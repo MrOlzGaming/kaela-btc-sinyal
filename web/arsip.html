@@ -47,13 +47,16 @@
   .price-change { font-size: 0.9rem; font-weight: 600; }
   .price-change.up { color: var(--clr-success); }
   .price-change.down { color: var(--clr-danger); }
-  .tf-selector { display: flex; gap: 6px; margin: 14px 0 10px; }
-  .tf-btn { flex: 1; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 7px 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .live-dot { color: var(--clr-danger); font-size: 0.7rem; font-weight: 700; animation: pulse-live 1.4s ease-in-out infinite; }
+  @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .mode-toggle-btn { margin-left: auto; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+  .tf-selector { display: flex; gap: 5px; margin: 14px 0 10px; flex-wrap: wrap; }
+  .tf-btn { flex: 1; min-width: 40px; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 7px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
   .tf-btn.active { background: var(--clr-primary); color: #111; border-color: var(--clr-primary); }
   #btc-chart-wrap { position: relative; width: 100%; touch-action: none; }
-  #btc-chart { display: block; width: 100%; height: 260px; cursor: crosshair; border-radius: var(--radius-sm); background: var(--clr-bg); }
-  .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
-  .clear-draw-btn { background: none; border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; }
+  #btc-chart { display: block; width: 100%; height: 300px; cursor: crosshair; border-radius: var(--radius-sm); background: var(--clr-bg); }
+  .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .clear-draw-btn { background: none; border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; flex-shrink: 0; }
 </style>
 </head>
 <body>

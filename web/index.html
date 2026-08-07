@@ -19,7 +19,9 @@
   .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
   .latest-label { color: var(--clr-success); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
   .latest-date, .entry-date { color: var(--clr-text-muted); font-size: 0.8rem; }
-  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; }
+  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; word-break: break-word; }
+  .content a { color: var(--clr-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .content a:hover { text-decoration-thickness: 2px; }
   .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 600; }
@@ -54,23 +56,23 @@
     <div class="latest"><div class="latest-label">TERBARU — 📰 Kaela News</div><div class="latest-date">7/8/2026, 12.46.47</div><pre class="content">📰 KAELA NEWS — 2026-08-07
 
 ⚪ Bitcoin (BTC) Terbaru: Bitcoin Tunggu Data NFP AS, Mampukah Tembus US$65.000? - Ajaib
-   Ajaib — https://news.google.com/rss/articles/CBMiqwFBVV95cUxPUXBzVGxHMEthRGpMZkZ5QTZWNXZ1M0ZwZmc1NWw4VTJ5NDY5MktGYUZSTHFCRDNyalVHMlFZZzliU2U2WEFDRmc4eEJsRkpBTmlKVG5ZeFF1S1lLNk1HcFBXWGxFTUhJM29weXAxMl9Ea2FPNFhTc2ktZUFlYnVvT244amlIcndVRTl4V2xFSjhpeTFGSktUS3VmUVZOdHNFa2IwNFVnM1BYRkU?oc=5
+   <a href="https://news.google.com/rss/articles/CBMiqwFBVV95cUxPUXBzVGxHMEthRGpMZkZ5QTZWNXZ1M0ZwZmc1NWw4VTJ5NDY5MktGYUZSTHFCRDNyalVHMlFZZzliU2U2WEFDRmc4eEJsRkpBTmlKVG5ZeFF1S1lLNk1HcFBXWGxFTUhJM29weXAxMl9Ea2FPNFhTc2ktZUFlYnVvT244amlIcndVRTl4V2xFSjhpeTFGSktUS3VmUVZOdHNFa2IwNFVnM1BYRkU?oc=5" target="_blank" rel="noopener noreferrer">Ajaib</a>
 ⚪ Peretas curi bitcoin Rp2,1 triliun lewat celah di dompet Coldcard - idnfinancials.com
-   idnfinancials.com — https://news.google.com/rss/articles/CBMirgFBVV95cUxOTVlhQWV6YmJTSHBqbjJ5WnFIaFNKUVlkOVZILXl3Um1Mclo0LWJkZ1pWbElSN2JxRW42SUQ1bjlmWXRKWVRmSUVpaHNLaHlPemEyeWlpUlJXY0R5aHoxVFdUX0s5bnFmcUVUdVAyTzlhTVdBSGNxSi1GS0I0aDhOUS1MckJoTDBBZ0FTMFlsb21TOXhLU0ViU2VqXzFRcm5GU1BWTEk0UTlSSDBJTmc?oc=5
+   <a href="https://news.google.com/rss/articles/CBMirgFBVV95cUxOTVlhQWV6YmJTSHBqbjJ5WnFIaFNKUVlkOVZILXl3Um1Mclo0LWJkZ1pWbElSN2JxRW42SUQ1bjlmWXRKWVRmSUVpaHNLaHlPemEyeWlpUlJXY0R5aHoxVFdUX0s5bnFmcUVUdVAyTzlhTVdBSGNxSi1GS0I0aDhOUS1MckJoTDBBZ0FTMFlsb21TOXhLU0ViU2VqXzFRcm5GU1BWTEk0UTlSSDBJTmc?oc=5" target="_blank" rel="noopener noreferrer">idnfinancials.com</a>
 ⚪ ETF Bitcoin Catat Arus Masuk US$244 Juta, Total Tiga Hari Lampaui US$626 Juta - fxstreet-id.com
-   fxstreet-id.com — https://news.google.com/rss/articles/CBMi0wFBVV95cUxQS2trRFg0bUxWUmRmb0d1REFZeDNoc0xSRW1FMldIN3ZsZDVWeUlGWU9OaFFOckFZUDQtWWNpcEU2blRIR25qd2pUbmtKWV9JODdqSXlXRW9nUzJTVHFzUVFlTnVobzhNNFc5Rmd6M0dudVJZVF80NmxhbGpGTFZmbVRJSzBRR3VqUWtwWmwxSEd6T2duVnVJR0lQVkw1VGM5YWZET0k0LU5BajhJTlh6bVlabWJyanhMdkJmNFU4MndJTldsemNCYm96eWVQenFBZjNF0gHYAUFVX3lxTE1qWGxrS2ItOXZ6TG5oZjJsSmt5RjRiOGxlWjRXTVhLY1VVTnBQVW84aDN2bTR6QUJLc0ZsdzIxX1JEUDRwWUpLcUpmNUJ4dzFId3JGWktFVnNKZ2h4eUc1aHdHN3JVUlQtRk9BWk5zNjJUWGF0YUh4dVFOaDNldDJoOUt2QWFCX3RsM1U4YlZLOUVBd0RscHVUaTZzdlRTTm5OMUlMSHNMaGE2a0dtVGVOMmZjM3JkSXdqYmszSzB2LXFJemZKdjdKRnR4YnFZbkZhT2lzSDdacg?oc=5
+   <a href="https://news.google.com/rss/articles/CBMi0wFBVV95cUxQS2trRFg0bUxWUmRmb0d1REFZeDNoc0xSRW1FMldIN3ZsZDVWeUlGWU9OaFFOckFZUDQtWWNpcEU2blRIR25qd2pUbmtKWV9JODdqSXlXRW9nUzJTVHFzUVFlTnVobzhNNFc5Rmd6M0dudVJZVF80NmxhbGpGTFZmbVRJSzBRR3VqUWtwWmwxSEd6T2duVnVJR0lQVkw1VGM5YWZET0k0LU5BajhJTlh6bVlabWJyanhMdkJmNFU4MndJTldsemNCYm96eWVQenFBZjNF0gHYAUFVX3lxTE1qWGxrS2ItOXZ6TG5oZjJsSmt5RjRiOGxlWjRXTVhLY1VVTnBQVW84aDN2bTR6QUJLc0ZsdzIxX1JEUDRwWUpLcUpmNUJ4dzFId3JGWktFVnNKZ2h4eUc1aHdHN3JVUlQtRk9BWk5zNjJUWGF0YUh4dVFOaDNldDJoOUt2QWFCX3RsM1U4YlZLOUVBd0RscHVUaTZzdlRTTm5OMUlMSHNMaGE2a0dtVGVOMmZjM3JkSXdqYmszSzB2LXFJemZKdjdKRnR4YnFZbkZhT2lzSDdacg?oc=5" target="_blank" rel="noopener noreferrer">fxstreet-id.com</a>
 ⚪ Ekonomi Indonesia Ditopang Kelas Atas, Daya Beli Menengah Bawah Kian Tertekan - investortrust.id
-   investortrust.id — https://news.google.com/rss/articles/CBMitAFBVV95cUxNOW5mYXYyRWdxQkZrNlZPRXV3c3NHZWJnTFFwQ0h5am5qNEs0RTdBd0lid05tTUJldVBGalhwRFUzUFFna1NMV2ptSEFTZEtmLWVtdlhfLW5RZEx6aURhbkh1ei16Z3BQZmYxNWlhekJZejRZYlo4N194b3B0cTNrdmYwc3dYUS1lXzNyNHVsRF9YWDhod1pyNGhWbDZkQXgwdlV5Q2dmNGtDOWJ5SGstcVpUM2g?oc=5
+   <a href="https://news.google.com/rss/articles/CBMitAFBVV95cUxNOW5mYXYyRWdxQkZrNlZPRXV3c3NHZWJnTFFwQ0h5am5qNEs0RTdBd0lid05tTUJldVBGalhwRFUzUFFna1NMV2ptSEFTZEtmLWVtdlhfLW5RZEx6aURhbkh1ei16Z3BQZmYxNWlhekJZejRZYlo4N194b3B0cTNrdmYwc3dYUS1lXzNyNHVsRF9YWDhod1pyNGhWbDZkQXgwdlV5Q2dmNGtDOWJ5SGstcVpUM2g?oc=5" target="_blank" rel="noopener noreferrer">investortrust.id</a>
 ⚪ Selat Hormuz Memanas, Harga Minyak Dunia Kembali Melonjak 3 Persen - news.schoolmedia.id
-   news.schoolmedia.id — https://news.google.com/rss/articles/CBMiqAFBVV95cUxQSEtvNUVZVFpKRjhtRlJ2b3FGbXBGVGdIWlN0VEE2NkZleG5fcFFIS2RWWElXd3NhcGFUUWM0bFNQUTNCQ25PdFEzZUNsM2xCTzRsTzBhNHN3bVpRMW00dWpZNGU2ZXp1SmJuZjNaU2hreFZXOHBwZ21OcGgyQ1lraVU5bGlSMTR4eURxX1Y4bUJvcGNFYmlYZHRHQzZLZ281SlF3VG44eVU?oc=5
+   <a href="https://news.google.com/rss/articles/CBMiqAFBVV95cUxQSEtvNUVZVFpKRjhtRlJ2b3FGbXBGVGdIWlN0VEE2NkZleG5fcFFIS2RWWElXd3NhcGFUUWM0bFNQUTNCQ25PdFEzZUNsM2xCTzRsTzBhNHN3bVpRMW00dWpZNGU2ZXp1SmJuZjNaU2hreFZXOHBwZ21OcGgyQ1lraVU5bGlSMTR4eURxX1Y4bUJvcGNFYmlYZHRHQzZLZ281SlF3VG44eVU?oc=5" target="_blank" rel="noopener noreferrer">news.schoolmedia.id</a>
 ⚪ Cadangan Devisa RI Stabil US$145,3 Miliar di Tengah Gejolak Global - Bisnis.com - Ekonomi
-   Bisnis.com - Ekonomi — https://news.google.com/rss/articles/CBMitgFBVV95cUxNUXk2NGNvM0d6TDhhYU1hVXNCcGY5WlU4S3ZmWnZTX0JtSFRycmRfREtKXzZXTURTRmJ6QVNXak1rbHFsWHE0VVNUNXJsSXZwdlY3NHdGZl9wQ2Q1QXNXbWE1di03Rks0VktvTldNSmh3ejc3VWdrSGcwdkYtOGJsOUlGUTlzTFltd0RoM1BIak84djlXTk1mSDc2YXhmNkFPQlotd2U0MjBqT3VCd05PX05rZmo5dw?oc=5
+   <a href="https://news.google.com/rss/articles/CBMitgFBVV95cUxNUXk2NGNvM0d6TDhhYU1hVXNCcGY5WlU4S3ZmWnZTX0JtSFRycmRfREtKXzZXTURTRmJ6QVNXak1rbHFsWHE0VVNUNXJsSXZwdlY3NHdGZl9wQ2Q1QXNXbWE1di03Rks0VktvTldNSmh3ejc3VWdrSGcwdkYtOGJsOUlGUTlzTFltd0RoM1BIak84djlXTk1mSDc2YXhmNkFPQlotd2U0MjBqT3VCd05PX05rZmo5dw?oc=5" target="_blank" rel="noopener noreferrer">Bisnis.com - Ekonomi</a>
 🟢 Ekonomi Indonesia Tumbuh 5,29%, Cek Negara-negara Tetangga - Market - Bloomberg Technoz
-   Bloomberg Technoz — https://news.google.com/rss/articles/CBMirwFBVV95cUxNMjEwVHJNZUpVcDRBek96OUdBNlNSdUY5VklrUEVKZFQ1QkRwNVhyaTJQU0lxYjhJNlZNVklmbjRrUGxIVnlZLXR0ejBENllBdnJlNk5qYnE4cTdpU1N1OURJU25QaFZjTHRybHJtczV2VTVFVnNrbkNiYUo3c190OXdlcmxUck9DRFh3azJvaUl2ODRwc01EeGtGWnA4a2lhRzBKRGdfM1hHWHhSdkFn?oc=5
+   <a href="https://news.google.com/rss/articles/CBMirwFBVV95cUxNMjEwVHJNZUpVcDRBek96OUdBNlNSdUY5VklrUEVKZFQ1QkRwNVhyaTJQU0lxYjhJNlZNVklmbjRrUGxIVnlZLXR0ejBENllBdnJlNk5qYnE4cTdpU1N1OURJU25QaFZjTHRybHJtczV2VTVFVnNrbkNiYUo3c190OXdlcmxUck9DRFh3azJvaUl2ODRwc01EeGtGWnA4a2lhRzBKRGdfM1hHWHhSdkFn?oc=5" target="_blank" rel="noopener noreferrer">Bloomberg Technoz</a>
 🟢 Meski Masih Bertumbuh, Mesin Utama Ekonomi Rapuh - Kompas.id
-   Kompas.id — https://news.google.com/rss/articles/CBMigwFBVV95cUxQZDVDcUZITVpoWTBJVVFnbU9jcFR5SlhWNnNyLXlENFFvamJyVkNqQ3p1eWpvLVRQVHF3dEhRMFlQUkVFUWdQVnlEc093a3ZCQ3FIUTFKUkd5bXpZMWZVYno2VDhGTzNLTkJkRUU2cFlOdFNxTlRYbFpXNmdHTGNXcW5TNA?oc=5
+   <a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxQZDVDcUZITVpoWTBJVVFnbU9jcFR5SlhWNnNyLXlENFFvamJyVkNqQ3p1eWpvLVRQVHF3dEhRMFlQUkVFUWdQVnlEc093a3ZCQ3FIUTFKUkd5bXpZMWZVYno2VDhGTzNLTkJkRUU2cFlOdFNxTlRYbFpXNmdHTGNXcW5TNA?oc=5" target="_blank" rel="noopener noreferrer">Kompas.id</a>
 
-🔗 https://kaela-btc-sinyal.netlify.app</pre></div>
+🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
     
   </section>
 <section class="arsip-group">
@@ -79,7 +81,7 @@
 Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
 ⏳ Halving berikutnya: 615 hari lagi (~2028-04-13)
 
-🔗 https://kaela-btc-sinyal.netlify.app</pre></div>
+🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
     
   </section>
 <section class="arsip-group">
@@ -87,7 +89,7 @@ Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
     <div class="latest"><div class="latest-label">TERBARU — ⚡ Nyopet Market</div><div class="latest-date">7/8/2026, 12.02.27</div><pre class="content">⚡ NYOPET MARKET — 2026-08-07
 Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.
 
-🔗 https://kaela-btc-sinyal.netlify.app</pre></div>
+🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
     
   </section>
 

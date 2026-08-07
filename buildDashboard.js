@@ -29,6 +29,29 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Ubah 2 pola baris yang dipakai semua formatter pesan jadi hyperlink beneran (bisa diklik):
+//   "   SumberBerita — https://url-panjang..."  -> teks link = nama sumber (bukan URL mentah)
+//   "🔗 https://kaela-btc-sinyal.netlify.app"    -> URL itu sendiri jadi teks link
+// Diproses per baris (bukan regex 1 kalimat) biar gak ke-double-wrap.
+function linkify(escapedText) {
+  return escapedText
+    .split('\n')
+    .map((line) => {
+      const sourceMatch = line.match(/^(\s*)(.+?) — (https?:\/\/\S+)$/);
+      if (sourceMatch) {
+        const [, indent, label, url] = sourceMatch;
+        return `${indent}<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      }
+      const webMatch = line.match(/^(🔗 )(https?:\/\/\S+)$/);
+      if (webMatch) {
+        const [, prefix, url] = webMatch;
+        return `${prefix}<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      }
+      return line;
+    })
+    .join('\n');
+}
+
 function renderEntry(e, { highlight = false } = {}) {
   const cls = highlight ? 'latest' : 'entry';
   const labelCls = highlight ? 'latest-label' : 'entry-type';
@@ -36,7 +59,7 @@ function renderEntry(e, { highlight = false } = {}) {
   const header = highlight
     ? `<div class="${labelCls}">TERBARU — ${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
     : `<div class="entry-header"><span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span><span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span></div>`;
-  return `<div class="${cls}">${header}<pre class="content">${escapeHtml(e.content)}</pre></div>`;
+  return `<div class="${cls}">${header}<pre class="content">${linkify(escapeHtml(e.content))}</pre></div>`;
 }
 
 function renderGroup(group, entries) {
@@ -86,7 +109,9 @@ function buildHtml() {
   .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
   .latest-label { color: var(--clr-success); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
   .latest-date, .entry-date { color: var(--clr-text-muted); font-size: 0.8rem; }
-  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; }
+  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; word-break: break-word; }
+  .content a { color: var(--clr-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .content a:hover { text-decoration-thickness: 2px; }
   .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 600; }

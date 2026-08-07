@@ -1,7 +1,9 @@
-// Kaela BTC Sinyal — service worker sederhana. Cache halaman inti biar tetap kebuka offline
-// (harga live gak akan update kalau offline, tapi laporan terakhir & kalkulator tetap bisa dibuka).
+// Kaela BTC Sinyal — service worker. NETWORK-FIRST (bukan cache-first) --
+// selalu coba ambil versi terbaru dulu, cache cuma dipakai kalau offline.
+// Ini sengaja diubah dari cache-first karena cache-first bikin pengunjung keliatan versi basi
+// terus-terusan sampai manual clear cache, padahal situs ini sering banget di-update (arsip harian).
 
-const CACHE_NAME = 'kaela-v2';
+const CACHE_NAME = 'kaela-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -10,6 +12,7 @@ const CORE_ASSETS = [
   './metodologi-sniper.html',
   './metodologi-nyopet.html',
   './css/variables.css',
+  './js/chart-widget.js',
   './manifest.json',
   './icons/icon.svg',
 ];
@@ -32,6 +35,12 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone)).catch(() => {});
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

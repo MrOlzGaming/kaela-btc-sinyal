@@ -41,6 +41,19 @@
   .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; }
   .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 10px; }
   .goto-arsip { display: block; text-align: center; margin-top: 30px; padding: 14px; background: var(--clr-bg-elevated); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 600; }
+  .price-widget { background: var(--clr-bg-elevated); border-radius: var(--radius-md); padding: 16px; margin: 16px 0; }
+  .price-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .price-live { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .price-change { font-size: 0.9rem; font-weight: 600; }
+  .price-change.up { color: var(--clr-success); }
+  .price-change.down { color: var(--clr-danger); }
+  .tf-selector { display: flex; gap: 6px; margin: 14px 0 10px; }
+  .tf-btn { flex: 1; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 7px 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .tf-btn.active { background: var(--clr-primary); color: #111; border-color: var(--clr-primary); }
+  #btc-chart-wrap { position: relative; width: 100%; touch-action: none; }
+  #btc-chart { display: block; width: 100%; height: 260px; cursor: crosshair; border-radius: var(--radius-sm); background: var(--clr-bg); }
+  .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .clear-draw-btn { background: none; border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -50,6 +63,26 @@
     👋 <strong>Selamat datang di Kaela BTC Sinyal</strong> — sistem Sniper otomatis untuk BTC: Siklus Halving
     (strategi utama, ~2 aksi per 4 tahun) + Nyopet Market (sinyal pelengkap opsional). Murni data & kalender,
     tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-sniper.html">Baca metodologi lengkap →</a>
+  </div>
+
+  <div class="price-widget">
+    <div class="price-header">
+      <span class="price-live" id="btc-price">Memuat...</span>
+      <span class="price-change" id="btc-change"></span>
+    </div>
+    <div class="tf-selector">
+      <button class="tf-btn" data-tf="24j">24 Jam</button>
+      <button class="tf-btn active" data-tf="7h">7 Hari</button>
+      <button class="tf-btn" data-tf="30h">30 Hari</button>
+      <button class="tf-btn" data-tf="1t">1 Tahun</button>
+    </div>
+    <div id="btc-chart-wrap">
+      <canvas id="btc-chart"></canvas>
+    </div>
+    <div class="draw-hint">
+      <span>✏️ Klik-tarik di grafik buat gambar garis analisa (hilang otomatis pas refresh)</span>
+      <button class="clear-draw-btn" id="clear-draw">Hapus garis</button>
+    </div>
   </div>
 
   <div class="countdown">
@@ -244,6 +277,7 @@ Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.
       navigator.serviceWorker.register('service-worker.js').catch(() => {});
     }
   </script>
+  <script src="js/chart-widget.js"></script>
 
   <nav class="bottom-nav">
     <a href="index.html" class="active"><span class="icon">🏠</span>Dashboard</a>

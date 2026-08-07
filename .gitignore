@@ -11,6 +11,7 @@ backtest/*-result.json
 # state runtime lokal (posisi terbuka, candle terakhir diproses) -- bukan source, beda tiap mesin
 state.json
 nyopet-state.json
+whale-state.json
 
 # file lepas, bukan bagian source
 *.jpeg

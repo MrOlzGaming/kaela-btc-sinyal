@@ -1,7 +1,7 @@
-// Jalankan tiap hari jam 07:00 WIB (sama jadwal ikut closing candle kayak monitor.js).
+// Jalankan tiap hari jam 07:00 WITA (sama jadwal ikut closing candle kayak monitor.js).
 // Beda dari monitor.js -- itu laporan PRIBADI Olan (dailyReport.js, cuma console+arsip).
 // Ini laporan buat GRUP WA "BTC Sniper Club" (groupReport.js) -- dikirim ke WEB (arsip) DAN Fonnte.
-// Weekly kirim tiap Senin, Monthly tiap tanggal 1, Yearly tiap 1 Januari -- Daily tiap hari.
+// Weekly kirim tiap Senin, Monthly tiap tanggal 1, Yearly tiap 1 Januari (semua kalender WITA).
 
 const {
   generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly,
@@ -9,6 +9,7 @@ const {
 const { sendWhatsApp } = require('./fonnte');
 const { addOrReplaceDaily } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
+const { toLocal } = require('./config');
 
 const BASE_URL = 'https://api.binance.com/api/v3/klines';
 
@@ -46,21 +47,21 @@ async function main() {
   const priceLastMonth = closeDaysAgo(closed, 30);
   const priceLastYear = closeDaysAgo(closed, 365);
 
-  // Cron jalan jam 00:00 UTC = 07:00 WIB (lihat .github/workflows/daily-report.yml).
-  // Karena WIB = UTC+7 dan 00:00+7 jam = 07:00 di HARI YANG SAMA (gak pernah lewat tengah malam),
-  // tanggal/hari-minggu/bulan di UTC pas jam segini SELALU sama persis dengan WIB -- aman pakai getUTC*.
-  // (Kalau jadwal cron berubah ke jam lain, asumsi ini WAJIB ditinjau ulang.)
+  // Hari/tanggal/bulan WAJIB dihitung dari kalender WITA (toLocal), BUKAN UTC mentah --
+  // cron GitHub Actions jalan di UTC, jam 23:00 UTC hari-H = 07:00 WITA hari BERIKUTNYA,
+  // jadi getUTCDate() mentah bakal salah 1 hari kalau gak digeser dulu.
+  const local = toLocal(now);
   const items = [];
   if (priceYesterday !== null) {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday) });
   }
-  if (now.getUTCDay() === 1 && priceLastWeek !== null) { // Senin
+  if (local.getUTCDay() === 1 && priceLastWeek !== null) { // Senin (WITA)
     items.push({ type: 'report-weekly', content: generateGroupWeekly(now, priceToday, priceLastWeek) });
   }
-  if (now.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1
+  if (local.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1 (WITA)
     items.push({ type: 'report-monthly', content: generateGroupMonthly(now, priceToday, priceLastMonth) });
   }
-  if (now.getUTCMonth() === 0 && now.getUTCDate() === 1 && priceLastYear !== null) { // 1 Januari
+  if (local.getUTCMonth() === 0 && local.getUTCDate() === 1 && priceLastYear !== null) { // 1 Januari (WITA)
     items.push({ type: 'report-yearly', content: generateGroupYearly(now, priceToday, priceLastYear) });
   }
 

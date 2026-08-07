@@ -2,7 +2,7 @@
 // Aturan: ramah, TIDAK PERNAH sebut modal/nominal individu siapapun (privasi total, sesuai desain kalkulator anonim).
 // Selama window Musim Tanam/Panen: nambahin pesan pengingat komitmen, bahasa santai, gonta-ganti biar gak monoton.
 
-const { WEB_URL } = require('./config');
+const { WEB_URL, toLocal, localDateKey } = require('./config');
 
 const NEXT_HALVING_EST = new Date('2028-04-13T13:11:00Z'); // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WINDOW_START = new Date('2026-10-19T00:00:00Z');
@@ -57,19 +57,19 @@ function getWindowPhase(now) {
 function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   const lines = [];
   const change = pctChange(priceToday, priceYesterday);
-  lines.push(`📊 Update BTC — ${now.toISOString().slice(0, 10)}`);
+  lines.push(`📊 Update BTC — ${localDateKey(now)}`);
   lines.push(`Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`);
   lines.push(halvingLine(now));
 
   const phase = opts.phase || getWindowPhase(now); // 'TANAM' | 'PANEN' | null
   if (phase === 'TANAM') {
     lines.push('');
-    lines.push(pick(REMINDER_TANAM, now.getUTCDate()));
+    lines.push(pick(REMINDER_TANAM, toLocal(now).getUTCDate()));
     lines.push('');
     lines.push(ADVANCED_NOTE);
   } else if (phase === 'PANEN') {
     lines.push('');
-    lines.push(pick(REMINDER_PANEN, now.getUTCDate()));
+    lines.push(pick(REMINDER_PANEN, toLocal(now).getUTCDate()));
     lines.push('');
     lines.push(PANEN_DISCLAIMER);
   }
@@ -81,7 +81,7 @@ function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
 function generateGroupWeekly(now, priceToday, priceLastWeek) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
-    `📆 Laporan Mingguan BTC — minggu ${now.toISOString().slice(0, 10)}`,
+    `📆 Laporan Mingguan BTC — minggu ${localDateKey(now)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
     halvingLine(now),
     '',
@@ -92,7 +92,7 @@ function generateGroupWeekly(now, priceToday, priceLastWeek) {
 function generateGroupMonthly(now, priceToday, priceLastMonth) {
   const change = pctChange(priceToday, priceLastMonth);
   return [
-    `🗓️ Laporan Bulanan BTC — ${now.toISOString().slice(0, 7)}`,
+    `🗓️ Laporan Bulanan BTC — ${localDateKey(now).slice(0, 7)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari bulan lalu)`,
     halvingLine(now),
     '',
@@ -103,7 +103,7 @@ function generateGroupMonthly(now, priceToday, priceLastMonth) {
 function generateGroupYearly(now, priceToday, priceLastYear) {
   const change = pctChange(priceToday, priceLastYear);
   return [
-    `📅 Laporan Tahunan BTC — ${now.getUTCFullYear()}`,
+    `📅 Laporan Tahunan BTC — ${toLocal(now).getUTCFullYear()}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari tahun lalu)`,
     halvingLine(now),
     '',

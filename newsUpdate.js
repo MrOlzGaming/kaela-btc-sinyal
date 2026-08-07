@@ -11,7 +11,7 @@
 // Pencarian berita: newsFetch.js (RSS Google News gratis, no API key, sentimen keyword-based --
 // bukan LLM, deterministik sesuai filosofi Kaela). Runner harian: newsMonitor.js.
 
-const { WEB_URL } = require('./config');
+const { WEB_URL, localDateKey } = require('./config');
 
 const MAX_ITEMS = 20;
 
@@ -19,7 +19,7 @@ const MAX_ITEMS = 20;
 function formatNewsUpdate(now, items) {
   const capped = items.slice(0, MAX_ITEMS);
   const lines = [];
-  lines.push(`📰 KAELA NEWS — ${now.toISOString().slice(0, 10)}`);
+  lines.push(`📰 KAELA NEWS — ${localDateKey(now)}`);
   lines.push('');
   for (const item of capped) {
     const tag = item.sentiment === 'positif' ? '🟢' : item.sentiment === 'negatif' ? '🔴' : '⚪';

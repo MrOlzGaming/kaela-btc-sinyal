@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { localDateKey } = require('./config');
 
 const ARCHIVE_PATH = path.join(__dirname, 'archive.json');
 
@@ -28,8 +29,8 @@ function addEntry(type, content, date = new Date()) {
 // Dipakai buat report/news harian -- kalau script kepaksa di-run ulang hari yang sama
 // (manual test, retry, dst), web archive gak jadi kelipetan.
 function addOrReplaceDaily(type, content, date = new Date()) {
-  const dayKey = date.toISOString().slice(0, 10);
-  const entries = loadArchive().filter((e) => !(e.type === type && e.date.slice(0, 10) === dayKey));
+  const dayKey = localDateKey(date); // hari kalender WITA, bukan UTC
+  const entries = loadArchive().filter((e) => !(e.type === type && localDateKey(new Date(e.date)) === dayKey));
   entries.push({ type, date: date.toISOString(), content });
   saveArchive(entries);
   return entries[entries.length - 1];

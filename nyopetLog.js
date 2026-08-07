@@ -9,7 +9,7 @@
 //   (dibanding Siklus Halving 73,8%/tahun DD 0% — Nyopet TETAP side-experiment, bukan pesaing)
 // Sinyal murni — TIDAK PERNAH sebut saldo/stake dalam nominal dolar.
 
-const { WEB_URL } = require('./config');
+const { WEB_URL, toLocal, localDateKey } = require('./config');
 
 const NYAWA_PCT = 0.10;
 const RR = 2;
@@ -26,7 +26,7 @@ function fmt(n) {
 }
 
 function formatNyopetEvent({ type, price, entry }) {
-  const time = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const time = toLocal(new Date()).toISOString().slice(0, 16).replace('T', ' ');
 
   if (type === 'ENTRY') {
     const lv = computeLevels(price);
@@ -67,7 +67,7 @@ function formatNyopetEvent({ type, price, entry }) {
 
 function formatNyopetNoSignal(now = new Date()) {
   return [
-    `⚡ NYOPET MARKET — ${now.toISOString().slice(0, 10)}`,
+    `⚡ NYOPET MARKET — ${localDateKey(now)}`,
     'Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.',
     '',
     `🔗 ${WEB_URL}`,

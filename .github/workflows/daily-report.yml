@@ -2,7 +2,7 @@ name: Laporan Harian (Siklus Halving + Grup WA)
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 00:00 UTC = 07:00 WIB, ikut jadwal closing candle
+    - cron: '0 23 * * *' # 23:00 UTC = 07:00 WITA (hari berikutnya), ikut jadwal closing candle
   workflow_dispatch: {}
 
 permissions:
@@ -32,6 +32,9 @@ jobs:
 
       - name: Laporan grup WA (groupMonitor.js)
         run: node groupMonitor.js
+
+      - name: Jadwal ekonomi hari ini (econCalendarMonitor.js)
+        run: node econCalendarMonitor.js
 
       - name: Rebuild web/index.html dari archive terbaru
         run: node buildDashboard.js

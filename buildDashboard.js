@@ -1,5 +1,5 @@
 // Generate web/index.html statis dari archive.json — data di-embed langsung (gak perlu server/fetch).
-// Arsip dibagi 3 GRUP TETAP: Berita, Laporan, Sinyal -- bukan 1 daftar campur kronologis.
+// Arsip dibagi 5 GRUP TETAP: Berita, Laporan, Sinyal, Whale Alert, Jadwal Ekonomi -- bukan 1 daftar campur.
 // Jalankan tiap kali ada entry baru: node buildDashboard.js
 
 const fs = require('fs');
@@ -16,6 +16,8 @@ const TYPE_LABEL = {
   'report-yearly': '📅 Laporan Tahunan',
   news: '📰 Kaela News',
   nyopet: '⚡ Nyopet Market',
+  whale: '🐋 Whale Alert',
+  'econ-calendar': '📅 Jadwal Ekonomi',
 };
 
 // Urutan & isi grup TETAP -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
@@ -23,6 +25,8 @@ const GROUPS = [
   { key: 'news', label: '📰 Berita', match: (type) => type === 'news' },
   { key: 'laporan', label: '📊 Laporan', match: (type) => type.startsWith('report-') },
   { key: 'sinyal', label: '⚡ Sinyal Nyopet Market', match: (type) => type === 'nyopet' },
+  { key: 'whale', label: '🐋 Aktivitas Whale', match: (type) => type === 'whale' },
+  { key: 'econ', label: '📅 Jadwal Ekonomi', match: (type) => type === 'econ-calendar' },
 ];
 
 function escapeHtml(s) {
@@ -33,10 +37,21 @@ function escapeHtml(s) {
 //   "   SumberBerita — https://url-panjang..."  -> teks link = nama sumber (bukan URL mentah)
 //   "🔗 https://kaela-btc-sinyal.netlify.app"    -> URL itu sendiri jadi teks link
 // Diproses per baris (bukan regex 1 kalimat) biar gak ke-double-wrap.
+// Warnai baris headline berita sesuai tag sentimen yang udah ada (🟢 bagus / 🔴 buruk / ⚪ netral-ragu)
+// -- di WA cuma emoji, di web ditambah warna teks biar lebih jelas ketauan mana yang mana.
+function colorizeSentiment(line) {
+  const m = line.match(/^(🟢|🔴|⚪) (.+)$/);
+  if (!m) return line;
+  const [, emoji, text] = m;
+  const cls = emoji === '🟢' ? 'news-positive' : emoji === '🔴' ? 'news-negative' : 'news-neutral';
+  return `${emoji} <span class="${cls}">${text}</span>`;
+}
+
 function linkify(escapedText) {
   return escapedText
     .split('\n')
     .map((line) => {
+      line = colorizeSentiment(line);
       const sourceMatch = line.match(/^(\s*)(.+?) — (https?:\/\/\S+)$/);
       if (sourceMatch) {
         const [, indent, label, url] = sourceMatch;
@@ -112,6 +127,9 @@ function buildHtml() {
   .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; word-break: break-word; }
   .content a { color: var(--clr-primary); text-decoration: underline; text-underline-offset: 2px; }
   .content a:hover { text-decoration-thickness: 2px; }
+  .news-positive { color: var(--clr-success); }
+  .news-negative { color: var(--clr-danger); }
+  .news-neutral { color: var(--clr-text-muted); }
   .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 600; }

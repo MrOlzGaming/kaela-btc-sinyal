@@ -13,6 +13,7 @@ const { formatNyopetEvent, formatNyopetNoSignal, computeLevels } = require('./ny
 const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
+const { localDateKey } = require('./config');
 
 const STATE_PATH = path.join(__dirname, 'nyopet-state.json');
 const BASE_URL = 'https://api.binance.com/api/v3/klines';
@@ -102,7 +103,7 @@ async function main() {
 
   // Status harian: kalau HARI INI belum ada event nyata, gak ada posisi terbuka,
   // dan belum kirim status hari ini -- kirim 1x "sedang mengumpulkan data" (keputusan Olan: lapor tiap hari, jangan diam total).
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = localDateKey(now); // hari kalender WITA, bukan UTC
   if (events.length === 0 && !state.position && state.lastNoSignalStatusDate !== todayStr) {
     events.push(formatNyopetNoSignal(now));
     state.lastNoSignalStatusDate = todayStr;

@@ -2,7 +2,7 @@ name: Kaela News (harian)
 
 on:
   schedule:
-    - cron: '0 2 * * *' # 02:00 UTC = 09:00 WIB
+    - cron: '0 1 * * *' # 01:00 UTC = 09:00 WITA
   workflow_dispatch: {}
 
 permissions:

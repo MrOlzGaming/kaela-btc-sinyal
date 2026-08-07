@@ -1,4 +1,4 @@
-// Laporan harian Kaela — jalan tiap hari jam 07:00 WIB, TERLEPAS ada sinyal entry atau enggak.
+// Laporan harian Kaela — jalan tiap hari jam 07:00 WITA, TERLEPAS ada sinyal entry atau enggak.
 // Strategi sekarang cuma trading ~2x per 4 tahun, jadi laporan hariannya berupa status/countdown,
 // bukan sinyal BUY/SELL/WAIT harian kayak desain lama.
 
@@ -11,7 +11,7 @@ const PROJECTED_BOTTOM_LOW = 20000;
 const PROJECTED_BOTTOM_HIGH = 28600;
 const PROJECTED_BOTTOM_MID = 24300;
 const WATCH_MONTH = 'OKTOBER–NOVEMBER 2026';
-const { WEB_URL } = require('./config');
+const { WEB_URL, localDateKey } = require('./config');
 
 function daysBetween(a, b) {
   return Math.round((b.getTime() - a.getTime()) / 86400000);
@@ -23,7 +23,7 @@ function generateDailyReport(now, currentPrice, position) {
   const daysToNextHalving = daysBetween(now, NEXT_HALVING_EST);
 
   let lines = [];
-  lines.push(`📊 LAPORAN HARIAN KAELA — ${now.toISOString().slice(0, 10)}`);
+  lines.push(`📊 LAPORAN HARIAN KAELA — ${localDateKey(now)}`);
   lines.push('');
   lines.push(`⏳ Hari sejak halving terakhir (19 Apr 2024): ${daysSinceHalving} hari`);
   lines.push(`🎯 Estimasi halving berikutnya: ${NEXT_HALVING_EST.toISOString().slice(0, 10)} (~${daysToNextHalving} hari lagi)`);

@@ -38,6 +38,17 @@ body {
   overflow-x: hidden;
 }
 
+/* Tablet ke atas: sedikit lebih lebar, napas lebih longgar */
+@media (min-width: 700px) {
+  body { max-width: 820px; padding: 28px; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Desktop: melebar lebih jauh biar gak keliatan sempit "kekecilan" di layar besar */
+@media (min-width: 1024px) {
+  body { max-width: 960px; padding: 36px 44px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
+  h1 { font-size: 1.6rem; }
+}
+
 /* Navigasi tab bawah — konsisten di semua halaman */
 .bottom-nav {
   position: fixed;
@@ -65,6 +76,12 @@ body {
 .bottom-nav a .icon { font-size: 1.3rem; line-height: 1; }
 .bottom-nav a.active { color: var(--clr-primary); }
 .bottom-nav a.active .icon { transform: scale(1.08); }
+
+/* Desktop: item nav gak ikutan melebar sampe ujung layar -- dikumpulin di tengah biar rapi */
+@media (min-width: 1024px) {
+  .bottom-nav { justify-content: center; }
+  .bottom-nav a { flex: 0 0 160px; }
+}
 
 /* Tabel responsif — gak overflow di layar kecil */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

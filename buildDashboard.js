@@ -1,4 +1,5 @@
 // Generate web/index.html statis dari archive.json — data di-embed langsung (gak perlu server/fetch).
+// Arsip dibagi 3 GRUP TETAP: Berita, Laporan, Sinyal -- bukan 1 daftar campur kronologis.
 // Jalankan tiap kali ada entry baru: node buildDashboard.js
 
 const fs = require('fs');
@@ -14,37 +15,55 @@ const TYPE_LABEL = {
   'report-monthly': '🗓️ Laporan Bulanan',
   'report-yearly': '📅 Laporan Tahunan',
   news: '📰 Kaela News',
-  nyopet: '⚡ Nyopet Market (side, web only)',
+  nyopet: '⚡ Nyopet Market',
 };
+
+// Urutan & isi grup TETAP -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
+const GROUPS = [
+  { key: 'news', label: '📰 Berita', match: (type) => type === 'news' },
+  { key: 'laporan', label: '📊 Laporan', match: (type) => type.startsWith('report-') },
+  { key: 'sinyal', label: '⚡ Sinyal Nyopet Market', match: (type) => type === 'nyopet' },
+];
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function renderEntry(e, { highlight = false } = {}) {
+  const cls = highlight ? 'latest' : 'entry';
+  const labelCls = highlight ? 'latest-label' : 'entry-type';
+  const dateCls = highlight ? 'latest-date' : 'entry-date';
+  const header = highlight
+    ? `<div class="${labelCls}">TERBARU — ${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
+    : `<div class="entry-header"><span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span><span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span></div>`;
+  return `<div class="${cls}">${header}<pre class="content">${escapeHtml(e.content)}</pre></div>`;
+}
+
+function renderGroup(group, entries) {
+  if (entries.length === 0) {
+    return `<section class="arsip-group">
+      <h2 class="group-title">${group.label}</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>`;
+  }
+
+  const [latest, ...rest] = entries;
+  const restHtml = rest.map((e) => renderEntry(e)).join('\n');
+
+  return `<section class="arsip-group">
+    <h2 class="group-title">${group.label}</h2>
+    ${renderEntry(latest, { highlight: true })}
+    ${rest.length > 0 ? `<details class="riwayat"><summary>Riwayat (${rest.length})</summary>${restHtml}</details>` : ''}
+  </section>`;
+}
+
 function buildHtml() {
-  const entries = getAll(); // terbaru duluan
-  const latest = entries[0] || null;
+  const entries = getAll(); // semua tipe, terbaru duluan
 
-  const latestHtml = latest
-    ? `<div class="latest">
-        <div class="latest-label">TERBARU — ${TYPE_LABEL[latest.type] || latest.type}</div>
-        <div class="latest-date">${new Date(latest.date).toLocaleString('id-ID')}</div>
-        <pre class="content">${escapeHtml(latest.content)}</pre>
-      </div>`
-    : `<div class="latest empty">Belum ada arsip.</div>`;
-
-  const historyHtml = entries
-    .slice(1)
-    .map(
-      (e) => `<div class="entry">
-        <div class="entry-header">
-          <span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span>
-          <span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span>
-        </div>
-        <pre class="content">${escapeHtml(e.content)}</pre>
-      </div>`
-    )
-    .join('\n');
+  const groupsHtml = GROUPS.map((group) => {
+    const groupEntries = entries.filter((e) => group.match(e.type));
+    return renderGroup(group, groupEntries);
+  }).join('\n');
 
   return `<!doctype html>
 <html lang="id">
@@ -62,15 +81,18 @@ function buildHtml() {
   h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
   nav { display: flex; gap: 10px; margin: 14px 0; }
   nav a { text-decoration: none; }
-  .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .arsip-group { margin-top: 34px; }
+  .group-title { font-size: 1.1rem; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border); padding-bottom: 8px; margin-bottom: 14px; }
+  .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
   .latest-label { color: var(--clr-success); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
   .latest-date, .entry-date { color: var(--clr-text-muted); font-size: 0.8rem; }
   .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; }
   .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 600; }
-  h2 { font-size: 1rem; color: var(--clr-text-muted); margin-top: 30px; }
-  .empty { color: var(--clr-text-muted); text-align: center; padding: 30px; }
+  .riwayat { margin-top: 10px; }
+  .riwayat summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.9rem; padding: 6px 0; }
+  .empty { color: var(--clr-text-muted); text-align: center; padding: 20px; background: var(--clr-bg-elevated); border-radius: var(--radius-sm); }
   .countdown { background: linear-gradient(135deg, #1f2937, #111827); border: 2px solid var(--clr-warning); border-radius: var(--radius-lg); padding: 18px; margin: 16px 0; text-align: center; }
   .countdown-label { color: var(--clr-warning); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 10px; }
   .countdown-grid { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -94,9 +116,7 @@ function buildHtml() {
     <div class="countdown-date">Estimasi: ${new Date(NEXT_HALVING_EST).toISOString().slice(0, 10)} (sumber: CoinGecko)</div>
   </div>
 
-  ${latestHtml}
-  <h2>Riwayat (${Math.max(0, entries.length - 1)} laporan sebelumnya)</h2>
-  ${historyHtml || '<div class="empty">Belum ada riwayat lain.</div>'}
+  ${groupsHtml}
 
   <script>
     const HALVING_TARGET = new Date('${NEXT_HALVING_EST}').getTime();

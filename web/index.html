@@ -14,15 +14,18 @@
   h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
   nav { display: flex; gap: 10px; margin: 14px 0; }
   nav a { text-decoration: none; }
-  .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .arsip-group { margin-top: 34px; }
+  .group-title { font-size: 1.1rem; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border); padding-bottom: 8px; margin-bottom: 14px; }
+  .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
   .latest-label { color: var(--clr-success); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
   .latest-date, .entry-date { color: var(--clr-text-muted); font-size: 0.8rem; }
   .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; }
   .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 600; }
-  h2 { font-size: 1rem; color: var(--clr-text-muted); margin-top: 30px; }
-  .empty { color: var(--clr-text-muted); text-align: center; padding: 30px; }
+  .riwayat { margin-top: 10px; }
+  .riwayat summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.9rem; padding: 6px 0; }
+  .empty { color: var(--clr-text-muted); text-align: center; padding: 20px; background: var(--clr-bg-elevated); border-radius: var(--radius-sm); }
   .countdown { background: linear-gradient(135deg, #1f2937, #111827); border: 2px solid var(--clr-warning); border-radius: var(--radius-lg); padding: 18px; margin: 16px 0; text-align: center; }
   .countdown-label { color: var(--clr-warning); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 10px; }
   .countdown-grid { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -46,77 +49,47 @@
     <div class="countdown-date">Estimasi: 2028-04-13 (sumber: CoinGecko)</div>
   </div>
 
-  <div class="latest">
-        <div class="latest-label">TERBARU — 📰 Kaela News</div>
-        <div class="latest-date">7/8/2026, 12.34.40</div>
-        <pre class="content">📰 KAELA NEWS — 2026-08-07
-(judul aja, cek sumbernya buat baca lengkap — gak ngaruh ke keputusan tanam/panen)
+  <section class="arsip-group">
+    <h2 class="group-title">📰 Berita</h2>
+    <div class="latest"><div class="latest-label">TERBARU — 📰 Kaela News</div><div class="latest-date">7/8/2026, 12.46.47</div><pre class="content">📰 KAELA NEWS — 2026-08-07
 
-⚪ Digital Detectives Are Going Sleepless After Bitcoin Wallet Hack - Bloomberg
-   Bloomberg — https://news.google.com/rss/articles/CBMitwFBVV95cUxQT250NFRXNlJaR2FwdS12TjlncUl0dTZITE80dXdNeG5jRThvV1hTdldfZXl0T1dTcE9XZVJJc2xKa18xd0NUWGhrcEVTa2xoeDBjQ0FQWjh0S3ZjXzRmaUk2SHhHVkRoSllWSG81X2tkOTh6ak0tNEZPNkdzNm13Vk4xbHowSVV2WWhTVHNvLWhfYnNjUXgyOE9zSEFzemx4ZkVKcjJDUjBWWWwxVFl4eFpLMFZFZ2M?oc=5
-⚪ Current price of Bitcoin for Aug. 6, 2026 - Fortune
-   Fortune — https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBRYjd3TDJPdWhjNXllSGdCRDBGR3NCeWZocXdBRnBPdVpCTHhrZXBRRDFueFYwcFRHRmFPQkxNVGhncDl2YjNMS29hbWFHNXFMeUZsTjJvRldKUlZEbk8yM3dQanZrTEU?oc=5
-⚪ $76,000. That's the potential target hiding inside bitcoin's boring price action - CoinDesk
-   CoinDesk — https://news.google.com/rss/articles/CBMi5wFBVV95cUxPd0dsVWFKOEF5eS0ybEQxaWROelBxeWpwRDBxVVpvV0QwZEQ5NFp3QkJrSGNobEJSRU5xSlQ4czRrY1pub213TmFzNWZnNDJrbFFUZW5xTy1QUi1IN21YWjF6OU4wQ0h6eUgxRlpuYVp5ZXpSZ0syQkw0a1lmUy1rQk5yUFRRTkd4eVRsRkM5Z0lCcHpFTzRBRTZsSEdGRzBIa3NoZjJkVjAtZ3ZEeXJXRVBPc3hIcEU0TTBwNXFVTjNuSHA3R1dWQVQtWDNiYTJCcVhMOVAySF9pTGtuTHd4V3RsekRvN3c?oc=5
-⚪ OTA dispute escalates tensions across Türkiye's travel sector - Turizm Ekonomi
-   Turizm Ekonomi — https://news.google.com/rss/articles/CBMimgFBVV95cUxObjhGM0JrNEwxeWVuT3M5SXdydlQtN3J3THNCc3c5ZklIQWdJNU1heF9xWFN1R3VxYkYtSUxMLXRoMzdEdWNMYXZrc0gwSDB3Mld0VmVmX1R3cWt3c3ZsaUk2NzNxN3c0dGRQQXNwSWE0X1lXNnBQSFhqaWRvRFRJNWdwWlI4dWRweTNwRDVkazd1NlotMmxvc1Rn0gGaAUFVX3lxTE5uOEYzQms0TDF5ZW5PczlJd3J2VC03cndMc0JzdzlmSUhBZ0k1TWF4X3FYU3VHdXFiRi1JTEwtdGgzN0R1Y0xhdmtzSDBIMHcyV3RWZWZfVHdxa3dzdmxpSTY3M3E3dzR0ZFBBc3BJYTRfWVc2cFBIWGppZG9EVEk1Z3BaUjh1ZHB5M3BENWRrN3U2Wi0ybG9zVGc?oc=5
-🟢 Swiss watch exports to Türkiye rise as major markets contract - Hürriyet Daily News
-   Hürriyet Daily News — https://news.google.com/rss/articles/CBMipAFBVV95cUxNdE1EbHdMOWxDTE00QXgyREFOUnhxNk9NTWlWUTRCSlpjTmlZaUw3Z0tyeEFBTnpsMWtkWjViblZXMVJWel9wLWZVMGF4MUxXSGNNdXk0bkwxTnhqd3FwdG1RVUxYVnF0NF9PSFMxekVlSXRSNXZ0Ykt3eGo5aWxkZmhqSDZHYXJPeVI2S3haSVFYUkJkcDZ6SVduX3hnMVNid0dhdw?oc=5
-🟢 Indonesia calls for global unity against Israeli violations - ANTARA News
-   ANTARA News — https://news.google.com/rss/articles/CBMiowFBVV95cUxQMjdjSnRfNmI4TVRNSVB0N1lyenBEYl9nY21RM0Fabk5RNWNpWVh4d1daMlZQMm1iQzdOcklMVElHbjZUY2xGYkd2Ym10N1djVkZPZjV5YWZBam1PSmotSzY4ZVZWQWo5ZTRMRWdNMktrX1NEd3ZhRHVQMm43d0pwWFRNVDZpV3VFLWJLTDU3cG11M09kcDVTcDl0WWZZX0ljTEh30gGjAUFVX3lxTFAyN2NKdF82YjhNVE1JUHQ3WXJ6cERiX2djbVEzQVpuTlE1Y2lZWHh3V1oyVlAybWJDN05ySUxUSUduNlRjbEZiR3ZibXQ3V2NWRk9mNXlhZkFqbU9Kai1LNjhlVlZBajllNExFZ00yS2tfU0R3dmFEdVAybjd3SnBYVE1UNmlXdUUtYktMNTdwbXUzT2RwNVNwOXRZZllfSWNMSHc?oc=5
+⚪ Bitcoin (BTC) Terbaru: Bitcoin Tunggu Data NFP AS, Mampukah Tembus US$65.000? - Ajaib
+   Ajaib — https://news.google.com/rss/articles/CBMiqwFBVV95cUxPUXBzVGxHMEthRGpMZkZ5QTZWNXZ1M0ZwZmc1NWw4VTJ5NDY5MktGYUZSTHFCRDNyalVHMlFZZzliU2U2WEFDRmc4eEJsRkpBTmlKVG5ZeFF1S1lLNk1HcFBXWGxFTUhJM29weXAxMl9Ea2FPNFhTc2ktZUFlYnVvT244amlIcndVRTl4V2xFSjhpeTFGSktUS3VmUVZOdHNFa2IwNFVnM1BYRkU?oc=5
+⚪ Peretas curi bitcoin Rp2,1 triliun lewat celah di dompet Coldcard - idnfinancials.com
+   idnfinancials.com — https://news.google.com/rss/articles/CBMirgFBVV95cUxOTVlhQWV6YmJTSHBqbjJ5WnFIaFNKUVlkOVZILXl3Um1Mclo0LWJkZ1pWbElSN2JxRW42SUQ1bjlmWXRKWVRmSUVpaHNLaHlPemEyeWlpUlJXY0R5aHoxVFdUX0s5bnFmcUVUdVAyTzlhTVdBSGNxSi1GS0I0aDhOUS1MckJoTDBBZ0FTMFlsb21TOXhLU0ViU2VqXzFRcm5GU1BWTEk0UTlSSDBJTmc?oc=5
+⚪ ETF Bitcoin Catat Arus Masuk US$244 Juta, Total Tiga Hari Lampaui US$626 Juta - fxstreet-id.com
+   fxstreet-id.com — https://news.google.com/rss/articles/CBMi0wFBVV95cUxQS2trRFg0bUxWUmRmb0d1REFZeDNoc0xSRW1FMldIN3ZsZDVWeUlGWU9OaFFOckFZUDQtWWNpcEU2blRIR25qd2pUbmtKWV9JODdqSXlXRW9nUzJTVHFzUVFlTnVobzhNNFc5Rmd6M0dudVJZVF80NmxhbGpGTFZmbVRJSzBRR3VqUWtwWmwxSEd6T2duVnVJR0lQVkw1VGM5YWZET0k0LU5BajhJTlh6bVlabWJyanhMdkJmNFU4MndJTldsemNCYm96eWVQenFBZjNF0gHYAUFVX3lxTE1qWGxrS2ItOXZ6TG5oZjJsSmt5RjRiOGxlWjRXTVhLY1VVTnBQVW84aDN2bTR6QUJLc0ZsdzIxX1JEUDRwWUpLcUpmNUJ4dzFId3JGWktFVnNKZ2h4eUc1aHdHN3JVUlQtRk9BWk5zNjJUWGF0YUh4dVFOaDNldDJoOUt2QWFCX3RsM1U4YlZLOUVBd0RscHVUaTZzdlRTTm5OMUlMSHNMaGE2a0dtVGVOMmZjM3JkSXdqYmszSzB2LXFJemZKdjdKRnR4YnFZbkZhT2lzSDdacg?oc=5
 ⚪ Ekonomi Indonesia Ditopang Kelas Atas, Daya Beli Menengah Bawah Kian Tertekan - investortrust.id
    investortrust.id — https://news.google.com/rss/articles/CBMitAFBVV95cUxNOW5mYXYyRWdxQkZrNlZPRXV3c3NHZWJnTFFwQ0h5am5qNEs0RTdBd0lid05tTUJldVBGalhwRFUzUFFna1NMV2ptSEFTZEtmLWVtdlhfLW5RZEx6aURhbkh1ei16Z3BQZmYxNWlhekJZejRZYlo4N194b3B0cTNrdmYwc3dYUS1lXzNyNHVsRF9YWDhod1pyNGhWbDZkQXgwdlV5Q2dmNGtDOWJ5SGstcVpUM2g?oc=5
+⚪ Selat Hormuz Memanas, Harga Minyak Dunia Kembali Melonjak 3 Persen - news.schoolmedia.id
+   news.schoolmedia.id — https://news.google.com/rss/articles/CBMiqAFBVV95cUxQSEtvNUVZVFpKRjhtRlJ2b3FGbXBGVGdIWlN0VEE2NkZleG5fcFFIS2RWWElXd3NhcGFUUWM0bFNQUTNCQ25PdFEzZUNsM2xCTzRsTzBhNHN3bVpRMW00dWpZNGU2ZXp1SmJuZjNaU2hreFZXOHBwZ21OcGgyQ1lraVU5bGlSMTR4eURxX1Y4bUJvcGNFYmlYZHRHQzZLZ281SlF3VG44eVU?oc=5
+⚪ Cadangan Devisa RI Stabil US$145,3 Miliar di Tengah Gejolak Global - Bisnis.com - Ekonomi
+   Bisnis.com - Ekonomi — https://news.google.com/rss/articles/CBMitgFBVV95cUxNUXk2NGNvM0d6TDhhYU1hVXNCcGY5WlU4S3ZmWnZTX0JtSFRycmRfREtKXzZXTURTRmJ6QVNXak1rbHFsWHE0VVNUNXJsSXZwdlY3NHdGZl9wQ2Q1QXNXbWE1di03Rks0VktvTldNSmh3ejc3VWdrSGcwdkYtOGJsOUlGUTlzTFltd0RoM1BIak84djlXTk1mSDc2YXhmNkFPQlotd2U0MjBqT3VCd05PX05rZmo5dw?oc=5
 🟢 Ekonomi Indonesia Tumbuh 5,29%, Cek Negara-negara Tetangga - Market - Bloomberg Technoz
    Bloomberg Technoz — https://news.google.com/rss/articles/CBMirwFBVV95cUxNMjEwVHJNZUpVcDRBek96OUdBNlNSdUY5VklrUEVKZFQ1QkRwNVhyaTJQU0lxYjhJNlZNVklmbjRrUGxIVnlZLXR0ejBENllBdnJlNk5qYnE4cTdpU1N1OURJU25QaFZjTHRybHJtczV2VTVFVnNrbkNiYUo3c190OXdlcmxUck9DRFh3azJvaUl2ODRwc01EeGtGWnA4a2lhRzBKRGdfM1hHWHhSdkFn?oc=5
 🟢 Meski Masih Bertumbuh, Mesin Utama Ekonomi Rapuh - Kompas.id
    Kompas.id — https://news.google.com/rss/articles/CBMigwFBVV95cUxQZDVDcUZITVpoWTBJVVFnbU9jcFR5SlhWNnNyLXlENFFvamJyVkNqQ3p1eWpvLVRQVHF3dEhRMFlQUkVFUWdQVnlEc093a3ZCQ3FIUTFKUkd5bXpZMWZVYno2VDhGTzNLTkJkRUU2cFlOdFNxTlRYbFpXNmdHTGNXcW5TNA?oc=5
 
-🔗 https://kaela-btc-sinyal.netlify.app</pre>
-      </div>
-  <h2>Riwayat (3 laporan sebelumnya)</h2>
-  <div class="entry">
-        <div class="entry-header">
-          <span class="entry-type">📊 Laporan Harian</span>
-          <span class="entry-date">7/8/2026, 12.34.31</span>
-        </div>
-        <pre class="content">📊 Update BTC — 2026-08-07
+🔗 https://kaela-btc-sinyal.netlify.app</pre></div>
+    
+  </section>
+<section class="arsip-group">
+    <h2 class="group-title">📊 Laporan</h2>
+    <div class="latest"><div class="latest-label">TERBARU — 📊 Laporan Harian</div><div class="latest-date">7/8/2026, 12.46.49</div><pre class="content">📊 Update BTC — 2026-08-07
 Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
 ⏳ Halving berikutnya: 615 hari lagi (~2028-04-13)
 
-🔗 https://kaela-btc-sinyal.netlify.app</pre>
-      </div>
-<div class="entry">
-        <div class="entry-header">
-          <span class="entry-type">⚡ Nyopet Market (side, web only)</span>
-          <span class="entry-date">7/8/2026, 12.02.27</span>
-        </div>
-        <pre class="content">⚡ NYOPET MARKET — 2026-08-07
+🔗 https://kaela-btc-sinyal.netlify.app</pre></div>
+    
+  </section>
+<section class="arsip-group">
+    <h2 class="group-title">⚡ Sinyal Nyopet Market</h2>
+    <div class="latest"><div class="latest-label">TERBARU — ⚡ Nyopet Market</div><div class="latest-date">7/8/2026, 12.02.27</div><pre class="content">⚡ NYOPET MARKET — 2026-08-07
 Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.
 
-🔗 https://kaela-btc-sinyal.netlify.app</pre>
-      </div>
-<div class="entry">
-        <div class="entry-header">
-          <span class="entry-type">📊 Laporan Harian</span>
-          <span class="entry-date">7/8/2026, 12.02.27</span>
-        </div>
-        <pre class="content">📊 LAPORAN HARIAN KAELA — 2026-08-07
-
-⏳ Hari sejak halving terakhir (19 Apr 2024): 840 hari
-🎯 Estimasi halving berikutnya: 2028-04-13 (~615 hari lagi)
-📈 Harga BTC sekarang: $64,260.65
-
-Status: ⚪ TUNAI (menunggu Musim Tanam)
-
-📅 Musim Tanam berikutnya: 2026-10-19 – 2026-11-17 (tengah: 2026-11-07)
-⏱️ 73 hari lagi menuju Musim Tanam
-💰 Proyeksi harga terendah: $20,000 - $28,600 (tengah ~$24,300)
-
-🔔 BULAN YANG PERLU DIPERHATIKAN UNTUK AKUMULASI: OKTOBER–NOVEMBER 2026
-   Siapkan modal sesuai Exposure System (lihat calculator.js) begitu Musim Tanam tiba.
-
-🔗 https://kaela-btc-sinyal.netlify.app</pre>
-      </div>
+🔗 https://kaela-btc-sinyal.netlify.app</pre></div>
+    
+  </section>
 
   <script>
     const HALVING_TARGET = new Date('2028-04-13T13:11:00Z').getTime();

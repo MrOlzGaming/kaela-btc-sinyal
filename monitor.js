@@ -5,7 +5,6 @@
 const fs = require('fs');
 const path = require('path');
 const { generateDailyReport } = require('./dailyReport');
-const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 
 const STATE_PATH = path.join(__dirname, 'state.json');
@@ -36,7 +35,8 @@ async function main() {
   const report = generateDailyReport(now, price, position);
 
   console.log(report);
-  addEntry('report-daily', report, now);
+  // SENGAJA gak diarsip ke web publik -- ini laporan PRIBADI Olan, bukan buat grup/publik.
+  // Arsip web cuma 3 grup: Berita, Laporan (grup), Sinyal (lihat buildDashboard.js).
 
   // cek peringatan tambahan kalau posisi lagi OPEN dan deket SL
   if (position) {

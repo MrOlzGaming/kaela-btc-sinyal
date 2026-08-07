@@ -24,6 +24,17 @@ function addEntry(type, content, date = new Date()) {
   return entries[entries.length - 1];
 }
 
+// Sama kayak addEntry, tapi kalau udah ada entry TIPE SAMA di TANGGAL SAMA, ditimpa (bukan numpuk).
+// Dipakai buat report/news harian -- kalau script kepaksa di-run ulang hari yang sama
+// (manual test, retry, dst), web archive gak jadi kelipetan.
+function addOrReplaceDaily(type, content, date = new Date()) {
+  const dayKey = date.toISOString().slice(0, 10);
+  const entries = loadArchive().filter((e) => !(e.type === type && e.date.slice(0, 10) === dayKey));
+  entries.push({ type, date: date.toISOString(), content });
+  saveArchive(entries);
+  return entries[entries.length - 1];
+}
+
 function getLatest(type = null) {
   const entries = loadArchive();
   const filtered = type ? entries.filter((e) => e.type === type) : entries;
@@ -36,4 +47,4 @@ function getAll(type = null) {
   return [...filtered].reverse(); // terbaru duluan
 }
 
-module.exports = { addEntry, getLatest, getAll };
+module.exports = { addEntry, addOrReplaceDaily, getLatest, getAll };

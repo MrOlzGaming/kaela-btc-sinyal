@@ -7,7 +7,7 @@ const {
   generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly,
 } = require('./groupReport');
 const { sendWhatsApp } = require('./fonnte');
-const { addEntry } = require('./archive');
+const { addOrReplaceDaily } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 
 const BASE_URL = 'https://api.binance.com/api/v3/klines';
@@ -66,7 +66,7 @@ async function main() {
 
   for (const item of items) {
     console.log(item.content + '\n');
-    addEntry(item.type, item.content, now);
+    addOrReplaceDaily(item.type, item.content, now); // anti-dobel kalau ke-run ulang di hari sama
     await sendWhatsApp(item.content);
   }
 }

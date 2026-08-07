@@ -6,7 +6,7 @@
 const { fetchNewsItems } = require('./newsFetch');
 const { formatNewsUpdate } = require('./newsUpdate');
 const { sendWhatsApp } = require('./fonnte');
-const { addEntry } = require('./archive');
+const { addOrReplaceDaily } = require('./archive');
 
 async function main() {
   const now = new Date();
@@ -19,7 +19,7 @@ async function main() {
 
   const msg = formatNewsUpdate(now, items);
   console.log(msg);
-  addEntry('news', msg, now);
+  addOrReplaceDaily('news', msg, now); // anti-dobel kalau ke-run ulang di hari sama
   await sendWhatsApp(msg);
 }
 

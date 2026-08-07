@@ -6,12 +6,12 @@ const fs = require('fs');
 const path = require('path');
 const { generateDailyReport } = require('./dailyReport');
 const { addEntry } = require('./archive');
+const { fetchWithRetry } = require('./httpRetry');
 
 const STATE_PATH = path.join(__dirname, 'state.json');
 
 async function fetchCurrentPrice() {
-  const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-  if (!res.ok) throw new Error('Gagal ambil harga BTC: ' + res.status);
+  const res = await fetchWithRetry('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
   const data = await res.json();
   return parseFloat(data.price);
 }

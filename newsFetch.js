@@ -17,6 +17,8 @@ const NEGATIVE_KEYWORDS = [
   'selloff', 'melemah', 'merosot', 'PHK', 'layoff',
 ];
 
+const { fetchWithRetry } = require('./httpRetry');
+
 function decodeEntities(s) {
   return s
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
@@ -57,13 +59,13 @@ async function fetchNewsItems(maxPerFeed = 3) {
   const all = [];
   for (const feed of FEEDS) {
     try {
-      const res = await fetch(feed.url);
-      if (!res.ok) { console.error(`[News] Gagal fetch ${feed.label}: ${res.status}`); continue; }
+      const res = await fetchWithRetry(feed.url);
       const xml = await res.text();
       const items = parseRssItems(xml).slice(0, maxPerFeed);
       for (const item of items) all.push({ ...item, sentiment: tagSentiment(item.headline) });
     } catch (e) {
-      console.error(`[News] Error fetch ${feed.label}:`, e.message);
+      // 1 feed gagal (setelah retry) gak boleh gugurin feed lain -- lanjut aja
+      console.error(`[News] Gagal fetch ${feed.label} setelah retry:`, e.message);
     }
   }
 

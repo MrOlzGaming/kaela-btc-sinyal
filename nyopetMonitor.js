@@ -12,6 +12,7 @@ const { adaptiveSuperTrend } = require('./backtest/adaptiveSuperTrend');
 const { formatNyopetEvent, formatNyopetNoSignal, computeLevels } = require('./nyopetLog');
 const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
+const { fetchWithRetry } = require('./httpRetry');
 
 const STATE_PATH = path.join(__dirname, 'nyopet-state.json');
 const BASE_URL = 'https://api.binance.com/api/v3/klines';
@@ -21,8 +22,7 @@ function parseCandle(raw) {
 }
 
 async function fetchRecentKlines(interval, limit) {
-  const res = await fetch(`${BASE_URL}?symbol=BTCUSDT&interval=${interval}&limit=${limit}`);
-  if (!res.ok) throw new Error(`Binance API error ${res.status}: ${await res.text()}`);
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=${interval}&limit=${limit}`);
   const raw = await res.json();
   return raw.map(parseCandle);
 }

@@ -8,6 +8,7 @@ const {
 } = require('./groupReport');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
+const { fetchWithRetry } = require('./httpRetry');
 
 const BASE_URL = 'https://api.binance.com/api/v3/klines';
 
@@ -16,8 +17,7 @@ function parseCandle(raw) {
 }
 
 async function fetchDailyCandles(limit) {
-  const res = await fetch(`${BASE_URL}?symbol=BTCUSDT&interval=1d&limit=${limit}`);
-  if (!res.ok) throw new Error(`Binance API error ${res.status}: ${await res.text()}`);
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=1d&limit=${limit}`);
   const raw = await res.json();
   return raw.map(parseCandle);
 }
@@ -46,6 +46,10 @@ async function main() {
   const priceLastMonth = closeDaysAgo(closed, 30);
   const priceLastYear = closeDaysAgo(closed, 365);
 
+  // Cron jalan jam 00:00 UTC = 07:00 WIB (lihat .github/workflows/daily-report.yml).
+  // Karena WIB = UTC+7 dan 00:00+7 jam = 07:00 di HARI YANG SAMA (gak pernah lewat tengah malam),
+  // tanggal/hari-minggu/bulan di UTC pas jam segini SELALU sama persis dengan WIB -- aman pakai getUTC*.
+  // (Kalau jadwal cron berubah ke jam lain, asumsi ini WAJIB ditinjau ulang.)
   const items = [];
   if (priceYesterday !== null) {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday) });

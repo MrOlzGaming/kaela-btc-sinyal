@@ -2,6 +2,8 @@
 // Searah total: Kaela cuma KIRIM ke 1 Group ID spesifik, gak pernah baca command atau balas DM.
 // Tanpa secrets.js (belum di-setup di mesin ini), fungsi ini otomatis no-op -- aman buat dev/testing lokal.
 
+const { fetchWithRetry } = require('./httpRetry');
+
 const FONNTE_URL = 'https://api.fonnte.com/send';
 
 function loadSecrets() {
@@ -29,19 +31,25 @@ async function sendWhatsApp(message, target) {
     message,
   });
 
-  const res = await fetch(FONNTE_URL, {
-    method: 'POST',
-    headers: { Authorization: secrets.FONNTE_TOKEN },
-    body,
-  });
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok || data.status === false) {
-    console.error('[Fonnte] Gagal kirim WA:', JSON.stringify(data));
-    return { ok: false, data };
+  // Gagal kirim WA gak boleh gugurin seluruh run (arsip web tetap harus jalan) -- retry dulu,
+  // kalau tetap gagal, cukup dicatat, jangan throw ke pemanggil.
+  try {
+    const res = await fetchWithRetry(FONNTE_URL, {
+      method: 'POST',
+      headers: { Authorization: secrets.FONNTE_TOKEN },
+      body,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.status === false) {
+      console.error('[Fonnte] Fonnte nolak pesan:', JSON.stringify(data));
+      return { ok: false, data };
+    }
+    console.log('[Fonnte] Terkirim ke grup WA.');
+    return { ok: true, data };
+  } catch (e) {
+    console.error('[Fonnte] Gagal kirim WA setelah retry:', e.message);
+    return { ok: false, error: e.message };
   }
-  console.log('[Fonnte] Terkirim ke grup WA.');
-  return { ok: true, data };
 }
 
 module.exports = { sendWhatsApp };

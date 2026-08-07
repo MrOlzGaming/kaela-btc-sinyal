@@ -20,7 +20,6 @@ function formatNewsUpdate(now, items) {
   const capped = items.slice(0, MAX_ITEMS);
   const lines = [];
   lines.push(`📰 KAELA NEWS — ${now.toISOString().slice(0, 10)}`);
-  lines.push('(judul aja, cek sumbernya buat baca lengkap — gak ngaruh ke keputusan tanam/panen)');
   lines.push('');
   for (const item of capped) {
     const tag = item.sentiment === 'positif' ? '🟢' : item.sentiment === 'negatif' ? '🔴' : '⚪';

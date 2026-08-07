@@ -1,9 +1,12 @@
 // Cari berita GRATIS lewat Google News RSS (no API key, no LLM) -- cakupan global + Indonesia + kripto,
 // sesuai scope newsUpdate.js. Sentimen ditag pakai keyword matching sederhana (deterministik, "otak sendiri").
 
+// Semua feed pakai locale Indonesia (hl=id&gl=ID&ceid=ID:id) -- Google News otomatis kasih
+// hasil dari sumber berbahasa Indonesia buat topik apapun (termasuk bitcoin/global), jadi gak
+// perlu translate API/LLM tambahan buat "meng-Indonesiakan" berita.
 const FEEDS = [
-  { url: 'https://news.google.com/rss/search?q=bitcoin%20when:1d&hl=en-US&gl=US&ceid=US:en', label: 'Bitcoin (global)' },
-  { url: 'https://news.google.com/rss/search?q=ekonomi%20global%20when:1d&hl=en-US&gl=US&ceid=US:en', label: 'Ekonomi Global' },
+  { url: 'https://news.google.com/rss/search?q=bitcoin%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Bitcoin' },
+  { url: 'https://news.google.com/rss/search?q=ekonomi%20global%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Ekonomi Global' },
   { url: 'https://news.google.com/rss/search?q=ekonomi%20indonesia%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Ekonomi Indonesia' },
 ];
 

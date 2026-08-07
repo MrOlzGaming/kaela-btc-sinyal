@@ -31,7 +31,7 @@ function formatNyopetEvent({ type, price, entry }) {
   if (type === 'ENTRY') {
     const lv = computeLevels(price);
     return [
-      `⚡ NYOPET — ENTRY BARU`,
+      `⚡ NYOPET MARKET — ENTRY BARU`,
       `🟢 LONG @ ${fmt(price)}`,
       `Nyawa (SL): ${fmt(lv.sl)}`,
       `TP (1:2): ${fmt(lv.tp)}`,
@@ -47,7 +47,7 @@ function formatNyopetEvent({ type, price, entry }) {
 
   if (type === 'SL') {
     return [
-      `⚡ NYOPET — ❌ KENA STOP LOSS`,
+      `⚡ NYOPET MARKET — ❌ KENA STOP LOSS`,
       `🟢 LONG | Entry ${fmt(entry)} -> SL ${fmt(price)}`,
       time,
       '',
@@ -57,7 +57,7 @@ function formatNyopetEvent({ type, price, entry }) {
 
   // TP
   return [
-    `⚡ NYOPET — ✅ TP KENA (RR 1:2)`,
+    `⚡ NYOPET MARKET — ✅ TP KENA (RR 1:2)`,
     `🟢 LONG | Entry ${fmt(entry)} -> TP ${fmt(price)}`,
     time,
     '',
@@ -65,7 +65,16 @@ function formatNyopetEvent({ type, price, entry }) {
   ].join('\n');
 }
 
-module.exports = { formatNyopetEvent, computeLevels, NYAWA_PCT, RR };
+function formatNyopetNoSignal(now = new Date()) {
+  return [
+    `⚡ NYOPET MARKET — ${now.toISOString().slice(0, 10)}`,
+    'Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.',
+    '',
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
+module.exports = { formatNyopetEvent, formatNyopetNoSignal, computeLevels, NYAWA_PCT, RR };
 
 if (require.main === module) {
   console.log(formatNyopetEvent({ type: 'ENTRY', price: 64500 }));

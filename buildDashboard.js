@@ -14,7 +14,7 @@ const TYPE_LABEL = {
   'report-monthly': '🗓️ Laporan Bulanan',
   'report-yearly': '📅 Laporan Tahunan',
   news: '📰 Kaela News',
-  nyopet: '⚡ Nyopet (side, web only)',
+  nyopet: '⚡ Nyopet Market (side, web only)',
 };
 
 function escapeHtml(s) {

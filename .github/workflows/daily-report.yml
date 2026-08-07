@@ -1,0 +1,51 @@
+name: Laporan Harian (Siklus Halving + Grup WA)
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 00:00 UTC = 07:00 WIB, ikut jadwal closing candle
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # secrets.js gitignored di repo -- ditulis ulang tiap run dari GitHub Actions Secrets
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Laporan pribadi Olan (monitor.js)
+        run: node monitor.js
+
+      - name: Laporan grup WA (groupMonitor.js)
+        run: node groupMonitor.js
+
+      - name: Rebuild web/index.html dari archive terbaru
+        run: node buildDashboard.js
+
+      - name: Commit & push state/archive/web (persist di git, satu-satunya storage yang tahan di CI)
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f state.json archive.json web/index.html
+          git diff --staged --quiet || git commit -m "Auto: laporan harian $(date -u +%Y-%m-%d)"
+          git pull --rebase origin master
+          git push
+
+      - name: Deploy web/ ke Netlify
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

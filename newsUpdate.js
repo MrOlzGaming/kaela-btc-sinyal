@@ -8,8 +8,8 @@
 // Jumlah item: 1-20 per hari (fleksibel sesuai yang relevan hari itu, gak dipaksa penuh).
 // Jadwal kirim: 09:00 WIB tiap hari (beda dari Kaela Report yang 07:00 WIB, biar gak numpuk).
 //
-// Live nanti: bagian pencarian berita perlu API berita (atau proses riset berkala), diringkas,
-// lalu dikirim lewat fungsi format di bawah. Contoh isi & format ada di bawah ini.
+// Pencarian berita: newsFetch.js (RSS Google News gratis, no API key, sentimen keyword-based --
+// bukan LLM, deterministik sesuai filosofi Kaela). Runner harian: newsMonitor.js.
 
 const { WEB_URL } = require('./config');
 

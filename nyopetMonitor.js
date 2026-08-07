@@ -3,15 +3,15 @@
 // Spesifikasi final (lihat nyopetLog.js header, hasil sweep 315 kombinasi):
 //   Hourly (entry) + Weekly (filter arah, wajib BULLISH), Long-only,
 //   Nyawa 10%, TP tunggal RR 1:2, stake 15% saldo terbaru (compound).
-// Nanti kalau WA (Fonnte) udah disiapkan, tinggal sambungin tiap event di bawah ke situ
-// (pola sama seperti monitor.js) — dikirim ke WEB (arsip) DAN grup WA, bukan salah satu aja.
+// Tiap event dikirim ke WEB (arsip) DAN grup WA "BTC Sniper Club" lewat Fonnte (fonnte.js).
 
 const fs = require('fs');
 const path = require('path');
 const { superTrend } = require('./backtest/indicators');
 const { adaptiveSuperTrend } = require('./backtest/adaptiveSuperTrend');
-const { formatNyopetEvent, computeLevels } = require('./nyopetLog');
+const { formatNyopetEvent, formatNyopetNoSignal, computeLevels } = require('./nyopetLog');
 const { addEntry } = require('./archive');
+const { sendWhatsApp } = require('./fonnte');
 
 const STATE_PATH = path.join(__dirname, 'nyopet-state.json');
 const BASE_URL = 'https://api.binance.com/api/v3/klines';
@@ -28,7 +28,7 @@ async function fetchRecentKlines(interval, limit) {
 }
 
 function loadState() {
-  if (!fs.existsSync(STATE_PATH)) return { position: null, lastProcessedCloseTime: null };
+  if (!fs.existsSync(STATE_PATH)) return { position: null, lastProcessedCloseTime: null, lastNoSignalStatusDate: null };
   return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
 }
 
@@ -57,58 +57,68 @@ async function main() {
   }
 
   const last = hourly[hourly.length - 1];
-  if (last.closeTime === state.lastProcessedCloseTime) {
-    console.log('[Nyopet]', now.toISOString(), '— candle jam ini sudah diproses, skip.');
-    return;
-  }
-
-  const hourlyAdaptive = adaptiveSuperTrend(hourly);
-  const weeklyTrend = superTrend(weekly, 10, 3);
-  const i = hourly.length - 1;
-  const currTrend = hourlyAdaptive[i]?.trend;
-  const prevTrend = hourlyAdaptive[i - 1]?.trend;
-  const weeklyNow = weeklyTrend[weeklyTrend.length - 1]?.trend;
-
   const events = [];
+  const isNewCandle = last.closeTime !== state.lastProcessedCloseTime;
 
-  // 1. posisi lagi OPEN? cek SL/TP dulu
-  if (state.position) {
-    const pos = state.position;
-    const hitSL = last.low <= pos.slPrice;
-    const hitTP = last.high >= pos.tpPrice;
-    if (hitSL || hitTP) {
-      const type = hitTP ? 'TP' : 'SL';
-      const price = hitTP ? pos.tpPrice : pos.slPrice;
-      events.push(formatNyopetEvent({ type, price, entry: pos.entry }));
-      state.position = null;
+  if (isNewCandle) {
+    const hourlyAdaptive = adaptiveSuperTrend(hourly);
+    const weeklyTrend = superTrend(weekly, 10, 3);
+    const i = hourly.length - 1;
+    const currTrend = hourlyAdaptive[i]?.trend;
+    const prevTrend = hourlyAdaptive[i - 1]?.trend;
+    const weeklyNow = weeklyTrend[weeklyTrend.length - 1]?.trend;
+
+    // 1. posisi lagi OPEN? cek SL/TP dulu
+    if (state.position) {
+      const pos = state.position;
+      const hitSL = last.low <= pos.slPrice;
+      const hitTP = last.high >= pos.tpPrice;
+      if (hitSL || hitTP) {
+        const type = hitTP ? 'TP' : 'SL';
+        const price = hitTP ? pos.tpPrice : pos.slPrice;
+        events.push(formatNyopetEvent({ type, price, entry: pos.entry }));
+        state.position = null;
+      }
     }
+
+    // 2. gak ada posisi (baru ditutup atau memang lagi kosong)? cek entry baru
+    if (!state.position) {
+      const flippedBullish = currTrend === 'BULLISH' && prevTrend === 'BEARISH';
+      if (flippedBullish && weeklyNow === 'BULLISH') {
+        const entry = last.close;
+        const lv = computeLevels(entry);
+        state.position = {
+          entry, slPrice: lv.sl, tpPrice: lv.tp,
+          entryDate: new Date(last.closeTime).toISOString(),
+        };
+        events.push(formatNyopetEvent({ type: 'ENTRY', price: entry }));
+      }
+    }
+
+    state.lastProcessedCloseTime = last.closeTime;
+  } else {
+    console.log('[Nyopet Market]', now.toISOString(), '— candle jam ini sudah diproses.');
   }
 
-  // 2. gak ada posisi (baru ditutup atau memang lagi kosong)? cek entry baru
-  if (!state.position) {
-    const flippedBullish = currTrend === 'BULLISH' && prevTrend === 'BEARISH';
-    if (flippedBullish && weeklyNow === 'BULLISH') {
-      const entry = last.close;
-      const lv = computeLevels(entry);
-      state.position = {
-        entry, slPrice: lv.sl, tpPrice: lv.tp,
-        entryDate: new Date(last.closeTime).toISOString(),
-      };
-      events.push(formatNyopetEvent({ type: 'ENTRY', price: entry }));
-    }
+  // Status harian: kalau HARI INI belum ada event nyata, gak ada posisi terbuka,
+  // dan belum kirim status hari ini -- kirim 1x "sedang mengumpulkan data" (keputusan Olan: lapor tiap hari, jangan diam total).
+  const todayStr = now.toISOString().slice(0, 10);
+  if (events.length === 0 && !state.position && state.lastNoSignalStatusDate !== todayStr) {
+    events.push(formatNyopetNoSignal(now));
+    state.lastNoSignalStatusDate = todayStr;
   }
 
-  state.lastProcessedCloseTime = last.closeTime;
   saveState(state);
 
   if (events.length === 0) {
-    console.log(`[Nyopet] ${now.toISOString()} — no event. Trend hourly: ${currTrend}, Weekly: ${weeklyNow}, posisi: ${state.position ? 'OPEN sejak ' + state.position.entryDate : '-'}`);
+    console.log(`[Nyopet Market] ${now.toISOString()} — gak ada yang perlu dikirim. posisi: ${state.position ? 'OPEN sejak ' + state.position.entryDate : '-'}`);
     return;
   }
 
   for (const msg of events) {
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
+    await sendWhatsApp(msg);
   }
 }
 

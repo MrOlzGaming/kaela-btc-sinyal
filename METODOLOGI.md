@@ -63,22 +63,22 @@ Pola ini diuji dengan metode **walk-forward** — aturan tiap siklus HANYA memak
 
 **Hasil tervalidasi (3 siklus penuh, 2015-2025):** modal $500 → $288.911, CAGR 73,8%/tahun, drawdown terealisasi 0% (tidak ada satupun dari 3 siklus yang kena stop-loss).
 
-## ⚡ Mode Nyopet — sinyal tambahan (opsional, syarat ketat)
+## ⚡ Mode Nyopet Market — sinyal tambahan (opsional, syarat ketat)
 
 Setelah menguji puluhan pendekatan — 12+ strategi utama, ditambah **315 kombinasi parameter** khusus buat side-trading — satu kesimpulan tetap kokoh: **strategi terbaik yang pernah kami temukan, diuji jujur lewat 9 tahun data, tetap Siklus Halving: CAGR 73,8%/tahun, drawdown 0%.** Tidak ada satupun pendekatan lain yang mendekati, apalagi mengalahkannya. Angka ini bukan tebakan pertama yang kebetulan bagus — ini hasil akhir dari proses bolak-balik mencari yang lebih baik, dan gagal menemukannya.
 
-Karena Kaela sebagian besar waktu **diam** (menunggu window ~4 tahun sekali), kami sediakan **Mode Nyopet** — sinyal tambahan opsional dari pergerakan market jangka pendek (kombinasi Hourly + Weekly), supaya perjalanan tidak monoton. Ini **bukan pengganti** strategi utama, cuma pelengkap buat yang mau tetap aktif sambil menunggu.
+Karena Kaela sebagian besar waktu **diam** (menunggu window ~4 tahun sekali), kami sediakan **Mode Nyopet Market** — sinyal tambahan opsional dari pergerakan market jangka pendek (kombinasi Hourly + Weekly), supaya perjalanan tidak monoton. Ini **bukan pengganti** strategi utama, cuma pelengkap buat yang mau tetap aktif sambil menunggu.
 
 **Hasil backtest jujur (9 tahun data, 71 trade):**
 - CAGR **20,1%/tahun** (jauh di bawah 73,8%/tahun Siklus Halving)
 - Winrate 45,1%
 - Max Drawdown **47,0%** (jauh lebih dalam dari 0% Siklus Halving)
 
-🚨 **Aturan ketat, wajib dipatuhi kalau ikut Mode Nyopet:**
-- **DILARANG KERAS ALL-IN.** Titik, tanpa pengecualian. Stake per posisi wajib 15% dari saldo khusus Nyopet.
+🚨 **Aturan ketat, wajib dipatuhi kalau ikut Mode Nyopet Market:**
+- **DILARANG KERAS ALL-IN.** Titik, tanpa pengecualian. Stake per posisi wajib 15% dari saldo khusus Nyopet Market.
 - **Sediakan modal terpisah yang memang siap hilang ("modal aman")** — jangan pernah pakai modal yang dialokasikan untuk Siklus Halving atau kebutuhan hidup sehari-hari.
 - Nyawa (Batas Rugi) tetap 10% per posisi, leverage otomatis mengikuti itu — bukan pilihan bebas untuk diubah-ubah sendiri.
-- Kalau tidak bisa tertib mengikuti aturan di atas, lebih baik tidak usah ikut Mode Nyopet sama sekali. **Disiplin adalah syarat, bukan saran.**
+- Kalau tidak bisa tertib mengikuti aturan di atas, lebih baik tidak usah ikut Mode Nyopet Market sama sekali. **Disiplin adalah syarat, bukan saran.**
 
 ## Disiplin adalah kunci
 

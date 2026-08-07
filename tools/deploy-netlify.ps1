@@ -1,7 +1,10 @@
 # Deploy web/ ke Netlify — pakai netlify-cli (sudah terpasang global), non-interaktif via token.
+# Akun target: olz.gaming.master@gmail.com, team "olz-gaming-master" -- proyek ini SENDIRI,
+# terpisah dari akun/proyek Netlify lain. Token WAJIB digenerate dari akun itu.
 #
 # Cara pakai:
-#   1. Buat Personal Access Token di https://app.netlify.com/user/applications#personal-access-tokens
+#   1. Login ke app.netlify.com sebagai olz.gaming.master@gmail.com
+#      -> buat Personal Access Token di User settings > Applications > Personal access tokens
 #   2. Deploy pertama kali (bikin site baru):
 #        .\tools\deploy-netlify.ps1 -Token "nfp_xxxxx" -SiteName "kaela-btc-sinyal"
 #   3. Deploy berikutnya (situs sudah ada, tinggal update):
@@ -14,7 +17,8 @@
 param(
   [Parameter(Mandatory = $true)][string]$Token,
   [string]$SiteName = "kaela-btc-sinyal",
-  [string]$SiteId = ""
+  [string]$SiteId = "",
+  [string]$AccountSlug = "olz-gaming-master"
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,12 +33,12 @@ if (-not (Test-Path $WebDir)) {
 $env:NETLIFY_AUTH_TOKEN = $Token
 
 if (-not $SiteId) {
-  Write-Host "=== Belum ada SiteId, bikin site baru: $SiteName ==="
-  $createRaw = netlify sites:create --name $SiteName --json 2>&1
+  Write-Host "=== Belum ada SiteId, bikin site baru: $SiteName (team: $AccountSlug) ==="
+  $createRaw = netlify sites:create --name $SiteName --account-slug $AccountSlug --json 2>&1
   Write-Host $createRaw
   try {
     $created = $createRaw | ConvertFrom-Json
-    $SiteId = $created.site_id
+    $SiteId = $created.id
   } catch {
     Write-Error "Gagal parse output netlify sites:create. Cek pesan di atas (mungkin nama '$SiteName' sudah dipakai orang lain -- coba -SiteName lain)."
     exit 1

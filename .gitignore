@@ -17,3 +17,6 @@ nyopet-state.json
 *.jpg
 *.png
 !web/icons/*
+
+# kredensial -- JANGAN PERNAH commit. Tanpa file ini, fonnte.js otomatis no-op (aman buat dev).
+secrets.js

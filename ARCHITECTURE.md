@@ -72,7 +72,7 @@ Binance API (candle Daily + 4H)
        - Tag sentimen: 🟢 positif / 🔴 negatif / ⚪ netral, tanpa bias
        - ⚠️ MURNI INFORMASI — modul ini gak pernah dipanggil oleh signal/backtest/logic tanam-panen manapun
 
-    C. ⚡ NYOPET (nyopetLog.js) — SIDE-EXPERIMENT, terpisah total dari Siklus Halving
+    C. ⚡ NYOPET MARKET (nyopetLog.js) — SIDE-EXPERIMENT, terpisah total dari Siklus Halving
        - **SPEK FINAL** (dipilih dari sweep sistematis 315 kombinasi, backtest/nyopetSweep.js —
          cari kombinasi Nyawa x Stake x RR x Timeframe dgn CAGR terbaik yg Max DD masih <=50%):
            Timeframe : Hourly (trigger entry) + Weekly (filter arah, harus BULLISH)
@@ -82,7 +82,7 @@ Binance API (candle Daily + 4H)
            Stake     : 15% saldo TERBARU tiap entry (compound otomatis, ikut naik-turun saldo)
        - Hasil backtest jujur, 9 tahun data Binance (2017-2026), 71 trade, walk-forward-safe:
          **CAGR 20,1%/tahun, winrate 45,1%, Max Drawdown 47,0%**
-         (dibanding Siklus Halving: CAGR 73,8%/tahun, Max DD 0% — Nyopet TETAP kalah jauh dan
+         (dibanding Siklus Halving: CAGR 73,8%/tahun, Max DD 0% — Nyopet Market TETAP kalah jauh dan
          JAUH lebih berisiko; ini side-experiment modal super mini, BUKAN pesaing strategi utama)
        - Kirim ke WEB (arsip) DAN grup WA, tiap syarat terpenuhi: ENTRY, lalu SL atau TP kena
        - 🚨 Disclaimer keras "JANGAN ALL-IN, stake wajib 15% — titik" wajib nempel di tiap ENTRY

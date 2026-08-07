@@ -10,24 +10,29 @@ const { localDateKey } = require('./config');
 const NEXT_HALVING_EST = '2028-04-13T13:11:00Z'; // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WEB_DIR = path.join(__dirname, 'web');
 
+// 5 kategori sinyal, 1 warna tetap per kategori -- dipakai KONSISTEN di web (border+emoji) DAN
+// WA (emoji kotak warna, lihat categoryColors.js). Biar orang bisa scan cari warna tertentu tanpa
+// baca teks lengkap (misal cuma mau Nyopet Market, langsung cari 🟧).
+const { CATEGORY_COLOR, categoryOfType } = require('./categoryColors');
+
 const TYPE_LABEL = {
-  'report-daily': '📊 Laporan Harian',
-  'report-weekly': '📆 Laporan Mingguan',
-  'report-monthly': '🗓️ Laporan Bulanan',
-  'report-yearly': '📅 Laporan Tahunan',
-  news: '📰 Kaela News',
-  nyopet: '⚡ Nyopet Market',
-  whale: '🐋 Whale Alert',
-  'econ-calendar': '📅 Jadwal Ekonomi',
+  'report-daily': `${CATEGORY_COLOR.laporan.emoji} 📊 Laporan Harian`,
+  'report-weekly': `${CATEGORY_COLOR.laporan.emoji} 📆 Laporan Mingguan`,
+  'report-monthly': `${CATEGORY_COLOR.laporan.emoji} 🗓️ Laporan Bulanan`,
+  'report-yearly': `${CATEGORY_COLOR.laporan.emoji} 📅 Laporan Tahunan`,
+  news: `${CATEGORY_COLOR.news.emoji} 📰 Kaela News`,
+  nyopet: `${CATEGORY_COLOR.nyopet.emoji} ⚡ Nyopet Market`,
+  whale: `${CATEGORY_COLOR.whale.emoji} 🐋 Whale Alert`,
+  'econ-calendar': `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`,
 };
 
 // Urutan & isi grup TETAP di Arsip -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
 const GROUPS = [
-  { key: 'news', label: '📰 Berita', match: (type) => type === 'news' },
-  { key: 'laporan', label: '📊 Laporan', match: (type) => type.startsWith('report-') },
-  { key: 'sinyal', label: '⚡ Sinyal Nyopet Market', match: (type) => type === 'nyopet' },
-  { key: 'whale', label: '🐋 Aktivitas Whale', match: (type) => type === 'whale' },
-  { key: 'econ', label: '📅 Jadwal Ekonomi', match: (type) => type === 'econ-calendar' },
+  { key: 'news', category: 'news', label: `${CATEGORY_COLOR.news.emoji} 📰 Berita`, match: (type) => type === 'news' },
+  { key: 'laporan', category: 'laporan', label: `${CATEGORY_COLOR.laporan.emoji} 📊 Laporan`, match: (type) => type.startsWith('report-') },
+  { key: 'sinyal', category: 'nyopet', label: `${CATEGORY_COLOR.nyopet.emoji} ⚡ Sinyal Nyopet Market`, match: (type) => type === 'nyopet' },
+  { key: 'whale', category: 'whale', label: `${CATEGORY_COLOR.whale.emoji} 🐋 Aktivitas Whale`, match: (type) => type === 'whale' },
+  { key: 'econ', category: 'econ', label: `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`, match: (type) => type === 'econ-calendar' },
 ];
 
 function escapeHtml(s) {
@@ -72,16 +77,19 @@ function renderEntry(e, { highlight = false } = {}) {
   const cls = highlight ? 'latest' : 'entry';
   const labelCls = highlight ? 'latest-label' : 'entry-type';
   const dateCls = highlight ? 'latest-date' : 'entry-date';
+  const cat = categoryOfType(e.type);
+  const borderStyle = cat ? ` style="border-left: 4px solid ${CATEGORY_COLOR[cat].hex};"` : '';
   const header = highlight
     ? `<div class="${labelCls}">${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
     : `<div class="entry-header"><span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span><span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span></div>`;
-  return `<div class="${cls}">${header}<pre class="content">${linkify(escapeHtml(e.content))}</pre></div>`;
+  return `<div class="${cls}"${borderStyle}>${header}<pre class="content">${linkify(escapeHtml(e.content))}</pre></div>`;
 }
 
 function renderGroup(group, entries) {
+  const titleStyle = ` style="border-bottom-color: ${CATEGORY_COLOR[group.category].hex};"`;
   if (entries.length === 0) {
     return `<section class="arsip-group">
-      <h2 class="group-title">${group.label}</h2>
+      <h2 class="group-title"${titleStyle}>${group.label}</h2>
       <div class="empty">Belum ada arsip.</div>
     </section>`;
   }
@@ -90,7 +98,7 @@ function renderGroup(group, entries) {
   const restHtml = rest.map((e) => renderEntry(e)).join('\n');
 
   return `<section class="arsip-group">
-    <h2 class="group-title">${group.label}</h2>
+    <h2 class="group-title"${titleStyle}>${group.label}</h2>
     ${renderEntry(latest, { highlight: true })}
     ${rest.length > 0 ? `<details class="riwayat"><summary>Riwayat (${rest.length})</summary>${restHtml}</details>` : ''}
   </section>`;

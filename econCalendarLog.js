@@ -1,10 +1,11 @@
 // Format pesan Jadwal Ekonomi -- MURNI INFORMASI (sama kayak Kaela News), gak pengaruhi sinyal.
 
 const { WEB_URL, localDateKey } = require('./config');
+const { CATEGORY_COLOR } = require('./categoryColors');
 
 function formatEconCalendar(now, events) {
   const lines = [];
-  lines.push(`📅 JADWAL EKONOMI HARI INI — ${localDateKey(now)}`);
+  lines.push(`${CATEGORY_COLOR.econ.emoji} 📅 JADWAL EKONOMI HARI INI — ${localDateKey(now)}`);
   lines.push('(event USD dampak tinggi aja -- paling relevan buat BTC lewat sentimen risiko)');
   lines.push('');
   for (const e of events) {

@@ -10,6 +10,7 @@
 // Sinyal murni — TIDAK PERNAH sebut saldo/stake dalam nominal dolar.
 
 const { WEB_URL, toLocal, localDateKey } = require('./config');
+const { CATEGORY_COLOR } = require('./categoryColors');
 
 const NYAWA_PCT = 0.10;
 const RR = 2;
@@ -31,7 +32,7 @@ function formatNyopetEvent({ type, price, entry }) {
   if (type === 'ENTRY') {
     const lv = computeLevels(price);
     return [
-      `⚡ NYOPET MARKET — ENTRY BARU`,
+      `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ENTRY BARU`,
       `🟢 LONG @ ${fmt(price)}`,
       `Nyawa (SL): ${fmt(lv.sl)}`,
       `TP (1:2): ${fmt(lv.tp)}`,
@@ -47,7 +48,7 @@ function formatNyopetEvent({ type, price, entry }) {
 
   if (type === 'SL') {
     return [
-      `⚡ NYOPET MARKET — ❌ KENA STOP LOSS`,
+      `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ❌ KENA STOP LOSS`,
       `🟢 LONG | Entry ${fmt(entry)} -> SL ${fmt(price)}`,
       time,
       '',
@@ -57,7 +58,7 @@ function formatNyopetEvent({ type, price, entry }) {
 
   // TP
   return [
-    `⚡ NYOPET MARKET — ✅ TP KENA (RR 1:2)`,
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ✅ TP KENA (RR 1:2)`,
     `🟢 LONG | Entry ${fmt(entry)} -> TP ${fmt(price)}`,
     time,
     '',
@@ -67,7 +68,7 @@ function formatNyopetEvent({ type, price, entry }) {
 
 function formatNyopetNoSignal(now = new Date()) {
   return [
-    `⚡ NYOPET MARKET — ${localDateKey(now)}`,
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${localDateKey(now)}`,
     'Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.',
     '',
     `🔗 ${WEB_URL}`,

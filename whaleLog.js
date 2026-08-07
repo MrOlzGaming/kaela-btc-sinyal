@@ -8,6 +8,7 @@
 //        wallet biasa, cuma "gak teridentifikasi" karena daftar exchange kita gak lengkap)
 
 const { WEB_URL, toLocal } = require('./config');
+const { CATEGORY_COLOR } = require('./categoryColors');
 
 function fmtBtc(n) {
   return n.toLocaleString('id-ID', { maximumFractionDigits: 2 });
@@ -37,7 +38,7 @@ function formatWhaleAlert(tx, btcPriceUsd, usdToIdr) {
   }
 
   return [
-    `${tag} PERGERAKAN BESAR TERDETEKSI`,
+    `${CATEGORY_COLOR.whale.emoji} ${tag} PERGERAKAN BESAR TERDETEKSI`,
     `${fmtBtc(tx.totalBtc)} BTC (~${fmtUsd(usdValue)} / ~${fmtIdr(idrValue)}) berpindah dalam 1 transaksi di blockchain.`,
     directionLine,
     `TXID: ${tx.txid}`,

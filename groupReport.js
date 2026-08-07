@@ -3,6 +3,7 @@
 // Selama window Musim Tanam/Panen: nambahin pesan pengingat komitmen, bahasa santai, gonta-ganti biar gak monoton.
 
 const { WEB_URL, toLocal, localDateKey } = require('./config');
+const { CATEGORY_COLOR } = require('./categoryColors');
 
 const NEXT_HALVING_EST = new Date('2028-04-13T13:11:00Z'); // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WINDOW_START = new Date('2026-10-19T00:00:00Z');
@@ -57,7 +58,7 @@ function getWindowPhase(now) {
 function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   const lines = [];
   const change = pctChange(priceToday, priceYesterday);
-  lines.push(`📊 Update BTC — ${localDateKey(now)}`);
+  lines.push(`${CATEGORY_COLOR.laporan.emoji} 📊 Update BTC — ${localDateKey(now)}`);
   lines.push(`Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`);
   lines.push(halvingLine(now));
 
@@ -81,7 +82,7 @@ function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
 function generateGroupWeekly(now, priceToday, priceLastWeek) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
-    `📆 Laporan Mingguan BTC — minggu ${localDateKey(now)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📆 Laporan Mingguan BTC — minggu ${localDateKey(now)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
     halvingLine(now),
     '',
@@ -92,7 +93,7 @@ function generateGroupWeekly(now, priceToday, priceLastWeek) {
 function generateGroupMonthly(now, priceToday, priceLastMonth) {
   const change = pctChange(priceToday, priceLastMonth);
   return [
-    `🗓️ Laporan Bulanan BTC — ${localDateKey(now).slice(0, 7)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 🗓️ Laporan Bulanan BTC — ${localDateKey(now).slice(0, 7)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari bulan lalu)`,
     halvingLine(now),
     '',
@@ -103,7 +104,7 @@ function generateGroupMonthly(now, priceToday, priceLastMonth) {
 function generateGroupYearly(now, priceToday, priceLastYear) {
   const change = pctChange(priceToday, priceLastYear);
   return [
-    `📅 Laporan Tahunan BTC — ${toLocal(now).getUTCFullYear()}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📅 Laporan Tahunan BTC — ${toLocal(now).getUTCFullYear()}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari tahun lalu)`,
     halvingLine(now),
     '',

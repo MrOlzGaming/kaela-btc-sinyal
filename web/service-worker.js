@@ -1,12 +1,14 @@
 // Kaela BTC Sinyal — service worker sederhana. Cache halaman inti biar tetap kebuka offline
 // (harga live gak akan update kalau offline, tapi laporan terakhir & kalkulator tetap bisa dibuka).
 
-const CACHE_NAME = 'kaela-v1';
+const CACHE_NAME = 'kaela-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
+  './arsip.html',
   './kalkulator.html',
-  './metodologi.html',
+  './metodologi-sniper.html',
+  './metodologi-nyopet.html',
   './css/variables.css',
   './manifest.json',
   './icons/icon.svg',

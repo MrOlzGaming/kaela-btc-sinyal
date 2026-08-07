@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kaela BTC Sinyal — Arsip</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7931a">
+<meta name="description" content="Arsip laporan & berita Kaela BTC Sinyal — sistem Sniper siklus halving Bitcoin.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  nav { display: flex; gap: 10px; margin: 14px 0; }
+  nav a { text-decoration: none; }
+  .welcome { background: var(--clr-bg-elevated); border-radius: var(--radius-md); padding: 16px; margin: 16px 0; line-height: 1.6; }
+  .welcome strong { color: var(--clr-primary); }
+  .arsip-group { margin-top: 34px; }
+  .group-title { font-size: 1.1rem; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border); padding-bottom: 8px; margin-bottom: 14px; }
+  .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
+  .latest-label { color: var(--clr-success); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
+  .latest-date, .entry-date { color: var(--clr-text-muted); font-size: 0.8rem; }
+  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; word-break: break-word; }
+  .content a { color: var(--clr-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .content a:hover { text-decoration-thickness: 2px; }
+  .news-positive { color: var(--clr-success); }
+  .news-negative { color: var(--clr-danger); }
+  .news-neutral { color: var(--clr-text-muted); }
+  .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
+  .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .entry-type { font-weight: 600; }
+  .riwayat { margin-top: 10px; }
+  .riwayat summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.9rem; padding: 6px 0; }
+  .empty { color: var(--clr-text-muted); text-align: center; padding: 20px; background: var(--clr-bg-elevated); border-radius: var(--radius-sm); }
+  .countdown { background: linear-gradient(135deg, #1f2937, #111827); border: 2px solid var(--clr-warning); border-radius: var(--radius-lg); padding: 18px; margin: 16px 0; text-align: center; }
+  .countdown-label { color: var(--clr-warning); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .countdown-grid { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .countdown-box { background: var(--clr-bg); border-radius: var(--radius-sm); padding: 10px 14px; min-width: 64px; }
+  .countdown-num { font-size: 1.6rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+  .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; }
+  .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 10px; }
+  .goto-arsip { display: block; text-align: center; margin-top: 30px; padding: 14px; background: var(--clr-bg-elevated); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 600; }
+</style>
+</head>
+<body>
+  <h1>📚 Kaela BTC Sinyal — Arsip</h1>
+  <p style="color:var(--clr-text-muted);font-size:0.9rem;">Info hari ini ada di tab <a href="index.html">🏠 Dashboard</a>. Halaman ini isinya hari-hari sebelumnya, dikelompokkan per jenis.</p>
+
+  <section class="arsip-group">
+      <h2 class="group-title">📰 Berita</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>
+<section class="arsip-group">
+      <h2 class="group-title">📊 Laporan</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>
+<section class="arsip-group">
+      <h2 class="group-title">⚡ Sinyal Nyopet Market</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>
+<section class="arsip-group">
+      <h2 class="group-title">🐋 Aktivitas Whale</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>
+<section class="arsip-group">
+      <h2 class="group-title">📅 Jadwal Ekonomi</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon">🏠</span>Dashboard</a>
+    <a href="arsip.html" class="active"><span class="icon">📚</span>Arsip</a>
+    <a href="kalkulator.html"><span class="icon">🧮</span>Kalkulator</a>
+    <a href="metodologi-sniper.html"><span class="icon">📖</span>Metodologi</a>
+  </nav>
+</body>
+</html>

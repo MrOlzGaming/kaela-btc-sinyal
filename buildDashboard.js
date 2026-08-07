@@ -1,10 +1,11 @@
-// Generate web/index.html statis dari archive.json — data di-embed langsung (gak perlu server/fetch).
-// Arsip dibagi 5 GRUP TETAP: Berita, Laporan, Sinyal, Whale Alert, Jadwal Ekonomi -- bukan 1 daftar campur.
+// Generate web/index.html (Dashboard: hari ini) + web/arsip.html (Arsip: hari-hari lalu, di-grup)
+// dari archive.json — data di-embed langsung (gak perlu server/fetch).
 // Jalankan tiap kali ada entry baru: node buildDashboard.js
 
 const fs = require('fs');
 const path = require('path');
 const { getAll } = require('./archive');
+const { localDateKey } = require('./config');
 
 const NEXT_HALVING_EST = '2028-04-13T13:11:00Z'; // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WEB_DIR = path.join(__dirname, 'web');
@@ -20,7 +21,7 @@ const TYPE_LABEL = {
   'econ-calendar': '📅 Jadwal Ekonomi',
 };
 
-// Urutan & isi grup TETAP -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
+// Urutan & isi grup TETAP di Arsip -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
 const GROUPS = [
   { key: 'news', label: '📰 Berita', match: (type) => type === 'news' },
   { key: 'laporan', label: '📊 Laporan', match: (type) => type.startsWith('report-') },
@@ -33,10 +34,6 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Ubah 2 pola baris yang dipakai semua formatter pesan jadi hyperlink beneran (bisa diklik):
-//   "   SumberBerita — https://url-panjang..."  -> teks link = nama sumber (bukan URL mentah)
-//   "🔗 https://kaela-btc-sinyal.netlify.app"    -> URL itu sendiri jadi teks link
-// Diproses per baris (bukan regex 1 kalimat) biar gak ke-double-wrap.
 // Warnai baris headline berita sesuai tag sentimen yang udah ada (🟢 bagus / 🔴 buruk / ⚪ netral-ragu)
 // -- di WA cuma emoji, di web ditambah warna teks biar lebih jelas ketauan mana yang mana.
 function colorizeSentiment(line) {
@@ -47,6 +44,10 @@ function colorizeSentiment(line) {
   return `${emoji} <span class="${cls}">${text}</span>`;
 }
 
+// Ubah 2 pola baris yang dipakai semua formatter pesan jadi hyperlink beneran (bisa diklik):
+//   "   SumberBerita — https://url-panjang..."  -> teks link = nama sumber (bukan URL mentah)
+//   "🔗 https://kaela-btc-sinyal.netlify.app"    -> URL itu sendiri jadi teks link
+// Diproses per baris (bukan regex 1 kalimat) biar gak ke-double-wrap.
 function linkify(escapedText) {
   return escapedText
     .split('\n')
@@ -72,7 +73,7 @@ function renderEntry(e, { highlight = false } = {}) {
   const labelCls = highlight ? 'latest-label' : 'entry-type';
   const dateCls = highlight ? 'latest-date' : 'entry-date';
   const header = highlight
-    ? `<div class="${labelCls}">TERBARU — ${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
+    ? `<div class="${labelCls}">${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
     : `<div class="entry-header"><span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span><span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span></div>`;
   return `<div class="${cls}">${header}<pre class="content">${linkify(escapeHtml(e.content))}</pre></div>`;
 }
@@ -95,30 +96,12 @@ function renderGroup(group, entries) {
   </section>`;
 }
 
-function buildHtml() {
-  const entries = getAll(); // semua tipe, terbaru duluan
-
-  const groupsHtml = GROUPS.map((group) => {
-    const groupEntries = entries.filter((e) => group.match(e.type));
-    return renderGroup(group, groupEntries);
-  }).join('\n');
-
-  return `<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<title>Kaela BTC Sinyal — Arsip</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7931a">
-<meta name="description" content="Arsip laporan & berita Kaela BTC Sinyal — sistem Sniper siklus halving Bitcoin.">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icons/icon.svg">
-<link rel="stylesheet" href="css/variables.css">
-<style>
+const SHARED_STYLE = `
   h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
   nav { display: flex; gap: 10px; margin: 14px 0; }
   nav a { text-decoration: none; }
+  .welcome { background: var(--clr-bg-elevated); border-radius: var(--radius-md); padding: 16px; margin: 16px 0; line-height: 1.6; }
+  .welcome strong { color: var(--clr-primary); }
   .arsip-group { margin-top: 34px; }
   .group-title { font-size: 1.1rem; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border); padding-bottom: 8px; margin-bottom: 14px; }
   .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
@@ -143,12 +126,11 @@ function buildHtml() {
   .countdown-num { font-size: 1.6rem; font-weight: bold; font-variant-numeric: tabular-nums; }
   .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; }
   .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 10px; }
-</style>
-</head>
-<body>
-  <h1>🎯 Kaela BTC Sinyal — Arsip</h1>
+  .goto-arsip { display: block; text-align: center; margin-top: 30px; padding: 14px; background: var(--clr-bg-elevated); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 600; }
+`;
 
-  <div class="countdown">
+function countdownHtml() {
+  return `<div class="countdown">
     <div class="countdown-label">⏳ COUNTDOWN HALVING BERIKUTNYA</div>
     <div class="countdown-grid">
       <div class="countdown-box"><div class="countdown-num" id="cd-days">-</div><div class="countdown-unit">Hari</div></div>
@@ -157,11 +139,11 @@ function buildHtml() {
       <div class="countdown-box"><div class="countdown-num" id="cd-secs">-</div><div class="countdown-unit">Detik</div></div>
     </div>
     <div class="countdown-date">Estimasi: ${new Date(NEXT_HALVING_EST).toISOString().slice(0, 10)} (sumber: CoinGecko)</div>
-  </div>
+  </div>`;
+}
 
-  ${groupsHtml}
-
-  <script>
+function countdownScript() {
+  return `
     const HALVING_TARGET = new Date('${NEXT_HALVING_EST}').getTime();
     function updateCountdown() {
       const diff = Math.max(0, HALVING_TARGET - Date.now());
@@ -180,17 +162,114 @@ function buildHtml() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js').catch(() => {});
     }
+  `;
+}
+
+function navHtml(activePage) {
+  const item = (href, icon, label, key) =>
+    `<a href="${href}"${key === activePage ? ' class="active"' : ''}><span class="icon">${icon}</span>${label}</a>`;
+  return `<nav class="bottom-nav">
+    ${item('index.html', '🏠', 'Dashboard', 'dashboard')}
+    ${item('arsip.html', '📚', 'Arsip', 'arsip')}
+    ${item('kalkulator.html', '🧮', 'Kalkulator', 'kalkulator')}
+    ${item('metodologi-sniper.html', '📖', 'Metodologi', 'metodologi')}
+  </nav>`;
+}
+
+// ============ DASHBOARD (index.html) — hari ini aja + countdown + sambutan ============
+
+function buildDashboardHtml() {
+  const now = new Date();
+  const todayKey = localDateKey(now);
+  const allEntries = getAll();
+  const todayEntries = allEntries.filter((e) => localDateKey(new Date(e.date)) === todayKey);
+
+  const todayHtml = todayEntries.length > 0
+    ? todayEntries.map((e) => renderEntry(e, { highlight: true })).join('\n')
+    : `<div class="empty">Belum ada info baru hari ini. Kaela masih memantau -- cek lagi nanti.</div>`;
+
+  return `<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kaela BTC Sinyal — Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7931a">
+<meta name="description" content="Dashboard Kaela BTC Sinyal — countdown halving & info hari ini.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>${SHARED_STYLE}</style>
+</head>
+<body>
+  <h1>🎯 Kaela BTC Sinyal</h1>
+
+  <div class="welcome">
+    👋 <strong>Selamat datang di Kaela BTC Sinyal</strong> — sistem Sniper otomatis untuk BTC: Siklus Halving
+    (strategi utama, ~2 aksi per 4 tahun) + Nyopet Market (sinyal pelengkap opsional). Murni data & kalender,
+    tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-sniper.html">Baca metodologi lengkap →</a>
+  </div>
+
+  ${countdownHtml()}
+
+  <h2 class="group-title" style="margin-top:30px;">📌 Hari Ini</h2>
+  ${todayHtml}
+
+  <a class="goto-arsip" href="arsip.html">📚 Lihat Arsip Lengkap (hari-hari sebelumnya) →</a>
+
+  <script>${countdownScript()}</script>
+
+  ${navHtml('dashboard')}
+</body>
+</html>`;
+}
+
+// ============ ARSIP (arsip.html) — hari-hari lalu, di-grup per tipe ============
+
+function buildArsipHtml() {
+  const now = new Date();
+  const todayKey = localDateKey(now);
+  const allEntries = getAll(); // terbaru duluan
+  const pastEntries = allEntries.filter((e) => localDateKey(new Date(e.date)) !== todayKey);
+
+  const groupsHtml = GROUPS.map((group) => {
+    const groupEntries = pastEntries.filter((e) => group.match(e.type));
+    return renderGroup(group, groupEntries);
+  }).join('\n');
+
+  return `<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kaela BTC Sinyal — Arsip</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7931a">
+<meta name="description" content="Arsip laporan & berita Kaela BTC Sinyal — sistem Sniper siklus halving Bitcoin.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>${SHARED_STYLE}</style>
+</head>
+<body>
+  <h1>📚 Kaela BTC Sinyal — Arsip</h1>
+  <p style="color:var(--clr-text-muted);font-size:0.9rem;">Info hari ini ada di tab <a href="index.html">🏠 Dashboard</a>. Halaman ini isinya hari-hari sebelumnya, dikelompokkan per jenis.</p>
+
+  ${groupsHtml}
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
   </script>
 
-  <nav class="bottom-nav">
-    <a href="index.html" class="active"><span class="icon">📊</span>Arsip</a>
-    <a href="kalkulator.html"><span class="icon">🧮</span>Kalkulator</a>
-    <a href="metodologi.html"><span class="icon">📖</span>Metodologi</a>
-  </nav>
+  ${navHtml('arsip')}
 </body>
 </html>`;
 }
 
 if (!fs.existsSync(WEB_DIR)) fs.mkdirSync(WEB_DIR, { recursive: true });
-fs.writeFileSync(path.join(WEB_DIR, 'index.html'), buildHtml());
-console.log('web/index.html dibuat.');
+fs.writeFileSync(path.join(WEB_DIR, 'index.html'), buildDashboardHtml());
+fs.writeFileSync(path.join(WEB_DIR, 'arsip.html'), buildArsipHtml());
+console.log('web/index.html (Dashboard) + web/arsip.html (Arsip) dibuat.');

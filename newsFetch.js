@@ -10,14 +10,23 @@ const FEEDS = [
   { url: 'https://news.google.com/rss/search?q=ekonomi%20indonesia%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Ekonomi Indonesia' },
 ];
 
+// 🟢 kata yang jelas nada POSITIF (hati-hati kata ambigu kayak "melonjak"/"naik tajam" SENGAJA
+// gak dimasukkan -- itu bisa positif buat harga kripto tapi negatif buat inflasi/harga minyak,
+// keyword matching gak bisa bedain konteks itu, mending netral daripada salah tag).
 const POSITIVE_KEYWORDS = [
   'naik', 'menguat', 'rally', 'surge', 'gain', 'inflow', 'bullish', 'rebound', 'tumbuh', 'positif',
   'record high', 'all-time high', 'rise', 'jump', 'soar', 'recovery', 'pulih', 'menghijau',
+  'membaik', 'surplus', 'untung', 'laba', 'optimis', 'melesat', 'cuan', 'terkerek', 'terdongkrak',
+  'membukukan untung', 'moncer',
 ];
+// 🔴 kata yang jelas nada NEGATIF
 const NEGATIVE_KEYWORDS = [
   'turun', 'anjlok', 'crash', 'plunge', 'outflow', 'bearish', 'resesi', 'recession', 'korupsi',
   'perang', 'war', 'sanksi', 'sanction', 'krisis', 'crisis', 'default', 'fall', 'drop', 'slump',
-  'selloff', 'melemah', 'merosot', 'PHK', 'layoff',
+  'selloff', 'sell-off', 'melemah', 'merosot', 'phk', 'layoff', 'rugi', 'kerugian', 'defisit',
+  'gagal bayar', 'bangkrut', 'pailit', 'tersendat', 'melambat', 'melesu', 'lesu', 'tertekan',
+  'ambruk', 'jatuh', 'skandal', 'penipuan', 'hack', 'diretas', 'dicuri', 'curi', 'darurat',
+  'terancam', 'ancaman', 'ketegangan', 'memanas', 'konflik', 'rentan', 'rapuh',
 ];
 
 const { fetchWithRetry } = require('./httpRetry');

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kalkulator — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7931a">
+<meta name="description" content="Kalkulator Exposure/Leverage/Margin — 100% di browser, tidak ada data yang dikirim kemana-mana.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  nav { margin: 14px 0; }
+  nav a { text-decoration: none; color: var(--clr-text-muted); font-size: 0.9rem; }
+  .privacy-note { background: var(--clr-bg-elevated); border: 1px solid var(--clr-success); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.85rem; color: var(--clr-success); margin: 14px 0; }
+  .field { margin: 14px 0; }
+  label { display: block; font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 6px; }
+  .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .mode-toggle button { flex: 1; background: var(--clr-bg-elevated); color: var(--clr-text); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 8px; cursor: pointer; }
+  .mode-toggle button.active { background: var(--clr-primary); color: #000; border-color: var(--clr-primary); font-weight: 600; }
+  .hidden { display: none; }
+  .result { margin-top: 20px; }
+  .result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--clr-border); }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { color: var(--clr-text-muted); }
+  .result-value { font-weight: 700; font-family: var(--font-mono); font-size: 1.1rem; }
+  .disclaimer { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 12px 14px; font-size: 0.82rem; color: var(--clr-text-muted); margin-top: 24px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .btn { width: 100%; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>🧮 Kalkulator Exposure</h1>
+
+  <div class="privacy-note">🔒 100% dihitung di HP/browser kamu sendiri. Tidak ada data (modal, hasil) yang dikirim atau disimpan kemana pun.</div>
+
+  <div class="card">
+    <div class="field">
+      <label for="modal">Modal (USD)</label>
+      <input type="number" id="modal" placeholder="misal: 500" min="1" step="any">
+    </div>
+
+    <div class="mode-toggle">
+      <button type="button" id="mode-nyawa" class="active">Pakai Nyawa (%)</button>
+      <button type="button" id="mode-entry">Pakai Entry + SL</button>
+    </div>
+
+    <div id="nyawa-fields" class="field">
+      <label for="nyawa">Nyawa (jarak Entry ke Stop Loss, %)</label>
+      <input type="number" id="nyawa" placeholder="misal: 1.53" min="0.01" step="any">
+    </div>
+
+    <div id="entry-fields" class="hidden">
+      <div class="field">
+        <label for="entry">Harga Entry</label>
+        <input type="number" id="entry" placeholder="misal: 65500" min="0" step="any">
+      </div>
+      <div class="field">
+        <label for="sl">Harga Stop Loss</label>
+        <input type="number" id="sl" placeholder="misal: 64500" min="0" step="any">
+      </div>
+    </div>
+
+    <button class="btn" id="hitung">Hitung</button>
+
+    <div class="result hidden" id="result">
+      <div class="result-row"><span class="result-label">Exposure (dari Modal)</span><span class="result-value" id="r-exposure">-</span></div>
+      <div class="result-row"><span class="result-label">🔥 Leverage</span><span class="result-value" id="r-leverage">-</span></div>
+      <div class="result-row"><span class="result-label">🎯 Nilai Posisi</span><span class="result-value" id="r-nilai">-</span></div>
+      <div class="result-row"><span class="result-label">💰 Margin</span><span class="result-value" id="r-margin">-</span></div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Ini jalur LANJUTAN (opsional).</strong> Default kami: beli spot biasa, tanpa leverage, tanpa risiko likuidasi.
+    Kalkulator ini buat yang paham & berani ambil risiko tambahan, kelola sendiri. Leverage cuma boleh dipakai di titik masuk
+    Musim Tanam — di luar itu wajib spot. Bukan nasihat finansial.
+  </div>
+
+  <script>
+    function getExposure(modal) {
+      if (modal < 1) modal = 1;
+      const magnitude = Math.floor(Math.log10(modal));
+      return 12 / Math.pow(2, magnitude);
+    }
+    function nyawaFromEntrySL(entry, sl) {
+      return (Math.abs(entry - sl) / entry) * 100;
+    }
+    function hitung(modal, nyawaPct) {
+      const exposure = getExposure(modal);
+      const nilaiPosisi = modal * exposure;
+      const leverage = Math.floor(100 / nyawaPct);
+      const margin = nilaiPosisi / leverage;
+      return { exposure, nilaiPosisi, leverage, margin };
+    }
+    function fmt(n, digits = 2) {
+      return '$' + n.toLocaleString('en-US', { maximumFractionDigits: digits });
+    }
+
+    const modeNyawaBtn = document.getElementById('mode-nyawa');
+    const modeEntryBtn = document.getElementById('mode-entry');
+    const nyawaFields = document.getElementById('nyawa-fields');
+    const entryFields = document.getElementById('entry-fields');
+    let mode = 'nyawa';
+
+    modeNyawaBtn.onclick = () => {
+      mode = 'nyawa';
+      modeNyawaBtn.classList.add('active');
+      modeEntryBtn.classList.remove('active');
+      nyawaFields.classList.remove('hidden');
+      entryFields.classList.add('hidden');
+    };
+    modeEntryBtn.onclick = () => {
+      mode = 'entry';
+      modeEntryBtn.classList.add('active');
+      modeNyawaBtn.classList.remove('active');
+      entryFields.classList.remove('hidden');
+      nyawaFields.classList.add('hidden');
+    };
+
+    document.getElementById('hitung').onclick = () => {
+      const modal = parseFloat(document.getElementById('modal').value);
+      if (!modal || modal <= 0) { alert('Isi Modal dulu.'); return; }
+
+      let nyawaPct;
+      if (mode === 'nyawa') {
+        nyawaPct = parseFloat(document.getElementById('nyawa').value);
+        if (!nyawaPct || nyawaPct <= 0) { alert('Isi Nyawa (%) dulu.'); return; }
+      } else {
+        const entry = parseFloat(document.getElementById('entry').value);
+        const sl = parseFloat(document.getElementById('sl').value);
+        if (!entry || !sl) { alert('Isi Entry dan Stop Loss dulu.'); return; }
+        nyawaPct = nyawaFromEntrySL(entry, sl);
+      }
+
+      const r = hitung(modal, nyawaPct);
+      document.getElementById('r-exposure').textContent = r.exposure + '×';
+      document.getElementById('r-leverage').textContent = r.leverage + '×';
+      document.getElementById('r-nilai').textContent = fmt(r.nilaiPosisi);
+      document.getElementById('r-margin').textContent = fmt(r.margin);
+      document.getElementById('result').classList.remove('hidden');
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon">📊</span>Arsip</a>
+    <a href="kalkulator.html" class="active"><span class="icon">🧮</span>Kalkulator</a>
+    <a href="metodologi.html"><span class="icon">📖</span>Metodologi</a>
+  </nav>
+</body>
+</html>

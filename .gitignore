@@ -1,0 +1,19 @@
+node_modules/
+.netlify/
+
+# cache candle mentah dari Binance -- regeneratable via backtest/fetchKlines.js, terlalu besar buat di-commit
+backtest/*-cache.json
+backtest/yahoo-btc-*.json
+
+# hasil sweep/backtest mentah -- regeneratable via node backtest/*.js, bukan source of truth
+backtest/*-result.json
+
+# state runtime lokal (posisi terbuka, candle terakhir diproses) -- bukan source, beda tiap mesin
+state.json
+nyopet-state.json
+
+# file lepas, bukan bagian source
+*.jpeg
+*.jpg
+*.png
+!web/icons/*

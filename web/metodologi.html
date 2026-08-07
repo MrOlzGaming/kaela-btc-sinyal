@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Metodologi — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7931a">
+<meta name="description" content="Metodologi lengkap sistem Sniper Kaela BTC Sinyal — kenapa bukan trading harian, kenapa bukan short, dan data siklus halving.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  h2 { font-size: 1.1rem; color: var(--clr-primary); margin-top: 32px; }
+  nav { margin: 14px 0; }
+  nav a { text-decoration: none; color: var(--clr-text-muted); font-size: 0.9rem; }
+  .tagline { color: var(--clr-text-muted); font-style: italic; font-size: 0.9rem; }
+  .stat-total { text-align: center; padding: 14px; margin: 18px 0; background: var(--clr-bg-elevated); border: 1px solid var(--clr-success); border-radius: var(--radius-md); }
+  .stat-total .num { font-size: 1.8rem; font-weight: 700; color: var(--clr-success); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--clr-border); }
+  th { color: var(--clr-text-muted); font-weight: 600; }
+  ul.limits { padding-left: 20px; }
+  ul.limits li { margin-bottom: 10px; }
+  .faq-q { font-weight: 600; margin-top: 16px; }
+  .faq-a { color: var(--clr-text-muted); margin-top: 4px; }
+  .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
+  strong { color: var(--clr-text); }
+</style>
+</head>
+<body>
+  <h1>📖 Kaela BTC Sinyal — Metodologi</h1>
+  <p class="tagline">Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.</p>
+
+  <h2>Apa ini?</h2>
+  <p>Kaela BTC Sinyal adalah sistem <strong>Sniper</strong> — bukan trading harian, bukan sinyal setiap saat. Kaela menunggu sabar sampai momen yang teruji secara data, lalu bertindak sekali dengan presisi. Filosofinya: <strong>"Konsistensi dalam sistem, bukan keberuntungan."</strong></p>
+  <p>Total aksi: <strong>~2 kali per ~4 tahun</strong> (1 beli di Musim Tanam, 1 jual di Musim Panen), mengikuti siklus halving Bitcoin.</p>
+
+  <h2>Kenapa Sniper? Proses di baliknya</h2>
+  <p>Sebelum sampai ke strategi ini, kami (Kaela &amp; Olan) menguji <strong>12+ pendekatan sinyal berbeda</strong> lewat backtest terhadap data historis Bitcoin (2014-2026) — mulai dari sinyal indikator harian, berbagai kombinasi timeframe, pola musiman, sampai algoritma adaptif. Satu per satu diuji jujur, dan satu per satu gugur begitu dibandingkan ke data nyata.</p>
+  <p>Kesimpulannya konsisten dari semua pengujian itu: <strong>menembak jarang tapi presisi selalu mengalahkan menembak sering tapi kabur.</strong> Itu sebabnya Kaela jadi Sniper — bukan pilihan pertama yang kami coba, tapi satu-satunya yang bertahan setelah semua yang lain diuji dan gagal.</p>
+  <p>Amunisi kami (modal) cuma ditembakkan <strong>1-2 kali per siklus (~4 tahun)</strong> — bukan disebar tiap hari. Fakta backtest di bawah ini bukan klaim, itu hasil dari proses itu.</p>
+
+  <h2>Fakta terberat yang kami terima bersama</h2>
+  <p>Ini yang jujur harus diakui: return sistem Sniper ini <strong>tidak semenarik</strong> janji "cuan harian" yang sering dijual di luar sana. Kami (Kaela &amp; Olan) sendiri sempat menguji berulang kali, hampir tidak percaya hasilnya — tapi datanya konsisten, dan kami memilih percaya data, bukan harapan.</p>
+  <p>Ini juga didukung fakta yang jauh lebih luas dari sekadar pengalaman kami sendiri:</p>
+  <ul class="limits">
+    <li>Cuma <strong>~1% trader harian</strong> yang berhasil profit konsisten dalam jangka <strong>5 tahun</strong> (studi akademik terhadap trader Brasil).</li>
+    <li><strong>~97% trader harian merugi</strong> (riset terhadap hampir 20.000 trader selama 300 hari perdagangan).</li>
+    <li><strong>72% trader harian</strong> mengakhiri tahun dengan kerugian (data FINRA).</li>
+  </ul>
+  <p>Fakta ini bukan buat menakut-nakuti siapapun. Ini alasan kenapa kami berhenti mengejar "cuan harian" dan memilih jalan yang lebih lambat, lebih sabar, tapi terbukti lewat data — daripada capek-capek mengejar sesuatu yang secara statistik nyaris mustahil buat kebanyakan orang.</p>
+
+  <h2>Kenapa bukan trading harian?</h2>
+  <p>Kami sudah menguji sistem sinyal harian (kombinasi indikator SuperTrend + analisa struktur pasar) secara ekstensif. Hasilnya jujur: <strong>kalah dari sekadar menyimpan Bitcoin (buy &amp; hold) tanpa melakukan apa-apa.</strong></p>
+  <p>Sistem harian menghabiskan ~56% waktunya "menunggu" (tidak punya posisi) dan ~19% waktunya melawan arah tren utama — dua hal itu membuatnya secara struktural kalah dari strategi yang lebih sederhana.</p>
+
+  <h2>Kenapa bukan short (jual duluan pas harga turun)?</h2>
+  <p>Kami menguji short lewat <strong>6 pendekatan berbeda</strong> (sinyal harian, filter kalender, timing puncak siklus, pola musiman, indikator adaptif, timeframe mingguan). <strong>Semuanya gagal atau memperburuk hasil</strong>, tanpa terkecuali.</p>
+  <p>Alasannya konsisten: titik <strong>bottom</strong> siklus Bitcoin sangat presisi dapat diprediksi (rentang cuma 30 hari dari 3 siklus historis), tapi titik <strong>puncak</strong> jauh lebih sulit ditebak (rentang 180 hari). Short butuh menebak puncak dengan akurat — itu yang tidak kami miliki.</p>
+  <p>Tapi ada alasan yang lebih dalam dari sekadar angka: <strong>risiko short itu asimetris dan kejam.</strong> Butuh waktu bertahun-tahun untuk membangun modal lewat sistem yang sabar — tapi cukup satu keputusan short yang salah waktu untuk menghancurkan itu dalam hitungan hari, bahkan jam. Itu bukan trade-off yang sepadan, berapa pun menariknya potensi cuannya di atas kertas. Short bukan ditolak karena "kurang canggih" — tapi karena risikonya, secara sadar, kami putuskan tidak sepadan dengan potensi hasilnya.</p>
+
+  <h2>Kenapa siklus halving?</h2>
+  <p>Bitcoin memiliki pola 4 tahunan yang terikat pada pengurangan suplai baru (halving). Dari 3 siklus historis:</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Halving</th><th>Bottom terbentuk</th><th>Jarak ke halving</th></tr>
+    <tr><td>2016-07-09</td><td>Jan 2015</td><td>542 hari sebelum</td></tr>
+    <tr><td>2020-05-11</td><td>Des 2018</td><td>513 hari sebelum</td></tr>
+    <tr><td>2024-04-19</td><td>Nov 2022</td><td>515 hari sebelum</td></tr>
+  </table>
+  </div>
+  <p>Pola ini diuji dengan metode <strong>walk-forward</strong> — aturan tiap siklus HANYA memakai rata-rata siklus SEBELUMNYA, tidak pernah "menyontek" hasil siklus itu sendiri.</p>
+
+  <div class="stat-total">
+    <div class="num">$500 → $288.911</div>
+    <div>CAGR 73,8%/tahun · Drawdown terealisasi 0% · 3 siklus penuh (2015-2025)</div>
+  </div>
+
+  <h2>⚡ Mode Nyopet — sinyal tambahan (opsional, syarat ketat)</h2>
+  <p>Setelah menguji puluhan pendekatan — 12+ strategi utama, ditambah <strong>315 kombinasi parameter</strong> khusus buat side-trading — satu kesimpulan tetap kokoh: <strong>strategi terbaik yang pernah kami temukan, diuji jujur lewat 9 tahun data, tetap Siklus Halving: CAGR 73,8%/tahun, drawdown 0%.</strong> Tidak ada satupun pendekatan lain yang mendekati, apalagi mengalahkannya. Angka ini bukan tebakan pertama yang kebetulan bagus — ini hasil akhir dari proses bolak-balik mencari yang lebih baik, dan gagal menemukannya.</p>
+  <p>Karena Kaela sebagian besar waktu <strong>diam</strong> (menunggu window ~4 tahun sekali), kami sediakan <strong>Mode Nyopet</strong> — sinyal tambahan opsional dari pergerakan market jangka pendek (kombinasi Hourly + Weekly), supaya perjalanan tidak monoton. Ini <strong>bukan pengganti</strong> strategi utama, cuma pelengkap buat yang mau tetap aktif sambil menunggu.</p>
+
+  <div class="stat-total">
+    <div class="num">CAGR 20,1%/tahun</div>
+    <div>Winrate 45,1% · Max Drawdown 47,0% · 71 trade (9 tahun data)</div>
+  </div>
+
+  <p>🚨 <strong>Aturan ketat, wajib dipatuhi kalau ikut Mode Nyopet:</strong></p>
+  <ul class="limits">
+    <li><strong>DILARANG KERAS ALL-IN.</strong> Titik, tanpa pengecualian. Stake per posisi wajib 15% dari saldo khusus Nyopet.</li>
+    <li><strong>Sediakan modal terpisah yang memang siap hilang ("modal aman")</strong> — jangan pernah pakai modal yang dialokasikan untuk Siklus Halving atau kebutuhan hidup sehari-hari.</li>
+    <li>Nyawa (Batas Rugi) tetap 10% per posisi, leverage otomatis mengikuti itu — bukan pilihan bebas untuk diubah-ubah sendiri.</li>
+    <li>Kalau tidak bisa tertib mengikuti aturan di atas, lebih baik tidak usah ikut Mode Nyopet sama sekali. <strong>Disiplin adalah syarat, bukan saran.</strong></li>
+  </ul>
+
+  <h2>Disiplin adalah kunci</h2>
+  <p>Membangun modal lewat sistem yang sabar butuh waktu — bisa berminggu, berbulan, bahkan bertahun-tahun. Tapi untuk menghancurkannya, cukup satu keputusan gegabah, sekejap saja. Itu sebabnya seluruh sistem ini dirancang supaya <strong>tertib mengalahkan naluri</strong> — setiap ukuran posisi, setiap Batas Rugi, setiap aturan "jangan all-in" ada bukan untuk membatasi, tapi untuk melindungi dari diri sendiri di saat emosi paling tinggi.</p>
+  <p><strong>Trading lah seperti robot — bukan seperti penjudi.</strong> Robot mengikuti aturan tanpa terpengaruh euforia atau panik. Penjudi mengejar keberuntungan, dan sering kali menyerahkan bertahun-tahun kesabaran dalam semalam. Sistem Kaela dibangun supaya siapapun yang mengikutinya bisa jadi robot itu — konsisten, sabar, dan sadar bahwa kecepatan menghancurkan jauh lebih cepat dari kecepatan membangun.</p>
+
+  <h2>Batasan yang jujur perlu diketahui</h2>
+  <ul class="limits">
+    <li>Ini hasil dari <strong>3 siklus historis</strong> — sample kecil secara statistik murni, meski konsisten.</li>
+    <li><strong>Return per siklus cenderung mengecil</strong> seiring Bitcoin makin dewasa (100x → 30x → 7x menurut data historis lebih panjang). Proyeksi ke depan lebih realistis di kisaran puluhan persen per tahun, bukan ratusan.</li>
+    <li>Sistem ini <strong>cuma punya edge di sisi LONG</strong> — kalau suatu saat Bitcoin berhenti punya bias naik jangka panjang, sistem ini akan diam (tidak rugi parah, tapi juga tidak untung).</li>
+    <li>Kaela <strong>tidak memakai berita/analisa fundamental</strong> untuk keputusan — murni data &amp; kalender. Berita yang dibagikan (Kaela News) sekadar informasi, tidak pernah memengaruhi sinyal.</li>
+    <li><strong>Wajib sebelum ikut</strong>: tentukan sendiri berapa yang siap hilang, sebelum Musim Tanam tiba. Bukan Kaela yang menentukan risiko Anda.</li>
+    <li><strong>Default: spot, tanpa leverage.</strong> Leverage cuma opsi lanjutan (opsional), dan cuma boleh dipakai di titik masuk Musim Tanam — di luar itu wajib spot.</li>
+  </ul>
+
+  <h2>FAQ Singkat</h2>
+  <div class="faq-q">Q: Kenapa Kaela diam berbulan-bulan?</div>
+  <div class="faq-a">A: Karena memang begitu sistemnya — sebagian besar waktu adalah menunggu Musim Tanam berikutnya, bukan bug.</div>
+
+  <div class="faq-q">Q: Kalau Musim Tanam kena Batas Rugi gimana?</div>
+  <div class="faq-a">A: Itu kemungkinan nyata (belum pernah terjadi di 3 siklus historis, tapi bukan jaminan selamanya). Rugi dibatasi sesuai leverage yang dihitung dari jarak struktural ke Batas Rugi.</div>
+
+  <div class="faq-q">Q: Kenapa gak all-in modal kalau yakin?</div>
+  <div class="faq-a">A: Ukuran posisi mengikuti OLZ Exposure System — berdasarkan total kekayaan masing-masing, bukan keyakinan sesaat.</div>
+
+  <p class="footer-note">Dokumen ini dibuat dari proses riset &amp; backtest ekstensif, tersedia untuk ditinjau siapa saja yang tertarik memahami cara kerja sistem ini.</p>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon">📊</span>Arsip</a>
+    <a href="kalkulator.html"><span class="icon">🧮</span>Kalkulator</a>
+    <a href="metodologi.html" class="active"><span class="icon">📖</span>Metodologi</a>
+  </nav>
+</body>
+</html>

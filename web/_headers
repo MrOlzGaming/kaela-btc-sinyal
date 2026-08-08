@@ -1,0 +1,14 @@
+# Netlify header rules -- situs ini di-update sering (arsip harian, fix cepat), jadi HTML/JS/CSS
+# WAJIB no-cache biar browser SELALU revalidate ke server, gak pernah nyangkut versi lama diam-diam.
+# (Ini terpisah dari service-worker.js -- SW cuma jalan SETELAH first load & register; request
+# pertama kali + <script> tag fetch awal tetap lewat HTTP cache biasa kalau gak diatur di sini.)
+# Font/ikon dikecualikan -- isinya gak pernah berubah walau nama file sama, aman di-cache lama.
+
+/*
+  Cache-Control: no-cache
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable

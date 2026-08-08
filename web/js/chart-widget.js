@@ -435,6 +435,12 @@
 
   chart.timeScale().subscribeVisibleTimeRangeChange(() => redrawOverlay());
   window.addEventListener('resize', () => redrawOverlay());
+  // Pinch-zoom (HP) & sebagian browser zoom (Ctrl +/-) ubah devicePixelRatio efektif tanpa
+  // selalu memicu 'resize' biasa -- visualViewport nangkep itu, overlay canvas custom kita
+  // (bukan dikelola LightweightCharts) perlu di-resize ulang biar gak keliatan "kepotong"/mismatch.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => redrawOverlay());
+  }
   window.addEventListener('beforeunload', () => { if (ws) ws.close(); });
 
   updatePrice();

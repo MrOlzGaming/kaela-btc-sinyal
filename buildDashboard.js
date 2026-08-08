@@ -204,7 +204,7 @@ const SHARED_STYLE = `
   .chart-tool-sep { height: 1px; background: var(--clr-border); margin: 3px 2px; }
   #btc-chart-wrap { position: relative; width: 100%; min-width: 0; }
   #btc-chart { width: 100%; height: 320px; border-radius: var(--radius-sm); background: var(--clr-bg); }
-  #btc-chart-draw { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; touch-action: none; }
+  #btc-chart-draw { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; touch-action: none; }
   @media (max-width: 520px) {
     .chart-area { flex-direction: column; }
     .chart-toolbar { flex-direction: row; width: 100%; overflow-x: auto; }
@@ -213,6 +213,29 @@ const SHARED_STYLE = `
   .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; }
   .tv-attribution { text-align: right; font-size: 0.68rem; color: var(--clr-text-muted); opacity: 0.6; margin-top: 4px; }
   .tv-attribution a { color: inherit; }
+  .nyopet-orders-panel { margin-bottom: 18px; }
+  .order-balance { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; font-size: 0.95rem; }
+  .order-balance-date { color: var(--clr-text-muted); font-size: 0.78rem; }
+  .order-disclaimer { color: var(--clr-text-muted); font-size: 0.78rem; background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 8px 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 12px; }
+  .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .order-card { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-md); padding: 14px; }
+  .order-card.floating { border-color: var(--clr-primary); }
+  .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .order-dir { font-weight: 700; }
+  .order-status-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--clr-bg); }
+  .order-status-badge.floating { color: var(--clr-primary); }
+  .order-strategy { color: var(--clr-text-muted); font-size: 0.82rem; margin-bottom: 8px; }
+  .order-levels { display: flex; flex-direction: column; gap: 3px; font-size: 0.85rem; margin-bottom: 6px; }
+  .order-note { font-size: 0.78rem; color: var(--clr-text-muted); font-style: italic; margin-bottom: 6px; }
+  .order-meta { font-size: 0.75rem; color: var(--clr-text-muted); }
+  .order-pnl-live { font-weight: 700; font-size: 1.05rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .order-pnl-live.up { color: var(--clr-success); }
+  .order-pnl-live.down { color: var(--clr-danger); }
+  .order-pnl { font-weight: 700; margin-top: 4px; }
+  .order-pnl.up { color: var(--clr-success); }
+  .order-pnl.down { color: var(--clr-danger); }
+  .order-history { margin-top: 10px; }
+  .order-history summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.85rem; padding: 6px 0; }
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
   .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
@@ -365,6 +388,78 @@ function todayOfType(allEntries, todayKey, matchType) {
   return allEntries.filter((e) => matchType(e.type) && localDateKey(new Date(e.date)) === todayKey);
 }
 
+// ============ Nyopet Market MANUAL: monitor order live (nyopet-orders.json) ============
+// Beda dari log teks lama (nyopetLog.js) -- ini KARTU LIVE per order: pending (nunggu trigger),
+// floating (P&L live dihitung DI BROWSER dari harga live, lihat web/js/nyopet-orders-widget.js),
+// closed (histori). Order dibuat MANUAL pas Olan+Kaela analisa bareng (bukan auto-decide algoritma
+// lagi) -- lihat nyopetOrders.js/nyopetOrderMonitor.js. Saldo publik SENGAJA (konfirmasi user).
+
+const DIR_LABEL_WEB = { buy: '🟢 BUY', sell: '🔴 SELL' };
+const STRATEGY_LABEL_WEB = { range: 'Range Trading', breakout: 'Breakout', trend: 'Trend Following' };
+function fmtUsdOrder(n) {
+  return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
+}
+
+function renderOrderCard(o) {
+  const dir = DIR_LABEL_WEB[o.direction] || o.direction;
+  const strategy = STRATEGY_LABEL_WEB[o.strategyType] || '';
+  if (o.status === 'pending') {
+    return `<div class="order-card pending">
+      <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge pending">⏳ PENDING</span></div>
+      <div class="order-strategy">${strategy}</div>
+      <div class="order-levels"><span>Trigger: <strong>${fmtUsdOrder(o.triggerPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${fmtUsdOrder(o.sl)}</span></div>
+      ${o.confirmationNote ? `<div class="order-note">📋 ${o.confirmationNote}</div>` : ''}
+      ${o.leverage ? `<div class="order-meta">Exposure ${o.exposure}× · Leverage ${o.leverage}× · Margin ${fmtUsdOrder(o.marginUsd)}</div>` : ''}
+    </div>`;
+  }
+  if (o.status === 'floating') {
+    return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}">
+      <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
+      <div class="order-strategy">${strategy}</div>
+      <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${fmtUsdOrder(o.sl)}</span></div>
+      <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
+    </div>`;
+  }
+  // closed_tp / closed_sl / cancelled
+  const won = o.status === 'closed_tp';
+  const badge = o.status === 'cancelled' ? '🚫 DIBATALKAN' : (won ? '✅ TP' : '❌ SL');
+  const pnlLine = (o.pnlUsd !== null && o.pnlUsd !== undefined)
+    ? `<div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${o.pnlPct.toFixed(2)}%)</div>` : '';
+  return `<div class="order-card closed">
+    <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
+    <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? fmtUsdOrder(o.sl) : '-'}</span></div>
+    ${pnlLine}
+  </div>`;
+}
+
+function renderNyopetOrdersPanel() {
+  const ordersPath = path.join(__dirname, 'nyopet-orders.json');
+  // Belum ada file = belum pernah ada order sama sekali (sistem manual baru mulai) -- BUKAN
+  // berarti panelnya kosong dari tampilan, tetap render empty-state yang jelas, jangan blank.
+  const state = fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
+  const active = (state.orders || []).filter((o) => o.status === 'pending' || o.status === 'floating');
+  const closed = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').slice(-5).reverse();
+
+  const balanceLine = state.balanceUpdatedAt
+    ? `<div class="order-balance">💰 Saldo Live Order: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
+    : '';
+
+  const activeHtml = active.length > 0
+    ? `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`
+    : `<div class="empty">⚡ Belum ada order aktif. Nyopet Market sekarang manual -- Olan &amp; Kaela analisa bareng dulu sebelum ada rencana order.</div>`;
+
+  const historyHtml = closed.length > 0
+    ? `<details class="order-history"><summary>Riwayat order terakhir (${closed.length})</summary><div class="order-grid">${closed.map(renderOrderCard).join('')}</div></details>`
+    : '';
+
+  return `<div class="nyopet-orders-panel">
+    ${balanceLine}
+    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo yang ditampilkan adalah saldo trading ASLI (eksperimen riset, bukan simulasi).</p>
+    ${activeHtml}
+    ${historyHtml}
+  </div>`;
+}
+
 function buildDashboardHtml() {
   const now = new Date();
   const todayKey = localDateKey(now);
@@ -375,15 +470,13 @@ function buildDashboardHtml() {
   const todayLaporan = todayOfType(allEntries, todayKey, (t) => t.startsWith('report-'));
   const halvingTabHtml = renderSiklusHalvingPanel(now) + todayLaporan.map((e) => renderEntry(e, { highlight: true })).join('\n');
 
-  // Tab Nyopet Market -- posisi OPEN (pinned) menang, baru entry hari ini, baru placeholder "belum ada"
+  // Tab Nyopet Market -- panel order LIVE (manual) di atas, baru log teks hari ini/posisi lama di bawah
   const todayNyopet = todayOfType(allEntries, todayKey, (t) => t === 'nyopet').filter((e) => !sameEntry(e, openSignal));
-  let nyopetTabHtml;
+  let nyopetTabHtml = renderNyopetOrdersPanel();
   if (openSignal) {
-    nyopetTabHtml = renderEntry(openSignal, { highlight: true, pinned: true }) + todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
+    nyopetTabHtml += renderEntry(openSignal, { highlight: true, pinned: true }) + todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
   } else if (todayNyopet.length > 0) {
-    nyopetTabHtml = todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
-  } else {
-    nyopetTabHtml = `<div class="empty">⚡ Belum ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.</div>`;
+    nyopetTabHtml += todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
   }
 
   // Tab Berita
@@ -486,6 +579,7 @@ function buildDashboardHtml() {
   <script>${countdownScript()}</script>
   <script src="js/lightweight-charts.standalone.production.js"></script>
   <script src="js/chart-widget.js"></script>
+  <script src="js/nyopet-orders-widget.js"></script>
   <script>
     document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {

@@ -53,6 +53,15 @@ Dari `web/data/btc-history.json` (2015-2026, data harian):
 - **Sabar tunggu setup terbaik** -- jangan paksa bikin Rencana cuma karena "giliran analisa hari ini".
 - **Long dan short dua-duanya boleh** -- arah dari struktur pasar, bukan preferensi pribadi.
 - **Sinyal harus valid** -- Rencana (pending) TIDAK PERNAH tampil publik (WA/web) sampai beneran ketrigger.
+- **Penentuan Nyawa/SL/Liq: berbasis STRUKTUR pasar, BUKAN persentase tetap yang dipilih bebas (8 Agu 2026).**
+  Leverage itu HASIL turunan, bukan input pertama. Alurnya: (1) tentuin arah dari trend saat itu (buy=uptrend,
+  sell=downtrend), (2) taruh Liq di titik struktur yang relevan -- **BUY: swing low signifikan terakhir**
+  (kalau harga break di bawah situ, thesis uptrend-nya sendiri batal, bukan cuma soal "berani rugi berapa
+  persen"); **SELL: swing high signifikan terakhir** (alasan sama, arah kebalikan), (3) masukin Modal + Harga
+  Order + Harga Liq ke [kalkulator.html](../web/kalkulator.html) mode "Pakai Entry + SL/Liq" -- leverage & margin
+  dihitung OTOMATIS dari jarak itu (`nyawaFromEntrySL`), gak pernah ditentukan manual duluan. Ini konsisten sama
+  §2 Liquidity Sweep: titik swing low/high yang kita pakai buat SL itu sendiri sering jadi zona tempat stop-loss
+  trader lain menumpuk -- kalau ketembus, bukan cuma SL kita kena, struktur pasarnya sendiri yang berubah.
 - **Aturan resiko RESMI (8 Agu 2026, filosofi Olan): "modal kecil paksa brutal, makin kaya makin safety".**
   Sizing SELALU lewat `getExposure(modal)` di [kalkulator.html](../web/kalkulator.html) -- gak pernah nembak modal manual
   di luar hasil kalkulator. Fungsi ini otomatis potong separuh exposure tiap modal naik 10x (magnitude desimal),

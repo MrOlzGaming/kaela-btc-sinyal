@@ -62,6 +62,15 @@ Dari `web/data/btc-history.json` (2015-2026, data harian):
   dihitung OTOMATIS dari jarak itu (`nyawaFromEntrySL`), gak pernah ditentukan manual duluan. Ini konsisten sama
   §2 Liquidity Sweep: titik swing low/high yang kita pakai buat SL itu sendiri sering jadi zona tempat stop-loss
   trader lain menumpuk -- kalau ketembus, bukan cuma SL kita kena, struktur pasarnya sendiri yang berubah.
+  **Caveat penting: aturan ini PALING RELIABLE pas trend JELAS (naik/turun tegas), BUKAN pas sideways/ranging
+  (8 Agu 2026).** Ranging gak punya momentum arah yang nge-back-up break-nya, jadi "low/high masa lalu" itu
+  batas yang gampang dilebihin dikit doang (range "melebar") sebelum balik lagi ke dalam range -- itu bukan
+  breakdown beneran, cuma sweep-dan-reverse biasa, dan kali ini KITA yang jadi korban stop hunt-nya kalau SL
+  dipasang tepat di level yang gampang ditebak orang lain juga. Konsekuensinya: (1) trend gak jelas/sideways
+  -> DEFAULT-nya SKIP dulu (konsisten sama "sabar tunggu setup terbaik", bukan semua kondisi wajib ditrading);
+  (2) kalau tetap mau fade range, JANGAN pasang SL di low/high historis SEBELUM ketes -- tunggu sweep-nya
+  beneran kejadian (pola `testLevel`+konfirmasi candle yang udah ada), baru SL dipasang di luar titik ekstrem
+  candle KONFIRMASI itu (bukan low/high lama) -- itu baru batas nyata yang udah kebukti dites pasar.
 - **Aturan resiko RESMI (8 Agu 2026, filosofi Olan): "modal kecil paksa brutal, makin kaya makin safety".**
   Sizing SELALU lewat `getExposure(modal)` di [kalkulator.html](../web/kalkulator.html) -- gak pernah nembak modal manual
   di luar hasil kalkulator. Fungsi ini otomatis potong separuh exposure tiap modal naik 10x (magnitude desimal),

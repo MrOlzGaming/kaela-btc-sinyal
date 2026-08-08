@@ -68,10 +68,15 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
   body { max-width: 820px; padding: 28px; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* Desktop: melebar lebih jauh biar gak keliatan sempit "kekecilan" di layar besar */
+/* Desktop: melebar lebih jauh biar gak keliatan sempit "kekecilan" di layar besar --
+   960px ternyata masih nyisain ruang kosong gede di monitor 1440px+ (keluhan Olan "compact"),
+   grid kayak .order-grid/.journal-stats-grid otomatis nambah kolom begitu container ini melebar. */
 @media (min-width: 1024px) {
-  body { max-width: 960px; padding: 36px 44px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
+  body { max-width: 1120px; padding: 36px 44px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
   h1 { font-size: 1.7rem; }
+}
+@media (min-width: 1440px) {
+  body { max-width: 1360px; padding: 40px 64px; }
 }
 
 /* Header brand: logo mark + judul */

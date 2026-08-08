@@ -4,7 +4,10 @@
 // nyopet-orders.json). Kalau gak ada kartu floating di halaman, script ini no-op.
 
 (function () {
-  const PRICE_URL = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT';
+  // data-api.binance.vision -- market data publik, gak kena blokir geografis (api.binance.com
+  // biasa ke-block HTTP 451 di beberapa region termasuk US -- kalau pengunjung web kita dari
+  // sana, harga bakal gagal muat juga kalau masih pakai endpoint lama).
+  const PRICE_URL = 'https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT';
 
   function fmtUsd(n) {
     const sign = n >= 0 ? '+' : '';

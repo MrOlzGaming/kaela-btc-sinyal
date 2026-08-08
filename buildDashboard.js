@@ -195,6 +195,7 @@ const SHARED_STYLE = `
   .order-dir { font-weight: 700; }
   .order-status-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--clr-bg); }
   .order-status-badge.floating { color: var(--clr-primary); }
+  .order-id { color: var(--clr-text-muted); font-size: 0.72rem; font-family: var(--font-mono); margin-bottom: 4px; }
   .order-strategy { color: var(--clr-text-muted); font-size: 0.82rem; margin-bottom: 8px; }
   .order-levels { display: flex; flex-direction: column; gap: 3px; font-size: 0.85rem; margin-bottom: 6px; }
   .order-note { font-size: 0.78rem; color: var(--clr-text-muted); font-style: italic; margin-bottom: 6px; }
@@ -377,20 +378,26 @@ function fmtUsdOrder(n) {
 function renderOrderCard(o) {
   const dir = DIR_LABEL_WEB[o.direction] || o.direction;
   const strategy = STRATEGY_LABEL_WEB[o.strategyType] || '';
+  // sl bisa null/undefined buat order "main liq" (gak ada SL formal) -- WAJIB fallback '-',
+  // jangan langsung fmtUsdOrder(undefined) (hasilnya "$NaN", ketauan pas audit anomali).
+  const slText = (o.sl !== null && o.sl !== undefined) ? fmtUsdOrder(o.sl) : '-';
+  const idLine = o.signalId ? `<div class="order-id">🆔 ${o.signalId}</div>` : '';
   if (o.status === 'pending') {
     return `<div class="order-card pending">
+      ${idLine}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge pending">⏳ PENDING</span></div>
       <div class="order-strategy">${strategy}</div>
-      <div class="order-levels"><span>Trigger: <strong>${fmtUsdOrder(o.triggerPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${fmtUsdOrder(o.sl)}</span></div>
+      <div class="order-levels"><span>Trigger: <strong>${fmtUsdOrder(o.triggerPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
       ${o.confirmationNote ? `<div class="order-note">📋 ${o.confirmationNote}</div>` : ''}
       ${o.leverage ? `<div class="order-meta">Exposure ${o.exposure}× · Leverage ${o.leverage}× · Margin ${fmtUsdOrder(o.marginUsd)}</div>` : ''}
     </div>`;
   }
   if (o.status === 'floating') {
-    return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}">
+    return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}">
+      ${idLine}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
       <div class="order-strategy">${strategy}</div>
-      <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${fmtUsdOrder(o.sl)}</span></div>
+      <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
       <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
     </div>`;
   }
@@ -400,8 +407,9 @@ function renderOrderCard(o) {
   const pnlLine = (o.pnlUsd !== null && o.pnlUsd !== undefined)
     ? `<div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${o.pnlPct.toFixed(2)}%)</div>` : '';
   return `<div class="order-card closed">
+    ${idLine}
     <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
-    <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? fmtUsdOrder(o.sl) : '-'}</span></div>
+    <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
     ${pnlLine}
   </div>`;
 }

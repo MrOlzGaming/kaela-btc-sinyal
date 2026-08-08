@@ -3,7 +3,9 @@
 // angka ringkas $harga + %perubahan 24 jam biar keliatan cepat tanpa buka chart-nya.
 
 (function () {
-  const PRICE_URL = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT';
+  // data-api.binance.vision -- market data publik, gak kena blokir geografis (api.binance.com
+  // biasa ke-block HTTP 451 di beberapa region termasuk US).
+  const PRICE_URL = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT';
   const priceEl = document.getElementById('btc-price');
   const changeEl = document.getElementById('btc-change');
   if (!priceEl) return;

@@ -79,7 +79,11 @@ async function main() {
 
     if (order.status === 'floating') {
       const hitTP = order.direction === 'buy' ? last.high >= order.tp : last.low <= order.tp;
-      const hitSL = order.direction === 'buy' ? last.low <= order.sl : last.high >= order.sl;
+      // sl bisa null/undefined buat order "main liq" (gak ada SL formal, ride sampai
+      // TP/liquidation asli) -- WAJIB guard eksplisit. Tanpa ini, perbandingan JS `x >= null`
+      // ke-coerce jadi `x >= 0` (SELALU true buat harga BTC!) -- order SELL tanpa SL bakal
+      // langsung ke-anggap "kena SL" di candle pertama walau harga gak gerak sama sekali.
+      const hitSL = order.sl == null ? false : (order.direction === 'buy' ? last.low <= order.sl : last.high >= order.sl);
       if (!hitTP && !hitSL) continue;
 
       // kalau dua-duanya kena di candle yang sama (gap/candle lebar), SL menang -- konservatif,

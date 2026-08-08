@@ -78,6 +78,22 @@ function formatClosed(order) {
   ].join('\n');
 }
 
+// Heartbeat harian ~08:05 WITA (abis candle Daily closed) -- BUKAN sinyal, murni status +
+// ajakan Olan buka chat buat analisa multi-timeframe bareng. Gak diarsipkan ke web sama sekali
+// (konsisten kebijakan "belum valid = gak tampil dimanapun"), dedup dicek via
+// nyopet-trigger-state.json (lihat nyopetDailyTrigger.js).
+function formatDailyTrigger(btcPrice) {
+  return [
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🔍 Kaela lagi kerja`,
+    '',
+    `Lagi ngumpulin data & analisa BTC multi-timeframe (harga sekarang: ${fmt(btcPrice)})...`,
+    'Kalau ada setup yang masuk akal, baru diinfoin di sini setelah VALID.',
+    '',
+    nowStr(),
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
 function formatCancelled(order) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🚫 RENCANA DIBATALKAN`,
@@ -88,4 +104,4 @@ function formatCancelled(order) {
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatCancelled };
+module.exports = { formatRencana, formatTriggered, formatClosed, formatCancelled, formatDailyTrigger };

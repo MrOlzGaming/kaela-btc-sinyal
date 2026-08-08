@@ -86,6 +86,21 @@
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
   });
 
+  // autoSize:true KADANG gak nangkep ukuran container yang bener di beberapa kondisi timing/hosting
+  // (ketauan live: canvas internal nyangkut di default 300x150 browser padahal CSS udah 786x292 --
+  // isinya digambar di buffer kecil terus di-stretch CSS, jadi keliatan "kepotong"/kosong sebagian).
+  // Resize manual eksplisit sebagai jaring pengaman, gak gantiin autoSize, cuma nambahin.
+  function forceResize() {
+    const rect = chartContainer.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    chart.resize(rect.width, rect.height);
+    // resize() ganti ukuran canvas TAPI gak otomatis re-fit rentang waktu yang lagi ketampil --
+    // tanpa ini, candle yang udah kegambar sebelumnya tetep kepake bar-spacing/posisi LAMA,
+    // jadi keliatan "nyempil" di sebagian canvas yang sekarang lebih lebar (ini akar masalah
+    // "kepotong" yang tersisa walau canvas internal udah bener ukurannya).
+    if (candles.length > 1) chart.timeScale().fitContent();
+  }
+
   const candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
     upColor: '#3fb950', downColor: '#f85149', borderVisible: false,
     wickUpColor: '#3fb950', wickDownColor: '#f85149',
@@ -317,6 +332,7 @@
         connectWebSocket(cfg.interval);
       }
       loadShapesForCurrentRange();
+      forceResize(); // pastikan canvas internal udah ukuran bener SEBELUM fitContent() ngitung layout
       applyCandlesToChart();
       renderPriceLevels();
       renderMarkers();
@@ -434,16 +450,21 @@
   });
 
   chart.timeScale().subscribeVisibleTimeRangeChange(() => redrawOverlay());
-  window.addEventListener('resize', () => redrawOverlay());
+  window.addEventListener('resize', () => { forceResize(); redrawOverlay(); });
   // Pinch-zoom (HP) & sebagian browser zoom (Ctrl +/-) ubah devicePixelRatio efektif tanpa
   // selalu memicu 'resize' biasa -- visualViewport nangkep itu, overlay canvas custom kita
   // (bukan dikelola LightweightCharts) perlu di-resize ulang biar gak keliatan "kepotong"/mismatch.
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => redrawOverlay());
+    window.visualViewport.addEventListener('resize', () => { forceResize(); redrawOverlay(); });
   }
   window.addEventListener('beforeunload', () => { if (ws) ws.close(); });
 
   updatePrice();
   setInterval(updatePrice, 15000);
   loadChart(currentRange);
+  // Jaring pengaman tambahan: beberapa saat setelah load pertama, layout/font udah pasti settle
+  // sepenuhnya -- resize ulang sekali lagi buat nutup celah timing kalau autoSize sempat ngukur
+  // container yang belum final (ini akar masalah "kepotong" yang dilaporkan live).
+  setTimeout(forceResize, 300);
+  setTimeout(forceResize, 1200);
 })();

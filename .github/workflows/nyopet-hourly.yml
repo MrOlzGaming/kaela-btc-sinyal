@@ -1,4 +1,4 @@
-name: Sinyal Nyopet Market (tiap jam)
+name: Monitor Order Nyopet Market (tiap jam)
 
 on:
   schedule:
@@ -26,13 +26,13 @@ jobs:
           };
           EOF
 
-      - name: Cek posisi/sinyal Nyopet Market (nyopetMonitor.js)
-        run: node nyopetMonitor.js
+      - name: Pantau order Nyopet Market MANUAL (nyopetOrderMonitor.js) -- BUKAN auto-decide entry
+        run: node nyopetOrderMonitor.js
 
-      - name: Cek apakah ada event/status baru (archive.json berubah)
+      - name: Cek apakah ada event/status baru (archive.json atau nyopet-orders.json berubah)
         id: check
         run: |
-          if git diff --quiet archive.json 2>/dev/null; then
+          if git diff --quiet archive.json nyopet-orders.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -42,12 +42,12 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         run: node buildDashboard.js
 
-      - name: Commit & push nyopet-state.json (WAJIB tiap run, biar posisi/candle terakhir gak lupa)
+      - name: Commit & push archive.json + nyopet-orders.json (WAJIB tiap run kalau ada perubahan)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f nyopet-state.json archive.json web/index.html
-          git diff --staged --quiet || git commit -m "Auto: nyopet market $(date -u +%Y-%m-%dT%H:%M)"
+          git add -f archive.json nyopet-orders.json web/index.html
+          git diff --staged --quiet || git commit -m "Auto: nyopet order monitor $(date -u +%Y-%m-%dT%H:%M)"
           git pull --rebase origin master
           git push
 

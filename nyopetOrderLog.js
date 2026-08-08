@@ -52,11 +52,11 @@ function formatTriggered(order) {
 
 function formatClosed(order) {
   const won = order.status === 'closed_tp';
-  const pnlSign = order.pnlUsd >= 0 ? '+' : '';
+  const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${won ? '✅ TP KENA' : '❌ KENA STOP LOSS'}`,
     `${DIR_LABEL[order.direction] || order.direction} | Entry ${fmt(order.entryPrice)} -> ${won ? 'TP' : 'SL'} ${fmt(won ? order.tp : order.sl)}`,
-    `P&L: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${order.pnlPct.toFixed(2)}%)`,
+    `P&L: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
     nowStr(),
     '',
     `🔗 ${WEB_URL}`,

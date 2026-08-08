@@ -207,6 +207,9 @@ const SHARED_STYLE = `
   .order-pnl.down { color: var(--clr-danger); }
   .order-history { margin-top: 10px; }
   .order-history summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.85rem; padding: 6px 0; }
+  .order-journal-summary { display: flex; gap: 16px; flex-wrap: wrap; background: var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin: 8px 0 12px; font-size: 0.85rem; }
+  .order-journal-summary .up { color: var(--clr-success); }
+  .order-journal-summary .down { color: var(--clr-danger); }
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
   .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
@@ -409,7 +412,12 @@ function renderNyopetOrdersPanel() {
   // berarti panelnya kosong dari tampilan, tetap render empty-state yang jelas, jangan blank.
   const state = fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
   const active = (state.orders || []).filter((o) => o.status === 'pending' || o.status === 'floating');
-  const closed = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').slice(-5).reverse();
+  // Jurnal = SEMUA order closed (bukan dipotong 5) -- cancelled ditampilkan tapi TIDAK dihitung
+  // ke statistik win-rate/P&L (itu batal sebelum jadi posisi beneran, bukan hasil trade).
+  const closedAll = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').reverse();
+  const trades = closedAll.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl');
+  const wins = trades.filter((o) => o.status === 'closed_tp').length;
+  const totalPnlUsd = trades.reduce((sum, o) => sum + (o.pnlUsd || 0), 0);
 
   const balanceLine = state.balanceUpdatedAt
     ? `<div class="order-balance">💰 Saldo Live Order: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
@@ -419,8 +427,16 @@ function renderNyopetOrdersPanel() {
     ? `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`
     : `<div class="empty">⚡ Belum ada order aktif. Nyopet Market sekarang manual -- Olan &amp; Kaela analisa bareng dulu sebelum ada rencana order.</div>`;
 
-  const historyHtml = closed.length > 0
-    ? `<details class="order-history"><summary>Riwayat order terakhir (${closed.length})</summary><div class="order-grid">${closed.map(renderOrderCard).join('')}</div></details>`
+  const journalSummary = trades.length > 0
+    ? `<div class="order-journal-summary">
+        <span>📓 Jurnal: <strong>${trades.length}</strong> trade</span>
+        <span>Win rate: <strong>${((wins / trades.length) * 100).toFixed(0)}%</strong> (${wins}/${trades.length})</span>
+        <span class="${totalPnlUsd >= 0 ? 'up' : 'down'}">Total P&amp;L: <strong>${totalPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(totalPnlUsd)}</strong></span>
+      </div>`
+    : '';
+
+  const historyHtml = closedAll.length > 0
+    ? `<details class="order-history"><summary>Jurnal &amp; riwayat order (${closedAll.length})</summary>${journalSummary}<div class="order-grid">${closedAll.map(renderOrderCard).join('')}</div></details>`
     : '';
 
   return `<div class="nyopet-orders-panel">

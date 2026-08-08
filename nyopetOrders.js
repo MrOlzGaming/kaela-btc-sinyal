@@ -28,6 +28,7 @@ function setBalance(amountUsd, date = new Date()) {
 }
 
 // order: { direction:'buy'|'sell', strategyType:'range'|'breakout'|'trend', triggerPrice,
+//          testLevel (opsional, buat setup fade/rejection -- lihat nyopetOrderMonitor.js),
 //          confirmationNote, tp, sl, exposure, leverage, marginUsd, notes }
 function createOrder(order, date = new Date()) {
   const state = load();
@@ -38,6 +39,7 @@ function createOrder(order, date = new Date()) {
     direction: order.direction,
     strategyType: order.strategyType || null,
     triggerPrice: order.triggerPrice,
+    testLevel: order.testLevel ?? null,
     confirmationNote: order.confirmationNote || '',
     entryPrice: null,
     tp: order.tp,

@@ -5,6 +5,11 @@
 //      (buy: close >= triggerPrice; sell: close <= triggerPrice) -> flip ke FLOATING.
 //      "Tunggu candle close" ini implementasi "candle konfirmasi" yang diminta Olan -- gak asal
 //      kesentuh intrabar/wick, harus beneran CLOSE di sisi yang benar dulu.
+//      Field opsional `testLevel`: buat setup FADE/REJECTION (bukan breakout) -- candle yang sama
+//      WAJIB dulu nge-wick ke zona level itu (buy: low <= testLevel; sell: high >= testLevel)
+//      BARU close balik ke sisi triggerPrice. Ini pola candle penolakan 1-bar standar (shooting
+//      star/hammer), dicek dalam 1 candle H1 yang sama -- kalau testLevel gak diisi, fallback ke
+//      perilaku lama (cek close doang, cocok buat setup breakout biasa).
 //   2. FLOATING -> cek High/Low candle buat TP/SL kena (touch, bukan nunggu close -- begitu kena,
 //      posisi beneran ketutup di real trading, gak nunggu candle selesai).
 // Eksekusi ASLI tetap Olan manual di Binance -- ini cuma monitor, TIDAK PERNAH generate order baru.
@@ -53,7 +58,11 @@ async function main() {
 
   for (const order of active) {
     if (order.status === 'pending') {
-      const confirmed = order.direction === 'buy' ? last.close >= order.triggerPrice : last.close <= order.triggerPrice;
+      const closeConfirmed = order.direction === 'buy' ? last.close >= order.triggerPrice : last.close <= order.triggerPrice;
+      const testConfirmed = order.testLevel == null
+        ? true
+        : (order.direction === 'buy' ? last.low <= order.testLevel : last.high >= order.testLevel);
+      const confirmed = closeConfirmed && testConfirmed;
       if (!confirmed) continue;
 
       const updated = updateOrder(order.id, {

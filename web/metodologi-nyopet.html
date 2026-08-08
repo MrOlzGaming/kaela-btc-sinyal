@@ -26,6 +26,10 @@
   .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
   strong { color: var(--clr-text); }
   .back-note { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-primary); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--clr-text-muted); }
+  .risk-banner { background: rgba(248,81,73,0.1); border: 1px solid var(--clr-danger); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .risk-banner-title { color: var(--clr-danger); font-weight: 800; font-size: 1rem; margin-bottom: 8px; }
+  .risk-banner p { margin: 0; font-size: 0.9rem; line-height: 1.6; }
+  code { background: var(--clr-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
 </style>
 </head>
 <body>
@@ -42,33 +46,35 @@
 
   <p class="back-note">Ini halaman <strong>pelengkap</strong>. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-sniper.html">🎯 Sniper</a> buat metodologi intinya.</p>
 
-  <h2>⚡ Mode Nyopet Market — sinyal tambahan (opsional, syarat ketat)</h2>
-  <p>Setelah menguji puluhan pendekatan — 12+ strategi utama, ditambah <strong>315 kombinasi parameter</strong> khusus buat side-trading — satu kesimpulan tetap kokoh: <strong>strategi terbaik yang pernah kami temukan, diuji jujur lewat 9 tahun data, tetap Siklus Halving: CAGR 73,8%/tahun, drawdown 0%.</strong> Tidak ada satupun pendekatan lain yang mendekati, apalagi mengalahkannya. Angka ini bukan tebakan pertama yang kebetulan bagus — ini hasil akhir dari proses bolak-balik mencari yang lebih baik, dan gagal menemukannya.</p>
-  <p>Karena Kaela sebagian besar waktu <strong>diam</strong> (menunggu window ~4 tahun sekali), kami sediakan <strong>Mode Nyopet Market</strong> — sinyal tambahan opsional dari pergerakan market jangka pendek (kombinasi Hourly + Weekly), supaya perjalanan tidak monoton. Ini <strong>bukan pengganti</strong> strategi utama, cuma pelengkap buat yang mau tetap aktif sambil menunggu.</p>
-
-  <h2>Spesifikasi teknis</h2>
-  <ul class="limits">
-    <li><strong>Timeframe:</strong> Hourly (pemicu entry) + Weekly (filter arah, wajib BULLISH)</li>
-    <li><strong>Arah:</strong> LONG-ONLY — short diuji, hasilnya rugi -86,4%, dibuang total</li>
-    <li><strong>Nyawa (Batas Rugi):</strong> 10% tetap → Leverage otomatis 10x</li>
-    <li><strong>Target:</strong> Tunggal di RR 1:2 (bukan bertingkat)</li>
-    <li><strong>Stake:</strong> 15% saldo terbaru tiap entry (compound otomatis)</li>
-  </ul>
-
-  <div class="stat-total">
-    <div class="num">CAGR 20,1%/tahun</div>
-    <div>Winrate 45,1% · Max Drawdown 47,0% · 71 trade (9 tahun data)</div>
+  <div class="risk-banner">
+    <div class="risk-banner-title">🚨 RISIKO TINGGI — BACA DULU SEBELUM LANJUT</div>
+    <p>Mode Nyopet Market itu <strong>KEPUTUSAN MANUAL/DISKRESIONER</strong> — beda total sama Siklus Halving yang aturannya deterministik &amp; sudah diuji jujur lewat 9 tahun data historis. Nyopet Market <strong>TIDAK PUNYA</strong> track record/backtest sepanjang itu karena sifatnya analisa manusia real-time, bukan rumus tetap. Leverage yang dipakai bisa <strong>SANGAT TINGGI</strong> (ikut OLZ Exposure System, bisa puluhan sampai 100×+ tergantung seberapa ketat Batas Rugi) — salah baca market = modal bisa habis cepat. Ini eksperimen belajar bareng, <strong>BUKAN sinyal untuk diikuti buta.</strong></p>
   </div>
+
+  <h2>⚡ Mode Nyopet Market — sekarang MANUAL &amp; kolaboratif (sejak 8 Agustus 2026)</h2>
+  <p>Setelah menguji puluhan pendekatan algoritmik — 12+ strategi utama, ditambah 315 kombinasi parameter khusus side-trading — satu kesimpulan tetap kokoh: <strong>strategi terbaik yang pernah ditemukan, diuji jujur lewat 9 tahun data, tetap Siklus Halving (CAGR 73,8%/tahun, drawdown 0%)</strong>. Tidak ada algoritma otomatis lain yang mendekati.</p>
+  <p>Nyopet Market dulu juga sempat pakai algoritma otomatis (SuperTrend adaptive, hasil sweep 315 kombinasi) — <strong>sekarang dipensiunkan</strong>. Alasannya: Olan (pemilik proyek) ingin Nyopet Market jadi sarana <strong>belajar analisa teknikal bareng Kaela</strong>, bukan sekadar terima sinyal jadi dari mesin. Jadi sekarang: Olan &amp; Kaela analisa multi-timeframe bareng (pakai chart TradingView resmi di web ini, lengkap alat gambar &amp; indikator), cari struktur pasar (range/breakout/trend), baru catat rencana order kalau memang ada setup yang masuk akal.</p>
+
+  <h2>Cara kerja sekarang</h2>
+  <ul class="limits">
+    <li><strong>LONG dan SHORT dua-duanya boleh</strong> — beda dari algoritma lama yang long-only (short dulu diuji algoritmik, hasilnya rugi -86,4%, dibuang). Sekarang arah ditentukan dari analisa struktur pasar manual, bukan aturan tetap sepihak.</li>
+    <li><strong>Analisa multi-timeframe:</strong> Weekly/Daily/4H/1H dibaca bareng buat cari konfluensi (level yang muncul konsisten di beberapa timeframe biasanya lebih kuat).</li>
+    <li><strong>Konfirmasi candle WAJIB</strong> — entry gak pernah diputuskan dari sekadar harga nyentuh satu angka. Harus ada candle H1 yang benar-benar CLOSE mengonfirmasi arah (breakout) atau pola penolakan (wick masuk zona lalu close balik keluar, buat setup fade/range). <strong>Sabar tunggu sinyal entry terbaik</strong> — gak asal bikin rencana cuma karena lagi analisa.</li>
+    <li><strong>Nominal entry (exposure/leverage/margin) SELALU lewat Kalkulator OLZ Exposure resmi</strong> — gak pernah asal tebak, biar risiko per posisi konsisten &amp; terukur.</li>
+    <li><strong>Rencana order dicatat dulu</strong> sebagai "Pending" di Dashboard web ini (trigger, TP, SL, exposure/leverage/margin) — SEBELUM benar-benar dieksekusi.</li>
+    <li><strong>Eksekusi ASLI tetap manual oleh Olan di Binance.</strong> Web ini murni monitor/tracker (status pending → floating → closed), <strong>bukan bot trading</strong> — tidak ada eksekusi otomatis apapun.</li>
+    <li><strong>Posting ke grup WA selalu lewat izin eksplisit Olan dulu</strong> — bukan otomatis kayak Berita/Laporan/Whale Alert/Jadwal Ekonomi.</li>
+  </ul>
 
   <p>🚨 <strong>Aturan ketat, wajib dipatuhi kalau ikut Mode Nyopet Market:</strong></p>
   <ul class="limits">
-    <li><strong>DILARANG KERAS ALL-IN.</strong> Titik, tanpa pengecualian. Stake per posisi wajib 15% dari saldo khusus Nyopet Market.</li>
-    <li><strong>Sediakan modal terpisah yang memang siap hilang ("modal aman")</strong> — jangan pernah pakai modal yang dialokasikan untuk Siklus Halving atau kebutuhan hidup sehari-hari.</li>
-    <li>Nyawa (Batas Rugi) tetap 10% per posisi, leverage otomatis mengikuti itu — bukan pilihan bebas untuk diubah-ubah sendiri.</li>
+    <li><strong>DILARANG KERAS ALL-IN.</strong> Titik, tanpa pengecualian.</li>
+    <li><strong>Sediakan modal terpisah yang memang siap hilang ("modal aman")</strong> — jangan pernah pakai modal yang dialokasikan untuk Siklus Halving atau kebutuhan hidup sehari-hari. Saldo yang ditampilkan di Dashboard memang saldo eksperimen riset asli, sengaja modal super mini.</li>
+    <li>Leverage tinggi (kadang 50-100×+) adalah KONSEKUENSI MATEMATIS dari Batas Rugi yang ketat, bukan pilihan bebas gambling — tapi tetap pahami risikonya sebelum ikut.</li>
     <li>Kalau tidak bisa tertib mengikuti aturan di atas, lebih baik tidak usah ikut Mode Nyopet Market sama sekali. <strong>Disiplin adalah syarat, bukan saran.</strong></li>
   </ul>
 
-  <p class="footer-note">Dokumen ini dibuat dari proses riset &amp; backtest ekstensif (sweep 315 kombinasi, backtest/nyopetSweep.js), tersedia untuk ditinjau siapa saja.</p>
+  <p class="footer-note">Riwayat metodologi algoritmik lama (SuperTrend adaptive, sweep 315 kombinasi, CAGR 20,1%/tahun backtest) masih tersimpan di <code>backtest/nyopetSweep.js</code> buat riset — sudah tidak dipakai lagi buat sinyal live.</p>
 
   <script>
     if ('serviceWorker' in navigator) {

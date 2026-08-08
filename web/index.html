@@ -83,6 +83,9 @@
   .order-pnl.down { color: var(--clr-danger); }
   .order-history { margin-top: 10px; }
   .order-history summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.85rem; padding: 6px 0; }
+  .order-journal-summary { display: flex; gap: 16px; flex-wrap: wrap; background: var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin: 8px 0 12px; font-size: 0.85rem; }
+  .order-journal-summary .up { color: var(--clr-success); }
+  .order-journal-summary .down { color: var(--clr-danger); }
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
   .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
@@ -188,9 +191,15 @@ Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
 
 🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div></div>
   <div class="dash-panel" data-panel="nyopet"><div class="nyopet-orders-panel">
-    
+    <div class="order-balance">💰 Saldo Live Order: <strong>$22.5</strong> <span class="order-balance-date">(update 8 Agustus 2026)</span></div>
     <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo yang ditampilkan adalah saldo trading ASLI (eksperimen riset, bukan simulasi).</p>
-    <div class="empty">⚡ Belum ada order aktif. Nyopet Market sekarang manual -- Olan &amp; Kaela analisa bareng dulu sebelum ada rencana order.</div>
+    <div class="order-grid"><div class="order-card pending">
+      <div class="order-header"><span class="order-dir">🔴 SELL</span><span class="order-status-badge pending">⏳ PENDING</span></div>
+      <div class="order-strategy">Range Trading</div>
+      <div class="order-levels"><span>Trigger: <strong>$65,200</strong></span><span>TP: $64,200</span><span>SL: $65,850</span></div>
+      <div class="order-note">📋 Candle H1 wick ke zona resistance 65.390-65.700 (sudah ditolak 3x dalam 2 minggu terakhir), lalu CLOSE balik di bawah 65.200 -- candle penolakan.</div>
+      <div class="order-meta">Exposure 6× · Leverage 100× · Margin $1.35</div>
+    </div></div>
     
   </div><div class="latest" style="border-left: 4px solid #f7931a;"><div class="latest-label">🟧 ⚡ Nyopet Market</div><div class="latest-date">8/8/2026, 07.42.34</div><pre class="content">🟧 ⚡ NYOPET MARKET — 2026-08-08
 Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.

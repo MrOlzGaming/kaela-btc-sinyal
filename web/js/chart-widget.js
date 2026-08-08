@@ -1,16 +1,19 @@
-// Widget harga live + grafik candlestick/garis multi-timeframe + indikator + alat gambar garis.
-// Vanilla JS, no library luar. Live movement dari Binance WebSocket (bukan cuma polling).
-// "All Time" pakai data historis 2014+ yang di-bundle statis (data/btc-history.json) --
-// API gratis buat riwayat sepuluh tahunan udah pada minta API key berbayar sekarang.
-// Garis gambar TERSIMPAN di localStorage browser (per timeframe, koordinat RELATIF 0-1 biar
-// tahan resize) -- beda dari versi awal yang sengaja hilang pas refresh, sekarang direvisi
-// sesuai permintaan biar analisa gak ilang tiap buka lagi.
+// Widget harga live + grafik candlestick/area multi-timeframe + indikator + alat gambar garis.
+// Pakai TradingView Lightweight Charts (self-hosted, lightweight-charts.standalone.production.js) --
+// library resmi open-source (Apache 2.0) dari TradingView sendiri, jadi pan/zoom/crosshair
+// beneran ala TradingView, bukan tiruan manual lagi. Tetap zero-dependency runtime: file-nya
+// di-download sekali dan disimpan statis di repo (lihat header file library-nya).
+// Live movement dari Binance WebSocket (bukan cuma polling).
+// "All Time" pakai data historis 2014+ yang di-bundle statis (data/btc-history.json).
+// Garis gambar TERSIMPAN di localStorage, koordinat DATA-SPACE (waktu asli + harga asli) --
+// jadi tetap valid dipakai lagi walau chart di-resize/pan/zoom, beda dari versi canvas manual
+// dulu yang cuma bisa pakai koordinat relatif fraksi 0-1.
 
 (function () {
   const PRICE_URL = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT';
   const KLINES_URL = 'https://api.binance.com/api/v3/klines';
   const WS_BASE = 'wss://stream.binance.com:9443/ws/btcusdt@kline_';
-  const LINES_STORAGE_KEY = 'kaela_chart_lines_v1';
+  const LINES_STORAGE_KEY = 'kaela_chart_lines_v2';
 
   const RANGES = {
     '1m': { label: '1m', interval: '1m', limit: 180 },
@@ -24,20 +27,21 @@
 
   let currentRange = '1h';
   let chartMode = 'candle'; // 'candle' | 'line'
-  let candles = []; // {time, open, high, low, close}
-  let drawnLines = []; // {x1,y1,x2,y2} FRAKSI 0-1 relatif ke ukuran canvas -- tahan resize
+  let candles = []; // {time (unix detik), open, high, low, close}
+  let drawnLines = []; // {t1,p1,t2,p2} DATA-SPACE (waktu unix detik + harga asli)
   let showSMA = false;
   let showEMA = false;
   let ws = null;
-  let historyCache = null; // cache data/btc-history.json biar gak fetch ulang tiap klik ALL
+  let historyCache = null;
+  let drawMode = false;
 
   const priceEl = document.getElementById('btc-price');
   const changeEl = document.getElementById('btc-change');
   const liveDot = document.getElementById('live-dot');
-  const canvas = document.getElementById('btc-chart');
+  const chartContainer = document.getElementById('btc-chart');
   const wrap = document.getElementById('btc-chart-wrap');
-  if (!canvas) return; // widget gak ada di halaman ini, skip
-  const ctx = canvas.getContext('2d');
+  const drawCanvas = document.getElementById('btc-chart-draw');
+  if (!chartContainer || !window.LightweightCharts) return; // widget/lib gak ada, skip
 
   function fmtUsd(n) {
     return '$' + n.toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
@@ -57,45 +61,35 @@
     }
   }
 
-  // --- persist garis gambar per timeframe, koordinat RELATIF (0-1) biar tahan resize ---
-  function loadAllSavedLines() {
-    try {
-      return JSON.parse(localStorage.getItem(LINES_STORAGE_KEY) || '{}');
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveLinesForCurrentRange() {
-    const all = loadAllSavedLines();
-    all[currentRange] = drawnLines;
-    try { localStorage.setItem(LINES_STORAGE_KEY, JSON.stringify(all)); } catch (e) {}
-  }
-  function loadLinesForCurrentRange() {
-    const all = loadAllSavedLines();
-    drawnLines = all[currentRange] || [];
-  }
+  // --- chart utama ---
+  const chart = LightweightCharts.createChart(chartContainer, {
+    autoSize: true,
+    layout: { background: { color: 'transparent' }, textColor: '#8b96a3', fontFamily: 'Inter, sans-serif', fontSize: 11 },
+    grid: {
+      vertLines: { color: 'rgba(139,150,163,0.08)' },
+      horzLines: { color: 'rgba(139,150,163,0.08)' },
+    },
+    rightPriceScale: { borderColor: 'rgba(139,150,163,0.2)' },
+    timeScale: { borderColor: 'rgba(139,150,163,0.2)', timeVisible: true, secondsVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
 
-  // Kadang dipanggil SEBELUM browser sempat layout (lebar masih 0px) -- kalau kejadian,
-  // coba lagi frame berikutnya daripada "kekunci" ke ukuran 0 selamanya.
-  function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = wrap.getBoundingClientRect();
-    if (rect.width === 0) return false;
-    canvas.width = rect.width * dpr;
-    canvas.height = 320 * dpr;
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = '320px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return true;
-  }
-
-  function renderFrame() {
-    if (!resizeCanvas()) {
-      requestAnimationFrame(renderFrame);
-      return;
-    }
-    drawChart();
-  }
+  const candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
+    upColor: '#3fb950', downColor: '#f85149', borderVisible: false,
+    wickUpColor: '#3fb950', wickDownColor: '#f85149',
+    visible: chartMode === 'candle',
+  });
+  const areaSeries = chart.addSeries(LightweightCharts.AreaSeries, {
+    lineColor: '#3fb950', topColor: 'rgba(63,185,80,0.25)', bottomColor: 'rgba(63,185,80,0)',
+    lineWidth: 2, visible: chartMode === 'line',
+  });
+  const smaSeries = chart.addSeries(LightweightCharts.LineSeries, {
+    color: '#4f9dff', lineWidth: 1, visible: false, priceLineVisible: false, lastValueVisible: false,
+  });
+  const emaSeries = chart.addSeries(LightweightCharts.LineSeries, {
+    color: '#c77dff', lineWidth: 1, visible: false, priceLineVisible: false, lastValueVisible: false,
+  });
+  const mainSeries = () => (chartMode === 'candle' ? candleSeries : areaSeries);
 
   function sma(values, period) {
     const out = new Array(values.length).fill(null);
@@ -107,7 +101,6 @@
     }
     return out;
   }
-
   function ema(values, period) {
     const out = new Array(values.length).fill(null);
     const k = 2 / (period + 1);
@@ -123,119 +116,85 @@
     }
     return out;
   }
-
-  // "harga rapi" buat label sumbu -- pembulatan ke satuan yang enak dibaca (1/2/5 x 10^n)
-  function niceStep(range, targetTicks) {
-    const rough = range / targetTicks;
-    const mag = Math.pow(10, Math.floor(Math.log10(rough)));
-    const norm = rough / mag;
-    const step = norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10;
-    return step * mag;
+  function indicatorSeriesData(period, fn) {
+    if (candles.length < period) return [];
+    const closes = candles.map((c) => c.close);
+    const values = fn(closes, period);
+    const out = [];
+    for (let i = 0; i < candles.length; i++) {
+      if (values[i] !== null) out.push({ time: candles[i].time, value: values[i] });
+    }
+    return out;
+  }
+  function refreshIndicators() {
+    smaSeries.setData(showSMA ? indicatorSeriesData(20, sma) : []);
+    emaSeries.setData(showEMA ? indicatorSeriesData(50, ema) : []);
   }
 
-  function drawChart() {
-    const w = canvas.clientWidth;
-    const h = 320;
-    ctx.clearRect(0, 0, w, h);
-    if (candles.length < 2) return;
+  function applyCandlesToChart() {
+    candleSeries.setData(candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })));
+    const closes = candles.map((c) => c.close);
+    const trendUp = closes.length > 1 ? closes[closes.length - 1] >= closes[0] : true;
+    areaSeries.applyOptions({
+      lineColor: trendUp ? '#3fb950' : '#f85149',
+      topColor: trendUp ? 'rgba(63,185,80,0.25)' : 'rgba(248,81,73,0.25)',
+      bottomColor: trendUp ? 'rgba(63,185,80,0)' : 'rgba(248,81,73,0)',
+    });
+    areaSeries.setData(candles.map((c) => ({ time: c.time, value: c.close })));
+    refreshIndicators();
+    chart.timeScale().fitContent();
+    redrawOverlay();
+  }
 
-    const highs = candles.map((c) => c.high);
-    const lows = candles.map((c) => c.low);
-    const yMax = Math.max(...highs), yMin = Math.min(...lows);
-    const pad = (yMax - yMin) * 0.08 || yMax * 0.01;
-    const top = yMax + pad, bottom = yMin - pad;
-    const marginLeft = 8, marginRight = 62, marginTop = 10, marginBottom = 10;
-    const plotW = w - marginLeft - marginRight;
-    const plotH = h - marginTop - marginBottom;
-    const n = candles.length;
+  // --- persist garis gambar per timeframe, koordinat DATA-SPACE (waktu + harga asli) ---
+  function loadAllSavedLines() {
+    try { return JSON.parse(localStorage.getItem(LINES_STORAGE_KEY) || '{}'); } catch (e) { return {}; }
+  }
+  function saveLinesForCurrentRange() {
+    const all = loadAllSavedLines();
+    all[currentRange] = drawnLines;
+    try { localStorage.setItem(LINES_STORAGE_KEY, JSON.stringify(all)); } catch (e) {}
+  }
+  function loadLinesForCurrentRange() {
+    const all = loadAllSavedLines();
+    drawnLines = all[currentRange] || [];
+  }
 
-    const y = (price) => marginTop + plotH - ((price - bottom) / (top - bottom)) * plotH;
-    const xAt = (i) => marginLeft + (i / Math.max(1, n - 1)) * plotW;
+  // --- overlay canvas: render garis gambar user di atas chart, posisi dihitung ULANG
+  // tiap kali dipanggil dari koordinat data (waktu/harga) -> pixel saat ini, jadi otomatis
+  // ikut kalau chart di-pan/zoom/resize ---
+  const octx = drawCanvas ? drawCanvas.getContext('2d') : null;
 
-    // --- gridline horizontal + label harga (kanan) ---
-    const step = niceStep(top - bottom, 5);
-    const firstTick = Math.ceil(bottom / step) * step;
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    for (let price = firstTick; price <= top; price += step) {
-      const gy = y(price);
-      ctx.strokeStyle = 'rgba(139,150,163,0.12)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(marginLeft, gy);
-      ctx.lineTo(w - marginRight, gy);
-      ctx.stroke();
-      ctx.fillStyle = '#8b96a3';
-      const label = price >= 1000 ? (price / 1000).toFixed(price % 1000 === 0 ? 0 : 1) + 'k' : price.toFixed(0);
-      ctx.fillText(label, w - marginRight + 6, gy);
-    }
+  function resizeOverlay() {
+    if (!drawCanvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = chartContainer.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    drawCanvas.width = rect.width * dpr;
+    drawCanvas.height = rect.height * dpr;
+    drawCanvas.style.width = rect.width + 'px';
+    drawCanvas.style.height = rect.height + 'px';
+    octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
 
-    if (chartMode === 'candle') {
-      const candleWidth = Math.max(1, (plotW / n) * 0.7);
-      candles.forEach((c, i) => {
-        const cx = marginLeft + ((i + 0.5) / n) * plotW;
-        const up = c.close >= c.open;
-        const color = up ? '#3fb950' : '#f85149';
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx, y(c.high));
-        ctx.lineTo(cx, y(c.low));
-        ctx.stroke();
-        ctx.fillStyle = color;
-        const bodyTop = Math.min(y(c.open), y(c.close));
-        const bodyH = Math.max(1, Math.abs(y(c.close) - y(c.open)));
-        ctx.fillRect(cx - candleWidth / 2, bodyTop, candleWidth, bodyH);
-      });
-    } else {
-      const closes = candles.map((c) => c.close);
-      const trendUp = closes[closes.length - 1] >= closes[0];
-      const gradient = ctx.createLinearGradient(0, marginTop, 0, h);
-      gradient.addColorStop(0, trendUp ? 'rgba(63,185,80,0.25)' : 'rgba(248,81,73,0.25)');
-      gradient.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.beginPath();
-      ctx.moveTo(xAt(0), y(closes[0]));
-      closes.forEach((c, i) => ctx.lineTo(xAt(i), y(c)));
-      ctx.lineTo(xAt(n - 1), h);
-      ctx.lineTo(xAt(0), h);
-      ctx.closePath();
-      ctx.fillStyle = gradient;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(xAt(0), y(closes[0]));
-      closes.forEach((c, i) => ctx.lineTo(xAt(i), y(c)));
-      ctx.strokeStyle = trendUp ? '#3fb950' : '#f85149';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    // --- indikator overlay: SMA20 / EMA50 ---
-    function drawOverlay(values, color) {
-      ctx.beginPath();
-      let started = false;
-      values.forEach((v, i) => {
-        if (v === null) return;
-        const px = xAt(i), py = y(v);
-        if (!started) { ctx.moveTo(px, py); started = true; } else { ctx.lineTo(px, py); }
-      });
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-    const closesForIndicator = candles.map((c) => c.close);
-    if (showSMA && n >= 20) drawOverlay(sma(closesForIndicator, 20), '#4f9dff');
-    if (showEMA && n >= 50) drawOverlay(ema(closesForIndicator, 50), '#c77dff');
-
-    // --- garis gambar user (fraksi 0-1 -> pixel canvas saat ini) ---
-    ctx.strokeStyle = '#f7931a';
-    ctx.lineWidth = 1.5;
-    drawnLines.forEach((l) => {
-      ctx.beginPath();
-      ctx.moveTo(l.x1 * w, l.y1 * h);
-      ctx.lineTo(l.x2 * w, l.y2 * h);
-      ctx.stroke();
+  function redrawOverlay(previewLine) {
+    if (!octx) return;
+    resizeOverlay();
+    const w = drawCanvas.clientWidth, h = drawCanvas.clientHeight;
+    octx.clearRect(0, 0, w, h);
+    const ts = chart.timeScale();
+    const series = mainSeries();
+    octx.strokeStyle = '#f7931a';
+    octx.lineWidth = 1.5;
+    const allLines = previewLine ? drawnLines.concat([previewLine]) : drawnLines;
+    allLines.forEach((l) => {
+      const x1 = ts.timeToCoordinate(l.t1), x2 = ts.timeToCoordinate(l.t2);
+      const y1 = series.priceToCoordinate(l.p1), y2 = series.priceToCoordinate(l.p2);
+      if (x1 === null || x2 === null || y1 === null || y2 === null) return;
+      octx.beginPath();
+      octx.moveTo(x1, y1);
+      octx.lineTo(x2, y2);
+      octx.stroke();
     });
   }
 
@@ -256,7 +215,7 @@
         const msg = JSON.parse(event.data);
         const k = msg.k;
         if (!k) return;
-        const liveCandle = { time: k.t, open: +k.o, high: +k.h, low: +k.l, close: +k.c };
+        const liveCandle = { time: Math.floor(k.t / 1000), open: +k.o, high: +k.h, low: +k.l, close: +k.c };
         const lastIdx = candles.length - 1;
         if (lastIdx >= 0 && candles[lastIdx].time === liveCandle.time) {
           candles[lastIdx] = liveCandle;
@@ -265,7 +224,10 @@
           const cfg = RANGES[currentRange];
           if (cfg.limit && candles.length > cfg.limit) candles.shift();
         }
-        drawChart();
+        candleSeries.update({ time: liveCandle.time, open: liveCandle.open, high: liveCandle.high, low: liveCandle.low, close: liveCandle.close });
+        areaSeries.update({ time: liveCandle.time, value: liveCandle.close });
+        refreshIndicators();
+        redrawOverlay();
       };
     } catch (e) {
       setLiveIndicator(false);
@@ -275,7 +237,8 @@
   async function loadHistoryAll() {
     if (historyCache) return historyCache;
     const res = await fetch('data/btc-history.json');
-    historyCache = await res.json();
+    const raw = await res.json();
+    historyCache = raw.map((c) => ({ time: Math.floor(c.time / 1000), open: c.open, high: c.high, low: c.low, close: c.close }));
     return historyCache;
   }
 
@@ -285,66 +248,81 @@
     const cfg = RANGES[rangeKey];
     try {
       if (rangeKey === 'all') {
-        const hist = await loadHistoryAll();
-        candles = hist.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }));
+        candles = await loadHistoryAll();
         connectWebSocket(null); // data statis, gak ada live stream buat "All Time"
       } else {
         const res = await fetch(`${KLINES_URL}?symbol=BTCUSDT&interval=${cfg.interval}&limit=${cfg.limit}`);
         const raw = await res.json();
-        candles = raw.map((r) => ({ time: r[0], open: +r[1], high: +r[2], low: +r[3], close: +r[4] }));
+        candles = raw.map((r) => ({ time: Math.floor(r[0] / 1000), open: +r[1], high: +r[2], low: +r[3], close: +r[4] }));
         connectWebSocket(cfg.interval);
       }
-      loadLinesForCurrentRange(); // ganti timeframe -> load garis yang PERNAH digambar di timeframe ini
-      renderFrame();
+      loadLinesForCurrentRange();
+      applyCandlesToChart();
     } catch (e) {
       console.error('Gagal muat grafik:', e.message);
     }
   }
 
-  // --- gambar garis: mouse + touch (disimpan localStorage per timeframe) ---
+  // --- gambar garis: mouse + touch, aktif cuma pas draw mode ON (biar gak bentrok sama pan/zoom chart) ---
   let drawing = null;
 
   function getPos(evt) {
-    const rect = canvas.getBoundingClientRect();
+    const rect = drawCanvas.getBoundingClientRect();
     const point = evt.touches ? evt.touches[0] : evt;
     return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+  }
+  function pixelToData(pos) {
+    const t = chart.timeScale().coordinateToTime(pos.x);
+    const p = mainSeries().coordinateToPrice(pos.y);
+    return { t, p };
   }
   function startDraw(evt) { evt.preventDefault(); drawing = getPos(evt); }
   function moveDraw(evt) {
     if (!drawing) return;
     evt.preventDefault();
     const pos = getPos(evt);
-    drawChart();
-    ctx.strokeStyle = '#f7931a';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(drawing.x, drawing.y);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
+    const d1 = pixelToData(drawing), d2 = pixelToData(pos);
+    if (d1.t === null || d2.t === null || d1.p === null || d2.p === null) return;
+    redrawOverlay({ t1: d1.t, p1: d1.p, t2: d2.t, p2: d2.p });
   }
   function endDraw(evt) {
     if (!drawing) return;
     const pos = getPos(evt.changedTouches ? { clientX: evt.changedTouches[0].clientX, clientY: evt.changedTouches[0].clientY } : evt);
-    const w = canvas.clientWidth, h = 320;
-    drawnLines.push({ x1: drawing.x / w, y1: drawing.y / h, x2: pos.x / w, y2: pos.y / h });
+    const d1 = pixelToData(drawing), d2 = pixelToData(pos);
     drawing = null;
-    saveLinesForCurrentRange();
-    drawChart();
+    if (d1.t !== null && d2.t !== null && d1.p !== null && d2.p !== null) {
+      drawnLines.push({ t1: d1.t, p1: d1.p, t2: d2.t, p2: d2.p });
+      saveLinesForCurrentRange();
+    }
+    redrawOverlay();
   }
 
-  canvas.addEventListener('mousedown', startDraw);
-  canvas.addEventListener('mousemove', moveDraw);
-  window.addEventListener('mouseup', endDraw);
-  canvas.addEventListener('touchstart', startDraw, { passive: false });
-  canvas.addEventListener('touchmove', moveDraw, { passive: false });
-  canvas.addEventListener('touchend', endDraw);
+  function setDrawMode(on) {
+    drawMode = on;
+    if (drawCanvas) drawCanvas.style.pointerEvents = on ? 'auto' : 'none';
+    const btn = document.getElementById('draw-mode-toggle');
+    if (btn) btn.classList.toggle('active', on);
+    if (wrap) wrap.style.cursor = on ? 'crosshair' : '';
+  }
+
+  if (drawCanvas) {
+    drawCanvas.addEventListener('mousedown', startDraw);
+    drawCanvas.addEventListener('mousemove', moveDraw);
+    window.addEventListener('mouseup', endDraw);
+    drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
+    drawCanvas.addEventListener('touchmove', moveDraw, { passive: false });
+    drawCanvas.addEventListener('touchend', endDraw);
+  }
+
+  const drawModeBtn = document.getElementById('draw-mode-toggle');
+  if (drawModeBtn) drawModeBtn.addEventListener('click', () => setDrawMode(!drawMode));
 
   const clearBtn = document.getElementById('clear-draw');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
       drawnLines = [];
       saveLinesForCurrentRange();
-      drawChart();
+      redrawOverlay();
     });
   }
 
@@ -353,20 +331,23 @@
     modeBtn.addEventListener('click', () => {
       chartMode = chartMode === 'candle' ? 'line' : 'candle';
       modeBtn.textContent = chartMode === 'candle' ? '📊 Candle' : '📈 Garis';
-      drawChart();
+      candleSeries.applyOptions({ visible: chartMode === 'candle' });
+      areaSeries.applyOptions({ visible: chartMode === 'line' });
+      redrawOverlay();
     });
   }
 
   const smaCheck = document.getElementById('indicator-sma');
-  if (smaCheck) smaCheck.addEventListener('change', () => { showSMA = smaCheck.checked; drawChart(); });
+  if (smaCheck) smaCheck.addEventListener('change', () => { showSMA = smaCheck.checked; refreshIndicators(); });
   const emaCheck = document.getElementById('indicator-ema');
-  if (emaCheck) emaCheck.addEventListener('change', () => { showEMA = emaCheck.checked; drawChart(); });
+  if (emaCheck) emaCheck.addEventListener('change', () => { showEMA = emaCheck.checked; refreshIndicators(); });
 
   document.querySelectorAll('.tf-btn').forEach((btn) => {
     btn.addEventListener('click', () => loadChart(btn.dataset.tf));
   });
 
-  window.addEventListener('resize', renderFrame);
+  chart.timeScale().subscribeVisibleTimeRangeChange(() => redrawOverlay());
+  window.addEventListener('resize', () => redrawOverlay());
   window.addEventListener('beforeunload', () => { if (ws) ws.close(); });
 
   updatePrice();

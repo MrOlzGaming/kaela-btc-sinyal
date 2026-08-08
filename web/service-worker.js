@@ -3,7 +3,7 @@
 // Ini sengaja diubah dari cache-first karena cache-first bikin pengunjung keliatan versi basi
 // terus-terusan sampai manual clear cache, padahal situs ini sering banget di-update (arsip harian).
 
-const CACHE_NAME = 'kaela-v5';
+const CACHE_NAME = 'kaela-v6';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ const CORE_ASSETS = [
   './metodologi-sniper.html',
   './metodologi-nyopet.html',
   './css/variables.css',
+  './js/lightweight-charts.standalone.production.js',
   './js/chart-widget.js',
   './fonts/Inter-Variable.woff2',
   './manifest.json',

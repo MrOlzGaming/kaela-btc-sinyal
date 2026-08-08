@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { localDateKey } = require('./config');
 
 const ORDERS_PATH = path.join(__dirname, 'nyopet-orders.json');
 
@@ -33,8 +34,14 @@ function setBalance(amountUsd, date = new Date()) {
 function createOrder(order, date = new Date()) {
   const state = load();
   const id = date.getTime().toString(36) + Math.random().toString(36).slice(2, 6);
+  // ID Sinyal manusiawi: YYYYMMDD (kalender WITA) + nomor urut 2 digit HARI ITU.
+  // Contoh: 2026080801 = 2026, bulan 08, tanggal 08, sinyal ke-1 hari itu.
+  const dayKey = localDateKey(date).replace(/-/g, ''); // 'YYYY-MM-DD' -> 'YYYYMMDD'
+  const countToday = (state.orders || []).filter((o) => (o.signalId || '').startsWith(dayKey)).length;
+  const signalId = dayKey + String(countToday + 1).padStart(2, '0');
   const entry = {
     id,
+    signalId,
     status: 'pending', // pending -> floating -> closed_tp | closed_sl ; atau pending -> cancelled
     direction: order.direction,
     strategyType: order.strategyType || null,

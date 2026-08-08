@@ -17,9 +17,14 @@ function nowStr() {
 const DIR_LABEL = { buy: '🟢 BUY', sell: '🔴 SELL' };
 const STRATEGY_LABEL = { range: 'Range Trading', breakout: 'Breakout', trend: 'Trend Following' };
 
+function seqLabel(order) {
+  return order.signalId ? `🆔 ID Sinyal: ${order.signalId}` : '';
+}
+
 function formatRencana(order) {
   const lines = [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 📋 RENCANA (analisa Kaela)`,
+    seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} · ${STRATEGY_LABEL[order.strategyType] || ''}`,
     '',
     `🎯 Harga: ${fmt(order.triggerPrice)}`,
@@ -29,7 +34,10 @@ function formatRencana(order) {
   if (order.notes) lines.push('', `📝 ${order.notes}`);
   lines.push(
     '',
-    'Volume/margin pakai Kalkulator OLZ Exposure di web -- tinggal masukin modal.',
+    `🧮 Hitung volume/margin: ${WEB_URL}/kalkulator.html`,
+    '(masukin Modal + Harga Order Entry + Area Liquidasi)',
+    '',
+    '🚨 JANGAN ALL-IN! Modal wajib terpisah, yang memang siap hilang.',
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,
@@ -40,6 +48,7 @@ function formatRencana(order) {
 function formatTriggered(order) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ✅ KENA TRIGGER, SEKARANG FLOATING`,
+    seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
     '',
     `✅ TP: ${fmt(order.tp)}`,
@@ -57,6 +66,7 @@ function formatClosed(order) {
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${won ? '✅ TP KENA' : '❌ KENA STOP LOSS'}`,
+    seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
     `Entry: ${fmt(order.entryPrice)}`,
@@ -71,6 +81,7 @@ function formatClosed(order) {
 function formatCancelled(order) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🚫 RENCANA DIBATALKAN`,
+    seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ trigger ${fmt(order.triggerPrice)} -- dibatalkan sebelum kena trigger.`,
     '',
     nowStr(),

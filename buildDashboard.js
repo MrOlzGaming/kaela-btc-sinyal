@@ -21,16 +21,6 @@ const ICON_CALC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><
 const ICON_BOOK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LOGO_MARK = '<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg>';
 
-// Ikon toolbar alat gambar grafik (ala TradingView/BC.Game) -- garis tipis, konsisten sama ikon nav di atas.
-// stroke="currentColor" WAJIB di root svg -- beda dari ikon nav (.bottom-nav a .icon svg) yang dapat warnanya
-// dari CSS scoped, toolbar ini gak kepakein class itu jadi kalau gak diset eksplisit strokenya default "none".
-const ICON_TOOL_CURSOR = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3l14 8-6 1.4L11 19 5 3z" stroke-width="1.6" stroke-linejoin="round"/></svg>';
-const ICON_TOOL_TREND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="19" x2="20" y2="5" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="19" r="1.8" fill="currentColor" stroke="none"/><circle cx="20" cy="5" r="1.8" fill="currentColor" stroke="none"/></svg>';
-const ICON_TOOL_HLINE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12" stroke-width="1.8" stroke-dasharray="3,2" stroke-linecap="round"/><circle cx="3" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="21" cy="12" r="1.8" fill="currentColor" stroke="none"/></svg>';
-const ICON_TOOL_FIB = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="5" x2="21" y2="5" stroke-width="1.5"/><line x1="3" y1="9.7" x2="16" y2="9.7" stroke-width="1.5"/><line x1="3" y1="14.3" x2="21" y2="14.3" stroke-width="1.5"/><line x1="3" y1="19" x2="11" y2="19" stroke-width="1.5"/></svg>';
-const ICON_TOOL_TEXT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16M12 5v14" stroke-width="1.8" stroke-linecap="round"/></svg>';
-const ICON_TOOL_ERASER = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 7h14M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0l1 12a1 1 0 001 1h8a1 1 0 001-1l1-12" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
 // 5 kategori sinyal, 1 warna tetap per kategori -- dipakai KONSISTEN di web (border+emoji) DAN
 // WA (emoji kotak warna, lihat categoryColors.js). Biar orang bisa scan cari warna tertentu tanpa
 // baca teks lengkap (misal cuma mau Nyopet Market, langsung cari 🟧).
@@ -187,32 +177,13 @@ const SHARED_STYLE = `
   .price-change.down { color: var(--clr-danger); }
   .live-dot { color: var(--clr-danger); font-size: 0.7rem; font-weight: 700; animation: pulse-live 1.4s ease-in-out infinite; }
   @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .mode-toggle-btn { margin-left: auto; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease; }
-  .mode-toggle-btn:hover { border-color: var(--clr-primary); color: var(--clr-text); }
-  .tf-selector { display: flex; gap: 5px; margin: 14px 0 10px; flex-wrap: wrap; }
-  .tf-btn { flex: 1; min-width: 40px; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 7px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
-  .tf-btn:hover { border-color: var(--clr-primary); color: var(--clr-text); }
-  .tf-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); }
-  .indicator-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0 10px; font-size: 0.8rem; color: var(--clr-text-muted); }
-  .indicator-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
-  .indicator-row input[type="checkbox"] { accent-color: var(--clr-primary); width: 14px; height: 14px; }
-  .chart-area { display: flex; gap: 8px; align-items: stretch; }
-  .chart-toolbar { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; background: var(--clr-bg); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 5px; height: fit-content; }
-  .chart-tool-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--clr-text-muted); border-radius: var(--radius-sm); cursor: pointer; padding: 0; flex-shrink: 0; transition: background 0.15s ease, color 0.15s ease; }
-  .chart-tool-btn:hover { background: var(--clr-bg-elevated); color: var(--clr-text); }
-  .chart-tool-btn.active { background: var(--clr-primary); color: #14100a; }
-  .chart-tool-sep { height: 1px; background: var(--clr-border); margin: 3px 2px; }
-  #btc-chart-wrap { position: relative; width: 100%; min-width: 0; }
-  #btc-chart { width: 100%; height: 320px; border-radius: var(--radius-sm); background: var(--clr-bg); }
-  #btc-chart-draw { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; touch-action: none; }
+  /* Chart utama = widget resmi TradingView Advanced Chart (embed, bukan self-hosted) -- toolbar
+     gambar/indikator BAWAAN MEREKA (fx Indicators, drawing tools lengkap), bukan tiruan kita lagi.
+     Tinggi dikasih eksplisit (autosize:true widget-nya ngikut TINGGI CONTAINER, bukan bikin sendiri). */
+  .tv-full-chart { height: 560px; margin-top: 14px; border-radius: var(--radius-md); overflow: hidden; }
   @media (max-width: 520px) {
-    .chart-area { flex-direction: column; }
-    .chart-toolbar { flex-direction: row; width: 100%; overflow-x: auto; }
-    .chart-tool-sep { width: 1px; height: 20px; margin: 0 2px; }
+    .tv-full-chart { height: 460px; }
   }
-  .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; }
-  .tv-attribution { text-align: right; font-size: 0.68rem; color: var(--clr-text-muted); opacity: 0.6; margin-top: 4px; }
-  .tv-attribution a { color: inherit; }
   .nyopet-orders-panel { margin-bottom: 18px; }
   .order-balance { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; font-size: 0.95rem; }
   .order-balance-date { color: var(--clr-text-muted); font-size: 0.78rem; }
@@ -524,39 +495,39 @@ function buildDashboardHtml() {
     <div class="price-header">
       <span class="price-live" id="btc-price">Memuat...</span>
       <span class="price-change" id="btc-change"></span>
-      <span id="live-dot" class="live-dot" title="Live update aktif" style="display:none;">● LIVE</span>
-      <button class="mode-toggle-btn" id="chart-mode-toggle">📊 Candle</button>
     </div>
-    <div class="tf-selector">
-      <button class="tf-btn" data-tf="1m">1m</button>
-      <button class="tf-btn" data-tf="15m">15m</button>
-      <button class="tf-btn active" data-tf="1h">1H</button>
-      <button class="tf-btn" data-tf="4h">4H</button>
-      <button class="tf-btn" data-tf="1d">1D</button>
-      <button class="tf-btn" data-tf="1w">1W</button>
-      <button class="tf-btn" data-tf="all">ALL</button>
-    </div>
-    <div class="indicator-row">
-      <label><input type="checkbox" id="indicator-sma"> <span style="color:#4f9dff;">●</span> SMA 20</label>
-      <label><input type="checkbox" id="indicator-ema"> <span style="color:#c77dff;">●</span> EMA 50</label>
-    </div>
-    <div class="chart-area">
-      <div class="chart-toolbar" id="chart-toolbar">
-        <button class="chart-tool-btn active" data-tool="cursor" title="Kursor (geser/zoom)">${ICON_TOOL_CURSOR}</button>
-        <button class="chart-tool-btn" data-tool="trend" title="Garis Tren">${ICON_TOOL_TREND}</button>
-        <button class="chart-tool-btn" data-tool="hline" title="Garis Horizontal">${ICON_TOOL_HLINE}</button>
-        <button class="chart-tool-btn" data-tool="fib" title="Fibonacci Retracement">${ICON_TOOL_FIB}</button>
-        <button class="chart-tool-btn" data-tool="text" title="Teks">${ICON_TOOL_TEXT}</button>
-        <div class="chart-tool-sep"></div>
-        <button class="chart-tool-btn" id="clear-draw" title="Hapus semua gambar">${ICON_TOOL_ERASER}</button>
+    <div class="tv-full-chart">
+      <div class="tradingview-widget-container" style="height:100%;width:100%">
+        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+        <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/BINANCE-BTCUSDT/" rel="noopener nofollow" target="_blank"><span class="blue-text">BTCUSDT chart</span></a><span class="trademark"> by TradingView</span></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {
+          "autosize": true,
+          "symbol": "BINANCE:BTCUSDT",
+          "interval": "60",
+          "timezone": "Asia/Makassar",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "backgroundColor": "#0a0e14",
+          "gridColor": "rgba(139, 150, 163, 0.08)",
+          "hide_top_toolbar": false,
+          "hide_side_toolbar": false,
+          "hide_legend": false,
+          "hide_volume": false,
+          "allow_symbol_change": false,
+          "save_image": true,
+          "calendar": false,
+          "hotlist": false,
+          "details": false,
+          "withdateranges": true,
+          "compareSymbols": [],
+          "studies": [],
+          "watchlist": []
+        }
+        </script>
       </div>
-      <div id="btc-chart-wrap">
-        <div id="btc-chart"></div>
-        <canvas id="btc-chart-draw"></canvas>
-      </div>
     </div>
-    <div class="draw-hint">✏️ Pilih alat di kiri buat gambar analisa (tren/horizontal/fibonacci/teks) -- tersimpan otomatis di browser ini per timeframe</div>
-    <div class="tv-attribution">Grafik oleh <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a></div>
   </div>
 
   ${countdownHtml()}
@@ -577,8 +548,7 @@ function buildDashboardHtml() {
   <a class="goto-arsip" href="arsip.html">📚 Lihat Arsip Lengkap (hari-hari sebelumnya) →</a>
 
   <script>${countdownScript()}</script>
-  <script src="js/lightweight-charts.standalone.production.js"></script>
-  <script src="js/chart-widget.js"></script>
+  <script src="js/price-ticker.js"></script>
   <script src="js/nyopet-orders-widget.js"></script>
   <script>
     document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {

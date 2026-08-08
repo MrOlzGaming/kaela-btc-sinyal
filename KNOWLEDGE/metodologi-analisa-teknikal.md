@@ -70,6 +70,23 @@ Dari `web/data/btc-history.json` (2015-2026, data harian):
   "max 1-2% resiko/trade" yang dipakai trader legend (Market Wizards, lihat bagian 1) -- jadi kalkulator kita
   sudah otomatis konvergen ke standar profesional pas modal cukup besar, dan sengaja lebih agresif di modal kecil
   karena kerugian nominalnya belum berarti, butuh dorongan buat compounding awal.
+- **Bukti matematis "gak akan rungkad ke nol" (8 Agu 2026) -- dan syarat wajibnya.**
+  Tiap kena SL/Liq, yang hilang cuma margin trade itu = PECAHAN dari modal saat itu (`margin/modal =
+  exposure/leverage`), bukan nominal tetap. Modal baru = modal lama x (1 - resiko%) -- deret geometris,
+  kalah berkali-kali pun modal cuma mendekati nol, gak pernah BENAR-BENAR nol (prinsip "risk of ruin": asal
+  taruhan selalu porsi dari SISA modal, ruin matematis mustahil). **SATU-SATUNYA cara modal beneran ke nol:
+  ALL-IN (resiko 100% dalam 1 kali)** -- ini kenapa aturan "JANGAN ALL-IN" bukan slogan, itu literally satu
+  lubang di sistem ini.
+  **Syarat wajib biar bukti ini beneran berlaku (bukan cuma teori):**
+  1. **Isolated margin WAJIB** di exchange (bukan cross) -- kalau cross, dana lain di akun bisa ketarik nahan
+     posisi, kerugian bisa lebih dari margin yang dihitung kalkulator, bukti ini batal.
+  2. **Modal yang diinput ke kalkulator WAJIB angka saldo TERBARU** (dicek langsung di Binance/tercatat di
+     `nyopet-orders.json` via `setBalance()`), **BUKAN modal lama yang diingat dari kepala.** Kalau pakai modal
+     lama (lebih besar dari saldo asli), resiko % dari saldo SEBENARNYA jadi lebih gede dari yang dihitung --
+     deret geometrisnya rusak. Urutan wajib tiap mau trade baru: trade sebelumnya closed -> cek saldo terbaru
+     -> baru hitung kalkulator buat trade berikutnya.
+  3. Slippage/gap di kondisi market ekstrem (flash crash) bisa bikin eksekusi meleset dikit dari harga Liq
+     teoritis -- biasanya selisih kecil, bukan pembatal klaim, tapi bukan nol resiko juga.
 
 ---
 *Dokumen ini bagian dari proyek Kaela BTC Sinyal (`D:\KAELA PROJECT\★ KAELA TRADING ENGINE ★\`). Backup juga ke GitHub biar gak hilang kalau folder lokal kenapa-kenapa.*

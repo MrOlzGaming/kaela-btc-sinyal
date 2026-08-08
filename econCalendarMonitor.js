@@ -6,10 +6,16 @@
 const { fetchWeekCalendar, getTodayHighImpactUsdEvents } = require('./econCalendar');
 const { formatEconCalendar } = require('./econCalendarLog');
 const { sendWhatsApp } = require('./fonnte');
-const { addOrReplaceDaily } = require('./archive');
+const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 
 async function main() {
   const now = new Date();
+
+  if (hasEntryToday('econ-calendar', now)) {
+    console.log('[EconCalendar]', now.toISOString(), '— udah kirim hari ini, skip (cegah dobel WA kalau ke-run ulang).');
+    return;
+  }
+
   const allEvents = await fetchWeekCalendar();
   const todayEvents = getTodayHighImpactUsdEvents(allEvents, now);
 

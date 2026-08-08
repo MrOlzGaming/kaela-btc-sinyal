@@ -36,6 +36,15 @@ function addOrReplaceDaily(type, content, date = new Date()) {
   return entries[entries.length - 1];
 }
 
+// Cek apakah TIPE ini udah pernah diarsipkan buat hari kalender WITA `date` -- dipakai monitor
+// script (news/econ/group) buat SKIP kirim WA kalau script ke-run ulang di hari yang sama
+// (retry GitHub Actions, susulan manual, dst). addOrReplaceDaily doang cuma jaga arsip WEB gak
+// dobel, TIDAK menjaga WA gak dobel -- makanya butuh dicek terpisah SEBELUM sendWhatsApp.
+function hasEntryToday(type, date = new Date()) {
+  const dayKey = localDateKey(date);
+  return loadArchive().some((e) => e.type === type && localDateKey(new Date(e.date)) === dayKey);
+}
+
 function getLatest(type = null) {
   const entries = loadArchive();
   const filtered = type ? entries.filter((e) => e.type === type) : entries;
@@ -48,4 +57,4 @@ function getAll(type = null) {
   return [...filtered].reverse(); // terbaru duluan
 }
 
-module.exports = { addEntry, addOrReplaceDaily, getLatest, getAll };
+module.exports = { addEntry, addOrReplaceDaily, hasEntryToday, getLatest, getAll };

@@ -58,10 +58,19 @@ function parseRssItems(xml) {
   return items;
 }
 
+// Word-boundary match, BUKAN substring .includes() -- .includes('war') dulu ke-trigger sama
+// "warga"/"wartawan"/"warta"/"warna" (kata Indonesia biasa banget) jadi salah tag negatif tiap
+// ada berita nyebut "warga" doang. \b aman juga buat frasa berspasi/berstrip ("record high",
+// "sell-off") karena spasi & strip itu sendiri udah non-word-char.
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+function hasWord(text, keyword) {
+  return new RegExp(`\\b${escapeRegex(keyword)}\\b`, 'i').test(text);
+}
 function tagSentiment(headline) {
-  const lower = headline.toLowerCase();
-  const pos = POSITIVE_KEYWORDS.some((k) => lower.includes(k));
-  const neg = NEGATIVE_KEYWORDS.some((k) => lower.includes(k));
+  const pos = POSITIVE_KEYWORDS.some((k) => hasWord(headline, k));
+  const neg = NEGATIVE_KEYWORDS.some((k) => hasWord(headline, k));
   if (pos && !neg) return 'positif';
   if (neg && !pos) return 'negatif';
   return 'netral';

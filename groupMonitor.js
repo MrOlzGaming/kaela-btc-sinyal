@@ -7,7 +7,7 @@ const {
   generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly,
 } = require('./groupReport');
 const { sendWhatsApp } = require('./fonnte');
-const { addOrReplaceDaily } = require('./archive');
+const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal } = require('./config');
 
@@ -66,6 +66,10 @@ async function main() {
   }
 
   for (const item of items) {
+    if (hasEntryToday(item.type, now)) {
+      console.log(`[GroupMonitor] ${item.type} udah kirim hari ini, skip (cegah dobel WA kalau ke-run ulang).`);
+      continue;
+    }
     console.log(item.content + '\n');
     addOrReplaceDaily(item.type, item.content, now); // anti-dobel kalau ke-run ulang di hari sama
     await sendWhatsApp(item.content);

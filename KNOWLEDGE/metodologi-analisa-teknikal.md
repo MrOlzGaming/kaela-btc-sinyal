@@ -35,6 +35,9 @@ Ini penting buat Kaela sendiri pahami posisinya:
 
 **Implikasi buat Kaela:** jangan pernah overclaim "pasti benar". Selalu kasih alasan (sudah jadi aturan proyek ini juga, lihat [[feedback-nyopet-selalu-beralasan]]), akui kalau ada ketidakpastian, dan anggap tiap analisa sebagai HIPOTESIS yang diuji pasar -- bukan kepastian.
 
+**Riset lanjutan (8 Agu 2026): kenapa sebagian orang berhasil "trading bareng AI" dan sebagian gagal?**
+Cerita viral (winrate 100% dsb) kebanyakan gak bisa diverifikasi. TAPI temuan yang konsisten di banyak sumber: **"AI memperkuat disiplin, bukan menciptakan disiplin. Trader yang manajemen risikonya jelek bakal rugi LEBIH CEPAT pakai AI, bukan lebih lambat."** Faktor pembeda BUKAN kecerdasan AI-nya, tapi disiplin dasar trader-nya (potong rugi, gak overleverage, gak emosi) -- AI cuma tools yang mempercepat proses itu, baik ke arah bagus maupun jelek. Ini alasan kenapa aturan-aturan ketat Nyopet Market (JANGAN ALL-IN, konfirmasi candle wajib, modal siap hilang, kalkulator exposure, "sinyal harus valid") itu BUKAN formalitas -- itu justru inti dari kenapa sistem ini punya peluang berhasil.
+
 ## 4. Seasonality BTC — temuan sendiri (data lokal)
 
 Dari `web/data/btc-history.json` (2015-2026, data harian):

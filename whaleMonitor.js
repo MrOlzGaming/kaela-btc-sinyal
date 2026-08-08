@@ -1,5 +1,5 @@
 // Jalankan tiap 15 menit: node whaleMonitor.js
-// Pantau blok Bitcoin baru, cari transaksi >=100 BTC (WHALE_THRESHOLD_BTC), kirim ke WEB (arsip,
+// Pantau blok Bitcoin baru, cari transaksi >=1000 BTC (WHALE_THRESHOLD_BTC), kirim ke WEB (arsip,
 // grup "Aktivitas Whale") DAN grup WA "BTC Sniper Club" lewat Fonnte.
 // JUJUR: fakta on-chain doang, gak nebak siapa/kenapa (lihat whaleLog.js).
 
@@ -12,7 +12,7 @@ const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 
 const STATE_PATH = path.join(__dirname, 'whale-state.json');
-const WHALE_THRESHOLD_BTC = 500;
+const WHALE_THRESHOLD_BTC = 1000; // naik dari 500 -> 1000 (permintaan Olan 8 Agu 2026, biar makin selektif)
 const MAX_BLOCKS_PER_RUN = 6; // cap ~1 jam data kalau run sempat kelewat/mati, hindari banjir alert lama
 
 function loadState() {

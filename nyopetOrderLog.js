@@ -19,20 +19,19 @@ const STRATEGY_LABEL = { range: 'Range Trading', breakout: 'Breakout', trend: 'T
 
 function formatRencana(order) {
   const lines = [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 📋 RENCANA (analisa bareng Olan + Kaela)`,
-    `${DIR_LABEL[order.direction] || order.direction} ${STRATEGY_LABEL[order.strategyType] || ''}`,
-    `Trigger: ${fmt(order.triggerPrice)}${order.confirmationNote ? ' — ' + order.confirmationNote : ''}`,
-    `TP: ${fmt(order.tp)} | SL: ${fmt(order.sl)}`,
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 📋 RENCANA (analisa Kaela)`,
+    `${DIR_LABEL[order.direction] || order.direction} · ${STRATEGY_LABEL[order.strategyType] || ''}`,
+    '',
+    `🎯 Harga: ${fmt(order.triggerPrice)}`,
+    `✅ TP: ${fmt(order.tp)}`,
   ];
-  if (order.leverage) lines.push(`Exposure: ${order.exposure}× | Leverage: ${order.leverage}× | Margin: ${fmt(order.marginUsd)}`);
-  if (order.notes) lines.push(`Catatan: ${order.notes}`);
+  if (order.confirmationNote) lines.push('', `📋 Kondisi: ${order.confirmationNote}`);
+  if (order.notes) lines.push('', `📝 ${order.notes}`);
   lines.push(
     '',
-    '⏳ Status: PENDING, nunggu konfirmasi candle. Belum open apapun -- ini rencana, bukan sinyal eksekusi.',
-    '🚨 Olan yang eksekusi manual di Binance kalau kondisi terpenuhi. Web ini cuma monitor/tracker,',
-    'BUKAN bot trading -- gak ada eksekusi otomatis apapun.',
-    nowStr(),
+    'Volume/margin pakai Kalkulator OLZ Exposure di web -- tinggal masukin modal.',
     '',
+    nowStr(),
     `🔗 ${WEB_URL}`,
   );
   return lines.join('\n');
@@ -42,10 +41,13 @@ function formatTriggered(order) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ✅ KENA TRIGGER, SEKARANG FLOATING`,
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
-    `TP: ${fmt(order.tp)} | SL: ${fmt(order.sl)}`,
-    'Live floating P&L bisa dipantau di web.',
-    nowStr(),
     '',
+    `✅ TP: ${fmt(order.tp)}`,
+    `❌ SL: ${fmt(order.sl)}`,
+    '',
+    'Live floating P&L bisa dipantau di web.',
+    '',
+    nowStr(),
     `🔗 ${WEB_URL}`,
   ].join('\n');
 }
@@ -55,10 +57,13 @@ function formatClosed(order) {
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${won ? '✅ TP KENA' : '❌ KENA STOP LOSS'}`,
-    `${DIR_LABEL[order.direction] || order.direction} | Entry ${fmt(order.entryPrice)} -> ${won ? 'TP' : 'SL'} ${fmt(won ? order.tp : order.sl)}`,
-    `P&L: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
-    nowStr(),
+    `${DIR_LABEL[order.direction] || order.direction}`,
     '',
+    `Entry: ${fmt(order.entryPrice)}`,
+    `Exit (${won ? 'TP' : 'SL'}): ${fmt(won ? order.tp : order.sl)}`,
+    `P&L: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
+    '',
+    nowStr(),
     `🔗 ${WEB_URL}`,
   ].join('\n');
 }
@@ -67,6 +72,7 @@ function formatCancelled(order) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🚫 RENCANA DIBATALKAN`,
     `${DIR_LABEL[order.direction] || order.direction} @ trigger ${fmt(order.triggerPrice)} -- dibatalkan sebelum kena trigger.`,
+    '',
     nowStr(),
   ].join('\n');
 }

@@ -1,0 +1,47 @@
+name: Kaela News (harian)
+
+on:
+  schedule:
+    - cron: '0 1 * * *' # 01:00 UTC = 09:00 WITA
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Cari & kirim berita (newsMonitor.js)
+        run: node newsMonitor.js
+
+      - name: Rebuild web/index.html dari archive terbaru
+        run: node buildDashboard.js
+
+      - name: Commit & push archive/web
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f archive.json web/index.html
+          git diff --staged --quiet || git commit -m "Auto: berita harian $(date -u +%Y-%m-%d)"
+          git pull --rebase origin master
+          git push
+
+      - name: Deploy web/ ke Netlify
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

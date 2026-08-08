@@ -1,0 +1,58 @@
+name: Whale Alert (tiap 15 menit)
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Cek transaksi besar (whaleMonitor.js)
+        run: node whaleMonitor.js
+
+      - name: Cek apakah ada whale alert baru (archive.json berubah)
+        id: check
+        run: |
+          if git diff --quiet archive.json 2>/dev/null; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rebuild web/index.html (cuma kalau ada perubahan)
+        if: steps.check.outputs.changed == 'true'
+        run: node buildDashboard.js
+
+      - name: Commit & push whale-state.json (WAJIB tiap run, biar blok terakhir gak lupa)
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f whale-state.json archive.json web/index.html
+          git diff --staged --quiet || git commit -m "Auto: whale monitor $(date -u +%Y-%m-%dT%H:%M)"
+          git pull --rebase origin master
+          git push
+
+      - name: Deploy web/ ke Netlify (cuma kalau ada perubahan)
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Kaela BTC Sinyal — Arsip</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7931a">
+<meta name="theme-color" content="#1fae6c">
 <meta name="description" content="Arsip laporan & berita Kaela BTC Sinyal — sistem Sniper siklus halving Bitcoin.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -110,6 +110,30 @@
   .date-group summary::before { content: '▸ '; color: var(--clr-primary); }
   .date-group[open] summary::before { content: '▾ '; }
   .date-group .entry { margin: 8px 10px; box-shadow: none; }
+
+  /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
+  .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .journal-stat { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .journal-stat-label { color: var(--clr-text-muted); font-size: 0.72rem; margin-bottom: 4px; }
+  .journal-stat-value { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .journal-stat-value.up { color: var(--clr-success); }
+  .journal-stat-value.down { color: var(--clr-danger); }
+  .journal-section-title { font-weight: 700; font-size: 0.95rem; margin: 22px 0 10px; color: var(--clr-text); }
+  .equity-svg { width: 100%; height: 160px; display: block; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .pnl-calendar { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 14px; }
+  .cal-header { font-weight: 700; margin-bottom: 10px; }
+  .cal-header .up { color: var(--clr-success); } .cal-header .down { color: var(--clr-danger); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { text-align: center; color: var(--clr-text-muted); font-size: 0.68rem; padding-bottom: 4px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 6px; background: var(--clr-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; }
+  .cal-cell-empty { background: transparent; }
+  .cal-cell.up { background: rgba(34, 197, 94, 0.16); color: var(--clr-success); }
+  .cal-cell.down { background: rgba(248, 81, 73, 0.16); color: var(--clr-danger); }
+  .cal-day { font-size: 0.68rem; opacity: 0.7; }
+  .cal-pnl { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .strategy-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .strategy-filter-btn { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+  .strategy-filter-btn.active { background: var(--clr-primary); color: #14100a; border-color: var(--clr-primary); }
 </style>
 </head>
 <body>
@@ -117,30 +141,6 @@
   <p style="color:var(--clr-text-muted);font-size:0.9rem;">Info hari ini ada di tab <a href="index.html">🏠 Dashboard</a>. Halaman ini isinya hari-hari sebelumnya, dikelompokkan per jenis.</p>
 
   <section class="arsip-group">
-    <h2 class="group-title" style="border-bottom-color: #3b82f6;">🟦 📰 Berita</h2>
-    <div class="latest" style="border-left: 4px solid #3b82f6;"><div class="latest-label">🟦 📰 Kaela News</div><div class="latest-date">7/8/2026, 13.59.37</div><pre class="content">📰 KAELA NEWS — 2026-08-07
-
-⚪ <span class="news-neutral">Dompet Bitcoin yang lama tidak aktif sejak 2011 pindahkan $3,2 juta ke alamat terkait FalconX - Pluang</span>
-   <a href="https://news.google.com/rss/articles/CBMingFBVV95cUxOblo0TVRPZ2w3WVhid1MwVHM2R25sTVhxdENnUWZYVUNuRmRMYk9MMVBtMmlpOE10eDZROThZNV9WVVNvZUt1Y0p2RjNSS0lXYjdZbkVvaGtkLVdrN1FHWE12aDBsN192SGhfalpQUFhTYUdWVEo3SGJiVE0xRVhMczlmbF9jOUxkLW9qYWNZWmpLc08yYVB6ZnpsTDBndw?oc=5" target="_blank" rel="noopener noreferrer">Pluang</a>
-⚪ <span class="news-neutral">Prediksi Harga 3 Besar: Bitcoin, Ethereum, Ripple – BTC di Bawah Tekanan, ETH Diperdagangkan Sideways, XRP Bergerak Menuju $1 - fxstreet-id.com</span>
-   <a href="https://news.google.com/rss/articles/CBMijAJBVV95cUxNaVY2b2d2VDFzbDdxTTVDai1Md3NyV3gwTFV5Vm5HOVhUUVNDVU9BWXJxeG1WcS1fZTlEM2N6V1JzLWFyTXYzMlVEYnRIc3hrMk9QZ3Zqa3BjRFVUUGU1MHRVOGhKOXpoX0p5aHAwUUt1Ulhrci0wQWJuS3hyME5RdHV1TDM1MDVKejVMRllLOWhBSlVuRG8xZk02dlVUTndVdFRuZURkc1JCQlBBSTFaUDB1NVRxclNCeXp1Qy1ZcWJaMnhLVGMyZHRKdlFMR0FZQ0NyYnl3OWRXUEU4T3Q3Y1dGTXJKT0VaQVpGeFdhbk42QkR3b19mbVVBTC1rMGRiUUlORFV4Ymd2eEll0gGSAkFVX3lxTE5XZmtJSW9vdnhXQ05YTFFWeVo1MUc0Wk5tdk5rOS1hWG42cHUySGxSNWliTFNkc2hyWm9aanB4Z0xmYm1UMkdFTEJLTHZMT3BUSHVEQ0pBRzRPclIzY0w0Uk5PSXo5X05GS2MtSm9majZJZ21mZWE2dDQ5SDVyZ0oydy0tWUJ1UEY2R1c5cmg5bUxOQ1pQb1FReldVNFVFbTRjaXVaT2xndmdLNlVpVzQzS29QVVVTSjY3MjQxeUlqaUxuVVJhY2VsNnhwR2FlMFpsa0VhUXdhSXF3NklkUUNSZWllXzlzb24tWTRMekxRNVE1cC1zZVZIT25zcTVFei11cWVNMFQ2SXJFR3gxMUxjWGc?oc=5" target="_blank" rel="noopener noreferrer">fxstreet-id.com</a>
-⚪ <span class="news-neutral">Bitcoin (BTC) Terbaru: Bitcoin Tunggu Data NFP AS, Mampukah Tembus US$65.000? - Ajaib</span>
-   <a href="https://news.google.com/rss/articles/CBMiqwFBVV95cUxPUXBzVGxHMEthRGpMZkZ5QTZWNXZ1M0ZwZmc1NWw4VTJ5NDY5MktGYUZSTHFCRDNyalVHMlFZZzliU2U2WEFDRmc4eEJsRkpBTmlKVG5ZeFF1S1lLNk1HcFBXWGxFTUhJM29weXAxMl9Ea2FPNFhTc2ktZUFlYnVvT244amlIcndVRTl4V2xFSjhpeTFGSktUS3VmUVZOdHNFa2IwNFVnM1BYRkU?oc=5" target="_blank" rel="noopener noreferrer">Ajaib</a>
-🔴 <span class="news-negative">Selat Hormuz Memanas, Harga Minyak Dunia Kembali Melonjak 3 Persen - news.schoolmedia.id</span>
-   <a href="https://news.google.com/rss/articles/CBMiqAFBVV95cUxQSEtvNUVZVFpKRjhtRlJ2b3FGbXBGVGdIWlN0VEE2NkZleG5fcFFIS2RWWElXd3NhcGFUUWM0bFNQUTNCQ25PdFEzZUNsM2xCTzRsTzBhNHN3bVpRMW00dWpZNGU2ZXp1SmJuZjNaU2hreFZXOHBwZ21OcGgyQ1lraVU5bGlSMTR4eURxX1Y4bUJvcGNFYmlYZHRHQzZLZ281SlF3VG44eVU?oc=5" target="_blank" rel="noopener noreferrer">news.schoolmedia.id</a>
-🔴 <span class="news-negative">Ekonomi Indonesia Ditopang Kelas Atas, Daya Beli Menengah Bawah Kian Tertekan - InvestorTrust</span>
-   <a href="https://news.google.com/rss/articles/CBMitAFBVV95cUxNOW5mYXYyRWdxQkZrNlZPRXV3c3NHZWJnTFFwQ0h5am5qNEs0RTdBd0lid05tTUJldVBGalhwRFUzUFFna1NMV2ptSEFTZEtmLWVtdlhfLW5RZEx6aURhbkh1ei16Z3BQZmYxNWlhekJZejRZYlo4N194b3B0cTNrdmYwc3dYUS1lXzNyNHVsRF9YWDhod1pyNGhWbDZkQXgwdlV5Q2dmNGtDOWJ5SGstcVpUM2g?oc=5" target="_blank" rel="noopener noreferrer">InvestorTrust</a>
-⚪ <span class="news-neutral">Pertumbuhan Ekonomi Filipina Terendah Sejak 2009 Efek Perang Iran - Bloomberg Technoz</span>
-   <a href="https://news.google.com/rss/articles/CBMiuAFBVV95cUxPajEyR1JTTTBXbHUwUEFEWjNkUjhyVzVIVkFpWUhYc1ZHVmZvM1J3UjQwYmNPclpGclduaDZyQkFMb3pvbU5ySjFoQS0wSGZMenR6NnR6VEkybkM1RFdCdHdmZmE0OUNjS3MzUE5iV3dmQ01mVXhvLV8zamVJOG5YaFRkZE1QU0Jfay1JaXd5N09sRDFNQnlONjdRNnlhWUxja09nUGNsS193QkhtcnhPampDbi01YmpS?oc=5" target="_blank" rel="noopener noreferrer">Bloomberg Technoz</a>
-🟢 <span class="news-positive">Ekonomi Indonesia Tumbuh 5,29%, Cek Negara-negara Tetangga - Market - Bloomberg Technoz</span>
-   <a href="https://news.google.com/rss/articles/CBMirwFBVV95cUxNMjEwVHJNZUpVcDRBek96OUdBNlNSdUY5VklrUEVKZFQ1QkRwNVhyaTJQU0lxYjhJNlZNVklmbjRrUGxIVnlZLXR0ejBENllBdnJlNk5qYnE4cTdpU1N1OURJU25QaFZjTHRybHJtczV2VTVFVnNrbkNiYUo3c190OXdlcmxUck9DRFh3azJvaUl2ODRwc01EeGtGWnA4a2lhRzBKRGdfM1hHWHhSdkFn?oc=5" target="_blank" rel="noopener noreferrer">Bloomberg Technoz</a>
-⚪ <span class="news-neutral">Meski Masih Bertumbuh, Mesin Utama Ekonomi Rapuh - Kompas.id</span>
-   <a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxQZDVDcUZITVpoWTBJVVFnbU9jcFR5SlhWNnNyLXlENFFvamJyVkNqQ3p1eWpvLVRQVHF3dEhRMFlQUkVFUWdQVnlEc093a3ZCQ3FIUTFKUkd5bXpZMWZVYno2VDhGTzNLTkJkRUU2cFlOdFNxTlRYbFpXNmdHTGNXcW5TNA?oc=5" target="_blank" rel="noopener noreferrer">Kompas.id</a>
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-    
-  </section>
-<section class="arsip-group">
     <h2 class="group-title" style="border-bottom-color: #a855f7;">🟪 📊 Laporan</h2>
     <div class="latest" style="border-left: 4px solid #a855f7;"><div class="latest-label">🟪 📊 Laporan Harian</div><div class="latest-date">7/8/2026, 13.59.36</div><pre class="content">📊 Update BTC — 2026-08-07
 Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
@@ -153,141 +153,6 @@ Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
       <h2 class="group-title" style="border-bottom-color: #f7931a;">🟧 ⚡ Sinyal Nyopet Market</h2>
       <div class="empty">Belum ada arsip.</div>
     </section>
-<section class="arsip-group">
-    <h2 class="group-title" style="border-bottom-color: #eab308;">🟨 🐋 Aktivitas Whale</h2>
-    <div class="latest" style="border-left: 4px solid #eab308;"><div class="latest-label">🟨 🐋 Whale Alert</div><div class="latest-date">7/8/2026, 13.59.57</div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
-570,12 BTC (~$36,679,741 / ~Rp657.899.018.102) berpindah dalam 1 transaksi di blockchain.
-Arah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).
-TXID: 077b7144cd4b21d37dc11b297096efc8d2305ac8771d60335a60507dede6ae3e
-Cek: https://mempool.space/tx/077b7144cd4b21d37dc11b297096efc8d2305ac8771d60335a60507dede6ae3e
-2026-08-07 13:52
-
-⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).
-Kaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-    <details class="riwayat"><summary>Riwayat (10)</summary><details class="date-group"><summary>2026-08-07 (10)</summary><div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.59.57</span></div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
-503,19 BTC (~$32,373,832 / ~Rp580.666.909.471) berpindah dalam 1 transaksi di blockchain.
-Arah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).
-TXID: 7b3b4edf3797a0b30004a445048a8cb369f6b3bd3b67a6439dcb30fa27efef69
-Cek: https://mempool.space/tx/7b3b4edf3797a0b30004a445048a8cb369f6b3bd3b67a6439dcb30fa27efef69
-2026-08-07 13:52
-
-⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).
-Kaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.59.57</span></div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
-570,16 BTC (~$36,682,041 / ~Rp657.940.265.037) berpindah dalam 1 transaksi di blockchain.
-Arah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).
-TXID: a4472df3145081ce60313a78a6c66e6c1c07da81768ea7b266178e791dc2c612
-Cek: https://mempool.space/tx/a4472df3145081ce60313a78a6c66e6c1c07da81768ea7b266178e791dc2c612
-2026-08-07 13:30
-
-⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).
-Kaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.59.57</span></div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
-570,17 BTC (~$36,682,793 / ~Rp657.953.752.423) berpindah dalam 1 transaksi di blockchain.
-Arah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).
-TXID: 2f9e6fd718b19203c4a2c8f48616900aad03a845f573b13f44c153a85f73552b
-Cek: https://mempool.space/tx/2f9e6fd718b19203c4a2c8f48616900aad03a845f573b13f44c153a85f73552b
-2026-08-07 13:23
-
-⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).
-Kaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.59.57</span></div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
-570,18 BTC (~$36,683,226 / ~Rp657.961.517.587) berpindah dalam 1 transaksi di blockchain.
-Arah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).
-TXID: 41ebbd88042b99f67de8aacc8a043ed5950f36bdf3eadd9422931305ff6363e3
-Cek: https://mempool.space/tx/41ebbd88042b99f67de8aacc8a043ed5950f36bdf3eadd9422931305ff6363e3
-2026-08-07 13:12
-
-⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).
-Kaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.02.53</span></div><pre class="content">🐋 PERGERAKAN BESAR TERDETEKSI
-160,73 BTC (~$10,327,389) berpindah dalam 1 transaksi di blockchain.
-TXID: ee3029721a2134be59a8ba1c5a6f2bfe12e876c9d3cfa94f68c757b566074d3f
-Cek: https://mempool.space/tx/ee3029721a2134be59a8ba1c5a6f2bfe12e876c9d3cfa94f68c757b566074d3f
-2026-08-07 04:58
-
-⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
-dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.02.53</span></div><pre class="content">🐋 PERGERAKAN BESAR TERDETEKSI
-324,95 BTC (~$20,878,336) berpindah dalam 1 transaksi di blockchain.
-TXID: fc49eb24b1a80f6b99ec2abe0a2f3f47b1f5b168adddf1d6ab07addd716fee02
-Cek: https://mempool.space/tx/fc49eb24b1a80f6b99ec2abe0a2f3f47b1f5b168adddf1d6ab07addd716fee02
-2026-08-07 04:58
-
-⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
-dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.02.53</span></div><pre class="content">🐋 PERGERAKAN BESAR TERDETEKSI
-153,51 BTC (~$9,863,414) berpindah dalam 1 transaksi di blockchain.
-TXID: 3b55969611339474262528538dea6078381e16be3313b64793f4ab3fc69630ab
-Cek: https://mempool.space/tx/3b55969611339474262528538dea6078381e16be3313b64793f4ab3fc69630ab
-2026-08-07 04:58
-
-⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
-dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.02.53</span></div><pre class="content">🐋 PERGERAKAN BESAR TERDETEKSI
-315,22 BTC (~$20,253,554) berpindah dalam 1 transaksi di blockchain.
-TXID: c17599cd16e4be9b642206496368716fca29b46d9ccdc58daf594077a2df0276
-Cek: https://mempool.space/tx/c17599cd16e4be9b642206496368716fca29b46d9ccdc58daf594077a2df0276
-2026-08-07 04:58
-
-⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
-dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.02.53</span></div><pre class="content">🐋 PERGERAKAN BESAR TERDETEKSI
-570,18 BTC (~$36,634,742) berpindah dalam 1 transaksi di blockchain.
-TXID: b94769a8164713f5e558c81bcb747233c7c0e185eff05c1c3f38f472d8ddc4af
-Cek: https://mempool.space/tx/b94769a8164713f5e558c81bcb747233c7c0e185eff05c1c3f38f472d8ddc4af
-2026-08-07 04:58
-
-⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
-dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-<div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.02.53</span></div><pre class="content">🐋 PERGERAKAN BESAR TERDETEKSI
-366,33 BTC (~$23,537,302) berpindah dalam 1 transaksi di blockchain.
-TXID: ab1dd23585ffbc8cb2ab080c5ed929a6c8c183b9db3bcddf348dd03b90cb7791
-Cek: https://mempool.space/tx/ab1dd23585ffbc8cb2ab080c5ed929a6c8c183b9db3bcddf348dd03b90cb7791
-2026-08-07 04:58
-
-⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
-dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div></details></details>
-  </section>
-<section class="arsip-group">
-    <h2 class="group-title" style="border-bottom-color: #8b949e;">⬜ 📅 Jadwal Ekonomi</h2>
-    <div class="latest" style="border-left: 4px solid #8b949e;"><div class="latest-label">⬜ 📅 Jadwal Ekonomi</div><div class="latest-date">7/8/2026, 13.59.39</div><pre class="content">📅 JADWAL EKONOMI HARI INI — 2026-08-07
-(event USD dampak tinggi aja -- paling relevan buat BTC lewat sentimen risiko)
-
-🕐 20:30 WITA — Pertumbuhan Upah per Jam (Bulanan)
-   Forecast: 0.3% | Sebelumnya: 0.3%
-🕐 20:30 WITA — Perubahan Lapangan Kerja Non-Pertanian (NFP)
-   Forecast: 85K | Sebelumnya: 57K
-🕐 20:30 WITA — Tingkat Pengangguran
-   Forecast: 4.2% | Sebelumnya: 4.2%
-
-⚠️ Murni informasi -- gak pengaruhi sinyal Nyopet Market atau keputusan Musim Tanam/Panen.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-    
-  </section>
 
   <script>
     if ('serviceWorker' in navigator) {

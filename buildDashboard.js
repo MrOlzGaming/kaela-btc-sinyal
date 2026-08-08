@@ -38,12 +38,12 @@ const TYPE_LABEL = {
 };
 
 // Urutan & isi grup TETAP di Arsip -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
+// News/Whale/Econ SENGAJA gak diarsip ke web lagi (keputusan Olan 8 Agu 2026) -- kejadian sesaat,
+// fungsinya selesai begitu terkirim ke WA, gak perlu jejak permanen. Web cuma simpan yang punya
+// nilai historis jangka panjang: laporan siklus halving + jurnal transaksi Nyopet Market.
 const GROUPS = [
-  { key: 'news', category: 'news', label: `${CATEGORY_COLOR.news.emoji} 📰 Berita`, match: (type) => type === 'news' },
   { key: 'laporan', category: 'laporan', label: `${CATEGORY_COLOR.laporan.emoji} 📊 Laporan`, match: (type) => type.startsWith('report-') },
   { key: 'sinyal', category: 'nyopet', label: `${CATEGORY_COLOR.nyopet.emoji} ⚡ Sinyal Nyopet Market`, match: (type) => type === 'nyopet' },
-  { key: 'whale', category: 'whale', label: `${CATEGORY_COLOR.whale.emoji} 🐋 Aktivitas Whale`, match: (type) => type === 'whale' },
-  { key: 'econ', category: 'econ', label: `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`, match: (type) => type === 'econ-calendar' },
 ];
 
 function escapeHtml(s) {
@@ -234,6 +234,30 @@ const SHARED_STYLE = `
   .date-group summary::before { content: '▸ '; color: var(--clr-primary); }
   .date-group[open] summary::before { content: '▾ '; }
   .date-group .entry { margin: 8px 10px; box-shadow: none; }
+
+  /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
+  .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .journal-stat { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .journal-stat-label { color: var(--clr-text-muted); font-size: 0.72rem; margin-bottom: 4px; }
+  .journal-stat-value { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .journal-stat-value.up { color: var(--clr-success); }
+  .journal-stat-value.down { color: var(--clr-danger); }
+  .journal-section-title { font-weight: 700; font-size: 0.95rem; margin: 22px 0 10px; color: var(--clr-text); }
+  .equity-svg { width: 100%; height: 160px; display: block; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .pnl-calendar { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 14px; }
+  .cal-header { font-weight: 700; margin-bottom: 10px; }
+  .cal-header .up { color: var(--clr-success); } .cal-header .down { color: var(--clr-danger); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { text-align: center; color: var(--clr-text-muted); font-size: 0.68rem; padding-bottom: 4px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 6px; background: var(--clr-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; }
+  .cal-cell-empty { background: transparent; }
+  .cal-cell.up { background: rgba(34, 197, 94, 0.16); color: var(--clr-success); }
+  .cal-cell.down { background: rgba(248, 81, 73, 0.16); color: var(--clr-danger); }
+  .cal-day { font-size: 0.68rem; opacity: 0.7; }
+  .cal-pnl { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .strategy-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .strategy-filter-btn { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+  .strategy-filter-btn.active { background: var(--clr-primary); color: #14100a; border-color: var(--clr-primary); }
 `;
 
 function countdownHtml() {
@@ -406,7 +430,7 @@ function renderOrderCard(o) {
   const badge = o.status === 'cancelled' ? '🚫 DIBATALKAN' : (won ? '✅ TP' : '❌ SL');
   const pnlLine = (o.pnlUsd !== null && o.pnlUsd !== undefined)
     ? `<div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${o.pnlPct.toFixed(2)}%)</div>` : '';
-  return `<div class="order-card closed">
+  return `<div class="order-card closed" data-strategy="${o.strategyType || ''}">
     ${idLine}
     <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
     <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
@@ -414,22 +438,19 @@ function renderOrderCard(o) {
   </div>`;
 }
 
-function renderNyopetOrdersPanel() {
+function loadNyopetOrdersState() {
   const ordersPath = path.join(__dirname, 'nyopet-orders.json');
   // Belum ada file = belum pernah ada order sama sekali (sistem manual baru mulai) -- BUKAN
   // berarti panelnya kosong dari tampilan, tetap render empty-state yang jelas, jangan blank.
-  const state = fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
+  return fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
+}
+
+function renderNyopetOrdersPanel(state) {
   // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
   // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
   // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di nyopet-orders.json
   // (dipantau nyopetOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
   const active = (state.orders || []).filter((o) => o.status === 'floating');
-  // Jurnal = SEMUA order closed (bukan dipotong 5) -- cancelled ditampilkan tapi TIDAK dihitung
-  // ke statistik win-rate/P&L (itu batal sebelum jadi posisi beneran, bukan hasil trade).
-  const closedAll = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').reverse();
-  const trades = closedAll.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl');
-  const wins = trades.filter((o) => o.status === 'closed_tp').length;
-  const totalPnlUsd = trades.reduce((sum, o) => sum + (o.pnlUsd || 0), 0);
 
   const balanceLine = state.balanceUpdatedAt
     ? `<div class="order-balance">💰 Saldo Live Order: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
@@ -439,24 +460,141 @@ function renderNyopetOrdersPanel() {
     ? `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`
     : `<div class="empty">⚡ Belum ada order aktif. Nyopet Market sekarang manual -- Olan &amp; Kaela analisa bareng dulu sebelum ada rencana order.</div>`;
 
-  const journalSummary = trades.length > 0
-    ? `<div class="order-journal-summary">
-        <span>📓 Jurnal: <strong>${trades.length}</strong> trade</span>
-        <span>Win rate: <strong>${((wins / trades.length) * 100).toFixed(0)}%</strong> (${wins}/${trades.length})</span>
-        <span class="${totalPnlUsd >= 0 ? 'up' : 'down'}">Total P&amp;L: <strong>${totalPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(totalPnlUsd)}</strong></span>
+  return `<div class="nyopet-orders-panel">
+    ${balanceLine}
+    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo yang ditampilkan adalah saldo trading ASLI (eksperimen riset, bukan simulasi). Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
+    ${activeHtml}
+  </div>`;
+}
+
+// ============ Tab Jurnal: statistik + equity curve + kalender P/L ala trading journal profesional
+// (RR Metrics/TradeZella dsb) -- SEMUA dihitung dari nyopet-orders.json yang udah ada, gak ada
+// field baru. R-multiple pakai marginUsd sebagai 1R (itu resiko riil per trade di sistem exposure
+// kita -- lihat KNOWLEDGE/metodologi-analisa-teknikal.md §5, margin = 100% loss kalau SL kena).
+
+function computeJournalStats(trades) {
+  if (trades.length === 0) return null;
+  const wins = trades.filter((o) => o.status === 'closed_tp');
+  const losses = trades.filter((o) => o.status === 'closed_sl');
+  const winRate = (wins.length / trades.length) * 100;
+  const grossWin = wins.reduce((s, o) => s + (o.pnlUsd || 0), 0);
+  const grossLoss = Math.abs(losses.reduce((s, o) => s + (o.pnlUsd || 0), 0));
+  const profitFactor = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? null : 0); // null = "tak terhingga" (belum pernah rugi)
+  const totalPnl = trades.reduce((s, o) => s + (o.pnlUsd || 0), 0);
+  const expectancy = totalPnl / trades.length;
+  const rMultiples = trades.filter((o) => o.marginUsd).map((o) => o.pnlUsd / o.marginUsd);
+  const avgR = rMultiples.length ? rMultiples.reduce((a, b) => a + b, 0) / rMultiples.length : null;
+  return { count: trades.length, wins: wins.length, losses: losses.length, winRate, profitFactor, totalPnl, expectancy, avgR };
+}
+
+function renderJournalStatsGrid(stats) {
+  const pfText = stats.profitFactor === null ? '∞' : stats.profitFactor.toFixed(2);
+  const cell = (label, value, cls = '') => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls}">${value}</div></div>`;
+  return `<div class="journal-stats-grid">
+    ${cell('Total Trade', stats.count)}
+    ${cell('Win Rate', `${stats.winRate.toFixed(0)}%`, stats.winRate >= 50 ? 'up' : 'down')}
+    ${cell('Profit Factor', pfText, (stats.profitFactor === null || stats.profitFactor >= 1) ? 'up' : 'down')}
+    ${cell('Expectancy/trade', fmtUsdOrder(stats.expectancy), stats.expectancy >= 0 ? 'up' : 'down')}
+    ${cell('Avg R-Multiple', stats.avgR === null ? '-' : `${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, (stats.avgR || 0) >= 0 ? 'up' : 'down')}
+    ${cell('Total P&amp;L', `${stats.totalPnl >= 0 ? '+' : ''}${fmtUsdOrder(stats.totalPnl)}`, stats.totalPnl >= 0 ? 'up' : 'down')}
+  </div>`;
+}
+
+// trades: newest-first (konsisten sama urutan lain di file ini) -- dibalik dulu buat kronologis
+function renderEquityCurveSvg(trades) {
+  if (trades.length < 2) return '<div class="empty">Butuh minimal 2 trade selesai buat equity curve.</div>';
+  const chronological = [...trades].reverse();
+  let cum = 0;
+  const points = [0, ...chronological.map((o) => (cum += (o.pnlUsd || 0)))];
+  const w = 600, h = 160, pad = 10;
+  const min = Math.min(...points), max = Math.max(...points);
+  const range = (max - min) || 1;
+  const stepX = (w - pad * 2) / (points.length - 1);
+  const coords = points.map((v, i) => {
+    const x = pad + i * stepX;
+    const y = pad + (h - pad * 2) * (1 - (v - min) / range);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = points[points.length - 1];
+  const strokeVar = last >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
+  const zeroY = (pad + (h - pad * 2) * (1 - (0 - min) / range)).toFixed(1);
+  return `<svg class="equity-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <line x1="0" y1="${zeroY}" x2="${w}" y2="${zeroY}" style="stroke:var(--clr-border);stroke-width:1" stroke-dasharray="4 4"/>
+    <polyline points="${coords.join(' ')}" fill="none" style="stroke:${strokeVar};stroke-width:2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+const DOW_ID = ['M', 'S', 'S', 'R', 'K', 'J', 'S']; // Minggu Senin Selasa Rabu Kamis Jumat Sabtu
+
+function renderPnlCalendar(trades, now) {
+  const monthKey = localDateKey(now).slice(0, 7); // 'YYYY-MM'
+  const daily = {};
+  trades.forEach((o) => {
+    if (!o.closedAt) return;
+    const key = localDateKey(new Date(o.closedAt));
+    if (!key.startsWith(monthKey)) return;
+    daily[key] = (daily[key] || 0) + (o.pnlUsd || 0);
+  });
+  const [y, m] = monthKey.split('-').map(Number);
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const monthPnl = Object.values(daily).reduce((a, b) => a + b, 0);
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push('<div class="cal-cell cal-cell-empty"></div>');
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${monthKey}-${String(d).padStart(2, '0')}`;
+    const pnl = daily[key];
+    const cls = pnl == null ? '' : pnl >= 0 ? 'up' : 'down';
+    const pnlText = pnl == null ? '' : `<span class="cal-pnl">${pnl >= 0 ? '+' : ''}${Math.round(pnl)}</span>`;
+    cells.push(`<div class="cal-cell ${cls}"><span class="cal-day">${d}</span>${pnlText}</div>`);
+  }
+  return `<div class="pnl-calendar">
+    <div class="cal-header">${BULAN_ID[m - 1]} ${y} <span class="${monthPnl >= 0 ? 'up' : 'down'}">${monthPnl >= 0 ? '+' : ''}${fmtUsdOrder(monthPnl)}</span></div>
+    <div class="cal-grid">${DOW_ID.map((d) => `<div class="cal-dow">${d}</div>`).join('')}${cells.join('')}</div>
+  </div>`;
+}
+
+function renderJurnalPanel(state, now) {
+  // cancelled TIDAK dihitung ke statistik (batal sebelum jadi posisi beneran, bukan hasil trade),
+  // tapi tetap muncul di daftar riwayat biar jejaknya keliatan.
+  const closedAll = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').reverse();
+  const trades = closedAll.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl');
+  const stats = computeJournalStats(trades);
+
+  if (!stats) {
+    return `<div class="empty">📓 Belum ada trade yang selesai. Jurnal bakal keisi otomatis begitu ada order Nyopet Market yang kena TP/SL.</div>`;
+  }
+
+  const strategies = [...new Set(closedAll.map((o) => o.strategyType).filter(Boolean))];
+  const filterHtml = strategies.length > 1
+    ? `<div class="strategy-filter">
+        <button class="strategy-filter-btn active" data-strategy="all">Semua</button>
+        ${strategies.map((s) => `<button class="strategy-filter-btn" data-strategy="${s}">${STRATEGY_LABEL_WEB[s] || s}</button>`).join('')}
       </div>`
     : '';
 
-  const historyHtml = closedAll.length > 0
-    ? `<details class="order-history"><summary>Jurnal &amp; riwayat order (${closedAll.length})</summary>${journalSummary}<div class="order-grid">${closedAll.map(renderOrderCard).join('')}</div></details>`
-    : '';
-
-  return `<div class="nyopet-orders-panel">
-    ${balanceLine}
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo yang ditampilkan adalah saldo trading ASLI (eksperimen riset, bukan simulasi).</p>
-    ${activeHtml}
-    ${historyHtml}
-  </div>`;
+  return `<div class="jurnal-panel">
+    ${renderJournalStatsGrid(stats)}
+    <div class="journal-section-title">📈 Equity Curve</div>
+    ${renderEquityCurveSvg(trades)}
+    <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
+    ${renderPnlCalendar(trades, now)}
+    <div class="journal-section-title">📋 Riwayat Trade (${closedAll.length})</div>
+    ${filterHtml}
+    <div class="order-grid" id="jurnal-trade-grid">${closedAll.map(renderOrderCard).join('')}</div>
+  </div>
+  <script>
+    document.querySelectorAll('.strategy-filter-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.strategy-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var s = btn.dataset.strategy;
+        document.querySelectorAll('#jurnal-trade-grid .order-card').forEach(function (card) {
+          card.style.display = (s === 'all' || card.dataset.strategy === s) ? '' : 'none';
+        });
+      });
+    });
+  </script>`;
 }
 
 function buildDashboardHtml() {
@@ -469,32 +607,18 @@ function buildDashboardHtml() {
   const todayLaporan = todayOfType(allEntries, todayKey, (t) => t.startsWith('report-'));
   const halvingTabHtml = renderSiklusHalvingPanel(now) + todayLaporan.map((e) => renderEntry(e, { highlight: true })).join('\n');
 
-  // Tab Nyopet Market -- panel order LIVE (manual) di atas, baru log teks hari ini/posisi lama di bawah
+  // Tab Nyopet Market -- panel order AKTIF (manual) di atas, baru log teks hari ini/posisi lama di bawah
   const todayNyopet = todayOfType(allEntries, todayKey, (t) => t === 'nyopet').filter((e) => !sameEntry(e, openSignal));
-  let nyopetTabHtml = renderNyopetOrdersPanel();
+  const ordersState = loadNyopetOrdersState();
+  let nyopetTabHtml = renderNyopetOrdersPanel(ordersState);
   if (openSignal) {
     nyopetTabHtml += renderEntry(openSignal, { highlight: true, pinned: true }) + todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
   } else if (todayNyopet.length > 0) {
     nyopetTabHtml += todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
   }
 
-  // Tab Berita
-  const todayNews = todayOfType(allEntries, todayKey, (t) => t === 'news');
-  const newsTabHtml = todayNews.length > 0
-    ? todayNews.map((e) => renderEntry(e, { highlight: true })).join('\n')
-    : `<div class="empty">📰 Belum ada berita baru hari ini.</div>`;
-
-  // Tab Whale Alert
-  const todayWhale = todayOfType(allEntries, todayKey, (t) => t === 'whale');
-  const whaleTabHtml = todayWhale.length > 0
-    ? todayWhale.map((e) => renderEntry(e, { highlight: true })).join('\n')
-    : `<div class="empty">🐋 Belum ada pergerakan besar terdeteksi hari ini.</div>`;
-
-  // Tab Jadwal Ekonomi
-  const todayEcon = todayOfType(allEntries, todayKey, (t) => t === 'econ-calendar');
-  const econTabHtml = todayEcon.length > 0
-    ? todayEcon.map((e) => renderEntry(e, { highlight: true })).join('\n')
-    : `<div class="empty">📅 Gak ada event ekonomi dampak tinggi hari ini.</div>`;
+  // Tab Jurnal -- statistik + equity curve + kalender P/L, dari riwayat order closed/cancelled
+  const jurnalTabHtml = renderJurnalPanel(ordersState, now);
 
   return `<!doctype html>
 <html lang="id">
@@ -502,7 +626,7 @@ function buildDashboardHtml() {
 <meta charset="utf-8">
 <title>Kaela BTC Sinyal — Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7931a">
+<meta name="theme-color" content="#1fae6c">
 <meta name="description" content="Dashboard Kaela BTC Sinyal — countdown halving & info hari ini.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -563,15 +687,11 @@ function buildDashboardHtml() {
   <div class="dash-tabs">
     <button class="dash-tab-btn active" data-tab="halving">🎯 Siklus Halving</button>
     <button class="dash-tab-btn" data-tab="nyopet">⚡ Nyopet Market</button>
-    <button class="dash-tab-btn" data-tab="news">📰 Berita</button>
-    <button class="dash-tab-btn" data-tab="whale">🐋 Whale Alert</button>
-    <button class="dash-tab-btn" data-tab="econ">📅 Jadwal Ekonomi</button>
+    <button class="dash-tab-btn" data-tab="jurnal">📓 Jurnal</button>
   </div>
   <div class="dash-panel active" data-panel="halving">${halvingTabHtml}</div>
   <div class="dash-panel" data-panel="nyopet">${nyopetTabHtml}</div>
-  <div class="dash-panel" data-panel="news">${newsTabHtml}</div>
-  <div class="dash-panel" data-panel="whale">${whaleTabHtml}</div>
-  <div class="dash-panel" data-panel="econ">${econTabHtml}</div>
+  <div class="dash-panel" data-panel="jurnal">${jurnalTabHtml}</div>
 
   <a class="goto-arsip" href="arsip.html">📚 Lihat Arsip Lengkap (hari-hari sebelumnya) →</a>
 
@@ -623,7 +743,7 @@ function buildArsipHtml() {
 <meta charset="utf-8">
 <title>Kaela BTC Sinyal — Arsip</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7931a">
+<meta name="theme-color" content="#1fae6c">
 <meta name="description" content="Arsip laporan & berita Kaela BTC Sinyal — sistem Sniper siklus halving Bitcoin.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">

@@ -148,5 +148,10 @@
     "type": "whale",
     "date": "2026-08-08T09:31:25.612Z",
     "content": "🟨 ⚪ PERGERAKAN BESAR TERDETEKSI\n2.519,08 BTC (~$163,799,560 / ~Rp2.926.006.362.040) berpindah dalam 1 transaksi di blockchain.\nArah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).\nTXID: 958c4856fb78b30802a53d73c6a77eb66ba93978eeaf778dc2c10d7fe541a924\nCek: https://mempool.space/tx/958c4856fb78b30802a53d73c6a77eb66ba93978eeaf778dc2c10d7fe541a924\n2026-08-08 17:08\n\n⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).\nKaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "nyopet",
+    "date": "2026-08-08T16:03:30.933Z",
+    "content": "⚡ NYOPET MARKET — 🔭 PENGAMATAN (persiapan, BELUM VALID)\n\nBukan sinyal order -- ini catatan analisa yang lagi kita pantau bareng. Belum ada posisi dibuka.\n\nGambaran besar: BTC lagi di titik ketemu (apex) dua garis tren besar -- resistance turun dari puncak lama, ketemu support naik dari area rendah beberapa bulan terakhir. Segitiga yang makin menyempit kayak gini biasanya diikuti gerakan besar begitu salah satu sisi ditembus -- arahnya belum ketauan sampai beneran kejadian.\n\nJangka pendek: range 2 minggu terakhir $62.300-$65.700, resistance atas udah ditolak berkali-kali. Ada juga tembok open interest options di $61rb-$67rb yang berpotensi jadi \"magnet\" nahan harga di situ dulu.\n\nKonteks lain: ETF inflow $1,1 miliar (terbaik sejak April) + Strategy raise $15 miliar buat beli BTC lagi -- demand institusional masih kuat, tapi belum tentu langsung dorong harga jangka pendek.\n\n📋 Kondisi yang kita tunggu: breakout dari apex segitiga -- candle CLOSE tembus salah satu garis (bukan cuma sentuh/wick). Sampai itu kejadian, kita belum buka posisi apapun. Begitu breakout valid, baru diproses lewat kalkulator exposure dan ditentukan arahnya.\n\n🧮 Hitung volume/margin (kalau nanti valid): https://kaela-btc-sinyal.netlify.app/kalkulator.html\n\n🚨 Ini edukasi & pengamatan bareng, BUKAN ajakan buy/sell. Trading kripto resiko tinggi, JANGAN ALL-IN."
   }
 ]

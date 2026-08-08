@@ -4,7 +4,7 @@
   "orders": [
     {
       "id": "msjxg28s99ky",
-      "status": "pending",
+      "status": "cancelled",
       "direction": "sell",
       "strategyType": "range",
       "triggerPrice": 65200,
@@ -19,8 +19,8 @@
       "notes": "Analisa Kaela 8 Agu 2026: range-bound 2 minggu ($62.300-$65.700), resistance kuat teruji weekly/daily/4H. Fade skenario, tunggu konfirmasi candle penolakan.",
       "createdAt": "2026-08-08T05:22:29.596Z",
       "triggeredAt": null,
-      "closedAt": null,
-      "closeReason": null,
+      "closedAt": "2026-08-08T16:00:07.317Z",
+      "closeReason": "dibatalkan manual",
       "pnlUsd": null,
       "pnlPct": null,
       "signalId": "2026080801"

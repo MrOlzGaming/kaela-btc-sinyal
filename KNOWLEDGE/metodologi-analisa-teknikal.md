@@ -53,6 +53,14 @@ Dari `web/data/btc-history.json` (2015-2026, data harian):
 - **Sabar tunggu setup terbaik** -- jangan paksa bikin Rencana cuma karena "giliran analisa hari ini".
 - **Long dan short dua-duanya boleh** -- arah dari struktur pasar, bukan preferensi pribadi.
 - **Sinyal harus valid** -- Rencana (pending) TIDAK PERNAH tampil publik (WA/web) sampai beneran ketrigger.
+- **Aturan resiko RESMI (8 Agu 2026, filosofi Olan): "modal kecil paksa brutal, makin kaya makin safety".**
+  Sizing SELALU lewat `getExposure(modal)` di [kalkulator.html](../web/kalkulator.html) -- gak pernah nembak modal manual
+  di luar hasil kalkulator. Fungsi ini otomatis potong separuh exposure tiap modal naik 10x (magnitude desimal),
+  jadi resiko riil per trade (margin/modal, di SL 1%) turun sendiri dari ~12% (modal $1-9) sampai <1% (modal
+  $10rb+) tanpa perlu tabel manual terpisah. Di modal $1.000+ resiko-nya mendarat ~1,5% -- pas ketemu sama aturan
+  "max 1-2% resiko/trade" yang dipakai trader legend (Market Wizards, lihat bagian 1) -- jadi kalkulator kita
+  sudah otomatis konvergen ke standar profesional pas modal cukup besar, dan sengaja lebih agresif di modal kecil
+  karena kerugian nominalnya belum berarti, butuh dorongan buat compounding awal.
 
 ---
 *Dokumen ini bagian dari proyek Kaela BTC Sinyal (`D:\KAELA PROJECT\★ KAELA TRADING ENGINE ★\`). Backup juga ke GitHub biar gak hilang kalau folder lokal kenapa-kenapa.*

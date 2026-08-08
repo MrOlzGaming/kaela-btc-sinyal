@@ -411,7 +411,11 @@ function renderNyopetOrdersPanel() {
   // Belum ada file = belum pernah ada order sama sekali (sistem manual baru mulai) -- BUKAN
   // berarti panelnya kosong dari tampilan, tetap render empty-state yang jelas, jangan blank.
   const state = fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
-  const active = (state.orders || []).filter((o) => o.status === 'pending' || o.status === 'floating');
+  // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
+  // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
+  // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di nyopet-orders.json
+  // (dipantau nyopetOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
+  const active = (state.orders || []).filter((o) => o.status === 'floating');
   // Jurnal = SEMUA order closed (bukan dipotong 5) -- cancelled ditampilkan tapi TIDAK dihitung
   // ke statistik win-rate/P&L (itu batal sebelum jadi posisi beneran, bukan hasil trade).
   const closedAll = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').reverse();

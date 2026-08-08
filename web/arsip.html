@@ -11,56 +11,89 @@
 <link rel="apple-touch-icon" href="icons/icon.svg">
 <link rel="stylesheet" href="css/variables.css">
 <style>
-  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  .brand { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 16px; margin-bottom: 4px; }
   nav { display: flex; gap: 10px; margin: 14px 0; }
   nav a { text-decoration: none; }
-  .welcome { background: var(--clr-bg-elevated); border-radius: var(--radius-md); padding: 16px; margin: 16px 0; line-height: 1.6; }
+  .welcome { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 18px; margin: 18px 0; line-height: 1.6; }
   .welcome strong { color: var(--clr-primary); }
-  .arsip-group { margin-top: 34px; }
-  .group-title { font-size: 1.1rem; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border); padding-bottom: 8px; margin-bottom: 14px; }
-  .latest { background: var(--clr-bg-elevated); border: 2px solid var(--clr-success); border-radius: var(--radius-md); padding: 16px; margin: 10px 0; }
-  .latest-label { color: var(--clr-success); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
+  .arsip-group { margin-top: 38px; }
+  .group-title { font-size: 1.05rem; font-weight: 700; color: var(--clr-primary); border-bottom: 2px solid var(--clr-border); padding-bottom: 9px; margin-bottom: 14px; }
+  .latest { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-success); box-shadow: var(--shadow-card), 0 0 0 1px rgba(63,185,80,0.08); border-radius: var(--radius-lg); padding: 18px; margin: 10px 0; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+  .latest:hover { box-shadow: var(--shadow-card-hover), 0 0 0 1px rgba(63,185,80,0.12); }
+  .latest-label { color: var(--clr-success); font-weight: 700; font-size: 0.82rem; letter-spacing: 0.04em; }
   .latest-date, .entry-date { color: var(--clr-text-muted); font-size: 0.8rem; }
-  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.5; word-break: break-word; }
+  .content { white-space: pre-wrap; font-family: inherit; margin: 10px 0 0; line-height: 1.55; word-break: break-word; }
   .content a { color: var(--clr-primary); text-decoration: underline; text-underline-offset: 2px; }
   .content a:hover { text-decoration-thickness: 2px; }
   .news-positive { color: var(--clr-success); }
   .news-negative { color: var(--clr-danger); }
   .news-neutral { color: var(--clr-text-muted); }
-  .entry { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 14px; margin: 10px 0; }
+  .entry { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); box-shadow: var(--shadow-card); border-radius: var(--radius-md); padding: 14px; margin: 10px 0; transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+  .entry:hover { box-shadow: var(--shadow-card-hover); border-color: var(--clr-border-soft); }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-  .entry-type { font-weight: 600; }
+  .entry-type { font-weight: 700; }
   .riwayat { margin-top: 10px; }
   .riwayat summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.9rem; padding: 6px 0; }
-  .empty { color: var(--clr-text-muted); text-align: center; padding: 20px; background: var(--clr-bg-elevated); border-radius: var(--radius-sm); }
-  .countdown { background: linear-gradient(135deg, #1f2937, #111827); border: 2px solid var(--clr-warning); border-radius: var(--radius-lg); padding: 18px; margin: 16px 0; text-align: center; }
-  .countdown-label { color: var(--clr-warning); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .empty { color: var(--clr-text-muted); text-align: center; padding: 22px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .countdown { background: var(--gradient-surface), linear-gradient(150deg, #1a2130, #0d1219); border: 1px solid var(--clr-warning); box-shadow: var(--shadow-card), 0 0 32px -8px rgba(240,136,62,0.25); border-radius: var(--radius-lg); padding: 20px; margin: 18px 0; text-align: center; }
+  .countdown-label { color: var(--clr-warning); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 12px; }
   .countdown-grid { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-  .countdown-box { background: var(--clr-bg); border-radius: var(--radius-sm); padding: 10px 14px; min-width: 64px; }
-  .countdown-num { font-size: 1.6rem; font-weight: bold; font-variant-numeric: tabular-nums; }
-  .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; }
-  .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 10px; }
-  .goto-arsip { display: block; text-align: center; margin-top: 30px; padding: 14px; background: var(--clr-bg-elevated); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 600; }
-  .price-widget { background: var(--clr-bg-elevated); border-radius: var(--radius-md); padding: 16px; margin: 16px 0; }
+  .countdown-box { background: rgba(0,0,0,0.25); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 16px; min-width: 64px; }
+  .countdown-num { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 12px; }
+  .goto-arsip { display: block; text-align: center; margin-top: 32px; padding: 15px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 700; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+  .goto-arsip:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+  .price-widget { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 18px; margin: 18px 0; }
   .price-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .price-live { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .price-change { font-size: 0.9rem; font-weight: 600; }
+  .price-live { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .price-change { font-size: 0.9rem; font-weight: 700; }
   .price-change.up { color: var(--clr-success); }
   .price-change.down { color: var(--clr-danger); }
   .live-dot { color: var(--clr-danger); font-size: 0.7rem; font-weight: 700; animation: pulse-live 1.4s ease-in-out infinite; }
   @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .mode-toggle-btn { margin-left: auto; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+  .mode-toggle-btn { margin-left: auto; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease; }
+  .mode-toggle-btn:hover { border-color: var(--clr-primary); color: var(--clr-text); }
   .tf-selector { display: flex; gap: 5px; margin: 14px 0 10px; flex-wrap: wrap; }
-  .tf-btn { flex: 1; min-width: 40px; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 7px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
-  .tf-btn.active { background: var(--clr-primary); color: #111; border-color: var(--clr-primary); }
+  .tf-btn { flex: 1; min-width: 40px; background: var(--clr-bg); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 7px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+  .tf-btn:hover { border-color: var(--clr-primary); color: var(--clr-text); }
+  .tf-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); }
+  .indicator-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0 10px; font-size: 0.8rem; color: var(--clr-text-muted); }
+  .indicator-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .indicator-row input[type="checkbox"] { accent-color: var(--clr-primary); width: 14px; height: 14px; }
   #btc-chart-wrap { position: relative; width: 100%; touch-action: none; }
-  #btc-chart { display: block; width: 100%; height: 300px; cursor: crosshair; border-radius: var(--radius-sm); background: var(--clr-bg); }
+  #btc-chart { display: block; width: 100%; height: 320px; cursor: crosshair; border-radius: var(--radius-sm); background: var(--clr-bg); }
   .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .clear-draw-btn { background: none; border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; flex-shrink: 0; }
+  .clear-draw-btn { background: none; border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s ease, color 0.15s ease; }
+  .clear-draw-btn:hover { border-color: var(--clr-danger); color: var(--clr-danger); }
+  .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
+  .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+  .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
+  .dash-tab-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); box-shadow: 0 2px 12px var(--clr-primary-glow); }
+  .dash-panel { display: none; animation: fade-in 0.25s ease; }
+  .dash-panel.active { display: block; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .halving-panel { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 14px; line-height: 1.65; }
+  .phase-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; margin-bottom: 12px; }
+  .phase-tanam { background: rgba(63,185,80,0.15); color: var(--clr-success); }
+  .phase-panen { background: rgba(240,136,62,0.15); color: var(--clr-warning); }
+  .phase-tunai { background: rgba(139,148,158,0.15); color: var(--clr-text-muted); }
+  .halving-note { color: var(--clr-text-muted); font-size: 0.85rem; margin-top: 12px; }
+  .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
+  .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
+  .riwayat-label { color: var(--clr-text-muted); font-size: 0.9rem; margin: 14px 0 6px; }
+  .date-group { margin: 6px 0; border: 1px solid var(--clr-border); border-radius: var(--radius-md); overflow: hidden; background: var(--clr-bg-elevated); }
+  .date-group summary { cursor: pointer; padding: 10px 14px; color: var(--clr-text); font-size: 0.85rem; font-weight: 600; background: var(--gradient-surface), var(--clr-bg-elevated-2); list-style: none; transition: background 0.15s ease; }
+  .date-group summary:hover { filter: brightness(1.1); }
+  .date-group summary::-webkit-details-marker { display: none; }
+  .date-group summary::before { content: '▸ '; color: var(--clr-primary); }
+  .date-group[open] summary::before { content: '▾ '; }
+  .date-group .entry { margin: 8px 10px; box-shadow: none; }
 </style>
 </head>
 <body>
-  <h1>📚 Kaela BTC Sinyal — Arsip</h1>
+  <div class="brand"><span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span><h1>Kaela BTC Sinyal — Arsip</h1></div>
   <p style="color:var(--clr-text-muted);font-size:0.9rem;">Info hari ini ada di tab <a href="index.html">🏠 Dashboard</a>. Halaman ini isinya hari-hari sebelumnya, dikelompokkan per jenis.</p>
 
   <section class="arsip-group">
@@ -97,13 +130,9 @@ Harga sekarang: $64,323.61 (📉 -0.5% dari kemarin)
     
   </section>
 <section class="arsip-group">
-    <h2 class="group-title" style="border-bottom-color: #f7931a;">🟧 ⚡ Sinyal Nyopet Market</h2>
-    <div class="latest" style="border-left: 4px solid #f7931a;"><div class="latest-label">🟧 ⚡ Nyopet Market</div><div class="latest-date">7/8/2026, 12.02.27</div><pre class="content">⚡ NYOPET MARKET — 2026-08-07
-Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.
-
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-    
-  </section>
+      <h2 class="group-title" style="border-bottom-color: #f7931a;">🟧 ⚡ Sinyal Nyopet Market</h2>
+      <div class="empty">Belum ada arsip.</div>
+    </section>
 <section class="arsip-group">
     <h2 class="group-title" style="border-bottom-color: #eab308;">🟨 🐋 Aktivitas Whale</h2>
     <div class="latest" style="border-left: 4px solid #eab308;"><div class="latest-label">🟨 🐋 Whale Alert</div><div class="latest-date">7/8/2026, 13.59.57</div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
@@ -117,7 +146,7 @@ Cek: https://mempool.space/tx/077b7144cd4b21d37dc11b297096efc8d2305ac8771d60335a
 Kaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
 
 🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-    <details class="riwayat"><summary>Riwayat (10)</summary><div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.59.57</span></div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
+    <details class="riwayat"><summary>Riwayat (10)</summary><details class="date-group"><summary>2026-08-07 (10)</summary><div class="entry" style="border-left: 4px solid #eab308;"><div class="entry-header"><span class="entry-type">🟨 🐋 Whale Alert</span><span class="entry-date">7/8/2026, 13.59.57</span></div><pre class="content">⚪ <span class="news-neutral">PERGERAKAN BESAR TERDETEKSI</span>
 503,19 BTC (~$32,373,832 / ~Rp580.666.909.471) berpindah dalam 1 transaksi di blockchain.
 Arah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).
 TXID: 7b3b4edf3797a0b30004a445048a8cb369f6b3bd3b67a6439dcb30fa27efef69
@@ -220,7 +249,7 @@ Cek: https://mempool.space/tx/ab1dd23585ffbc8cb2ab080c5ed929a6c8c183b9db3bcddf34
 ⚠️ Ini fakta murni on-chain -- Kaela TIDAK tau ini dari/ke exchange mana atau siapa pelakunya,
 dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.
 
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div></details>
+🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div></details></details>
   </section>
 <section class="arsip-group">
     <h2 class="group-title" style="border-bottom-color: #8b949e;">⬜ 📅 Jadwal Ekonomi</h2>
@@ -247,10 +276,10 @@ dan TIDAK menebak arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun
   </script>
 
   <nav class="bottom-nav">
-    <a href="index.html"><span class="icon">🏠</span>Dashboard</a>
-    <a href="arsip.html" class="active"><span class="icon">📚</span>Arsip</a>
-    <a href="kalkulator.html"><span class="icon">🧮</span>Kalkulator</a>
-    <a href="metodologi-sniper.html"><span class="icon">📖</span>Metodologi</a>
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
+    <a href="arsip.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5-8 4.5-8-4.5L12 3z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12l8 4.5 8-4.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16.5L12 21l8-4.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Arsip</a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
+    <a href="metodologi-sniper.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
   </nav>
 </body>
 </html>

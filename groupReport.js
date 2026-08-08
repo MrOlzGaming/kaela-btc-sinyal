@@ -112,7 +112,10 @@ function generateGroupYearly(now, priceToday, priceLastYear) {
   ].join('\n');
 }
 
-module.exports = { generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly, getWindowPhase };
+module.exports = {
+  generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly, getWindowPhase,
+  NEXT_HALVING_EST, WINDOW_START, WINDOW_END, daysToHalving,
+};
 
 if (require.main === module) {
   const now = new Date('2026-10-25');

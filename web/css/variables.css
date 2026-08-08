@@ -1,42 +1,65 @@
 /* Kaela BTC Sinyal — Design Tokens (dipakai semua halaman: dashboard, kalkulator, dst) */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../fonts/Inter-Variable.woff2') format('woff2-variations'), url('../fonts/Inter-Variable.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --clr-bg: #0d1117;
-  --clr-bg-elevated: #161b22;
-  --clr-border: #30363d;
-  --clr-text: #e6edf3;
-  --clr-text-muted: #8b949e;
+  --clr-bg: #0a0e14;
+  --clr-bg-elevated: #12181f;
+  --clr-bg-elevated-2: #171f28;
+  --clr-border: #262e38;
+  --clr-border-soft: #1c232c;
+  --clr-text: #eef2f6;
+  --clr-text-muted: #8b96a3;
 
   --clr-primary: #f7931a; /* oranye Bitcoin */
   --clr-primary-dim: #b5691a;
+  --clr-primary-glow: rgba(247, 147, 26, 0.18);
   --clr-success: #3fb950; /* hijau: Musim Tanam / positif */
   --clr-danger: #f85149;  /* merah: negatif / Batas Rugi */
   --clr-warning: #f0883e; /* oranye: countdown / peringatan */
   --clr-neutral: #8b949e;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.3), 0 14px 36px rgba(0, 0, 0, 0.4);
+  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 60%);
+  --gradient-bg: radial-gradient(ellipse 900px 500px at 50% -10%, rgba(247, 147, 26, 0.09), transparent);
 }
 
 * { box-sizing: border-box; }
 
+html { background: var(--clr-bg); }
+
 body {
   font-family: var(--font-sans);
-  background: var(--clr-bg);
+  font-feature-settings: 'ss01' on, 'cv01' on;
+  -webkit-font-smoothing: antialiased;
+  background: var(--gradient-bg), var(--clr-bg);
+  background-attachment: fixed;
   color: var(--clr-text);
   margin: 0;
   padding: 20px;
   padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   max-width: 700px;
   margin-inline: auto;
-  line-height: 1.5;
+  line-height: 1.55;
   overflow-x: hidden;
+  letter-spacing: -0.01em;
 }
+
+h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
 
 /* Tablet ke atas: sedikit lebih lebar, napas lebih longgar */
 @media (min-width: 700px) {
@@ -46,10 +69,15 @@ body {
 /* Desktop: melebar lebih jauh biar gak keliatan sempit "kekecilan" di layar besar */
 @media (min-width: 1024px) {
   body { max-width: 960px; padding: 36px 44px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
-  h1 { font-size: 1.6rem; }
+  h1 { font-size: 1.7rem; }
 }
 
-/* Navigasi tab bawah — konsisten di semua halaman */
+/* Header brand: logo mark + judul */
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark { flex-shrink: 0; filter: drop-shadow(0 0 10px var(--clr-primary-glow)); }
+.brand h1 { margin: 0; border: none; padding: 0; }
+
+/* Navigasi tab bawah — konsisten di semua halaman, ikon SVG (bukan emoji) */
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -57,8 +85,10 @@ body {
   bottom: 0;
   z-index: 50;
   display: flex;
-  background: var(--clr-bg-elevated);
-  border-top: 1px solid var(--clr-border);
+  background: rgba(18, 24, 31, 0.88);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-top: 1px solid var(--clr-border-soft);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .bottom-nav a {
@@ -66,16 +96,18 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 10px 4px 8px;
+  gap: 4px;
+  padding: 11px 4px 9px;
   text-decoration: none;
   color: var(--clr-text-muted);
   font-size: 0.72rem;
   font-weight: 600;
+  transition: color 0.18s ease;
 }
-.bottom-nav a .icon { font-size: 1.3rem; line-height: 1; }
+.bottom-nav a .icon { line-height: 1; transition: transform 0.18s ease; }
+.bottom-nav a .icon svg { display: block; stroke: currentColor; }
 .bottom-nav a.active { color: var(--clr-primary); }
-.bottom-nav a.active .icon { transform: scale(1.08); }
+.bottom-nav a.active .icon { transform: translateY(-1px); }
 
 /* Desktop: item nav gak ikutan melebar sampe ujung layar -- dikumpulin di tengah biar rapi */
 @media (min-width: 1024px) {
@@ -89,30 +121,35 @@ table { min-width: 100%; }
 
 @media (max-width: 420px) {
   body { padding: 14px; padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
-  h1 { font-size: 1.2rem; }
+  h1 { font-size: 1.25rem; }
 }
 
 a { color: var(--clr-primary); }
 
 .card {
-  background: var(--clr-bg-elevated);
+  background: var(--gradient-surface), var(--clr-bg-elevated);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-md);
   padding: 16px;
   box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
+.card:hover { box-shadow: var(--shadow-card-hover); border-color: var(--clr-border-soft); }
 
 .btn {
-  background: var(--clr-primary);
-  color: #000;
+  background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim));
+  color: #14100a;
   border: none;
   border-radius: var(--radius-sm);
   padding: 10px 18px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
+  box-shadow: 0 2px 10px var(--clr-primary-glow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
-.btn:hover { background: var(--clr-primary-dim); }
+.btn:hover { filter: brightness(1.06); box-shadow: 0 4px 16px var(--clr-primary-glow); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
 
 input[type="number"], input[type="text"] {
   background: var(--clr-bg);
@@ -122,4 +159,10 @@ input[type="number"], input[type="text"] {
   padding: 10px 12px;
   font-size: 1rem;
   width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="number"]:focus, input[type="text"]:focus {
+  outline: none;
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px var(--clr-primary-glow);
 }

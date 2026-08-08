@@ -43,6 +43,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Cuma urus request ke origin situs kita sendiri -- biarkan request cross-origin (widget
+  // TradingView dari s3.tradingview.com, Binance API, dst) lewat NORMAL tanpa campur tangan SW
+  // ini. SW yang ikut nge-force no-store ke asset besar milik pihak lain cuma bikin lambat &
+  // berpotensi ganggu caching strategy mereka sendiri, gak ada untungnya buat kita.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
+
   event.respondWith(
     fetch(event.request, { cache: 'no-store' })
       .then((res) => {

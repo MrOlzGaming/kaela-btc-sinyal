@@ -25,7 +25,9 @@ function saveState(state) {
 }
 
 async function fetchBtcPriceUsd() {
-  const res = await fetchWithRetry('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+  // data-api.binance.vision -- market data publik, gak kena blokir geografis GitHub Actions
+  // (ketauan HTTP 451 "restricted location" pas api.binance.com biasa diakses dari runner)
+  const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT');
   const data = await res.json();
   return parseFloat(data.price);
 }

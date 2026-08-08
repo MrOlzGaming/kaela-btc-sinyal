@@ -20,7 +20,9 @@ const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
 
-const BASE_URL = 'https://api.binance.com/api/v3/klines';
+// data-api.binance.vision -- endpoint RESMI Binance khusus market data publik, gak kena
+// blokir geografis kayak api.binance.com (GitHub Actions runner ketauan HTTP 451 pas testing).
+const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 
 function parseCandle(raw) {
   return { openTime: raw[0], open: +raw[1], high: +raw[2], low: +raw[3], close: +raw[4], closeTime: raw[6] };

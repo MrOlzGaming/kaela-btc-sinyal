@@ -16,7 +16,7 @@ const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey } = require('./config');
 
 const STATE_PATH = path.join(__dirname, 'nyopet-state.json');
-const BASE_URL = 'https://api.binance.com/api/v3/klines';
+const BASE_URL = 'https://data-api.binance.vision/api/v3/klines'; // gak kena blokir geografis
 
 function parseCandle(raw) {
   return { openTime: raw[0], open: +raw[1], high: +raw[2], low: +raw[3], close: +raw[4], closeTime: raw[6] };

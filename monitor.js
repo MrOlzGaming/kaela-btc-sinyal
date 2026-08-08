@@ -10,7 +10,8 @@ const { fetchWithRetry } = require('./httpRetry');
 const STATE_PATH = path.join(__dirname, 'state.json');
 
 async function fetchCurrentPrice() {
-  const res = await fetchWithRetry('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+  // data-api.binance.vision -- market data publik, gak kena blokir geografis GitHub Actions
+  const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT');
   const data = await res.json();
   return parseFloat(data.price);
 }

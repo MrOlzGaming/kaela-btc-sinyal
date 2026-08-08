@@ -11,7 +11,10 @@ const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal } = require('./config');
 
-const BASE_URL = 'https://api.binance.com/api/v3/klines';
+// data-api.binance.vision -- endpoint RESMI Binance khusus market data publik (harga/kline),
+// gak kena batasan geografis kayak api.binance.com biasa (GitHub Actions runner ketauan
+// diblokir HTTP 451 "restricted location" pas testing 2026-08-08).
+const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 
 function parseCandle(raw) {
   return { closeTime: raw[6], close: parseFloat(raw[4]) };

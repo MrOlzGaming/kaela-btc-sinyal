@@ -21,6 +21,14 @@ const ICON_CALC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><
 const ICON_BOOK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LOGO_MARK = '<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg>';
 
+// Ikon toolbar alat gambar grafik (ala TradingView/BC.Game) -- garis tipis, konsisten sama ikon nav di atas.
+const ICON_TOOL_CURSOR = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 8-6 1.4L11 19 5 3z" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const ICON_TOOL_TREND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><line x1="4" y1="19" x2="20" y2="5" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="19" r="1.8" fill="currentColor" stroke="none"/><circle cx="20" cy="5" r="1.8" fill="currentColor" stroke="none"/></svg>';
+const ICON_TOOL_HLINE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><line x1="3" y1="12" x2="21" y2="12" stroke-width="1.8" stroke-dasharray="3,2" stroke-linecap="round"/><circle cx="3" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="21" cy="12" r="1.8" fill="currentColor" stroke="none"/></svg>';
+const ICON_TOOL_FIB = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><line x1="3" y1="5" x2="21" y2="5" stroke-width="1.5"/><line x1="3" y1="9.7" x2="16" y2="9.7" stroke-width="1.5"/><line x1="3" y1="14.3" x2="21" y2="14.3" stroke-width="1.5"/><line x1="3" y1="19" x2="11" y2="19" stroke-width="1.5"/></svg>';
+const ICON_TOOL_TEXT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 5h16M12 5v14" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ICON_TOOL_ERASER = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0l1 12a1 1 0 001 1h8a1 1 0 001-1l1-12" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 // 5 kategori sinyal, 1 warna tetap per kategori -- dipakai KONSISTEN di web (border+emoji) DAN
 // WA (emoji kotak warna, lihat categoryColors.js). Biar orang bisa scan cari warna tertentu tanpa
 // baca teks lengkap (misal cuma mau Nyopet Market, langsung cari 🟧).
@@ -186,15 +194,16 @@ const SHARED_STYLE = `
   .indicator-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0 10px; font-size: 0.8rem; color: var(--clr-text-muted); }
   .indicator-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
   .indicator-row input[type="checkbox"] { accent-color: var(--clr-primary); width: 14px; height: 14px; }
-  #btc-chart-wrap { position: relative; width: 100%; }
+  .chart-area { display: flex; gap: 8px; align-items: stretch; }
+  .chart-toolbar { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; background: var(--clr-bg); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 5px; height: fit-content; }
+  .chart-tool-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--clr-text-muted); border-radius: var(--radius-sm); cursor: pointer; padding: 0; transition: background 0.15s ease, color 0.15s ease; }
+  .chart-tool-btn:hover { background: var(--clr-bg-elevated); color: var(--clr-text); }
+  .chart-tool-btn.active { background: var(--clr-primary); color: #14100a; }
+  .chart-tool-sep { height: 1px; background: var(--clr-border); margin: 3px 2px; }
+  #btc-chart-wrap { position: relative; width: 100%; min-width: 0; }
   #btc-chart { width: 100%; height: 320px; border-radius: var(--radius-sm); background: var(--clr-bg); }
   #btc-chart-draw { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; touch-action: none; }
-  .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .draw-hint-tools { display: flex; gap: 8px; flex-shrink: 0; }
-  .draw-mode-btn, .clear-draw-btn { background: none; border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 0.75rem; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease; }
-  .draw-mode-btn:hover { border-color: var(--clr-primary); color: var(--clr-text); }
-  .draw-mode-btn.active { background: var(--clr-primary); color: #14100a; border-color: var(--clr-primary); font-weight: 600; }
-  .clear-draw-btn:hover { border-color: var(--clr-danger); color: var(--clr-danger); }
+  .draw-hint { color: var(--clr-text-muted); font-size: 0.75rem; margin-top: 8px; }
   .tv-attribution { text-align: right; font-size: 0.68rem; color: var(--clr-text-muted); opacity: 0.6; margin-top: 4px; }
   .tv-attribution a { color: inherit; }
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
@@ -431,17 +440,22 @@ function buildDashboardHtml() {
       <label><input type="checkbox" id="indicator-sma"> <span style="color:#4f9dff;">●</span> SMA 20</label>
       <label><input type="checkbox" id="indicator-ema"> <span style="color:#c77dff;">●</span> EMA 50</label>
     </div>
-    <div id="btc-chart-wrap">
-      <div id="btc-chart"></div>
-      <canvas id="btc-chart-draw"></canvas>
-    </div>
-    <div class="draw-hint">
-      <span>✏️ Nyalakan mode gambar buat tarik garis analisa -- tersimpan otomatis di browser ini per timeframe</span>
-      <div class="draw-hint-tools">
-        <button class="draw-mode-btn" id="draw-mode-toggle">✏️ Mode Gambar</button>
-        <button class="clear-draw-btn" id="clear-draw">Hapus garis</button>
+    <div class="chart-area">
+      <div class="chart-toolbar" id="chart-toolbar">
+        <button class="chart-tool-btn active" data-tool="cursor" title="Kursor (geser/zoom)">${ICON_TOOL_CURSOR}</button>
+        <button class="chart-tool-btn" data-tool="trend" title="Garis Tren">${ICON_TOOL_TREND}</button>
+        <button class="chart-tool-btn" data-tool="hline" title="Garis Horizontal">${ICON_TOOL_HLINE}</button>
+        <button class="chart-tool-btn" data-tool="fib" title="Fibonacci Retracement">${ICON_TOOL_FIB}</button>
+        <button class="chart-tool-btn" data-tool="text" title="Teks">${ICON_TOOL_TEXT}</button>
+        <div class="chart-tool-sep"></div>
+        <button class="chart-tool-btn" id="clear-draw" title="Hapus semua gambar">${ICON_TOOL_ERASER}</button>
+      </div>
+      <div id="btc-chart-wrap">
+        <div id="btc-chart"></div>
+        <canvas id="btc-chart-draw"></canvas>
       </div>
     </div>
+    <div class="draw-hint">✏️ Pilih alat di kiri buat gambar analisa (tren/horizontal/fibonacci/teks) -- tersimpan otomatis di browser ini per timeframe</div>
     <div class="tv-attribution">Grafik oleh <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a></div>
   </div>
 

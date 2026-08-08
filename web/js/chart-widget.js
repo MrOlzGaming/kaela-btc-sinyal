@@ -1,19 +1,26 @@
-// Widget harga live + grafik candlestick/area multi-timeframe + indikator + alat gambar garis.
-// Pakai TradingView Lightweight Charts (self-hosted, lightweight-charts.standalone.production.js) --
-// library resmi open-source (Apache 2.0) dari TradingView sendiri, jadi pan/zoom/crosshair
-// beneran ala TradingView, bukan tiruan manual lagi. Tetap zero-dependency runtime: file-nya
-// di-download sekali dan disimpan statis di repo (lihat header file library-nya).
-// Live movement dari Binance WebSocket (bukan cuma polling).
-// "All Time" pakai data historis 2014+ yang di-bundle statis (data/btc-history.json).
-// Garis gambar TERSIMPAN di localStorage, koordinat DATA-SPACE (waktu asli + harga asli) --
-// jadi tetap valid dipakai lagi walau chart di-resize/pan/zoom, beda dari versi canvas manual
-// dulu yang cuma bisa pakai koordinat relatif fraksi 0-1.
+// Widget harga live + grafik candlestick/area multi-timeframe + indikator + toolbar gambar
+// analisa multi-alat (ala TradingView/BC.Game): Kursor, Garis Tren, Garis Horizontal,
+// Fibonacci Retracement, Teks. Pakai TradingView Lightweight Charts (self-hosted,
+// lightweight-charts.standalone.production.js) -- library resmi open-source (Apache 2.0)
+// dari TradingView sendiri, jadi pan/zoom/crosshair beneran ala TradingView, bukan tiruan
+// manual. Tetap zero-dependency runtime: file library-nya di-download sekali dan disimpan
+// statis di repo. Attribution logo bawaan dimatikan (attributionLogo:false) karena sudah ada
+// link atribusi eksplisit sendiri di bawah chart -- logo bawaan kepotong/kekecilan di tinggi
+// chart 320px kita.
+// Live movement dari Binance WebSocket. "All Time" pakai data historis 2014+ statis
+// (data/btc-history.json).
+// Semua gambar TERSIMPAN di localStorage per timeframe, koordinat DATA-SPACE (waktu asli +
+// harga asli) -- Garis Horizontal & Fibonacci pakai native price line API (otomatis ikut
+// price-scale), Garis Tren pakai overlay canvas custom (dihitung ulang tiap frame dari
+// waktu/harga -> pixel), Teks pakai native series markers (snap ke candle terdekat).
 
 (function () {
   const PRICE_URL = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT';
   const KLINES_URL = 'https://api.binance.com/api/v3/klines';
   const WS_BASE = 'wss://stream.binance.com:9443/ws/btcusdt@kline_';
-  const LINES_STORAGE_KEY = 'kaela_chart_lines_v2';
+  const SHAPES_STORAGE_KEY = 'kaela_chart_shapes_v3';
+  const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+  const FIB_COLORS = ['#8b96a3', '#4f9dff', '#3fb950', '#f7931a', '#3fb950', '#4f9dff', '#8b96a3'];
 
   const RANGES = {
     '1m': { label: '1m', interval: '1m', limit: 180 },
@@ -28,12 +35,17 @@
   let currentRange = '1h';
   let chartMode = 'candle'; // 'candle' | 'line'
   let candles = []; // {time (unix detik), open, high, low, close}
-  let drawnLines = []; // {t1,p1,t2,p2} DATA-SPACE (waktu unix detik + harga asli)
   let showSMA = false;
   let showEMA = false;
   let ws = null;
   let historyCache = null;
-  let drawMode = false;
+
+  // alat gambar aktif: 'cursor' | 'trend' | 'hline' | 'fib' | 'text'
+  let activeTool = 'cursor';
+  let pendingPoint = null; // titik pertama buat alat 2-klik (trend/fib)
+  let shapes = { trend: [], hLines: [], fibs: [], texts: [] }; // per-timeframe, DATA-SPACE
+  let candlePriceLineRefs = [], areaPriceLineRefs = [];
+  let candleMarkersPrim = null, areaMarkersPrim = null;
 
   const priceEl = document.getElementById('btc-price');
   const changeEl = document.getElementById('btc-change');
@@ -64,7 +76,7 @@
   // --- chart utama ---
   const chart = LightweightCharts.createChart(chartContainer, {
     autoSize: true,
-    layout: { background: { color: 'transparent' }, textColor: '#8b96a3', fontFamily: 'Inter, sans-serif', fontSize: 11 },
+    layout: { background: { color: 'transparent' }, textColor: '#8b96a3', fontFamily: 'Inter, sans-serif', fontSize: 11, attributionLogo: false },
     grid: {
       vertLines: { color: 'rgba(139,150,163,0.08)' },
       horzLines: { color: 'rgba(139,150,163,0.08)' },
@@ -143,26 +155,72 @@
     areaSeries.setData(candles.map((c) => ({ time: c.time, value: c.close })));
     refreshIndicators();
     chart.timeScale().fitContent();
-    redrawOverlay();
   }
 
-  // --- persist garis gambar per timeframe, koordinat DATA-SPACE (waktu + harga asli) ---
-  function loadAllSavedLines() {
-    try { return JSON.parse(localStorage.getItem(LINES_STORAGE_KEY) || '{}'); } catch (e) { return {}; }
+  // --- persist semua bentuk gambar per timeframe, koordinat DATA-SPACE (waktu + harga asli) ---
+  function loadAllShapes() {
+    try { return JSON.parse(localStorage.getItem(SHAPES_STORAGE_KEY) || '{}'); } catch (e) { return {}; }
   }
-  function saveLinesForCurrentRange() {
-    const all = loadAllSavedLines();
-    all[currentRange] = drawnLines;
-    try { localStorage.setItem(LINES_STORAGE_KEY, JSON.stringify(all)); } catch (e) {}
+  function saveShapes() {
+    const all = loadAllShapes();
+    all[currentRange] = shapes;
+    try { localStorage.setItem(SHAPES_STORAGE_KEY, JSON.stringify(all)); } catch (e) {}
   }
-  function loadLinesForCurrentRange() {
-    const all = loadAllSavedLines();
-    drawnLines = all[currentRange] || [];
+  function loadShapesForCurrentRange() {
+    const all = loadAllShapes();
+    shapes = all[currentRange] || { trend: [], hLines: [], fibs: [], texts: [] };
   }
 
-  // --- overlay canvas: render garis gambar user di atas chart, posisi dihitung ULANG
-  // tiap kali dipanggil dari koordinat data (waktu/harga) -> pixel saat ini, jadi otomatis
-  // ikut kalau chart di-pan/zoom/resize ---
+  // --- Garis Horizontal & Fibonacci: native price line API, ditaruh di KEDUA series
+  // (candle+area) sekaligus biar gak perlu re-create pas toggle mode candle/garis ---
+  function clearPriceLines() {
+    candlePriceLineRefs.forEach((pl) => { try { candleSeries.removePriceLine(pl); } catch (e) {} });
+    areaPriceLineRefs.forEach((pl) => { try { areaSeries.removePriceLine(pl); } catch (e) {} });
+    candlePriceLineRefs = []; areaPriceLineRefs = [];
+  }
+  function renderPriceLevels() {
+    clearPriceLines();
+    const defs = [];
+    shapes.hLines.forEach((price) => defs.push({
+      price, color: '#f7931a', lineStyle: LightweightCharts.LineStyle.Dashed, title: '',
+    }));
+    shapes.fibs.forEach((f) => {
+      FIB_LEVELS.forEach((lv, i) => {
+        defs.push({
+          price: f.p1 + (f.p2 - f.p1) * lv, color: FIB_COLORS[i],
+          lineStyle: LightweightCharts.LineStyle.Dotted, title: (lv * 100).toFixed(1) + '%',
+        });
+      });
+    });
+    defs.forEach((d) => {
+      candlePriceLineRefs.push(candleSeries.createPriceLine({ ...d, lineWidth: 1, axisLabelVisible: true }));
+      areaPriceLineRefs.push(areaSeries.createPriceLine({ ...d, lineWidth: 1, axisLabelVisible: true }));
+    });
+  }
+
+  // --- Teks: native series markers, snap ke waktu candle terdekat ---
+  function nearestCandleTime(t) {
+    if (!candles.length) return null;
+    let best = candles[0].time, bestDiff = Math.abs(candles[0].time - t);
+    for (const c of candles) {
+      const diff = Math.abs(c.time - t);
+      if (diff < bestDiff) { bestDiff = diff; best = c.time; }
+    }
+    return best;
+  }
+  function renderMarkers() {
+    const markers = shapes.texts
+      .map((t) => ({ time: t.time, position: 'aboveBar', color: '#f7931a', shape: 'circle', text: t.text }))
+      .sort((a, b) => a.time - b.time);
+    if (!candleMarkersPrim) candleMarkersPrim = LightweightCharts.createSeriesMarkers(candleSeries, []);
+    if (!areaMarkersPrim) areaMarkersPrim = LightweightCharts.createSeriesMarkers(areaSeries, []);
+    candleMarkersPrim.setMarkers(markers);
+    areaMarkersPrim.setMarkers(markers);
+  }
+
+  // --- Garis Tren: gak ada primitive native buat garis diagonal bebas, jadi dirender di
+  // overlay canvas transparan di atas chart, dihitung ULANG tiap kali dipanggil dari
+  // koordinat data (waktu/harga) -> pixel SEKARANG, otomatis ikut kalau chart di-pan/zoom ---
   const octx = drawCanvas ? drawCanvas.getContext('2d') : null;
 
   function resizeOverlay() {
@@ -177,25 +235,27 @@
     octx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
+  function strokeDataLine(l, color) {
+    const ts = chart.timeScale();
+    const series = mainSeries();
+    const x1 = ts.timeToCoordinate(l.t1), x2 = ts.timeToCoordinate(l.t2);
+    const y1 = series.priceToCoordinate(l.p1), y2 = series.priceToCoordinate(l.p2);
+    if (x1 === null || x2 === null || y1 === null || y2 === null) return;
+    octx.strokeStyle = color;
+    octx.lineWidth = 1.5;
+    octx.beginPath();
+    octx.moveTo(x1, y1);
+    octx.lineTo(x2, y2);
+    octx.stroke();
+  }
+
   function redrawOverlay(previewLine) {
     if (!octx) return;
     resizeOverlay();
     const w = drawCanvas.clientWidth, h = drawCanvas.clientHeight;
     octx.clearRect(0, 0, w, h);
-    const ts = chart.timeScale();
-    const series = mainSeries();
-    octx.strokeStyle = '#f7931a';
-    octx.lineWidth = 1.5;
-    const allLines = previewLine ? drawnLines.concat([previewLine]) : drawnLines;
-    allLines.forEach((l) => {
-      const x1 = ts.timeToCoordinate(l.t1), x2 = ts.timeToCoordinate(l.t2);
-      const y1 = series.priceToCoordinate(l.p1), y2 = series.priceToCoordinate(l.p2);
-      if (x1 === null || x2 === null || y1 === null || y2 === null) return;
-      octx.beginPath();
-      octx.moveTo(x1, y1);
-      octx.lineTo(x2, y2);
-      octx.stroke();
-    });
+    shapes.trend.forEach((l) => strokeDataLine(l, '#f7931a'));
+    if (previewLine) strokeDataLine(previewLine, 'rgba(247,147,26,0.6)');
   }
 
   function setLiveIndicator(isLive) {
@@ -256,72 +316,99 @@
         candles = raw.map((r) => ({ time: Math.floor(r[0] / 1000), open: +r[1], high: +r[2], low: +r[3], close: +r[4] }));
         connectWebSocket(cfg.interval);
       }
-      loadLinesForCurrentRange();
+      loadShapesForCurrentRange();
       applyCandlesToChart();
+      renderPriceLevels();
+      renderMarkers();
+      redrawOverlay();
     } catch (e) {
       console.error('Gagal muat grafik:', e.message);
     }
   }
 
-  // --- gambar garis: mouse + touch, aktif cuma pas draw mode ON (biar gak bentrok sama pan/zoom chart) ---
-  let drawing = null;
+  // --- toolbar alat gambar: klik ikon buat pilih alat, klik di chart buat pakai ---
+  function setActiveTool(tool) {
+    activeTool = tool;
+    pendingPoint = null;
+    document.querySelectorAll('.chart-tool-btn[data-tool]').forEach((b) => b.classList.toggle('active', b.dataset.tool === tool));
+    if (drawCanvas) drawCanvas.style.pointerEvents = tool === 'cursor' ? 'none' : 'auto';
+    if (wrap) wrap.style.cursor = tool === 'cursor' ? '' : 'crosshair';
+    redrawOverlay();
+  }
 
   function getPos(evt) {
     const rect = drawCanvas.getBoundingClientRect();
-    const point = evt.touches ? evt.touches[0] : evt;
-    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+    return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
   }
   function pixelToData(pos) {
     const t = chart.timeScale().coordinateToTime(pos.x);
     const p = mainSeries().coordinateToPrice(pos.y);
     return { t, p };
   }
-  function startDraw(evt) { evt.preventDefault(); drawing = getPos(evt); }
-  function moveDraw(evt) {
-    if (!drawing) return;
-    evt.preventDefault();
-    const pos = getPos(evt);
-    const d1 = pixelToData(drawing), d2 = pixelToData(pos);
-    if (d1.t === null || d2.t === null || d1.p === null || d2.p === null) return;
-    redrawOverlay({ t1: d1.t, p1: d1.p, t2: d2.t, p2: d2.p });
-  }
-  function endDraw(evt) {
-    if (!drawing) return;
-    const pos = getPos(evt.changedTouches ? { clientX: evt.changedTouches[0].clientX, clientY: evt.changedTouches[0].clientY } : evt);
-    const d1 = pixelToData(drawing), d2 = pixelToData(pos);
-    drawing = null;
-    if (d1.t !== null && d2.t !== null && d1.p !== null && d2.p !== null) {
-      drawnLines.push({ t1: d1.t, p1: d1.p, t2: d2.t, p2: d2.p });
-      saveLinesForCurrentRange();
-    }
-    redrawOverlay();
-  }
 
-  function setDrawMode(on) {
-    drawMode = on;
-    if (drawCanvas) drawCanvas.style.pointerEvents = on ? 'auto' : 'none';
-    const btn = document.getElementById('draw-mode-toggle');
-    if (btn) btn.classList.toggle('active', on);
-    if (wrap) wrap.style.cursor = on ? 'crosshair' : '';
+  function onCanvasClick(evt) {
+    const d = pixelToData(getPos(evt));
+    if (d.t === null || d.p === null) return;
+
+    if (activeTool === 'hline') {
+      shapes.hLines.push(d.p);
+      saveShapes();
+      renderPriceLevels();
+      setActiveTool('cursor');
+      return;
+    }
+    if (activeTool === 'text') {
+      const txt = window.prompt('Teks anotasi:');
+      if (txt) {
+        const snapped = nearestCandleTime(d.t);
+        if (snapped !== null) {
+          shapes.texts.push({ time: snapped, text: txt });
+          saveShapes();
+          renderMarkers();
+        }
+      }
+      setActiveTool('cursor');
+      return;
+    }
+    // alat 2 klik: trend / fib
+    if (activeTool === 'trend' || activeTool === 'fib') {
+      if (!pendingPoint) {
+        pendingPoint = d;
+        return;
+      }
+      const shape = { t1: pendingPoint.t, p1: pendingPoint.p, t2: d.t, p2: d.p };
+      if (activeTool === 'trend') shapes.trend.push(shape);
+      else shapes.fibs.push(shape);
+      pendingPoint = null;
+      saveShapes();
+      if (activeTool === 'trend') redrawOverlay();
+      else renderPriceLevels();
+      setActiveTool('cursor');
+    }
+  }
+  function onCanvasMove(evt) {
+    if (!pendingPoint) return;
+    const d = pixelToData(getPos(evt));
+    if (d.t === null || d.p === null) return;
+    redrawOverlay({ t1: pendingPoint.t, p1: pendingPoint.p, t2: d.t, p2: d.p });
   }
 
   if (drawCanvas) {
-    drawCanvas.addEventListener('mousedown', startDraw);
-    drawCanvas.addEventListener('mousemove', moveDraw);
-    window.addEventListener('mouseup', endDraw);
-    drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
-    drawCanvas.addEventListener('touchmove', moveDraw, { passive: false });
-    drawCanvas.addEventListener('touchend', endDraw);
+    drawCanvas.addEventListener('click', onCanvasClick);
+    drawCanvas.addEventListener('mousemove', onCanvasMove);
   }
 
-  const drawModeBtn = document.getElementById('draw-mode-toggle');
-  if (drawModeBtn) drawModeBtn.addEventListener('click', () => setDrawMode(!drawMode));
+  document.querySelectorAll('.chart-tool-btn[data-tool]').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveTool(btn.dataset.tool));
+  });
 
   const clearBtn = document.getElementById('clear-draw');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      drawnLines = [];
-      saveLinesForCurrentRange();
+      shapes = { trend: [], hLines: [], fibs: [], texts: [] };
+      saveShapes();
+      renderPriceLevels();
+      renderMarkers();
       redrawOverlay();
     });
   }

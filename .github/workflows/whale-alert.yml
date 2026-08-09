@@ -56,8 +56,17 @@ jobs:
           git config user.email "kaela-bot@users.noreply.github.com"
           git add -f whale-state.json archive.json web/index.html web/arsip.html
           git diff --staged --quiet || git commit -m "Auto: whale monitor $(date -u +%Y-%m-%dT%H:%M)"
-          git pull --rebase origin master
-          git push
+          # Retry pull+push -- kalau push gagal (misal race sama workflow lain) dan gak diulang,
+          # whale-state.json GAK MAJU -- run berikutnya scan ulang blok yang SAMA dari state basi,
+          # deteksi+kirim WA transaksi yang SAMA lagi (ketauan 9 Agu 2026, dobel WA). Percobaan
+          # berulang lebih murah daripada gagal diam-diam dan bikin duplikat kayak gini lagi.
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin master && git push && exit 0
+            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+            sleep 5
+          done
+          echo "::error::Gagal push whale-state.json setelah 5x percobaan -- state gak ke-simpan, run berikutnya bisa re-scan blok yang sama."
+          exit 1
 
       - name: Deploy web/ ke Netlify (cuma kalau ada perubahan)
         if: steps.check.outputs.changed == 'true'

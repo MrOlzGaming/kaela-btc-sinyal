@@ -47,7 +47,7 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f state.json archive.json web/index.html
+          git add -f state.json archive.json web/index.html web/arsip.html
           git diff --staged --quiet || git commit -m "Auto: laporan harian $(date -u +%Y-%m-%d)"
           git pull --rebase origin master
           git push

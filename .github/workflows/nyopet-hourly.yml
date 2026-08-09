@@ -52,7 +52,7 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f archive.json nyopet-orders.json web/index.html
+          git add -f archive.json nyopet-orders.json web/index.html web/arsip.html
           git diff --staged --quiet || git commit -m "Auto: nyopet order monitor $(date -u +%Y-%m-%dT%H:%M)"
           git pull --rebase origin master
           git push

@@ -7,10 +7,12 @@
 // Sumber:
 //   - Fear & Greed Index: alternative.me (gratis, no key, no rate limit ketat)
 //   - Funding Rate + Open Interest + Long/Short Ratio: Bybit (api.bybit.com, gratis, no key)
-//     CATATAN PENTING (9 Agu 2026): awalnya pakai Binance Futures (fapi.binance.com), TERNYATA
-//     kena blokir geografis (HTTP 451) di runner GitHub Actions -- beda dari data-api.binance.vision
-//     (spot) yang emang didesain unblocked, gak ada versi "vision" buat futures Binance. Dites
-//     langsung: Bybit gak kena blokir yang sama, dipakai gantiin buat 3 metrik ini.
+//     CATATAN PENTING (9 Agu 2026): data DERIVATIF/FUTURES ternyata rawan blokir geografis dari
+//     runner GitHub Actions (berbasis US) -- Binance Futures (fapi.binance.com) kena HTTP 451,
+//     Bybit kena blokir CloudFront-nya sendiri juga. Pola berulang lintas exchange, bukan cuma 1
+//     penyedia. Fear & Greed (bukan data derivatif exchange) gak kena pola yang sama. Karena itu
+//     SETIAP sumber di bawah independen (try/catch masing-masing) -- kalau 1 gagal, yang lain
+//     TETAP tampil, bukan semuanya ikut gugur.
 
 const { fetchWithRetry } = require('./httpRetry');
 
@@ -35,14 +37,28 @@ async function fetchLongShortRatio(symbol = 'BTCUSDT') {
   return { longAccount: parseFloat(item.buyRatio), shortAccount: parseFloat(item.sellRatio), ratio: parseFloat(item.buyRatio) / parseFloat(item.sellRatio) };
 }
 
+async function safe(fn, label) {
+  try {
+    return await fn();
+  } catch (e) {
+    console.log(`[MarketSentiment] ${label} gagal (dilewatin):`, e.message.slice(0, 120));
+    return null;
+  }
+}
+
+// Partial-OK by design -- tiap sumber independen, sebagian gagal TIDAK gugurin yang lain
+// (lihat catatan di atas soal blokir geografis derivatif). Field yang gagal jadi null,
+// caller (nyopetOrderLog.js sentimentLines) WAJIB handle null per-field.
 async function analyzeSentiment(symbol = 'BTCUSDT') {
   const [fearGreed, fundingAndOI, longShort] = await Promise.all([
-    fetchFearGreed(), fetchFundingAndOI(symbol), fetchLongShortRatio(symbol),
+    safe(fetchFearGreed, 'Fear & Greed'),
+    safe(() => fetchFundingAndOI(symbol), 'Funding/OI (Bybit)'),
+    safe(() => fetchLongShortRatio(symbol), 'Long/Short Ratio (Bybit)'),
   ]);
   return {
     fearGreed,
-    funding: { rate: fundingAndOI.rate, nextFundingTime: fundingAndOI.nextFundingTime },
-    openInterest: { openInterest: fundingAndOI.openInterest },
+    funding: fundingAndOI ? { rate: fundingAndOI.rate, nextFundingTime: fundingAndOI.nextFundingTime } : null,
+    openInterest: fundingAndOI ? { openInterest: fundingAndOI.openInterest } : null,
     longShort,
   };
 }

@@ -123,14 +123,17 @@ function fundingPct(rate) {
   return (rate * 100).toFixed(4) + '%';
 }
 
+// Partial-OK -- tiap sumber independen (lihat marketSentiment.js), field yang gagal
+// (geo-block derivatif dari runner GH Actions, pernah kejadian 9 Agu 2026) ditandai jelas,
+// BUKAN bikin seluruh lapis sentimen ilang.
 function sentimentLines(sentiment) {
   if (!sentiment) return ['Sentimen & posisi pasar: gagal ambil data kali ini (dilewatin, gak fatal).'];
   const { fearGreed, funding, openInterest, longShort } = sentiment;
   return [
-    `Fear & Greed Index: ${fearGreed.value}/100 (${fearGreed.classification})`,
-    `Funding Rate: ${fundingPct(funding.rate)} (${funding.rate >= 0 ? 'long bayar short' : 'short bayar long'})`,
-    `Open Interest: ${openInterest.openInterest.toLocaleString('en-US', { maximumFractionDigits: 0 })} BTC`,
-    `Long/Short Ratio (akun): ${(longShort.longAccount * 100).toFixed(1)}% long / ${(longShort.shortAccount * 100).toFixed(1)}% short`,
+    fearGreed ? `Fear & Greed Index: ${fearGreed.value}/100 (${fearGreed.classification})` : 'Fear & Greed Index: gagal ambil data.',
+    funding ? `Funding Rate: ${fundingPct(funding.rate)} (${funding.rate >= 0 ? 'long bayar short' : 'short bayar long'})` : 'Funding Rate: gagal ambil data.',
+    openInterest ? `Open Interest: ${openInterest.openInterest.toLocaleString('en-US', { maximumFractionDigits: 0 })} BTC` : 'Open Interest: gagal ambil data.',
+    longShort ? `Long/Short Ratio (akun): ${(longShort.longAccount * 100).toFixed(1)}% long / ${(longShort.shortAccount * 100).toFixed(1)}% short` : 'Long/Short Ratio: gagal ambil data.',
   ];
 }
 

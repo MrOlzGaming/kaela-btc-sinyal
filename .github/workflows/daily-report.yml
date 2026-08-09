@@ -2,7 +2,8 @@ name: Laporan Harian (Siklus Halving + Grup WA)
 
 on:
   schedule:
-    - cron: '0 23 * * *' # 23:00 UTC = 07:00 WITA (hari berikutnya), ikut jadwal closing candle
+    # 23:03 (bukan 23:00 persis) -- mitigasi delay jadwal jam bulat, lihat news-daily.yml.
+    - cron: '3 23 * * *' # 23:03 UTC = 07:03 WITA (hari berikutnya)
   workflow_dispatch: {}
 
 concurrency:

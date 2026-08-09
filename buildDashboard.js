@@ -39,10 +39,11 @@ const TYPE_LABEL = {
 
 // Urutan & isi grup TETAP di Arsip -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
 // News/Whale/Econ SENGAJA gak diarsip ke web lagi (keputusan Olan 8 Agu 2026) -- kejadian sesaat,
-// fungsinya selesai begitu terkirim ke WA, gak perlu jejak permanen. Web cuma simpan yang punya
-// nilai historis jangka panjang: laporan siklus halving + jurnal transaksi Nyopet Market.
+// fungsinya selesai begitu terkirim ke WA, gak perlu jejak permanen. Laporan Harian JUGA (keputusan
+// Olan 9 Agu 2026) -- WA aja udah cukup, status Siklus Halving LIVE-nya sendiri tetap ada di tab
+// Dashboard (renderSiklusHalvingPanel, baca state.json, gak butuh archive laporan teks). Web cuma
+// simpan yang punya nilai historis jangka panjang: jurnal transaksi Nyopet Market.
 const GROUPS = [
-  { key: 'laporan', category: 'laporan', label: `${CATEGORY_COLOR.laporan.emoji} 📊 Laporan`, match: (type) => type.startsWith('report-') },
   { key: 'sinyal', category: 'nyopet', label: `${CATEGORY_COLOR.nyopet.emoji} ⚡ Sinyal Nyopet Market`, match: (type) => type === 'nyopet' },
 ];
 
@@ -603,9 +604,10 @@ function buildDashboardHtml() {
   const allEntries = getAll();
   const openSignal = getOpenNyopetSignal();
 
-  // Tab Siklus Halving (default) -- panel status TENANG + Laporan hari ini (kalau ada), gak berisik
-  const todayLaporan = todayOfType(allEntries, todayKey, (t) => t.startsWith('report-'));
-  const halvingTabHtml = renderSiklusHalvingPanel(now) + todayLaporan.map((e) => renderEntry(e, { highlight: true })).join('\n');
+  // Tab Siklus Halving (default) -- panel status LIVE doang (state.json), gak berisik. Laporan Harian
+  // teks SENGAJA gak ditampilin lagi di sini (keputusan Olan 9 Agu 2026) -- WA aja udah cukup, panel
+  // ini sendiri udah cukup nunjukin status live-nya tanpa perlu archive teks laporan tiap hari.
+  const halvingTabHtml = renderSiklusHalvingPanel(now);
 
   // Tab Nyopet Market -- panel order AKTIF (manual) di atas, baru log teks hari ini/posisi lama di bawah
   const todayNyopet = todayOfType(allEntries, todayKey, (t) => t === 'nyopet').filter((e) => !sameEntry(e, openSignal));

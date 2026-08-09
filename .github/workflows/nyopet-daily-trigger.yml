@@ -5,6 +5,10 @@ on:
     - cron: '5 0 * * *' # 00:05 UTC = 08:05 WITA, abis candle Daily closed (08:00 WITA)
   workflow_dispatch: {}
 
+concurrency:
+  group: nyopet-daily-trigger
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

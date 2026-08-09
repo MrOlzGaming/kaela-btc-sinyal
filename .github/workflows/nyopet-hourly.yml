@@ -5,6 +5,12 @@ on:
     - cron: '5 * * * *' # menit ke-5 tiap jam -- buffer biar candle hourly Binance udah pasti closed
   workflow_dispatch: {}
 
+# Cegah 2 run tumpang tindih -- kalau bareng, dua-duanya bisa liat order PENDING/FLOATING yang
+# sama dan sama-sama trigger/close + kirim WA 2x. Lihat whale-alert.yml buat kasus nyata bug ini.
+concurrency:
+  group: nyopet-hourly
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

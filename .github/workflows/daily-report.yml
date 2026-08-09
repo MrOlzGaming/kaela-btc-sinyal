@@ -5,6 +5,10 @@ on:
     - cron: '0 23 * * *' # 23:00 UTC = 07:00 WITA (hari berikutnya), ikut jadwal closing candle
   workflow_dispatch: {}
 
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

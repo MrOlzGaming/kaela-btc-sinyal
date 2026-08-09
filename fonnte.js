@@ -2,7 +2,7 @@
 // Searah total: Kaela cuma KIRIM ke 1 Group ID spesifik, gak pernah baca command atau balas DM.
 // Tanpa secrets.js (belum di-setup di mesin ini), fungsi ini otomatis no-op -- aman buat dev/testing lokal.
 
-const { fetchWithRetry } = require('./httpRetry');
+const { fetchRetryNetworkErrorOnly } = require('./httpRetry');
 
 const FONNTE_URL = 'https://api.fonnte.com/send';
 
@@ -32,9 +32,12 @@ async function sendWhatsApp(message, target) {
   });
 
   // Gagal kirim WA gak boleh gugurin seluruh run (arsip web tetap harus jalan) -- retry dulu,
-  // kalau tetap gagal, cukup dicatat, jangan throw ke pemanggil.
+  // kalau tetap gagal, cukup dicatat, jangan throw ke pemanggil. PAKAI fetchRetryNetworkErrorOnly
+  // (BUKAN fetchWithRetry biasa) -- kirim WA itu TIDAK IDEMPOTEN, retry pas server sempat merespon
+  // (walau error) bisa bikin Fonnte kirim pesan yang SAMA 2-3x ke grup (bug nyata, ketauan 9 Agu 2026:
+  // whale alert sama persis -- tx id, jam, jumlah BTC sama -- kekirim berulang).
   try {
-    const res = await fetchWithRetry(FONNTE_URL, {
+    const res = await fetchRetryNetworkErrorOnly(FONNTE_URL, {
       method: 'POST',
       headers: { Authorization: secrets.FONNTE_TOKEN },
       body,

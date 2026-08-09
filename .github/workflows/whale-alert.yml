@@ -5,6 +5,14 @@ on:
     - cron: '*/10 * * * *'
   workflow_dispatch: {}
 
+# Cegah 2 run tumpang tindih (kalau 1 run kelamaan, run cron berikutnya nunggu dulu, BUKAN
+# jalan bareng) -- run bareng bisa baca whale-state.json yang SAMA sebelum salah satunya sempat
+# commit, jadi transaksi whale yang sama ke-deteksi & ke-kirim WA 2x. Ketauan 9 Agu 2026: alert
+# sama persis (tx id, jam, jumlah BTC) kekirim berulang ke grup.
+concurrency:
+  group: whale-alert
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

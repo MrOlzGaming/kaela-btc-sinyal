@@ -1,6 +1,11 @@
-// Generate web/index.html (Dashboard: hari ini) + web/arsip.html (Arsip: hari-hari lalu, di-grup)
-// dari archive.json — data di-embed langsung (gak perlu server/fetch).
+// Generate web/index.html (Dashboard, satu-satunya halaman data) dari archive.json --
+// data di-embed langsung (gak perlu server/fetch).
 // Jalankan tiap kali ada entry baru: node buildDashboard.js
+//
+// Arsip (arsip.html) DIBUANG (keputusan Olan 9 Agu 2026) -- setelah News/Whale/Econ/Laporan
+// Harian dibuang dari web, satu-satunya isi Arsip yang tersisa cuma log teks mentah Nyopet
+// Market (RENCANA/INVALID dst) yang gak nambah nilai lagi -- riwayat yang BENERAN berharga
+// (trade selesai, profit/loss) udah ditangani rapi sama tab Jurnal.
 
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +21,6 @@ const WEB_DIR = path.join(__dirname, 'web');
 // Ikon SVG garis tipis (bukan emoji) -- konsisten di semua halaman (dashboard, arsip, kalkulator,
 // metodologi). Sama persis dipakai ulang di web/kalkulator.html & web/metodologi-*.html (statis).
 const ICON_HOME = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const ICON_ARCHIVE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5-8 4.5-8-4.5L12 3z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12l8 4.5 8-4.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16.5L12 21l8-4.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_CALC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg>';
 const ICON_BOOK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LOGO_MARK = '<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -36,16 +40,6 @@ const TYPE_LABEL = {
   whale: `${CATEGORY_COLOR.whale.emoji} 🐋 Whale Alert`,
   'econ-calendar': `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`,
 };
-
-// Urutan & isi grup TETAP di Arsip -- tiap entry archive.json masuk PERSIS 1 grup, gak pernah dobel tampil.
-// News/Whale/Econ SENGAJA gak diarsip ke web lagi (keputusan Olan 8 Agu 2026) -- kejadian sesaat,
-// fungsinya selesai begitu terkirim ke WA, gak perlu jejak permanen. Laporan Harian JUGA (keputusan
-// Olan 9 Agu 2026) -- WA aja udah cukup, status Siklus Halving LIVE-nya sendiri tetap ada di tab
-// Dashboard (renderSiklusHalvingPanel, baca state.json, gak butuh archive laporan teks). Web cuma
-// simpan yang punya nilai historis jangka panjang: jurnal transaksi Nyopet Market.
-const GROUPS = [
-  { key: 'sinyal', category: 'nyopet', label: `${CATEGORY_COLOR.nyopet.emoji} ⚡ Sinyal Nyopet Market`, match: (type) => type === 'nyopet' },
-];
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -98,43 +92,6 @@ function renderEntry(e, { highlight = false, pinned = false } = {}) {
   return `<div class="${cls}${pinned ? ' pinned' : ''}"${borderStyle}>${pinnedBadge}${header}<pre class="content">${linkify(escapeHtml(e.content))}</pre></div>`;
 }
 
-// entries HARUS udah terbaru-duluan (dari getAll()) -- Map jaga urutan insersi, jadi tanggal
-// otomatis kekumpul terbaru-duluan juga, gak perlu sort ulang.
-function groupByDate(entries) {
-  const map = new Map();
-  for (const e of entries) {
-    const key = localDateKey(new Date(e.date));
-    if (!map.has(key)) map.set(key, []);
-    map.get(key).push(e);
-  }
-  return map;
-}
-
-function renderGroup(group, entries) {
-  const titleStyle = ` style="border-bottom-color: ${CATEGORY_COLOR[group.category].hex};"`;
-  if (entries.length === 0) {
-    return `<section class="arsip-group">
-      <h2 class="group-title"${titleStyle}>${group.label}</h2>
-      <div class="empty">Belum ada arsip.</div>
-    </section>`;
-  }
-
-  const [latest, ...rest] = entries;
-  const restByDate = groupByDate(rest);
-  const restHtml = Array.from(restByDate.entries())
-    .map(([dateKey, dateEntries]) => {
-      const entriesHtml = dateEntries.map((e) => renderEntry(e)).join('\n');
-      return `<details class="date-group"><summary>${dateKey} (${dateEntries.length})</summary>${entriesHtml}</details>`;
-    })
-    .join('\n');
-
-  return `<section class="arsip-group">
-    <h2 class="group-title"${titleStyle}>${group.label}</h2>
-    ${renderEntry(latest, { highlight: true })}
-    ${rest.length > 0 ? `<details class="riwayat"><summary>Riwayat (${rest.length})</summary>${restHtml}</details>` : ''}
-  </section>`;
-}
-
 const SHARED_STYLE = `
   h1 { font-size: 1.4rem; margin: 0; }
   .brand { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 16px; margin-bottom: 4px; }
@@ -142,8 +99,6 @@ const SHARED_STYLE = `
   nav a { text-decoration: none; }
   .welcome { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 18px; margin: 18px 0; line-height: 1.6; }
   .welcome strong { color: var(--clr-primary); }
-  .arsip-group { margin-top: 38px; }
-  .group-title { font-size: 1.05rem; font-weight: 700; color: var(--clr-primary); border-bottom: 2px solid var(--clr-border); padding-bottom: 9px; margin-bottom: 14px; }
   .latest { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-success); box-shadow: var(--shadow-card), 0 0 0 1px rgba(63,185,80,0.08); border-radius: var(--radius-lg); padding: 18px; margin: 10px 0; transition: box-shadow 0.2s ease, transform 0.2s ease; }
   .latest:hover { box-shadow: var(--shadow-card-hover), 0 0 0 1px rgba(63,185,80,0.12); }
   .latest-label { color: var(--clr-success); font-weight: 700; font-size: 0.82rem; letter-spacing: 0.04em; }
@@ -158,8 +113,6 @@ const SHARED_STYLE = `
   .entry:hover { box-shadow: var(--shadow-card-hover); border-color: var(--clr-border-soft); }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 700; }
-  .riwayat { margin-top: 10px; }
-  .riwayat summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.9rem; padding: 6px 0; }
   .empty { color: var(--clr-text-muted); text-align: center; padding: 22px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
   .countdown { background: var(--gradient-surface), linear-gradient(150deg, #1a2130, #0d1219); border: 1px solid var(--clr-warning); box-shadow: var(--shadow-card), 0 0 32px -8px rgba(240,136,62,0.25); border-radius: var(--radius-lg); padding: 20px; margin: 18px 0; text-align: center; }
   .countdown-label { color: var(--clr-warning); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 12px; }
@@ -168,8 +121,6 @@ const SHARED_STYLE = `
   .countdown-num { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
   .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
   .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 12px; }
-  .goto-arsip { display: block; text-align: center; margin-top: 32px; padding: 15px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 700; transition: box-shadow 0.2s ease, transform 0.2s ease; }
-  .goto-arsip:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
   .price-widget { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 18px; margin: 18px 0; }
   .price-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .price-live { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
@@ -227,14 +178,6 @@ const SHARED_STYLE = `
   .halving-note { color: var(--clr-text-muted); font-size: 0.85rem; margin-top: 12px; }
   .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
   .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
-  .riwayat-label { color: var(--clr-text-muted); font-size: 0.9rem; margin: 14px 0 6px; }
-  .date-group { margin: 6px 0; border: 1px solid var(--clr-border); border-radius: var(--radius-md); overflow: hidden; background: var(--clr-bg-elevated); }
-  .date-group summary { cursor: pointer; padding: 10px 14px; color: var(--clr-text); font-size: 0.85rem; font-weight: 600; background: var(--gradient-surface), var(--clr-bg-elevated-2); list-style: none; transition: background 0.15s ease; }
-  .date-group summary:hover { filter: brightness(1.1); }
-  .date-group summary::-webkit-details-marker { display: none; }
-  .date-group summary::before { content: '▸ '; color: var(--clr-primary); }
-  .date-group[open] summary::before { content: '▾ '; }
-  .date-group .entry { margin: 8px 10px; box-shadow: none; }
 
   /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
   .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
@@ -302,17 +245,12 @@ function navHtml(activePage) {
     `<a href="${href}"${key === activePage ? ' class="active"' : ''}><span class="icon">${icon}</span>${label}</a>`;
   return `<nav class="bottom-nav">
     ${item('index.html', ICON_HOME, 'Dashboard', 'dashboard')}
-    ${item('arsip.html', ICON_ARCHIVE, 'Arsip', 'arsip')}
     ${item('kalkulator.html', ICON_CALC, 'Kalkulator', 'kalkulator')}
     ${item('metodologi-sniper.html', ICON_BOOK, 'Metodologi', 'metodologi')}
   </nav>`;
 }
 
 // ============ DASHBOARD (index.html) — hari ini aja + countdown + sambutan ============
-
-function sameEntry(a, b) {
-  return a && b && a.date === b.date && a.type === b.type;
-}
 
 function fmtDateShort(d) {
   return d.toISOString().slice(0, 10);
@@ -682,8 +620,6 @@ function buildDashboardHtml() {
   <div class="dash-panel" data-panel="nyopet">${nyopetTabHtml}</div>
   <div class="dash-panel" data-panel="jurnal">${jurnalTabHtml}</div>
 
-  <a class="goto-arsip" href="arsip.html">📚 Lihat Arsip Lengkap (hari-hari sebelumnya) →</a>
-
   <script>${countdownScript()}</script>
   <script src="js/price-ticker.js"></script>
   <script src="js/nyopet-orders-widget.js"></script>
@@ -703,56 +639,6 @@ function buildDashboardHtml() {
 </html>`;
 }
 
-// ============ ARSIP (arsip.html) — hari-hari lalu, di-grup per tipe ============
-
-function buildArsipHtml() {
-  const now = new Date();
-  const todayKey = localDateKey(now);
-  const allEntries = getAll(); // terbaru duluan
-  // Entry nyopet TERBARU nempel di tab Nyopet Market Dashboard (status terkini) -- jangan
-  // ikut ditampilin di Arsip juga (biar gak dobel), berapapun hari udah lewat sejak entry itu.
-  const latestNyopetEntry = getAll('nyopet')[0] || null;
-  const pastEntries = allEntries.filter(
-    (e) => localDateKey(new Date(e.date)) !== todayKey && !sameEntry(e, latestNyopetEntry)
-  );
-
-  const groupsHtml = GROUPS.map((group) => {
-    const groupEntries = pastEntries.filter((e) => group.match(e.type));
-    return renderGroup(group, groupEntries);
-  }).join('\n');
-
-  return `<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<title>Kaela BTC Sinyal — Arsip</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1fae6c">
-<meta name="description" content="Arsip laporan & berita Kaela BTC Sinyal — sistem Sniper siklus halving Bitcoin.">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icons/icon.svg">
-<link rel="stylesheet" href="css/variables.css">
-<style>${SHARED_STYLE}</style>
-</head>
-<body>
-  <div class="brand"><span class="brand-mark">${LOGO_MARK}</span><h1>Kaela BTC Sinyal — Arsip</h1></div>
-  <p style="color:var(--clr-text-muted);font-size:0.9rem;">Info hari ini ada di tab <a href="index.html">🏠 Dashboard</a>. Halaman ini isinya hari-hari sebelumnya, dikelompokkan per jenis.</p>
-
-  ${groupsHtml}
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').catch(() => {});
-    }
-  </script>
-
-  ${navHtml('arsip')}
-</body>
-</html>`;
-}
-
 if (!fs.existsSync(WEB_DIR)) fs.mkdirSync(WEB_DIR, { recursive: true });
 fs.writeFileSync(path.join(WEB_DIR, 'index.html'), buildDashboardHtml());
-fs.writeFileSync(path.join(WEB_DIR, 'arsip.html'), buildArsipHtml());
-console.log('web/index.html (Dashboard) + web/arsip.html (Arsip) dibuat.');
+console.log('web/index.html (Dashboard) dibuat.');

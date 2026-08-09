@@ -17,8 +17,6 @@
   nav a { text-decoration: none; }
   .welcome { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 18px; margin: 18px 0; line-height: 1.6; }
   .welcome strong { color: var(--clr-primary); }
-  .arsip-group { margin-top: 38px; }
-  .group-title { font-size: 1.05rem; font-weight: 700; color: var(--clr-primary); border-bottom: 2px solid var(--clr-border); padding-bottom: 9px; margin-bottom: 14px; }
   .latest { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-success); box-shadow: var(--shadow-card), 0 0 0 1px rgba(63,185,80,0.08); border-radius: var(--radius-lg); padding: 18px; margin: 10px 0; transition: box-shadow 0.2s ease, transform 0.2s ease; }
   .latest:hover { box-shadow: var(--shadow-card-hover), 0 0 0 1px rgba(63,185,80,0.12); }
   .latest-label { color: var(--clr-success); font-weight: 700; font-size: 0.82rem; letter-spacing: 0.04em; }
@@ -33,8 +31,6 @@
   .entry:hover { box-shadow: var(--shadow-card-hover); border-color: var(--clr-border-soft); }
   .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
   .entry-type { font-weight: 700; }
-  .riwayat { margin-top: 10px; }
-  .riwayat summary { cursor: pointer; color: var(--clr-text-muted); font-size: 0.9rem; padding: 6px 0; }
   .empty { color: var(--clr-text-muted); text-align: center; padding: 22px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
   .countdown { background: var(--gradient-surface), linear-gradient(150deg, #1a2130, #0d1219); border: 1px solid var(--clr-warning); box-shadow: var(--shadow-card), 0 0 32px -8px rgba(240,136,62,0.25); border-radius: var(--radius-lg); padding: 20px; margin: 18px 0; text-align: center; }
   .countdown-label { color: var(--clr-warning); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 12px; }
@@ -43,8 +39,6 @@
   .countdown-num { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
   .countdown-unit { font-size: 0.7rem; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
   .countdown-date { color: var(--clr-text-muted); font-size: 0.8rem; margin-top: 12px; }
-  .goto-arsip { display: block; text-align: center; margin-top: 32px; padding: 15px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-md); color: var(--clr-primary); text-decoration: none; font-weight: 700; transition: box-shadow 0.2s ease, transform 0.2s ease; }
-  .goto-arsip:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
   .price-widget { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 18px; margin: 18px 0; }
   .price-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .price-live { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
@@ -102,14 +96,6 @@
   .halving-note { color: var(--clr-text-muted); font-size: 0.85rem; margin-top: 12px; }
   .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
   .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
-  .riwayat-label { color: var(--clr-text-muted); font-size: 0.9rem; margin: 14px 0 6px; }
-  .date-group { margin: 6px 0; border: 1px solid var(--clr-border); border-radius: var(--radius-md); overflow: hidden; background: var(--clr-bg-elevated); }
-  .date-group summary { cursor: pointer; padding: 10px 14px; color: var(--clr-text); font-size: 0.85rem; font-weight: 600; background: var(--gradient-surface), var(--clr-bg-elevated-2); list-style: none; transition: background 0.15s ease; }
-  .date-group summary:hover { filter: brightness(1.1); }
-  .date-group summary::-webkit-details-marker { display: none; }
-  .date-group summary::before { content: '▸ '; color: var(--clr-primary); }
-  .date-group[open] summary::before { content: '▾ '; }
-  .date-group .entry { margin: 8px 10px; box-shadow: none; }
 
   /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
   .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
@@ -239,8 +225,6 @@ Long/Short Ratio (akun): 54.6% long / 45.4% short
   </div></div>
   <div class="dash-panel" data-panel="jurnal"><div class="empty">📓 Belum ada trade yang selesai. Jurnal bakal keisi otomatis begitu ada order Nyopet Market yang kena TP/SL.</div></div>
 
-  <a class="goto-arsip" href="arsip.html">📚 Lihat Arsip Lengkap (hari-hari sebelumnya) →</a>
-
   <script>
     const HALVING_TARGET = new Date('2028-04-13T13:11:00Z').getTime();
     function updateCountdown() {
@@ -276,7 +260,6 @@ Long/Short Ratio (akun): 54.6% long / 45.4% short
 
   <nav class="bottom-nav">
     <a href="index.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
-    <a href="arsip.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5-8 4.5-8-4.5L12 3z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12l8 4.5 8-4.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16.5L12 21l8-4.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Arsip</a>
     <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
     <a href="metodologi-sniper.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
   </nav>

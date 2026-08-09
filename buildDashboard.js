@@ -310,18 +310,6 @@ function navHtml(activePage) {
 
 // ============ DASHBOARD (index.html) — hari ini aja + countdown + sambutan ============
 
-// Kalau posisi Nyopet Market lagi OPEN, entry ENTRY-nya WAJIB nempel di Dashboard (gak pindah ke
-// Arsip) sampai kena SL/TP -- gak peduli udah berapa hari lewat. Sistem cuma 1 posisi/waktu, jadi
-// entry ENTRY BARU paling baru = entry yang lagi buka itu (gak mungkin ambigu).
-function getOpenNyopetSignal() {
-  const statePath = path.join(__dirname, 'nyopet-state.json');
-  if (!fs.existsSync(statePath)) return null;
-  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
-  if (!state.position) return null;
-  const allNyopet = getAll('nyopet'); // terbaru duluan
-  return allNyopet.find((e) => e.content.includes('ENTRY BARU')) || null;
-}
-
 function sameEntry(a, b) {
   return a && b && a.date === b.date && a.type === b.type;
 }
@@ -384,10 +372,6 @@ function renderSiklusHalvingPanel(now) {
   </div>`;
 }
 
-function todayOfType(allEntries, todayKey, matchType) {
-  return allEntries.filter((e) => matchType(e.type) && localDateKey(new Date(e.date)) === todayKey);
-}
-
 // ============ Nyopet Market MANUAL: monitor order live (nyopet-orders.json) ============
 // Beda dari log teks lama (nyopetLog.js) -- ini KARTU LIVE per order: pending (nunggu trigger),
 // floating (P&L live dihitung DI BROWSER dari harga live, lihat web/js/nyopet-orders-widget.js),
@@ -446,7 +430,12 @@ function loadNyopetOrdersState() {
   return fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
 }
 
-function renderNyopetOrdersPanel(state) {
+// Tab Nyopet Market = status TERKINI doang, SATU kartu (permintaan Olan 9 Agu 2026 -- sebelumnya
+// numpuk semua entry hari ini, bingung). Kalau ada order aktif (floating), itu yang tampil.
+// Kalau enggak, tampilkan 1 status TERAKHIR (biasanya "INVALID, masih nunggu" dari
+// nyopetAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
+// yang UDAH SELESAI (closed_tp/closed_sl) itu tugas tab Jurnal, bukan di sini.
+function renderNyopetOrdersPanel(state, latestStatusEntry) {
   // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
   // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
   // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di nyopet-orders.json
@@ -457,9 +446,14 @@ function renderNyopetOrdersPanel(state) {
     ? `<div class="order-balance">💰 Saldo Live Order: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
     : '';
 
-  const activeHtml = active.length > 0
-    ? `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`
-    : `<div class="empty">⚡ Belum ada order aktif. Nyopet Market sekarang manual -- Olan &amp; Kaela analisa bareng dulu sebelum ada rencana order.</div>`;
+  let activeHtml;
+  if (active.length > 0) {
+    activeHtml = `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`;
+  } else if (latestStatusEntry) {
+    activeHtml = renderEntry(latestStatusEntry, { highlight: true });
+  } else {
+    activeHtml = `<div class="empty">⚡ Belum ada analisa Nyopet Market.</div>`;
+  }
 
   return `<div class="nyopet-orders-panel">
     ${balanceLine}
@@ -600,24 +594,17 @@ function renderJurnalPanel(state, now) {
 
 function buildDashboardHtml() {
   const now = new Date();
-  const todayKey = localDateKey(now);
-  const allEntries = getAll();
-  const openSignal = getOpenNyopetSignal();
 
   // Tab Siklus Halving (default) -- panel status LIVE doang (state.json), gak berisik. Laporan Harian
   // teks SENGAJA gak ditampilin lagi di sini (keputusan Olan 9 Agu 2026) -- WA aja udah cukup, panel
   // ini sendiri udah cukup nunjukin status live-nya tanpa perlu archive teks laporan tiap hari.
   const halvingTabHtml = renderSiklusHalvingPanel(now);
 
-  // Tab Nyopet Market -- panel order AKTIF (manual) di atas, baru log teks hari ini/posisi lama di bawah
-  const todayNyopet = todayOfType(allEntries, todayKey, (t) => t === 'nyopet').filter((e) => !sameEntry(e, openSignal));
+  // Tab Nyopet Market -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
+  // renderNyopetOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir.
   const ordersState = loadNyopetOrdersState();
-  let nyopetTabHtml = renderNyopetOrdersPanel(ordersState);
-  if (openSignal) {
-    nyopetTabHtml += renderEntry(openSignal, { highlight: true, pinned: true }) + todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
-  } else if (todayNyopet.length > 0) {
-    nyopetTabHtml += todayNyopet.map((e) => renderEntry(e, { highlight: true })).join('\n');
-  }
+  const latestNyopetEntry = getAll('nyopet')[0] || null; // terbaru duluan
+  const nyopetTabHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry);
 
   // Tab Jurnal -- statistik + equity curve + kalender P/L, dari riwayat order closed/cancelled
   const jurnalTabHtml = renderJurnalPanel(ordersState, now);
@@ -722,16 +709,11 @@ function buildArsipHtml() {
   const now = new Date();
   const todayKey = localDateKey(now);
   const allEntries = getAll(); // terbaru duluan
-  const openSignal = getOpenNyopetSignal();
-  // Sinyal ENTRY yang posisinya masih OPEN nempel permanen di Dashboard (pinned) -- jangan
+  // Entry nyopet TERBARU nempel di tab Nyopet Market Dashboard (status terkini) -- jangan
   // ikut ditampilin di Arsip juga (biar gak dobel), berapapun hari udah lewat sejak entry itu.
-  // Heartbeat "belum ada sinyal hari ini" juga gak masuk Arsip -- itu bukan sinyal beneran,
-  // cuma status harian, relevan pas "hari ini" doang (di Dashboard), gak perlu jadi riwayat.
+  const latestNyopetEntry = getAll('nyopet')[0] || null;
   const pastEntries = allEntries.filter(
-    (e) =>
-      localDateKey(new Date(e.date)) !== todayKey &&
-      !sameEntry(e, openSignal) &&
-      !(e.type === 'nyopet' && e.content.includes('Tidak ada sinyal Nyopet Market hari ini'))
+    (e) => localDateKey(new Date(e.date)) !== todayKey && !sameEntry(e, latestNyopetEntry)
   );
 
   const groupsHtml = GROUPS.map((group) => {

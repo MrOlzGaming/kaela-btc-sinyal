@@ -52,7 +52,7 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f nyopet-trigger-state.json archive.json nyopet-orders.json web/index.html web/arsip.html
+          git add -f nyopet-trigger-state.json archive.json nyopet-orders.json web/index.html
           git diff --staged --quiet || git commit -m "Auto: nyopet analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             git pull --rebase origin master && git push && exit 0

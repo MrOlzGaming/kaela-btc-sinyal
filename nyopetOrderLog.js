@@ -137,6 +137,17 @@ function sentimentLines(sentiment) {
   ];
 }
 
+// Lapis ke-5 (9 Agu 2026): On-chain metrics -- SOPR + NUPL (lebih pas jangka pendek-menengah
+// dibanding MVRV/Puell yang dipakai buat siklus Halving). Null-safe sama kayak sentimentLines.
+function onchainLines(onchain) {
+  if (!onchain) return ['On-chain metrics: gagal ambil data kali ini (dilewatin, gak fatal).'];
+  const { sopr, nupl } = onchain;
+  return [
+    sopr ? `SOPR: ${sopr.value.toFixed(4)} (${sopr.classification})` : 'SOPR: gagal ambil data.',
+    nupl ? `NUPL: ${nupl.value.toFixed(4)} (${nupl.classification})` : 'NUPL: gagal ambil data.',
+  ];
+}
+
 function taLines(ta) {
   const r = ta.resistanceZones[0], s = ta.supportZones[0];
   return [
@@ -148,7 +159,7 @@ function taLines(ta) {
   ];
 }
 
-function formatAutoValid({ order, ta, liq, sentiment }) {
+function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
@@ -162,6 +173,9 @@ function formatAutoValid({ order, ta, liq, sentiment }) {
     '',
     '🌊 SENTIMEN & POSISI PASAR',
     ...sentimentLines(sentiment),
+    '',
+    '⛓️ ON-CHAIN METRICS',
+    ...onchainLines(onchain),
     '',
     `✅ TP: ${fmt(order.tp)}`,
     `❌ SL: ${fmt(order.sl)}`,
@@ -177,7 +191,7 @@ function formatAutoValid({ order, ta, liq, sentiment }) {
   ].join('\n');
 }
 
-function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment }) {
+function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain }) {
   const r = ta.resistanceZones[0], s = ta.supportZones[0];
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
@@ -192,6 +206,9 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment }) {
     '',
     '🌊 SENTIMEN & POSISI PASAR',
     ...sentimentLines(sentiment),
+    '',
+    '⛓️ ON-CHAIN METRICS',
+    ...onchainLines(onchain),
     '',
     '📋 Syarat yang ditunggu: candle harian CLOSE di atas ' + (r ? fmt(r.priceMax) : '(resistance belum jelas)') + ' (breakout naik) atau di bawah ' + (s ? fmt(s.priceMin) : '(support belum jelas)') + ' (breakdown turun).',
     '',

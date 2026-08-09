@@ -22,6 +22,7 @@ const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey } = require('./config');
 const { analyzeSentiment } = require('./marketSentiment');
+const { fetchTradeMetrics } = require('./onchainMetrics');
 
 // Sentimen (Fear&Greed + Binance Futures) BUKAN dari data-api.binance.vision yang biasa kita
 // pakai -- domain fapi.binance.com belum pernah dites dari runner GitHub Actions. Kalau gagal
@@ -32,6 +33,18 @@ async function safeSentiment() {
     return await analyzeSentiment('BTCUSDT');
   } catch (e) {
     console.log('[NyopetAutoAnalysis] Sentimen gagal diambil (dilewatin):', e.message);
+    return null;
+  }
+}
+
+// On-chain (SOPR + NUPL, lihat onchainMetrics.js) -- opsional/best-effort, sama pola kayak
+// safeSentiment(). Modul ini sendiri udah null-safe per-metrik, tapi tetap dibungkus try/catch
+// jaga-jaga error tak terduga (misal network putus total) gak gugurin seluruh analisa.
+async function safeOnchain() {
+  try {
+    return await fetchTradeMetrics();
+  } catch (e) {
+    console.log('[NyopetAutoAnalysis] On-chain metrics gagal diambil (dilewatin):', e.message);
     return null;
   }
 }
@@ -99,8 +112,8 @@ async function main() {
     return;
   }
 
-  const [ta, dailyClose, livePrice, liq, sentiment] = await Promise.all([
-    analyze('BTCUSDT'), fetchLastDailyClose(), fetchLivePrice(), sampleLiquidations(), safeSentiment(),
+  const [ta, dailyClose, livePrice, liq, sentiment, onchain] = await Promise.all([
+    analyze('BTCUSDT'), fetchLastDailyClose(), fetchLivePrice(), sampleLiquidations(), safeSentiment(), safeOnchain(),
   ]);
 
   const topResistance = ta.resistanceZones[0]; // udah kesortir touches terbanyak dari analyze()
@@ -111,7 +124,7 @@ async function main() {
   else if (topSupport && dailyClose < topSupport.priceMin) direction = 'sell';
 
   if (!direction) {
-    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment });
+    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain });
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
     await sendWhatsApp(msg);
@@ -152,7 +165,7 @@ async function main() {
   }, now);
   const opened = updateOrder(created.id, { status: 'floating', entryPrice: livePrice, triggeredAt: now.toISOString() });
 
-  const msg = formatAutoValid({ order: opened, ta, liq, sentiment });
+  const msg = formatAutoValid({ order: opened, ta, liq, sentiment, onchain });
   console.log(msg + '\n');
   addEntry('nyopet', msg, now);
   await sendWhatsApp(msg);

@@ -10,6 +10,16 @@ const { sendWhatsApp } = require('./fonnte');
 const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal } = require('./config');
+const { fetchCycleMetrics } = require('./onchainMetrics');
+
+async function safeOnchain() {
+  try {
+    return await fetchCycleMetrics();
+  } catch (e) {
+    console.log('[GroupMonitor] On-chain metrics gagal diambil (dilewatin):', e.message);
+    return null;
+  }
+}
 
 // data-api.binance.vision -- endpoint RESMI Binance khusus market data publik (harga/kline),
 // gak kena batasan geografis kayak api.binance.com biasa (GitHub Actions runner ketauan
@@ -56,7 +66,9 @@ async function main() {
   const local = toLocal(now);
   const items = [];
   if (priceYesterday !== null) {
-    items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday) });
+    // On-chain cuma di-fetch kalau laporan daily beneran mau dikirim (hemat quota 10req/jam).
+    const onchain = await safeOnchain();
+    items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
   }
   if (local.getUTCDay() === 1 && priceLastWeek !== null) { // Senin (WITA)
     items.push({ type: 'report-weekly', content: generateGroupWeekly(now, priceToday, priceLastWeek) });

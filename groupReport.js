@@ -55,12 +55,25 @@ function getWindowPhase(now) {
   return null;
 }
 
+// On-chain siklus (MVRV + Puell Multiple) -- opsional/best-effort, lihat onchainMetrics.js
+// (sumber gratis limit 10req/jam, update 1x/hari). Null-safe: kalau gagal ambil, baris dilewatin
+// aja (bukan bikin laporan gagal total).
+function onchainCycleLines(onchain) {
+  if (!onchain) return [];
+  const { mvrv, puellMultiple } = onchain;
+  const lines = [];
+  if (mvrv) lines.push(`⛓️ MVRV: ${mvrv.value.toFixed(2)} (${mvrv.classification})`);
+  if (puellMultiple) lines.push(`⛓️ Puell Multiple: ${puellMultiple.value.toFixed(2)} (${puellMultiple.classification})`);
+  return lines;
+}
+
 function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   const lines = [];
   const change = pctChange(priceToday, priceYesterday);
   lines.push(`${CATEGORY_COLOR.laporan.emoji} 📊 Update BTC — ${localDateKey(now)}`);
   lines.push(`Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`);
   lines.push(halvingLine(now));
+  lines.push(...onchainCycleLines(opts.onchain));
 
   const phase = opts.phase || getWindowPhase(now); // 'TANAM' | 'PANEN' | null
   if (phase === 'TANAM') {

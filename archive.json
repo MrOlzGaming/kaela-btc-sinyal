@@ -158,5 +158,10 @@
     "type": "report-daily",
     "date": "2026-08-09T00:15:40.344Z",
     "content": "🟪 📊 Update BTC — 2026-08-09\nHarga sekarang: $64,962.6 (📈 +0.1% dari kemarin)\n⏳ Halving berikutnya: 614 hari lagi (~2028-04-13)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale",
+    "date": "2026-08-09T00:44:20.250Z",
+    "content": "🟨 ⚪ PERGERAKAN BESAR TERDETEKSI\n1.101,96 BTC (~$71,602,071 / ~Rp1.278.811.289.884) berpindah dalam 1 transaksi di blockchain.\nArah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).\nTXID: 01a25a43e85a678fbf9c13fd83954877bbeb6166fe0a625929017036cf37641a\nCek: https://mempool.space/tx/01a25a43e85a678fbf9c13fd83954877bbeb6166fe0a625929017036cf37641a\n2026-08-08 17:34\n\n⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).\nKaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

@@ -119,17 +119,24 @@ async function main() {
   const topResistance = ta.resistanceZones[0]; // udah kesortir touches terbanyak dari analyze()
   const topSupport = ta.supportZones[0];
 
+  // Konfirmasi Weekly (9 Agu 2026): breakout daily WAJIB gak lawan trend Weekly -- kalau
+  // breakout kedeteksi tapi trend Weekly kontra, tetap INVALID (ditahan), bukan langsung entry.
+  // weeklyTrend null (data belum cukup) atau 'netral' TIDAK memblokir -- cuma blokir kontradiksi jelas.
   let direction = null;
-  if (topResistance && dailyClose > topResistance.priceMax) direction = 'buy';
-  else if (topSupport && dailyClose < topSupport.priceMin) direction = 'sell';
+  let weeklyBlocked = null;
+  if (topResistance && dailyClose > topResistance.priceMax) {
+    if (ta.weeklyTrend === 'bearish') weeklyBlocked = 'buy'; else direction = 'buy';
+  } else if (topSupport && dailyClose < topSupport.priceMin) {
+    if (ta.weeklyTrend === 'bullish') weeklyBlocked = 'sell'; else direction = 'sell';
+  }
 
   if (!direction) {
-    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain });
+    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain, weeklyBlocked });
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
     await sendWhatsApp(msg);
     saveTriggerState({ lastSentDate: todayKey });
-    console.log('[NyopetAutoAnalysis] INVALID -- belum ada breakout candle harian.');
+    console.log('[NyopetAutoAnalysis] INVALID --', weeklyBlocked ? `breakout ${weeklyBlocked} ditahan (lawan trend Weekly)` : 'belum ada breakout candle harian.');
     return;
   }
 

@@ -113,9 +113,21 @@ function fitTrendline(points) {
 async function analyze(symbol = 'BTCUSDT') {
   const daily = await fetchCandles(symbol, '1d', 220); // cukup buat MA200
   const hourly = await fetchCandles(symbol, '1h', 96); // 4 hari terakhir buat swing pendek
+  const weekly = await fetchCandles(symbol, '1w', 60); // ~14 bulan, cukup buat MA30 mingguan
 
   const dailyCloses = daily.map((c) => c.close);
   const lastPrice = hourly[hourly.length - 1].close;
+
+  // Konfirmasi multi-timeframe (9 Agu 2026): trend Weekly (MA10 vs MA30 mingguan) dipakai
+  // buat cegah sinyal harian/jam-an LAWAN ARAH TREND BESAR -- breakout daily kadang cuma noise
+  // di tengah trend mingguan yang lebih kuat. bukan indikator baru, sama logic golden/death cross
+  // di atas, cuma timeframe-nya digeser ke mingguan.
+  const weeklyCloses = weekly.map((c) => c.close);
+  const weeklyMa10 = sma(weeklyCloses, 10);
+  const weeklyMa30 = sma(weeklyCloses, 30);
+  const weeklyTrend = (weeklyMa10 && weeklyMa30)
+    ? (weeklyMa10 > weeklyMa30 ? 'bullish' : weeklyMa10 < weeklyMa30 ? 'bearish' : 'netral')
+    : null;
 
   const ma20 = sma(dailyCloses, 20);
   const ma50 = sma(dailyCloses, 50);
@@ -146,6 +158,7 @@ async function analyze(symbol = 'BTCUSDT') {
     ma: { ma20, ma50, ma200 },
     rsi14Daily,
     crossSignal,
+    weeklyTrend,
     resistanceZones, supportZones,
     trendline: {
       resistance: resistanceTrendline ? { ...resistanceTrendline, currentValue: resistanceTrendline.valueAt(hourly.length - 1), direction: resistanceTrendline.slope > 0 ? 'naik' : resistanceTrendline.slope < 0 ? 'turun' : 'datar' } : null,

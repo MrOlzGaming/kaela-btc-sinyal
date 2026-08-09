@@ -148,12 +148,15 @@ function onchainLines(onchain) {
   ];
 }
 
+const WEEKLY_TREND_LABEL = { bullish: '📈 Bullish', bearish: '📉 Bearish', netral: '➡️ Netral' };
+
 function taLines(ta) {
   const r = ta.resistanceZones[0], s = ta.supportZones[0];
   return [
     `Harga: ${fmt(ta.lastPrice)}`,
     `MA20 ${fmt(ta.ma.ma20)} / MA50 ${fmt(ta.ma.ma50)} / MA200 ${fmt(ta.ma.ma200)} -- ${ta.crossSignal === 'bearish_cross_active' ? 'Death Cross aktif' : ta.crossSignal === 'bullish_cross_active' ? 'Golden Cross aktif' : ta.crossSignal || '-'}`,
     `RSI14: ${ta.rsi14Daily.toFixed(0)}`,
+    `Trend Weekly: ${ta.weeklyTrend ? WEEKLY_TREND_LABEL[ta.weeklyTrend] : 'belum cukup data'}`,
     r ? `Resistance kunci: ${fmt(r.price)} (tersentuh ${r.touches}x)` : 'Resistance: belum terdeteksi zona jelas',
     s ? `Support kunci: ${fmt(s.price)} (tersentuh ${s.touches}x)` : 'Support: belum terdeteksi zona jelas',
   ];
@@ -191,8 +194,11 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
   ].join('\n');
 }
 
-function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain }) {
+function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain, weeklyBlocked }) {
   const r = ta.resistanceZones[0], s = ta.supportZones[0];
+  const syaratLine = weeklyBlocked
+    ? `📋 Candle harian udah breakout arah ${DIR_LABEL[weeklyBlocked] || weeklyBlocked}, TAPI trend Weekly masih ${WEEKLY_TREND_LABEL[ta.weeklyTrend]} -- ditahan dulu biar gak lawan arah trend besar. Nunggu trend Weekly berbalik, atau breakout berikutnya lebih kuat.`
+    : '📋 Syarat yang ditunggu: candle harian CLOSE di atas ' + (r ? fmt(r.priceMax) : '(resistance belum jelas)') + ' (breakout naik) atau di bawah ' + (s ? fmt(s.priceMin) : '(support belum jelas)') + ' (breakdown turun).';
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
     'Belum ada posisi. Masih nunggu syarat terpenuhi.',
@@ -210,7 +216,7 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain 
     '⛓️ ON-CHAIN METRICS',
     ...onchainLines(onchain),
     '',
-    '📋 Syarat yang ditunggu: candle harian CLOSE di atas ' + (r ? fmt(r.priceMax) : '(resistance belum jelas)') + ' (breakout naik) atau di bawah ' + (s ? fmt(s.priceMin) : '(support belum jelas)') + ' (breakdown turun).',
+    syaratLine,
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,

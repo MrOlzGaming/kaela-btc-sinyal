@@ -473,5 +473,15 @@
     "type": "whale",
     "date": "2026-08-09T22:54:03.316Z",
     "content": "🟨 ⚪ PERGERAKAN BESAR TERDETEKSI\n2.458,17 BTC (~$159,886,088 / ~Rp2.855.561.754.626) berpindah dalam 1 transaksi di blockchain.\nArah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).\nTXID: a59e3afd4729133047d26978ab5aeb875ac46356744b22c3ebd64fd3f60e1e55\nCek: https://mempool.space/tx/a59e3afd4729133047d26978ab5aeb875ac46356744b22c3ebd64fd3f60e1e55\n2026-08-09 14:13\n\n⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).\nKaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-08-09T23:39:56.614Z",
+    "content": "🟪 📊 Update BTC — 2026-08-10\nHarga sekarang: $64,962.6 (📈 +0.1% dari kemarin)\n⏳ Halving berikutnya: 613 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.24 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.76 (Normal)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-weekly",
+    "date": "2026-08-09T23:39:56.614Z",
+    "content": "🟪 📆 Laporan Mingguan BTC — minggu 2026-08-10\nHarga: $64,962.6 (📈 +3.4% dari minggu lalu)\n⏳ Halving berikutnya: 613 hari lagi (~2028-04-13)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

@@ -13,6 +13,7 @@ state.json
 nyopet-state.json
 whale-state.json
 nyopet-trigger-state.json
+price-alert-state.json
 
 # file lepas, bukan bagian source
 *.jpeg

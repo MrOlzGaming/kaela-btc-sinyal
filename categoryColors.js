@@ -13,6 +13,7 @@ const CATEGORY_COLOR = {
   nyopet: { emoji: '🟧', hex: '#f7931a', label: 'Nyopet Market' },
   whale: { emoji: '🟨', hex: '#eab308', label: 'Whale Alert' },
   econ: { emoji: '⬜', hex: '#8b949e', label: 'Jadwal Ekonomi' },
+  priceAlert: { emoji: '🟫', hex: '#a16207', label: 'Pergerakan Harga' },
 };
 
 // type archive.json -> kategori (dipakai buildDashboard.js buat nentuin warna border kartu)
@@ -22,6 +23,7 @@ function categoryOfType(type) {
   if (type === 'nyopet') return 'nyopet';
   if (type === 'whale') return 'whale';
   if (type === 'econ-calendar') return 'econ';
+  if (type === 'price-alert') return 'priceAlert';
   return null;
 }
 

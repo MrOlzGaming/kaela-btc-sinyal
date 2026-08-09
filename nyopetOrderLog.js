@@ -117,6 +117,23 @@ function liqLine(liq) {
     : `${liq.btcCount} liquidation BTCUSDT terpantau dalam window singkat -- ada tekanan leverage kena stop.`;
 }
 
+// Lapis ke-4 (9 Agu 2026): Sentimen & Posisi Pasar -- gratis (alternative.me + Binance Futures),
+// beda dari struktur harga (taLines) dan event liquidation (liqLine).
+function fundingPct(rate) {
+  return (rate * 100).toFixed(4) + '%';
+}
+
+function sentimentLines(sentiment) {
+  if (!sentiment) return ['Sentimen & posisi pasar: gagal ambil data kali ini (dilewatin, gak fatal).'];
+  const { fearGreed, funding, openInterest, longShort } = sentiment;
+  return [
+    `Fear & Greed Index: ${fearGreed.value}/100 (${fearGreed.classification})`,
+    `Funding Rate: ${fundingPct(funding.rate)} (${funding.rate >= 0 ? 'long bayar short' : 'short bayar long'})`,
+    `Open Interest: ${openInterest.openInterest.toLocaleString('en-US', { maximumFractionDigits: 0 })} BTC`,
+    `Long/Short Ratio (akun): ${(longShort.longAccount * 100).toFixed(1)}% long / ${(longShort.shortAccount * 100).toFixed(1)}% short`,
+  ];
+}
+
 function taLines(ta) {
   const r = ta.resistanceZones[0], s = ta.supportZones[0];
   return [
@@ -128,7 +145,7 @@ function taLines(ta) {
   ];
 }
 
-function formatAutoValid({ order, ta, liq }) {
+function formatAutoValid({ order, ta, liq, sentiment }) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
@@ -139,6 +156,9 @@ function formatAutoValid({ order, ta, liq }) {
     '',
     '🔥 LIQUIDATION HEATMAP',
     liqLine(liq),
+    '',
+    '🌊 SENTIMEN & POSISI PASAR',
+    ...sentimentLines(sentiment),
     '',
     `✅ TP: ${fmt(order.tp)}`,
     `❌ SL: ${fmt(order.sl)}`,
@@ -154,7 +174,7 @@ function formatAutoValid({ order, ta, liq }) {
   ].join('\n');
 }
 
-function formatAutoInvalid({ ta, dailyClose, livePrice, liq }) {
+function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment }) {
   const r = ta.resistanceZones[0], s = ta.supportZones[0];
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
@@ -166,6 +186,9 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, liq }) {
     '',
     '🔥 LIQUIDATION HEATMAP',
     liqLine(liq),
+    '',
+    '🌊 SENTIMEN & POSISI PASAR',
+    ...sentimentLines(sentiment),
     '',
     '📋 Syarat yang ditunggu: candle harian CLOSE di atas ' + (r ? fmt(r.priceMax) : '(resistance belum jelas)') + ' (breakout naik) atau di bawah ' + (s ? fmt(s.priceMin) : '(support belum jelas)') + ' (breakdown turun).',
     '',

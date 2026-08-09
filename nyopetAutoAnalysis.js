@@ -21,6 +21,20 @@ const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey } = require('./config');
+const { analyzeSentiment } = require('./marketSentiment');
+
+// Sentimen (Fear&Greed + Binance Futures) BUKAN dari data-api.binance.vision yang biasa kita
+// pakai -- domain fapi.binance.com belum pernah dites dari runner GitHub Actions. Kalau gagal
+// (misal kena blokir geografis kayak api.binance.com dulu), JANGAN gugurin seluruh analisa --
+// lapis lain (teknikal+liquidation) tetap valid tanpa ini, sentimen jadi opsional/best-effort.
+async function safeSentiment() {
+  try {
+    return await analyzeSentiment('BTCUSDT');
+  } catch (e) {
+    console.log('[NyopetAutoAnalysis] Sentimen gagal diambil (dilewatin):', e.message);
+    return null;
+  }
+}
 
 // Dedup harian -- 1x cek per hari kalender WITA (nempel jadwal candle harian), cegah spam
 // kalau workflow ke-run ulang hari yang sama (pola sama kayak nyopetDailyTrigger.js lama,
@@ -85,8 +99,8 @@ async function main() {
     return;
   }
 
-  const [ta, dailyClose, livePrice, liq] = await Promise.all([
-    analyze('BTCUSDT'), fetchLastDailyClose(), fetchLivePrice(), sampleLiquidations(),
+  const [ta, dailyClose, livePrice, liq, sentiment] = await Promise.all([
+    analyze('BTCUSDT'), fetchLastDailyClose(), fetchLivePrice(), sampleLiquidations(), safeSentiment(),
   ]);
 
   const topResistance = ta.resistanceZones[0]; // udah kesortir touches terbanyak dari analyze()
@@ -97,7 +111,7 @@ async function main() {
   else if (topSupport && dailyClose < topSupport.priceMin) direction = 'sell';
 
   if (!direction) {
-    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq });
+    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment });
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
     await sendWhatsApp(msg);
@@ -138,7 +152,7 @@ async function main() {
   }, now);
   const opened = updateOrder(created.id, { status: 'floating', entryPrice: livePrice, triggeredAt: now.toISOString() });
 
-  const msg = formatAutoValid({ order: opened, ta, liq });
+  const msg = formatAutoValid({ order: opened, ta, liq, sentiment });
   console.log(msg + '\n');
   addEntry('nyopet', msg, now);
   await sendWhatsApp(msg);

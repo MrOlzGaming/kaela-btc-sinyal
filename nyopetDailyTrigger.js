@@ -1,3 +1,7 @@
+// PENSIUN per 9 Agu 2026 -- digantikan nyopetAutoAnalysis.js (analisa gabungan teknikal +
+// liquidation heatmap + VALID/INVALID otomatis, bukan cuma heartbeat generik). File ini
+// TIDAK DIPANGGIL workflow lagi, dibiarin ada buat referensi/riwayat, jangan dihapus.
+//
 // Jalankan tiap hari ~08:05 WITA (candle Daily udah closed): node nyopetDailyTrigger.js
 // Kirim heartbeat harian ke grup WA -- BUKAN sinyal apapun, cuma status "Kaela lagi kerja" +
 // ajakan Olan buka chat buat analisa BTC multi-timeframe bareng (lihat feedback-nyopet-selalu-

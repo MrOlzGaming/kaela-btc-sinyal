@@ -30,17 +30,30 @@ jobs:
           };
           EOF
 
-      # BUKAN sinyal, gak nyentuh web/archive sama sekali (konsisten kebijakan "belum valid
-      # gak tampil dimanapun") -- makanya gak ada langkah rebuild/deploy Netlify di sini.
-      - name: Kirim heartbeat + ajakan analisa (nyopetDailyTrigger.js)
-        run: node nyopetDailyTrigger.js
+      # Analisa gabungan OTOMATIS (teknikal + liquidation heatmap) -> VALID buka posisi
+      # BAYANGAN (nyopetAutoAnalysis.js, keputusan Olan 9 Agu 2026) / INVALID kirim status.
+      - name: Analisa gabungan otomatis (nyopetAutoAnalysis.js)
+        run: node nyopetAutoAnalysis.js
 
-      - name: Commit & push nyopet-trigger-state.json (dedup harian, WAJIB biar gak dobel kirim)
+      - name: Cek apakah ada perubahan (archive.json atau nyopet-orders.json)
+        id: check
+        run: |
+          if git diff --quiet archive.json nyopet-orders.json 2>/dev/null; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rebuild web/index.html (cuma kalau ada perubahan)
+        if: steps.check.outputs.changed == 'true'
+        run: node buildDashboard.js
+
+      - name: Commit & push (WAJIB tiap run, biar dedup harian gak lupa)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f nyopet-trigger-state.json
-          git diff --staged --quiet || git commit -m "Auto: nyopet daily trigger $(date -u +%Y-%m-%dT%H:%M)"
+          git add -f nyopet-trigger-state.json archive.json nyopet-orders.json web/index.html web/arsip.html
+          git diff --staged --quiet || git commit -m "Auto: nyopet analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             git pull --rebase origin master && git push && exit 0
             echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
@@ -48,3 +61,9 @@ jobs:
           done
           echo "::error::Gagal push setelah 5x percobaan."
           exit 1
+
+      - name: Deploy web/ ke Netlify (cuma kalau ada perubahan)
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

@@ -104,4 +104,74 @@ function formatCancelled(order) {
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatCancelled, formatDailyTrigger };
+// Analisa gabungan OTOMATIS harian (9 Agu 2026, nyopetAutoAnalysis.js) -- 3 bagian WAJIB
+// (keputusan Olan): Analisa Teknikal + Liquidation Heatmap + Kesimpulan VALID/INVALID.
+// VALID = posisi BAYANGAN langsung dibuka (murni perhitungan, TIDAK ADA uang bergerak -- Kaela
+// bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI (kalau Olan mau ikut)
+// tetap manual di Binance.
+
+function liqLine(liq) {
+  if (liq.error) return 'Liquidation heatmap: gagal ambil data kali ini (dilewatin, gak fatal).';
+  return liq.btcCount === 0
+    ? `0 liquidation BTCUSDT terpantau (koin lain tetap ada liquidation jalan) -- volatilitas BTC rendah.`
+    : `${liq.btcCount} liquidation BTCUSDT terpantau dalam window singkat -- ada tekanan leverage kena stop.`;
+}
+
+function taLines(ta) {
+  const r = ta.resistanceZones[0], s = ta.supportZones[0];
+  return [
+    `Harga: ${fmt(ta.lastPrice)}`,
+    `MA20 ${fmt(ta.ma.ma20)} / MA50 ${fmt(ta.ma.ma50)} / MA200 ${fmt(ta.ma.ma200)} -- ${ta.crossSignal === 'bearish_cross_active' ? 'Death Cross aktif' : ta.crossSignal === 'bullish_cross_active' ? 'Golden Cross aktif' : ta.crossSignal || '-'}`,
+    `RSI14: ${ta.rsi14Daily.toFixed(0)}`,
+    r ? `Resistance kunci: ${fmt(r.price)} (tersentuh ${r.touches}x)` : 'Resistance: belum terdeteksi zona jelas',
+    s ? `Support kunci: ${fmt(s.price)} (tersentuh ${s.touches}x)` : 'Support: belum terdeteksi zona jelas',
+  ];
+}
+
+function formatAutoValid({ order, ta, liq }) {
+  return [
+    `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
+    seqLabel(order),
+    `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
+    '',
+    '📊 ANALISA TEKNIKAL',
+    ...taLines(ta),
+    '',
+    '🔥 LIQUIDATION HEATMAP',
+    liqLine(liq),
+    '',
+    `✅ TP: ${fmt(order.tp)}`,
+    `❌ SL: ${fmt(order.sl)}`,
+    `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
+    '',
+    order.confirmationNote,
+    '',
+    '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
+    '🚨 JANGAN ALL-IN! Trading kripto resiko tinggi.',
+    '',
+    nowStr(),
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
+function formatAutoInvalid({ ta, dailyClose, livePrice, liq }) {
+  const r = ta.resistanceZones[0], s = ta.supportZones[0];
+  return [
+    `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
+    'Belum ada posisi. Masih nunggu syarat terpenuhi.',
+    '',
+    '📊 ANALISA TEKNIKAL',
+    ...taLines(ta),
+    `Candle harian terakhir close: ${fmt(dailyClose)} | Harga sekarang: ${fmt(livePrice)}`,
+    '',
+    '🔥 LIQUIDATION HEATMAP',
+    liqLine(liq),
+    '',
+    '📋 Syarat yang ditunggu: candle harian CLOSE di atas ' + (r ? fmt(r.priceMax) : '(resistance belum jelas)') + ' (breakout naik) atau di bawah ' + (s ? fmt(s.priceMin) : '(support belum jelas)') + ' (breakdown turun).',
+    '',
+    nowStr(),
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
+module.exports = { formatRencana, formatTriggered, formatClosed, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid };

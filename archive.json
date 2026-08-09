@@ -278,5 +278,10 @@
     "type": "whale",
     "date": "2026-08-09T08:21:35.428Z",
     "content": "🟨 ⚪ PERGERAKAN BESAR TERDETEKSI\n1.000,01 BTC (~$64,915,483 / ~Rp1.159.388.991.029) berpindah dalam 1 transaksi di blockchain.\nArah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).\nTXID: f0cbdd3be3d755d3afa8039477b45370644202f763a9302f1d395b3a51398e82\nCek: https://mempool.space/tx/f0cbdd3be3d755d3afa8039477b45370644202f763a9302f1d395b3a51398e82\n2026-08-09 00:06\n\n⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).\nKaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "nyopet",
+    "date": "2026-08-09T08:57:01.935Z",
+    "content": "🟧 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)\nBelum ada posisi. Masih nunggu syarat terpenuhi.\n\n📊 ANALISA TEKNIKAL\nHarga: $64,818\nMA20 $64,436 / MA50 $63,372 / MA200 $70,172 -- Death Cross aktif\nRSI14: 46\nResistance kunci: $65,063 (tersentuh 6x)\nSupport kunci: $64,620 (tersentuh 4x)\nCandle harian terakhir close: $64,963 | Harga sekarang: $64,818\n\n🔥 LIQUIDATION HEATMAP\n0 liquidation BTCUSDT terpantau (koin lain tetap ada liquidation jalan) -- volatilitas BTC rendah.\n\n📋 Syarat yang ditunggu: candle harian CLOSE di atas $65,193 (breakout naik) atau di bawah $64,439 (breakdown turun).\n\n2026-08-09 16:57 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

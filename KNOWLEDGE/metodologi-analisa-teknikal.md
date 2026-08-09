@@ -53,6 +53,11 @@ Dari `web/data/btc-history.json` (2015-2026, data harian):
 - **Sabar tunggu setup terbaik** -- jangan paksa bikin Rencana cuma karena "giliran analisa hari ini".
 - **Long dan short dua-duanya boleh** -- arah dari struktur pasar, bukan preferensi pribadi.
 - **Sinyal harus valid** -- Rencana (pending) TIDAK PERNAH tampil publik (WA/web) sampai beneran ketrigger.
+- **Format analisa gabungan WAJIB 3 bagian (keputusan Olan, 9 Agu 2026, FINAL -- berlaku semua analisa bareng ke depan):**
+  1. **Analisa Teknikal Kaela** -- angka dari `technicalAnalysis.js` (MA/death-cross/RSI/support-resistance/trendline), BUKAN tebak dari mata.
+  2. **Liquidation Heatmap** -- sampel realtime dari websocket `wss://fstream.binance.com/market/ws/!forceOrder@arr` (endpoint BARU -- yang lama `wss://fstream.binance.com/ws/!forceOrder@arr` ternyata udah MATI, Binance migrasi format URL per 23 Apr 2026, ketauan 9 Agu 2026 pas connect "sukses" tapi 0 data selamanya). Liquidation BTC sepi = volatilitas rendah/kompresi, ramai = ada gerakan besar sedang/baru terjadi.
+  3. **Kesimpulan Kaela: VALID atau INVALID** -- tegas, gak boleh ngambang. VALID cuma kalau ada candle CLOSE konfirmasi tembus level kunci (bukan wick doang, lihat aturan konfirmasi candle di atas).
+  Pesan ke WA diberi label "pengamatan murni Kaela", direview Olan dulu sebelum kirim (pola yang sudah jalan).
 - **Penentuan Nyawa/SL/Liq: berbasis STRUKTUR pasar, BUKAN persentase tetap yang dipilih bebas (8 Agu 2026).**
   Leverage itu HASIL turunan, bukan input pertama. Alurnya: (1) tentuin arah dari trend saat itu (buy=uptrend,
   sell=downtrend), (2) taruh Liq di titik struktur yang relevan -- **BUY: swing low signifikan terakhir**

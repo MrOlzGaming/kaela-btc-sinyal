@@ -15,7 +15,7 @@
 //      keluar kalau harga tutup di bawah/atas SMA pendek -- proksi "lihat kelakuan candle").
 
 const { fetchWithRetry } = require('./httpRetry');
-const { sma } = require('./technicalAnalysis');
+const { sma, findSwingPoints } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
 
 const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
@@ -67,11 +67,78 @@ function detectFlag(daily, i, opts) {
   return null;
 }
 
+// WEDGE (rising/falling) -- 10 Agu 2026, riset lanjutan atas permintaan Olan. BEDA KARAKTER dari
+// flag/pennant: itu pola LANJUTAN (breakout searah tiang), wedge sering pola PEMBALIKAN --
+// breakout-nya KEBALIKAN dari kemiringan pola-nya sendiri (rising wedge nembus TURUN, falling
+// wedge nembus NAIK). Deteksinya juga beda: bukan cuma "range sempit", tapi 2 trendline (dari
+// swing high & swing low terpisah) yang SAMA-SAMA miring ke arah yang sama DAN mengerucut
+// (convergen) -- makanya perlu regresi linear, bukan sekadar max/min.
+function linearRegression(points) {
+  const n = points.length;
+  if (n < 2) return null;
+  const sumX = points.reduce((s, p) => s + p.x, 0);
+  const sumY = points.reduce((s, p) => s + p.y, 0);
+  const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
+  const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
+  const denom = n * sumXX - sumX * sumX;
+  if (denom === 0) return null;
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+  return { slope, intercept };
+}
+
+function detectWedge(daily, i, opts) {
+  const { wedgeLookbackRange = [15, 40], minTouches = 3, convergenceRatio = 0.65, swingPointLookback = 2 } = opts;
+  for (let wedgeLen = wedgeLookbackRange[0]; wedgeLen <= wedgeLookbackRange[1]; wedgeLen++) {
+    const start = i - wedgeLen;
+    if (start < 0) continue;
+    const window = daily.slice(start, i); // belum termasuk hari ini (breakout day)
+    if (window.length < wedgeLen) continue;
+    const { highs, lows } = findSwingPoints(window, swingPointLookback);
+    if (highs.length < minTouches || lows.length < minTouches) continue;
+
+    const highReg = linearRegression(highs.map((h) => ({ x: h.index, y: h.price })));
+    const lowReg = linearRegression(lows.map((l) => ({ x: l.index, y: l.price })));
+    if (!highReg || !lowReg) continue;
+
+    // Lebar pola di AWAL vs di titik breakout (index=wedgeLen, satu langkah setelah window
+    // berakhir) -- harus MENYEMPIT (convergen), bukan sejajar/melebar.
+    const spreadStart = highReg.intercept - lowReg.intercept;
+    const spreadEnd = (highReg.slope * wedgeLen + highReg.intercept) - (lowReg.slope * wedgeLen + lowReg.intercept);
+    if (spreadStart <= 0 || spreadEnd <= 0) continue; // garis udah kesilang -- invalid
+    if (spreadEnd > spreadStart * convergenceRatio) continue; // gak cukup mengerucut
+
+    const projectedResistance = highReg.slope * wedgeLen + highReg.intercept;
+    const projectedSupport = lowReg.slope * wedgeLen + lowReg.intercept;
+    const recentSwingHigh = Math.max(...highs.map((h) => h.price));
+    const recentSwingLow = Math.min(...lows.map((l) => l.price));
+
+    if (highReg.slope > 0 && lowReg.slope > 0) {
+      return { type: 'rising', projectedSupport, projectedResistance, recentSwingHigh, recentSwingLow, spreadStart, wedgeLen };
+    }
+    if (highReg.slope < 0 && lowReg.slope < 0) {
+      return { type: 'falling', projectedSupport, projectedResistance, recentSwingHigh, recentSwingLow, spreadStart, wedgeLen };
+    }
+  }
+  return null;
+}
+
 function runFlagBacktest(daily, opts = {}) {
   const {
     warmupDays = 60, poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
     slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10, allowShort = true,
     startCapital = 100, topUpAmount = 100, topUpStopAt = 1000, topUpDayOfMonth = 5,
+    // Pola mana yang mau di-scan tiap hari -- flag/pennant (lanjutan) dan/atau wedge (pembalikan).
+    usePatterns = ['flag', 'wedge'],
+    // wedgeMinTouches=2 (bukan 3 kayak "aturan textbook") -- dites 10 Agu 2026, TERBUKTI lebih
+    // baik di SEMUA metrik (PF, totalR, DD, modal akhir) drpd syarat 3 sentuhan yang lebih ketat.
+    // 3 sentuhan kebanyakan MISS wedge yang beneran valid tapi cuma kebentuk dari 2 titik jelas.
+    wedgeLookbackRange = [15, 40], wedgeMinTouches = 2, wedgeConvergenceRatio = 0.65,
+    // Batas keras margin/modal per-trade (10 Agu 2026, instruksi Olan: "gak boleh ada lagi posisi
+    // margin super -- kita nyopet, bukan investasi"). Kalkulator exposure udah alami ngasih margin
+    // kecil kalau nyawa tipis (pattern-based SL emang tipis), tapi ini jaring pengaman keras biar
+    // gak ada 1 trade pun yang lolos dengan margin gede -- skip trade kalau kejadian.
+    maxMarginPct = 20,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -124,29 +191,42 @@ function runFlagBacktest(daily, opts = {}) {
       continue;
     }
 
-    const flag = detectFlag(daily, i, { poleLookbackRange, poleMinMovePct, flagLookbackRange, flagMaxRangePct });
-    if (!flag) continue;
-    if (flag.type === 'bear' && !allowShort) continue;
-
     const lastPrice = today.close;
-    let direction, sl;
-    if (flag.type === 'bull' && lastPrice > flag.flagHigh) {
-      direction = 'buy'; sl = flag.flagLow * (1 - slBufferPct / 100);
-    } else if (flag.type === 'bear' && lastPrice < flag.flagLow) {
-      direction = 'sell'; sl = flag.flagHigh * (1 + slBufferPct / 100);
-    } else continue;
+    let direction = null, sl = null, patternType = null;
+
+    if (usePatterns.includes('flag')) {
+      const flag = detectFlag(daily, i, { poleLookbackRange, poleMinMovePct, flagLookbackRange, flagMaxRangePct });
+      if (flag && flag.type === 'bull' && lastPrice > flag.flagHigh) {
+        direction = 'buy'; sl = flag.flagLow * (1 - slBufferPct / 100); patternType = 'flag_bull';
+      } else if (flag && flag.type === 'bear' && lastPrice < flag.flagLow && allowShort) {
+        direction = 'sell'; sl = flag.flagHigh * (1 + slBufferPct / 100); patternType = 'flag_bear';
+      }
+    }
+    if (!direction && usePatterns.includes('wedge')) {
+      const wedge = detectWedge(daily, i, { wedgeLookbackRange, minTouches: wedgeMinTouches, convergenceRatio: wedgeConvergenceRatio });
+      // Rising wedge -> breakout TURUN (short). Falling wedge -> breakout NAIK (long). SL di
+      // swing extreme TERAKHIR di dalam pola (bukan ujung bendera -- wedge beda geometri).
+      if (wedge && wedge.type === 'rising' && lastPrice < wedge.projectedSupport && allowShort) {
+        direction = 'sell'; sl = wedge.recentSwingHigh * (1 + slBufferPct / 100); patternType = 'wedge_rising';
+      } else if (wedge && wedge.type === 'falling' && lastPrice > wedge.projectedResistance) {
+        direction = 'buy'; sl = wedge.recentSwingLow * (1 - slBufferPct / 100); patternType = 'wedge_falling';
+      }
+    }
+    if (!direction) continue;
 
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
     const nyawaPct = riskDistance / lastPrice * 100;
     const { nilaiPosisi, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl });
     if (margin > capital) continue;
+    const marginPct = margin / capital * 100;
+    if (marginPct > maxMarginPct) continue; // jaring pengaman keras -- nyopet, bukan investasi
     const lossAtSl = nilaiPosisi * (nyawaPct / 100);
     const partialTp = direction === 'buy' ? lastPrice + riskDistance * partialRR : lastPrice - riskDistance * partialRR;
 
     openPos = {
       direction, entryPrice: lastPrice, sl, originalSl: sl, partialTp, entryTime: today.closeTime,
-      nilaiPosisi, margin, lossAtSl, partialDone: false, realizedPnl: 0,
+      nilaiPosisi, margin, marginPct, lossAtSl, partialDone: false, realizedPnl: 0, patternType,
     };
   }
 
@@ -165,7 +245,7 @@ function summarize(trades) {
   return { n, winRate: (wins.length / n * 100).toFixed(1) + '%', profitFactor: grossLossR > 0 ? (grossWinR / grossLossR).toFixed(2) : 'inf', totalR: totalR.toFixed(2), avgR: (totalR / n).toFixed(2) };
 }
 
-module.exports = { runFlagBacktest, detectFlag, summarize, fetchAllCandles };
+module.exports = { runFlagBacktest, detectFlag, detectWedge, summarize, fetchAllCandles };
 
 if (require.main === module) {
   (async () => {

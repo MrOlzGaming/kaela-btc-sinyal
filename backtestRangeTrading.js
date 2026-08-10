@@ -33,6 +33,13 @@ function runRangeBacktest(daily, opts = {}) {
     warmupDays = 220, lookbackDays = 90, swingPointLookback = 3, proximityPct = 1.5,
     targetRiskPct = 10, startCapital = 100, topUpAmount = 100, topUpStopAt = 1000, topUpIntervalDays = 30,
     fromMs = null, toMs = null,
+    // Filter "market BENERAN sideways" (10 Agu 2026, penyempurnaan #2) -- range-trading cuma
+    // masuk akal kalau market emang lagi gak trending. Cek net-move harga N hari terakhir --
+    // kalau geraknya udah jauh satu arah (trending), skip (biar gak nge-range-trade pas lagi trend).
+    rangeFilterDays = 30, rangeFilterMaxMovePct = 15,
+    // TP lebih realistis -- BUKAN full ke zona seberang (kadang terlalu jauh/optimis), tapi
+    // sebagian jalan ke sana (default 70%).
+    tpFraction = 0.7,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -70,6 +77,12 @@ function runRangeBacktest(daily, opts = {}) {
       continue;
     }
 
+    // Filter sideways: net-move harga rangeFilterDays hari terakhir harus KECIL (bukti market
+    // beneran lagi gak trending, bukan cuma volatile).
+    const rf = daily[Math.max(0, i - rangeFilterDays)];
+    const netMovePct = Math.abs(today.close - rf.close) / rf.close * 100;
+    if (netMovePct > rangeFilterMaxMovePct) continue;
+
     const priorIdx = i - 1;
     const window = daily.slice(Math.max(0, priorIdx - lookbackDays), priorIdx + 1);
     const { highs, lows } = findSwingPoints(window, swingPointLookback);
@@ -103,7 +116,9 @@ function runRangeBacktest(daily, opts = {}) {
     const sl = direction === 'buy' ? zone.priceMin * 0.99 : zone.priceMax * 1.01; // dikit di luar zona
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
-    const tp = oppositeZone.price;
+    // TP sebagian (tpFraction) jalan ke zona seberang -- lebih realistis, gak nunggu FULL nyampe
+    // zona lawan yang kadang kejauhan/optimis.
+    const tp = lastPrice + (oppositeZone.price - lastPrice) * tpFraction;
     if ((direction === 'buy' && tp <= lastPrice) || (direction === 'sell' && tp >= lastPrice)) continue; // TP harus searah untung
 
     const nyawaPct = riskDistance / lastPrice * 100;

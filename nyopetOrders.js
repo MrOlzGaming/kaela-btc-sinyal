@@ -30,7 +30,8 @@ function setBalance(amountUsd, date = new Date()) {
 
 // order: { direction:'buy'|'sell', strategyType:'range'|'breakout'|'trend', triggerPrice,
 //          testLevel (opsional, buat setup fade/rejection -- lihat nyopetOrderMonitor.js),
-//          confirmationNote, tp, sl, exposure, leverage, marginUsd, notes }
+//          confirmationNote, tpReasoning (alasan pemilihan TP, lihat nyopetAutoAnalysis.js
+//          pickAdaptiveTp), tp, sl, exposure, leverage, marginUsd, notes }
 function createOrder(order, date = new Date()) {
   const state = load();
   const id = date.getTime().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -48,6 +49,7 @@ function createOrder(order, date = new Date()) {
     triggerPrice: order.triggerPrice,
     testLevel: order.testLevel ?? null,
     confirmationNote: order.confirmationNote || '',
+    tpReasoning: order.tpReasoning || '',
     entryPrice: null,
     tp: order.tp,
     sl: order.sl,

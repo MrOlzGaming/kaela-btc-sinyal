@@ -89,12 +89,43 @@ async function fetchLivePrice() {
   return parseFloat(data.price);
 }
 
-// Cari zona berikutnya SEARAH trade di luar entry (buat TP) -- kalau gak ada, null (caller fallback R:R 1:1).
-function findNextZone(zones, entryPrice, direction) {
-  const candidates = direction === 'buy'
+// TP adaptif (10 Agu 2026, respons temuan backtest: TP "zona terdekat" sering ngasih R:R kecil
+// meski win rate tinggi -- avg cuma +0,18R/trade). Sekarang TP nyesuaiin KEKUATAN trend Weekly
+// (momentum MA10 vs MA30 mingguan), bukan selalu ambil zona paling deket atau R:R flat 1:1:
+// - momentum LEMAH -> target lebih konservatif (minRR 1.0x), ambil zona terdekat yang masih masuk akal.
+// - momentum SEDANG -> minRR 1.5x, lewatin zona yang terlalu deket, cari yang lebih berarti.
+// - momentum KUAT -> minRR 2.0x, berani nunggu zona lebih jauh karena momentum besar sering nembus
+//   zona lemah di depannya.
+// Ambang lemah/sedang/kuat (10% / 20%) diambil dari PERSENTIL riil histori jarak MA10-MA30
+// mingguan BTCUSDT 2017-2026 (p33=10,2% / p67=19,8%, lihat riset backtestNyopet.js) -- BUKAN
+// angka tebakan.
+function classifyWeeklyStrength(momentumPct) {
+  if (momentumPct === null || momentumPct === undefined) return 'lemah'; // data belum cukup, konservatif
+  if (momentumPct < 10) return 'lemah';
+  if (momentumPct < 20) return 'sedang';
+  return 'kuat';
+}
+const MIN_RR_BY_STRENGTH = { lemah: 1.0, sedang: 1.5, kuat: 2.0 };
+
+// Susun zona SEARAH trade (di luar entry), terdekat dulu.
+function sortedZonesInDirection(zones, entryPrice, direction) {
+  return direction === 'buy'
     ? zones.filter((z) => z.price > entryPrice).sort((a, b) => a.price - b.price)
     : zones.filter((z) => z.price < entryPrice).sort((a, b) => b.price - a.price);
-  return candidates[0] || null;
+}
+
+// Pilih zona TP PERTAMA (dari yang terdekat) yang R:R-nya udah penuhi minRR -- kalau zona
+// terdekat kasih R:R kecil, LEWATIN, cari yang lebih jauh/berarti. Return null kalau semua
+// zona yang ada masih di bawah minRR (caller fallback ke proyeksi minRR × risk).
+function pickAdaptiveTp(zones, entryPrice, sl, direction, minRR) {
+  const riskDistance = Math.abs(entryPrice - sl);
+  if (riskDistance === 0) return null;
+  const candidates = sortedZonesInDirection(zones, entryPrice, direction);
+  for (const z of candidates) {
+    const reward = Math.abs(z.price - entryPrice);
+    if (reward / riskDistance >= minRR) return z;
+  }
+  return null;
 }
 
 async function main() {
@@ -148,10 +179,15 @@ async function main() {
     return;
   }
 
+  const weeklyStrength = classifyWeeklyStrength(ta.weeklyMomentumPct);
+  const minRR = MIN_RR_BY_STRENGTH[weeklyStrength];
   const oppositeZones = direction === 'buy' ? ta.resistanceZones : ta.supportZones;
-  const nextZone = findNextZone(oppositeZones, livePrice, direction);
+  const adaptiveZone = pickAdaptiveTp(oppositeZones, livePrice, sl, direction, minRR);
   const riskDistance = Math.abs(livePrice - sl);
-  const tp = nextZone ? nextZone.price : (direction === 'buy' ? livePrice + riskDistance : livePrice - riskDistance);
+  const tp = adaptiveZone ? adaptiveZone.price : (direction === 'buy' ? livePrice + riskDistance * minRR : livePrice - riskDistance * minRR);
+  const tpReasoning = adaptiveZone
+    ? `TP di zona ${direction === 'buy' ? 'resistance' : 'support'} $${adaptiveZone.price.toLocaleString('en-US', { maximumFractionDigits: 0 })} (tersentuh ${adaptiveZone.touches}x) -- momentum Weekly ${weeklyStrength.toUpperCase()} (${ta.weeklyMomentumPct === null ? 'data belum cukup' : ta.weeklyMomentumPct.toFixed(1) + '%'}), minimal target ${minRR}x risiko, zona ini penuhi itu.`
+    : `Gak ada zona ${direction === 'buy' ? 'resistance' : 'support'} yang penuhi target minimal ${minRR}x risiko (momentum Weekly ${weeklyStrength.toUpperCase()}) -- TP diproyeksi ${minRR}x jarak SL sebagai gantinya.`;
 
   const ordersState = loadOrdersState();
   const modal = ordersState.balance || 0;
@@ -166,6 +202,7 @@ async function main() {
     strategyType: 'breakout',
     triggerPrice: livePrice,
     confirmationNote: `Candle harian CLOSE ${direction === 'buy' ? 'di atas' : 'di bawah'} zona ${direction === 'buy' ? 'resistance' : 'support'} ($${dailyClose.toLocaleString('en-US')}) -- deteksi otomatis technicalAnalysis.js.`,
+    tpReasoning,
     tp, sl,
     exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
     notes: 'Analisa otomatis Kaela (9 Agu 2026): posisi BAYANGAN, murni perhitungan, tidak ada uang bergerak. Eksekusi asli tetap manual Olan di Binance kalau mau ikut.',

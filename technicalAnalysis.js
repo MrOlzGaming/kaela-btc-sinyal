@@ -128,6 +128,9 @@ async function analyze(symbol = 'BTCUSDT') {
   const weeklyTrend = (weeklyMa10 && weeklyMa30)
     ? (weeklyMa10 > weeklyMa30 ? 'bullish' : weeklyMa10 < weeklyMa30 ? 'bearish' : 'netral')
     : null;
+  // Jarak % MA10 vs MA30 mingguan = proxy KEKUATAN trend (bukan cuma arah) -- dipakai buat
+  // nentuin seberapa ambisius target TP (lihat nyopetAutoAnalysis.js pickAdaptiveTp/classifyWeeklyStrength).
+  const weeklyMomentumPct = (weeklyMa10 && weeklyMa30) ? Math.abs((weeklyMa10 - weeklyMa30) / weeklyMa30) * 100 : null;
 
   const ma20 = sma(dailyCloses, 20);
   const ma50 = sma(dailyCloses, 50);
@@ -158,7 +161,7 @@ async function analyze(symbol = 'BTCUSDT') {
     ma: { ma20, ma50, ma200 },
     rsi14Daily,
     crossSignal,
-    weeklyTrend,
+    weeklyTrend, weeklyMomentumPct,
     resistanceZones, supportZones,
     trendline: {
       resistance: resistanceTrendline ? { ...resistanceTrendline, currentValue: resistanceTrendline.valueAt(hourly.length - 1), direction: resistanceTrendline.slope > 0 ? 'naik' : resistanceTrendline.slope < 0 ? 'turun' : 'datar' } : null,

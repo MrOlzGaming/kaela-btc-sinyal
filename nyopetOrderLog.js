@@ -182,6 +182,7 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
     '',
     `✅ TP: ${fmt(order.tp)}`,
     `❌ SL: ${fmt(order.sl)}`,
+    order.tpReasoning ? `📐 ${order.tpReasoning}` : '',
     `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
     '',
     order.confirmationNote,

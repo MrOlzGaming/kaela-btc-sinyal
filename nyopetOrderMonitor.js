@@ -1,24 +1,23 @@
 // Jalankan tiap jam (bareng jadwal candle H1 close): node nyopetOrderMonitor.js
-// Pantau order MANUAL (nyopetOrders.js, dibuat pas Olan+Kaela analisa bareng) -- BUKAN auto-decide
-// entry kayak nyopetMonitor.js lama. Cuma 2 kerjaan:
-//   1. PENDING -> cek candle H1 TERAKHIR YANG SUDAH CLOSE: kalau CLOSE-nya konfirmasi arah
+// Pantau order (nyopetOrders.js, dibuat manual ATAU otomatis nyopetAutoAnalysis.js). 2 jenis:
+//   1. Order LAMA/manual (gak ada partialTp) -- TP/SL tunggal, perilaku asli:
+//      PENDING -> cek candle H1 TERAKHIR YANG SUDAH CLOSE: kalau CLOSE-nya konfirmasi arah
 //      (buy: close >= triggerPrice; sell: close <= triggerPrice) -> flip ke FLOATING.
-//      "Tunggu candle close" ini implementasi "candle konfirmasi" yang diminta Olan -- gak asal
-//      kesentuh intrabar/wick, harus beneran CLOSE di sisi yang benar dulu.
-//      Field opsional `testLevel`: buat setup FADE/REJECTION (bukan breakout) -- candle yang sama
-//      WAJIB dulu nge-wick ke zona level itu (buy: low <= testLevel; sell: high >= testLevel)
-//      BARU close balik ke sisi triggerPrice. Ini pola candle penolakan 1-bar standar (shooting
-//      star/hammer), dicek dalam 1 candle H1 yang sama -- kalau testLevel gak diisi, fallback ke
-//      perilaku lama (cek close doang, cocok buat setup breakout biasa).
-//   2. FLOATING -> cek High/Low candle buat TP/SL kena (touch, bukan nunggu close -- begitu kena,
-//      posisi beneran ketutup di real trading, gak nunggu candle selesai).
+//      FLOATING -> cek High/Low candle buat TP/SL kena (touch, bukan nunggu close).
+//   2. Order strategi POLA CHART (10 Agu 2026, ada partialTp) -- exit 2 TAHAP:
+//      FLOATING, belum partial -> SL kena (full close) ATAU partialTp kena (separuh diamankan,
+//      SL sisa digeser breakeven, kirim notifikasi TAHAP 1 terpisah).
+//      FLOATING, udah partial -> SL breakeven kena (full close sisa) ATAU candle harian tutup
+//      di bawah/atas SMA trailing (momentum patah -> full close sisa, "lihat kelakuan candle").
 // Eksekusi ASLI tetap Olan manual di Binance -- ini cuma monitor, TIDAK PERNAH generate order baru.
 
 const { getActiveOrders, updateOrder } = require('./nyopetOrders');
-const { formatTriggered, formatClosed } = require('./nyopetOrderLog');
+const { formatTriggered, formatClosed, formatPartialClosed } = require('./nyopetOrderLog');
 const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
+const { sma } = require('./technicalAnalysis');
+const { isWaMuted } = require('./config');
 
 // data-api.binance.vision -- endpoint RESMI Binance khusus market data publik, gak kena
 // blokir geografis kayak api.binance.com (GitHub Actions runner ketauan HTTP 451 pas testing).
@@ -35,12 +34,26 @@ async function fetchHourlyClosed(limit = 5) {
   return raw.map(parseCandle).filter((c) => c.closeTime <= nowMs);
 }
 
-function computePnl(order, exitPrice) {
+async function fetchDailyClosed(limit = 30) {
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=1d&limit=${limit}`);
+  const raw = await res.json();
+  return raw.map(parseCandle);
+}
+
+function computePnl(order, exitPrice, fraction = 1) {
   const dir = order.direction === 'buy' ? 1 : -1;
   const priceMovePct = ((exitPrice - order.entryPrice) / order.entryPrice) * 100 * dir;
   const pnlPct = priceMovePct * (order.leverage || 1);
-  const pnlUsd = order.marginUsd ? (order.marginUsd * pnlPct) / 100 : null;
+  const pnlUsd = order.marginUsd ? (order.marginUsd * fraction * pnlPct) / 100 : null;
   return { pnlPct, pnlUsd };
+}
+
+async function sendWhatsAppRespectMute(msg, label) {
+  if (isWaMuted()) {
+    console.log(`[NyopetOrderMonitor] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
+    return;
+  }
+  await sendWhatsApp(msg);
 }
 
 async function main() {
@@ -58,6 +71,13 @@ async function main() {
   }
   const last = candles[candles.length - 1];
 
+  // Cuma fetch daily kalau BENERAN ada order floating+partial yang butuh cek trailing SMA --
+  // gak worth-it fetch tiap jam kalau gak ada yang butuh (hemat request).
+  const needsDaily = active.some((o) => o.status === 'floating' && o.partialDone && o.trailSmaLen);
+  const dailyCandles = needsDaily
+    ? await fetchDailyClosed(Math.max(30, ...active.filter((o) => o.trailSmaLen).map((o) => o.trailSmaLen + 5)))
+    : null;
+
   for (const order of active) {
     if (order.status === 'pending') {
       const closeConfirmed = order.direction === 'buy' ? last.close >= order.triggerPrice : last.close <= order.triggerPrice;
@@ -73,35 +93,106 @@ async function main() {
       const msg = formatTriggered(updated);
       console.log(msg + '\n');
       addEntry('nyopet', msg, now);
-      await sendWhatsApp(msg);
+      await sendWhatsAppRespectMute(msg, 'order kena trigger');
       continue;
     }
 
-    if (order.status === 'floating') {
-      const hitTP = order.direction === 'buy' ? last.high >= order.tp : last.low <= order.tp;
-      // sl bisa null/undefined buat order "main liq" (gak ada SL formal, ride sampai
-      // TP/liquidation asli) -- WAJIB guard eksplisit. Tanpa ini, perbandingan JS `x >= null`
-      // ke-coerce jadi `x >= 0` (SELALU true buat harga BTC!) -- order SELL tanpa SL bakal
-      // langsung ke-anggap "kena SL" di candle pertama walau harga gak gerak sama sekali.
-      const hitSL = order.sl == null ? false : (order.direction === 'buy' ? last.low <= order.sl : last.high >= order.sl);
-      if (!hitTP && !hitSL) continue;
+    if (order.status !== 'floating') continue;
 
-      // kalau dua-duanya kena di candle yang sama (gap/candle lebar), SL menang -- konservatif,
-      // gak asumsikan urutan intrabar yang gak kita tau.
-      const isTP = hitTP && !hitSL;
-      const exitPrice = isTP ? order.tp : order.sl;
-      const { pnlPct, pnlUsd } = computePnl(order, exitPrice);
+    // ===== Order strategi POLA CHART (partialTp diisi) -- exit 2 tahap =====
+    if (order.partialTp) {
+      if (!order.partialDone) {
+        const hitSl = order.sl == null ? false : (order.direction === 'buy' ? last.low <= order.sl : last.high >= order.sl);
+        const hitPartial = order.direction === 'buy' ? last.high >= order.partialTp : last.low <= order.partialTp;
+        if (hitSl && !hitPartial) {
+          // Kena SL sebelum sempat partial -- full close rugi, sama kayak order biasa.
+          const { pnlPct, pnlUsd } = computePnl(order, order.sl, 1);
+          const updated = updateOrder(order.id, {
+            status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
+          });
+          const msg = formatClosed(updated);
+          console.log(msg + '\n');
+          addEntry('nyopet', msg, now);
+          await sendWhatsAppRespectMute(msg, 'posisi kena SL');
+          continue;
+        }
+        if (hitPartial) {
+          // Dua-duanya kena candle sama = SL menang (konservatif), KECUALI SL gak kena -- normal case.
+          if (hitSl) {
+            const { pnlPct, pnlUsd } = computePnl(order, order.sl, 1);
+            const updated = updateOrder(order.id, {
+              status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
+            });
+            const msg = formatClosed(updated);
+            console.log(msg + '\n');
+            addEntry('nyopet', msg, now);
+            await sendWhatsAppRespectMute(msg, 'posisi kena SL');
+            continue;
+          }
+          const { pnlUsd: realizedPnlUsd } = computePnl(order, order.partialTp, 0.5);
+          const updated = updateOrder(order.id, {
+            partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd: realizedPnlUsd || 0,
+          });
+          const msg = formatPartialClosed(updated);
+          console.log(msg + '\n');
+          addEntry('nyopet', msg, now);
+          await sendWhatsAppRespectMute(msg, 'target tahap 1 kena');
+          continue;
+        }
+        continue; // belum kena apa-apa
+      }
+
+      // Udah partial -- SL sekarang breakeven, pantau itu (hourly) + trailing SMA (daily).
+      const hitBreakevenSl = order.direction === 'buy' ? last.low <= order.sl : last.high >= order.sl;
+      let trailBroken = false;
+      if (dailyCandles && dailyCandles.length >= order.trailSmaLen) {
+        const closes = dailyCandles.map((c) => c.close);
+        const trailSma = sma(closes, order.trailSmaLen);
+        const lastDailyClose = dailyCandles[dailyCandles.length - 1].close;
+        if (trailSma !== null) trailBroken = order.direction === 'buy' ? lastDailyClose < trailSma : lastDailyClose > trailSma;
+      }
+      if (!hitBreakevenSl && !trailBroken) continue;
+
+      const exitPrice = hitBreakevenSl ? order.sl : last.close;
+      const { pnlUsd: restPnlUsd, pnlPct } = computePnl(order, exitPrice, order.remainingFraction);
+      const totalPnlUsd = (order.realizedPnlUsd || 0) + (restPnlUsd || 0);
       const updated = updateOrder(order.id, {
-        status: isTP ? 'closed_tp' : 'closed_sl',
+        status: hitBreakevenSl ? 'closed_sl' : 'closed_tp',
         closedAt: new Date(last.closeTime).toISOString(),
-        closeReason: isTP ? 'TP' : 'SL',
-        pnlPct, pnlUsd,
+        closeReason: hitBreakevenSl ? 'SL_BREAKEVEN' : 'TRAIL',
+        exitPrice, pnlPct, pnlUsd: totalPnlUsd,
       });
       const msg = formatClosed(updated);
       console.log(msg + '\n');
       addEntry('nyopet', msg, now);
-      await sendWhatsApp(msg);
+      await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh');
+      continue;
     }
+
+    // ===== Order LAMA/manual (TP/SL tunggal) -- perilaku asli, gak berubah =====
+    const hitTP = order.direction === 'buy' ? last.high >= order.tp : last.low <= order.tp;
+    // sl bisa null/undefined buat order "main liq" (gak ada SL formal, ride sampai
+    // TP/liquidation asli) -- WAJIB guard eksplisit. Tanpa ini, perbandingan JS `x >= null`
+    // ke-coerce jadi `x >= 0` (SELALU true buat harga BTC!) -- order SELL tanpa SL bakal
+    // langsung ke-anggap "kena SL" di candle pertama walau harga gak gerak sama sekali.
+    const hitSL = order.sl == null ? false : (order.direction === 'buy' ? last.low <= order.sl : last.high >= order.sl);
+    if (!hitTP && !hitSL) continue;
+
+    // kalau dua-duanya kena di candle yang sama (gap/candle lebar), SL menang -- konservatif,
+    // gak asumsikan urutan intrabar yang gak kita tau.
+    const isTP = hitTP && !hitSL;
+    const exitPrice = isTP ? order.tp : order.sl;
+    const { pnlPct, pnlUsd } = computePnl(order, exitPrice, 1);
+    const updated = updateOrder(order.id, {
+      status: isTP ? 'closed_tp' : 'closed_sl',
+      closedAt: new Date(last.closeTime).toISOString(),
+      closeReason: isTP ? 'TP' : 'SL',
+      exitPrice, pnlPct, pnlUsd,
+    });
+    const msg = formatClosed(updated);
+    console.log(msg + '\n');
+    addEntry('nyopet', msg, now);
+    await sendWhatsAppRespectMute(msg, 'posisi ditutup');
   }
 }
 

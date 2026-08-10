@@ -15,8 +15,9 @@
 //      keluar kalau harga tutup di bawah/atas SMA pendek -- proksi "lihat kelakuan candle").
 
 const { fetchWithRetry } = require('./httpRetry');
-const { sma, findSwingPoints } = require('./technicalAnalysis');
+const { sma } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
+const { detectFlag, detectWedge } = require('./chartPatterns');
 
 const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 function parseCandle(raw) { return { openTime: raw[0], open: +raw[1], high: +raw[2], low: +raw[3], close: +raw[4], closeTime: raw[6] }; }
@@ -34,94 +35,8 @@ async function fetchAllCandles(symbol, interval, startTime) {
   return all;
 }
 
-// SCAN rentang panjang tiang & bendera yang FLEKSIBEL (10 Agu 2026, fix atas versi pertama yang
-// cuma cek 1 kombinasi panjang tetap per hari -- dari 9 tahun data cuma nemu 1 sinyal, jelas
-// bukan krn polanya beneran langka, tapi krn jendela pencarian terlalu kaku. Pola asli di pasar
-// gak selalu persis N hari -- perlu discan beberapa kemungkinan panjang.
-function detectFlag(daily, i, opts) {
-  const { poleLookbackRange = [5, 20], poleMinMovePct, flagLookbackRange = [3, 15], flagMaxRangePct } = opts;
-  for (let flagLen = flagLookbackRange[0]; flagLen <= flagLookbackRange[1]; flagLen++) {
-    const flagStart = i - flagLen;
-    if (flagStart < 1) continue;
-    const flagWindow = daily.slice(flagStart, i); // belum termasuk hari ini (breakout day)
-    if (flagWindow.length < 3) continue;
-    const flagHigh = Math.max(...flagWindow.map((c) => c.high));
-    const flagLow = Math.min(...flagWindow.map((c) => c.low));
-    const flagRangePct = (flagHigh - flagLow) / flagLow * 100;
-    if (flagRangePct > flagMaxRangePct) continue;
-
-    for (let poleLen = poleLookbackRange[0]; poleLen <= poleLookbackRange[1]; poleLen++) {
-      const poleStart = flagStart - poleLen;
-      if (poleStart < 0) continue;
-      const poleOpenPrice = daily[poleStart].close;
-      const poleClosePrice = daily[flagStart].close;
-      const poleMovePct = (poleClosePrice - poleOpenPrice) / poleOpenPrice * 100;
-      if (poleMovePct >= poleMinMovePct && flagHigh <= poleClosePrice * 1.02) {
-        return { type: 'bull', flagHigh, flagLow, poleMovePct, flagLen, poleLen };
-      }
-      if (poleMovePct <= -poleMinMovePct && flagLow >= poleClosePrice * 0.98) {
-        return { type: 'bear', flagHigh, flagLow, poleMovePct, flagLen, poleLen };
-      }
-    }
-  }
-  return null;
-}
-
-// WEDGE (rising/falling) -- 10 Agu 2026, riset lanjutan atas permintaan Olan. BEDA KARAKTER dari
-// flag/pennant: itu pola LANJUTAN (breakout searah tiang), wedge sering pola PEMBALIKAN --
-// breakout-nya KEBALIKAN dari kemiringan pola-nya sendiri (rising wedge nembus TURUN, falling
-// wedge nembus NAIK). Deteksinya juga beda: bukan cuma "range sempit", tapi 2 trendline (dari
-// swing high & swing low terpisah) yang SAMA-SAMA miring ke arah yang sama DAN mengerucut
-// (convergen) -- makanya perlu regresi linear, bukan sekadar max/min.
-function linearRegression(points) {
-  const n = points.length;
-  if (n < 2) return null;
-  const sumX = points.reduce((s, p) => s + p.x, 0);
-  const sumY = points.reduce((s, p) => s + p.y, 0);
-  const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
-  const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
-  const denom = n * sumXX - sumX * sumX;
-  if (denom === 0) return null;
-  const slope = (n * sumXY - sumX * sumY) / denom;
-  const intercept = (sumY - slope * sumX) / n;
-  return { slope, intercept };
-}
-
-function detectWedge(daily, i, opts) {
-  const { wedgeLookbackRange = [15, 40], minTouches = 3, convergenceRatio = 0.65, swingPointLookback = 2 } = opts;
-  for (let wedgeLen = wedgeLookbackRange[0]; wedgeLen <= wedgeLookbackRange[1]; wedgeLen++) {
-    const start = i - wedgeLen;
-    if (start < 0) continue;
-    const window = daily.slice(start, i); // belum termasuk hari ini (breakout day)
-    if (window.length < wedgeLen) continue;
-    const { highs, lows } = findSwingPoints(window, swingPointLookback);
-    if (highs.length < minTouches || lows.length < minTouches) continue;
-
-    const highReg = linearRegression(highs.map((h) => ({ x: h.index, y: h.price })));
-    const lowReg = linearRegression(lows.map((l) => ({ x: l.index, y: l.price })));
-    if (!highReg || !lowReg) continue;
-
-    // Lebar pola di AWAL vs di titik breakout (index=wedgeLen, satu langkah setelah window
-    // berakhir) -- harus MENYEMPIT (convergen), bukan sejajar/melebar.
-    const spreadStart = highReg.intercept - lowReg.intercept;
-    const spreadEnd = (highReg.slope * wedgeLen + highReg.intercept) - (lowReg.slope * wedgeLen + lowReg.intercept);
-    if (spreadStart <= 0 || spreadEnd <= 0) continue; // garis udah kesilang -- invalid
-    if (spreadEnd > spreadStart * convergenceRatio) continue; // gak cukup mengerucut
-
-    const projectedResistance = highReg.slope * wedgeLen + highReg.intercept;
-    const projectedSupport = lowReg.slope * wedgeLen + lowReg.intercept;
-    const recentSwingHigh = Math.max(...highs.map((h) => h.price));
-    const recentSwingLow = Math.min(...lows.map((l) => l.price));
-
-    if (highReg.slope > 0 && lowReg.slope > 0) {
-      return { type: 'rising', projectedSupport, projectedResistance, recentSwingHigh, recentSwingLow, spreadStart, wedgeLen };
-    }
-    if (highReg.slope < 0 && lowReg.slope < 0) {
-      return { type: 'falling', projectedSupport, projectedResistance, recentSwingHigh, recentSwingLow, spreadStart, wedgeLen };
-    }
-  }
-  return null;
-}
+// detectFlag/detectWedge dipindah ke chartPatterns.js (10 Agu 2026) -- dipakai bareng sama live
+// (nyopetAutoAnalysis.js), satu sumber kebenaran.
 
 function runFlagBacktest(daily, opts = {}) {
   const {

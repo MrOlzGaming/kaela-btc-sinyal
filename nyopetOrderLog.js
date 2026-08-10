@@ -64,14 +64,38 @@ function formatTriggered(order) {
 function formatClosed(order) {
   const won = order.status === 'closed_tp';
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
+  const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)' };
+  const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${won ? '✅ TP KENA' : '❌ KENA STOP LOSS'}`,
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${exitLabel}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
     `Entry: ${fmt(order.entryPrice)}`,
-    `Exit (${won ? 'TP' : 'SL'}): ${fmt(won ? order.tp : order.sl)}`,
-    `P&L: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
+    `Exit (${order.closeReason || (won ? 'TP' : 'SL')}): ${fmt(order.exitPrice ?? (won ? order.tp : order.sl))}`,
+    order.partialDone ? `(Ini penutupan sisa posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)` : '',
+    `P&L TOTAL: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
+    '',
+    nowStr(),
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
+// Notifikasi TAHAP 1 (10 Agu 2026, strategi pola chart flag/wedge) -- separuh posisi diamankan
+// pas kena target 2R, SL sisanya digeser ke breakeven (gak bisa rugi lagi dari titik ini), sisa
+// separuh di-trail pakai SMA harian sampai momentum patah. Notifikasi TERPISAH dari formatClosed
+// (posisi BELUM full closed, cuma dikurangin).
+function formatPartialClosed(order) {
+  const pnlSign = order.realizedPnlUsd >= 0 ? '+' : '-';
+  return [
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
+    seqLabel(order),
+    `${DIR_LABEL[order.direction] || order.direction}`,
+    '',
+    `Entry: ${fmt(order.entryPrice)}`,
+    `Separuh posisi diamankan @ ${fmt(order.partialTp)} -- P&L separuh: ${pnlSign}${fmt(Math.abs(order.realizedPnlUsd))}`,
+    `SL sisa separuh digeser ke BREAKEVEN (${fmt(order.entryPrice)}) -- gak bisa rugi lagi dari sini.`,
+    `Sisa separuh di-trail pakai SMA${order.trailSmaLen} harian -- ditutup kalau momentum patah, biar gak buru-buru lepas semua pas trend masih jalan.`,
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,
@@ -180,7 +204,7 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
     '⛓️ ON-CHAIN METRICS',
     ...onchainLines(onchain),
     '',
-    `✅ TP: ${fmt(order.tp)}`,
+    `✅ TP${order.partialTp ? ' tahap 1 (separuh posisi)' : ''}: ${fmt(order.tp)}`,
     `❌ SL: ${fmt(order.sl)}`,
     order.tpReasoning ? `📐 ${order.tpReasoning}` : '',
     `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
@@ -189,17 +213,17 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
     '',
     '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
     '🚨 JANGAN ALL-IN! Trading kripto resiko tinggi.',
+    '⚠️ Deteksi pola ini pendekatan NUMERIK (regresi/aturan angka), bukan mata manusia -- cocokkan dulu sama chart aslinya sebelum diikuti.',
+    '',
+    '🍀 Semoga beruntung!',
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,
   ].join('\n');
 }
 
-function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain, weeklyBlocked }) {
-  const r = ta.resistanceZones[0], s = ta.supportZones[0];
-  const syaratLine = weeklyBlocked
-    ? `📋 Candle harian udah breakout arah ${DIR_LABEL[weeklyBlocked] || weeklyBlocked}, TAPI trend Weekly masih ${WEEKLY_TREND_LABEL[ta.weeklyTrend]} -- ditahan dulu biar gak lawan arah trend besar. Nunggu trend Weekly berbalik, atau breakout berikutnya lebih kuat.`
-    : '📋 Syarat yang ditunggu: candle harian CLOSE di atas ' + (r ? fmt(r.priceMax) : '(resistance belum jelas)') + ' (breakout naik) atau di bawah ' + (s ? fmt(s.priceMin) : '(support belum jelas)') + ' (breakdown turun).';
+function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain }) {
+  const syaratLine = '📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.';
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
     'Belum ada posisi. Masih nunggu syarat terpenuhi.',
@@ -224,4 +248,4 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain,
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid };
+module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid };

@@ -31,7 +31,10 @@ function setBalance(amountUsd, date = new Date()) {
 // order: { direction:'buy'|'sell', strategyType:'range'|'breakout'|'trend', triggerPrice,
 //          testLevel (opsional, buat setup fade/rejection -- lihat nyopetOrderMonitor.js),
 //          confirmationNote, tpReasoning (alasan pemilihan TP, lihat nyopetAutoAnalysis.js
-//          pickAdaptiveTp), tp, sl, exposure, leverage, marginUsd, notes }
+//          pickAdaptiveTp), tp, sl, exposure, leverage, marginUsd, notes,
+//          patternType/partialTp/trailSmaLen (opsional, 10 Agu 2026 -- strategi pola chart
+//          flag/wedge: exit 2 tahap, separuh di partialTp lalu sisanya di-trail. Order LAMA
+//          [zona breakout biasa] gak isi field ini, tetap jalan TP/SL tunggal seperti biasa) }
 function createOrder(order, date = new Date()) {
   const state = load();
   const id = date.getTime().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -53,10 +56,17 @@ function createOrder(order, date = new Date()) {
     entryPrice: null,
     tp: order.tp,
     sl: order.sl,
+    originalSl: order.sl,
     exposure: order.exposure ?? null,
     leverage: order.leverage ?? null,
     marginUsd: order.marginUsd ?? null,
     notes: order.notes || '',
+    patternType: order.patternType ?? null,
+    partialTp: order.partialTp ?? null,
+    partialDone: false,
+    remainingFraction: 1,
+    trailSmaLen: order.trailSmaLen ?? null,
+    realizedPnlUsd: 0,
     createdAt: date.toISOString(),
     triggeredAt: null,
     closedAt: null,

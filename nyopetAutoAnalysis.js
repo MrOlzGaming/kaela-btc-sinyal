@@ -6,29 +6,47 @@
 // finansial -- keputusan Olan 9 Agu 2026, murni "kalkulator logika": VALID = buka posisi bayangan,
 // INVALID = nunggu syarat kepenuhi sesuai analisa).
 //
+// STRATEGI (10 Agu 2026, GANTI TOTAL dari versi zona-breakout+Weekly-filter lama): sekarang
+// nyari breakout dari POLA CHART SPESIFIK (bull flag/pennant + falling wedge -- lihat
+// chartPatterns.js), BUKAN breakout dari zona swing high/low umum. Riset backtestFlagBreakout.js
+// (10 Agu 2026): SL yang nempel di lebar POLA-nya sendiri (bukan zona jauh) alami TIPIS, hasilnya
+// jauh lebih baik (profit factor 2,51 vs 1,11-1,19 punya versi lama, drawdown 38% vs 90%+).
+// BUY ONLY (short kebukti berkali-kali ngerusak edge, baik di sistem lama maupun baru ini).
+// Sizing pakai kalkulator exposure ASLI (bukan fixedRisk lagi) + jaring pengaman keras: margin
+// per-trade gak boleh >MAX_MARGIN_PCT dari modal ("kita nyopet, bukan investasi" -- instruksi
+// Olan 10 Agu 2026).
+//
 // PENTING: kalau UDAH ADA order aktif (pending/floating), SKIP -- 1 posisi bayangan per waktu,
 // gak numpuk. candle HARIAN dipakai (bukan H1) -- keputusan Olan: closing candle harian pas
 // dijadwal 08:05 WITA emang momen konfirmasi asli, sinyal lebih kuat/jarang dari cek per-jam.
 
 const fs = require('fs');
 const path = require('path');
-const { analyze } = require('./technicalAnalysis');
+const { analyze, fetchCandles } = require('./technicalAnalysis');
+const { detectPatternSignal } = require('./chartPatterns');
 const { getActiveOrders, createOrder, updateOrder } = require('./nyopetOrders');
-const { hitungFixedRisk } = require('./calculator');
-
-// Target resiko per-trade (10 Agu 2026, keputusan Olan setelah riset drawdown): 15% dari modal --
-// lihat penjelasan lengkap di calculator.js `hitungFixedRisk()`. INI BUKAN hitung() lama (yang
-// bisa bikin margin sampai 100% modal kalau nyawa lebar) -- margin di sini SELALU 15% dari modal,
-// posisi (nilai posisi/leverage) yang menyesuaikan lebar nyawa.
-const NYOPET_TARGET_RISK_PCT = 15;
+const { hitung: hitungExposure } = require('./calculator');
 const { load: loadOrdersState } = require('./nyopetOrders');
 const { formatAutoValid, formatAutoInvalid } = require('./nyopetOrderLog');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
-const { localDateKey } = require('./config');
+const { localDateKey, isWaMuted } = require('./config');
 const { analyzeSentiment } = require('./marketSentiment');
 const { fetchTradeMetrics } = require('./onchainMetrics');
+
+// Batas keras margin/modal per-trade (10 Agu 2026, instruksi Olan langsung: "gak boleh ada lagi
+// posisi margin super, kita nyopet bukan investasi"). SL pattern-based udah alami ngasih margin
+// kecil (tervalidasi backtest: margin terbesar dari 66 trade cuma 18,8%), ini jaring pengaman
+// tambahan biar gak ada 1 sinyal pun yang lolos kalau kejadian nyawa-nya kebetulan lebar.
+const MAX_MARGIN_PCT = 20;
+// Target R:R buat exit tahap 1 (jual separuh posisi) -- tervalidasi backtest sbg titik optimal.
+const PARTIAL_RR = 2;
+// SMA (hari) buat trailing sisa separuh posisi abis partial exit -- proksi "lihat kelakuan candle".
+const TRAIL_SMA_LEN = 10;
+// Berapa hari histori candle harian diambil -- cukup buat wedge (lookback maks 40 hari + swing
+// point) + pole (maks 20 hari) + margin aman, TANPA amit-amit kurang data pas market baru listing.
+const PATTERN_HISTORY_DAYS = 200;
 
 // Sentimen (Fear&Greed + Binance Futures) BUKAN dari data-api.binance.vision yang biasa kita
 // pakai -- domain fapi.binance.com belum pernah dites dari runner GitHub Actions. Kalau gagal
@@ -53,6 +71,16 @@ async function safeOnchain() {
     console.log('[NyopetAutoAnalysis] On-chain metrics gagal diambil (dilewatin):', e.message);
     return null;
   }
+}
+
+// Kirim WA respek mute sementara (config.js isWaMuted, aktif sampai 2026-08-14) -- tetap DIARSIP
+// ke web/archive.json apa adanya, cuma broadcast grup yang ditahan sampai pengumuman resmi.
+async function sendWhatsAppRespectMute(msg, label) {
+  if (isWaMuted()) {
+    console.log(`[NyopetAutoAnalysis] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
+    return;
+  }
+  await sendWhatsApp(msg);
 }
 
 // Dedup harian -- 1x cek per hari kalender WITA (nempel jadwal candle harian), cegah spam
@@ -83,71 +111,10 @@ async function sampleLiquidations(windowMs = 15000) {
   });
 }
 
-async function fetchLastDailyClose() {
-  const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=2');
-  const raw = await res.json();
-  return +raw[0][4]; // candle ke-0 = candle harian TERAKHIR yang udah closed
-}
-
 async function fetchLivePrice() {
   const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT');
   const data = await res.json();
   return parseFloat(data.price);
-}
-
-// TP adaptif (10 Agu 2026, respons temuan backtest: TP "zona terdekat" sering ngasih R:R kecil
-// meski win rate tinggi -- avg cuma +0,18R/trade). Sekarang TP nyesuaiin KEKUATAN trend Weekly
-// (momentum MA10 vs MA30 mingguan), bukan selalu ambil zona paling deket atau R:R flat 1:1:
-// - momentum LEMAH -> target lebih konservatif (minRR 1.0x), ambil zona terdekat yang masih masuk akal.
-// - momentum SEDANG -> minRR 1.5x, lewatin zona yang terlalu deket, cari yang lebih berarti.
-// - momentum KUAT -> minRR 2.0x, berani nunggu zona lebih jauh karena momentum besar sering nembus
-//   zona lemah di depannya.
-// Ambang lemah/sedang/kuat (10% / 20%) diambil dari PERSENTIL riil histori jarak MA10-MA30
-// mingguan BTCUSDT 2017-2026 (p33=10,2% / p67=19,8%, lihat riset backtestNyopet.js) -- BUKAN
-// angka tebakan.
-function classifyWeeklyStrength(momentumPct) {
-  if (momentumPct === null || momentumPct === undefined) return 'lemah'; // data belum cukup, konservatif
-  if (momentumPct < 10) return 'lemah';
-  if (momentumPct < 20) return 'sedang';
-  return 'kuat';
-}
-const MIN_RR_BY_STRENGTH = { lemah: 1.0, sedang: 1.5, kuat: 2.0 };
-
-// SL "nearest zone" (10 Agu 2026, respons diskusi Olan: "kalau breakout, biasanya gak ambil
-// nyawa yang terlalu lebar kan?"). Dulu SL = zona berlawanan PALING TERSENTUH (`swingSource[0]`)
-// -- bisa jadi zona structural LAMA yang jauh banget dari harga (kejadian nyata: Des 2018 abis
-// crash, zona SL kepilih jaraknya sampai >90% dari harga). Sekarang SL = zona berlawanan PALING
-// DEKET ke entry -- invalidation breakout yang natural emang tipis ("kalau balik ke bawah level
-// breakout, breakout-nya gagal"), bukan level mayor sejarah yang kebetulan sering disentuh.
-// VALIDASI EMPIRIS (backtestNyopet.js, modal $100 disimulasikan pakai exposure system asli):
-// SL nearest = $4.569 final (+4.469%). SL paling-tersentuh (lama) = $0,06 (nyaris ambruk total).
-// CUMA dari ganti cara pilih SL ini, gak ada perubahan lain.
-function pickNearestSl(zones, entryPrice, direction) {
-  const candidates = direction === 'buy'
-    ? zones.filter((z) => z.price < entryPrice).sort((a, b) => b.price - a.price)
-    : zones.filter((z) => z.price > entryPrice).sort((a, b) => a.price - b.price);
-  return candidates[0] || null;
-}
-
-// Susun zona SEARAH trade (di luar entry), terdekat dulu.
-function sortedZonesInDirection(zones, entryPrice, direction) {
-  return direction === 'buy'
-    ? zones.filter((z) => z.price > entryPrice).sort((a, b) => a.price - b.price)
-    : zones.filter((z) => z.price < entryPrice).sort((a, b) => b.price - a.price);
-}
-
-// Pilih zona TP PERTAMA (dari yang terdekat) yang R:R-nya udah penuhi minRR -- kalau zona
-// terdekat kasih R:R kecil, LEWATIN, cari yang lebih jauh/berarti. Return null kalau semua
-// zona yang ada masih di bawah minRR (caller fallback ke proyeksi minRR × risk).
-function pickAdaptiveTp(zones, entryPrice, sl, direction, minRR) {
-  const riskDistance = Math.abs(entryPrice - sl);
-  if (riskDistance === 0) return null;
-  const candidates = sortedZonesInDirection(zones, entryPrice, direction);
-  for (const z of candidates) {
-    const reward = Math.abs(z.price - entryPrice);
-    if (reward / riskDistance >= minRR) return z;
-  }
-  return null;
 }
 
 async function main() {
@@ -165,62 +132,34 @@ async function main() {
     return;
   }
 
-  const [ta, dailyClose, livePrice, liq, sentiment, onchain] = await Promise.all([
-    analyze('BTCUSDT'), fetchLastDailyClose(), fetchLivePrice(), sampleLiquidations(), safeSentiment(), safeOnchain(),
+  const [ta, daily, livePrice, liq, sentiment, onchain] = await Promise.all([
+    analyze('BTCUSDT'), fetchCandles('BTCUSDT', '1d', PATTERN_HISTORY_DAYS), fetchLivePrice(), sampleLiquidations(), safeSentiment(), safeOnchain(),
   ]);
 
-  const topResistance = ta.resistanceZones[0]; // udah kesortir touches terbanyak dari analyze()
-  const topSupport = ta.supportZones[0];
+  const dailyClose = daily[daily.length - 1].close;
+  const signal = detectPatternSignal(daily, daily.length - 1, { allowShort: false });
 
-  // Konfirmasi Weekly (9 Agu 2026): breakout daily WAJIB gak lawan trend Weekly -- kalau
-  // breakout kedeteksi tapi trend Weekly kontra, tetap INVALID (ditahan), bukan langsung entry.
-  // weeklyTrend null (data belum cukup) atau 'netral' TIDAK memblokir -- cuma blokir kontradiksi jelas.
-  let direction = null;
-  let weeklyBlocked = null;
-  if (topResistance && dailyClose > topResistance.priceMax) {
-    if (ta.weeklyTrend === 'bearish') weeklyBlocked = 'buy'; else direction = 'buy';
-  } else if (topSupport && dailyClose < topSupport.priceMin) {
-    if (ta.weeklyTrend === 'bullish') weeklyBlocked = 'sell'; else direction = 'sell';
-  }
-
-  if (!direction) {
-    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain, weeklyBlocked });
+  if (!signal) {
+    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain });
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
-    await sendWhatsApp(msg);
+    await sendWhatsAppRespectMute(msg, 'status INVALID');
     saveTriggerState({ lastSentDate: todayKey });
-    console.log('[NyopetAutoAnalysis] INVALID --', weeklyBlocked ? `breakout ${weeklyBlocked} ditahan (lawan trend Weekly)` : 'belum ada breakout candle harian.');
+    console.log('[NyopetAutoAnalysis] INVALID -- belum ada pola flag/wedge yang breakout candle harian.');
     return;
   }
 
-  // SL: titik struktur berlawanan PALING DEKET (swing low buat buy, swing high buat sell) --
-  // lihat pickNearestSl() di atas buat alasan lengkap.
-  const swingSource = direction === 'buy' ? ta.supportZones : ta.resistanceZones;
-  const slZone = pickNearestSl(swingSource, livePrice, direction);
-  const sl = slZone ? slZone.price : null;
-  if (sl === null) {
-    console.log('[NyopetAutoAnalysis] Gagal tentuin SL (gak ada swing zone terdeteksi), skip -- lebih aman diam daripada asal.');
-    return;
-  }
-
-  const weeklyStrength = classifyWeeklyStrength(ta.weeklyMomentumPct);
-  const minRR = MIN_RR_BY_STRENGTH[weeklyStrength];
-  const oppositeZones = direction === 'buy' ? ta.resistanceZones : ta.supportZones;
-  const adaptiveZone = pickAdaptiveTp(oppositeZones, livePrice, sl, direction, minRR);
+  const { direction, sl, patternType } = signal;
   const riskDistance = Math.abs(livePrice - sl);
-  const tp = adaptiveZone ? adaptiveZone.price : (direction === 'buy' ? livePrice + riskDistance * minRR : livePrice - riskDistance * minRR);
-  // Sanity guard (ketemu pas backtest 10 Agu 2026): SL dipilih dari zona PALING BANYAK TERSENTUH
-  // (bukan paling deket) -- pas market abis crash/pump tajam, itu bisa jadi zona LAMA yang jauh
-  // banget dari harga sekarang (risk distance bisa >90% dari harga). Fallback TP yang ngali-in
-  // riskDistance segede itu dengan minRR bisa jadi negatif/gak masuk akal (mustahil buat harga
-  // BTC). Lebih aman diam daripada kirim TP yang gak masuk akal.
-  if (tp <= 0) {
-    console.log('[NyopetAutoAnalysis] Proyeksi TP fallback gak masuk akal (SL kejauhan dari harga), skip -- lebih aman diam daripada asal.');
+  if (riskDistance === 0) {
+    console.log('[NyopetAutoAnalysis] Jarak SL 0 (harga = SL), skip -- lebih aman diam daripada asal.');
     return;
   }
-  const tpReasoning = adaptiveZone
-    ? `TP di zona ${direction === 'buy' ? 'resistance' : 'support'} $${adaptiveZone.price.toLocaleString('en-US', { maximumFractionDigits: 0 })} (tersentuh ${adaptiveZone.touches}x) -- momentum Weekly ${weeklyStrength.toUpperCase()} (${ta.weeklyMomentumPct === null ? 'data belum cukup' : ta.weeklyMomentumPct.toFixed(1) + '%'}), minimal target ${minRR}x risiko, zona ini penuhi itu.`
-    : `Gak ada zona ${direction === 'buy' ? 'resistance' : 'support'} yang penuhi target minimal ${minRR}x risiko (momentum Weekly ${weeklyStrength.toUpperCase()}) -- TP diproyeksi ${minRR}x jarak SL sebagai gantinya.`;
+  const partialTp = direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
+  if (partialTp <= 0) {
+    console.log('[NyopetAutoAnalysis] Proyeksi TP gak masuk akal, skip -- lebih aman diam daripada asal.');
+    return;
+  }
 
   const ordersState = loadOrdersState();
   const modal = ordersState.balance || 0;
@@ -228,26 +167,37 @@ async function main() {
     console.log('[NyopetAutoAnalysis] Saldo belum diset (0), skip -- gak bisa hitung exposure.');
     return;
   }
-  const calc = hitungFixedRisk({ modal, targetRiskPct: NYOPET_TARGET_RISK_PCT, entry: livePrice, stopLoss: sl });
+  const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sl });
+  if (calc.marginPct > MAX_MARGIN_PCT) {
+    console.log(`[NyopetAutoAnalysis] Margin ${calc.marginPct.toFixed(1)}% modal ngelewatin batas ${MAX_MARGIN_PCT}% -- skip, nyopet bukan investasi.`);
+    saveTriggerState({ lastSentDate: todayKey });
+    return;
+  }
+
+  const patternLabel = { flag_bull: 'Bull Flag/Pennant', flag_bear: 'Bear Flag/Pennant', wedge_falling: 'Falling Wedge', wedge_rising: 'Rising Wedge' }[patternType] || patternType;
+  const confirmationNote = `Breakout pola ${patternLabel} -- candle harian CLOSE ${direction === 'buy' ? 'di atas' : 'di bawah'} batas pola ($${dailyClose.toLocaleString('en-US')}). SL nempel lebar pola itu sendiri (nyawa ${(riskDistance / livePrice * 100).toFixed(1)}%), bukan zona jauh. Deteksi otomatis chartPatterns.js.`;
+  const tpReasoning = `Target tahap 1 (jual separuh): ${PARTIAL_RR}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}. Sisanya di-trail pakai SMA${TRAIL_SMA_LEN} harian (SL digeser breakeven abis tahap 1) -- "lihat kelakuan candle" sebelum lepas semua.`;
 
   const created = createOrder({
     direction,
     strategyType: 'breakout',
     triggerPrice: livePrice,
-    confirmationNote: `Candle harian CLOSE ${direction === 'buy' ? 'di atas' : 'di bawah'} zona ${direction === 'buy' ? 'resistance' : 'support'} ($${dailyClose.toLocaleString('en-US')}) -- deteksi otomatis technicalAnalysis.js.`,
+    confirmationNote,
     tpReasoning,
-    tp, sl,
+    tp: partialTp, // dipakai formatAutoValid buat tampilan "TP tahap 1"; exit penuh via trail
+    sl,
     exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
-    notes: 'Analisa otomatis Kaela (9 Agu 2026): posisi BAYANGAN, murni perhitungan, tidak ada uang bergerak. Eksekusi asli tetap manual Olan di Binance kalau mau ikut.',
+    patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
+    notes: 'Analisa otomatis Kaela (strategi pola chart, 10 Agu 2026): posisi BAYANGAN, murni perhitungan, tidak ada uang bergerak. Eksekusi asli tetap manual Olan di Binance kalau mau ikut.',
   }, now);
   const opened = updateOrder(created.id, { status: 'floating', entryPrice: livePrice, triggeredAt: now.toISOString() });
 
   const msg = formatAutoValid({ order: opened, ta, liq, sentiment, onchain });
   console.log(msg + '\n');
   addEntry('nyopet', msg, now);
-  await sendWhatsApp(msg);
+  await sendWhatsAppRespectMute(msg, `sinyal VALID (${patternLabel})`);
   saveTriggerState({ lastSentDate: todayKey });
-  console.log('[NyopetAutoAnalysis] VALID --', direction, 'posisi bayangan dibuka @', livePrice);
+  console.log('[NyopetAutoAnalysis] VALID --', direction, patternLabel, 'posisi bayangan dibuka @', livePrice);
 }
 
 main().catch((e) => {

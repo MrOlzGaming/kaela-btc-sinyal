@@ -94,8 +94,16 @@ function main() {
       totalDeposited += 100;
       const cycIdx = cycles.findIndex((c) => today.time >= c.tanamStart && today.time <= c.tanamEnd);
       const cyc = cycIdx === -1 ? null : cycles[cycIdx];
+      // Pause DCA dari HALVING sampai PANEN (10 Agu 2026, klarifikasi Olan: "berhenti DCA saat
+      // halving tiba, tunggu ~300+ hari [durasi Panen] baru lanjut") -- setoran TETAP masuk
+      // (komitmen bulanan Olan jalan terus), tapi gak dibelanjain apa-apa selama pause, cuma
+      // numpuk jadi cash nganggur sampai Panen cair.
+      const inPauseWindow = cycles.some((c) => today.time >= c.h && today.time < c.panenMs);
 
-      if (cyc) {
+      if (inPauseWindow) {
+        cash += 100;
+        log.push(`[PAUSE] ${new Date(today.time).toISOString().slice(0, 10)} -- setoran $100 nganggur (nunggu Panen, abis halving)`);
+      } else if (cyc) {
         // Bagi $100: porsi margin (getDynamicRiskPerTrade dari cash yang UDAH ke-realisasi --
         // saldo realisasi doang, sama filosofi kayak Nyopet fixedRisk) buat leverage, SISANYA
         // langsung spot juga (permintaan Olan: jangan nganggur, jadi jaring pengaman kalau

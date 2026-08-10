@@ -52,7 +52,44 @@ function formatWhaleAlert(tx, btcPriceUsd, usdToIdr) {
   ].join('\n');
 }
 
-module.exports = { formatWhaleAlert };
+// Rekap HARIAN (10 Agu 2026, ganti dari real-time per-transaksi -- permintaan Olan). Alasan:
+// konfirmasi blockchain BUKAN instan -- transaksi jam 2 pagi bisa aja baru KE-MINED (masuk blok)
+// jam siang kalau network lagi padat/kompetisi fee. Alert "real-time" tiap 10 menit jadi misleading
+// -- kadang telat berjam-jam dari kejadian aslinya tanpa jelas ke pembaca. Rekap harian lebih jujur:
+// gak janjiin real-time, cuma laporin TOTAL pergerakan yang KE-KONFIRMASI dalam ~24 jam terakhir.
+function formatWhaleDailyDigest(txList, btcPriceUsd, usdToIdr, dateStr) {
+  const count = txList.length;
+  if (count === 0) {
+    return [
+      `${CATEGORY_COLOR.whale.emoji} 🐋 REKAP WHALE HARIAN — ${dateStr}`,
+      'Gak ada transaksi besar (>=1000 BTC) yang KE-KONFIRMASI dalam ~24 jam terakhir -- volatilitas whale rendah.',
+      '',
+      '⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya.',
+      `🔗 ${WEB_URL}`,
+    ].join('\n');
+  }
+
+  const totalBtc = txList.reduce((s, t) => s + t.totalBtc, 0);
+  const biggest = txList.reduce((a, b) => (b.totalBtc > a.totalBtc ? b : a));
+  const toExchange = txList.filter((t) => t.direction === 'TO_EXCHANGE').length;
+  const fromExchange = txList.filter((t) => t.direction === 'FROM_EXCHANGE').length;
+  const unknown = count - toExchange - fromExchange;
+  const usdValue = totalBtc * btcPriceUsd;
+  const idrValue = usdValue * usdToIdr;
+
+  return [
+    `${CATEGORY_COLOR.whale.emoji} 🐋 REKAP WHALE HARIAN — ${dateStr}`,
+    `${count} transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.`,
+    `Total: ${fmtBtc(totalBtc)} BTC berpindah (~${fmtUsd(usdValue)} / ~${fmtIdr(idrValue)})`,
+    `Terbesar: ${fmtBtc(biggest.totalBtc)} BTC dalam 1 transaksi.`,
+    `Arah (best-effort): ${toExchange} masuk exchange (potensi tekanan jual) · ${fromExchange} keluar exchange (potensi akumulasi) · ${unknown} gak teridentifikasi.`,
+    '',
+    '⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.',
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
+module.exports = { formatWhaleAlert, formatWhaleDailyDigest };
 
 if (require.main === module) {
   console.log(formatWhaleAlert({ totalBtc: 366.33, txid: 'ab1dd23585ffbc8cb2ab080c5ed929a6c8c183b9db3bcddf348dd03b90cb7791', blockTime: Math.floor(Date.now() / 1000), direction: null, exchange: null }, 64300, 17936));

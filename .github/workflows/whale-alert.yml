@@ -1,8 +1,11 @@
-name: Whale Alert (tiap 10 menit)
+name: Whale Alert (rekap harian)
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # 23:20 UTC = 07:20 WITA (hari berikutnya) -- ganti dari tiap 10 menit ke 1x/hari (10 Agu 2026,
+    # permintaan Olan: konfirmasi blockchain gak instan, "real-time" tiap 10 menit jadi ilusi kalau
+    # network lagi padat -- rekap harian lebih jujur, gak janjiin real-time).
+    - cron: '20 23 * * *'
   workflow_dispatch: {}
 
 # Cegah 2 run tumpang tindih (kalau 1 run kelamaan, run cron berikutnya nunggu dulu, BUKAN
@@ -34,8 +37,8 @@ jobs:
           };
           EOF
 
-      - name: Cek transaksi besar (whaleMonitor.js)
-        run: node whaleMonitor.js
+      - name: Rekap transaksi besar 24 jam terakhir (whaleDailyDigest.js)
+        run: node whaleDailyDigest.js
 
       - name: Cek apakah ada whale alert baru (archive.json berubah)
         id: check

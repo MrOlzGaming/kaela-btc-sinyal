@@ -301,7 +301,22 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3,
     warmupDays = 220, maxConcurrent = 3, startCapital = 100, topUpAmount = 100, topUpStopAt = 1000,
     topUpIntervalDays = 30, slSelection = 'nearest', // 'nearest' (default, tervalidasi) | 'mostTouched' (lama)
-    maxNyawaPct = null, // cap opsional (10 Agu 2026, ide Olan: "breakout paling nyawa 1-3%") -- null = gak ada cap
+    maxNyawaPct = null, // cap lebar SL langsung (dites 10 Agu, TERBUKTI merugikan -- default null/gak dipakai)
+    maxMarginPct = null, // cap margin per-trade sbg % dari modal (10 Agu 2026, dites juga TERBUKTI gak jelas untungnya -- default null/gak dipakai)
+    // Circuit breaker (10 Agu 2026, ide "rem darurat modal" -- BEDA dari cap di atas: bukan
+    // nebak resiko SEBELUM entry, tapi REAKSI ke kerugian yang UDAH kejadian). Begitu drawdown
+    // dari puncak modal tertinggi >= cbPausePct, sistem STOP buka posisi baru (posisi yang
+    // udah terbuka tetap dipantau normal sampai closed). Resume begitu drawdown pulih ke bawah
+    // cbResumePct (dibikin beda dari cbPausePct -- hysteresis, biar gak plin-plan
+    // pause-resume-pause tiap hari deket garis batas).
+    cbPausePct = null, cbResumePct = null,
+    // Mode sizing (10 Agu 2026, respons akar masalah drawdown: bukan soal short/long, tapi
+    // kalkulator OLZ Exposure jaga NILAI POSISI tetap sama, jadi kalau SL jauh (leverage kecil),
+    // MARGIN yang membengkak nutupin. 'fixedRisk' balik logikanya -- margin dijaga = targetRiskPct
+    // × modal (KONSTAN), posisi (nilaiPosisi) yang mengecil kalau SL jauh, BUKAN margin yang
+    // membesar. Ini BELUM ngubah calculator.js beneran -- cuma dites di sini dulu.
+    sizingMode = 'exposure', // 'exposure' (calculator.js asli) | 'fixedRisk'
+    targetRiskPct = 2,
   } = opts;
   const trades = [];
   let openPositions = [];
@@ -309,6 +324,8 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
   let toppedUpStopped = capital >= topUpStopAt;
   let lastTopUpTime = dailyCandles[warmupDays] ? dailyCandles[warmupDays].closeTime : 0;
   let maxConcurrentReached = 0;
+  let peakCapital = startCapital;
+  let circuitPaused = false;
   const capitalSeries = [{ time: lastTopUpTime, capital }];
 
   for (let i = warmupDays; i < dailyCandles.length; i++) {
@@ -347,6 +364,16 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
       }
     }
     openPositions = stillOpen;
+
+    // Circuit breaker: update puncak modal tertinggi, cek apakah harus pause/resume cari sinyal
+    // baru. Posisi yang UDAH terbuka tetap dipantau normal di atas -- ini cuma nge-rem ENTRY BARU.
+    peakCapital = Math.max(peakCapital, capital);
+    if (cbPausePct !== null) {
+      const drawdownNow = peakCapital > 0 ? (peakCapital - capital) / peakCapital * 100 : 0;
+      if (!circuitPaused && drawdownNow >= cbPausePct) circuitPaused = true;
+      else if (circuitPaused && drawdownNow <= (cbResumePct !== null ? cbResumePct : cbPausePct / 2)) circuitPaused = false;
+    }
+    if (circuitPaused) continue;
 
     if (openPositions.length >= maxConcurrent) continue;
 
@@ -412,9 +439,26 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     const lockedMargin = openPositions.reduce((s, p) => s + p.margin, 0);
     const availableCapital = capital - lockedMargin;
     if (availableCapital <= 0) continue;
-    const { exposure, nilaiPosisi, leverage, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl });
-    if (margin > availableCapital) continue; // gak cukup modal available buat kunci margin ini
+
     const nyawaPct = riskDistance / lastPrice * 100;
+    let exposure, nilaiPosisi, leverage, margin;
+    if (sizingMode === 'fixedRisk') {
+      // Margin DIJAGA konstan (targetRiskPct dari modal) -- posisi (nilaiPosisi) yang otomatis
+      // mengecil kalau SL jauh, bukan margin yang membengkak. Leverage tetap dari nyawa%
+      // (konsep "nyawa" gak berubah), tapi arah hitungnya kebalik dari calculator.js asli.
+      leverage = Math.max(1, Math.floor(100 / nyawaPct));
+      margin = capital * (targetRiskPct / 100);
+      nilaiPosisi = margin * leverage;
+      exposure = nilaiPosisi / capital;
+    } else {
+      ({ exposure, nilaiPosisi, leverage, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl }));
+    }
+    if (margin > availableCapital) continue; // gak cukup modal available buat kunci margin ini
+    // Cap margin per-trade opsional -- beda dari cap nyawa% (yang TERBUKTI ngerusak edge di atas):
+    // ini nyasar target LEBIH SPESIFIK, "jangan taruh porsi modal segede itu di SATU taruhan",
+    // bukan "jangan ambil SL lebar" -- exposure system bisa aja tetap ambisius (nyawa lebar,
+    // exposure gede) TAPI dibatasi seberapa besar bagian modal yang boleh nyangkut di 1 trade.
+    if (maxMarginPct !== null && (margin / capital * 100) > maxMarginPct) continue;
     const lossAtSl = nilaiPosisi * (nyawaPct / 100); // presisi langsung dari nilai posisi, bukan margin (yang kena pembulatan floor(leverage))
 
     openPositions.push({

@@ -48,17 +48,43 @@ function findNextZone(zones, entryPrice, direction) {
   return candidates[0] || null;
 }
 
-function computeWeeklyTrendAt(weeklyCandles, asOfMs) {
+function computeWeeklyStatsAt(weeklyCandles, asOfMs) {
   const closes = weeklyCandles.filter((c) => c.closeTime <= asOfMs).map((c) => c.close);
   const ma10 = sma(closes, 10);
   const ma30 = sma(closes, 30);
-  if (!ma10 || !ma30) return null;
-  return ma10 > ma30 ? 'bullish' : ma10 < ma30 ? 'bearish' : 'netral';
+  if (!ma10 || !ma30) return { trend: null, momentumPct: null };
+  const trend = ma10 > ma30 ? 'bullish' : ma10 < ma30 ? 'bearish' : 'netral';
+  const momentumPct = Math.abs((ma10 - ma30) / ma30) * 100;
+  return { trend, momentumPct };
+}
+
+// Sama persis logika `nyopetAutoAnalysis.js` (10 Agu 2026) -- direplikasi di sini (bukan
+// require langsung) biar backtestNyopet.js tetap berdiri sendiri, konsisten sama pola findNextZone
+// di atas yang juga duplikat manual buat keperluan backtest.
+function classifyWeeklyStrength(momentumPct) {
+  if (momentumPct === null || momentumPct === undefined) return 'lemah';
+  if (momentumPct < 10) return 'lemah';
+  if (momentumPct < 20) return 'sedang';
+  return 'kuat';
+}
+const MIN_RR_BY_STRENGTH = { lemah: 1.0, sedang: 1.5, kuat: 2.0 };
+
+function pickAdaptiveTp(zones, entryPrice, sl, direction, minRR) {
+  const riskDistance = Math.abs(entryPrice - sl);
+  if (riskDistance === 0) return null;
+  const candidates = direction === 'buy'
+    ? zones.filter((z) => z.price > entryPrice).sort((a, b) => a.price - b.price)
+    : zones.filter((z) => z.price < entryPrice).sort((a, b) => b.price - a.price);
+  for (const z of candidates) {
+    const reward = Math.abs(z.price - entryPrice);
+    if (reward / riskDistance >= minRR) return z;
+  }
+  return null;
 }
 
 function runBacktest(dailyCandles, weeklyCandles, opts = {}) {
   const {
-    useWeeklyFilter = true, swingLookbackDays = 90, swingPointLookback = 3, warmupDays = 220,
+    useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3, warmupDays = 220,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -100,25 +126,38 @@ function runBacktest(dailyCandles, weeklyCandles, opts = {}) {
     const topSupport = supportZones[0];
     const lastPrice = today.close;
 
-    const weeklyTrend = useWeeklyFilter ? computeWeeklyTrendAt(weeklyCandles, today.closeTime) : null;
+    const weeklyStats = computeWeeklyStatsAt(weeklyCandles, today.closeTime);
 
     let direction = null;
     if (topResistance && today.close > topResistance.priceMax) {
-      if (!(useWeeklyFilter && weeklyTrend === 'bearish')) direction = 'buy';
+      if (!(useWeeklyFilter && weeklyStats.trend === 'bearish')) direction = 'buy';
     } else if (topSupport && today.close < topSupport.priceMin) {
-      if (!(useWeeklyFilter && weeklyTrend === 'bullish')) direction = 'sell';
+      if (!(useWeeklyFilter && weeklyStats.trend === 'bullish')) direction = 'sell';
     }
     if (!direction) continue;
 
     const swingSource = direction === 'buy' ? supportZones : resistanceZones;
     if (!swingSource[0]) continue;
     const sl = swingSource[0].price;
-
-    const oppositeZones = direction === 'buy' ? resistanceZones : supportZones;
-    const nextZone = findNextZone(oppositeZones, lastPrice, direction);
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
-    const tp = nextZone ? nextZone.price : (direction === 'buy' ? lastPrice + riskDistance : lastPrice - riskDistance);
+
+    const oppositeZones = direction === 'buy' ? resistanceZones : supportZones;
+    let tp;
+    if (useAdaptiveTp) {
+      const strength = classifyWeeklyStrength(weeklyStats.momentumPct);
+      const minRR = MIN_RR_BY_STRENGTH[strength];
+      const adaptiveZone = pickAdaptiveTp(oppositeZones, lastPrice, sl, direction, minRR);
+      tp = adaptiveZone ? adaptiveZone.price : (direction === 'buy' ? lastPrice + riskDistance * minRR : lastPrice - riskDistance * minRR);
+    } else {
+      const nextZone = findNextZone(oppositeZones, lastPrice, direction);
+      tp = nextZone ? nextZone.price : (direction === 'buy' ? lastPrice + riskDistance : lastPrice - riskDistance);
+    }
+    // Sanity guard sama kayak live nyopetAutoAnalysis.js: SL dari zona PALING BANYAK TERSENTUH
+    // (bukan paling deket) sesekali jauh banget dari harga pas abis crash/pump tajam -- fallback
+    // TP bisa jadi negatif/gak masuk akal. Skip trade itu (harusnya jarang -- kejadian nyata cuma
+    // 1x di seluruh histori pas ngetest ini, Des 2018).
+    if (tp <= 0) continue;
 
     openPos = { direction, entryIdx: i, entryPrice: lastPrice, sl, tp, entryTime: today.closeTime };
   }
@@ -165,19 +204,22 @@ async function main() {
   ]);
   console.log(`Daily candles: ${daily.length}, Weekly candles: ${weekly.length}`);
 
-  const withFilter = runBacktest(daily, weekly, { useWeeklyFilter: true });
-  const withoutFilter = runBacktest(daily, weekly, { useWeeklyFilter: false });
+  const noFilterFlatTp = runBacktest(daily, weekly, { useWeeklyFilter: false, useAdaptiveTp: false });
+  const filterFlatTp = runBacktest(daily, weekly, { useWeeklyFilter: true, useAdaptiveTp: false });
+  const filterAdaptiveTp = runBacktest(daily, weekly, { useWeeklyFilter: true, useAdaptiveTp: true });
 
-  console.log('\n=== DENGAN filter Weekly (strategi SEKARANG) ===');
-  console.log(JSON.stringify(summarize(withFilter), null, 2));
-  console.log('\n=== TANPA filter Weekly (breakout polos, buat perbandingan) ===');
-  console.log(JSON.stringify(summarize(withoutFilter), null, 2));
+  console.log('\n=== A. TANPA filter Weekly, TP zona-terdekat/flat (baseline paling awal) ===');
+  console.log(JSON.stringify(summarize(noFilterFlatTp), null, 2));
+  console.log('\n=== B. DENGAN filter Weekly, TP zona-terdekat/flat (strategi SEBELUM TP adaptif) ===');
+  console.log(JSON.stringify(summarize(filterFlatTp), null, 2));
+  console.log('\n=== C. DENGAN filter Weekly, TP ADAPTIF momentum (strategi SEKARANG) ===');
+  console.log(JSON.stringify(summarize(filterAdaptiveTp), null, 2));
 
-  return { withFilter, withoutFilter, daily, weekly };
+  return { noFilterFlatTp, filterFlatTp, filterAdaptiveTp, daily, weekly };
 }
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR backtestNyopet.js:', e.message); process.exit(1); });
 }
 
-module.exports = { runBacktest, summarize, fetchAllCandles, computeWeeklyTrendAt };
+module.exports = { runBacktest, summarize, fetchAllCandles, computeWeeklyStatsAt, classifyWeeklyStrength, pickAdaptiveTp };

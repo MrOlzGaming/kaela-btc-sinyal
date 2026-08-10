@@ -185,6 +185,15 @@ async function main() {
   const adaptiveZone = pickAdaptiveTp(oppositeZones, livePrice, sl, direction, minRR);
   const riskDistance = Math.abs(livePrice - sl);
   const tp = adaptiveZone ? adaptiveZone.price : (direction === 'buy' ? livePrice + riskDistance * minRR : livePrice - riskDistance * minRR);
+  // Sanity guard (ketemu pas backtest 10 Agu 2026): SL dipilih dari zona PALING BANYAK TERSENTUH
+  // (bukan paling deket) -- pas market abis crash/pump tajam, itu bisa jadi zona LAMA yang jauh
+  // banget dari harga sekarang (risk distance bisa >90% dari harga). Fallback TP yang ngali-in
+  // riskDistance segede itu dengan minRR bisa jadi negatif/gak masuk akal (mustahil buat harga
+  // BTC). Lebih aman diam daripada kirim TP yang gak masuk akal.
+  if (tp <= 0) {
+    console.log('[NyopetAutoAnalysis] Proyeksi TP fallback gak masuk akal (SL kejauhan dari harga), skip -- lebih aman diam daripada asal.');
+    return;
+  }
   const tpReasoning = adaptiveZone
     ? `TP di zona ${direction === 'buy' ? 'resistance' : 'support'} $${adaptiveZone.price.toLocaleString('en-US', { maximumFractionDigits: 0 })} (tersentuh ${adaptiveZone.touches}x) -- momentum Weekly ${weeklyStrength.toUpperCase()} (${ta.weeklyMomentumPct === null ? 'data belum cukup' : ta.weeklyMomentumPct.toFixed(1) + '%'}), minimal target ${minRR}x risiko, zona ini penuhi itu.`
     : `Gak ada zona ${direction === 'buy' ? 'resistance' : 'support'} yang penuhi target minimal ${minRR}x risiko (momentum Weekly ${weeklyStrength.toUpperCase()}) -- TP diproyeksi ${minRR}x jarak SL sebagai gantinya.`;

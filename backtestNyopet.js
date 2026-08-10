@@ -330,6 +330,12 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     // udah BALIK ARAH lawan posisi, TUTUP SEKARANG (kunci untung yang ada), jangan nunggu TP asli
     // yang mungkin gak pernah kesampaian kalau momentum udah berbalik.
     exitOnTrendFlipIfProfit = false,
+    // Versi SEBAGIAN (10 Agu 2026, penyempurnaan atas exitOnTrendFlipIfProfit -- versi TOTAL
+    // kebuktian motong 2 dari 3 trade untung besar jadi kecil). Tutup cuma partialExitFraction
+    // dari posisi pas trend flip + profit, GESER SL sisanya ke breakeven -- kunci sebagian untung
+    // TANPA korbanin potensi lanjut ke TP asli buat sisanya.
+    partialExitOnTrendFlipIfProfit = false,
+    partialExitFraction = 0.5,
   } = opts;
   const trades = [];
   let openPositions = [];
@@ -358,35 +364,60 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
       const hitTp = pos.direction === 'buy' ? today.high >= pos.tp : today.low <= pos.tp;
       const hitSl = pos.direction === 'buy' ? today.low <= pos.sl : today.high >= pos.sl;
       if (hitSl) {
+        // Sisa yang kena SL = remainingFraction (bisa <1 kalau udah pernah partial-exit).
+        // PENTING: hitung ulang lossThisLeg dari JARAK SL SAAT INI (bukan `pos.lossAtSl` yang
+        // statis dari pas entry) -- kalau SL udah digeser ke breakeven abis partial-exit, jarak
+        // rugi-nya sekarang beda (nyaris 0), BUKAN jarak asli yang lebar dari awal. Bug ketemu
+        // 10 Agu 2026: pakai lossAtSl lama bikin "SL breakeven" tetap keitung rugi gede, padahal
+        // seharusnya nyaris impas.
+        const currentNyawaPct = Math.abs(pos.entryPrice - pos.sl) / pos.entryPrice * 100;
+        const lossThisLeg = pos.nilaiPosisi * pos.remainingFraction * (currentNyawaPct / 100);
         // Floor di 0 -- kejadian LANGKA (posisi lain yang masih terbuka ikut nguras modal duluan
         // sebelum posisi ini closed), tapi real trading gak pernah biarin saldo negatif (exchange
         // liquidasi/nolak duluan). Lebih baik "wipeout" di 0 daripada angka ngaco negatif.
-        capital = Math.max(0, capital - pos.lossAtSl);
-        trades.push({ ...pos, exitIdx: i, exitPrice: pos.sl, exitReason: 'SL', rMultiple: -1, pnlUsd: -pos.lossAtSl, exitTime: today.closeTime, capitalAfter: capital });
+        capital = Math.max(0, capital - lossThisLeg);
+        const totalPnl = pos.realizedPnlSoFar - lossThisLeg;
+        trades.push({ ...pos, exitIdx: i, exitPrice: pos.sl, exitReason: pos.partialExited ? 'SL_AFTER_PARTIAL' : 'SL', rMultiple: -1, pnlUsd: totalPnl, exitTime: today.closeTime, capitalAfter: capital });
         capitalSeries.push({ time: today.closeTime, capital });
       } else if (hitTp) {
         const rewardPct = Math.abs(pos.tp - pos.entryPrice) / pos.entryPrice * 100;
-        const profitUsd = pos.nilaiPosisi * (rewardPct / 100);
-        capital += profitUsd;
-        const risk = Math.abs(pos.entryPrice - pos.sl);
+        const profitThisLeg = pos.nilaiPosisi * pos.remainingFraction * (rewardPct / 100);
+        capital += profitThisLeg;
+        const totalPnl = pos.realizedPnlSoFar + profitThisLeg;
+        const risk = Math.abs(pos.entryPrice - pos.originalSl);
         const reward = Math.abs(pos.tp - pos.entryPrice);
-        trades.push({ ...pos, exitIdx: i, exitPrice: pos.tp, exitReason: 'TP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: profitUsd, exitTime: today.closeTime, capitalAfter: capital });
+        trades.push({ ...pos, exitIdx: i, exitPrice: pos.tp, exitReason: pos.partialExited ? 'TP_AFTER_PARTIAL' : 'TP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: totalPnl, exitTime: today.closeTime, capitalAfter: capital });
         capitalSeries.push({ time: today.closeTime, capital });
-      } else if (exitOnTrendFlipIfProfit) {
+      } else if (exitOnTrendFlipIfProfit || partialExitOnTrendFlipIfProfit) {
         // Belum kena TP/SL -- cek apakah lagi UNTUNG (harga close hari ini lebih baik dari entry,
-        // searah trade) DAN trend Weekly udah balik arah LAWAN posisi. Kalau dua-duanya, tutup
-        // SEKARANG di harga close hari ini (kunci untung yang ada), jangan nunggu TP asli.
+        // searah trade) DAN trend Weekly udah balik arah LAWAN posisi.
         const inProfit = pos.direction === 'buy' ? today.close > pos.entryPrice : today.close < pos.entryPrice;
         const weeklyNow = computeWeeklyStatsAt(weeklyCandles, today.closeTime);
         const trendFlipped = pos.direction === 'buy' ? weeklyNow.trend === 'bearish' : weeklyNow.trend === 'bullish';
-        if (inProfit && trendFlipped) {
+        if (inProfit && trendFlipped && exitOnTrendFlipIfProfit) {
+          // Versi TOTAL (lama) -- tutup SEKARANG semua, kunci untung yang ada.
           const movePct = Math.abs(today.close - pos.entryPrice) / pos.entryPrice * 100;
-          const profitUsd = pos.nilaiPosisi * (movePct / 100);
-          capital += profitUsd;
-          const risk = Math.abs(pos.entryPrice - pos.sl);
+          const profitThisLeg = pos.nilaiPosisi * pos.remainingFraction * (movePct / 100);
+          capital += profitThisLeg;
+          const totalPnl = pos.realizedPnlSoFar + profitThisLeg;
+          const risk = Math.abs(pos.entryPrice - pos.originalSl);
           const reward = Math.abs(today.close - pos.entryPrice);
-          trades.push({ ...pos, exitIdx: i, exitPrice: today.close, exitReason: 'TREND_FLIP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: profitUsd, exitTime: today.closeTime, capitalAfter: capital });
+          trades.push({ ...pos, exitIdx: i, exitPrice: today.close, exitReason: 'TREND_FLIP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: totalPnl, exitTime: today.closeTime, capitalAfter: capital });
           capitalSeries.push({ time: today.closeTime, capital });
+        } else if (inProfit && trendFlipped && partialExitOnTrendFlipIfProfit && !pos.partialExited) {
+          // Versi SEBAGIAN (baru, 10 Agu 2026) -- tutup cuma `partialExitFraction` dari posisi,
+          // kunci sebagian untung, GESER SL SISANYA KE BREAKEVEN (entry) -- sisanya tetap lanjut
+          // ke TP asli, tapi risikonya sekarang NOL (paling apes cuma balik modal, gak rugi lagi).
+          const movePct = Math.abs(today.close - pos.entryPrice) / pos.entryPrice * 100;
+          const exitFraction = pos.remainingFraction * partialExitFraction;
+          const profitThisLeg = pos.nilaiPosisi * exitFraction * (movePct / 100);
+          capital += profitThisLeg;
+          pos.realizedPnlSoFar += profitThisLeg;
+          pos.remainingFraction -= exitFraction;
+          pos.sl = pos.entryPrice; // breakeven -- sisa posisi gak bisa rugi lagi dari titik ini
+          pos.partialExited = true;
+          capitalSeries.push({ time: today.closeTime, capital });
+          stillOpen.push(pos);
         } else {
           stillOpen.push(pos);
         }
@@ -502,6 +533,7 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     openPositions.push({
       direction, entryIdx: i, entryPrice: lastPrice, sl, tp, entryTime: today.closeTime,
       capitalAtEntry: capital, exposure, nilaiPosisi, leverage, margin, lossAtSl,
+      remainingFraction: 1, realizedPnlSoFar: 0, partialExited: false, originalSl: sl,
     });
     maxConcurrentReached = Math.max(maxConcurrentReached, openPositions.length);
   }

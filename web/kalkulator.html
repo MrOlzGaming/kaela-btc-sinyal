@@ -28,6 +28,10 @@
   .result-value { font-weight: 700; font-family: var(--font-mono); font-size: 1.1rem; }
   .disclaimer { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 12px 14px; font-size: 0.82rem; color: var(--clr-text-muted); margin-top: 24px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
   .btn { width: 100%; margin-top: 8px; }
+  .risk-warning { display: flex; gap: 8px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-top: 14px; }
+  .risk-warning.perhatian { background: color-mix(in srgb, var(--clr-warning) 12%, transparent); border: 1px solid var(--clr-warning); color: var(--clr-warning); }
+  .risk-warning.bahaya { background: color-mix(in srgb, #e5484d 12%, transparent); border: 1px solid #e5484d; color: #e5484d; }
+  .risk-warning.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -73,6 +77,7 @@
       <div class="result-row"><span class="result-label">🎯 Nilai Posisi</span><span class="result-value" id="r-nilai">-</span></div>
       <div class="result-row"><span class="result-label">💰 Margin</span><span class="result-value" id="r-margin">-</span></div>
     </div>
+    <div class="risk-warning hidden" id="r-warning"></div>
   </div>
 
   <div class="disclaimer">
@@ -90,12 +95,22 @@
     function nyawaFromEntrySL(entry, sl) {
       return (Math.abs(entry - sl) / entry) * 100;
     }
+    // Peringatan margin/modal (10 Agu 2026) -- ambang dari riset backtest Nyopet: margin/modal
+    // <10% drawdown historis terkendali, >20% drawdown historis berat. Bukan pembatas keras --
+    // tetap bisa dihitung/dipakai, cuma dikasih tau porsi modal yang nyangkut di 1 trade ini.
+    function assessMarginRisk(marginPct) {
+      if (marginPct > 20) return { level: 'bahaya', message: `⚠️ Nyawa ini kegedean buat modal segini -- margin yang kepake ${marginPct.toFixed(1)}% dari modal. Riskan banget kalau kena SL.` };
+      if (marginPct > 10) return { level: 'perhatian', message: `⚠️ Nyawa lumayan lebar -- margin yang kepake ${marginPct.toFixed(1)}% dari modal. Pertimbangkan modal lebih besar atau nyawa lebih tipis.` };
+      return null;
+    }
     function hitung(modal, nyawaPct) {
       const exposure = getExposure(modal);
       const nilaiPosisi = modal * exposure;
       const leverage = Math.floor(100 / nyawaPct);
       const margin = nilaiPosisi / leverage;
-      return { exposure, nilaiPosisi, leverage, margin };
+      const marginPct = margin / modal * 100;
+      const warning = assessMarginRisk(marginPct);
+      return { exposure, nilaiPosisi, leverage, margin, marginPct, warning };
     }
     function fmt(n, digits = 2) {
       return '$' + n.toLocaleString('en-US', { maximumFractionDigits: digits });
@@ -143,6 +158,15 @@
       document.getElementById('r-nilai').textContent = fmt(r.nilaiPosisi);
       document.getElementById('r-margin').textContent = fmt(r.margin);
       document.getElementById('result').classList.remove('hidden');
+
+      const warnEl = document.getElementById('r-warning');
+      if (r.warning) {
+        warnEl.textContent = r.warning.message;
+        warnEl.className = 'risk-warning ' + r.warning.level;
+      } else {
+        warnEl.textContent = '';
+        warnEl.className = 'risk-warning hidden';
+      }
     };
 
     if ('serviceWorker' in navigator) {

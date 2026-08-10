@@ -26,23 +26,59 @@ function nyawaFromEntrySL(entry, stopLoss) {
   return (Math.abs(entry - stopLoss) / entry) * 100;
 }
 
+// Peringatan margin/modal (10 Agu 2026) -- ambang dari riset backtest Nyopet (backtestNyopet.js):
+// margin/modal <10% -> drawdown historis terkendali (~33%). >20% -> drawdown historis berat
+// (58%+, bahkan bisa ambruk total di kasus ekstrem). BUKAN pembatas keras -- tetap bisa diinput,
+// cuma dikasih tau biar sadar seberapa besar porsi modal yang nyangkut di 1 trade ini.
+function assessMarginRisk(marginPct) {
+  if (marginPct > 20) {
+    return { level: 'bahaya', message: `Nyawa ini kegedean buat modal segini -- margin yang kepake ${marginPct.toFixed(1)}% dari modal. Riskan banget kalau kena SL.` };
+  }
+  if (marginPct > 10) {
+    return { level: 'perhatian', message: `Nyawa lumayan lebar -- margin yang kepake ${marginPct.toFixed(1)}% dari modal. Pertimbangkan modal lebih besar atau nyawa lebih tipis.` };
+  }
+  return null;
+}
+
 function hitung({ modal, nyawa, entry, stopLoss }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
   const exposure = getExposure(modal);
   const nilaiPosisi = modal * exposure;
   const leverage = Math.floor(100 / nyawaPct);
   const margin = nilaiPosisi / leverage;
-  return { exposure, nilaiPosisi, leverage, margin };
+  const marginPct = margin / modal * 100;
+  const warning = assessMarginRisk(marginPct);
+  return { exposure, nilaiPosisi, leverage, margin, marginPct, warning };
+}
+
+// Sizing "fixed risk" (10 Agu 2026, Nyopet Auto-Analysis SAJA -- BUKAN ganti `hitung()` di atas,
+// yang tetap jadi rumus RESMI buat kalkulator manual/proyek lain). Beda arah hitung: `hitung()`
+// jaga NILAI POSISI tetap (exposure × modal), margin BISA MEMBENGKAK kalau nyawa lebar (ketemu
+// bisa sampai 100% modal 1 trade -- akar masalah drawdown Nyopet, riset backtestNyopet.js
+// 10 Agu 2026). Di sini margin DIJAGA KONSTAN (targetRiskPct × modal), nilai posisi yang otomatis
+// MENGECIL kalau nyawa lebar. Tervalidasi backtest: targetRiskPct=15% -> drawdown historis turun
+// dari 78,1% jadi 47% (modal simulasi $100 -> $3.228 dalam 6,5 tahun), dipilih Olan sebagai
+// keseimbangan return-vs-drawdown.
+function hitungFixedRisk({ modal, targetRiskPct, nyawa, entry, stopLoss }) {
+  const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
+  const leverage = Math.max(1, Math.floor(100 / nyawaPct));
+  const margin = modal * (targetRiskPct / 100);
+  const nilaiPosisi = margin * leverage;
+  const exposure = nilaiPosisi / modal;
+  const marginPct = targetRiskPct; // by design, selalu = targetRiskPct
+  const warning = assessMarginRisk(marginPct);
+  return { exposure, nilaiPosisi, leverage, margin, marginPct, warning };
 }
 
 function format(modal, hasil) {
   return `Modal : $${modal.toLocaleString('en-US')}\n\n` +
     `🔥 LEVERAGE      : ${hasil.leverage}×\n` +
     `🎯 NILAI POSISI  : $${hasil.nilaiPosisi.toLocaleString('en-US', { maximumFractionDigits: 2 })}\n` +
-    `💰 MARGIN        : $${hasil.margin.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    `💰 MARGIN        : $${hasil.margin.toLocaleString('en-US', { maximumFractionDigits: 2 })}` +
+    (hasil.warning ? `\n\n⚠️ ${hasil.warning.message}` : '');
 }
 
-module.exports = { getExposure, nyawaFromEntrySL, hitung, format };
+module.exports = { getExposure, nyawaFromEntrySL, hitung, hitungFixedRisk, format };
 
 if (require.main === module) {
   console.log(format(50, hitung({ modal: 50, entry: 65500, stopLoss: 64500 })));

@@ -14,7 +14,13 @@ const fs = require('fs');
 const path = require('path');
 const { analyze } = require('./technicalAnalysis');
 const { getActiveOrders, createOrder, updateOrder } = require('./nyopetOrders');
-const { hitung } = require('./calculator');
+const { hitungFixedRisk } = require('./calculator');
+
+// Target resiko per-trade (10 Agu 2026, keputusan Olan setelah riset drawdown): 15% dari modal --
+// lihat penjelasan lengkap di calculator.js `hitungFixedRisk()`. INI BUKAN hitung() lama (yang
+// bisa bikin margin sampai 100% modal kalau nyawa lebar) -- margin di sini SELALU 15% dari modal,
+// posisi (nilai posisi/leverage) yang menyesuaikan lebar nyawa.
+const NYOPET_TARGET_RISK_PCT = 15;
 const { load: loadOrdersState } = require('./nyopetOrders');
 const { formatAutoValid, formatAutoInvalid } = require('./nyopetOrderLog');
 const { sendWhatsApp } = require('./fonnte');
@@ -222,7 +228,7 @@ async function main() {
     console.log('[NyopetAutoAnalysis] Saldo belum diset (0), skip -- gak bisa hitung exposure.');
     return;
   }
-  const calc = hitung({ modal, entry: livePrice, stopLoss: sl });
+  const calc = hitungFixedRisk({ modal, targetRiskPct: NYOPET_TARGET_RISK_PCT, entry: livePrice, stopLoss: sl });
 
   const created = createOrder({
     direction,

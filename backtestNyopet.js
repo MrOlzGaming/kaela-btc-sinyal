@@ -20,6 +20,7 @@
 
 const { fetchWithRetry } = require('./httpRetry');
 const { sma, findSwingPoints, clusterLevels } = require('./technicalAnalysis');
+const { hitung: hitungExposure } = require('./calculator');
 
 const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 
@@ -271,6 +272,146 @@ function runBacktestMultiPos(dailyCandles, weeklyCandles, opts = {}) {
   return { trades, finalBankroll: bankroll, maxConcurrentReached, maxDrawdownPct, bankrollSeries };
 }
 
+// Varian REALISTIS (10 Agu 2026, koreksi Olan atas asumsi 1% flat di runBacktestMultiPos):
+// sizing pakai OLZ Exposure System ASLI (calculator.js `hitung()`), BUKAN persen risiko flat --
+// risiko per-trade OTOMATIS gede pas modal kecil (~12% di modal <$10) dan mengecil sendiri pas
+// modal membesar (<1% di modal $10rb+, lihat "Aturan resiko RESMI"). Skenario modal REALISTIS
+// Olan: mulai $100, top-up $100/bulan sampai saldo nyentuh $1.000 (abis itu BERHENTI top-up,
+// murni dari hasil trading). Rugi di SL gak pernah "all-in" -- exposure system udah nentuin
+// leverage dari jarak SL (nyawa%) spesifik biar rugi kalau SL kena ~seukuran margin yang
+// dialokasikan, BUKAN persentase modal yang gede sembarangan kayak yang keliatan di harga.
+function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
+  const {
+    useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3,
+    warmupDays = 220, maxConcurrent = 3, startCapital = 100, topUpAmount = 100, topUpStopAt = 1000,
+    topUpIntervalDays = 30,
+  } = opts;
+  const trades = [];
+  let openPositions = [];
+  let capital = startCapital;
+  let toppedUpStopped = capital >= topUpStopAt;
+  let lastTopUpTime = dailyCandles[warmupDays] ? dailyCandles[warmupDays].closeTime : 0;
+  let maxConcurrentReached = 0;
+  const capitalSeries = [{ time: lastTopUpTime, capital }];
+
+  for (let i = warmupDays; i < dailyCandles.length; i++) {
+    const today = dailyCandles[i];
+
+    // Top-up bulanan (simulasi kebiasaan Olan) -- berhenti PERMANEN begitu saldo pernah nyentuh
+    // topUpStopAt, gak topup lagi walau nanti turun lagi karena rugi trading.
+    if (!toppedUpStopped && today.closeTime - lastTopUpTime >= topUpIntervalDays * 86400000) {
+      capital += topUpAmount;
+      lastTopUpTime = today.closeTime;
+      if (capital >= topUpStopAt) toppedUpStopped = true;
+      capitalSeries.push({ time: today.closeTime, capital });
+    }
+
+    const stillOpen = [];
+    for (const pos of openPositions) {
+      const hitTp = pos.direction === 'buy' ? today.high >= pos.tp : today.low <= pos.tp;
+      const hitSl = pos.direction === 'buy' ? today.low <= pos.sl : today.high >= pos.sl;
+      if (hitSl) {
+        // Floor di 0 -- kejadian LANGKA (posisi lain yang masih terbuka ikut nguras modal duluan
+        // sebelum posisi ini closed), tapi real trading gak pernah biarin saldo negatif (exchange
+        // liquidasi/nolak duluan). Lebih baik "wipeout" di 0 daripada angka ngaco negatif.
+        capital = Math.max(0, capital - pos.lossAtSl);
+        trades.push({ ...pos, exitIdx: i, exitPrice: pos.sl, exitReason: 'SL', rMultiple: -1, pnlUsd: -pos.lossAtSl, exitTime: today.closeTime, capitalAfter: capital });
+        capitalSeries.push({ time: today.closeTime, capital });
+      } else if (hitTp) {
+        const rewardPct = Math.abs(pos.tp - pos.entryPrice) / pos.entryPrice * 100;
+        const profitUsd = pos.nilaiPosisi * (rewardPct / 100);
+        capital += profitUsd;
+        const risk = Math.abs(pos.entryPrice - pos.sl);
+        const reward = Math.abs(pos.tp - pos.entryPrice);
+        trades.push({ ...pos, exitIdx: i, exitPrice: pos.tp, exitReason: 'TP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: profitUsd, exitTime: today.closeTime, capitalAfter: capital });
+        capitalSeries.push({ time: today.closeTime, capital });
+      } else {
+        stillOpen.push(pos);
+      }
+    }
+    openPositions = stillOpen;
+
+    if (openPositions.length >= maxConcurrent) continue;
+
+    const dailyCloses = dailyCandles.slice(0, i + 1).map((c) => c.close);
+    const ma200 = sma(dailyCloses, 200);
+    if (!ma200) continue;
+
+    const priorIdx = i - 1;
+    const window = dailyCandles.slice(Math.max(0, priorIdx - swingLookbackDays), priorIdx + 1);
+    const { highs, lows } = findSwingPoints(window, swingPointLookback);
+    const priorPrice = dailyCandles[priorIdx].close;
+    const resistanceZones = clusterLevels(highs.filter((h) => h.price > priorPrice), 0.4);
+    const supportZones = clusterLevels(lows.filter((l) => l.price < priorPrice), 0.4);
+    const topResistance = resistanceZones[0];
+    const topSupport = supportZones[0];
+    const lastPrice = today.close;
+
+    const weeklyStats = computeWeeklyStatsAt(weeklyCandles, today.closeTime);
+
+    let direction = null;
+    if (topResistance && today.close > topResistance.priceMax) {
+      if (!(useWeeklyFilter && weeklyStats.trend === 'bearish')) direction = 'buy';
+    } else if (topSupport && today.close < topSupport.priceMin) {
+      if (!(useWeeklyFilter && weeklyStats.trend === 'bullish')) direction = 'sell';
+    }
+    if (!direction) continue;
+
+    const swingSource = direction === 'buy' ? supportZones : resistanceZones;
+    if (!swingSource[0]) continue;
+    const sl = swingSource[0].price;
+    const riskDistance = Math.abs(lastPrice - sl);
+    if (riskDistance === 0) continue;
+
+    const oppositeZones = direction === 'buy' ? resistanceZones : supportZones;
+    let tp;
+    if (useAdaptiveTp) {
+      const strength = classifyWeeklyStrength(weeklyStats.momentumPct);
+      const minRR = MIN_RR_BY_STRENGTH[strength];
+      const adaptiveZone = pickAdaptiveTp(oppositeZones, lastPrice, sl, direction, minRR);
+      tp = adaptiveZone ? adaptiveZone.price : (direction === 'buy' ? lastPrice + riskDistance * minRR : lastPrice - riskDistance * minRR);
+    } else {
+      const nextZone = findNextZone(oppositeZones, lastPrice, direction);
+      tp = nextZone ? nextZone.price : (direction === 'buy' ? lastPrice + riskDistance : lastPrice - riskDistance);
+    }
+    if (tp <= 0) continue;
+
+    // Sizing ASLI dari calculator.js, dihitung dari MODAL SAAT INI (saldo realisasi -- floating
+    // P&L posisi lain yang masih jalan gak ikut dihitung, konsisten sama keputusan Olan sebelumnya).
+    // PENTING (ketemu 2 lapis bug pas nge-run ini pertama kali -- hasil awal absurd, $100 jadi
+    // $12 JUTA, drawdown >100%): (1) calculator.js `getExposure()` cuma nge-clamp `modal`
+    // LOKALNYA SENDIRI ke >=1, tapi `hitung()` tetap ngali-in `nilaiPosisi` pakai `modal` ASLI --
+    // kalau modal negatif (dari bug #2 di bawah), nilaiPosisi ikut negatif dan hasil selanjutnya
+    // ngaco liar. (2) margin buat posisi baru gak pernah "dikunci" dari modal -- jadi kalau 3
+    // posisi bersamaan (maxConcurrent) SEMUA kebagian margin gede dari modal yang SAMA, gabungan
+    // margin bisa lebih gede dari modal beneran, dan kalau semuanya kena SL bareng modal jadi
+    // NEGATIF (mustahil di real trading -- exchange bakal liquidasi/nolak order duluan sebelum itu
+    // kejadian). Fix: hitung `lockedMargin` (total margin posisi yang masih terbuka), affordability
+    // dicek terhadap `capital - lockedMargin` (modal yang BENERAN available), bukan `capital` mentah.
+    const lockedMargin = openPositions.reduce((s, p) => s + p.margin, 0);
+    const availableCapital = capital - lockedMargin;
+    if (availableCapital <= 0) continue;
+    const { exposure, nilaiPosisi, leverage, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl });
+    if (margin > availableCapital) continue; // gak cukup modal available buat kunci margin ini
+    const nyawaPct = riskDistance / lastPrice * 100;
+    const lossAtSl = nilaiPosisi * (nyawaPct / 100); // presisi langsung dari nilai posisi, bukan margin (yang kena pembulatan floor(leverage))
+
+    openPositions.push({
+      direction, entryIdx: i, entryPrice: lastPrice, sl, tp, entryTime: today.closeTime,
+      capitalAtEntry: capital, exposure, nilaiPosisi, leverage, margin, lossAtSl,
+    });
+    maxConcurrentReached = Math.max(maxConcurrentReached, openPositions.length);
+  }
+
+  let peak = -Infinity, maxDrawdownPct = 0;
+  for (const pt of capitalSeries) {
+    peak = Math.max(peak, pt.capital);
+    maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.capital) / peak * 100);
+  }
+
+  return { trades, finalCapital: capital, maxConcurrentReached, maxDrawdownPct, capitalSeries };
+}
+
 function summarize(trades) {
   const n = trades.length;
   if (n === 0) return { n: 0 };
@@ -333,7 +474,20 @@ async function main() {
   console.log('\n=== E. MAKS 3 posisi bersamaan (usulan Olan, saldo realisasi doang) ===');
   console.log(JSON.stringify({ ...summarize(multiPos3.trades), finalReturn: ((multiPos3.finalBankroll - 1) * 100).toFixed(1) + '%', maxDrawdown: multiPos3.maxDrawdownPct.toFixed(1) + '%', maxConcurrentReached: multiPos3.maxConcurrentReached }, null, 2));
 
-  return { noFilterFlatTp, filterFlatTp, filterAdaptiveTp, singlePos, multiPos3, daily, weekly };
+  // F: versi REALISTIS (koreksi Olan 10 Agu 2026) -- sizing pakai OLZ Exposure System asli
+  // (calculator.js), modal mulai $100, top-up $100/bulan sampai $1.000 lalu berhenti.
+  const realistic = runBacktestRealistic(daily, weekly, { useWeeklyFilter: true, useAdaptiveTp: true, maxConcurrent: 3 });
+  console.log('\n=== F. Realistis: exposure system asli + modal $100 top-up $100/bulan s.d. $1.000 ===');
+  console.log(JSON.stringify({
+    ...summarize(realistic.trades),
+    startCapital: 100,
+    finalCapital: '$' + realistic.finalCapital.toFixed(2),
+    finalReturnPct: ((realistic.finalCapital / 100 - 1) * 100).toFixed(1) + '%',
+    maxDrawdown: realistic.maxDrawdownPct.toFixed(1) + '%',
+    maxConcurrentReached: realistic.maxConcurrentReached,
+  }, null, 2));
+
+  return { noFilterFlatTp, filterFlatTp, filterAdaptiveTp, singlePos, multiPos3, realistic, daily, weekly };
 }
 
 if (require.main === module) {
@@ -341,5 +495,5 @@ if (require.main === module) {
 }
 
 module.exports = {
-  runBacktest, runBacktestMultiPos, summarize, fetchAllCandles, computeWeeklyStatsAt, classifyWeeklyStrength, pickAdaptiveTp,
+  runBacktest, runBacktestMultiPos, runBacktestRealistic, summarize, fetchAllCandles, computeWeeklyStatsAt, classifyWeeklyStrength, pickAdaptiveTp,
 };

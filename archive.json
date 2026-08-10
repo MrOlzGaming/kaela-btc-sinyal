@@ -528,5 +528,15 @@
     "type": "whale",
     "date": "2026-08-10T04:17:08.657Z",
     "content": "🟨 ⚪ PERGERAKAN BESAR TERDETEKSI\n1.091,68 BTC (~$71,044,753 / ~Rp1.269.015.056.684) berpindah dalam 1 transaksi di blockchain.\nArah: gak teridentifikasi (bukan berarti pasti wallet biasa -- daftar exchange kami gak lengkap).\nTXID: 3b98027a233a075b1513f0a340e6443de3b9dfc6eed4548a789032a1d8f3024f\nCek: https://mempool.space/tx/3b98027a233a075b1513f0a340e6443de3b9dfc6eed4548a789032a1d8f3024f\n2026-08-09 16:32\n\n⚠️ Fakta on-chain + best-effort label exchange (daftar terbatas, lihat metodologi web).\nKaela TIDAK menjamin arah pasar dari ini. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "nyopet",
+    "date": "2026-08-10T05:05:38.637Z",
+    "content": "🟧 ⚡ NYOPET MARKET — UPDATE STRATEGI\n\nSetelah backtest ke data historis BTC 2018-2026 (6,5+ tahun), beberapa perbaikan sekarang berlaku otomatis di sistem Nyopet:\n\n📈 Konfirmasi Trend Weekly — sinyal breakout harian dicek dulu ke trend mingguan. Kalau lawan arah trend besar, ditahan dulu, gak langsung entry.\n\n🎯 Take Profit Adaptif — target profit nyesuaiin kekuatan momentum pasar saat itu, bukan angka tetap/rasio flat.\n\n🛡️ Stop Loss \"Zona Terdekat\" — invalidation diambil dari struktur harga paling deket ke entry (bukan yang paling sering disentuh historis). Ini yang paling signifikan ningkatin kualitas sinyal di backtest.\n\n⚖️ Resiko per-trade dibatasi 15% dari modal — drawdown jadi jauh lebih terkendali, gak ada lagi 1 trade yang bisa makan porsi modal gede banget.\n\nSemua perubahan ini diuji dulu ke data historis sebelum diterapkan, bukan sekadar coba-coba. Efeknya: sinyal Nyopet emang gak sering muncul (rata-rata ~1 sinyal tiap 2 bulan) — itu emang disengaja, nunggu setup yang bener-bener bersih.\n\n⚠️ Backtest pakai data masa lalu, bukan jaminan/prediksi masa depan. Kaela murni kalkulator logika, bukan eksekutor finansial — keputusan & eksekusi tetap di tangan masing-masing.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale",
+    "date": "2026-08-10T05:06:19.449Z",
+    "content": "🟨 🐋 UPDATE: WHALE ALERT SEKARANG REKAP HARIAN\n\nMulai sekarang, Whale Alert gak lagi kirim per-transaksi tiap kali ada pergerakan besar terdeteksi (dulu dicek tiap 10 menit). Diganti jadi 1x rekap harian, isinya total pergerakan 24 jam terakhir (jumlah transaksi ≥1000 BTC, total BTC berpindah, transaksi terbesar, dan arah best-effort ke/dari exchange).\n\nAlasan jujurnya: konfirmasi di blockchain itu gak instan. Transaksi yang kejadian jam 2 pagi bisa aja baru \"ke-mined\"/masuk blok jam siang kalau jaringan lagi padat. Jadi alert \"real-time\" tiap 10 menit itu sebenernya sering nipu — kelihatannya baru padahal transaksinya udah lama, cuma baru kekonfirmasi. Rekap harian lebih jujur soal ini: gak janji real-time, cuma laporin apa yang beneran ke-konfirmasi dalam ~24 jam terakhir.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

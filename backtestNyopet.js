@@ -317,6 +317,19 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     // membesar. Ini BELUM ngubah calculator.js beneran -- cuma dites di sini dulu.
     sizingMode = 'exposure', // 'exposure' (calculator.js asli) | 'fixedRisk'
     targetRiskPct = 2,
+    // Split-risk-across-slots (10 Agu 2026, respons temuan korelasi multi-posisi: 3 posisi
+    // bersamaan yang naif, TIAP slot dapat sizing PENUH, ambruk total ($0) pas beberapa kena SL
+    // BARENG -- Agu 2019, 4 posisi searah dalam 11 hari). Kalau true & sizingMode='fixedRisk',
+    // risiko per POSISI = targetRiskPct / maxConcurrent (JATAH TERBAGI), bukan targetRiskPct
+    // PENUH tiap slot -- biar total resiko simultan tetap ~targetRiskPct walau semua slot kepake
+    // bareng, bukan targetRiskPct × maxConcurrent kalau nasib lagi jelek.
+    splitRiskAcrossSlots = false,
+    // Manajemen posisi AKTIF (10 Agu 2026, ide Olan sendiri: "pas posisi udah profit, analisa
+    // terus jalan -- apakah tahan apakah berhenti"). BEDA dari TP/SL statis (dikunci sekali pas
+    // entry) -- tiap hari posisi masih terbuka DAN lagi untung, dicek ulang: kalau trend Weekly
+    // udah BALIK ARAH lawan posisi, TUTUP SEKARANG (kunci untung yang ada), jangan nunggu TP asli
+    // yang mungkin gak pernah kesampaian kalau momentum udah berbalik.
+    exitOnTrendFlipIfProfit = false,
   } = opts;
   const trades = [];
   let openPositions = [];
@@ -359,6 +372,24 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
         const reward = Math.abs(pos.tp - pos.entryPrice);
         trades.push({ ...pos, exitIdx: i, exitPrice: pos.tp, exitReason: 'TP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: profitUsd, exitTime: today.closeTime, capitalAfter: capital });
         capitalSeries.push({ time: today.closeTime, capital });
+      } else if (exitOnTrendFlipIfProfit) {
+        // Belum kena TP/SL -- cek apakah lagi UNTUNG (harga close hari ini lebih baik dari entry,
+        // searah trade) DAN trend Weekly udah balik arah LAWAN posisi. Kalau dua-duanya, tutup
+        // SEKARANG di harga close hari ini (kunci untung yang ada), jangan nunggu TP asli.
+        const inProfit = pos.direction === 'buy' ? today.close > pos.entryPrice : today.close < pos.entryPrice;
+        const weeklyNow = computeWeeklyStatsAt(weeklyCandles, today.closeTime);
+        const trendFlipped = pos.direction === 'buy' ? weeklyNow.trend === 'bearish' : weeklyNow.trend === 'bullish';
+        if (inProfit && trendFlipped) {
+          const movePct = Math.abs(today.close - pos.entryPrice) / pos.entryPrice * 100;
+          const profitUsd = pos.nilaiPosisi * (movePct / 100);
+          capital += profitUsd;
+          const risk = Math.abs(pos.entryPrice - pos.sl);
+          const reward = Math.abs(today.close - pos.entryPrice);
+          trades.push({ ...pos, exitIdx: i, exitPrice: today.close, exitReason: 'TREND_FLIP', rMultiple: risk > 0 ? reward / risk : 0, pnlUsd: profitUsd, exitTime: today.closeTime, capitalAfter: capital });
+          capitalSeries.push({ time: today.closeTime, capital });
+        } else {
+          stillOpen.push(pos);
+        }
       } else {
         stillOpen.push(pos);
       }
@@ -446,8 +477,15 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
       // Margin DIJAGA konstan (targetRiskPct dari modal) -- posisi (nilaiPosisi) yang otomatis
       // mengecil kalau SL jauh, bukan margin yang membengkak. Leverage tetap dari nyawa%
       // (konsep "nyawa" gak berubah), tapi arah hitungnya kebalik dari calculator.js asli.
+      // Kalau splitRiskAcrossSlots aktif, jatah risiko PER-POSISI dibagi DINAMIS berdasarkan
+      // berapa posisi yang BENERAN lagi kebuka saat ini (bukan dibagi rata ke maxConcurrent
+      // teoretis -- itu kebuktian TERLALU konservatif, ngedilusi return di waktu2 yang sebenernya
+      // cuma 1 posisi doang lagi jalan). Posisi PERTAMA (openPositions.length===0) tetap dapat
+      // jatah PENUH, baru posisi ke-2/3/dst yang nge-dilusi -- biar TOTAL risiko simultan tetap
+      // ~targetRiskPct kapanpun, tapi gak buang potensi return di saat slot gak penuh-penuh amat.
+      const effectiveRiskPct = splitRiskAcrossSlots ? targetRiskPct / (openPositions.length + 1) : targetRiskPct;
       leverage = Math.max(1, Math.floor(100 / nyawaPct));
-      margin = capital * (targetRiskPct / 100);
+      margin = capital * (effectiveRiskPct / 100);
       nilaiPosisi = margin * leverage;
       exposure = nilaiPosisi / capital;
     } else {

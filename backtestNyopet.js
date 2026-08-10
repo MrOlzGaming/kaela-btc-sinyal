@@ -301,6 +301,7 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3,
     warmupDays = 220, maxConcurrent = 3, startCapital = 100, topUpAmount = 100, topUpStopAt = 1000,
     topUpIntervalDays = 30, slSelection = 'nearest', // 'nearest' (default, tervalidasi) | 'mostTouched' (lama)
+    maxNyawaPct = null, // cap opsional (10 Agu 2026, ide Olan: "breakout paling nyawa 1-3%") -- null = gak ada cap
   } = opts;
   const trades = [];
   let openPositions = [];
@@ -379,6 +380,9 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     const sl = slZone.price;
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
+    // Cap nyawa% opsional -- kalau zona terdekat pun masih lebih jauh dari cap, ini bukan
+    // breakout tipis/bersih yang dicari, skip (bukan dipaksa pakai stop lebih lebar dari niat).
+    if (maxNyawaPct !== null && (riskDistance / lastPrice * 100) > maxNyawaPct) continue;
 
     const oppositeZones = direction === 'buy' ? resistanceZones : supportZones;
     let tp;

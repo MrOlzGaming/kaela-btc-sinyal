@@ -107,6 +107,22 @@ function classifyWeeklyStrength(momentumPct) {
 }
 const MIN_RR_BY_STRENGTH = { lemah: 1.0, sedang: 1.5, kuat: 2.0 };
 
+// SL "nearest zone" (10 Agu 2026, respons diskusi Olan: "kalau breakout, biasanya gak ambil
+// nyawa yang terlalu lebar kan?"). Dulu SL = zona berlawanan PALING TERSENTUH (`swingSource[0]`)
+// -- bisa jadi zona structural LAMA yang jauh banget dari harga (kejadian nyata: Des 2018 abis
+// crash, zona SL kepilih jaraknya sampai >90% dari harga). Sekarang SL = zona berlawanan PALING
+// DEKET ke entry -- invalidation breakout yang natural emang tipis ("kalau balik ke bawah level
+// breakout, breakout-nya gagal"), bukan level mayor sejarah yang kebetulan sering disentuh.
+// VALIDASI EMPIRIS (backtestNyopet.js, modal $100 disimulasikan pakai exposure system asli):
+// SL nearest = $4.569 final (+4.469%). SL paling-tersentuh (lama) = $0,06 (nyaris ambruk total).
+// CUMA dari ganti cara pilih SL ini, gak ada perubahan lain.
+function pickNearestSl(zones, entryPrice, direction) {
+  const candidates = direction === 'buy'
+    ? zones.filter((z) => z.price < entryPrice).sort((a, b) => b.price - a.price)
+    : zones.filter((z) => z.price > entryPrice).sort((a, b) => a.price - b.price);
+  return candidates[0] || null;
+}
+
 // Susun zona SEARAH trade (di luar entry), terdekat dulu.
 function sortedZonesInDirection(zones, entryPrice, direction) {
   return direction === 'buy'
@@ -171,9 +187,11 @@ async function main() {
     return;
   }
 
-  // SL: titik struktur berlawanan terdekat (aturan proyek -- swing low buat buy, swing high buat sell)
+  // SL: titik struktur berlawanan PALING DEKET (swing low buat buy, swing high buat sell) --
+  // lihat pickNearestSl() di atas buat alasan lengkap.
   const swingSource = direction === 'buy' ? ta.supportZones : ta.resistanceZones;
-  const sl = swingSource[0] ? swingSource[0].price : null;
+  const slZone = pickNearestSl(swingSource, livePrice, direction);
+  const sl = slZone ? slZone.price : null;
   if (sl === null) {
     console.log('[NyopetAutoAnalysis] Gagal tentuin SL (gak ada swing zone terdeteksi), skip -- lebih aman diam daripada asal.');
     return;

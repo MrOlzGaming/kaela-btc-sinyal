@@ -148,8 +148,13 @@ async function analyze(symbol = 'BTCUSDT') {
   }
 
   const { highs, lows } = findSwingPoints(hourly, 3);
-  const resistanceZones = clusterLevels(highs.filter((h) => h.price > lastPrice), 0.4).slice(0, 3);
-  const supportZones = clusterLevels(lows.filter((l) => l.price < lastPrice), 0.4).slice(0, 3);
+  // SENGAJA gak dibatasin cuma top-3-by-touches (dulu `.slice(0,3)`) -- nyopetAutoAnalysis.js
+  // butuh akses ke SEMUA zona buat milih SL "paling deket" (10 Agu 2026, tervalidasi backtest:
+  // SL paling deket >> SL paling tersentuh). `[0]` (paling tersentuh) tetap dipakai buat deteksi
+  // breakout & tampilan "kunci" -- itu tujuannya beda (level paling SIGNIFIKAN historis),
+  // bukan buat invalidation yang natural harus tipis.
+  const resistanceZones = clusterLevels(highs.filter((h) => h.price > lastPrice), 0.4);
+  const supportZones = clusterLevels(lows.filter((l) => l.price < lastPrice), 0.4);
 
   const recentHighs = highs.slice(-4);
   const recentLows = lows.slice(-4);

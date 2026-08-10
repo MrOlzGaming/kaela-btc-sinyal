@@ -301,6 +301,15 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3,
     warmupDays = 220, maxConcurrent = 3, startCapital = 100, topUpAmount = 100, topUpStopAt = 1000,
     topUpIntervalDays = 30, slSelection = 'nearest', // 'nearest' (default, tervalidasi) | 'mostTouched' (lama)
+    // Top-up bulanan versi KOREKSI (10 Agu 2026, instruksi Olan langsung): dulu SEKALI saldo
+    // nyentuh topUpStopAt, top-up berhenti PERMANEN selamanya walau nanti ambruk lagi karena
+    // rugi. Itu SALAH -- niat Olan top-up itu jaring pengaman ONGOING: tiap tanggal 5 tiap
+    // bulan, cek ULANG saldo SAAT ITU -- kalau masih di bawah topUpStopAt, top up (walau bulan
+    // lalu sempat udah di atas 1000 terus jatuh lagi karena rugi, tetap boleh topup lagi).
+    // Kalau saldo pas dicek udah >= topUpStopAt, skip bulan itu -- tapi TETAP dicek lagi bulan
+    // depan (bukan flag one-way). Sengaja pakai tanggal KALENDER asli (bukan interval 30 hari
+    // rolling) biar match instruksi "tiap tanggal 5".
+    topUpDayOfMonth = 5,
     maxNyawaPct = null, // cap lebar SL langsung (dites 10 Agu, TERBUKTI merugikan -- default null/gak dipakai)
     maxMarginPct = null, // cap margin per-trade sbg % dari modal (10 Agu 2026, dites juga TERBUKTI gak jelas untungnya -- default null/gak dipakai)
     // Circuit breaker (10 Agu 2026, ide "rem darurat modal" -- BEDA dari cap di atas: bukan
@@ -336,27 +345,37 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     // TANPA korbanin potensi lanjut ke TP asli buat sisanya.
     partialExitOnTrendFlipIfProfit = false,
     partialExitFraction = 0.5,
+    // Batas maksimal HARI nahan posisi (10 Agu 2026, ide Olan: "prinsip kita nyopet" -- bukan
+    // nahan posisi berbulan-bulan nunggu TP/SL statis. Kalau belum kena TP/SL dalam maxHoldDays,
+    // FORCE CLOSE di harga pasar SAAT ITU (untung/rugi apa adanya, bukan nunggu terus). null =
+    // gak ada batas (perilaku lama).
+    maxHoldDays = null,
   } = opts;
   const trades = [];
   let openPositions = [];
   let capital = startCapital;
-  let toppedUpStopped = capital >= topUpStopAt;
-  let lastTopUpTime = dailyCandles[warmupDays] ? dailyCandles[warmupDays].closeTime : 0;
+  let lastTopUpMonthKey = null;
   let maxConcurrentReached = 0;
   let peakCapital = startCapital;
   let circuitPaused = false;
-  const capitalSeries = [{ time: lastTopUpTime, capital }];
+  const startMs = dailyCandles[warmupDays] ? dailyCandles[warmupDays].closeTime : 0;
+  const capitalSeries = [{ time: startMs, capital }];
 
   for (let i = warmupDays; i < dailyCandles.length; i++) {
     const today = dailyCandles[i];
 
-    // Top-up bulanan (simulasi kebiasaan Olan) -- berhenti PERMANEN begitu saldo pernah nyentuh
-    // topUpStopAt, gak topup lagi walau nanti turun lagi karena rugi trading.
-    if (!toppedUpStopped && today.closeTime - lastTopUpTime >= topUpIntervalDays * 86400000) {
-      capital += topUpAmount;
-      lastTopUpTime = today.closeTime;
-      if (capital >= topUpStopAt) toppedUpStopped = true;
-      capitalSeries.push({ time: today.closeTime, capital });
+    // Top-up bulanan versi KOREKSI -- cek ULANG tiap tanggal topUpDayOfMonth, RECURRING (bukan
+    // flag sekali-jalan). Contoh Olan: saldo 999 -> topup jadi 1099 (boleh, karena PAS dicek
+    // masih <1000). Bulan berikutnya kalau saldo turun lagi ke bawah 1000 karena rugi, topup
+    // jalan lagi -- gak "lulus" permanen.
+    const todayDate = new Date(today.closeTime);
+    const curMonthKey = todayDate.getUTCFullYear() * 12 + todayDate.getUTCMonth();
+    if (todayDate.getUTCDate() >= topUpDayOfMonth && curMonthKey !== lastTopUpMonthKey) {
+      lastTopUpMonthKey = curMonthKey;
+      if (capital < topUpStopAt) {
+        capital += topUpAmount;
+        capitalSeries.push({ time: today.closeTime, capital });
+      }
     }
 
     const stillOpen = [];
@@ -421,6 +440,17 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
         } else {
           stillOpen.push(pos);
         }
+      } else if (maxHoldDays !== null && (today.closeTime - pos.entryTime) >= maxHoldDays * 86400000) {
+        // Batas waktu nahan posisi (10 Agu 2026, ide Olan: "prinsip kita nyopet", bukan nahan
+        // berbulan-bulan). Belum kena TP/SL -- FORCE CLOSE di harga pasar HARI INI, untung/rugi
+        // apa adanya, bukan nunggu terus.
+        const movePctSigned = (today.close - pos.entryPrice) / pos.entryPrice * (pos.direction === 'buy' ? 1 : -1) * 100;
+        const pnlThisLeg = pos.nilaiPosisi * pos.remainingFraction * (movePctSigned / 100);
+        capital = Math.max(0, capital + pnlThisLeg);
+        const totalPnl = pos.realizedPnlSoFar + pnlThisLeg;
+        const riskPct = Math.abs(pos.entryPrice - pos.originalSl) / pos.entryPrice * 100;
+        trades.push({ ...pos, exitIdx: i, exitPrice: today.close, exitReason: 'MAX_HOLD', rMultiple: riskPct > 0 ? movePctSigned / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime, capitalAfter: capital });
+        capitalSeries.push({ time: today.closeTime, capital });
       } else {
         stillOpen.push(pos);
       }

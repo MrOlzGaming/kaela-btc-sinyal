@@ -20,7 +20,7 @@
 
 const { fetchWithRetry } = require('./httpRetry');
 const { sma, findSwingPoints, clusterLevels } = require('./technicalAnalysis');
-const { hitung: hitungExposure } = require('./calculator');
+const { hitung: hitungExposure, getExposure } = require('./calculator');
 
 const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 
@@ -350,6 +350,17 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     // FORCE CLOSE di harga pasar SAAT ITU (untung/rugi apa adanya, bukan nunggu terus). null =
     // gak ada batas (perilaku lama).
     maxHoldDays = null,
+    // Toggle short (10 Agu 2026, respons poin Olan: risiko LONG vs SHORT gak simetris -- kenaikan
+    // aset gak terbatas, penurunan mentok 100% [BTC terjelek historis "cuma" -93%]. Nahan short
+    // yang salah arah jauh lebih berbahaya daripada nahan long yang salah arah. allowShort=false
+    // buat isolasi/uji dampaknya.
+    allowShort = true,
+    // Versi lebih halus dari allowShort (10 Agu 2026, usulan Olan: bukan short dimatikan total,
+    // tapi TETAP jalan dengan exposure SEPARUH dari kalkulator asli -- di TIAP tingkatan modal
+    // (bukan cuma tingkatan tertentu). Cara paling simpel & konsisten sama filosofi tabel exposure
+    // asli (tiap x10 modal dibagi 2): short pakai exposure yang SATU LANGKAH lebih kecil dari
+    // exposure long normal di modal yang sama.
+    shortExposureFactor = 1,
   } = opts;
   const trades = [];
   let openPositions = [];
@@ -488,15 +499,29 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     let direction = null;
     if (topResistance && today.close > topResistance.priceMax) {
       if (!(useWeeklyFilter && weeklyStats.trend === 'bearish')) direction = 'buy';
-    } else if (topSupport && today.close < topSupport.priceMin) {
+    } else if (allowShort && topSupport && today.close < topSupport.priceMin) {
       if (!(useWeeklyFilter && weeklyStats.trend === 'bullish')) direction = 'sell';
     }
     if (!direction) continue;
 
-    const swingSource = direction === 'buy' ? supportZones : resistanceZones;
-    const slZone = slSelection === 'nearest' ? pickNearestSl(swingSource, lastPrice, direction) : (swingSource[0] || null);
-    if (!slZone) continue;
-    const sl = slZone.price;
+    // slSelection='brokenLevel' (10 Agu 2026, hasil riset breakout trading standar -- bukan
+    // ngarang: SL harusnya nempel di level yang BARU DITEMBUS itu sendiri, bukan zona struktural
+    // lain yang jauh. Alasannya: level yang ditembus berubah peran (resistance jadi support buat
+    // buy, support jadi resistance buat sell) -- kalau harga balik nembus level ITU LAGI, berarti
+    // breakout-nya GAGAL/invalid, itu definisi kegagalan yang paling logis. SL 'nearest' (lama)
+    // milih zona struktural TERPISAH yang kebetulan terdekat, yang seringkali BUKAN level yang
+    // baru ditembus -- makanya nyawa bisa lebar padahal breakout-nya sendiri kelihatan udah gagal
+    // lebih awal.
+    let sl;
+    if (slSelection === 'brokenLevel') {
+      const buffer = 0.995; // dikit di luar level biar gak ke-whipsaw noise super tipis
+      sl = direction === 'buy' ? topResistance.priceMin * buffer : topSupport.priceMax * (2 - buffer);
+    } else {
+      const swingSource = direction === 'buy' ? supportZones : resistanceZones;
+      const slZone = slSelection === 'nearest' ? pickNearestSl(swingSource, lastPrice, direction) : (swingSource[0] || null);
+      if (!slZone) continue;
+      sl = slZone.price;
+    }
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
     // Cap nyawa% opsional -- kalau zona terdekat pun masih lebih jauh dari cap, ini bukan
@@ -545,10 +570,21 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
       // jatah PENUH, baru posisi ke-2/3/dst yang nge-dilusi -- biar TOTAL risiko simultan tetap
       // ~targetRiskPct kapanpun, tapi gak buang potensi return di saat slot gak penuh-penuh amat.
       const effectiveRiskPct = splitRiskAcrossSlots ? targetRiskPct / (openPositions.length + 1) : targetRiskPct;
+      const shortFactor = direction === 'sell' ? shortExposureFactor : 1;
       leverage = Math.max(1, Math.floor(100 / nyawaPct));
-      margin = capital * (effectiveRiskPct / 100);
+      margin = capital * (effectiveRiskPct / 100) * shortFactor;
       nilaiPosisi = margin * leverage;
       exposure = nilaiPosisi / capital;
+    } else if (direction === 'sell' && shortExposureFactor !== 1) {
+      // Exposure short diperkecil manual (rumus SAMA persis kayak hitung() di calculator.js,
+      // cuma exposure-nya dikali shortExposureFactor) -- kenaikan aset gak terbatas, penurunan
+      // mentok 100%, jadi nahan short salah arah jauh lebih berbahaya daripada nahan long salah
+      // arah (poin Olan, tervalidasi juga dari data: short historis net rugi -$769 walau winrate
+      // sama kayak long).
+      exposure = getExposure(capital) * shortExposureFactor;
+      nilaiPosisi = capital * exposure;
+      leverage = Math.max(1, Math.floor(100 / nyawaPct));
+      margin = nilaiPosisi / leverage;
     } else {
       ({ exposure, nilaiPosisi, leverage, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl }));
     }

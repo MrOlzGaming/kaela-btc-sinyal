@@ -83,6 +83,22 @@ function pickAdaptiveTp(zones, entryPrice, sl, direction, minRR) {
   return null;
 }
 
+// SL "nearest" (10 Agu 2026, respons diskusi Olan: "kalau breakout, biasanya gak ambil nyawa
+// yang terlalu lebar kan?") -- zona TERDEKAT ke harga entry, BUKAN zona "paling tersentuh"
+// (`swingSource[0]` lama). Buat trade breakout, invalidation yang natural itu TIPIS (dekat level
+// breakout-nya sendiri -- "kalau balik lagi ke bawah level itu, breakout-nya gagal"), bukan zona
+// struktur mayor yang kebetulan paling sering disentuh historis (bisa jadi zona LAMA yang jauh
+// banget, apalagi abis crash/pump tajam). VALIDASI EMPIRIS (backtest realistis, modal $100):
+// mostTouched -> nyaris ambruk total ($0,06 final). nearest -> $977 final, TANPA ubah apapun
+// selain SL selection ini. Perbedaannya besar BUKAN dari lebar SL (median nyawa% mirip), tapi
+// dari MENGHINDARI kasus ekor ekstrem (SL kebetulan zona jauh banget dari histori lama).
+function pickNearestSl(zones, entryPrice, direction) {
+  const candidates = direction === 'buy'
+    ? zones.filter((z) => z.price < entryPrice).sort((a, b) => b.price - a.price)
+    : zones.filter((z) => z.price > entryPrice).sort((a, b) => a.price - b.price);
+  return candidates[0] || null;
+}
+
 function runBacktest(dailyCandles, weeklyCandles, opts = {}) {
   const {
     useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3, warmupDays = 220,
@@ -284,7 +300,7 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
   const {
     useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3,
     warmupDays = 220, maxConcurrent = 3, startCapital = 100, topUpAmount = 100, topUpStopAt = 1000,
-    topUpIntervalDays = 30,
+    topUpIntervalDays = 30, slSelection = 'nearest', // 'nearest' (default, tervalidasi) | 'mostTouched' (lama)
   } = opts;
   const trades = [];
   let openPositions = [];
@@ -358,8 +374,9 @@ function runBacktestRealistic(dailyCandles, weeklyCandles, opts = {}) {
     if (!direction) continue;
 
     const swingSource = direction === 'buy' ? supportZones : resistanceZones;
-    if (!swingSource[0]) continue;
-    const sl = swingSource[0].price;
+    const slZone = slSelection === 'nearest' ? pickNearestSl(swingSource, lastPrice, direction) : (swingSource[0] || null);
+    if (!slZone) continue;
+    const sl = slZone.price;
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
 

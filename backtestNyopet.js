@@ -165,6 +165,112 @@ function runBacktest(dailyCandles, weeklyCandles, opts = {}) {
   return trades;
 }
 
+// Varian MULTI-POSISI (10 Agu 2026, diskusi Olan: "posisi 1 belum target, muncul sinyal 2,
+// reposisi dengan modal baru"). Beda dari runBacktest() di atas (1 posisi doang, skip cari
+// sinyal baru selama masih ada yang floating) -- di sini boleh ada sampai `maxConcurrent` posisi
+// bersamaan, TIAP posisi baru di-size dari SALDO REALISASI SAAT ITU doang (keputusan Olan: floating
+// P&L posisi lain yang masih jalan TIDAK ikut dihitung -- "gak menghitung ayam belum menetas").
+// Karena sizing sekarang beneran mempengaruhi hasil (bukan cuma R-multiple murni), simulasi ini
+// pakai bankroll compounding (mulai dari 1.0 = 100% modal awal), risiko TETAP per-trade
+// (riskFractionPerTrade, default 1% -- standar "Market Wizards" yang udah jadi rujukan proyek ini,
+// lihat aturan resiko resmi) supaya perbandingan 1-posisi vs multi-posisi adil (variabel yang
+// diuji CUMA soal konkurensi, bukan soal sizing).
+function runBacktestMultiPos(dailyCandles, weeklyCandles, opts = {}) {
+  const {
+    useWeeklyFilter = true, useAdaptiveTp = true, swingLookbackDays = 90, swingPointLookback = 3,
+    warmupDays = 220, maxConcurrent = 1, riskFractionPerTrade = 0.01,
+  } = opts;
+  const trades = [];
+  let openPositions = [];
+  let bankroll = 1.0;
+  let maxConcurrentReached = 0;
+  const bankrollSeries = [{ time: dailyCandles[warmupDays] ? dailyCandles[warmupDays].closeTime : 0, bankroll }];
+
+  for (let i = warmupDays; i < dailyCandles.length; i++) {
+    const today = dailyCandles[i];
+
+    const stillOpen = [];
+    for (const pos of openPositions) {
+      const hitTp = pos.direction === 'buy' ? today.high >= pos.tp : today.low <= pos.tp;
+      const hitSl = pos.direction === 'buy' ? today.low <= pos.sl : today.high >= pos.sl;
+      if (hitSl) {
+        bankroll += pos.riskAmountAtEntry * -1;
+        trades.push({ ...pos, exitIdx: i, exitPrice: pos.sl, exitReason: 'SL', rMultiple: -1, exitTime: today.closeTime, bankrollAfter: bankroll });
+        bankrollSeries.push({ time: today.closeTime, bankroll });
+      } else if (hitTp) {
+        const risk = Math.abs(pos.entryPrice - pos.sl);
+        const reward = Math.abs(pos.tp - pos.entryPrice);
+        const rMultiple = risk > 0 ? reward / risk : 0;
+        bankroll += pos.riskAmountAtEntry * rMultiple;
+        trades.push({ ...pos, exitIdx: i, exitPrice: pos.tp, exitReason: 'TP', rMultiple, exitTime: today.closeTime, bankrollAfter: bankroll });
+        bankrollSeries.push({ time: today.closeTime, bankroll });
+      } else {
+        stillOpen.push(pos);
+      }
+    }
+    openPositions = stillOpen;
+
+    if (openPositions.length >= maxConcurrent) continue; // slot penuh, gak nyari sinyal baru hari ini
+
+    const dailyCloses = dailyCandles.slice(0, i + 1).map((c) => c.close);
+    const ma200 = sma(dailyCloses, 200);
+    if (!ma200) continue;
+
+    const priorIdx = i - 1;
+    const window = dailyCandles.slice(Math.max(0, priorIdx - swingLookbackDays), priorIdx + 1);
+    const { highs, lows } = findSwingPoints(window, swingPointLookback);
+    const priorPrice = dailyCandles[priorIdx].close;
+    const resistanceZones = clusterLevels(highs.filter((h) => h.price > priorPrice), 0.4);
+    const supportZones = clusterLevels(lows.filter((l) => l.price < priorPrice), 0.4);
+    const topResistance = resistanceZones[0];
+    const topSupport = supportZones[0];
+    const lastPrice = today.close;
+
+    const weeklyStats = computeWeeklyStatsAt(weeklyCandles, today.closeTime);
+
+    let direction = null;
+    if (topResistance && today.close > topResistance.priceMax) {
+      if (!(useWeeklyFilter && weeklyStats.trend === 'bearish')) direction = 'buy';
+    } else if (topSupport && today.close < topSupport.priceMin) {
+      if (!(useWeeklyFilter && weeklyStats.trend === 'bullish')) direction = 'sell';
+    }
+    if (!direction) continue;
+
+    const swingSource = direction === 'buy' ? supportZones : resistanceZones;
+    if (!swingSource[0]) continue;
+    const sl = swingSource[0].price;
+    const riskDistance = Math.abs(lastPrice - sl);
+    if (riskDistance === 0) continue;
+
+    const oppositeZones = direction === 'buy' ? resistanceZones : supportZones;
+    let tp;
+    if (useAdaptiveTp) {
+      const strength = classifyWeeklyStrength(weeklyStats.momentumPct);
+      const minRR = MIN_RR_BY_STRENGTH[strength];
+      const adaptiveZone = pickAdaptiveTp(oppositeZones, lastPrice, sl, direction, minRR);
+      tp = adaptiveZone ? adaptiveZone.price : (direction === 'buy' ? lastPrice + riskDistance * minRR : lastPrice - riskDistance * minRR);
+    } else {
+      const nextZone = findNextZone(oppositeZones, lastPrice, direction);
+      tp = nextZone ? nextZone.price : (direction === 'buy' ? lastPrice + riskDistance : lastPrice - riskDistance);
+    }
+    if (tp <= 0) continue;
+
+    // Modal buat posisi ini = saldo realisasi SAAT INI (bankroll cuma berubah pas ada posisi
+    // LAIN yang beneran closed di atas -- posisi yang masih floating gak ikut mempengaruhi).
+    const riskAmountAtEntry = bankroll * riskFractionPerTrade;
+    openPositions.push({ direction, entryIdx: i, entryPrice: lastPrice, sl, tp, entryTime: today.closeTime, riskAmountAtEntry });
+    maxConcurrentReached = Math.max(maxConcurrentReached, openPositions.length);
+  }
+
+  let peak = -Infinity, maxDrawdownPct = 0;
+  for (const pt of bankrollSeries) {
+    peak = Math.max(peak, pt.bankroll);
+    maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.bankroll) / peak * 100);
+  }
+
+  return { trades, finalBankroll: bankroll, maxConcurrentReached, maxDrawdownPct, bankrollSeries };
+}
+
 function summarize(trades) {
   const n = trades.length;
   if (n === 0) return { n: 0 };
@@ -215,11 +321,25 @@ async function main() {
   console.log('\n=== C. DENGAN filter Weekly, TP ADAPTIF momentum (strategi SEKARANG) ===');
   console.log(JSON.stringify(summarize(filterAdaptiveTp), null, 2));
 
-  return { noFilterFlatTp, filterFlatTp, filterAdaptiveTp, daily, weekly };
+  // D vs E: efek MULTI-POSISI (diskusi Olan 10 Agu 2026) -- sizing tiap posisi baru dari saldo
+  // REALISASI doang (bukan floating), maks 3 posisi bersamaan. D pakai maxConcurrent=1 (setara
+  // sistem sekarang tapi disimulasikan bankroll compounding, bukan cuma jumlah R) buat pembanding
+  // adil vs E (maxConcurrent=3).
+  const singlePos = runBacktestMultiPos(daily, weekly, { useWeeklyFilter: true, useAdaptiveTp: true, maxConcurrent: 1 });
+  const multiPos3 = runBacktestMultiPos(daily, weekly, { useWeeklyFilter: true, useAdaptiveTp: true, maxConcurrent: 3 });
+
+  console.log('\n=== D. MAKS 1 posisi bersamaan (setara sistem sekarang, bankroll compounding) ===');
+  console.log(JSON.stringify({ ...summarize(singlePos.trades), finalReturn: ((singlePos.finalBankroll - 1) * 100).toFixed(1) + '%', maxDrawdown: singlePos.maxDrawdownPct.toFixed(1) + '%', maxConcurrentReached: singlePos.maxConcurrentReached }, null, 2));
+  console.log('\n=== E. MAKS 3 posisi bersamaan (usulan Olan, saldo realisasi doang) ===');
+  console.log(JSON.stringify({ ...summarize(multiPos3.trades), finalReturn: ((multiPos3.finalBankroll - 1) * 100).toFixed(1) + '%', maxDrawdown: multiPos3.maxDrawdownPct.toFixed(1) + '%', maxConcurrentReached: multiPos3.maxConcurrentReached }, null, 2));
+
+  return { noFilterFlatTp, filterFlatTp, filterAdaptiveTp, singlePos, multiPos3, daily, weekly };
 }
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR backtestNyopet.js:', e.message); process.exit(1); });
 }
 
-module.exports = { runBacktest, summarize, fetchAllCandles, computeWeeklyStatsAt, classifyWeeklyStrength, pickAdaptiveTp };
+module.exports = {
+  runBacktest, runBacktestMultiPos, summarize, fetchAllCandles, computeWeeklyStatsAt, classifyWeeklyStrength, pickAdaptiveTp,
+};

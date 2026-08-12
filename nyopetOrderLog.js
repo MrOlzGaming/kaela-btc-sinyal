@@ -194,10 +194,11 @@ function taLines(ta) {
 // nyopetOrderMonitor.js) -- ini gak ngubah eksekusi, cuma kasih konteks R-multiple lengkap.
 function rMultipleLevels(order) {
   const risk = Math.abs(order.entryPrice - order.sl);
+  const nyawaPct = risk / order.entryPrice * 100;
   const sign = order.direction === 'buy' ? 1 : -1;
   const at = (r) => order.entryPrice + sign * risk * r;
   return [
-    `❌ SL: ${fmt(order.sl)}`,
+    `❌ SL: ${fmt(order.sl)} (nyawa ${nyawaPct.toFixed(1)}% -- jarak entry-SL, biar gampang diinput ulang manual)`,
     `🎯 TP 1:1 = ${fmt(at(1))}  |  1:2 = ${fmt(at(2))}  |  1:3 = ${fmt(at(3))}`,
     `   (eksekusi beneran: partial di 1:2 -- jual separuh, sisanya di-trail SMA harian sampai momentum patah)`,
   ];

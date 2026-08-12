@@ -54,6 +54,10 @@ function runFlagBacktest(daily, opts = {}) {
     // kecil kalau nyawa tipis (pattern-based SL emang tipis), tapi ini jaring pengaman keras biar
     // gak ada 1 trade pun yang lolos dengan margin gede -- skip trade kalau kejadian.
     maxMarginPct = 20,
+    // Batas keras nyawa% (12 Agu 2026, instruksi Olan: "nyopet ya pake nyawa dikit aja, max
+    // nyawa% sesuai yang kita buat.. invalidasi diterima dengan lapang, gak maksa nyawa lebar
+    // buat ukuran nyopet"). null = gak dibatasi (perilaku lama).
+    maxNyawaPct = null,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -132,6 +136,7 @@ function runFlagBacktest(daily, opts = {}) {
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;
     const nyawaPct = riskDistance / lastPrice * 100;
+    if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue; // invalidasi -- nyawa kelewat lebar buat ukuran nyopet
     const { nilaiPosisi, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl });
     if (margin > capital) continue;
     const marginPct = margin / capital * 100;

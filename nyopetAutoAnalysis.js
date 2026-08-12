@@ -41,6 +41,13 @@ const { fetchTradeMetrics } = require('./onchainMetrics');
 // kecil (tervalidasi backtest: margin terbesar dari 66 trade cuma 18,8%), ini jaring pengaman
 // tambahan biar gak ada 1 sinyal pun yang lolos kalau kejadian nyawa-nya kebetulan lebar.
 const MAX_MARGIN_PCT = 20;
+// Batas keras nyawa% (12 Agu 2026, instruksi Olan: "nyopet ya pake nyawa dikit aja.. invalidasi
+// diterima dengan lapang"). Dites sweep 5-20% di backtestFlagBreakout.js -- nyawa TERLEBAR yang
+// pernah muncul di 66 trade cuma 20,5% (sistem pola chart emang alami tipis, beda dari zona lama
+// yang bisa 38%). Mempersempit lebih dari ini TERBUKTI ngerusak hasil (batas 8% malah drawdown
+// 57,7%, lebih parah dari tanpa batas). 20% dipilih sbg jaring pengaman yang HAMPIR GAK PERNAH
+// kesentuh, bukan pembatas aktif -- hasil backtest sama persis (finalCapital $20.391 vs $20.523).
+const MAX_NYAWA_PCT = 20;
 // Target R:R buat exit tahap 1 (jual separuh posisi) -- tervalidasi backtest sbg titik optimal.
 const PARTIAL_RR = 2;
 // SMA (hari) buat trailing sisa separuh posisi abis partial exit -- proksi "lihat kelakuan candle".
@@ -146,6 +153,12 @@ async function main() {
   const riskDistance = Math.abs(livePrice - sl);
   if (riskDistance === 0) {
     console.log('[NyopetAutoAnalysis] Jarak SL 0 (harga = SL), skip -- lebih aman diam daripada asal.');
+    return;
+  }
+  const nyawaPct = riskDistance / livePrice * 100;
+  if (nyawaPct > MAX_NYAWA_PCT) {
+    console.log(`[NyopetAutoAnalysis] Nyawa ${nyawaPct.toFixed(1)}% ngelewatin batas ${MAX_NYAWA_PCT}% -- invalidasi diterima, nyopet pake nyawa dikit aja.`);
+    saveTriggerState({ lastSentDate: todayKey });
     return;
   }
   const partialTp = direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;

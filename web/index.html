@@ -193,39 +193,24 @@
       masuk pelan-pelan (DCA)</strong>, baru direncanakan Musim Panen di sekitar 368–549 hari setelah halving
       (~13 April 2028). Begitu Musim Tanam maupun Musim Panen tiba, Kaela bakal
       <strong>rewel ingetin berhari-hari lewat WhatsApp grup</strong> sampai window itu berakhir.</p>
-    <p class="halving-note">⏳ Halving berikutnya: <strong>611 hari lagi</strong> (~13 April 2028)</p>
+    <p class="halving-note">⏳ Halving berikutnya: <strong>610 hari lagi</strong> (~13 April 2028)</p>
   </div></div>
   <div class="dash-panel" data-panel="nyopet"><div class="nyopet-orders-panel">
     <div class="order-balance">💰 Saldo Live Order: <strong>$22.5</strong> <span class="order-balance-date">(update 8 Agustus 2026)</span></div>
     <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo yang ditampilkan adalah saldo trading ASLI (eksperimen riset, bukan simulasi). Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
-    <div class="latest" style="border-left: 4px solid #f7931a;"><div class="latest-label">🟧 ⚡ Nyopet Market</div><div class="latest-date">12/8/2026, 00.42.57</div><pre class="content">🟧 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)
-Belum ada posisi. Masih nunggu syarat terpenuhi.
+    <div class="latest" style="border-left: 4px solid #f7931a;"><div class="latest-label">🟧 ⚡ Nyopet Market</div><div class="latest-date">12/8/2026, 08.51.01</div><pre class="content">🟧 ⚡ NYOPET MARKET — 🔥 LIQUIDATION HEATMAP OTOMATIS DIMATIKAN
 
-📊 ANALISA TEKNIKAL
-Harga: $63,718
-MA20 $64,116 / MA50 $63,398 / MA200 $69,787 -- Death Cross aktif
-RSI14: 48
-Trend Weekly: 📉 Bearish
-Resistance kunci: $65,337 (tersentuh 4x)
-Support kunci: $63,238 (tersentuh 1x)
-Candle harian terakhir close: $63,718 | Harga sekarang: $63,718
+Curiga Olan benar: "0 liquidation tiap hari" itu emang gak masuk akal, apalagi Olan sendiri baru kena liquidasi (walau cuma $0,5, tetep kejadian nyata).
 
-🔥 LIQUIDATION HEATMAP
-0 liquidation sama sekali terpantau (semua pair) dalam window sampel -- kemungkinan besar market beneran sepi, TAPI juga bisa berarti sampling-nya kebetulan gak nangkep momen liquidasi (event jarang/bursty, sampel cuma cuplikan singkat).
+Sudah diselidiki: endpoint yang dipakai ternyata SALAH dari awal (URL WebSocket-nya keliru, gak sesuai dokumentasi resmi Binance) -- dibetulkan. Tapi setelah dites ulang, bahkan versi yang benar tetap dapat 0 di server otomatisasi kami. Kemungkinan besar Binance membatasi akses live-streaming semacam ini dari server cloud/datacenter (hal umum yang dialami banyak developer, beda dari data harga biasa yang tetap lancar).
 
-🌊 SENTIMEN &amp; POSISI PASAR
-Fear &amp; Greed Index: 27/100 (Fear)
-Funding Rate: 0.0049% (long bayar short)
-Open Interest: 32,365 BTC
-Long/Short Ratio (akun): 64.5% long / 35.5% short
+Intinya: Kaela gak bisa akses data ini secara GRATIS dan AKURAT dari infrastruktur yang ada sekarang. Daripada nampilin angka yang gak bisa dipercaya (dan ternyata emang salah selama ini), lapisan ini kami MATIKAN.
 
-⛓️ ON-CHAIN METRICS
-SOPR: 0.9969 (Breakeven (~1.0))
-NUPL: 0.1822 (Hope / Fear)
+Sebagai gantinya, tiap laporan harian (VALID/INVALID) sekarang sertakan link buat cek MANUAL:
+🔗 <a href="https://www.coinglass.com/LiquidationData" target="_blank" rel="noopener noreferrer">https://www.coinglass.com/LiquidationData</a>
 
-📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.
+Bagian analisa lain (teknikal, sentimen, on-chain) tetap jalan normal seperti biasa.
 
-2026-08-12 08:43 WITA
 🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
   </div></div>
   <div class="dash-panel" data-panel="jurnal"><div class="empty">📓 Belum ada trade yang selesai. Jurnal bakal keisi otomatis begitu ada order Nyopet Market yang kena TP/SL.</div></div>

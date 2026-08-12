@@ -58,6 +58,8 @@ jobs:
           # run berikutnya bisa anggap order yang UDAH ditrigger/ditutup sebagai belum, kirim WA
           # duplikat trigger/close. Lihat whale-alert.yml buat kasus nyata bug sejenis.
           for i in 1 2 3 4 5; do
+            # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
+            git rebase --abort 2>/dev/null || true
             git pull --rebase origin master && git push && exit 0
             echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
             sleep 5

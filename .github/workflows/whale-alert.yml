@@ -64,6 +64,11 @@ jobs:
           # deteksi+kirim WA transaksi yang SAMA lagi (ketauan 9 Agu 2026, dobel WA). Percobaan
           # berulang lebih murah daripada gagal diam-diam dan bikin duplikat kayak gini lagi.
           for i in 1 2 3 4 5; do
+            # Buang state rebase stuck dari percobaan sebelumnya SEBELUM narik ulang -- tanpa ini,
+            # begitu 1 percobaan kena conflict, SEMUA percobaan berikutnya ikut gagal identik
+            # ("unmerged files") walau conflict aslinya udah gak relevan lagi (ketauan 12 Agu 2026,
+            # whale-state.json gak ke-simpan gara-gara ini -> risiko whale alert dobel besoknya).
+            git rebase --abort 2>/dev/null || true
             git pull --rebase origin master && git push && exit 0
             echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
             sleep 5

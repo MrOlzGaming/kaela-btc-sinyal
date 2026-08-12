@@ -51,6 +51,8 @@ jobs:
           git add -f state.json archive.json web/index.html
           git diff --staged --quiet || git commit -m "Auto: laporan harian $(date -u +%Y-%m-%d)"
           for i in 1 2 3 4 5; do
+            # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
+            git rebase --abort 2>/dev/null || true
             git pull --rebase origin master && git push && exit 0
             echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
             sleep 5

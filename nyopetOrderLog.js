@@ -134,11 +134,14 @@ function formatCancelled(order) {
 // bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI (kalau Olan mau ikut)
 // tetap manual di Binance.
 
+// Fix 12 Agu 2026: dulu SELALU klaim "koin lain tetap ada liquidation jalan" pas BTC 0, padahal
+// gak pernah dicek beneran -- endpoint-nya sendiri lagi salah/gak nerima data sama sekali waktu
+// itu (totalCount ikutan 0), jadi klaimnya bohong. Sekarang jujur pakai totalCount asli.
 function liqLine(liq) {
   if (liq.error) return 'Liquidation heatmap: gagal ambil data kali ini (dilewatin, gak fatal).';
-  return liq.btcCount === 0
-    ? `0 liquidation BTCUSDT terpantau (koin lain tetap ada liquidation jalan) -- volatilitas BTC rendah.`
-    : `${liq.btcCount} liquidation BTCUSDT terpantau dalam window singkat -- ada tekanan leverage kena stop.`;
+  if (liq.btcCount > 0) return `${liq.btcCount} liquidation BTCUSDT terpantau dalam window sampel -- ada tekanan leverage kena stop.`;
+  if (liq.totalCount > 0) return `0 liquidation BTCUSDT terpantau, tapi ${liq.totalCount} liquidation koin lain jalan dalam window sampel -- volatilitas BTC spesifik rendah.`;
+  return `0 liquidation sama sekali terpantau (semua pair) dalam window sampel -- kemungkinan besar market beneran sepi, TAPI juga bisa berarti sampling-nya kebetulan gak nangkep momen liquidasi (event jarang/bursty, sampel cuma cuplikan singkat).`;
 }
 
 // Lapis ke-4 (9 Agu 2026): Sentimen & Posisi Pasar -- gratis (alternative.me + Binance Futures),

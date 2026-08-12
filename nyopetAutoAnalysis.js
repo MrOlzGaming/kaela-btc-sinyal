@@ -95,10 +95,17 @@ function saveTriggerState(state) {
   fs.writeFileSync(TRIGGER_STATE_PATH, JSON.stringify(state, null, 2));
 }
 
-// Sampel liquidation heatmap singkat -- endpoint BARU (lihat KNOWLEDGE, yang lama mati 23 Apr 2026).
-async function sampleLiquidations(windowMs = 15000) {
+// Sampel liquidation heatmap -- FIX 12 Agu 2026 (Olan curiga "0 liquidation tiap hari gak
+// mungkin", dia sendiri baru kena liquidasi $0,5): endpoint LAMA `/market/ws/!forceOrder@arr`
+// itu SALAH -- gak ada prefix "/market" di stream WebSocket Binance Futures manapun (dokumentasi
+// resmi: wss://fstream.binance.com/ws/<streamName>). Endpoint salah itu MASIH bisa "connect"
+// (handshake keterima) tapi gak pernah ngirim data beneran -- makanya selalu 0, bukan karena
+// beneran sepi. Endpoint dibetulkan ke path yang benar. Window juga diperpanjang 15dtk -> 45dtk
+// (liquidation itu event jarang/bursty, 15dtk kepotong -- makin lama window makin kecil peluang
+// "kebetulan lewat" pas sample-nya nyampe 0 padahal beneran ada barusan).
+async function sampleLiquidations(windowMs = 45000) {
   return new Promise((resolve) => {
-    const ws = new WebSocket('wss://fstream.binance.com/market/ws/!forceOrder@arr');
+    const ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');
     let btcCount = 0, totalCount = 0;
     ws.onmessage = (msg) => {
       try {
@@ -107,7 +114,11 @@ async function sampleLiquidations(windowMs = 15000) {
       } catch (e) { /* abaikan pesan gak valid */ }
     };
     ws.onerror = () => resolve({ btcCount: 0, totalCount: 0, error: true });
-    setTimeout(() => { ws.close(); resolve({ btcCount, totalCount, error: false }); }, windowMs);
+    setTimeout(() => {
+      ws.close();
+      console.log(`[NyopetAutoAnalysis] Sampel liquidation ${windowMs / 1000}dtk: totalCount=${totalCount} btcCount=${btcCount}`);
+      resolve({ btcCount, totalCount, error: false });
+    }, windowMs);
   });
 }
 

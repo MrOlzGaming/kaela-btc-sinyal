@@ -186,11 +186,27 @@ function taLines(ta) {
   ];
 }
 
+// Level TP 1:1/1:2/1:3 (11 Agu 2026, permintaan Olan: "kasih SL + TP 1:1/1:2/1:3 sekalian,
+// biar bisa dibandingin sama analisaku sendiri") -- MURNI TAMPILAN referensi, dihitung langsung
+// dari entry+SL. Exit BENERAN tetap ikut mekanisme partial 2R + trailing SMA (lihat
+// nyopetOrderMonitor.js) -- ini gak ngubah eksekusi, cuma kasih konteks R-multiple lengkap.
+function rMultipleLevels(order) {
+  const risk = Math.abs(order.entryPrice - order.sl);
+  const sign = order.direction === 'buy' ? 1 : -1;
+  const at = (r) => order.entryPrice + sign * risk * r;
+  return [
+    `❌ SL: ${fmt(order.sl)}`,
+    `🎯 TP 1:1 = ${fmt(at(1))}  |  1:2 = ${fmt(at(2))}  |  1:3 = ${fmt(at(3))}`,
+    `   (eksekusi beneran: partial di 1:2 -- jual separuh, sisanya di-trail SMA harian sampai momentum patah)`,
+  ];
+}
+
 function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
+    ...rMultipleLevels(order),
     '',
     '📊 ANALISA TEKNIKAL',
     ...taLines(ta),
@@ -204,8 +220,6 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
     '⛓️ ON-CHAIN METRICS',
     ...onchainLines(onchain),
     '',
-    `✅ TP${order.partialTp ? ' tahap 1 (separuh posisi)' : ''}: ${fmt(order.tp)}`,
-    `❌ SL: ${fmt(order.sl)}`,
     order.tpReasoning ? `📐 ${order.tpReasoning}` : '',
     `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
     '',

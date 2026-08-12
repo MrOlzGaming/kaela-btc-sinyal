@@ -3,6 +3,25 @@
 const { WEB_URL, localDateKey } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 
+const ARAH_LABEL = { tertekan: '📉 BTC cenderung TERTEKAN', menguat: '📈 BTC cenderung MENGUAT', campuran: '↔️ Efek CAMPURAN, gak konsisten' };
+
+// Baris perkiraan arah (11 Agu 2026, permintaan Olan: "berani memperkirakan arah, jelasin
+// kalau begini maka begitu") -- heuristik makro standar (channel ekspektasi The Fed
+// hawkish/dovish), BUKAN backtest data historis kayak sinyal Nyopet/Halving. `strength`
+// ditampilkan biar jujur soal seberapa reliable hubungannya -- gak semua event sama kuat.
+function directionalLines(e) {
+  const v = e.directionalView;
+  if (!v) return ['   (belum ada peta sebab-akibat buat event ini -- gak dipaksa nebak)'];
+  if (v.aboveForecast === null) {
+    return [`   📐 ${v.label} (keyakinan: ${v.strength}) -- ${v.mechanism}`];
+  }
+  return [
+    `   📐 ${v.label} (keyakinan: ${v.strength}):`,
+    `      • Kalau ACTUAL > forecast -> ${ARAH_LABEL[v.aboveForecast] || v.aboveForecast}`,
+    `      • Kalau ACTUAL < forecast -> ${ARAH_LABEL[v.belowForecast] || v.belowForecast}`,
+  ];
+}
+
 function formatEconCalendar(now, events) {
   const lines = [];
   lines.push(`${CATEGORY_COLOR.econ.emoji} 📅 JADWAL EKONOMI HARI INI — ${localDateKey(now)}`);
@@ -11,9 +30,10 @@ function formatEconCalendar(now, events) {
   for (const e of events) {
     lines.push(`🕐 ${e.time} WITA — ${e.title}`);
     lines.push(`   Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`);
+    lines.push(...directionalLines(e));
+    lines.push('');
   }
-  lines.push('');
-  lines.push('⚠️ Murni informasi -- gak pengaruhi sinyal Nyopet Market atau keputusan Musim Tanam/Panen.');
+  lines.push('⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Nyopet/Halving -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Nyopet Market atau keputusan Musim Tanam/Panen.');
   lines.push('');
   lines.push(`🔗 ${WEB_URL}`);
   return lines.join('\n');

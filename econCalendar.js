@@ -6,6 +6,7 @@
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal, localDateKey } = require('./config');
 const { translateEventTitle } = require('./econTranslate');
+const { getDirectionalView } = require('./econDirectionalView');
 
 const CALENDAR_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
 
@@ -14,7 +15,10 @@ async function fetchWeekCalendar() {
   return res.json();
 }
 
-// Event USD + High impact aja, tanggal WITA-nya sama kayak `now` (hari ini).
+// Event USD + High impact aja, tanggal WITA-nya sama kayak `now` (hari ini). `directionalView`
+// (permintaan Olan 11 Agu 2026: "berani memperkirakan arah") dicari dari judul ASLI bahasa
+// Inggris SEBELUM diterjemahkan -- econDirectionalView.js cocokin ke kamus yang sama dipakai
+// econTranslate.js. null kalau event-nya gak ada mapping dikenal (jangan maksa nebak).
 function getTodayHighImpactUsdEvents(allEvents, now = new Date()) {
   const todayKey = localDateKey(now);
   return allEvents
@@ -25,6 +29,7 @@ function getTodayHighImpactUsdEvents(allEvents, now = new Date()) {
       time: toLocal(new Date(e.date)).toISOString().slice(11, 16), // HH:MM WITA
       forecast: e.forecast || '-',
       previous: e.previous || '-',
+      directionalView: getDirectionalView(e.title),
     }))
     .sort((a, b) => a.time.localeCompare(b.time));
 }

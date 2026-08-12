@@ -5,6 +5,7 @@
 
 const { WEB_URL, toLocal } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
+const { getExtremeFearGreedNote } = require('./fearGreedInsight');
 
 function fmt(n) {
   return '$' + n.toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
@@ -203,6 +204,7 @@ function rMultipleLevels(order) {
 }
 
 function formatAutoValid({ order, ta, sentiment, onchain }) {
+  const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
@@ -217,6 +219,7 @@ function formatAutoValid({ order, ta, sentiment, onchain }) {
     '',
     '🌊 SENTIMEN & POSISI PASAR',
     ...sentimentLines(sentiment),
+    ...(extremeNote ? ['', extremeNote] : []),
     '',
     '⛓️ ON-CHAIN METRICS',
     ...onchainLines(onchain),
@@ -239,6 +242,7 @@ function formatAutoValid({ order, ta, sentiment, onchain }) {
 
 function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
   const syaratLine = '📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.';
+  const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
     'Belum ada posisi. Masih nunggu syarat terpenuhi.',
@@ -252,6 +256,7 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
     '',
     '🌊 SENTIMEN & POSISI PASAR',
     ...sentimentLines(sentiment),
+    ...(extremeNote ? ['', extremeNote] : []),
     '',
     '⛓️ ON-CHAIN METRICS',
     ...onchainLines(onchain),

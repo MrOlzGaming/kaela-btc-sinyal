@@ -19,13 +19,12 @@ function localDateKey(date) {
   return toLocal(date).toISOString().slice(0, 10);
 }
 
-// Mute WA sementara (10 Agu 2026, instruksi Olan): strategi baru flag+wedge AKTIF sekarang
-// (sinyal tetap kedeteksi, order tetap dicatat + tampil di web/archive), TAPI broadcast WA
-// ditahan sampai Jumat (2026-08-14) -- nunggu pengumuman resmi biar grup gak bingung liat
-// perubahan mendadak tanpa penjelasan. Setelah tanggal ini, WA jalan normal lagi otomatis.
-const WA_MUTE_UNTIL_DATE = '2026-08-14';
+// Mute WA (10 Agu 2026 - 12 Agu 2026): sempat ditahan sampai Jumat nunggu pengumuman resmi.
+// Dicabut 12 Agu 2026 (instruksi Olan langsung: "analisa valid invalid buka posisi aktifkan
+// sekarang aja, kalo pemberitahuan fiturnya jumat gpp") -- broadcast sinyal VALID/INVALID
+// jalan normal lagi mulai sekarang, terpisah dari kapan pengumuman fitur formalnya.
 function isWaMuted() {
-  return localDateKey(new Date()) < WA_MUTE_UNTIL_DATE;
+  return false;
 }
 
-module.exports = { WEB_URL, TIMEZONE_OFFSET_HOURS, toLocal, localDateKey, WA_MUTE_UNTIL_DATE, isWaMuted };
+module.exports = { WEB_URL, TIMEZONE_OFFSET_HOURS, toLocal, localDateKey, isWaMuted };

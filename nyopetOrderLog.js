@@ -134,14 +134,12 @@ function formatCancelled(order) {
 // bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI (kalau Olan mau ikut)
 // tetap manual di Binance.
 
-// Fix 12 Agu 2026: dulu SELALU klaim "koin lain tetap ada liquidation jalan" pas BTC 0, padahal
-// gak pernah dicek beneran -- endpoint-nya sendiri lagi salah/gak nerima data sama sekali waktu
-// itu (totalCount ikutan 0), jadi klaimnya bohong. Sekarang jujur pakai totalCount asli.
-function liqLine(liq) {
-  if (liq.error) return 'Liquidation heatmap: gagal ambil data kali ini (dilewatin, gak fatal).';
-  if (liq.btcCount > 0) return `${liq.btcCount} liquidation BTCUSDT terpantau dalam window sampel -- ada tekanan leverage kena stop.`;
-  if (liq.totalCount > 0) return `0 liquidation BTCUSDT terpantau, tapi ${liq.totalCount} liquidation koin lain jalan dalam window sampel -- volatilitas BTC spesifik rendah.`;
-  return `0 liquidation sama sekali terpantau (semua pair) dalam window sampel -- kemungkinan besar market beneran sepi, TAPI juga bisa berarti sampling-nya kebetulan gak nangkep momen liquidasi (event jarang/bursty, sampel cuma cuplikan singkat).`;
+// Liquidation heatmap OTOMATIS DICABUT (12 Agu 2026) -- Kaela gak mampu akses data ini gratis
+// & akurat dari infrastruktur yang ada (Binance kemungkinan blokir WebSocket streaming dari IP
+// datacenter GitHub Actions, ketauan lewat kecurigaan Olan "0 liquidation tiap hari gak
+// mungkin"). Daripada nampilin angka yang gak bisa dipercaya, dikasih link buat cek MANUAL.
+function liqLine() {
+  return `Liquidation heatmap otomatis DIMATIKAN -- Kaela gak bisa akses data ini gratis & akurat dari infrastrukturnya. Cek manual: https://www.coinglass.com/LiquidationData`;
 }
 
 // Lapis ke-4 (9 Agu 2026): Sentimen & Posisi Pasar -- gratis (alternative.me + Binance Futures),
@@ -204,7 +202,7 @@ function rMultipleLevels(order) {
   ];
 }
 
-function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
+function formatAutoValid({ order, ta, sentiment, onchain }) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
@@ -215,7 +213,7 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
     ...taLines(ta),
     '',
     '🔥 LIQUIDATION HEATMAP',
-    liqLine(liq),
+    liqLine(),
     '',
     '🌊 SENTIMEN & POSISI PASAR',
     ...sentimentLines(sentiment),
@@ -239,7 +237,7 @@ function formatAutoValid({ order, ta, liq, sentiment, onchain }) {
   ].join('\n');
 }
 
-function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain }) {
+function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
   const syaratLine = '📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.';
   return [
     `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
@@ -250,7 +248,7 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain 
     `Candle harian terakhir close: ${fmt(dailyClose)} | Harga sekarang: ${fmt(livePrice)}`,
     '',
     '🔥 LIQUIDATION HEATMAP',
-    liqLine(liq),
+    liqLine(),
     '',
     '🌊 SENTIMEN & POSISI PASAR',
     ...sentimentLines(sentiment),

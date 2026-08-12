@@ -1,6 +1,7 @@
 // Jalankan 1x sehari, abis candle HARIAN closing (00:00 UTC = 08:00 WITA -- pas jadwal
-// nyopet-daily-trigger.yml, 00:05 UTC): analisa gabungan OTOMATIS (teknikal + liquidation
-// heatmap) -> kesimpulan VALID/INVALID -> kalau VALID langsung catat "posisi bayangan" (shadow --
+// nyopet-daily-trigger.yml, 00:05 UTC): analisa gabungan OTOMATIS (teknikal + sentimen +
+// on-chain -- liquidation heatmap DICABUT 12 Agu 2026, lihat komentar di bawah) -> kesimpulan
+// VALID/INVALID -> kalau VALID langsung catat "posisi bayangan" (shadow --
 // TIDAK ADA uang beneran, Kaela cuma ngitung seolah entry market saat itu, murni bookkeeping) dan
 // kirim WA. Kalau INVALID, kirim status + syarat yang masih ditunggu (Kaela BUKAN eksekutor
 // finansial -- keputusan Olan 9 Agu 2026, murni "kalkulator logika": VALID = buka posisi bayangan,
@@ -95,32 +96,13 @@ function saveTriggerState(state) {
   fs.writeFileSync(TRIGGER_STATE_PATH, JSON.stringify(state, null, 2));
 }
 
-// Sampel liquidation heatmap -- FIX 12 Agu 2026 (Olan curiga "0 liquidation tiap hari gak
-// mungkin", dia sendiri baru kena liquidasi $0,5): endpoint LAMA `/market/ws/!forceOrder@arr`
-// itu SALAH -- gak ada prefix "/market" di stream WebSocket Binance Futures manapun (dokumentasi
-// resmi: wss://fstream.binance.com/ws/<streamName>). Endpoint salah itu MASIH bisa "connect"
-// (handshake keterima) tapi gak pernah ngirim data beneran -- makanya selalu 0, bukan karena
-// beneran sepi. Endpoint dibetulkan ke path yang benar. Window juga diperpanjang 15dtk -> 45dtk
-// (liquidation itu event jarang/bursty, 15dtk kepotong -- makin lama window makin kecil peluang
-// "kebetulan lewat" pas sample-nya nyampe 0 padahal beneran ada barusan).
-async function sampleLiquidations(windowMs = 45000) {
-  return new Promise((resolve) => {
-    const ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');
-    let btcCount = 0, totalCount = 0;
-    ws.onmessage = (msg) => {
-      try {
-        const o = JSON.parse(msg.data).o;
-        if (o) { totalCount++; if (o.s === 'BTCUSDT') btcCount++; }
-      } catch (e) { /* abaikan pesan gak valid */ }
-    };
-    ws.onerror = () => resolve({ btcCount: 0, totalCount: 0, error: true });
-    setTimeout(() => {
-      ws.close();
-      console.log(`[NyopetAutoAnalysis] Sampel liquidation ${windowMs / 1000}dtk: totalCount=${totalCount} btcCount=${btcCount}`);
-      resolve({ btcCount, totalCount, error: false });
-    }, windowMs);
-  });
-}
+// Liquidation heatmap DIMATIKAN (12 Agu 2026) -- diselidiki abis Olan curiga "0 liquidation
+// tiap hari gak mungkin". Ketemu endpoint lama `/market/ws/!forceOrder@arr` SALAH (dibetulkan),
+// tapi bahkan versi benar tetap 0/0 di runner GitHub Actions (kemungkinan besar Binance
+// blokir/diamkan koneksi WebSocket streaming dari IP datacenter/cloud -- masalah umum, beda
+// dari data-api.binance.vision yang emang didesain khusus publik/gak kena blokir). Kaela gak
+// mampu akses data ini gratis dari infrastruktur yang ada -- daripada nampilin angka yang gak
+// bisa dipercaya, lapisan ini dicabut. Link manual (Coinglass) dikasih di pesan sebagai gantinya.
 
 async function fetchLivePrice() {
   const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT');
@@ -143,15 +125,15 @@ async function main() {
     return;
   }
 
-  const [ta, daily, livePrice, liq, sentiment, onchain] = await Promise.all([
-    analyze('BTCUSDT'), fetchCandles('BTCUSDT', '1d', PATTERN_HISTORY_DAYS), fetchLivePrice(), sampleLiquidations(), safeSentiment(), safeOnchain(),
+  const [ta, daily, livePrice, sentiment, onchain] = await Promise.all([
+    analyze('BTCUSDT'), fetchCandles('BTCUSDT', '1d', PATTERN_HISTORY_DAYS), fetchLivePrice(), safeSentiment(), safeOnchain(),
   ]);
 
   const dailyClose = daily[daily.length - 1].close;
   const signal = detectPatternSignal(daily, daily.length - 1, { allowShort: false });
 
   if (!signal) {
-    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, liq, sentiment, onchain });
+    const msg = formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain });
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
     await sendWhatsAppRespectMute(msg, 'status INVALID');
@@ -203,7 +185,7 @@ async function main() {
   }, now);
   const opened = updateOrder(created.id, { status: 'floating', entryPrice: livePrice, triggeredAt: now.toISOString() });
 
-  const msg = formatAutoValid({ order: opened, ta, liq, sentiment, onchain });
+  const msg = formatAutoValid({ order: opened, ta, sentiment, onchain });
   console.log(msg + '\n');
   addEntry('nyopet', msg, now);
   await sendWhatsAppRespectMute(msg, `sinyal VALID (${patternLabel})`);

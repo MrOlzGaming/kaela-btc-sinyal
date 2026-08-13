@@ -618,5 +618,10 @@
     "type": "econ-calendar",
     "date": "2026-08-12T23:52:22.523Z",
     "content": "⬜ 📅 JADWAL EKONOMI HARI INI — 2026-08-13\n(event USD dampak tinggi aja -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 20:30 WITA — Inflasi Produsen Inti Bulanan\n   Forecast: 0.3% | Sebelumnya: 0.2%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n🕐 20:30 WITA — Inflasi Produsen (PPI) Bulanan\n   Forecast: 0.2% | Sebelumnya: -0.3%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Nyopet/Halving -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Nyopet Market atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-08-12T23:57:57.638Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-08-13\n148 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 510.168,34 BTC berpindah (~$32,354,294,707 / ~Rp577.502.407.856.717)\nTerbesar: 49.275 BTC dalam 1 transaksi.\nArah (best-effort): 1 masuk exchange (potensi tekanan jual) · 0 keluar exchange (potensi akumulasi) · 147 gak teridentifikasi.\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

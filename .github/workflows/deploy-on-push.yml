@@ -1,0 +1,29 @@
+name: Deploy web/ ke Netlify (tiap push ke master)
+
+# Fix akar masalah (14 Agu 2026, ketauan 2x kejadian): git push LANGSUNG (bukan lewat workflow
+# lain yang emang jalanin report+deploy) gak pernah trigger deploy apapun -- GitHub Actions cuma
+# jalan dari `schedule`/`workflow_dispatch`, gak ada workflow yang dengerin `push` biasa. Akibatnya
+# perubahan web/*.html yang di-push manual (rename, fitur baru, dst) BISA nyangkut sampai 1-2 hari
+# nunggu cron laporan harian berikutnya baru ke-deploy. Workflow ini nutup celah itu -- SELALU
+# deploy begitu ada push ke master, apapun isinya, gak perlu nunggu cron report atau trigger manual.
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: deploy-on-push
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy web/ ke Netlify
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

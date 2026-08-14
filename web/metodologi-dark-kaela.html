@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Metodologi Dark Kaela — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Metodologi Dark Kaela — sinyal zona likuiditas (mantul/jebol), murni informasi, risiko tinggi.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  h2 { font-size: 1.1rem; color: var(--clr-primary); margin-top: 32px; }
+  nav { margin: 14px 0; }
+  nav a { text-decoration: none; color: var(--clr-text-muted); font-size: 0.9rem; }
+  .tagline { color: var(--clr-text-muted); font-style: italic; font-size: 0.9rem; }
+  .meta-toggle { display: flex; gap: 8px; margin: 16px 0 24px; }
+  .meta-tab { flex: 1; text-align: center; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--clr-border); text-decoration: none; color: var(--clr-text-muted); font-size: 0.9rem; font-weight: 600; }
+  .meta-tab.active { background: var(--clr-primary); color: #111; border-color: var(--clr-primary); }
+  ul.limits { padding-left: 20px; }
+  ul.limits li { margin-bottom: 10px; }
+  .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
+  strong { color: var(--clr-text); }
+  .back-note { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-primary); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--clr-text-muted); }
+  .risk-banner { background: rgba(248,81,73,0.1); border: 1px solid var(--clr-danger); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .risk-banner-title { color: var(--clr-danger); font-weight: 800; font-size: 1rem; margin-bottom: 8px; }
+  .risk-banner p { margin: 0; font-size: 0.9rem; line-height: 1.6; }
+  code { background: var(--clr-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+  .stat-total { text-align: center; padding: 14px; margin: 18px 0; background: var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .stat-total .num { font-size: 1.8rem; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <h1>Kaela BTC Sinyal — Metodologi</h1>
+  </div>
+  <p class="tagline">Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.</p>
+
+  <div class="meta-toggle">
+    <a href="metodologi-musiman.html" class="meta-tab">🌾 Musiman (Utama)</a>
+    <a href="metodologi-sniper.html" class="meta-tab">🎯 Sniper</a>
+    <a href="metodologi-dark-kaela.html" class="meta-tab active">🥷 Dark Kaela</a>
+  </div>
+
+  <p class="back-note">Ini halaman pelengkap PALING BARU &amp; PALING BERISIKO. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-musiman.html">🌾 Musiman</a> buat metodologi intinya.</p>
+
+  <div class="risk-banner">
+    <div class="risk-banner-title">🚨 RISIKO PALING TINGGI DARI SEMUA MODE — BACA SEMUA DULU SEBELUM LANJUT</div>
+    <p>Dark Kaela pakai leverage <strong>JAUH lebih agresif dari Sniper</strong> (bisa sampai ~100×, nyawa/Batas Rugi setipis 1%). <strong>Dark Kaela TIDAK PERNAH menyimpan posisi/saldo bayangan apapun</strong> — beda total dari Sniper yang punya bankroll &amp; Jurnal sendiri. Dark Kaela <strong>MURNI INFORMASI</strong>: kasih tau kapan harga lagi deket zona yang secara historis sering jadi titik pantul, titik. <strong>TIDAK PERNAH menyuruh entry, tidak pernah eksekusi apapun.</strong> Keputusan entry, kapan, di harga berapa, pakai leverage berapa — 100% di tangan sendiri.</p>
+  </div>
+
+  <h2>🥷 Kenapa "Dark Kaela"?</h2>
+  <p>Namanya sengaja beda dari Kaela biasa. Kalau Sniper (dan Musiman) filosofinya <strong>tunggu konfirmasi dulu baru percaya</strong> (candle harus CLOSE dulu, breakout harus jelas) — Dark Kaela jalan pikirnya kebalikan: <strong>market-maker style</strong>, cari titik-titik di mana banyak orang lain naruh stop-loss/likuidasi mereka (zona likuiditas), karena harga punya kecenderungan "diburu" ke situ dulu sebelum bener-bener membalik. "Nyopet" itu istilah lama yang sekarang direserve khusus buat mode ini — cocok sama vibe-nya yang lebih jahil/gesit, beda dari Sniper yang sabar nunggu presisi.</p>
+
+  <h2>Cara kerja — zona likuiditas, bukan data likuidasi asli</h2>
+  <p><strong>Kejujuran penting di awal:</strong> Dark Kaela TIDAK pakai data likuidasi live beneran (peta Coinglass yang sesungguhnya). Sudah dicoba (dites langsung di infrastruktur Kaela) konek ke data resmi Binance — koneksinya berhasil, tapi Binance diam-diam menahan datanya buat koneksi dari server cloud kayak yang Kaela pakai. Daripada bohong seolah-olah ini data likuidasi asli, Dark Kaela pakai <strong>proxy teknikal</strong> yang dihitung sendiri dari data harga:</p>
+  <ul class="limits">
+    <li><strong>Swing high/low signifikan</strong> — titik-titik harga yang berkali-kali disentuh &amp; ditolak sebelumnya (makin sering disentuh, makin dianggap "tebal").</li>
+    <li><strong>Angka bulat psikologis</strong> — level kayak $60.000/$65.000 dst, tempat orang biasa naruh order tanpa mikir panjang.</li>
+  </ul>
+  <p>Zona-zona ini ditampilkan sebagai <strong>perkiraan area rawan likuidasi</strong>, BUKAN klaim "ini beneran peta likuidasi Binance". Buat konfirmasi yang lebih akurat, tiap sinyal selalu sertakan link <strong>Coinglass</strong> buat dicek manual sendiri.</p>
+
+  <h2>Alur sinyal — potensi, bukan perintah</h2>
+  <ul class="limits">
+    <li><strong>Harga deket zona di ATAS</strong> → "🔴 Potensi SHORT". <strong>Harga deket zona di BAWAH</strong> → "🟢 Potensi LONG".</li>
+    <li>Tiap pesan WAJIB disclaimer <strong>"jangan langsung entry"</strong> + link Coinglass — cek dulu kelakuan candle di zona itu SENDIRI: beneran mantul, atau malah ditembus?</li>
+    <li>Kalau beneran mantul &amp; confirmed, baru pertimbangkan entry — pakai <a href="kalkulator.html">Kalkulator Exposure</a>, JANGAN ALL-IN.</li>
+    <li><strong>Target (TP) = zona LAWAN itu sendiri</strong> — bukan rasio tetap. Begitu harga sampai ke zona kebalikan, itu jadi titik wajar buat closing, SEKALIGUS jadi sinyal baru arah kebalikan. Siklusnya muter terus antar 2 zona.</li>
+    <li>Kalau zona yang dikasih tau ternyata DITEMBUS (bukan mantul), ada pesan susulan "zona ditembus" — transparan, gak dibiarin nggantung.</li>
+    <li><strong>Frekuensi gak terjadwal</strong> — beda dari Sniper yang cek 1x/hari. Dark Kaela cek tiap 20 menit, kirim sinyal SETIAP kali harga beneran deket zona baru (bisa 1x, bisa banyak kali sehari kalau market lagi volatil/"gacor").</li>
+  </ul>
+
+  <h2>Saran cara pakai</h2>
+  <ul class="limits">
+    <li><strong>Jangan pernah entry cuma karena dapat notifikasi.</strong> Buka link Coinglass, lihat sendiri apa harga beneran nunjukkin tanda mantul (rejection candle, wick panjang balik arah) sebelum mikirin masuk.</li>
+    <li><strong>Selalu pakai <a href="kalkulator.html">Kalkulator Exposure</a></strong> buat nentuin sizing sesuai modal sendiri — leverage setinggi ini artinya margin kecil pun bisa habis cepat kalau salah arah.</li>
+    <li><strong>Modal terpisah, siap hilang</strong> — sama kayak aturan Sniper, JANGAN pernah pakai modal Musiman atau kebutuhan harian.</li>
+    <li><strong>Dark Kaela gak nyimpen riwayat/statistik apapun di web</strong> — beda dari Sniper yang ada Jurnal lengkap. Kalau mau evaluasi performa sinyal sendiri, catat manual.</li>
+  </ul>
+
+  <h2>🔬 Riset dasar (jujur, apa adanya)</h2>
+  <p>Diuji lewat data historis BTC 2017-2026 (candle jam-an) — mesin deteksi zona rata-rata kasih 3-8 sinyal/hari tergantung parameter, dan rasio "mantul" (diukur ketat pakai konfirmasi candle CLOSE, bukan tebakan) ada di kisaran <strong>56-61%</strong>. Di atas 50-50, tapi <strong>bukan edge yang dramatis</strong> — realistis buat gaya risiko setinggi ini, bukan jaminan menang. Riset lengkap (termasuk parameter yang dicoba &amp; kenapa dipilih) didokumentasikan apa adanya, gak dipoles biar keliatan lebih meyakinkan dari kenyataannya.</p>
+
+  <p class="footer-note">Dark Kaela masih fitur BARU (aktif 15 Agustus 2026) — mekanismenya bisa berubah/disempurnakan seiring waktu berdasar hasil nyata di lapangan. Baca ulang halaman ini sesekali kalau ada update.</p>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
+    <a href="metodologi-dark-kaela.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
+  </nav>
+</body>
+</html>

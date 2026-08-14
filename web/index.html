@@ -84,6 +84,24 @@
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
   .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
+  /* Tab (dipakai jurnal.html buat Spot/Sniper -- dashboard utama sengaja gak pake tab lagi) */
+  .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
+  .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+  .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
+  .dash-tab-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); box-shadow: 0 2px 12px var(--clr-primary-glow); }
+  .dash-panel { display: none; animation: fade-in 0.25s ease; }
+  .dash-panel.active { display: block; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .spot-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .spot-cycle-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
+  .spot-cycle-table th, .spot-cycle-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--clr-border-soft); }
+  .spot-cycle-table th { color: var(--clr-text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .spot-cycle-table .up { color: var(--clr-success); }
+  .spot-cycle-table .down { color: var(--clr-danger); }
+  .spot-buy-log { max-height: 260px; overflow-y: auto; border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .spot-buy-log table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .spot-buy-log th, .spot-buy-log td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--clr-border-soft); }
+  .spot-buy-log th { position: sticky; top: 0; background: var(--clr-bg-elevated); color: var(--clr-text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; }
   .halving-panel { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 14px; line-height: 1.65; }
   .phase-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; margin-bottom: 12px; }
   .phase-tanam { background: rgba(63,185,80,0.15); color: var(--clr-success); }

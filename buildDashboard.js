@@ -15,6 +15,7 @@ const { localDateKey } = require('./config');
 const {
   WINDOW_START, WINDOW_END, NEXT_HALVING_EST: HALVING_DATE, daysToHalving,
 } = require('./groupReport');
+const { load: loadSpotState, sellTriggerDate: spotSellTriggerDate, DAILY_BUY_USD: SPOT_DAILY_BUY_USD } = require('./spotDca');
 
 const NEXT_HALVING_EST = '2028-04-13T13:11:00Z'; // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WEB_DIR = path.join(__dirname, 'web');
@@ -168,6 +169,24 @@ const SHARED_STYLE = `
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
   .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
+  /* Tab (dipakai jurnal.html buat Spot/Sniper -- dashboard utama sengaja gak pake tab lagi) */
+  .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
+  .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+  .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
+  .dash-tab-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); box-shadow: 0 2px 12px var(--clr-primary-glow); }
+  .dash-panel { display: none; animation: fade-in 0.25s ease; }
+  .dash-panel.active { display: block; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .spot-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .spot-cycle-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
+  .spot-cycle-table th, .spot-cycle-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--clr-border-soft); }
+  .spot-cycle-table th { color: var(--clr-text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .spot-cycle-table .up { color: var(--clr-success); }
+  .spot-cycle-table .down { color: var(--clr-danger); }
+  .spot-buy-log { max-height: 260px; overflow-y: auto; border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .spot-buy-log table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .spot-buy-log th, .spot-buy-log td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--clr-border-soft); }
+  .spot-buy-log th { position: sticky; top: 0; background: var(--clr-bg-elevated); color: var(--clr-text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; }
   .halving-panel { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 14px; line-height: 1.65; }
   .phase-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; margin-bottom: 12px; }
   .phase-tanam { background: rgba(63,185,80,0.15); color: var(--clr-success); }
@@ -574,6 +593,83 @@ function renderFundReportSection(report) {
   </div>`;
 }
 
+// ============ Tab Spot (Jurnal): DCA Musiman BAYANGAN Kaela (15 Agu 2026) -- lihat spotDca.js
+// buat mekanisme lengkap. Beda TOTAL dari tab Sniper: bukan margin/leverage, ini spot polos $2/hari.
+
+function renderSpotJurnalPanel(spotState, now) {
+  const cell = (label, value, cls = '') => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls}">${value}</div></div>`;
+
+  const sellDate = spotSellTriggerDate();
+  let badgeClass, badgeText, phaseNote;
+  if (spotState.btcHeld > 0) {
+    if (now < HALVING_DATE) {
+      badgeClass = 'phase-tanam';
+      badgeText = '🌱 SEDANG DCA (Musim Tanam)';
+      phaseNote = `Beli $${SPOT_DAILY_BUY_USD} BTC tiap hari sampai halving tiba (~${fmtDateLong(HALVING_DATE)}).`;
+    } else {
+      badgeClass = 'phase-panen';
+      badgeText = '🌾 TAHAN, MENUNGGU PANEN';
+      phaseNote = `Halving udah lewat, DCA berhenti. Jual otomatis semua BTC sekitar ${fmtDateLong(sellDate)}.`;
+    }
+  } else if (now >= WINDOW_START && now < HALVING_DATE) {
+    badgeClass = 'phase-tanam';
+    badgeText = '🌱 WINDOW TANAM -- DCA BERJALAN';
+    phaseNote = `DCA $${SPOT_DAILY_BUY_USD}/hari lagi berjalan (posisi belum keupdate di data terakhir, nunggu tick harian berikutnya).`;
+  } else {
+    badgeClass = 'phase-tunai';
+    badgeText = '⚪ TUNAI -- MENUNGGU WINDOW TANAM';
+    phaseNote = `DCA mulai otomatis begitu window Musim Tanam tiba (${fmtDateLong(WINDOW_START)}), jalan sampai halving (~${fmtDateLong(HALVING_DATE)}).`;
+  }
+
+  const avgCost = spotState.btcHeld > 0 ? spotState.totalInvestedCurrentCycle / spotState.btcHeld : null;
+
+  const summaryHtml = `<div class="spot-summary-grid">
+    ${cell('BTC Dimiliki', spotState.btcHeld > 0 ? spotState.btcHeld.toFixed(8) + ' BTC' : '0 BTC')}
+    ${cell('Modal Siklus Ini', fmtUsdOrder(spotState.totalInvestedCurrentCycle))}
+    ${cell('Avg Cost', avgCost !== null ? fmtUsdOrder(avgCost) : '-')}
+    ${cell('Saldo Terealisasi', fmtUsdOrder(spotState.totalRealizedCash))}
+    ${cell('Siklus Selesai', spotState.completedCycles.length)}
+  </div>`;
+
+  const liveValueHtml = spotState.btcHeld > 0
+    ? `<div data-spot-btc-held="${spotState.btcHeld}" data-spot-invested="${spotState.totalInvestedCurrentCycle}">
+        <div class="order-live-price">Nilai sekarang: <strong data-spot-value-target>memuat...</strong></div>
+        <div class="order-pnl-live" data-spot-pnl-target>Menghitung P&amp;L live...</div>
+      </div>`
+    : '';
+
+  const buyLogHtml = spotState.buyLog.length > 0
+    ? `<div class="spot-buy-log"><table>
+        <thead><tr><th>Tanggal</th><th>Harga BTC</th><th>BTC Didapat</th></tr></thead>
+        <tbody>${spotState.buyLog.slice().reverse().map((b) => `<tr><td>${fmtDateLong(new Date(b.date))}</td><td>${fmtUsdOrder(b.price)}</td><td>${b.btcBought.toFixed(8)}</td></tr>`).join('')}</tbody>
+      </table></div>`
+    : `<div class="empty">Belum ada pembelian di siklus ini.</div>`;
+
+  const cyclesHtml = spotState.completedCycles.length > 0
+    ? `<table class="spot-cycle-table">
+        <thead><tr><th>Mulai Beli</th><th>Terjual</th><th>Modal</th><th>Hasil Jual</th><th>P&amp;L</th></tr></thead>
+        <tbody>${spotState.completedCycles.slice().reverse().map((c) => `<tr>
+          <td>${c.buyWindowStart ? fmtDateLong(new Date(c.buyWindowStart)) : '-'}</td>
+          <td>${fmtDateLong(new Date(c.soldAt))}</td>
+          <td>${fmtUsdOrder(c.totalInvested)}</td>
+          <td>${fmtUsdOrder(c.proceedsUsd)}</td>
+          <td class="${c.pnlUsd >= 0 ? 'up' : 'down'}">${c.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(c.pnlUsd)} (${c.pnlPct >= 0 ? '+' : ''}${c.pnlPct.toFixed(1)}%)</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    : '';
+
+  return `<div class="spot-panel">
+    <div class="phase-badge ${badgeClass}">${badgeText}</div>
+    <p class="halving-note" style="margin-top:0;">${phaseNote}</p>
+    <p class="order-disclaimer">🎭 DCA Spot BAYANGAN Kaela sendiri -- modal $${SPOT_DAILY_BUY_USD}/hari FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper. Gak pernah dikirim ke WhatsApp, murni tercatat di sini.</p>
+    ${summaryHtml}
+    ${liveValueHtml}
+    <div class="journal-section-title">🧾 Jurnal Pembelian (siklus berjalan)</div>
+    ${buyLogHtml}
+    ${spotState.completedCycles.length > 0 ? `<div class="journal-section-title">📜 Riwayat Siklus Selesai</div>${cyclesHtml}` : ''}
+  </div>`;
+}
+
 function renderJurnalPanel(state, now, fundReport) {
   // cancelled TIDAK dihitung ke statistik (batal sebelum jadi posisi beneran, bukan hasil trade),
   // tapi tetap muncul di daftar riwayat biar jejaknya keliatan.
@@ -730,7 +826,8 @@ function buildDashboardHtml() {
 function buildJurnalHtml() {
   const now = new Date();
   const ordersState = loadSniperOrdersState();
-  const jurnalHtml = renderJurnalPanel(ordersState, now, getFundReport());
+  const sniperJurnalHtml = renderJurnalPanel(ordersState, now, getFundReport());
+  const spotJurnalHtml = renderSpotJurnalPanel(loadSpotState(), now);
 
   return `<!doctype html>
 <html lang="id">
@@ -755,7 +852,24 @@ function buildJurnalHtml() {
     jujur, gak disaring atau dipilih-pilih.
   </div>
 
-  ${jurnalHtml}
+  <div class="dash-tabs">
+    <button class="dash-tab-btn active" data-tab="spot">🌱 Spot</button>
+    <button class="dash-tab-btn" data-tab="sniper">🎯 Sniper</button>
+  </div>
+  <div class="dash-panel active" data-panel="spot">${spotJurnalHtml}</div>
+  <div class="dash-panel" data-panel="sniper">${sniperJurnalHtml}</div>
+
+  <script src="js/spot-widget.js"></script>
+  <script>
+    document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.dash-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+        document.querySelectorAll('.dash-panel').forEach(function (p) { p.classList.remove('active'); });
+        btn.classList.add('active');
+        document.querySelector('.dash-panel[data-panel="' + btn.dataset.tab + '"]').classList.add('active');
+      });
+    });
+  </script>
 
   ${navHtml('jurnal')}
 </body>

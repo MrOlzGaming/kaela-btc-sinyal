@@ -84,6 +84,24 @@
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
   .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
+  /* Tab (dipakai jurnal.html buat Spot/Sniper -- dashboard utama sengaja gak pake tab lagi) */
+  .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
+  .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+  .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
+  .dash-tab-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); box-shadow: 0 2px 12px var(--clr-primary-glow); }
+  .dash-panel { display: none; animation: fade-in 0.25s ease; }
+  .dash-panel.active { display: block; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .spot-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .spot-cycle-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
+  .spot-cycle-table th, .spot-cycle-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--clr-border-soft); }
+  .spot-cycle-table th { color: var(--clr-text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .spot-cycle-table .up { color: var(--clr-success); }
+  .spot-cycle-table .down { color: var(--clr-danger); }
+  .spot-buy-log { max-height: 260px; overflow-y: auto; border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .spot-buy-log table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .spot-buy-log th, .spot-buy-log td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--clr-border-soft); }
+  .spot-buy-log th { position: sticky; top: 0; background: var(--clr-bg-elevated); color: var(--clr-text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; }
   .halving-panel { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 14px; line-height: 1.65; }
   .phase-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; margin-bottom: 12px; }
   .phase-tanam { background: rgba(63,185,80,0.15); color: var(--clr-success); }
@@ -127,7 +145,27 @@
     jujur, gak disaring atau dipilih-pilih.
   </div>
 
-  <div class="jurnal-panel">
+  <div class="dash-tabs">
+    <button class="dash-tab-btn active" data-tab="spot">🌱 Spot</button>
+    <button class="dash-tab-btn" data-tab="sniper">🎯 Sniper</button>
+  </div>
+  <div class="dash-panel active" data-panel="spot"><div class="spot-panel">
+    <div class="phase-badge phase-tunai">⚪ TUNAI -- MENUNGGU WINDOW TANAM</div>
+    <p class="halving-note" style="margin-top:0;">DCA mulai otomatis begitu window Musim Tanam tiba (19 Oktober 2026), jalan sampai halving (~13 April 2028).</p>
+    <p class="order-disclaimer">🎭 DCA Spot BAYANGAN Kaela sendiri -- modal $2/hari FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper. Gak pernah dikirim ke WhatsApp, murni tercatat di sini.</p>
+    <div class="spot-summary-grid">
+    <div class="journal-stat"><div class="journal-stat-label">BTC Dimiliki</div><div class="journal-stat-value ">0 BTC</div></div>
+    <div class="journal-stat"><div class="journal-stat-label">Modal Siklus Ini</div><div class="journal-stat-value ">$0</div></div>
+    <div class="journal-stat"><div class="journal-stat-label">Avg Cost</div><div class="journal-stat-value ">-</div></div>
+    <div class="journal-stat"><div class="journal-stat-label">Saldo Terealisasi</div><div class="journal-stat-value ">$0</div></div>
+    <div class="journal-stat"><div class="journal-stat-label">Siklus Selesai</div><div class="journal-stat-value ">0</div></div>
+  </div>
+    
+    <div class="journal-section-title">🧾 Jurnal Pembelian (siklus berjalan)</div>
+    <div class="empty">Belum ada pembelian di siklus ini.</div>
+    
+  </div></div>
+  <div class="dash-panel" data-panel="sniper"><div class="jurnal-panel">
       <div class="fund-report-section">
     <div class="journal-section-title">🤖 Laporan Fund Kaela -- Bankroll Bayangan</div>
     <p class="order-disclaimer" style="margin-top:0;">Murni perhitungan (posisi bayangan), gak ada uang bergerak beneran -- tapi dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
@@ -144,7 +182,19 @@
     <p class="order-disclaimer">🟧 Kotak oranye di grafik = momen top-up (setoran baru), BUKAN hasil trading -- biar kenaikan dari 2 sumber ini gampang dibedain sekilas.</p>
   </div>
       <div class="empty">📓 Belum ada trade yang selesai. Statistik per-trade bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>
-    </div>
+    </div></div>
+
+  <script src="js/spot-widget.js"></script>
+  <script>
+    document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.dash-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+        document.querySelectorAll('.dash-panel').forEach(function (p) { p.classList.remove('active'); });
+        btn.classList.add('active');
+        document.querySelector('.dash-panel[data-panel="' + btn.dataset.tab + '"]').classList.add('active');
+      });
+    });
+  </script>
 
   <nav class="bottom-nav">
     <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>

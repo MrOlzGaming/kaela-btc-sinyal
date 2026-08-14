@@ -38,10 +38,16 @@ jobs:
       - name: Analisa gabungan otomatis (sniperAutoAnalysis.js)
         run: node sniperAutoAnalysis.js
 
-      - name: Cek apakah ada perubahan (archive.json atau sniper-orders.json)
+      # DCA Spot Musiman BAYANGAN (15 Agu 2026, permintaan Olan) -- $2/hari selama window Tanam
+      # sampai halving, jual semua pas Panen. TANPA WA sama sekali (spotDca.js gak pernah impor
+      # fonnte.js) -- murni tercatat ke kaela-spot.json, ditampilkan di tab Spot halaman Jurnal.
+      - name: DCA Spot Musiman (spotDca.js)
+        run: node spotDca.js
+
+      - name: Cek apakah ada perubahan (archive.json, sniper-orders.json, atau kaela-spot.json)
         id: check
         run: |
-          if git diff --quiet archive.json sniper-orders.json 2>/dev/null; then
+          if git diff --quiet archive.json sniper-orders.json kaela-spot.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -55,7 +61,7 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f sniper-trigger-state.json archive.json sniper-orders.json web/index.html web/jurnal.html
+          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json web/index.html web/jurnal.html
           git diff --staged --quiet || git commit -m "Auto: sniper analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).

@@ -10,7 +10,7 @@
 // baru di-deploy tapi browser Olan masih jalanin chart-widget.js versi lama yang gak kenal
 // elemen toolbar baru -- semua tombol keliatan gak berfungsi).
 
-const CACHE_NAME = 'kaela-v11';
+const CACHE_NAME = 'kaela-v12';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -21,6 +21,7 @@ const CORE_ASSETS = [
   './css/variables.css',
   './js/price-ticker.js',
   './js/sniper-orders-widget.js',
+  './js/spot-widget.js',
   './fonts/Inter-Variable.woff2',
   './manifest.json',
   './icons/icon.svg',

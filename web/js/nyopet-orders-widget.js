@@ -26,6 +26,10 @@
       const remFrac = card.dataset.remainingFraction !== undefined ? parseFloat(card.dataset.remainingFraction) : 1;
       const realizedPnl = parseFloat(card.dataset.realizedPnl) || 0;
       const target = card.querySelector('[data-pnl-target]');
+      // Harga BTC sekarang -- baris TERPISAH & menonjol (14 Agu 2026, permintaan Olan: "biar enak
+      // liatnya"), bukan cuma nempel di ujung teks P&L kayak sebelumnya.
+      const priceTarget = card.querySelector('[data-price-target]');
+      if (priceTarget) priceTarget.textContent = `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
       if (!target || !entry) return;
 
       const priceMovePct = ((price - entry) / entry) * 100 * dir;
@@ -33,14 +37,13 @@
       const floatingPnlUsd = margin ? (margin * remFrac * pnlPct) / 100 : null;
       const totalPnlUsd = floatingPnlUsd !== null ? floatingPnlUsd + realizedPnl : null;
 
-      const priceStr = `@ $${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
       if (totalPnlUsd !== null) {
         target.textContent = remFrac < 1
-          ? `${fmtUsd(totalPnlUsd)} total (realized ${fmtUsd(realizedPnl)} + floating ${fmtUsd(floatingPnlUsd)}) ${priceStr}`
-          : `${fmtUsd(totalPnlUsd)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%) ${priceStr}`;
+          ? `${fmtUsd(totalPnlUsd)} total (realized ${fmtUsd(realizedPnl)} + floating ${fmtUsd(floatingPnlUsd)})`
+          : `${fmtUsd(totalPnlUsd)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%)`;
         target.className = 'order-pnl-live ' + (totalPnlUsd >= 0 ? 'up' : 'down');
       } else {
-        target.textContent = `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% ${priceStr}`;
+        target.textContent = `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%`;
         target.className = 'order-pnl-live ' + (pnlPct >= 0 ? 'up' : 'down');
       }
     });

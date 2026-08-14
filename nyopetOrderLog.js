@@ -22,6 +22,24 @@ function seqLabel(order) {
   return order.signalId ? `🆔 ID Sinyal: ${order.signalId}` : '';
 }
 
+// Harga LIKUIDASI (14 Agu 2026, permintaan Olan: "ada liquidated dimana") -- BEDA dari SL walau
+// sering deket/sama: margin abis kalau harga gerak 100/leverage% lawan posisi. SL biasanya
+// kena DULUAN (floor(leverage) di calculator.js ngasih buffer kecil), tapi titik likuidasi
+// sesungguhnya tetap ditampilkan terpisah, jangan disamain sama SL biar gak nyesatin.
+function liquidationPrice(order) {
+  if (!order.leverage || !order.entryPrice) return null;
+  const distPct = 100 / order.leverage;
+  return order.direction === 'buy' ? order.entryPrice * (1 - distPct / 100) : order.entryPrice * (1 + distPct / 100);
+}
+
+// Baris margin/leverage/volume/likuidasi -- volume (nilai posisi/notional) = margin x leverage,
+// dihitung on-the-fly (bukan field tersendiri di data).
+function tradeMetaLine(order) {
+  const volumeUsd = (order.marginUsd && order.leverage) ? order.marginUsd * order.leverage : null;
+  const liqPrice = liquidationPrice(order);
+  return `Margin ${fmt(order.marginUsd)} · Leverage ${order.leverage}× · Volume ${volumeUsd !== null ? fmt(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmt(liqPrice)}` : ''}`;
+}
+
 function formatRencana(order) {
   const lines = [
     `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 📋 RENCANA (analisa Kaela)`,
@@ -54,6 +72,7 @@ function formatTriggered(order) {
     '',
     `✅ TP: ${fmt(order.tp)}`,
     `❌ SL: ${fmt(order.sl)}`,
+    order.leverage ? tradeMetaLine(order) : '',
     '',
     'Live floating P&L bisa dipantau di web.',
     '',

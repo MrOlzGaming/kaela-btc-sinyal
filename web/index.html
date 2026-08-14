@@ -70,6 +70,8 @@
   .order-levels { display: flex; flex-direction: column; gap: 3px; font-size: 0.85rem; margin-bottom: 6px; }
   .order-note { font-size: 0.78rem; color: var(--clr-text-muted); font-style: italic; margin-bottom: 6px; }
   .order-meta { font-size: 0.75rem; color: var(--clr-text-muted); }
+  .order-live-price { font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 6px; }
+  .order-live-price strong { color: var(--clr-text); font-variant-numeric: tabular-nums; }
   .order-pnl-live { font-weight: 700; font-size: 1.05rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .order-pnl-live.up { color: var(--clr-success); }
   .order-pnl-live.down { color: var(--clr-danger); }
@@ -202,7 +204,9 @@
       <div class="order-id">🆔 2026081402</div>
       <div class="order-header"><span class="order-dir">🟢 BUY</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
       <div class="order-strategy">Breakout</div>
+      <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
       <div class="order-levels"><span>Entry: <strong>$62,682</strong></span><span>TP: $68,950</span><span>SL: $59,548</span></div>
+      <div class="order-meta">Margin $30 · Leverage 20× · Volume $600 · Liquidated @ $59,548</div>
       
       <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
     </div></div>

@@ -153,6 +153,8 @@ const SHARED_STYLE = `
   .order-levels { display: flex; flex-direction: column; gap: 3px; font-size: 0.85rem; margin-bottom: 6px; }
   .order-note { font-size: 0.78rem; color: var(--clr-text-muted); font-style: italic; margin-bottom: 6px; }
   .order-meta { font-size: 0.75rem; color: var(--clr-text-muted); }
+  .order-live-price { font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 6px; }
+  .order-live-price strong { color: var(--clr-text); font-variant-numeric: tabular-nums; }
   .order-pnl-live { font-weight: 700; font-size: 1.05rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .order-pnl-live.up { color: var(--clr-success); }
   .order-pnl-live.down { color: var(--clr-danger); }
@@ -323,6 +325,17 @@ function fmtUsdOrder(n) {
   return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
 }
 
+// Harga LIKUIDASI (14 Agu 2026, permintaan Olan: "ada liquidated dimana") -- BEDA dari SL, walau
+// sering deket/sama. Margin abis kalau harga gerak 100/leverage persen lawan posisi -- SL biasanya
+// dipasang SEDIKIT lebih deket dari titik ini (floor(leverage) di calculator.js ngasih buffer
+// kecil), jadi SL harusnya kena DULUAN sebelum beneran liquidated -- tapi titik likuidasi
+// sesungguhnya tetap perlu ditampilkan terpisah, jangan disamain sama SL biar gak nyesatin.
+function liquidationPrice(o) {
+  if (!o.leverage || !o.entryPrice) return null;
+  const distPct = 100 / o.leverage;
+  return o.direction === 'buy' ? o.entryPrice * (1 - distPct / 100) : o.entryPrice * (1 + distPct / 100);
+}
+
 function renderOrderCard(o) {
   const dir = DIR_LABEL_WEB[o.direction] || o.direction;
   const strategy = STRATEGY_LABEL_WEB[o.strategyType] || '';
@@ -348,11 +361,20 @@ function renderOrderCard(o) {
     const partialBadge = o.partialDone
       ? `<div class="order-partial-note">🟡 Tahap 1 diamankan: ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)} -- SL sisa di breakeven, sisa ${(remFrac * 100).toFixed(0)}% posisi di-trail</div>`
       : '';
+    // Volume tradingan (nilai posisi/notional) = margin x leverage -- BUKAN field tersendiri di
+    // data, dihitung on-the-fly (14 Agu 2026, permintaan Olan: "ada volume tradingnya").
+    const volumeUsd = (o.marginUsd && o.leverage) ? o.marginUsd * o.leverage : null;
+    const liqPrice = liquidationPrice(o);
+    const tradeMetaLine = (o.leverage || o.marginUsd)
+      ? `<div class="order-meta">Margin ${fmtUsdOrder(o.marginUsd)} · Leverage ${o.leverage}× · Volume ${volumeUsd !== null ? fmtUsdOrder(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmtUsdOrder(liqPrice)}` : ''}</div>`
+      : '';
     return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}">
       ${idLine}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
       <div class="order-strategy">${strategy}</div>
+      <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
       <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
+      ${tradeMetaLine}
       ${partialBadge}
       <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
     </div>`;

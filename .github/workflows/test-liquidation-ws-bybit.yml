@@ -1,0 +1,43 @@
+name: TEST liquidation WS Bybit (sementara, buat riset Dark Kaela)
+
+# Olan tanya (15 Agu 2026): "ada alat likuidasi lain yang bisa langsung diakses, bukan andalin
+# swing swing?" -- Binance forceOrder WS udah dikonfirmasi kekunci dari IP cloud GitHub Actions
+# (koneksi jalan, 0 pesan diterima). Test ini: apa Bybit "All Liquidation" WS (topik publik,
+# gak butuh API key) juga kena blokir yang sama, atau beneran bisa dipakai gantiin proxy swing.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test koneksi WS allLiquidation Bybit BTCUSDT (90 detik)
+        run: |
+          node -e "
+          const ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
+          let count = 0;
+          let closed = false;
+          ws.onopen = () => {
+            console.log('[OPEN]', new Date().toISOString());
+            ws.send(JSON.stringify({ op: 'subscribe', args: ['allLiquidation.BTCUSDT'] }));
+            console.log('[SUB SENT] allLiquidation.BTCUSDT');
+          };
+          ws.onmessage = (ev) => {
+            count++;
+            if (count <= 5) console.log('[MSG]', count, ev.data.slice(0, 300));
+          };
+          ws.onerror = (e) => console.log('[ERROR]', JSON.stringify(e.message || e));
+          ws.onclose = (e) => { closed = true; console.log('[CLOSE]', e.code, e.reason, new Date().toISOString()); };
+          setTimeout(() => {
+            console.log('[SUMMARY Bybit BTCUSDT] total msg dalam 90dtk:', count, '| masih connected:', !closed);
+            process.exit(0);
+          }, 90000);
+          "

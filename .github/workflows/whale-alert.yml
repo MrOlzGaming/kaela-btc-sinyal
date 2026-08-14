@@ -40,24 +40,14 @@ jobs:
       - name: Rekap transaksi besar 24 jam terakhir (whaleDailyDigest.js)
         run: node whaleDailyDigest.js
 
-      - name: Cek apakah ada whale alert baru (archive.json berubah)
-        id: check
-        run: |
-          if git diff --quiet archive.json 2>/dev/null; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Rebuild web/index.html (cuma kalau ada perubahan)
-        if: steps.check.outputs.changed == 'true'
-        run: node buildDashboard.js
-
+      # 15 Agu 2026: buildDashboard.js DICABUT -- entry whale gak pernah dirender ke HTML
+      # (dashboard/jurnal cuma tampilin tipe 'sniper'), jadi rebuild di sini emang gak pernah
+      # ngubah apapun secara visual. Commit archive.json aja udah cukup buat jejak riwayat.
       - name: Commit & push whale-state.json (WAJIB tiap run, biar blok terakhir gak lupa)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f whale-state.json archive.json web/index.html
+          git add -f whale-state.json archive.json
           git diff --staged --quiet || git commit -m "Auto: whale monitor $(date -u +%Y-%m-%dT%H:%M)"
           # Retry pull+push -- kalau push gagal (misal race sama workflow lain) dan gak diulang,
           # whale-state.json GAK MAJU -- run berikutnya scan ulang blok yang SAMA dari state basi,
@@ -75,7 +65,3 @@ jobs:
           done
           echo "::error::Gagal push whale-state.json setelah 5x percobaan -- state gak ke-simpan, run berikutnya bisa re-scan blok yang sama."
           exit 1
-
-      # Deploy Netlify DICABUT dari sini (15 Agu 2026, kredit abis gara-gara puluhan deploy/hari) --
-      # web/index.html tetap ke-rebuild+commit tiap run (di atas), tapi live site cuma keupdate
-      # lewat deploy-daily.yml (1x/hari terjadwal) atau manual workflow_dispatch.

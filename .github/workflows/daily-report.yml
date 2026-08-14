@@ -41,14 +41,14 @@ jobs:
       - name: Jadwal ekonomi hari ini (econCalendarMonitor.js)
         run: node econCalendarMonitor.js
 
-      - name: Rebuild web/index.html dari archive terbaru
-        run: node buildDashboard.js
-
-      - name: Commit & push state/archive/web (persist di git, satu-satunya storage yang tahan di CI)
+      # 15 Agu 2026: buildDashboard.js DICABUT -- state.json difetch LANGSUNG di browser
+      # pengunjung (web/js/dashboard-load.js), jadi commit di bawah ini aja udah cukup buat
+      # panel Musiman keupdate, gak perlu rebuild/deploy HTML apapun.
+      - name: Commit & push state/archive (persist di git, satu-satunya storage yang tahan di CI)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f state.json archive.json web/index.html
+          git add -f state.json archive.json
           git diff --staged --quiet || git commit -m "Auto: laporan harian $(date -u +%Y-%m-%d)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
@@ -59,7 +59,3 @@ jobs:
           done
           echo "::error::Gagal push setelah 5x percobaan."
           exit 1
-
-      # Deploy Netlify DICABUT dari sini (15 Agu 2026, kredit abis gara-gara puluhan deploy/hari) --
-      # web/index.html tetap ke-rebuild+commit tiap run (di atas), tapi live site cuma keupdate
-      # lewat deploy-daily.yml (1x/hari terjadwal) atau manual workflow_dispatch.

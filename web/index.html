@@ -47,9 +47,6 @@
   .price-change.down { color: var(--clr-danger); }
   .live-dot { color: var(--clr-danger); font-size: 0.7rem; font-weight: 700; animation: pulse-live 1.4s ease-in-out infinite; }
   @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  /* Chart utama = widget resmi TradingView Advanced Chart (embed, bukan self-hosted) -- toolbar
-     gambar/indikator BAWAAN MEREKA (fx Indicators, drawing tools lengkap), bukan tiruan kita lagi.
-     Tinggi dikasih eksplisit (autosize:true widget-nya ngikut TINGGI CONTAINER, bukan bikin sendiri). */
   .tv-full-chart { height: 560px; margin-top: 14px; border-radius: var(--radius-md); overflow: hidden; }
   @media (max-width: 520px) {
     .tv-full-chart { height: 460px; }
@@ -84,7 +81,6 @@
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
   .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
-  /* Tab (dipakai jurnal.html buat Spot/Sniper -- dashboard utama sengaja gak pake tab lagi) */
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
   .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
@@ -111,7 +107,6 @@
   .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
   .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
 
-  /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
   .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
   .journal-stat { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
   .journal-stat-label { color: var(--clr-text-muted); font-size: 0.72rem; margin-bottom: 4px; }
@@ -196,32 +191,10 @@
   </div>
 
   <div class="dash-section-title">🌾 Musiman</div>
-  <div class="halving-panel">
-    <div class="phase-badge phase-tunai">⚪ TUNAI — MENUNGGU</div>
-    <p><strong>Rencana Kaela:</strong> mulai Musim Tanam sekitar <strong>19 Oktober 2026 – 17 November 2026</strong> (~65 hari lagi).
-      Bukan cuma beli sekali lalu diam — <strong>selama window Musim Tanam sampai halving tiba, kalau ada dana boleh terus
-      masuk pelan-pelan (DCA)</strong>, baru direncanakan Musim Panen di sekitar 368–549 hari setelah halving
-      (~13 April 2028). Begitu Musim Tanam maupun Musim Panen tiba, Kaela bakal
-      <strong>rewel ingetin berhari-hari lewat WhatsApp grup</strong> sampai window itu berakhir.</p>
-    <p class="halving-note">⏳ Halving berikutnya: <strong>608 hari lagi</strong> (~13 April 2028)</p>
-  </div>
+  <div id="musiman-container"><div class="empty">Memuat...</div></div>
 
   <div class="dash-section-title">🎯 Sniper</div>
-  <div class="sniper-orders-panel">
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Saldo, riwayat &amp; statistik lengkap ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
-    <div class="latest" style="border-left: 4px solid #f7931a;"><div class="latest-label">🟧 🎯 Sniper</div><div class="latest-date">15/8/2026, 00.02.58</div><pre class="content">🟧 🎯 SNIPER — 📡 PEMANTAUAN POSISI (hari ke-1)
-🆔 ID Sinyal: 2026081402
-🟢 <span class="news-positive">BUY @ $62,682 -- masih FLOATING, bukan sinyal baru.</span>
-
-Harga sekarang: $63,027 (+0.55% dari entry)
-❌ SL: $59,548  🎯 TP tahap 1: $68,950
-P&amp;L saat ini: +$3.3
-
-🎭 Posisi bayangan, murni perhitungan -- eksekusi asli (kalau ikut) tetap manual sendiri di Binance.
-
-2026-08-15 00:02 WITA
-🔗 <a href="https://kaela-btc-sinyal.netlify.app" target="_blank" rel="noopener noreferrer">https://kaela-btc-sinyal.netlify.app</a></pre></div>
-  </div>
+  <div id="sniper-container"><div class="empty">Memuat...</div></div>
 
   <script>
     const HALVING_TARGET = new Date('2028-04-13T13:11:00Z').getTime();
@@ -244,6 +217,8 @@ P&amp;L saat ini: +$3.3
     }
   </script>
   <script src="js/price-ticker.js"></script>
+  <script src="js/kaela-render.js"></script>
+  <script src="js/dashboard-load.js"></script>
   <script src="js/sniper-orders-widget.js"></script>
 
   <nav class="bottom-nav">

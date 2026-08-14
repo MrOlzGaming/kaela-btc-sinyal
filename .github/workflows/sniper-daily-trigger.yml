@@ -44,24 +44,14 @@ jobs:
       - name: DCA Spot Musiman (spotDca.js)
         run: node spotDca.js
 
-      - name: Cek apakah ada perubahan (archive.json, sniper-orders.json, atau kaela-spot.json)
-        id: check
-        run: |
-          if git diff --quiet archive.json sniper-orders.json kaela-spot.json 2>/dev/null; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Rebuild web/index.html + web/jurnal.html (cuma kalau ada perubahan)
-        if: steps.check.outputs.changed == 'true'
-        run: node buildDashboard.js
-
+      # 15 Agu 2026: buildDashboard.js DICABUT -- web/*.html shell statis, gak butuh rebuild
+      # tiap data berubah. Pengunjung fetch data terbaru langsung dari file JSON di bawah ini
+      # (client-side, lihat web/js/jurnal-load.js/dashboard-load.js) -- commit aja udah cukup.
       - name: Commit & push (WAJIB tiap run, biar dedup harian gak lupa)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json web/index.html web/jurnal.html
+          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json
           git diff --staged --quiet || git commit -m "Auto: sniper analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
@@ -72,7 +62,3 @@ jobs:
           done
           echo "::error::Gagal push setelah 5x percobaan."
           exit 1
-
-      # Deploy Netlify DICABUT dari sini (15 Agu 2026, kredit abis gara-gara puluhan deploy/hari) --
-      # web/index.html + web/jurnal.html tetap ke-rebuild+commit tiap run (di atas), tapi live site
-      # cuma keupdate lewat deploy-daily.yml (1x/hari terjadwal) atau manual workflow_dispatch.

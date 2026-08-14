@@ -47,9 +47,6 @@
   .price-change.down { color: var(--clr-danger); }
   .live-dot { color: var(--clr-danger); font-size: 0.7rem; font-weight: 700; animation: pulse-live 1.4s ease-in-out infinite; }
   @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  /* Chart utama = widget resmi TradingView Advanced Chart (embed, bukan self-hosted) -- toolbar
-     gambar/indikator BAWAAN MEREKA (fx Indicators, drawing tools lengkap), bukan tiruan kita lagi.
-     Tinggi dikasih eksplisit (autosize:true widget-nya ngikut TINGGI CONTAINER, bukan bikin sendiri). */
   .tv-full-chart { height: 560px; margin-top: 14px; border-radius: var(--radius-md); overflow: hidden; }
   @media (max-width: 520px) {
     .tv-full-chart { height: 460px; }
@@ -84,7 +81,6 @@
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
   .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
-  /* Tab (dipakai jurnal.html buat Spot/Sniper -- dashboard utama sengaja gak pake tab lagi) */
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
   .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
@@ -111,7 +107,6 @@
   .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
   .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
 
-  /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
   .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
   .journal-stat { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
   .journal-stat-label { color: var(--clr-text-muted); font-size: 0.72rem; margin-bottom: 4px; }
@@ -149,41 +144,11 @@
     <button class="dash-tab-btn active" data-tab="spot">🌱 Spot</button>
     <button class="dash-tab-btn" data-tab="sniper">🎯 Sniper</button>
   </div>
-  <div class="dash-panel active" data-panel="spot"><div class="spot-panel">
-    <div class="phase-badge phase-tunai">⚪ TUNAI -- MENUNGGU WINDOW TANAM</div>
-    <p class="halving-note" style="margin-top:0;">DCA mulai otomatis begitu window Musim Tanam tiba (19 Oktober 2026), jalan sampai halving (~13 April 2028).</p>
-    <p class="order-disclaimer">🎭 DCA Spot BAYANGAN Kaela sendiri -- modal $2/hari FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper. Gak pernah dikirim ke WhatsApp, murni tercatat di sini.</p>
-    <div class="spot-summary-grid">
-    <div class="journal-stat"><div class="journal-stat-label">BTC Dimiliki</div><div class="journal-stat-value ">0 BTC</div></div>
-    <div class="journal-stat"><div class="journal-stat-label">Modal Siklus Ini</div><div class="journal-stat-value ">$0</div></div>
-    <div class="journal-stat"><div class="journal-stat-label">Avg Cost</div><div class="journal-stat-value ">-</div></div>
-    <div class="journal-stat"><div class="journal-stat-label">Saldo Terealisasi</div><div class="journal-stat-value ">$0</div></div>
-    <div class="journal-stat"><div class="journal-stat-label">Siklus Selesai</div><div class="journal-stat-value ">0</div></div>
-  </div>
-    
-    <div class="journal-section-title">🧾 Jurnal Pembelian (siklus berjalan)</div>
-    <div class="empty">Belum ada pembelian di siklus ini.</div>
-    
-  </div></div>
-  <div class="dash-panel" data-panel="sniper"><div class="jurnal-panel">
-      <div class="fund-report-section">
-    <div class="journal-section-title">🤖 Laporan Fund Kaela -- Bankroll Bayangan</div>
-    <p class="order-disclaimer" style="margin-top:0;">Murni perhitungan (posisi bayangan), gak ada uang bergerak beneran -- tapi dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
-    <div class="journal-stats-grid">
-      <div class="journal-stat"><div class="journal-stat-label">Saldo Sekarang</div><div class="journal-stat-value ">$100</div></div>
-      <div class="journal-stat"><div class="journal-stat-label">Total Disetor</div><div class="journal-stat-value ">$100</div></div>
-      <div class="journal-stat"><div class="journal-stat-label">P&amp;L Trading (murni)</div><div class="journal-stat-value up">+$0</div></div>
-      <div class="journal-stat"><div class="journal-stat-label">Return dari Trading</div><div class="journal-stat-value up">+0.0%</div></div>
-      <div class="journal-stat"><div class="journal-stat-label">Total Growth (gabungan)</div><div class="journal-stat-value up">+0.0%</div></div>
-      <div class="journal-stat"><div class="journal-stat-label">Jumlah Trade</div><div class="journal-stat-value ">0</div></div>
-    </div>
-    <div class="journal-section-title">📈 Equity Curve Bankroll (mulai $100, 14 Agustus 2026)</div>
-    <div class="empty">Bankroll baru mulai, equity curve keisi begitu ada top-up/trade berikutnya.</div>
-    <p class="order-disclaimer">🟧 Kotak oranye di grafik = momen top-up (setoran baru), BUKAN hasil trading -- biar kenaikan dari 2 sumber ini gampang dibedain sekilas.</p>
-  </div>
-      <div class="empty">📓 Belum ada trade yang selesai. Statistik per-trade bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>
-    </div></div>
+  <div class="dash-panel active" data-panel="spot"><div class="empty">Memuat...</div></div>
+  <div class="dash-panel" data-panel="sniper"><div class="empty">Memuat...</div></div>
 
+  <script src="js/kaela-render.js"></script>
+  <script src="js/jurnal-load.js"></script>
   <script src="js/spot-widget.js"></script>
   <script>
     document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {

@@ -1,21 +1,23 @@
-name: Deploy web/ ke Netlify (1x/hari + manual)
+name: Deploy web/ ke Netlify (manual)
 
-# Diubah TOTAL 15 Agu 2026 -- versi lama ("deploy-on-push") jalan tiap ada push ke master, TAPI
-# hampir semua push ke master itu commit BOT rutin (sniper-hourly tiap jam, price-alert tiap
-# 5 menit, whale/news/laporan harian) yang MASING-MASING udah punya step deploy sendiri juga --
-# hasilnya deploy DOBEL/TRIPEL tiap kali data berubah, puluhan kali sehari. Itu yang ngabisin
-# 1000 kredit Netlify (ketauan pas deploy gagal "JSONHTTPError: Forbidden").
+# Diubah TOTAL 15 Agu 2026, 2 tahap:
+#   Tahap 1: dari "tiap push" (dobel-triple sama step deploy tiap workflow rutin) jadi 1x/hari
+#   terjadwal -- itu MASIH nyimpen bug konsep ("ngetik ulang lalu deploy" cuma dikurangin
+#   frekuensinya, bukan dihilangin akarnya).
+#   Tahap 2 (final, permintaan Olan: "rumus bro rumus, bukan deploy deploy an"): arsitektur
+#   diubah TOTAL -- web/index.html & web/jurnal.html sekarang SHELL STATIS doang (lihat
+#   buildDashboard.js), SEMUA konten dinamis (sinyal/posisi/DCA/jurnal) di-fetch+render
+#   LANGSUNG DI BROWSER pengunjung dari data JSON di repo publik (lihat web/js/kaela-render.js,
+#   dashboard-load.js, jurnal-load.js) -- GRATIS, real-time, ZERO kredit Netlify. Cron rutin
+#   (sniper-hourly/daily-trigger, whale/news/laporan) SEKARANG CUMA commit data ke git, gak ada
+#   satupun yang nyentuh web/*.html atau manggil buildDashboard.js lagi.
 #
-# Sekarang: SEMUA workflow rutin cuma commit data ke git (gratis, gak kena kredit) -- TIDAK ada
-# yang deploy sendiri lagi. Live site cuma keupdate lewat workflow INI, yang jalan:
-#   1. Terjadwal 1x/hari (abis sniper-daily-trigger + laporan pagi kelar, ~08:20 WITA) -- cukup
-#      buat nampilin semua update rutin harian (sinyal, whale, news, laporan) tanpa keteteran.
-#   2. workflow_dispatch manual -- dipicu Kaela begitu abis push fitur/kode BENERAN (bukan data
-#      rutin), biar perubahan itu langsung kelihatan gak perlu nunggu jadwal harian.
+# Konsekuensinya: shell HTML PRAKTIS TIDAK PERNAH BERUBAH dari aktivitas rutin apapun -- jadi
+# gak ada lagi alasan buat jadwal deploy otomatis SAMA SEKALI. Workflow ini SEKARANG MURNI
+# MANUAL (workflow_dispatch) -- dipicu Kaela sendiri HANYA begitu ada perubahan TAMPILAN/STRUKTUR
+# shell beneran (edit buildDashboard.js, CSS, dst), bukan buat data rutin apapun.
 
 on:
-  schedule:
-    - cron: '20 0 * * *' # 00:20 UTC = 08:20 WITA -- abis sniper-daily-trigger (08:05) + daily-report (07:03) kelar
   workflow_dispatch: {}
 
 concurrency:

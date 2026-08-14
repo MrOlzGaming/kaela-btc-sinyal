@@ -1,26 +1,21 @@
-// Generate web/index.html (Dashboard, satu-satunya halaman data) dari archive.json --
-// data di-embed langsung (gak perlu server/fetch).
-// Jalankan tiap kali ada entry baru: node buildDashboard.js
+// Generate web/index.html + web/jurnal.html -- SHELL STATIS doang (welcome, chart, countdown,
+// nav, CSS). SEMUA konten dinamis (Musiman/Sniper/Jurnal/Spot) DIHAPUS dari sini (15 Agu 2026,
+// arsitektur diubah TOTAL atas permintaan Olan: "rumus bro rumus, bukan deploy deploy an") --
+// dulu file ini baca archive.json/sniper-orders.json/dst terus nge-bake HTML-nya, jadi
+// SETIAP kali data berubah, HTML ikut berubah, jadi HARUS di-deploy ulang. Sekarang konten
+// dinamis itu di-fetch+render LANGSUNG DI BROWSER pengunjung (lihat web/js/kaela-render.js +
+// web/js/dashboard-load.js + web/js/jurnal-load.js, fetch dari raw.githubusercontent.com --
+// GRATIS, gak kena kredit Netlify) -- shell ini praktis TIDAK PERNAH perlu di-generate ulang
+// kecuali emang mau ubah TAMPILAN/struktur halamannya sendiri.
 //
-// Arsip (arsip.html) DIBUANG (keputusan Olan 9 Agu 2026) -- setelah News/Whale/Econ/Laporan
-// Harian dibuang dari web, satu-satunya isi Arsip yang tersisa cuma log teks mentah Nyopet
-// Market (RENCANA/INVALID dst) yang gak nambah nilai lagi -- riwayat yang BENERAN berharga
-// (trade selesai, profit/loss) udah ditangani rapi sama tab Jurnal.
+// Jalankan cuma kalau emang ubah shell: node buildDashboard.js
 
 const fs = require('fs');
 const path = require('path');
-const { getFundReport } = require('./kaelaBankroll');
-const { getAll } = require('./archive');
-const { localDateKey } = require('./config');
-const {
-  WINDOW_START, WINDOW_END, NEXT_HALVING_EST: HALVING_DATE, daysToHalving,
-} = require('./groupReport');
-const { load: loadSpotState, sellTriggerDate: spotSellTriggerDate, DAILY_BUY_USD: SPOT_DAILY_BUY_USD } = require('./spotDca');
 
-const NEXT_HALVING_EST = '2028-04-13T13:11:00Z'; // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WEB_DIR = path.join(__dirname, 'web');
 
-// Ikon SVG garis tipis (bukan emoji) -- konsisten di semua halaman (dashboard, arsip, kalkulator,
+// Ikon SVG garis tipis (bukan emoji) -- konsisten di semua halaman (dashboard, kalkulator,
 // metodologi). Sama persis dipakai ulang di web/kalkulator.html & web/metodologi-*.html (statis).
 const ICON_HOME = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_CALC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg>';
@@ -28,73 +23,8 @@ const ICON_BOOK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><
 const ICON_CHART = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LOGO_MARK = '<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg>';
 
-// 5 kategori sinyal, 1 warna tetap per kategori -- dipakai KONSISTEN di web (border+emoji) DAN
-// WA (emoji kotak warna, lihat categoryColors.js). Biar orang bisa scan cari warna tertentu tanpa
-// baca teks lengkap (misal cuma mau Sniper, langsung cari 🟧).
-const { CATEGORY_COLOR, categoryOfType } = require('./categoryColors');
-
-const TYPE_LABEL = {
-  'report-daily': `${CATEGORY_COLOR.laporan.emoji} 📊 Laporan Harian`,
-  'report-weekly': `${CATEGORY_COLOR.laporan.emoji} 📆 Laporan Mingguan`,
-  'report-monthly': `${CATEGORY_COLOR.laporan.emoji} 🗓️ Laporan Bulanan`,
-  'report-yearly': `${CATEGORY_COLOR.laporan.emoji} 📅 Laporan Tahunan`,
-  news: `${CATEGORY_COLOR.news.emoji} 📰 Kaela News`,
-  sniper: `${CATEGORY_COLOR.sniper.emoji} 🎯 Sniper`,
-  whale: `${CATEGORY_COLOR.whale.emoji} 🐋 Whale Alert`,
-  'econ-calendar': `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`,
-};
-
-function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-// Warnai baris headline berita sesuai tag sentimen yang udah ada (🟢 bagus / 🔴 buruk / ⚪ netral-ragu)
-// -- di WA cuma emoji, di web ditambah warna teks biar lebih jelas ketauan mana yang mana.
-function colorizeSentiment(line) {
-  const m = line.match(/^(🟢|🔴|⚪) (.+)$/);
-  if (!m) return line;
-  const [, emoji, text] = m;
-  const cls = emoji === '🟢' ? 'news-positive' : emoji === '🔴' ? 'news-negative' : 'news-neutral';
-  return `${emoji} <span class="${cls}">${text}</span>`;
-}
-
-// Ubah 2 pola baris yang dipakai semua formatter pesan jadi hyperlink beneran (bisa diklik):
-//   "   SumberBerita — https://url-panjang..."  -> teks link = nama sumber (bukan URL mentah)
-//   "🔗 https://kaela-btc-sinyal.netlify.app"    -> URL itu sendiri jadi teks link
-// Diproses per baris (bukan regex 1 kalimat) biar gak ke-double-wrap.
-function linkify(escapedText) {
-  return escapedText
-    .split('\n')
-    .map((line) => {
-      line = colorizeSentiment(line);
-      const sourceMatch = line.match(/^(\s*)(.+?) — (https?:\/\/\S+)$/);
-      if (sourceMatch) {
-        const [, indent, label, url] = sourceMatch;
-        return `${indent}<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-      }
-      const webMatch = line.match(/^(🔗 )(https?:\/\/\S+)$/);
-      if (webMatch) {
-        const [, prefix, url] = webMatch;
-        return `${prefix}<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-      }
-      return line;
-    })
-    .join('\n');
-}
-
-function renderEntry(e, { highlight = false, pinned = false } = {}) {
-  const cls = highlight ? 'latest' : 'entry';
-  const labelCls = highlight ? 'latest-label' : 'entry-type';
-  const dateCls = highlight ? 'latest-date' : 'entry-date';
-  const cat = categoryOfType(e.type);
-  const borderStyle = cat ? ` style="border-left: 4px solid ${CATEGORY_COLOR[cat].hex};"` : '';
-  const pinnedBadge = pinned ? `<div class="pinned-badge">📌 POSISI SNIPER MASIH TERBUKA</div>` : '';
-  const header = highlight
-    ? `<div class="${labelCls}">${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
-    : `<div class="entry-header"><span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span><span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span></div>`;
-  return `<div class="${cls}${pinned ? ' pinned' : ''}"${borderStyle}>${pinnedBadge}${header}<pre class="content">${linkify(escapeHtml(e.content))}</pre></div>`;
-}
-
+// CSS dipakai buat style-in HTML yang di-render CLIENT-SIDE (kaela-render.js) -- class names
+// di sini WAJIB tetap sinkron sama class yang dipakai fungsi render di kaela-render.js.
 const SHARED_STYLE = `
   h1 { font-size: 1.4rem; margin: 0; }
   .brand { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 16px; margin-bottom: 4px; }
@@ -132,9 +62,6 @@ const SHARED_STYLE = `
   .price-change.down { color: var(--clr-danger); }
   .live-dot { color: var(--clr-danger); font-size: 0.7rem; font-weight: 700; animation: pulse-live 1.4s ease-in-out infinite; }
   @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  /* Chart utama = widget resmi TradingView Advanced Chart (embed, bukan self-hosted) -- toolbar
-     gambar/indikator BAWAAN MEREKA (fx Indicators, drawing tools lengkap), bukan tiruan kita lagi.
-     Tinggi dikasih eksplisit (autosize:true widget-nya ngikut TINGGI CONTAINER, bukan bikin sendiri). */
   .tv-full-chart { height: 560px; margin-top: 14px; border-radius: var(--radius-md); overflow: hidden; }
   @media (max-width: 520px) {
     .tv-full-chart { height: 460px; }
@@ -169,7 +96,6 @@ const SHARED_STYLE = `
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
   .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
-  /* Tab (dipakai jurnal.html buat Spot/Sniper -- dashboard utama sengaja gak pake tab lagi) */
   .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
   .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
   .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
@@ -196,7 +122,6 @@ const SHARED_STYLE = `
   .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
   .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
 
-  /* Tab Jurnal -- statistik, equity curve, kalender P/L (ala trading journal profesional) */
   .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
   .journal-stat { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
   .journal-stat-label { color: var(--clr-text-muted); font-size: 0.72rem; margin-bottom: 4px; }
@@ -220,6 +145,8 @@ const SHARED_STYLE = `
   .strategy-filter-btn { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
   .strategy-filter-btn.active { background: var(--clr-primary); color: #14100a; border-color: var(--clr-primary); }
 `;
+
+const NEXT_HALVING_EST = '2028-04-13T13:11:00Z'; // sumber: CoinGecko real-time countdown — cek ulang berkala
 
 function countdownHtml() {
   return `<div class="countdown">
@@ -268,478 +195,9 @@ function navHtml(activePage) {
   </nav>`;
 }
 
-// ============ DASHBOARD (index.html) — hari ini aja + countdown + sambutan ============
-
-function fmtDateShort(d) {
-  return d.toISOString().slice(0, 10);
-}
-
-const BULAN_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-function fmtDateLong(d) {
-  return `${d.getUTCDate()} ${BULAN_ID[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
-
-// Status TENANG, non-noisy, selalu up-to-date -- ini yang disuguhkan pertama kali (default tab)
-// biar user gak dibanjiri info begitu buka Dashboard. Baca state.json (status Siklus Halving
-// SEBENARNYA, bukan cuma tebakan tanggal) buat nentuin fase yang bener.
-function renderSiklusHalvingPanel(now) {
-  const statePath = path.join(__dirname, 'state.json');
-  let state = { status: 'TUNAI', position: null };
-  if (fs.existsSync(statePath)) {
-    try { state = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (e) { /* pakai default */ }
-  }
-
-  const windowLabel = `${fmtDateLong(WINDOW_START)} – ${fmtDateLong(WINDOW_END)}`;
-  const daysToWindow = Math.round((WINDOW_START.getTime() - now.getTime()) / 86400000);
-  let badgeClass, badgeText, bodyHtml;
-
-  if (state.status === 'OPEN' && state.position) {
-    badgeClass = 'phase-panen';
-    badgeText = '🌾 POSISI TERBUKA';
-    bodyHtml = `<p>Kaela udah masuk Musim Tanam di <strong>${state.position.entryDate}</strong> @ <strong>$${Number(state.position.entryPrice).toLocaleString('en-US')}</strong>.
-      Rencana: <strong>tahan, dan kalau ada dana lebih boleh nambah pelan-pelan (DCA) terus</strong> sampai mendekati puncak siklus
-      (368–549 hari setelah halving, berdasar 3 siklus historis), baru direncanakan Musim Panen. Kaela bakal mulai
-      <strong>rewel ingetin tiap hari lewat WhatsApp</strong> begitu momen Musim Panen mendekat.</p>`;
-  } else if (now >= WINDOW_START && now <= WINDOW_END) {
-    badgeClass = 'phase-tanam';
-    badgeText = '🌱 SEDANG MUSIM TANAM';
-    bodyHtml = `<p>Window Musim Tanam <strong>${windowLabel}</strong> SEDANG BERLANGSUNG SEKARANG. Default: beli spot.
-      Bukan sekadar beli-lalu-diamkan — <strong>kalau ada dana, boleh terus masuk pelan-pelan (DCA)</strong> sepanjang
-      window ini sampai halving tiba, baru direncanakan Musim Panen. Kaela ngirim pengingat ke grup WA
-      <strong>tiap hari selama window ini berlangsung</strong> — bukan cuma sekali.</p>`;
-  } else if (now > WINDOW_END) {
-    badgeClass = 'phase-tunai';
-    badgeText = '⚠️ WINDOW LEWAT, PERLU DITINJAU';
-    bodyHtml = `<p>Musim Tanam (${windowLabel}) udah lewat tapi belum ada catatan posisi terbuka — perlu ditinjau ulang manual.</p>`;
-  } else {
-    badgeClass = 'phase-tunai';
-    badgeText = '⚪ TUNAI — MENUNGGU';
-    bodyHtml = `<p><strong>Rencana Kaela:</strong> mulai Musim Tanam sekitar <strong>${windowLabel}</strong> (~${daysToWindow} hari lagi).
-      Bukan cuma beli sekali lalu diam — <strong>selama window Musim Tanam sampai halving tiba, kalau ada dana boleh terus
-      masuk pelan-pelan (DCA)</strong>, baru direncanakan Musim Panen di sekitar 368–549 hari setelah halving
-      (~${fmtDateLong(HALVING_DATE)}). Begitu Musim Tanam maupun Musim Panen tiba, Kaela bakal
-      <strong>rewel ingetin berhari-hari lewat WhatsApp grup</strong> sampai window itu berakhir.</p>`;
-  }
-
-  return `<div class="halving-panel">
-    <div class="phase-badge ${badgeClass}">${badgeText}</div>
-    ${bodyHtml}
-    <p class="halving-note">⏳ Halving berikutnya: <strong>${daysToHalving(now)} hari lagi</strong> (~${fmtDateLong(HALVING_DATE)})</p>
-  </div>`;
-}
-
-// ============ Sniper MANUAL: monitor order live (sniper-orders.json) ============
-// Beda dari log teks lama (sniperLog.js) -- ini KARTU LIVE per order: pending (nunggu trigger),
-// floating (P&L live dihitung DI BROWSER dari harga live, lihat web/js/sniper-orders-widget.js),
-// closed (histori). Order dibuat MANUAL pas Olan+Kaela analisa bareng (bukan auto-decide algoritma
-// lagi) -- lihat sniperOrders.js/sniperOrderMonitor.js. Saldo publik SENGAJA (konfirmasi user).
-
-const DIR_LABEL_WEB = { buy: '🟢 BUY', sell: '🔴 SELL' };
-const STRATEGY_LABEL_WEB = { range: 'Range Trading', breakout: 'Breakout', trend: 'Trend Following' };
-function fmtUsdOrder(n) {
-  return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
-}
-
-// Harga LIKUIDASI (14 Agu 2026, permintaan Olan: "ada liquidated dimana") -- BEDA dari SL, walau
-// sering deket/sama. Margin abis kalau harga gerak 100/leverage persen lawan posisi -- SL biasanya
-// dipasang SEDIKIT lebih deket dari titik ini (floor(leverage) di calculator.js ngasih buffer
-// kecil), jadi SL harusnya kena DULUAN sebelum beneran liquidated -- tapi titik likuidasi
-// sesungguhnya tetap perlu ditampilkan terpisah, jangan disamain sama SL biar gak nyesatin.
-function liquidationPrice(o) {
-  if (!o.leverage || !o.entryPrice) return null;
-  const distPct = 100 / o.leverage;
-  return o.direction === 'buy' ? o.entryPrice * (1 - distPct / 100) : o.entryPrice * (1 + distPct / 100);
-}
-
-function renderOrderCard(o) {
-  const dir = DIR_LABEL_WEB[o.direction] || o.direction;
-  const strategy = STRATEGY_LABEL_WEB[o.strategyType] || '';
-  // sl bisa null/undefined buat order "main liq" (gak ada SL formal) -- WAJIB fallback '-',
-  // jangan langsung fmtUsdOrder(undefined) (hasilnya "$NaN", ketauan pas audit anomali).
-  const slText = (o.sl !== null && o.sl !== undefined) ? fmtUsdOrder(o.sl) : '-';
-  const idLine = o.signalId ? `<div class="order-id">🆔 ${o.signalId}</div>` : '';
-  if (o.status === 'pending') {
-    return `<div class="order-card pending">
-      ${idLine}
-      <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge pending">⏳ PENDING</span></div>
-      <div class="order-strategy">${strategy}</div>
-      <div class="order-levels"><span>Trigger: <strong>${fmtUsdOrder(o.triggerPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
-      ${o.confirmationNote ? `<div class="order-note">📋 ${o.confirmationNote}</div>` : ''}
-      ${o.leverage ? `<div class="order-meta">Exposure ${o.exposure}× · Leverage ${o.leverage}× · Margin ${fmtUsdOrder(o.marginUsd)}</div>` : ''}
-    </div>`;
-  }
-  if (o.status === 'floating') {
-    // remainingFraction (12 Agu 2026, fix widget P&L live abis partial-exit) -- posisi yang
-    // udah kena tahap 1 cuma sisa SEBAGIAN (biasanya 0.5) yang masih floating, widget WAJIB
-    // tau ini biar gak overstate P&L pakai margin penuh.
-    const remFrac = o.remainingFraction !== undefined && o.remainingFraction !== null ? o.remainingFraction : 1;
-    const partialBadge = o.partialDone
-      ? `<div class="order-partial-note">🟡 Tahap 1 diamankan: ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)} -- SL sisa di breakeven, sisa ${(remFrac * 100).toFixed(0)}% posisi di-trail</div>`
-      : '';
-    // Volume tradingan (nilai posisi/notional) = margin x leverage -- BUKAN field tersendiri di
-    // data, dihitung on-the-fly (14 Agu 2026, permintaan Olan: "ada volume tradingnya").
-    const volumeUsd = (o.marginUsd && o.leverage) ? o.marginUsd * o.leverage : null;
-    const liqPrice = liquidationPrice(o);
-    const tradeMetaLine = (o.leverage || o.marginUsd)
-      ? `<div class="order-meta">Margin ${fmtUsdOrder(o.marginUsd)} · Leverage ${o.leverage}× · Volume ${volumeUsd !== null ? fmtUsdOrder(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmtUsdOrder(liqPrice)}` : ''}</div>`
-      : '';
-    return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}">
-      ${idLine}
-      <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
-      <div class="order-strategy">${strategy}</div>
-      <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
-      <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
-      ${tradeMetaLine}
-      ${partialBadge}
-      <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
-    </div>`;
-  }
-  // closed_tp / closed_sl / cancelled
-  const won = o.status === 'closed_tp';
-  const badge = o.status === 'cancelled' ? '🚫 DIBATALKAN' : (won ? '✅ TP' : '❌ SL');
-  const pnlLine = (o.pnlUsd !== null && o.pnlUsd !== undefined)
-    ? `<div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${o.pnlPct.toFixed(2)}%)</div>` : '';
-  // Timeline 2-tahap (12 Agu 2026, permintaan Olan: "partial di jurnal juga") -- kalau order ini
-  // sempat kena tahap 1 sebelum full closed, tunjukkin timeline-nya, jangan cuma hasil akhir gabungan.
-  const partialTimeline = o.partialDone
-    ? `<div class="order-partial-timeline">
-        <div>🟡 Tahap 1 @ ${fmtUsdOrder(o.partialTp)}${o.partialClosedAt ? ` (${fmtDateLong(new Date(o.partialClosedAt))})` : ''}: ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)}</div>
-        <div>🏁 Tahap 2 (sisa) @ ${fmtUsdOrder(o.exitPrice ?? (won ? o.tp : o.sl))}${o.closedAt ? ` (${fmtDateLong(new Date(o.closedAt))})` : ''}: ${(o.pnlUsd - (o.realizedPnlUsd || 0)) >= 0 ? '+' : ''}${fmtUsdOrder((o.pnlUsd || 0) - (o.realizedPnlUsd || 0))}</div>
-      </div>`
-    : '';
-  return `<div class="order-card closed" data-strategy="${o.strategyType || ''}">
-    ${idLine}
-    <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
-    <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
-    ${partialTimeline}
-    ${pnlLine}
-  </div>`;
-}
-
-function loadSniperOrdersState() {
-  const ordersPath = path.join(__dirname, 'sniper-orders.json');
-  // Belum ada file = belum pernah ada order sama sekali (sistem manual baru mulai) -- BUKAN
-  // berarti panelnya kosong dari tampilan, tetap render empty-state yang jelas, jangan blank.
-  return fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
-}
-
-// Tab Sniper = status TERKINI doang, SATU kartu (permintaan Olan 9 Agu 2026 -- sebelumnya
-// numpuk semua entry hari ini, bingung). Kalau ada order aktif (floating), itu yang tampil.
-// Kalau enggak, tampilkan 1 status TERAKHIR (biasanya "INVALID, masih nunggu" dari
-// sniperAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
-// yang UDAH SELESAI (closed_tp/closed_sl) itu tugas tab Jurnal, bukan di sini.
-function renderSniperOrdersPanel(state, latestStatusEntry) {
-  // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
-  // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
-  // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di sniper-orders.json
-  // (dipantau sniperOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
-  const active = (state.orders || []).filter((o) => o.status === 'floating');
-
-  // Saldo bankroll Kaela DIPINDAH ke halaman Jurnal (14 Agu 2026, instruksi Olan: "jurnal
-  // isinya saldo berjalan kaela, jurnal trading dan grafik") -- section ini sekarang murni
-  // posisi live doang, gak dobel nampilin saldo yang udah ada di Jurnal.
-  let activeHtml;
-  if (active.length > 0) {
-    activeHtml = `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`;
-  } else if (latestStatusEntry) {
-    activeHtml = renderEntry(latestStatusEntry, { highlight: true });
-  } else {
-    activeHtml = `<div class="empty">🎯 Belum ada analisa Sniper.</div>`;
-  }
-
-  return `<div class="sniper-orders-panel">
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Saldo, riwayat &amp; statistik lengkap ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
-    ${activeHtml}
-  </div>`;
-}
-
-// ============ Tab Jurnal: statistik + equity curve + kalender P/L ala trading journal profesional
-// (RR Metrics/TradeZella dsb) -- SEMUA dihitung dari sniper-orders.json yang udah ada, gak ada
-// field baru. R-multiple pakai marginUsd sebagai 1R (itu resiko riil per trade di sistem exposure
-// kita -- lihat KNOWLEDGE/metodologi-analisa-teknikal.md §5, margin = 100% loss kalau SL kena).
-
-function computeJournalStats(trades) {
-  if (trades.length === 0) return null;
-  const wins = trades.filter((o) => o.status === 'closed_tp');
-  const losses = trades.filter((o) => o.status === 'closed_sl');
-  const winRate = (wins.length / trades.length) * 100;
-  const grossWin = wins.reduce((s, o) => s + (o.pnlUsd || 0), 0);
-  const grossLoss = Math.abs(losses.reduce((s, o) => s + (o.pnlUsd || 0), 0));
-  const profitFactor = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? null : 0); // null = "tak terhingga" (belum pernah rugi)
-  const totalPnl = trades.reduce((s, o) => s + (o.pnlUsd || 0), 0);
-  const expectancy = totalPnl / trades.length;
-  const rMultiples = trades.filter((o) => o.marginUsd).map((o) => o.pnlUsd / o.marginUsd);
-  const avgR = rMultiples.length ? rMultiples.reduce((a, b) => a + b, 0) / rMultiples.length : null;
-  return { count: trades.length, wins: wins.length, losses: losses.length, winRate, profitFactor, totalPnl, expectancy, avgR };
-}
-
-function renderJournalStatsGrid(stats) {
-  const pfText = stats.profitFactor === null ? '∞' : stats.profitFactor.toFixed(2);
-  const cell = (label, value, cls = '') => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls}">${value}</div></div>`;
-  return `<div class="journal-stats-grid">
-    ${cell('Total Trade', stats.count)}
-    ${cell('Win Rate', `${stats.winRate.toFixed(0)}%`, stats.winRate >= 50 ? 'up' : 'down')}
-    ${cell('Profit Factor', pfText, (stats.profitFactor === null || stats.profitFactor >= 1) ? 'up' : 'down')}
-    ${cell('Expectancy/trade', fmtUsdOrder(stats.expectancy), stats.expectancy >= 0 ? 'up' : 'down')}
-    ${cell('Avg R-Multiple', stats.avgR === null ? '-' : `${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, (stats.avgR || 0) >= 0 ? 'up' : 'down')}
-    ${cell('Total P&amp;L', `${stats.totalPnl >= 0 ? '+' : ''}${fmtUsdOrder(stats.totalPnl)}`, stats.totalPnl >= 0 ? 'up' : 'down')}
-  </div>`;
-}
-
-// trades: newest-first (konsisten sama urutan lain di file ini) -- dibalik dulu buat kronologis
-function renderEquityCurveSvg(trades) {
-  if (trades.length < 2) return '<div class="empty">Butuh minimal 2 trade selesai buat equity curve.</div>';
-  const chronological = [...trades].reverse();
-  let cum = 0;
-  const points = [0, ...chronological.map((o) => (cum += (o.pnlUsd || 0)))];
-  const w = 600, h = 160, pad = 10;
-  const min = Math.min(...points), max = Math.max(...points);
-  const range = (max - min) || 1;
-  const stepX = (w - pad * 2) / (points.length - 1);
-  const coords = points.map((v, i) => {
-    const x = pad + i * stepX;
-    const y = pad + (h - pad * 2) * (1 - (v - min) / range);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  const last = points[points.length - 1];
-  const strokeVar = last >= 0 ? 'var(--clr-success)' : 'var(--clr-danger)';
-  const zeroY = (pad + (h - pad * 2) * (1 - (0 - min) / range)).toFixed(1);
-  return `<svg class="equity-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <line x1="0" y1="${zeroY}" x2="${w}" y2="${zeroY}" style="stroke:var(--clr-border);stroke-width:1" stroke-dasharray="4 4"/>
-    <polyline points="${coords.join(' ')}" fill="none" style="stroke:${strokeVar};stroke-width:2.5" stroke-linejoin="round" stroke-linecap="round"/>
-  </svg>`;
-}
-
-const DOW_ID = ['M', 'S', 'S', 'R', 'K', 'J', 'S']; // Minggu Senin Selasa Rabu Kamis Jumat Sabtu
-
-function renderPnlCalendar(trades, now) {
-  const monthKey = localDateKey(now).slice(0, 7); // 'YYYY-MM'
-  const daily = {};
-  trades.forEach((o) => {
-    if (!o.closedAt) return;
-    const key = localDateKey(new Date(o.closedAt));
-    if (!key.startsWith(monthKey)) return;
-    daily[key] = (daily[key] || 0) + (o.pnlUsd || 0);
-  });
-  const [y, m] = monthKey.split('-').map(Number);
-  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
-  const monthPnl = Object.values(daily).reduce((a, b) => a + b, 0);
-  const cells = [];
-  for (let i = 0; i < firstDow; i++) cells.push('<div class="cal-cell cal-cell-empty"></div>');
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = `${monthKey}-${String(d).padStart(2, '0')}`;
-    const pnl = daily[key];
-    const cls = pnl == null ? '' : pnl >= 0 ? 'up' : 'down';
-    const pnlText = pnl == null ? '' : `<span class="cal-pnl">${pnl >= 0 ? '+' : ''}${Math.round(pnl)}</span>`;
-    cells.push(`<div class="cal-cell ${cls}"><span class="cal-day">${d}</span>${pnlText}</div>`);
-  }
-  return `<div class="pnl-calendar">
-    <div class="cal-header">${BULAN_ID[m - 1]} ${y} <span class="${monthPnl >= 0 ? 'up' : 'down'}">${monthPnl >= 0 ? '+' : ''}${fmtUsdOrder(monthPnl)}</span></div>
-    <div class="cal-grid">${DOW_ID.map((d) => `<div class="cal-dow">${d}</div>`).join('')}${cells.join('')}</div>
-  </div>`;
-}
-
-// Equity curve SALDO BENERAN Kaela (14 Agu 2026, beda dari renderEquityCurveSvg di atas yang
-// mulai dari 0/kumulatif P&L trade doang) -- ini titik awal $100, naik dari top-up MAUPUN
-// trading, biar keliatan trajectory bankroll yang sesungguhnya kalau berjalan bertahun-tahun.
-function renderFundEquitySvg(events) {
-  if (events.length < 2) return '<div class="empty">Bankroll baru mulai, equity curve keisi begitu ada top-up/trade berikutnya.</div>';
-  const w = 600, h = 160, pad = 10;
-  const values = events.map((e) => e.balanceAfter);
-  const min = Math.min(...values), max = Math.max(...values);
-  const range = (max - min) || 1;
-  const stepX = (w - pad * 2) / (values.length - 1);
-  const coords = values.map((v, i) => {
-    const x = pad + i * stepX;
-    const y = pad + (h - pad * 2) * (1 - (v - min) / range);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  // Tandai titik top-up (kotak kecil) biar keliatan mana kenaikan dari SETORAN, beda dari trading.
-  const topUpMarkers = events
-    .map((e, i) => (e.type === 'topup' || e.type === 'start' ? { x: pad + i * stepX, y: pad + (h - pad * 2) * (1 - (e.balanceAfter - min) / range) } : null))
-    .filter(Boolean)
-    .map((p) => `<rect x="${(p.x - 2.5).toFixed(1)}" y="${(p.y - 2.5).toFixed(1)}" width="5" height="5" style="fill:var(--clr-primary)"/>`)
-    .join('');
-  return `<svg class="equity-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <polyline points="${coords.join(' ')}" fill="none" style="stroke:var(--clr-success);stroke-width:2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    ${topUpMarkers}
-  </svg>`;
-}
-
-// Kartu ringkasan ala FUND REPORT (14 Agu 2026, permintaan Olan: "Kaela langsung jadi fund
-// manajer, harus bekerja seperti fund manajer beneran") -- pemisahan WAJIB: pertumbuhan dari
-// SETORAN (top-up, bukan prestasi) vs dari PERFORMA TRADING (P&L beneran, ini yang nunjukkin
-// skill). "Total Growth" digabung DIPERBOLEHKAN ditampilkan, tapi HARUS ada pecahannya juga --
-// jangan biarin pembaca ngira semua kenaikan itu dari skill trading kalau sebagiannya cuma setoran.
-function renderFundReportSection(report) {
-  const cell = (label, value, cls = '') => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls}">${value}</div></div>`;
-  const totalGrowthUsd = report.balance - report.totalContributed;
-  const totalGrowthPct = report.totalContributed > 0 ? (totalGrowthUsd / report.totalContributed) * 100 : 0;
-  return `<div class="fund-report-section">
-    <div class="journal-section-title">🤖 Laporan Fund Kaela -- Bankroll Bayangan</div>
-    <p class="order-disclaimer" style="margin-top:0;">Murni perhitungan (posisi bayangan), gak ada uang bergerak beneran -- tapi dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
-    <div class="journal-stats-grid">
-      ${cell('Saldo Sekarang', fmtUsdOrder(report.balance))}
-      ${cell('Total Disetor', fmtUsdOrder(report.totalContributed), '')}
-      ${cell('P&amp;L Trading (murni)', `${report.totalRealizedPnl >= 0 ? '+' : ''}${fmtUsdOrder(report.totalRealizedPnl)}`, report.totalRealizedPnl >= 0 ? 'up' : 'down')}
-      ${cell('Return dari Trading', `${report.returnOnContributedPct >= 0 ? '+' : ''}${report.returnOnContributedPct.toFixed(1)}%`, report.returnOnContributedPct >= 0 ? 'up' : 'down')}
-      ${cell('Total Growth (gabungan)', `${totalGrowthPct >= 0 ? '+' : ''}${totalGrowthPct.toFixed(1)}%`, totalGrowthPct >= 0 ? 'up' : 'down')}
-      ${cell('Jumlah Trade', report.tradeCount)}
-    </div>
-    <div class="journal-section-title">📈 Equity Curve Bankroll (mulai $100${report.startedAt ? ', ' + fmtDateLong(new Date(report.startedAt)) : ''})</div>
-    ${renderFundEquitySvg(report.events)}
-    <p class="order-disclaimer">🟧 Kotak oranye di grafik = momen top-up (setoran baru), BUKAN hasil trading -- biar kenaikan dari 2 sumber ini gampang dibedain sekilas.</p>
-  </div>`;
-}
-
-// ============ Tab Spot (Jurnal): DCA Musiman BAYANGAN Kaela (15 Agu 2026) -- lihat spotDca.js
-// buat mekanisme lengkap. Beda TOTAL dari tab Sniper: bukan margin/leverage, ini spot polos $2/hari.
-
-function renderSpotJurnalPanel(spotState, now) {
-  const cell = (label, value, cls = '') => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls}">${value}</div></div>`;
-
-  const sellDate = spotSellTriggerDate();
-  let badgeClass, badgeText, phaseNote;
-  if (spotState.btcHeld > 0) {
-    if (now < HALVING_DATE) {
-      badgeClass = 'phase-tanam';
-      badgeText = '🌱 SEDANG DCA (Musim Tanam)';
-      phaseNote = `Beli $${SPOT_DAILY_BUY_USD} BTC tiap hari sampai halving tiba (~${fmtDateLong(HALVING_DATE)}).`;
-    } else {
-      badgeClass = 'phase-panen';
-      badgeText = '🌾 TAHAN, MENUNGGU PANEN';
-      phaseNote = `Halving udah lewat, DCA berhenti. Jual otomatis semua BTC sekitar ${fmtDateLong(sellDate)}.`;
-    }
-  } else if (now >= WINDOW_START && now < HALVING_DATE) {
-    badgeClass = 'phase-tanam';
-    badgeText = '🌱 WINDOW TANAM -- DCA BERJALAN';
-    phaseNote = `DCA $${SPOT_DAILY_BUY_USD}/hari lagi berjalan (posisi belum keupdate di data terakhir, nunggu tick harian berikutnya).`;
-  } else {
-    badgeClass = 'phase-tunai';
-    badgeText = '⚪ TUNAI -- MENUNGGU WINDOW TANAM';
-    phaseNote = `DCA mulai otomatis begitu window Musim Tanam tiba (${fmtDateLong(WINDOW_START)}), jalan sampai halving (~${fmtDateLong(HALVING_DATE)}).`;
-  }
-
-  const avgCost = spotState.btcHeld > 0 ? spotState.totalInvestedCurrentCycle / spotState.btcHeld : null;
-
-  const summaryHtml = `<div class="spot-summary-grid">
-    ${cell('BTC Dimiliki', spotState.btcHeld > 0 ? spotState.btcHeld.toFixed(8) + ' BTC' : '0 BTC')}
-    ${cell('Modal Siklus Ini', fmtUsdOrder(spotState.totalInvestedCurrentCycle))}
-    ${cell('Avg Cost', avgCost !== null ? fmtUsdOrder(avgCost) : '-')}
-    ${cell('Saldo Terealisasi', fmtUsdOrder(spotState.totalRealizedCash))}
-    ${cell('Siklus Selesai', spotState.completedCycles.length)}
-  </div>`;
-
-  const liveValueHtml = spotState.btcHeld > 0
-    ? `<div data-spot-btc-held="${spotState.btcHeld}" data-spot-invested="${spotState.totalInvestedCurrentCycle}">
-        <div class="order-live-price">Nilai sekarang: <strong data-spot-value-target>memuat...</strong></div>
-        <div class="order-pnl-live" data-spot-pnl-target>Menghitung P&amp;L live...</div>
-      </div>`
-    : '';
-
-  const buyLogHtml = spotState.buyLog.length > 0
-    ? `<div class="spot-buy-log"><table>
-        <thead><tr><th>Tanggal</th><th>Harga BTC</th><th>BTC Didapat</th></tr></thead>
-        <tbody>${spotState.buyLog.slice().reverse().map((b) => `<tr><td>${fmtDateLong(new Date(b.date))}</td><td>${fmtUsdOrder(b.price)}</td><td>${b.btcBought.toFixed(8)}</td></tr>`).join('')}</tbody>
-      </table></div>`
-    : `<div class="empty">Belum ada pembelian di siklus ini.</div>`;
-
-  const cyclesHtml = spotState.completedCycles.length > 0
-    ? `<table class="spot-cycle-table">
-        <thead><tr><th>Mulai Beli</th><th>Terjual</th><th>Modal</th><th>Hasil Jual</th><th>P&amp;L</th></tr></thead>
-        <tbody>${spotState.completedCycles.slice().reverse().map((c) => `<tr>
-          <td>${c.buyWindowStart ? fmtDateLong(new Date(c.buyWindowStart)) : '-'}</td>
-          <td>${fmtDateLong(new Date(c.soldAt))}</td>
-          <td>${fmtUsdOrder(c.totalInvested)}</td>
-          <td>${fmtUsdOrder(c.proceedsUsd)}</td>
-          <td class="${c.pnlUsd >= 0 ? 'up' : 'down'}">${c.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(c.pnlUsd)} (${c.pnlPct >= 0 ? '+' : ''}${c.pnlPct.toFixed(1)}%)</td>
-        </tr>`).join('')}</tbody>
-      </table>`
-    : '';
-
-  return `<div class="spot-panel">
-    <div class="phase-badge ${badgeClass}">${badgeText}</div>
-    <p class="halving-note" style="margin-top:0;">${phaseNote}</p>
-    <p class="order-disclaimer">🎭 DCA Spot BAYANGAN Kaela sendiri -- modal $${SPOT_DAILY_BUY_USD}/hari FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper. Gak pernah dikirim ke WhatsApp, murni tercatat di sini.</p>
-    ${summaryHtml}
-    ${liveValueHtml}
-    <div class="journal-section-title">🧾 Jurnal Pembelian (siklus berjalan)</div>
-    ${buyLogHtml}
-    ${spotState.completedCycles.length > 0 ? `<div class="journal-section-title">📜 Riwayat Siklus Selesai</div>${cyclesHtml}` : ''}
-  </div>`;
-}
-
-function renderJurnalPanel(state, now, fundReport) {
-  // cancelled TIDAK dihitung ke statistik (batal sebelum jadi posisi beneran, bukan hasil trade),
-  // tapi tetap muncul di daftar riwayat biar jejaknya keliatan.
-  const closedAll = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').reverse();
-  const trades = closedAll.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl');
-  const stats = computeJournalStats(trades);
-
-  // Fund report (14 Agu 2026) tampil DULUAN, TERPISAH dari statistik per-trade -- muncul begitu
-  // bankroll mulai (top-up pertama), gak perlu nunggu ada trade selesai kayak statistik di bawahnya.
-  const fundHtml = fundReport ? renderFundReportSection(fundReport) : '';
-
-  if (!stats) {
-    return `<div class="jurnal-panel">
-      ${fundHtml}
-      <div class="empty">📓 Belum ada trade yang selesai. Statistik per-trade bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>
-    </div>`;
-  }
-
-  const strategies = [...new Set(closedAll.map((o) => o.strategyType).filter(Boolean))];
-  const filterHtml = strategies.length > 1
-    ? `<div class="strategy-filter">
-        <button class="strategy-filter-btn active" data-strategy="all">Semua</button>
-        ${strategies.map((s) => `<button class="strategy-filter-btn" data-strategy="${s}">${STRATEGY_LABEL_WEB[s] || s}</button>`).join('')}
-      </div>`
-    : '';
-
-  return `<div class="jurnal-panel">
-    ${fundHtml}
-    ${renderJournalStatsGrid(stats)}
-    <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
-    ${renderEquityCurveSvg(trades)}
-    <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
-    ${renderPnlCalendar(trades, now)}
-    <div class="journal-section-title">📋 Riwayat Trade (${closedAll.length})</div>
-    ${filterHtml}
-    <div class="order-grid" id="jurnal-trade-grid">${closedAll.map(renderOrderCard).join('')}</div>
-  </div>
-  <script>
-    document.querySelectorAll('.strategy-filter-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        document.querySelectorAll('.strategy-filter-btn').forEach(function (b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        var s = btn.dataset.strategy;
-        document.querySelectorAll('#jurnal-trade-grid .order-card').forEach(function (card) {
-          card.style.display = (s === 'all' || card.dataset.strategy === s) ? '' : 'none';
-        });
-      });
-    });
-  </script>`;
-}
-
-// Dashboard (14 Agu 2026, permintaan Olan: "gausah dipisah tab, biarin ngalir") -- SATU halaman
-// mengalir, urutan tetap: Selamat datang -> Chart BTC -> Countdown Halving -> Musiman -> Sniper
-// -> (nanti nyopet, Dark Kaela). Jurnal DIPISAH ke halaman sendiri (jurnal.html) -- lihat
-// buildJurnalHtml() di bawah.
+// Dashboard (index.html) -- shell doang. #musiman-container/#sniper-container diisi
+// dashboard-load.js (fetch+render client-side, lihat kaela-render.js).
 function buildDashboardHtml() {
-  const now = new Date();
-
-  // Status LIVE Siklus Halving (state.json), gak berisik. Laporan Harian teks SENGAJA gak
-  // ditampilin lagi di sini (keputusan Olan 9 Agu 2026) -- WA aja udah cukup.
-  const musimanHtml = renderSiklusHalvingPanel(now);
-
-  // Sniper -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
-  // renderSniperOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir. Sengaja
-  // gak pakai banner terpisah di atas chart lagi -- sekarang halaman ngalir tanpa tab, jadi posisi
-  // floating udah otomatis kelihatan pas scroll turun dikit, gak perlu klik apa-apa.
-  const ordersState = loadSniperOrdersState();
-  const latestSniperEntry = getAll('sniper')[0] || null; // terbaru duluan
-  const sniperHtml = renderSniperOrdersPanel(ordersState, latestSniperEntry);
-
   return `<!doctype html>
 <html lang="id">
 <head>
@@ -805,13 +263,15 @@ function buildDashboardHtml() {
   ${countdownHtml()}
 
   <div class="dash-section-title">🌾 Musiman</div>
-  ${musimanHtml}
+  <div id="musiman-container"><div class="empty">Memuat...</div></div>
 
   <div class="dash-section-title">🎯 Sniper</div>
-  ${sniperHtml}
+  <div id="sniper-container"><div class="empty">Memuat...</div></div>
 
   <script>${countdownScript()}</script>
   <script src="js/price-ticker.js"></script>
+  <script src="js/kaela-render.js"></script>
+  <script src="js/dashboard-load.js"></script>
   <script src="js/sniper-orders-widget.js"></script>
 
   ${navHtml('dashboard')}
@@ -819,16 +279,9 @@ function buildDashboardHtml() {
 </html>`;
 }
 
-// Jurnal (14 Agu 2026, permintaan Olan: "taruh halaman sendiri isinya saldo berjalan kaela,
-// jurnal trading dan grafik perkembangan saldo") -- halaman terpisah, isi PERSIS renderJurnalPanel
-// yang dulu jadi tab (fund report saldo + statistik trade + equity curve + kalender P/L +
-// riwayat). Profit MAUPUN loss ditampilkan apa adanya (gak disaring) -- lihat renderFundReportSection.
+// Jurnal (jurnal.html) -- shell doang, 2 tab (Spot/Sniper). Isi tiap panel diisi jurnal-load.js
+// (fetch+render client-side). Profit MAUPUN loss ditampilkan apa adanya (gak disaring).
 function buildJurnalHtml() {
-  const now = new Date();
-  const ordersState = loadSniperOrdersState();
-  const sniperJurnalHtml = renderJurnalPanel(ordersState, now, getFundReport());
-  const spotJurnalHtml = renderSpotJurnalPanel(loadSpotState(), now);
-
   return `<!doctype html>
 <html lang="id">
 <head>
@@ -856,9 +309,11 @@ function buildJurnalHtml() {
     <button class="dash-tab-btn active" data-tab="spot">🌱 Spot</button>
     <button class="dash-tab-btn" data-tab="sniper">🎯 Sniper</button>
   </div>
-  <div class="dash-panel active" data-panel="spot">${spotJurnalHtml}</div>
-  <div class="dash-panel" data-panel="sniper">${sniperJurnalHtml}</div>
+  <div class="dash-panel active" data-panel="spot"><div class="empty">Memuat...</div></div>
+  <div class="dash-panel" data-panel="sniper"><div class="empty">Memuat...</div></div>
 
+  <script src="js/kaela-render.js"></script>
+  <script src="js/jurnal-load.js"></script>
   <script src="js/spot-widget.js"></script>
   <script>
     document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
@@ -879,4 +334,4 @@ function buildJurnalHtml() {
 if (!fs.existsSync(WEB_DIR)) fs.mkdirSync(WEB_DIR, { recursive: true });
 fs.writeFileSync(path.join(WEB_DIR, 'index.html'), buildDashboardHtml());
 fs.writeFileSync(path.join(WEB_DIR, 'jurnal.html'), buildJurnalHtml());
-console.log('web/index.html (Dashboard) + web/jurnal.html dibuat.');
+console.log('web/index.html + web/jurnal.html (shell statis) dibuat.');

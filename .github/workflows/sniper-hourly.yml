@@ -35,24 +35,16 @@ jobs:
       - name: Pantau order Sniper MANUAL (sniperOrderMonitor.js) -- BUKAN auto-decide entry
         run: node sniperOrderMonitor.js
 
-      - name: Cek apakah ada event/status baru (archive.json atau sniper-orders.json berubah)
-        id: check
-        run: |
-          if git diff --quiet archive.json sniper-orders.json 2>/dev/null; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Rebuild web/index.html + web/jurnal.html (cuma kalau ada perubahan)
-        if: steps.check.outputs.changed == 'true'
-        run: node buildDashboard.js
-
+      # 15 Agu 2026: buildDashboard.js DICABUT dari sini -- web/index.html sekarang shell statis
+      # yang gak nyimpen data (lihat buildDashboard.js), jadi gak pernah butuh di-rebuild tiap
+      # data berubah. Pengunjung dapet data terbaru LANGSUNG dari archive.json/sniper-orders.json
+      # di bawah ini (fetch client-side, lihat web/js/dashboard-load.js) -- BUKAN dari HTML yang
+      # di-generate ulang. Commit di sini CUKUP, gak perlu apa-apa lagi buat web keliatan fresh.
       - name: Commit & push archive.json + sniper-orders.json (WAJIB tiap run kalau ada perubahan)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f archive.json sniper-orders.json web/index.html web/jurnal.html
+          git add -f archive.json sniper-orders.json
           git diff --staged --quiet || git commit -m "Auto: sniper order monitor $(date -u +%Y-%m-%dT%H:%M)"
           # Retry pull+push -- kalau push gagal dan gak diulang, sniper-orders.json GAK MAJU,
           # run berikutnya bisa anggap order yang UDAH ditrigger/ditutup sebagai belum, kirim WA
@@ -66,7 +58,3 @@ jobs:
           done
           echo "::error::Gagal push sniper-orders.json setelah 5x percobaan."
           exit 1
-
-      # Deploy Netlify DICABUT dari sini (15 Agu 2026, kredit abis gara-gara puluhan deploy/hari) --
-      # web/index.html tetap ke-rebuild+commit tiap run (di atas), tapi live site cuma keupdate
-      # lewat deploy-daily.yml (1x/hari terjadwal) atau manual workflow_dispatch. Lihat memory.

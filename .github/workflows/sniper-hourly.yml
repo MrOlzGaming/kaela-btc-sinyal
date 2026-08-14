@@ -1,4 +1,4 @@
-name: Monitor Order Nyopet Market (tiap jam)
+name: Monitor Order Sniper (tiap jam)
 
 on:
   schedule:
@@ -8,7 +8,7 @@ on:
 # Cegah 2 run tumpang tindih -- kalau bareng, dua-duanya bisa liat order PENDING/FLOATING yang
 # sama dan sama-sama trigger/close + kirim WA 2x. Lihat whale-alert.yml buat kasus nyata bug ini.
 concurrency:
-  group: nyopet-hourly
+  group: sniper-hourly
   cancel-in-progress: false
 
 permissions:
@@ -32,29 +32,29 @@ jobs:
           };
           EOF
 
-      - name: Pantau order Nyopet Market MANUAL (nyopetOrderMonitor.js) -- BUKAN auto-decide entry
-        run: node nyopetOrderMonitor.js
+      - name: Pantau order Sniper MANUAL (sniperOrderMonitor.js) -- BUKAN auto-decide entry
+        run: node sniperOrderMonitor.js
 
-      - name: Cek apakah ada event/status baru (archive.json atau nyopet-orders.json berubah)
+      - name: Cek apakah ada event/status baru (archive.json atau sniper-orders.json berubah)
         id: check
         run: |
-          if git diff --quiet archive.json nyopet-orders.json 2>/dev/null; then
+          if git diff --quiet archive.json sniper-orders.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Rebuild web/index.html (cuma kalau ada perubahan)
+      - name: Rebuild web/index.html + web/jurnal.html (cuma kalau ada perubahan)
         if: steps.check.outputs.changed == 'true'
         run: node buildDashboard.js
 
-      - name: Commit & push archive.json + nyopet-orders.json (WAJIB tiap run kalau ada perubahan)
+      - name: Commit & push archive.json + sniper-orders.json (WAJIB tiap run kalau ada perubahan)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f archive.json nyopet-orders.json web/index.html
-          git diff --staged --quiet || git commit -m "Auto: nyopet order monitor $(date -u +%Y-%m-%dT%H:%M)"
-          # Retry pull+push -- kalau push gagal dan gak diulang, nyopet-orders.json GAK MAJU,
+          git add -f archive.json sniper-orders.json web/index.html web/jurnal.html
+          git diff --staged --quiet || git commit -m "Auto: sniper order monitor $(date -u +%Y-%m-%dT%H:%M)"
+          # Retry pull+push -- kalau push gagal dan gak diulang, sniper-orders.json GAK MAJU,
           # run berikutnya bisa anggap order yang UDAH ditrigger/ditutup sebagai belum, kirim WA
           # duplikat trigger/close. Lihat whale-alert.yml buat kasus nyata bug sejenis.
           for i in 1 2 3 4 5; do
@@ -64,7 +64,7 @@ jobs:
             echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
             sleep 5
           done
-          echo "::error::Gagal push nyopet-orders.json setelah 5x percobaan."
+          echo "::error::Gagal push sniper-orders.json setelah 5x percobaan."
           exit 1
 
       - name: Deploy web/ ke Netlify (cuma kalau ada perubahan, hemat build minutes)

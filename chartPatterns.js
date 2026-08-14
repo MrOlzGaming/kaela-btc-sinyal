@@ -1,5 +1,5 @@
 // Deteksi pola chart breakout (10 Agu 2026) -- diekstrak dari backtestFlagBreakout.js supaya
-// SATU sumber kebenaran dipakai backtest MAUPUN live (nyopetAutoAnalysis.js), gak ada logika
+// SATU sumber kebenaran dipakai backtest MAUPUN live (sniperAutoAnalysis.js), gak ada logika
 // duplikat yang bisa kegeser beda satu sama lain. Lihat backtestFlagBreakout.js buat riset/hasil
 // validasi lengkapnya -- file ini murni fungsi deteksi, gak ada logic backtest/simulasi di sini.
 //
@@ -92,7 +92,7 @@ function detectWedge(daily, i, opts = {}) {
   return null;
 }
 
-// Deteksi TERPADU (buat live -- nyopetAutoAnalysis.js) -- cek flag dulu, baru wedge kalau flag
+// Deteksi TERPADU (buat live -- sniperAutoAnalysis.js) -- cek flag dulu, baru wedge kalau flag
 // gak ketemu, normalisasi ke bentuk sinyal generik { direction, sl, patternType, ... } biar
 // caller gak perlu tau beda struktur flag vs wedge. `allowShort=false` = default tervalidasi
 // (short kebukti ngerusak edge di backtest, baik di sistem lama maupun pola baru ini).

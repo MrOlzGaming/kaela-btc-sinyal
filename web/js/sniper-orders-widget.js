@@ -1,7 +1,7 @@
 // Hitung & tampilkan P&L LIVE buat order Sniper yang lagi FLOATING -- baca harga BTC
 // live (Binance REST, sama endpoint kayak chart-widget.js) tiap 15 detik, update kartu order
 // yang punya [data-order-id] di DOM (dirender statis oleh buildDashboard.js dari
-// nyopet-orders.json). Kalau gak ada kartu floating di halaman, script ini no-op.
+// sniper-orders.json). Kalau gak ada kartu floating di halaman, script ini no-op.
 
 (function () {
   // data-api.binance.vision -- market data publik, gak kena blokir geografis (api.binance.com

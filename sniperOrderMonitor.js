@@ -1,5 +1,5 @@
-// Jalankan tiap jam (bareng jadwal candle H1 close): node nyopetOrderMonitor.js
-// Pantau order (nyopetOrders.js, dibuat manual ATAU otomatis nyopetAutoAnalysis.js). 2 jenis:
+// Jalankan tiap jam (bareng jadwal candle H1 close): node sniperOrderMonitor.js
+// Pantau order (sniperOrders.js, dibuat manual ATAU otomatis sniperAutoAnalysis.js). 2 jenis:
 //   1. Order LAMA/manual (gak ada partialTp) -- TP/SL tunggal, perilaku asli:
 //      PENDING -> cek candle H1 TERAKHIR YANG SUDAH CLOSE: kalau CLOSE-nya konfirmasi arah
 //      (buy: close >= triggerPrice; sell: close <= triggerPrice) -> flip ke FLOATING.
@@ -11,9 +11,9 @@
 //      di bawah/atas SMA trailing (momentum patah -> full close sisa, "lihat kelakuan candle").
 // Eksekusi ASLI tetap Olan manual di Binance -- ini cuma monitor, TIDAK PERNAH generate order baru.
 
-const { getActiveOrders, updateOrder } = require('./nyopetOrders');
+const { getActiveOrders, updateOrder } = require('./sniperOrders');
 const { applyRealizedPnl } = require('./kaelaBankroll');
-const { formatTriggered, formatClosed, formatPartialClosed } = require('./nyopetOrderLog');
+const { formatTriggered, formatClosed, formatPartialClosed } = require('./sniperOrderLog');
 const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
@@ -58,11 +58,11 @@ function computePnl(order, exitPrice, fraction = 1) {
 // SEPANJANG hidupnya (trigger/partial/closed), tetap kecatat normal di web/jurnal/bankroll.
 async function sendWhatsAppRespectMute(msg, label, silent = false) {
   if (silent) {
-    console.log(`[NyopetOrderMonitor] Order SILENT (trial/simulasi) -- ${label} TETAP tercatat di web, gak pernah dikirim ke grup.`);
+    console.log(`[SniperOrderMonitor] Order SILENT (trial/simulasi) -- ${label} TETAP tercatat di web, gak pernah dikirim ke grup.`);
     return;
   }
   if (isWaMuted()) {
-    console.log(`[NyopetOrderMonitor] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
+    console.log(`[SniperOrderMonitor] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
     return;
   }
   await sendWhatsApp(msg);
@@ -72,13 +72,13 @@ async function main() {
   const now = new Date();
   const active = getActiveOrders();
   if (active.length === 0) {
-    console.log('[NyopetOrderMonitor]', now.toISOString(), '— gak ada order aktif, skip.');
+    console.log('[SniperOrderMonitor]', now.toISOString(), '— gak ada order aktif, skip.');
     return;
   }
 
   const candles = await fetchHourlyClosed(5);
   if (candles.length === 0) {
-    console.log('[NyopetOrderMonitor] Belum ada candle H1 closed, skip.');
+    console.log('[SniperOrderMonitor] Belum ada candle H1 closed, skip.');
     return;
   }
   const last = candles[candles.length - 1];
@@ -104,7 +104,7 @@ async function main() {
       });
       const msg = formatTriggered(updated);
       console.log(msg + '\n');
-      addEntry('nyopet', msg, now);
+      addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, 'order kena trigger', order.silentTest);
       continue;
     }
@@ -125,7 +125,7 @@ async function main() {
           applyRealizedPnl(pnlUsd || 0, 'closed_sl', now); // update bankroll bayangan Kaela
           const msg = formatClosed(updated);
           console.log(msg + '\n');
-          addEntry('nyopet', msg, now);
+          addEntry('sniper', msg, now);
           await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
           continue;
         }
@@ -139,7 +139,7 @@ async function main() {
             applyRealizedPnl(pnlUsd || 0, 'closed_sl', now);
             const msg = formatClosed(updated);
             console.log(msg + '\n');
-            addEntry('nyopet', msg, now);
+            addEntry('sniper', msg, now);
             await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
             continue;
           }
@@ -150,7 +150,7 @@ async function main() {
           applyRealizedPnl(realizedPnlUsd || 0, 'partial_tahap1', now); // update bankroll bayangan Kaela -- cuma separuh
           const msg = formatPartialClosed(updated);
           console.log(msg + '\n');
-          addEntry('nyopet', msg, now);
+          addEntry('sniper', msg, now);
           await sendWhatsAppRespectMute(msg, 'target tahap 1 kena', order.silentTest);
           continue;
         }
@@ -182,7 +182,7 @@ async function main() {
       applyRealizedPnl(restPnlUsd || 0, hitBreakevenSl ? 'closed_sl_breakeven' : 'closed_trail', now);
       const msg = formatClosed(updated);
       console.log(msg + '\n');
-      addEntry('nyopet', msg, now);
+      addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh', order.silentTest);
       continue;
     }
@@ -209,12 +209,12 @@ async function main() {
     });
     const msg = formatClosed(updated);
     console.log(msg + '\n');
-    addEntry('nyopet', msg, now);
+    addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'posisi ditutup', order.silentTest);
   }
 }
 
 main().catch((e) => {
-  console.error('ERROR nyopetOrderMonitor.js:', e.message);
+  console.error('ERROR sniperOrderMonitor.js:', e.message);
   process.exit(1);
 });

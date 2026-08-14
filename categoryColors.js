@@ -10,7 +10,7 @@
 const CATEGORY_COLOR = {
   news: { emoji: '🟦', hex: '#3b82f6', label: 'Berita' },
   laporan: { emoji: '🟪', hex: '#a855f7', label: 'Laporan' },
-  nyopet: { emoji: '🟧', hex: '#f7931a', label: 'Sniper' }, // key 'nyopet' dipertahankan (identifier kode), cuma label tampilan yang diganti (12 Agu 2026, rename Nyopet Market -> Sniper)
+  sniper: { emoji: '🟧', hex: '#f7931a', label: 'Sniper' }, // key 'nyopet' -> 'sniper' (14 Agu 2026, rename kode penuh -- 'nyopet' dilepas, dipakai lagi nanti buat Dark Kaela)
   whale: { emoji: '🟨', hex: '#eab308', label: 'Whale Alert' },
   econ: { emoji: '⬜', hex: '#8b949e', label: 'Jadwal Ekonomi' },
   priceAlert: { emoji: '🟫', hex: '#a16207', label: 'Pergerakan Harga' },
@@ -20,7 +20,7 @@ const CATEGORY_COLOR = {
 function categoryOfType(type) {
   if (type === 'news') return 'news';
   if (type.startsWith('report-')) return 'laporan';
-  if (type === 'nyopet') return 'nyopet';
+  if (type === 'sniper') return 'sniper';
   if (type === 'whale') return 'whale';
   if (type === 'econ-calendar') return 'econ';
   if (type === 'price-alert') return 'priceAlert';

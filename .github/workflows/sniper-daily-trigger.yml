@@ -1,4 +1,4 @@
-name: Nyopet Market - Trigger Analisa Harian
+name: Sniper - Trigger Analisa Harian
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  group: nyopet-daily-trigger
+  group: sniper-daily-trigger
   cancel-in-progress: false
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          # WAJIB >=22 -- nyopetAutoAnalysis.js pakai WebSocket bawaan Node (sampleLiquidations()),
+          # WAJIB >=22 -- sniperAutoAnalysis.js pakai WebSocket bawaan Node (sampleLiquidations()),
           # baru stabil tanpa flag mulai Node 22. Ketauan 12 Agu 2026: workflow gagal 2 hari
           # berturut-turut ("WebSocket is not defined") gara-gara masih di Node 20.
           node-version: '22'
@@ -34,20 +34,20 @@ jobs:
           EOF
 
       # Analisa gabungan OTOMATIS (teknikal + liquidation heatmap) -> VALID buka posisi
-      # BAYANGAN (nyopetAutoAnalysis.js, keputusan Olan 9 Agu 2026) / INVALID kirim status.
-      - name: Analisa gabungan otomatis (nyopetAutoAnalysis.js)
-        run: node nyopetAutoAnalysis.js
+      # BAYANGAN (sniperAutoAnalysis.js, keputusan Olan 9 Agu 2026) / INVALID kirim status.
+      - name: Analisa gabungan otomatis (sniperAutoAnalysis.js)
+        run: node sniperAutoAnalysis.js
 
-      - name: Cek apakah ada perubahan (archive.json atau nyopet-orders.json)
+      - name: Cek apakah ada perubahan (archive.json atau sniper-orders.json)
         id: check
         run: |
-          if git diff --quiet archive.json nyopet-orders.json 2>/dev/null; then
+          if git diff --quiet archive.json sniper-orders.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Rebuild web/index.html (cuma kalau ada perubahan)
+      - name: Rebuild web/index.html + web/jurnal.html (cuma kalau ada perubahan)
         if: steps.check.outputs.changed == 'true'
         run: node buildDashboard.js
 
@@ -55,8 +55,8 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f nyopet-trigger-state.json archive.json nyopet-orders.json web/index.html
-          git diff --staged --quiet || git commit -m "Auto: nyopet analisa harian $(date -u +%Y-%m-%dT%H:%M)"
+          git add -f sniper-trigger-state.json archive.json sniper-orders.json web/index.html web/jurnal.html
+          git diff --staged --quiet || git commit -m "Auto: sniper analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
             git rebase --abort 2>/dev/null || true

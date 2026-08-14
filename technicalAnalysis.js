@@ -15,7 +15,7 @@ function parseCandle(raw) {
 
 // Fix 14 Agu 2026 (bug KRITIS ketauan pas audit): Binance selalu nyertain candle PALING BARU
 // yang MASIH JALAN (belum closed) sebagai elemen terakhir tiap query "N candle terakhir" --
-// tanpa filter ini, `daily[daily.length-1]` yang dipakai nyopetAutoAnalysis.js buat cek breakout
+// tanpa filter ini, `daily[daily.length-1]` yang dipakai sniperAutoAnalysis.js buat cek breakout
 // itu candle yang BARU MULAI beberapa menit lalu (open~=close candle sebelumnya, BUKAN candle
 // kemarin yang beneran closed) -- mentahin seluruh premis "tunggu candle harian CLOSE dulu baru
 // konfirmasi sinyal". Fetch limit+1 lalu filter closeTime<=now, biar caller tetap dapet `limit`
@@ -137,7 +137,7 @@ async function analyze(symbol = 'BTCUSDT') {
     ? (weeklyMa10 > weeklyMa30 ? 'bullish' : weeklyMa10 < weeklyMa30 ? 'bearish' : 'netral')
     : null;
   // Jarak % MA10 vs MA30 mingguan = proxy KEKUATAN trend (bukan cuma arah) -- dipakai buat
-  // nentuin seberapa ambisius target TP (lihat nyopetAutoAnalysis.js pickAdaptiveTp/classifyWeeklyStrength).
+  // nentuin seberapa ambisius target TP (lihat sniperAutoAnalysis.js pickAdaptiveTp/classifyWeeklyStrength).
   const weeklyMomentumPct = (weeklyMa10 && weeklyMa30) ? Math.abs((weeklyMa10 - weeklyMa30) / weeklyMa30) * 100 : null;
 
   const ma20 = sma(dailyCloses, 20);
@@ -156,7 +156,7 @@ async function analyze(symbol = 'BTCUSDT') {
   }
 
   const { highs, lows } = findSwingPoints(hourly, 3);
-  // SENGAJA gak dibatasin cuma top-3-by-touches (dulu `.slice(0,3)`) -- nyopetAutoAnalysis.js
+  // SENGAJA gak dibatasin cuma top-3-by-touches (dulu `.slice(0,3)`) -- sniperAutoAnalysis.js
   // butuh akses ke SEMUA zona buat milih SL "paling deket" (10 Agu 2026, tervalidasi backtest:
   // SL paling deket >> SL paling tersentuh). `[0]` (paling tersentuh) tetap dipakai buat deteksi
   // breakout & tampilan "kunci" -- itu tujuannya beda (level paling SIGNIFIKAN historis),

@@ -2,8 +2,8 @@
 // GRATIS, no API key -- TAPI limit 10 request/jam. Data sumbernya sendiri cuma update 1x/hari
 // (nilai yang ditarik "hari ini" biasanya masih tanggal KEMARIN, butuh waktu settle blockchain) --
 // makanya modul ini WAJIB dipanggil paling banyak 1x/hari per proses (Laporan Harian Halving +
-// Nyopet Auto-Analysis), JANGAN pernah dipasang ke workflow yang jalan tiap jam/menit
-// (whale-alert/price-alert/nyopet-hourly) -- limitnya abis dalam hitungan menit kalau dipaksa.
+// Sniper Auto-Analysis), JANGAN pernah dipasang ke workflow yang jalan tiap jam/menit
+// (whale-alert/price-alert/sniper-hourly) -- limitnya abis dalam hitungan menit kalau dipaksa.
 
 const BASE_URL = 'https://bitcoin-data.com/v1';
 
@@ -84,7 +84,7 @@ async function fetchCycleMetrics() {
   return { mvrv, puellMultiple };
 }
 
-// Buat Nyopet Auto-Analysis -- SOPR + NUPL (lebih pas buat konteks jangka pendek-menengah).
+// Buat Sniper Auto-Analysis -- SOPR + NUPL (lebih pas buat konteks jangka pendek-menengah).
 async function fetchTradeMetrics() {
   const [sopr, nupl] = await Promise.all([
     safe(fetchSopr, 'SOPR'),
@@ -100,6 +100,6 @@ module.exports = {
 if (require.main === module) {
   (async () => {
     console.log('Cycle (Halving):', JSON.stringify(await fetchCycleMetrics(), null, 2));
-    console.log('Trade (Nyopet):', JSON.stringify(await fetchTradeMetrics(), null, 2));
+    console.log('Trade (Sniper):', JSON.stringify(await fetchTradeMetrics(), null, 2));
   })();
 }

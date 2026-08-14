@@ -1,7 +1,7 @@
 // Peta arah SEBAB-AKIBAT standar makro -> BTC (permintaan Olan: "berani memperkirakan arah,
 // jelasin kalau begini maka begitu"). INI HEURISTIK MAKRO UMUM (channel ekspektasi The Fed
 // hawkish/dovish -> dolar/yield -> selera risiko), BUKAN backtest data historis -- beda level
-// keyakinan dari sinyal Nyopet/Halving yang semua diuji lewat data. Disclaimer ini WAJIB tetap
+// keyakinan dari sinyal Sniper/Musiman yang semua diuji lewat data. Disclaimer ini WAJIB tetap
 // ditampilkan di pesan (lihat econCalendarLog.js), jangan disamakan levelnya sama sinyal utama.
 //
 // `strength` jujur soal seberapa reliable hubungan tiap event ke BTC secara historis -- 'kuat'

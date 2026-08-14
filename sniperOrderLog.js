@@ -42,7 +42,7 @@ function tradeMetaLine(order) {
 
 function formatRencana(order) {
   const lines = [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 📋 RENCANA (analisa Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 📋 RENCANA (analisa Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} · ${STRATEGY_LABEL[order.strategyType] || ''}`,
     '',
@@ -66,7 +66,7 @@ function formatRencana(order) {
 
 function formatTriggered(order) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — ✅ KENA TRIGGER, SEKARANG FLOATING`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ✅ KENA TRIGGER, SEKARANG FLOATING`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
     '',
@@ -87,7 +87,7 @@ function formatClosed(order) {
   const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)' };
   const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — ${exitLabel}`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${exitLabel}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -108,7 +108,7 @@ function formatClosed(order) {
 function formatPartialClosed(order) {
   const pnlSign = order.realizedPnlUsd >= 0 ? '+' : '-';
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -140,7 +140,7 @@ function formatPositionMonitor(order, livePrice) {
     : `❌ SL: ${fmt(order.sl)}  🎯 TP tahap 1: ${fmt(order.partialTp)}`;
 
   const lines = [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} -- masih FLOATING, bukan sinyal baru.`,
     '',
@@ -161,10 +161,10 @@ function formatPositionMonitor(order, livePrice) {
 // Heartbeat harian ~08:05 WITA (abis candle Daily closed) -- BUKAN sinyal, murni status +
 // ajakan Olan buka chat buat analisa multi-timeframe bareng. Gak diarsipkan ke web sama sekali
 // (konsisten kebijakan "belum valid = gak tampil dimanapun"), dedup dicek via
-// nyopet-trigger-state.json (lihat nyopetDailyTrigger.js).
+// sniper-trigger-state.json (lihat sniperDailyTrigger.js).
 function formatDailyTrigger(btcPrice) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 🔍 Kaela lagi kerja`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 🔍 Kaela lagi kerja`,
     '',
     `Lagi ngumpulin data & analisa BTC multi-timeframe (harga sekarang: ${fmt(btcPrice)})...`,
     'Kalau ada setup yang masuk akal, baru diinfoin di sini setelah VALID.',
@@ -176,7 +176,7 @@ function formatDailyTrigger(btcPrice) {
 
 function formatCancelled(order) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 🚫 RENCANA DIBATALKAN`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 🚫 RENCANA DIBATALKAN`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ trigger ${fmt(order.triggerPrice)} -- dibatalkan sebelum kena trigger.`,
     '',
@@ -184,7 +184,7 @@ function formatCancelled(order) {
   ].join('\n');
 }
 
-// Analisa gabungan OTOMATIS harian (9 Agu 2026, nyopetAutoAnalysis.js) -- Analisa Teknikal +
+// Analisa gabungan OTOMATIS harian (9 Agu 2026, sniperAutoAnalysis.js) -- Analisa Teknikal +
 // Sentimen + On-chain + Kesimpulan VALID/INVALID (Liquidation Heatmap dicabut 12 Agu 2026, lihat
 // liqLine() di bawah). VALID = posisi BAYANGAN langsung dibuka (murni perhitungan, TIDAK ADA
 // uang bergerak -- Kaela bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI
@@ -246,7 +246,7 @@ function taLines(ta) {
 // Level TP 1:1/1:2/1:3 (11 Agu 2026, permintaan Olan: "kasih SL + TP 1:1/1:2/1:3 sekalian,
 // biar bisa dibandingin sama analisaku sendiri") -- MURNI TAMPILAN referensi, dihitung langsung
 // dari entry+SL. Exit BENERAN tetap ikut mekanisme partial 2R + trailing SMA (lihat
-// nyopetOrderMonitor.js) -- ini gak ngubah eksekusi, cuma kasih konteks R-multiple lengkap.
+// sniperOrderMonitor.js) -- ini gak ngubah eksekusi, cuma kasih konteks R-multiple lengkap.
 function rMultipleLevels(order) {
   const risk = Math.abs(order.entryPrice - order.sl);
   const nyawaPct = risk / order.entryPrice * 100;
@@ -262,7 +262,7 @@ function rMultipleLevels(order) {
 function formatAutoValid({ order, ta, sentiment, onchain }) {
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🤖 SNIPER — ✅ VALID (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
     ...rMultipleLevels(order),
@@ -300,7 +300,7 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
   const syaratLine = '📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.';
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🤖 SNIPER — ❌ INVALID (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ❌ INVALID (analisa otomatis Kaela)`,
     'Belum ada posisi. Masih nunggu syarat terpenuhi.',
     '',
     '📊 ANALISA TEKNIKAL',

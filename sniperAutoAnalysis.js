@@ -1,5 +1,5 @@
 // Jalankan 1x sehari, abis candle HARIAN closing (00:00 UTC = 08:00 WITA -- pas jadwal
-// nyopet-daily-trigger.yml, 00:05 UTC): analisa gabungan OTOMATIS (teknikal + sentimen +
+// sniper-daily-trigger.yml, 00:05 UTC): analisa gabungan OTOMATIS (teknikal + sentimen +
 // on-chain -- liquidation heatmap DICABUT 12 Agu 2026, lihat komentar di bawah) -> kesimpulan
 // VALID/INVALID -> kalau VALID langsung catat "posisi bayangan" (shadow --
 // TIDAK ADA uang beneran, Kaela cuma ngitung seolah entry market saat itu, murni bookkeeping) dan
@@ -25,10 +25,10 @@ const fs = require('fs');
 const path = require('path');
 const { analyze, fetchCandles } = require('./technicalAnalysis');
 const { detectPatternSignal } = require('./chartPatterns');
-const { getActiveOrders, createOrder, updateOrder } = require('./nyopetOrders');
+const { getActiveOrders, createOrder, updateOrder } = require('./sniperOrders');
 const { hitung: hitungExposure } = require('./calculator');
 const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBankroll');
-const { formatAutoValid, formatAutoInvalid, formatPositionMonitor } = require('./nyopetOrderLog');
+const { formatAutoValid, formatAutoInvalid, formatPositionMonitor } = require('./sniperOrderLog');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
@@ -64,7 +64,7 @@ async function safeSentiment() {
   try {
     return await analyzeSentiment('BTCUSDT');
   } catch (e) {
-    console.log('[NyopetAutoAnalysis] Sentimen gagal diambil (dilewatin):', e.message);
+    console.log('[SniperAutoAnalysis] Sentimen gagal diambil (dilewatin):', e.message);
     return null;
   }
 }
@@ -76,7 +76,7 @@ async function safeOnchain() {
   try {
     return await fetchTradeMetrics();
   } catch (e) {
-    console.log('[NyopetAutoAnalysis] On-chain metrics gagal diambil (dilewatin):', e.message);
+    console.log('[SniperAutoAnalysis] On-chain metrics gagal diambil (dilewatin):', e.message);
     return null;
   }
 }
@@ -85,16 +85,16 @@ async function safeOnchain() {
 // ke web/archive.json apa adanya, cuma broadcast grup yang ditahan sampai pengumuman resmi.
 async function sendWhatsAppRespectMute(msg, label) {
   if (isWaMuted()) {
-    console.log(`[NyopetAutoAnalysis] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
+    console.log(`[SniperAutoAnalysis] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
     return;
   }
   await sendWhatsApp(msg);
 }
 
 // Dedup harian -- 1x cek per hari kalender WITA (nempel jadwal candle harian), cegah spam
-// kalau workflow ke-run ulang hari yang sama (pola sama kayak nyopetDailyTrigger.js lama,
+// kalau workflow ke-run ulang hari yang sama (pola sama kayak sniperDailyTrigger.js lama,
 // yang diretire/digantikan script ini).
-const TRIGGER_STATE_PATH = path.join(__dirname, 'nyopet-trigger-state.json');
+const TRIGGER_STATE_PATH = path.join(__dirname, 'sniper-trigger-state.json');
 function loadTriggerState() {
   if (!fs.existsSync(TRIGGER_STATE_PATH)) return { lastSentDate: null };
   return JSON.parse(fs.readFileSync(TRIGGER_STATE_PATH, 'utf8'));
@@ -122,7 +122,7 @@ async function main() {
   const todayKey = localDateKey(now);
   const triggerState = loadTriggerState();
   if (triggerState.lastSentDate === todayKey) {
-    console.log('[NyopetAutoAnalysis]', now.toISOString(), '-- udah dicek hari ini, skip (cegah dobel kalau ke-run ulang).');
+    console.log('[SniperAutoAnalysis]', now.toISOString(), '-- udah dicek hari ini, skip (cegah dobel kalau ke-run ulang).');
     return;
   }
 
@@ -134,16 +134,16 @@ async function main() {
     // cuma status posisi yang UDAH terbuka (floating P&L, jarak SL/TP, udah berapa hari).
     const order = active[0];
     if (order.status !== 'floating') {
-      console.log('[NyopetAutoAnalysis]', now.toISOString(), '-- posisi bayangan masih pending (', order.signalId, '), skip pemantauan (belum floating).');
+      console.log('[SniperAutoAnalysis]', now.toISOString(), '-- posisi bayangan masih pending (', order.signalId, '), skip pemantauan (belum floating).');
       return;
     }
     const livePrice = await fetchLivePrice();
     const msg = formatPositionMonitor(order, livePrice);
     console.log(msg + '\n');
-    addEntry('nyopet', msg, now);
+    addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'pemantauan posisi terbuka');
     saveTriggerState({ lastSentDate: todayKey });
-    console.log('[NyopetAutoAnalysis] Pemantauan posisi terbuka (', order.signalId, ') terkirim.');
+    console.log('[SniperAutoAnalysis] Pemantauan posisi terbuka (', order.signalId, ') terkirim.');
     return;
   }
 
@@ -157,45 +157,45 @@ async function main() {
   if (!signal) {
     const msg = formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain });
     console.log(msg + '\n');
-    addEntry('nyopet', msg, now);
+    addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'status INVALID');
     saveTriggerState({ lastSentDate: todayKey });
-    console.log('[NyopetAutoAnalysis] INVALID -- belum ada pola flag/wedge yang breakout candle harian.');
+    console.log('[SniperAutoAnalysis] INVALID -- belum ada pola flag/wedge yang breakout candle harian.');
     return;
   }
 
   const { direction, sl, patternType } = signal;
   const riskDistance = Math.abs(livePrice - sl);
   if (riskDistance === 0) {
-    console.log('[NyopetAutoAnalysis] Jarak SL 0 (harga = SL), skip -- lebih aman diam daripada asal.');
+    console.log('[SniperAutoAnalysis] Jarak SL 0 (harga = SL), skip -- lebih aman diam daripada asal.');
     return;
   }
   const nyawaPct = riskDistance / livePrice * 100;
   if (nyawaPct > MAX_NYAWA_PCT) {
-    console.log(`[NyopetAutoAnalysis] Nyawa ${nyawaPct.toFixed(1)}% ngelewatin batas ${MAX_NYAWA_PCT}% -- invalidasi diterima, nyopet pake nyawa dikit aja.`);
+    console.log(`[SniperAutoAnalysis] Nyawa ${nyawaPct.toFixed(1)}% ngelewatin batas ${MAX_NYAWA_PCT}% -- invalidasi diterima, nyopet pake nyawa dikit aja.`);
     saveTriggerState({ lastSentDate: todayKey });
     return;
   }
   const partialTp = direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
   if (partialTp <= 0) {
-    console.log('[NyopetAutoAnalysis] Proyeksi TP gak masuk akal, skip -- lebih aman diam daripada asal.');
+    console.log('[SniperAutoAnalysis] Proyeksi TP gak masuk akal, skip -- lebih aman diam daripada asal.');
     return;
   }
 
   // Sizing pakai bankroll BAYANGAN Kaela sendiri (12 Agu 2026, permintaan Olan: "Kaela dikasih
-  // saldo bayangan $100") -- BUKAN saldo real Olan (nyopetOrders.js, tetap ada terpisah buat
+  // saldo bayangan $100") -- BUKAN saldo real Olan (sniperOrders.js, tetap ada terpisah buat
   // referensi dia pribadi). Bankroll ini mulai $100 + top-up $100/bln (tanggal 5, recurring
   // selama <$1000), compound dari P&L trade Sniper beneran -- persis metodologi backtest yang
   // udah tervalidasi ($100 -> $20.523/9 tahun), biar hasil live bisa dibandingin apel-ke-apel.
   checkAndApplyTopUp(now);
   const modal = getKaelaBalance();
   if (modal <= 0) {
-    console.log('[NyopetAutoAnalysis] Bankroll Kaela abis (0), skip -- gak bisa hitung exposure.');
+    console.log('[SniperAutoAnalysis] Bankroll Kaela abis (0), skip -- gak bisa hitung exposure.');
     return;
   }
   const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sl });
   if (calc.marginPct > MAX_MARGIN_PCT) {
-    console.log(`[NyopetAutoAnalysis] Margin ${calc.marginPct.toFixed(1)}% modal ngelewatin batas ${MAX_MARGIN_PCT}% -- skip, nyopet bukan investasi.`);
+    console.log(`[SniperAutoAnalysis] Margin ${calc.marginPct.toFixed(1)}% modal ngelewatin batas ${MAX_MARGIN_PCT}% -- skip, nyopet bukan investasi.`);
     saveTriggerState({ lastSentDate: todayKey });
     return;
   }
@@ -220,13 +220,13 @@ async function main() {
 
   const msg = formatAutoValid({ order: opened, ta, sentiment, onchain });
   console.log(msg + '\n');
-  addEntry('nyopet', msg, now);
+  addEntry('sniper', msg, now);
   await sendWhatsAppRespectMute(msg, `sinyal VALID (${patternLabel})`);
   saveTriggerState({ lastSentDate: todayKey });
-  console.log('[NyopetAutoAnalysis] VALID --', direction, patternLabel, 'posisi bayangan dibuka @', livePrice);
+  console.log('[SniperAutoAnalysis] VALID --', direction, patternLabel, 'posisi bayangan dibuka @', livePrice);
 }
 
 main().catch((e) => {
-  console.error('ERROR nyopetAutoAnalysis.js:', e.message);
+  console.error('ERROR sniperAutoAnalysis.js:', e.message);
   process.exit(1);
 });

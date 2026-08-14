@@ -14,7 +14,7 @@ function toLocal(date) {
 }
 
 // String "YYYY-MM-DD" sesuai tanggal WITA pada momen `date` -- dipakai buat label tanggal
-// di pesan DAN buat kunci dedup harian (archive.js addOrReplaceDaily, heartbeat Nyopet, dst).
+// di pesan DAN buat kunci dedup harian (archive.js addOrReplaceDaily, heartbeat Sniper, dst).
 function localDateKey(date) {
   return toLocal(date).toISOString().slice(0, 10);
 }

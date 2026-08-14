@@ -12,7 +12,7 @@ backtest/*-result.json
 state.json
 nyopet-state.json
 whale-state.json
-nyopet-trigger-state.json
+sniper-trigger-state.json
 price-alert-state.json
 
 # file lepas, bukan bagian source

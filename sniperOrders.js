@@ -1,4 +1,4 @@
-// Data layer buat sistem Nyopet Market MANUAL (gantiin auto-entry nyopetMonitor.js lama).
+// Data layer buat sistem Sniper MANUAL (gantiin auto-entry nyopetMonitor.js lama, pensiun).
 // Olan + Kaela ANALISA BARENG (chart+alat gambar di web), baru KEPUTUSAN order dicatat di sini.
 // Eksekusi order ASLI tetap Olan sendiri di Binance -- ini cuma MONITOR/TRACKER, gak pernah
 // eksekusi apapun. Saldo di sini SENGAJA saldo trading ASLI Olan (sinkron manual, konfirmasi
@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { localDateKey } = require('./config');
 
-const ORDERS_PATH = path.join(__dirname, 'nyopet-orders.json');
+const ORDERS_PATH = path.join(__dirname, 'sniper-orders.json');
 
 function load() {
   if (!fs.existsSync(ORDERS_PATH)) return { balance: 0, balanceUpdatedAt: null, orders: [] };
@@ -29,8 +29,8 @@ function setBalance(amountUsd, date = new Date()) {
 }
 
 // order: { direction:'buy'|'sell', strategyType:'range'|'breakout'|'trend', triggerPrice,
-//          testLevel (opsional, buat setup fade/rejection -- lihat nyopetOrderMonitor.js),
-//          confirmationNote, tpReasoning (alasan pemilihan TP, lihat nyopetAutoAnalysis.js
+//          testLevel (opsional, buat setup fade/rejection -- lihat sniperOrderMonitor.js),
+//          confirmationNote, tpReasoning (alasan pemilihan TP, lihat sniperAutoAnalysis.js
 //          pickAdaptiveTp), tp, sl, exposure, leverage, marginUsd, notes,
 //          patternType/partialTp/trailSmaLen (opsional, 10 Agu 2026 -- strategi pola chart
 //          flag/wedge: exit 2 tahap, separuh di partialTp lalu sisanya di-trail. Order LAMA
@@ -68,7 +68,7 @@ function createOrder(order, date = new Date()) {
     trailSmaLen: order.trailSmaLen ?? null,
     realizedPnlUsd: 0,
     // silentTest (14 Agu 2026, buat order trial/simulasi) -- tetap kecatat NORMAL di web/jurnal/
-    // bankroll, tapi nyopetOrderMonitor.js WAJIB skip WA SELAMANYA buat order ini (beda dari
+    // bankroll, tapi sniperOrderMonitor.js WAJIB skip WA SELAMANYA buat order ini (beda dari
     // isWaMuted() yang cuma nunda sementara).
     silentTest: order.silentTest === true,
     createdAt: date.toISOString(),

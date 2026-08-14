@@ -38,7 +38,7 @@ const TYPE_LABEL = {
   'report-monthly': `${CATEGORY_COLOR.laporan.emoji} 🗓️ Laporan Bulanan`,
   'report-yearly': `${CATEGORY_COLOR.laporan.emoji} 📅 Laporan Tahunan`,
   news: `${CATEGORY_COLOR.news.emoji} 📰 Kaela News`,
-  nyopet: `${CATEGORY_COLOR.nyopet.emoji} 🎯 Sniper`,
+  sniper: `${CATEGORY_COLOR.sniper.emoji} 🎯 Sniper`,
   whale: `${CATEGORY_COLOR.whale.emoji} 🐋 Whale Alert`,
   'econ-calendar': `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`,
 };
@@ -138,7 +138,7 @@ const SHARED_STYLE = `
   @media (max-width: 520px) {
     .tv-full-chart { height: 460px; }
   }
-  .nyopet-orders-panel { margin-bottom: 18px; }
+  .sniper-orders-panel { margin-bottom: 18px; }
   .order-balance { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; font-size: 0.95rem; }
   .order-balance-date { color: var(--clr-text-muted); font-size: 0.78rem; }
   .order-disclaimer { color: var(--clr-text-muted); font-size: 0.78rem; background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 8px 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 12px; }
@@ -309,11 +309,11 @@ function renderSiklusHalvingPanel(now) {
   </div>`;
 }
 
-// ============ Sniper MANUAL: monitor order live (nyopet-orders.json) ============
-// Beda dari log teks lama (nyopetLog.js) -- ini KARTU LIVE per order: pending (nunggu trigger),
-// floating (P&L live dihitung DI BROWSER dari harga live, lihat web/js/nyopet-orders-widget.js),
+// ============ Sniper MANUAL: monitor order live (sniper-orders.json) ============
+// Beda dari log teks lama (sniperLog.js) -- ini KARTU LIVE per order: pending (nunggu trigger),
+// floating (P&L live dihitung DI BROWSER dari harga live, lihat web/js/sniper-orders-widget.js),
 // closed (histori). Order dibuat MANUAL pas Olan+Kaela analisa bareng (bukan auto-decide algoritma
-// lagi) -- lihat nyopetOrders.js/nyopetOrderMonitor.js. Saldo publik SENGAJA (konfirmasi user).
+// lagi) -- lihat sniperOrders.js/sniperOrderMonitor.js. Saldo publik SENGAJA (konfirmasi user).
 
 const DIR_LABEL_WEB = { buy: '🟢 BUY', sell: '🔴 SELL' };
 const STRATEGY_LABEL_WEB = { range: 'Range Trading', breakout: 'Breakout', trend: 'Trend Following' };
@@ -397,8 +397,8 @@ function renderOrderCard(o) {
   </div>`;
 }
 
-function loadNyopetOrdersState() {
-  const ordersPath = path.join(__dirname, 'nyopet-orders.json');
+function loadSniperOrdersState() {
+  const ordersPath = path.join(__dirname, 'sniper-orders.json');
   // Belum ada file = belum pernah ada order sama sekali (sistem manual baru mulai) -- BUKAN
   // berarti panelnya kosong dari tampilan, tetap render empty-state yang jelas, jangan blank.
   return fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
@@ -407,13 +407,13 @@ function loadNyopetOrdersState() {
 // Tab Sniper = status TERKINI doang, SATU kartu (permintaan Olan 9 Agu 2026 -- sebelumnya
 // numpuk semua entry hari ini, bingung). Kalau ada order aktif (floating), itu yang tampil.
 // Kalau enggak, tampilkan 1 status TERAKHIR (biasanya "INVALID, masih nunggu" dari
-// nyopetAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
+// sniperAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
 // yang UDAH SELESAI (closed_tp/closed_sl) itu tugas tab Jurnal, bukan di sini.
-function renderNyopetOrdersPanel(state, latestStatusEntry) {
+function renderSniperOrdersPanel(state, latestStatusEntry) {
   // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
   // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
-  // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di nyopet-orders.json
-  // (dipantau nyopetOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
+  // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di sniper-orders.json
+  // (dipantau sniperOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
   const active = (state.orders || []).filter((o) => o.status === 'floating');
 
   // Saldo bankroll Kaela DIPINDAH ke halaman Jurnal (14 Agu 2026, instruksi Olan: "jurnal
@@ -428,14 +428,14 @@ function renderNyopetOrdersPanel(state, latestStatusEntry) {
     activeHtml = `<div class="empty">🎯 Belum ada analisa Sniper.</div>`;
   }
 
-  return `<div class="nyopet-orders-panel">
+  return `<div class="sniper-orders-panel">
     <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Saldo, riwayat &amp; statistik lengkap ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
     ${activeHtml}
   </div>`;
 }
 
 // ============ Tab Jurnal: statistik + equity curve + kalender P/L ala trading journal profesional
-// (RR Metrics/TradeZella dsb) -- SEMUA dihitung dari nyopet-orders.json yang udah ada, gak ada
+// (RR Metrics/TradeZella dsb) -- SEMUA dihitung dari sniper-orders.json yang udah ada, gak ada
 // field baru. R-multiple pakai marginUsd sebagai 1R (itu resiko riil per trade di sistem exposure
 // kita -- lihat KNOWLEDGE/metodologi-analisa-teknikal.md §5, margin = 100% loss kalau SL kena).
 
@@ -637,12 +637,12 @@ function buildDashboardHtml() {
   const musimanHtml = renderSiklusHalvingPanel(now);
 
   // Sniper -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
-  // renderNyopetOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir. Sengaja
+  // renderSniperOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir. Sengaja
   // gak pakai banner terpisah di atas chart lagi -- sekarang halaman ngalir tanpa tab, jadi posisi
   // floating udah otomatis kelihatan pas scroll turun dikit, gak perlu klik apa-apa.
-  const ordersState = loadNyopetOrdersState();
-  const latestNyopetEntry = getAll('nyopet')[0] || null; // terbaru duluan
-  const sniperHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry);
+  const ordersState = loadSniperOrdersState();
+  const latestSniperEntry = getAll('sniper')[0] || null; // terbaru duluan
+  const sniperHtml = renderSniperOrdersPanel(ordersState, latestSniperEntry);
 
   return `<!doctype html>
 <html lang="id">
@@ -716,7 +716,7 @@ function buildDashboardHtml() {
 
   <script>${countdownScript()}</script>
   <script src="js/price-ticker.js"></script>
-  <script src="js/nyopet-orders-widget.js"></script>
+  <script src="js/sniper-orders-widget.js"></script>
 
   ${navHtml('dashboard')}
 </body>
@@ -729,7 +729,7 @@ function buildDashboardHtml() {
 // riwayat). Profit MAUPUN loss ditampilkan apa adanya (gak disaring) -- lihat renderFundReportSection.
 function buildJurnalHtml() {
   const now = new Date();
-  const ordersState = loadNyopetOrdersState();
+  const ordersState = loadSniperOrdersState();
   const jurnalHtml = renderJurnalPanel(ordersState, now, getFundReport());
 
   return `<!doctype html>

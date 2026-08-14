@@ -75,7 +75,7 @@ async function tryInOrder(fns, label) {
 }
 
 // Partial-OK by design -- tiap kategori independen, sebagian gagal TIDAK gugurin yang lain.
-// Field yang gagal jadi null, caller (nyopetOrderLog.js sentimentLines) WAJIB handle null per-field.
+// Field yang gagal jadi null, caller (sniperOrderLog.js sentimentLines) WAJIB handle null per-field.
 async function analyzeSentiment() {
   const [fearGreed, fundingAndOI, longShort] = await Promise.all([
     tryInOrder([fetchFearGreed], 'Fear & Greed'),

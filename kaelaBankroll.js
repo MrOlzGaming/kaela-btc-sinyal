@@ -1,5 +1,5 @@
 // Bankroll BAYANGAN milik Kaela sendiri (12 Agu 2026, permintaan Olan: "Kaela akan dikasih
-// saldo bayangan $100") -- TERPISAH dari saldo real Olan di nyopet-orders.json (yang tetap
+// saldo bayangan $100") -- TERPISAH dari saldo real Olan di sniper-orders.json (yang tetap
 // apa adanya, murni referensi Olan pribadi). Sizing sinyal Sniper & tracking performa SEKARANG
 // pakai bankroll INI, biar hasil live bisa dibandingin apel-ke-apel sama backtest yang udah
 // tervalidasi (backtestFlagBreakout.js: modal $100, top-up $100/bulan tiap tanggal 5 selama
@@ -29,7 +29,7 @@ function save(state) {
 
 // Recurring, BUKAN permanen (bug lama yang udah dikoreksi di backtest, 10 Agu 2026) -- cek ULANG
 // tiap tanggal 5 tiap bulan, kalau saldo waktu itu <$1000 (termasuk kalau sempat di atas lalu
-// turun lagi karena rugi), top-up jalan lagi. Dipanggil tiap kali nyopetAutoAnalysis.js jalan
+// turun lagi karena rugi), top-up jalan lagi. Dipanggil tiap kali sniperAutoAnalysis.js jalan
 // (1x/hari), idempotent -- gak dobel top-up kalau ke-run ulang hari yang sama (lastTopUpMonthKey).
 function checkAndApplyTopUp(now = new Date()) {
   const state = load();

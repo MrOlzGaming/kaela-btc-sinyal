@@ -2,10 +2,10 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>Kaela BTC Sinyal — Dashboard</title>
+<title>Kaela BTC Sinyal — Jurnal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1fae6c">
-<meta name="description" content="Dashboard Kaela BTC Sinyal — countdown halving & info hari ini.">
+<meta name="description" content="Jurnal trading Kaela — saldo bankroll, riwayat trade, dan grafik pertumbuhan saldo.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon.svg">
@@ -122,113 +122,36 @@
   <div class="brand"><span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span><h1>Kaela BTC Sinyal</h1></div>
 
   <div class="welcome">
-    👋 <strong>Selamat datang di Kaela BTC Sinyal</strong> — sistem Musiman otomatis untuk BTC: Siklus Halving
-    (strategi utama, ~2 aksi per 4 tahun) + Sniper (sinyal pelengkap opsional). Murni data & kalender,
-    tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-musiman.html">Baca metodologi lengkap →</a>
+    📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll bayangan yang berjalan, riwayat lengkap tiap
+    trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya,
+    jujur, gak disaring atau dipilih-pilih.
   </div>
 
-  <div class="price-widget">
-    <div class="price-header">
-      <span class="price-live" id="btc-price">Memuat...</span>
-      <span class="price-change" id="btc-change"></span>
+  <div class="jurnal-panel">
+      <div class="fund-report-section">
+    <div class="journal-section-title">🤖 Laporan Fund Kaela -- Bankroll Bayangan</div>
+    <p class="order-disclaimer" style="margin-top:0;">Murni perhitungan (posisi bayangan), gak ada uang bergerak beneran -- tapi dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
+    <div class="journal-stats-grid">
+      <div class="journal-stat"><div class="journal-stat-label">Saldo Sekarang</div><div class="journal-stat-value ">$200</div></div>
+      <div class="journal-stat"><div class="journal-stat-label">Total Disetor</div><div class="journal-stat-value ">$200</div></div>
+      <div class="journal-stat"><div class="journal-stat-label">P&amp;L Trading (murni)</div><div class="journal-stat-value up">+$0</div></div>
+      <div class="journal-stat"><div class="journal-stat-label">Return dari Trading</div><div class="journal-stat-value up">+0.0%</div></div>
+      <div class="journal-stat"><div class="journal-stat-label">Total Growth (gabungan)</div><div class="journal-stat-value up">+0.0%</div></div>
+      <div class="journal-stat"><div class="journal-stat-label">Jumlah Trade</div><div class="journal-stat-value ">0</div></div>
     </div>
-    <div class="tv-full-chart">
-      <div class="tradingview-widget-container" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-        <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/BINANCE-BTCUSDT/" rel="noopener nofollow" target="_blank"><span class="blue-text">BTCUSDT chart</span></a><span class="trademark"> by TradingView</span></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-        {
-          "autosize": true,
-          "symbol": "BINANCE:BTCUSDT",
-          "interval": "60",
-          "timezone": "Asia/Makassar",
-          "theme": "dark",
-          "style": "1",
-          "locale": "en",
-          "backgroundColor": "#0a0e14",
-          "gridColor": "rgba(139, 150, 163, 0.08)",
-          "hide_top_toolbar": false,
-          "hide_side_toolbar": false,
-          "hide_legend": false,
-          "hide_volume": false,
-          "allow_symbol_change": false,
-          "save_image": true,
-          "calendar": false,
-          "hotlist": false,
-          "details": false,
-          "withdateranges": true,
-          "compareSymbols": [],
-          "studies": [],
-          "watchlist": []
-        }
-        </script>
-      </div>
+    <div class="journal-section-title">📈 Equity Curve Bankroll (mulai $100, 14 Agustus 2026)</div>
+    <svg class="equity-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
+    <polyline points="10.0,150.0 590.0,10.0" fill="none" style="stroke:var(--clr-success);stroke-width:2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="7.5" y="147.5" width="5" height="5" style="fill:var(--clr-primary)"/><rect x="587.5" y="7.5" width="5" height="5" style="fill:var(--clr-primary)"/>
+  </svg>
+    <p class="order-disclaimer">🟧 Kotak oranye di grafik = momen top-up (setoran baru), BUKAN hasil trading -- biar kenaikan dari 2 sumber ini gampang dibedain sekilas.</p>
+  </div>
+      <div class="empty">📓 Belum ada trade yang selesai. Statistik per-trade bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>
     </div>
-  </div>
-
-  <div class="countdown">
-    <div class="countdown-label">⏳ COUNTDOWN HALVING BERIKUTNYA</div>
-    <div class="countdown-grid">
-      <div class="countdown-box"><div class="countdown-num" id="cd-days">-</div><div class="countdown-unit">Hari</div></div>
-      <div class="countdown-box"><div class="countdown-num" id="cd-hours">-</div><div class="countdown-unit">Jam</div></div>
-      <div class="countdown-box"><div class="countdown-num" id="cd-mins">-</div><div class="countdown-unit">Menit</div></div>
-      <div class="countdown-box"><div class="countdown-num" id="cd-secs">-</div><div class="countdown-unit">Detik</div></div>
-    </div>
-    <div class="countdown-date">Estimasi: 2028-04-13 (sumber: CoinGecko)</div>
-  </div>
-
-  <div class="dash-section-title">🌾 Musiman</div>
-  <div class="halving-panel">
-    <div class="phase-badge phase-tunai">⚪ TUNAI — MENUNGGU</div>
-    <p><strong>Rencana Kaela:</strong> mulai Musim Tanam sekitar <strong>19 Oktober 2026 – 17 November 2026</strong> (~65 hari lagi).
-      Bukan cuma beli sekali lalu diam — <strong>selama window Musim Tanam sampai halving tiba, kalau ada dana boleh terus
-      masuk pelan-pelan (DCA)</strong>, baru direncanakan Musim Panen di sekitar 368–549 hari setelah halving
-      (~13 April 2028). Begitu Musim Tanam maupun Musim Panen tiba, Kaela bakal
-      <strong>rewel ingetin berhari-hari lewat WhatsApp grup</strong> sampai window itu berakhir.</p>
-    <p class="halving-note">⏳ Halving berikutnya: <strong>608 hari lagi</strong> (~13 April 2028)</p>
-  </div>
-
-  <div class="dash-section-title">🎯 Sniper</div>
-  <div class="nyopet-orders-panel">
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Saldo, riwayat &amp; statistik lengkap ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
-    <div class="order-grid"><div class="order-card floating" data-order-id="mst32s5jp9t5" data-direction="buy" data-entry="62682.01" data-tp="68950.21100000001" data-sl="59547.9095" data-leverage="20" data-margin="30" data-remaining-fraction="1" data-realized-pnl="0">
-      <div class="order-id">🆔 2026081402</div>
-      <div class="order-header"><span class="order-dir">🟢 BUY</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
-      <div class="order-strategy">Breakout</div>
-      <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
-      <div class="order-levels"><span>Entry: <strong>$62,682</strong></span><span>TP: $68,950</span><span>SL: $59,548</span></div>
-      <div class="order-meta">Margin $30 · Leverage 20× · Volume $600 · Liquidated @ $59,548</div>
-      
-      <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
-    </div></div>
-  </div>
-
-  <script>
-    const HALVING_TARGET = new Date('2028-04-13T13:11:00Z').getTime();
-    function updateCountdown() {
-      const diff = Math.max(0, HALVING_TARGET - Date.now());
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      document.getElementById('cd-days').textContent = d;
-      document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
-      document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
-      document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
-    }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').catch(() => {});
-    }
-  </script>
-  <script src="js/price-ticker.js"></script>
-  <script src="js/nyopet-orders-widget.js"></script>
 
   <nav class="bottom-nav">
-    <a href="index.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
-    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
+    <a href="jurnal.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
     <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
     <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
   </nav>

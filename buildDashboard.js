@@ -9,7 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { load: loadKaelaBankroll, getFundReport } = require('./kaelaBankroll');
+const { getFundReport } = require('./kaelaBankroll');
 const { getAll } = require('./archive');
 const { localDateKey } = require('./config');
 const {
@@ -24,6 +24,7 @@ const WEB_DIR = path.join(__dirname, 'web');
 const ICON_HOME = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_CALC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg>';
 const ICON_BOOK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_CHART = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LOGO_MARK = '<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg>';
 
 // 5 kategori sinyal, 1 warna tetap per kategori -- dipakai KONSISTEN di web (border+emoji) DAN
@@ -155,8 +156,6 @@ const SHARED_STYLE = `
   .order-meta { font-size: 0.75rem; color: var(--clr-text-muted); }
   .order-live-price { font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 6px; }
   .order-live-price strong { color: var(--clr-text); font-variant-numeric: tabular-nums; }
-  .floating-banner { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1.5px solid var(--clr-primary); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 16px; margin: 18px 0; }
-  .floating-banner-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: var(--clr-primary); }
   .order-pnl-live { font-weight: 700; font-size: 1.05rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .order-pnl-live.up { color: var(--clr-success); }
   .order-pnl-live.down { color: var(--clr-danger); }
@@ -168,13 +167,7 @@ const SHARED_STYLE = `
   .order-journal-summary { display: flex; gap: 16px; flex-wrap: wrap; background: var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin: 8px 0 12px; font-size: 0.85rem; }
   .order-journal-summary .up { color: var(--clr-success); }
   .order-journal-summary .down { color: var(--clr-danger); }
-  .dash-tabs { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; padding-bottom: 2px; }
-  .dash-tab-btn { flex-shrink: 0; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border); color: var(--clr-text-muted); border-radius: var(--radius-md); padding: 9px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
-  .dash-tab-btn:hover { color: var(--clr-text); border-color: var(--clr-border-soft); transform: translateY(-1px); }
-  .dash-tab-btn.active { background: linear-gradient(180deg, var(--clr-primary), var(--clr-primary-dim)); color: #14100a; border-color: var(--clr-primary); box-shadow: 0 2px 12px var(--clr-primary-glow); }
-  .dash-panel { display: none; animation: fade-in 0.25s ease; }
-  .dash-panel.active { display: block; }
-  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .dash-section-title { font-weight: 800; font-size: 1.05rem; margin: 30px 0 12px; color: var(--clr-primary); border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 8px; }
   .halving-panel { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 14px; line-height: 1.65; }
   .phase-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; margin-bottom: 12px; }
   .phase-tanam { background: rgba(63,185,80,0.15); color: var(--clr-success); }
@@ -250,6 +243,7 @@ function navHtml(activePage) {
     `<a href="${href}"${key === activePage ? ' class="active"' : ''}><span class="icon">${icon}</span>${label}</a>`;
   return `<nav class="bottom-nav">
     ${item('index.html', ICON_HOME, 'Dashboard', 'dashboard')}
+    ${item('jurnal.html', ICON_CHART, 'Jurnal', 'jurnal')}
     ${item('kalkulator.html', ICON_CALC, 'Kalkulator', 'kalkulator')}
     ${item('metodologi-musiman.html', ICON_BOOK, 'Metodologi', 'metodologi')}
   </nav>`;
@@ -415,23 +409,16 @@ function loadNyopetOrdersState() {
 // Kalau enggak, tampilkan 1 status TERAKHIR (biasanya "INVALID, masih nunggu" dari
 // nyopetAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
 // yang UDAH SELESAI (closed_tp/closed_sl) itu tugas tab Jurnal, bukan di sini.
-function renderNyopetOrdersPanel(state, latestStatusEntry, bankroll) {
+function renderNyopetOrdersPanel(state, latestStatusEntry) {
   // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
   // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
   // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di nyopet-orders.json
   // (dipantau nyopetOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
   const active = (state.orders || []).filter((o) => o.status === 'floating');
 
-  // Saldo Live Olan DICABUT dari tampilan (12 Agu 2026, instruksi Olan: "hapus aja, murni semua
-  // saldo Kaela") -- panel ini sekarang murni bankroll BAYANGAN Kaela, gak nampilin saldo real
-  // Olan lagi sama sekali (data-nya tetap ada di nyopet-orders.json kalau suatu saat perlu, cuma
-  // gak ditampilkan di sini). Mulai $100, top-up $100/bln tanggal 5 selama <$1000, compound dari
-  // P&L sinyal Sniper beneran -- dipakai buat SIZING sinyal, biar bisa dibandingin apel-ke-apel
-  // sama backtest yang udah tervalidasi ($100 -> $20.523/9 tahun).
-  const bankrollLine = bankroll
-    ? `<div class="order-balance">🤖 Bankroll Bayangan Kaela: <strong>${fmtUsdOrder(bankroll.balance)}</strong> <span class="order-balance-date">(mulai $100${bankroll.startedAt ? ', ' + fmtDateLong(new Date(bankroll.startedAt)) : ''})</span></div>`
-    : '';
-
+  // Saldo bankroll Kaela DIPINDAH ke halaman Jurnal (14 Agu 2026, instruksi Olan: "jurnal
+  // isinya saldo berjalan kaela, jurnal trading dan grafik") -- section ini sekarang murni
+  // posisi live doang, gak dobel nampilin saldo yang udah ada di Jurnal.
   let activeHtml;
   if (active.length > 0) {
     activeHtml = `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`;
@@ -442,8 +429,7 @@ function renderNyopetOrdersPanel(state, latestStatusEntry, bankroll) {
   }
 
   return `<div class="nyopet-orders-panel">
-    ${bankrollLine}
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
+    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Saldo, riwayat &amp; statistik lengkap ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
     ${activeHtml}
   </div>`;
 }
@@ -639,35 +625,24 @@ function renderJurnalPanel(state, now, fundReport) {
   </script>`;
 }
 
+// Dashboard (14 Agu 2026, permintaan Olan: "gausah dipisah tab, biarin ngalir") -- SATU halaman
+// mengalir, urutan tetap: Selamat datang -> Chart BTC -> Countdown Halving -> Musiman -> Sniper
+// -> (nanti nyopet, Dark Kaela). Jurnal DIPISAH ke halaman sendiri (jurnal.html) -- lihat
+// buildJurnalHtml() di bawah.
 function buildDashboardHtml() {
   const now = new Date();
 
-  // Tab Siklus Halving (default) -- panel status LIVE doang (state.json), gak berisik. Laporan Harian
-  // teks SENGAJA gak ditampilin lagi di sini (keputusan Olan 9 Agu 2026) -- WA aja udah cukup, panel
-  // ini sendiri udah cukup nunjukin status live-nya tanpa perlu archive teks laporan tiap hari.
-  const halvingTabHtml = renderSiklusHalvingPanel(now);
+  // Status LIVE Siklus Halving (state.json), gak berisik. Laporan Harian teks SENGAJA gak
+  // ditampilin lagi di sini (keputusan Olan 9 Agu 2026) -- WA aja udah cukup.
+  const musimanHtml = renderSiklusHalvingPanel(now);
 
-  // Tab Sniper -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
-  // renderNyopetOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir.
+  // Sniper -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
+  // renderNyopetOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir. Sengaja
+  // gak pakai banner terpisah di atas chart lagi -- sekarang halaman ngalir tanpa tab, jadi posisi
+  // floating udah otomatis kelihatan pas scroll turun dikit, gak perlu klik apa-apa.
   const ordersState = loadNyopetOrdersState();
   const latestNyopetEntry = getAll('nyopet')[0] || null; // terbaru duluan
-  const nyopetTabHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry, loadKaelaBankroll());
-
-  // Tab Jurnal -- statistik + equity curve + kalender P/L, dari riwayat order closed/cancelled
-  const jurnalTabHtml = renderJurnalPanel(ordersState, now, getFundReport());
-
-  // Banner posisi TERBUKA (14 Agu 2026, permintaan Olan: "pelihat yang masuk web langsung
-  // disuguhkan floating itu, sama kayak pas buka web langsung ada chart BTC") -- dulu posisi
-  // floating cuma keliatan kalau pengunjung klik tab Sniper dulu. Sekarang kalau ADA posisi
-  // aktif, langsung nongol PALING ATAS (sebelum chart) -- gak perlu navigasi buat tau ada
-  // posisi lagi jalan.
-  const activeFloating = (ordersState.orders || []).filter((o) => o.status === 'floating');
-  const floatingBannerHtml = activeFloating.length > 0
-    ? `<div class="floating-banner">
-        <div class="floating-banner-title">🔴 SNIPER LAGI OPEN POSISI -- pantau live di bawah</div>
-        <div class="order-grid">${activeFloating.map(renderOrderCard).join('')}</div>
-      </div>`
-    : '';
+  const sniperHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry);
 
   return `<!doctype html>
 <html lang="id">
@@ -691,8 +666,6 @@ function buildDashboardHtml() {
     (strategi utama, ~2 aksi per 4 tahun) + Sniper (sinyal pelengkap opsional). Murni data & kalender,
     tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-musiman.html">Baca metodologi lengkap →</a>
   </div>
-
-  ${floatingBannerHtml}
 
   <div class="price-widget">
     <div class="price-header">
@@ -735,34 +708,61 @@ function buildDashboardHtml() {
 
   ${countdownHtml()}
 
-  <div class="dash-tabs">
-    <button class="dash-tab-btn active" data-tab="halving">🌾 Musiman</button>
-    <button class="dash-tab-btn" data-tab="nyopet">🎯 Sniper</button>
-    <button class="dash-tab-btn" data-tab="jurnal">📓 Jurnal</button>
-  </div>
-  <div class="dash-panel active" data-panel="halving">${halvingTabHtml}</div>
-  <div class="dash-panel" data-panel="nyopet">${nyopetTabHtml}</div>
-  <div class="dash-panel" data-panel="jurnal">${jurnalTabHtml}</div>
+  <div class="dash-section-title">🌾 Musiman</div>
+  ${musimanHtml}
+
+  <div class="dash-section-title">🎯 Sniper</div>
+  ${sniperHtml}
 
   <script>${countdownScript()}</script>
   <script src="js/price-ticker.js"></script>
   <script src="js/nyopet-orders-widget.js"></script>
-  <script>
-    document.querySelectorAll('.dash-tab-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        document.querySelectorAll('.dash-tab-btn').forEach(function (b) { b.classList.remove('active'); });
-        document.querySelectorAll('.dash-panel').forEach(function (p) { p.classList.remove('active'); });
-        btn.classList.add('active');
-        document.querySelector('.dash-panel[data-panel="' + btn.dataset.tab + '"]').classList.add('active');
-      });
-    });
-  </script>
 
   ${navHtml('dashboard')}
 </body>
 </html>`;
 }
 
+// Jurnal (14 Agu 2026, permintaan Olan: "taruh halaman sendiri isinya saldo berjalan kaela,
+// jurnal trading dan grafik perkembangan saldo") -- halaman terpisah, isi PERSIS renderJurnalPanel
+// yang dulu jadi tab (fund report saldo + statistik trade + equity curve + kalender P/L +
+// riwayat). Profit MAUPUN loss ditampilkan apa adanya (gak disaring) -- lihat renderFundReportSection.
+function buildJurnalHtml() {
+  const now = new Date();
+  const ordersState = loadNyopetOrdersState();
+  const jurnalHtml = renderJurnalPanel(ordersState, now, getFundReport());
+
+  return `<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kaela BTC Sinyal — Jurnal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Jurnal trading Kaela — saldo bankroll, riwayat trade, dan grafik pertumbuhan saldo.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>${SHARED_STYLE}</style>
+</head>
+<body>
+  <div class="brand"><span class="brand-mark">${LOGO_MARK}</span><h1>Kaela BTC Sinyal</h1></div>
+
+  <div class="welcome">
+    📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll bayangan yang berjalan, riwayat lengkap tiap
+    trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya,
+    jujur, gak disaring atau dipilih-pilih.
+  </div>
+
+  ${jurnalHtml}
+
+  ${navHtml('jurnal')}
+</body>
+</html>`;
+}
+
 if (!fs.existsSync(WEB_DIR)) fs.mkdirSync(WEB_DIR, { recursive: true });
 fs.writeFileSync(path.join(WEB_DIR, 'index.html'), buildDashboardHtml());
-console.log('web/index.html (Dashboard) dibuat.');
+fs.writeFileSync(path.join(WEB_DIR, 'jurnal.html'), buildJurnalHtml());
+console.log('web/index.html (Dashboard) + web/jurnal.html dibuat.');

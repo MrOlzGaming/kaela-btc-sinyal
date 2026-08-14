@@ -23,3 +23,6 @@ price-alert-state.json
 
 # kredensial -- JANGAN PERNAH commit. Tanpa file ini, fonnte.js otomatis no-op (aman buat dev).
 secrets.js
+
+# PAT GitHub buat push manual ke origin-new (MrOlzGaming) dari sesi lokal -- JANGAN PERNAH commit.
+.gh-token-mrolzgaming

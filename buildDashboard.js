@@ -9,7 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { load: loadKaelaBankroll } = require('./kaelaBankroll');
+const { load: loadKaelaBankroll, getFundReport } = require('./kaelaBankroll');
 const { getAll } = require('./archive');
 const { localDateKey } = require('./config');
 const {
@@ -511,15 +511,75 @@ function renderPnlCalendar(trades, now) {
   </div>`;
 }
 
-function renderJurnalPanel(state, now) {
+// Equity curve SALDO BENERAN Kaela (14 Agu 2026, beda dari renderEquityCurveSvg di atas yang
+// mulai dari 0/kumulatif P&L trade doang) -- ini titik awal $100, naik dari top-up MAUPUN
+// trading, biar keliatan trajectory bankroll yang sesungguhnya kalau berjalan bertahun-tahun.
+function renderFundEquitySvg(events) {
+  if (events.length < 2) return '<div class="empty">Bankroll baru mulai, equity curve keisi begitu ada top-up/trade berikutnya.</div>';
+  const w = 600, h = 160, pad = 10;
+  const values = events.map((e) => e.balanceAfter);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const stepX = (w - pad * 2) / (values.length - 1);
+  const coords = values.map((v, i) => {
+    const x = pad + i * stepX;
+    const y = pad + (h - pad * 2) * (1 - (v - min) / range);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  // Tandai titik top-up (kotak kecil) biar keliatan mana kenaikan dari SETORAN, beda dari trading.
+  const topUpMarkers = events
+    .map((e, i) => (e.type === 'topup' || e.type === 'start' ? { x: pad + i * stepX, y: pad + (h - pad * 2) * (1 - (e.balanceAfter - min) / range) } : null))
+    .filter(Boolean)
+    .map((p) => `<rect x="${(p.x - 2.5).toFixed(1)}" y="${(p.y - 2.5).toFixed(1)}" width="5" height="5" style="fill:var(--clr-primary)"/>`)
+    .join('');
+  return `<svg class="equity-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${coords.join(' ')}" fill="none" style="stroke:var(--clr-success);stroke-width:2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${topUpMarkers}
+  </svg>`;
+}
+
+// Kartu ringkasan ala FUND REPORT (14 Agu 2026, permintaan Olan: "Kaela langsung jadi fund
+// manajer, harus bekerja seperti fund manajer beneran") -- pemisahan WAJIB: pertumbuhan dari
+// SETORAN (top-up, bukan prestasi) vs dari PERFORMA TRADING (P&L beneran, ini yang nunjukkin
+// skill). "Total Growth" digabung DIPERBOLEHKAN ditampilkan, tapi HARUS ada pecahannya juga --
+// jangan biarin pembaca ngira semua kenaikan itu dari skill trading kalau sebagiannya cuma setoran.
+function renderFundReportSection(report) {
+  const cell = (label, value, cls = '') => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls}">${value}</div></div>`;
+  const totalGrowthUsd = report.balance - report.totalContributed;
+  const totalGrowthPct = report.totalContributed > 0 ? (totalGrowthUsd / report.totalContributed) * 100 : 0;
+  return `<div class="fund-report-section">
+    <div class="journal-section-title">🤖 Laporan Fund Kaela -- Bankroll Bayangan</div>
+    <p class="order-disclaimer" style="margin-top:0;">Murni perhitungan (posisi bayangan), gak ada uang bergerak beneran -- tapi dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
+    <div class="journal-stats-grid">
+      ${cell('Saldo Sekarang', fmtUsdOrder(report.balance))}
+      ${cell('Total Disetor', fmtUsdOrder(report.totalContributed), '')}
+      ${cell('P&amp;L Trading (murni)', `${report.totalRealizedPnl >= 0 ? '+' : ''}${fmtUsdOrder(report.totalRealizedPnl)}`, report.totalRealizedPnl >= 0 ? 'up' : 'down')}
+      ${cell('Return dari Trading', `${report.returnOnContributedPct >= 0 ? '+' : ''}${report.returnOnContributedPct.toFixed(1)}%`, report.returnOnContributedPct >= 0 ? 'up' : 'down')}
+      ${cell('Total Growth (gabungan)', `${totalGrowthPct >= 0 ? '+' : ''}${totalGrowthPct.toFixed(1)}%`, totalGrowthPct >= 0 ? 'up' : 'down')}
+      ${cell('Jumlah Trade', report.tradeCount)}
+    </div>
+    <div class="journal-section-title">📈 Equity Curve Bankroll (mulai $100${report.startedAt ? ', ' + fmtDateLong(new Date(report.startedAt)) : ''})</div>
+    ${renderFundEquitySvg(report.events)}
+    <p class="order-disclaimer">🟧 Kotak oranye di grafik = momen top-up (setoran baru), BUKAN hasil trading -- biar kenaikan dari 2 sumber ini gampang dibedain sekilas.</p>
+  </div>`;
+}
+
+function renderJurnalPanel(state, now, fundReport) {
   // cancelled TIDAK dihitung ke statistik (batal sebelum jadi posisi beneran, bukan hasil trade),
   // tapi tetap muncul di daftar riwayat biar jejaknya keliatan.
   const closedAll = (state.orders || []).filter((o) => o.status.startsWith('closed') || o.status === 'cancelled').reverse();
   const trades = closedAll.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl');
   const stats = computeJournalStats(trades);
 
+  // Fund report (14 Agu 2026) tampil DULUAN, TERPISAH dari statistik per-trade -- muncul begitu
+  // bankroll mulai (top-up pertama), gak perlu nunggu ada trade selesai kayak statistik di bawahnya.
+  const fundHtml = fundReport ? renderFundReportSection(fundReport) : '';
+
   if (!stats) {
-    return `<div class="empty">📓 Belum ada trade yang selesai. Jurnal bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>`;
+    return `<div class="jurnal-panel">
+      ${fundHtml}
+      <div class="empty">📓 Belum ada trade yang selesai. Statistik per-trade bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>
+    </div>`;
   }
 
   const strategies = [...new Set(closedAll.map((o) => o.strategyType).filter(Boolean))];
@@ -531,8 +591,9 @@ function renderJurnalPanel(state, now) {
     : '';
 
   return `<div class="jurnal-panel">
+    ${fundHtml}
     ${renderJournalStatsGrid(stats)}
-    <div class="journal-section-title">📈 Equity Curve</div>
+    <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
     ${renderEquityCurveSvg(trades)}
     <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
     ${renderPnlCalendar(trades, now)}
@@ -569,7 +630,7 @@ function buildDashboardHtml() {
   const nyopetTabHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry, loadKaelaBankroll());
 
   // Tab Jurnal -- statistik + equity curve + kalender P/L, dari riwayat order closed/cancelled
-  const jurnalTabHtml = renderJurnalPanel(ordersState, now);
+  const jurnalTabHtml = renderJurnalPanel(ordersState, now, getFundReport());
 
   return `<!doctype html>
 <html lang="id">

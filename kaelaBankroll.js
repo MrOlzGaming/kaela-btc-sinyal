@@ -65,4 +65,35 @@ function getBalance() {
   return load().balance;
 }
 
-module.exports = { load, save, checkAndApplyTopUp, applyRealizedPnl, getBalance, START_BALANCE, TOP_UP_STOP_AT };
+// Laporan ala FUND MANAGER (14 Agu 2026, permintaan Olan: "Kaela langsung jadi fund manajer
+// trading di tradingan dia sendiri, harus bekerja seperti fund manajer beneran") -- pemisahan
+// yang WAJIB ada di laporan fund asli: pertumbuhan dari SETORAN (top-up, bukan prestasi) vs
+// pertumbuhan dari PERFORMA TRADING (P&L beneran, ini yang nunjukkin skill). Nyampur dua-duanya
+// jadi "total growth" doang itu MENYESATKAN -- fund manager beneran gak pernah klaim "AUM naik
+// 5x" kalau separuhnya cuma dari investor nambah setoran, bukan dari trading.
+function getFundReport() {
+  const state = load();
+  const totalContributed = START_BALANCE + state.topUpHistory.reduce((s, t) => s + t.amount, 0);
+  const totalRealizedPnl = state.pnlHistory.reduce((s, p) => s + p.pnlUsd, 0);
+  const returnOnContributedPct = totalContributed > 0 ? (totalRealizedPnl / totalContributed) * 100 : 0;
+
+  // Timeline gabungan (topup + pnl), urut kronologis -- INI equity curve SALDO BENERAN (bukan
+  // cuma kumulatif P&L dari 0 kayak equity curve trade biasa di tab Jurnal) -- titik awal $100.
+  const events = [
+    { date: state.startedAt || new Date().toISOString(), type: 'start', amount: START_BALANCE, balanceAfter: START_BALANCE, label: 'Mulai' },
+    ...state.topUpHistory.map((t) => ({ ...t, type: 'topup', label: 'Top-up' })),
+    ...state.pnlHistory.map((p) => ({ ...p, type: 'pnl', amount: p.pnlUsd })),
+  ].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return {
+    balance: state.balance,
+    startedAt: state.startedAt,
+    totalContributed,
+    totalRealizedPnl,
+    returnOnContributedPct,
+    tradeCount: state.pnlHistory.length,
+    events,
+  };
+}
+
+module.exports = { load, save, checkAndApplyTopUp, applyRealizedPnl, getBalance, getFundReport, START_BALANCE, TOP_UP_STOP_AT };

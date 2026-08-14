@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Metodologi Musiman — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Metodologi sistem Musiman Kaela BTC Sinyal — kenapa bukan trading harian, kenapa bukan short, dan data siklus halving.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  h2 { font-size: 1.1rem; color: var(--clr-primary); margin-top: 32px; }
+  nav { margin: 14px 0; }
+  nav a { text-decoration: none; color: var(--clr-text-muted); font-size: 0.9rem; }
+  .tagline { color: var(--clr-text-muted); font-style: italic; font-size: 0.9rem; }
+  .meta-toggle { display: flex; gap: 8px; margin: 16px 0 24px; }
+  .meta-tab { flex: 1; text-align: center; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--clr-border); text-decoration: none; color: var(--clr-text-muted); font-size: 0.9rem; font-weight: 600; }
+  .meta-tab.active { background: var(--clr-primary); color: #111; border-color: var(--clr-primary); }
+  .stat-total { text-align: center; padding: 14px; margin: 18px 0; background: var(--clr-bg-elevated); border: 1px solid var(--clr-success); border-radius: var(--radius-md); }
+  .stat-total .num { font-size: 1.8rem; font-weight: 700; color: var(--clr-success); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--clr-border); }
+  th { color: var(--clr-text-muted); font-weight: 600; }
+  ul.limits { padding-left: 20px; }
+  ul.limits li { margin-bottom: 10px; }
+  .faq-q { font-weight: 600; margin-top: 16px; }
+  .faq-a { color: var(--clr-text-muted); margin-top: 4px; }
+  .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
+  strong { color: var(--clr-text); }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <h1>Kaela BTC Sinyal — Metodologi</h1>
+  </div>
+  <p class="tagline">Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.</p>
+
+  <div class="meta-toggle">
+    <a href="metodologi-musiman.html" class="meta-tab active">🌾 Musiman (Utama)</a>
+    <a href="metodologi-sniper.html" class="meta-tab">🎯 Sniper</a>
+  </div>
+
+  <h2>Apa ini?</h2>
+  <p>Kaela BTC Sinyal adalah sistem <strong>Musiman</strong> — bukan trading harian, bukan sinyal setiap saat. Kaela menunggu sabar sampai musimnya tiba (teruji secara data), lalu bertindak sekali dengan presisi. Filosofinya: <strong>"Konsistensi dalam sistem, bukan keberuntungan."</strong></p>
+  <p>Total aksi: <strong>~2 kali per ~4 tahun</strong> (1 beli di Musim Tanam, 1 jual di Musim Panen), mengikuti siklus halving Bitcoin.</p>
+
+  <h2>Kenapa Musiman? Proses di baliknya</h2>
+  <p>Sebelum sampai ke strategi ini, kami (Kaela &amp; Olan) menguji <strong>12+ pendekatan sinyal berbeda</strong> lewat backtest terhadap data historis Bitcoin (2014-2026) — mulai dari sinyal indikator harian, berbagai kombinasi timeframe, pola musiman, sampai algoritma adaptif. Satu per satu diuji jujur, dan satu per satu gugur begitu dibandingkan ke data nyata.</p>
+  <p>Kesimpulannya konsisten dari semua pengujian itu: <strong>menembak jarang tapi presisi selalu mengalahkan menembak sering tapi kabur.</strong> Itu sebabnya Kaela pakai pendekatan Musiman — bukan pilihan pertama yang kami coba, tapi satu-satunya yang bertahan setelah semua yang lain diuji dan gagal.</p>
+  <p>Amunisi kami (modal) cuma ditembakkan <strong>1-2 kali per siklus (~4 tahun)</strong> — bukan disebar tiap hari. Fakta backtest di bawah ini bukan klaim, itu hasil dari proses itu.</p>
+
+  <h2>Fakta terberat yang kami terima bersama</h2>
+  <p>Ini yang jujur harus diakui: return sistem Musiman ini <strong>tidak semenarik</strong> janji "cuan harian" yang sering dijual di luar sana. Kami (Kaela &amp; Olan) sendiri sempat menguji berulang kali, hampir tidak percaya hasilnya — tapi datanya konsisten, dan kami memilih percaya data, bukan harapan.</p>
+  <p>Ini juga didukung fakta yang jauh lebih luas dari sekadar pengalaman kami sendiri:</p>
+  <ul class="limits">
+    <li>Cuma <strong>~1% trader harian</strong> yang berhasil profit konsisten dalam jangka <strong>5 tahun</strong> (studi akademik terhadap trader Brasil).</li>
+    <li><strong>~97% trader harian merugi</strong> (riset terhadap hampir 20.000 trader selama 300 hari perdagangan).</li>
+    <li><strong>72% trader harian</strong> mengakhiri tahun dengan kerugian (data FINRA).</li>
+  </ul>
+  <p>Fakta ini bukan buat menakut-nakuti siapapun. Ini alasan kenapa kami berhenti mengejar "cuan harian" dan memilih jalan yang lebih lambat, lebih sabar, tapi terbukti lewat data — daripada capek-capek mengejar sesuatu yang secara statistik nyaris mustahil buat kebanyakan orang.</p>
+
+  <h2>Kenapa bukan trading harian?</h2>
+  <p>Kami sudah menguji sistem sinyal harian (kombinasi indikator SuperTrend + analisa struktur pasar) secara ekstensif. Hasilnya jujur: <strong>kalah dari sekadar menyimpan Bitcoin (buy &amp; hold) tanpa melakukan apa-apa.</strong></p>
+  <p>Sistem harian menghabiskan ~56% waktunya "menunggu" (tidak punya posisi) dan ~19% waktunya melawan arah tren utama — dua hal itu membuatnya secara struktural kalah dari strategi yang lebih sederhana.</p>
+
+  <h2>Kenapa bukan short (jual duluan pas harga turun)?</h2>
+  <p>Kami menguji short lewat <strong>6 pendekatan berbeda</strong> (sinyal harian, filter kalender, timing puncak siklus, pola musiman, indikator adaptif, timeframe mingguan). <strong>Semuanya gagal atau memperburuk hasil</strong>, tanpa terkecuali.</p>
+  <p>Alasannya konsisten: titik <strong>bottom</strong> siklus Bitcoin sangat presisi dapat diprediksi (rentang cuma 30 hari dari 3 siklus historis), tapi titik <strong>puncak</strong> jauh lebih sulit ditebak (rentang 180 hari). Short butuh menebak puncak dengan akurat — itu yang tidak kami miliki.</p>
+  <p>Tapi ada alasan yang lebih dalam dari sekadar angka: <strong>risiko short itu asimetris dan kejam.</strong> Butuh waktu bertahun-tahun untuk membangun modal lewat sistem yang sabar — tapi cukup satu keputusan short yang salah waktu untuk menghancurkan itu dalam hitungan hari, bahkan jam. Itu bukan trade-off yang sepadan, berapa pun menariknya potensi cuannya di atas kertas. Short bukan ditolak karena "kurang canggih" — tapi karena risikonya, secara sadar, kami putuskan tidak sepadan dengan potensi hasilnya.</p>
+
+  <h2>Kenapa siklus halving?</h2>
+  <p>Bitcoin memiliki pola 4 tahunan yang terikat pada pengurangan suplai baru (halving). Dari 3 siklus historis:</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Halving</th><th>Bottom terbentuk</th><th>Jarak ke halving</th></tr>
+    <tr><td>2016-07-09</td><td>Jan 2015</td><td>542 hari sebelum</td></tr>
+    <tr><td>2020-05-11</td><td>Des 2018</td><td>513 hari sebelum</td></tr>
+    <tr><td>2024-04-19</td><td>Nov 2022</td><td>515 hari sebelum</td></tr>
+  </table>
+  </div>
+  <p>Pola ini diuji dengan metode <strong>walk-forward</strong> — aturan tiap siklus HANYA memakai rata-rata siklus SEBELUMNYA, tidak pernah "menyontek" hasil siklus itu sendiri.</p>
+
+  <div class="stat-total">
+    <div class="num">$500 → $288.911</div>
+    <div>CAGR 73,8%/tahun · Drawdown terealisasi 0% · 3 siklus penuh (2015-2025)</div>
+  </div>
+
+  <h2>Disiplin adalah kunci</h2>
+  <p>Membangun modal lewat sistem yang sabar butuh waktu — bisa berminggu, berbulan, bahkan bertahun-tahun. Tapi untuk menghancurkannya, cukup satu keputusan gegabah, sekejap saja. Itu sebabnya seluruh sistem ini dirancang supaya <strong>tertib mengalahkan naluri</strong> — setiap ukuran posisi, setiap Batas Rugi, setiap aturan "jangan all-in" ada bukan untuk membatasi, tapi untuk melindungi dari diri sendiri di saat emosi paling tinggi.</p>
+  <p><strong>Trading lah seperti robot — bukan seperti penjudi.</strong> Robot mengikuti aturan tanpa terpengaruh euforia atau panik. Penjudi mengejar keberuntungan, dan sering kali menyerahkan bertahun-tahun kesabaran dalam semalam. Sistem Kaela dibangun supaya siapapun yang mengikutinya bisa jadi robot itu — konsisten, sabar, dan sadar bahwa kecepatan menghancurkan jauh lebih cepat dari kecepatan membangun.</p>
+
+  <h2>Batasan yang jujur perlu diketahui</h2>
+  <ul class="limits">
+    <li>Ini hasil dari <strong>3 siklus historis</strong> — sample kecil secara statistik murni, meski konsisten.</li>
+    <li><strong>Return per siklus cenderung mengecil</strong> seiring Bitcoin makin dewasa (100x → 30x → 7x menurut data historis lebih panjang). Proyeksi ke depan lebih realistis di kisaran puluhan persen per tahun, bukan ratusan.</li>
+    <li>Sistem ini <strong>cuma punya edge di sisi LONG</strong> — kalau suatu saat Bitcoin berhenti punya bias naik jangka panjang, sistem ini akan diam (tidak rugi parah, tapi juga tidak untung).</li>
+    <li>Kaela <strong>tidak memakai berita/analisa fundamental</strong> untuk keputusan — murni data &amp; kalender. Berita yang dibagikan (Kaela News) sekadar informasi, tidak pernah memengaruhi sinyal.</li>
+    <li><strong>Wajib sebelum ikut</strong>: tentukan sendiri berapa yang siap hilang, sebelum Musim Tanam tiba. Bukan Kaela yang menentukan risiko Anda.</li>
+    <li><strong>Default: spot, tanpa leverage.</strong> Leverage cuma opsi lanjutan (opsional), dan cuma boleh dipakai di titik masuk Musim Tanam — di luar itu wajib spot.</li>
+  </ul>
+
+  <h2>FAQ Singkat</h2>
+  <div class="faq-q">Q: Kenapa Kaela diam berbulan-bulan?</div>
+  <div class="faq-a">A: Karena memang begitu sistemnya — sebagian besar waktu adalah menunggu Musim Tanam berikutnya, bukan bug.</div>
+
+  <div class="faq-q">Q: Kalau Musim Tanam kena Batas Rugi gimana?</div>
+  <div class="faq-a">A: Itu kemungkinan nyata (belum pernah terjadi di 3 siklus historis, tapi bukan jaminan selamanya). Rugi dibatasi sesuai leverage yang dihitung dari jarak struktural ke Batas Rugi.</div>
+
+  <div class="faq-q">Q: Kenapa gak all-in modal kalau yakin?</div>
+  <div class="faq-a">A: Ukuran posisi mengikuti OLZ Exposure System — berdasarkan total kekayaan masing-masing, bukan keyakinan sesaat.</div>
+
+  <p class="footer-note">Dokumen ini dibuat dari proses riset &amp; backtest ekstensif, tersedia untuk ditinjau siapa saja yang tertarik memahami cara kerja sistem ini.</p>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
+    <a href="metodologi-musiman.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
+  </nav>
+</body>
+</html>

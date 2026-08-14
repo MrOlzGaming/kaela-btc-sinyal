@@ -7,7 +7,7 @@ const ARAH_LABEL = { tertekan: '📉 BTC cenderung TERTEKAN', menguat: '📈 BTC
 
 // Baris perkiraan arah (11 Agu 2026, permintaan Olan: "berani memperkirakan arah, jelasin
 // kalau begini maka begitu") -- heuristik makro standar (channel ekspektasi The Fed
-// hawkish/dovish), BUKAN backtest data historis kayak sinyal Nyopet/Halving. `strength`
+// hawkish/dovish), BUKAN backtest data historis kayak sinyal Sniper/Musiman. `strength`
 // ditampilkan biar jujur soal seberapa reliable hubungannya -- gak semua event sama kuat.
 function directionalLines(e) {
   const v = e.directionalView;
@@ -33,7 +33,7 @@ function formatEconCalendar(now, events) {
     lines.push(...directionalLines(e));
     lines.push('');
   }
-  lines.push('⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Nyopet/Halving -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Nyopet Market atau keputusan Musim Tanam/Panen.');
+  lines.push('⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.');
   lines.push('');
   lines.push(`🔗 ${WEB_URL}`);
   return lines.join('\n');

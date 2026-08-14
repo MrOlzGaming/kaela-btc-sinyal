@@ -27,7 +27,7 @@ const LOGO_MARK = '<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><
 
 // 5 kategori sinyal, 1 warna tetap per kategori -- dipakai KONSISTEN di web (border+emoji) DAN
 // WA (emoji kotak warna, lihat categoryColors.js). Biar orang bisa scan cari warna tertentu tanpa
-// baca teks lengkap (misal cuma mau Nyopet Market, langsung cari 🟧).
+// baca teks lengkap (misal cuma mau Sniper, langsung cari 🟧).
 const { CATEGORY_COLOR, categoryOfType } = require('./categoryColors');
 
 const TYPE_LABEL = {
@@ -36,7 +36,7 @@ const TYPE_LABEL = {
   'report-monthly': `${CATEGORY_COLOR.laporan.emoji} 🗓️ Laporan Bulanan`,
   'report-yearly': `${CATEGORY_COLOR.laporan.emoji} 📅 Laporan Tahunan`,
   news: `${CATEGORY_COLOR.news.emoji} 📰 Kaela News`,
-  nyopet: `${CATEGORY_COLOR.nyopet.emoji} ⚡ Nyopet Market`,
+  nyopet: `${CATEGORY_COLOR.nyopet.emoji} 🎯 Sniper`,
   whale: `${CATEGORY_COLOR.whale.emoji} 🐋 Whale Alert`,
   'econ-calendar': `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`,
 };
@@ -85,7 +85,7 @@ function renderEntry(e, { highlight = false, pinned = false } = {}) {
   const dateCls = highlight ? 'latest-date' : 'entry-date';
   const cat = categoryOfType(e.type);
   const borderStyle = cat ? ` style="border-left: 4px solid ${CATEGORY_COLOR[cat].hex};"` : '';
-  const pinnedBadge = pinned ? `<div class="pinned-badge">📌 POSISI NYOPET MARKET MASIH TERBUKA</div>` : '';
+  const pinnedBadge = pinned ? `<div class="pinned-badge">📌 POSISI SNIPER MASIH TERBUKA</div>` : '';
   const header = highlight
     ? `<div class="${labelCls}">${TYPE_LABEL[e.type] || e.type}</div><div class="${dateCls}">${new Date(e.date).toLocaleString('id-ID')}</div>`
     : `<div class="entry-header"><span class="entry-type">${TYPE_LABEL[e.type] || e.type}</span><span class="entry-date">${new Date(e.date).toLocaleString('id-ID')}</span></div>`;
@@ -246,7 +246,7 @@ function navHtml(activePage) {
   return `<nav class="bottom-nav">
     ${item('index.html', ICON_HOME, 'Dashboard', 'dashboard')}
     ${item('kalkulator.html', ICON_CALC, 'Kalkulator', 'kalkulator')}
-    ${item('metodologi-sniper.html', ICON_BOOK, 'Metodologi', 'metodologi')}
+    ${item('metodologi-musiman.html', ICON_BOOK, 'Metodologi', 'metodologi')}
   </nav>`;
 }
 
@@ -310,7 +310,7 @@ function renderSiklusHalvingPanel(now) {
   </div>`;
 }
 
-// ============ Nyopet Market MANUAL: monitor order live (nyopet-orders.json) ============
+// ============ Sniper MANUAL: monitor order live (nyopet-orders.json) ============
 // Beda dari log teks lama (nyopetLog.js) -- ini KARTU LIVE per order: pending (nunggu trigger),
 // floating (P&L live dihitung DI BROWSER dari harga live, lihat web/js/nyopet-orders-widget.js),
 // closed (histori). Order dibuat MANUAL pas Olan+Kaela analisa bareng (bukan auto-decide algoritma
@@ -368,7 +368,7 @@ function loadNyopetOrdersState() {
   return fs.existsSync(ordersPath) ? JSON.parse(fs.readFileSync(ordersPath, 'utf8')) : { balance: 0, balanceUpdatedAt: null, orders: [] };
 }
 
-// Tab Nyopet Market = status TERKINI doang, SATU kartu (permintaan Olan 9 Agu 2026 -- sebelumnya
+// Tab Sniper = status TERKINI doang, SATU kartu (permintaan Olan 9 Agu 2026 -- sebelumnya
 // numpuk semua entry hari ini, bingung). Kalau ada order aktif (floating), itu yang tampil.
 // Kalau enggak, tampilkan 1 status TERAKHIR (biasanya "INVALID, masih nunggu" dari
 // nyopetAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
@@ -390,7 +390,7 @@ function renderNyopetOrdersPanel(state, latestStatusEntry) {
   } else if (latestStatusEntry) {
     activeHtml = renderEntry(latestStatusEntry, { highlight: true });
   } else {
-    activeHtml = `<div class="empty">⚡ Belum ada analisa Nyopet Market.</div>`;
+    activeHtml = `<div class="empty">🎯 Belum ada analisa Sniper.</div>`;
   }
 
   return `<div class="nyopet-orders-panel">
@@ -495,7 +495,7 @@ function renderJurnalPanel(state, now) {
   const stats = computeJournalStats(trades);
 
   if (!stats) {
-    return `<div class="empty">📓 Belum ada trade yang selesai. Jurnal bakal keisi otomatis begitu ada order Nyopet Market yang kena TP/SL.</div>`;
+    return `<div class="empty">📓 Belum ada trade yang selesai. Jurnal bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>`;
   }
 
   const strategies = [...new Set(closedAll.map((o) => o.strategyType).filter(Boolean))];
@@ -538,7 +538,7 @@ function buildDashboardHtml() {
   // ini sendiri udah cukup nunjukin status live-nya tanpa perlu archive teks laporan tiap hari.
   const halvingTabHtml = renderSiklusHalvingPanel(now);
 
-  // Tab Nyopet Market -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
+  // Tab Sniper -- status TERKINI doang, 1 kartu (permintaan Olan 9 Agu 2026, lihat
   // renderNyopetOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir.
   const ordersState = loadNyopetOrdersState();
   const latestNyopetEntry = getAll('nyopet')[0] || null; // terbaru duluan
@@ -565,9 +565,9 @@ function buildDashboardHtml() {
   <div class="brand"><span class="brand-mark">${LOGO_MARK}</span><h1>Kaela BTC Sinyal</h1></div>
 
   <div class="welcome">
-    👋 <strong>Selamat datang di Kaela BTC Sinyal</strong> — sistem Sniper otomatis untuk BTC: Siklus Halving
-    (strategi utama, ~2 aksi per 4 tahun) + Nyopet Market (sinyal pelengkap opsional). Murni data & kalender,
-    tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-sniper.html">Baca metodologi lengkap →</a>
+    👋 <strong>Selamat datang di Kaela BTC Sinyal</strong> — sistem Musiman otomatis untuk BTC: Siklus Halving
+    (strategi utama, ~2 aksi per 4 tahun) + Sniper (sinyal pelengkap opsional). Murni data & kalender,
+    tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-musiman.html">Baca metodologi lengkap →</a>
   </div>
 
   <div class="price-widget">
@@ -612,8 +612,8 @@ function buildDashboardHtml() {
   ${countdownHtml()}
 
   <div class="dash-tabs">
-    <button class="dash-tab-btn active" data-tab="halving">🎯 Siklus Halving</button>
-    <button class="dash-tab-btn" data-tab="nyopet">⚡ Nyopet Market</button>
+    <button class="dash-tab-btn active" data-tab="halving">🌾 Musiman</button>
+    <button class="dash-tab-btn" data-tab="nyopet">🎯 Sniper</button>
     <button class="dash-tab-btn" data-tab="jurnal">📓 Jurnal</button>
   </div>
   <div class="dash-panel active" data-panel="halving">${halvingTabHtml}</div>

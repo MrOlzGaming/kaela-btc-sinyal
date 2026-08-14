@@ -5,7 +5,7 @@
 <title>Metodologi Sniper — Kaela BTC Sinyal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1fae6c">
-<meta name="description" content="Metodologi sistem Sniper Kaela BTC Sinyal — kenapa bukan trading harian, kenapa bukan short, dan data siklus halving.">
+<meta name="description" content="Metodologi Mode Sniper — side-signal opsional Kaela BTC Sinyal, breakout dari pola chart (flag/wedge).">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon.svg">
@@ -21,15 +21,15 @@
   .meta-tab.active { background: var(--clr-primary); color: #111; border-color: var(--clr-primary); }
   .stat-total { text-align: center; padding: 14px; margin: 18px 0; background: var(--clr-bg-elevated); border: 1px solid var(--clr-success); border-radius: var(--radius-md); }
   .stat-total .num { font-size: 1.8rem; font-weight: 700; color: var(--clr-success); }
-  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--clr-border); }
-  th { color: var(--clr-text-muted); font-weight: 600; }
   ul.limits { padding-left: 20px; }
   ul.limits li { margin-bottom: 10px; }
-  .faq-q { font-weight: 600; margin-top: 16px; }
-  .faq-a { color: var(--clr-text-muted); margin-top: 4px; }
   .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
   strong { color: var(--clr-text); }
+  .back-note { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-primary); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--clr-text-muted); }
+  .risk-banner { background: rgba(248,81,73,0.1); border: 1px solid var(--clr-danger); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .risk-banner-title { color: var(--clr-danger); font-weight: 800; font-size: 1rem; margin-bottom: 8px; }
+  .risk-banner p { margin: 0; font-size: 0.9rem; line-height: 1.6; }
+  code { background: var(--clr-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
 </style>
 </head>
 <body>
@@ -40,80 +40,54 @@
   <p class="tagline">Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.</p>
 
   <div class="meta-toggle">
-    <a href="metodologi-sniper.html" class="meta-tab active">🎯 Sniper (Utama)</a>
-    <a href="metodologi-nyopet.html" class="meta-tab">⚡ Nyopet Market</a>
+    <a href="metodologi-musiman.html" class="meta-tab">🌾 Musiman (Utama)</a>
+    <a href="metodologi-sniper.html" class="meta-tab active">🎯 Sniper</a>
   </div>
 
-  <h2>Apa ini?</h2>
-  <p>Kaela BTC Sinyal adalah sistem <strong>Sniper</strong> — bukan trading harian, bukan sinyal setiap saat. Kaela menunggu sabar sampai momen yang teruji secara data, lalu bertindak sekali dengan presisi. Filosofinya: <strong>"Konsistensi dalam sistem, bukan keberuntungan."</strong></p>
-  <p>Total aksi: <strong>~2 kali per ~4 tahun</strong> (1 beli di Musim Tanam, 1 jual di Musim Panen), mengikuti siklus halving Bitcoin.</p>
+  <p class="back-note">Ini halaman <strong>pelengkap</strong>. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-musiman.html">🌾 Musiman</a> buat metodologi intinya.</p>
 
-  <h2>Kenapa Sniper? Proses di baliknya</h2>
-  <p>Sebelum sampai ke strategi ini, kami (Kaela &amp; Olan) menguji <strong>12+ pendekatan sinyal berbeda</strong> lewat backtest terhadap data historis Bitcoin (2014-2026) — mulai dari sinyal indikator harian, berbagai kombinasi timeframe, pola musiman, sampai algoritma adaptif. Satu per satu diuji jujur, dan satu per satu gugur begitu dibandingkan ke data nyata.</p>
-  <p>Kesimpulannya konsisten dari semua pengujian itu: <strong>menembak jarang tapi presisi selalu mengalahkan menembak sering tapi kabur.</strong> Itu sebabnya Kaela jadi Sniper — bukan pilihan pertama yang kami coba, tapi satu-satunya yang bertahan setelah semua yang lain diuji dan gagal.</p>
-  <p>Amunisi kami (modal) cuma ditembakkan <strong>1-2 kali per siklus (~4 tahun)</strong> — bukan disebar tiap hari. Fakta backtest di bawah ini bukan klaim, itu hasil dari proses itu.</p>
+  <div class="risk-banner">
+    <div class="risk-banner-title">🚨 RISIKO TINGGI — BACA DULU SEBELUM LANJUT</div>
+    <p>Mode Sniper itu <strong>ANALISA OTOMATIS</strong> — beda total sama Musiman yang aturannya deterministik &amp; sudah diuji jujur lewat 9 tahun data historis. Sniper <strong>TIDAK PUNYA</strong> track record/backtest sepanjang itu. Sejak 10 Agustus 2026, <strong>margin per-trade DIBATASI keras maksimal 20% dari modal</strong> — sinyal yang margin-nya lebih dari itu OTOMATIS DILEWATIN, gak dibuka jadi posisi. Posisi yang dicatat sistem ini tetap <strong>MURNI PERHITUNGAN (bayangan), TIDAK ADA uang bergerak</strong>. <strong>BUKAN sinyal untuk diikuti buta.</strong></p>
+  </div>
 
-  <h2>Fakta terberat yang kami terima bersama</h2>
-  <p>Ini yang jujur harus diakui: return sistem Sniper ini <strong>tidak semenarik</strong> janji "cuan harian" yang sering dijual di luar sana. Kami (Kaela &amp; Olan) sendiri sempat menguji berulang kali, hampir tidak percaya hasilnya — tapi datanya konsisten, dan kami memilih percaya data, bukan harapan.</p>
-  <p>Ini juga didukung fakta yang jauh lebih luas dari sekadar pengalaman kami sendiri:</p>
+  <div class="risk-banner" style="border-color: var(--clr-primary); background: rgba(31,174,108,0.08);">
+    <div class="risk-banner-title" style="color: var(--clr-primary);">⚠️ Batasan jujur: ini deteksi NUMERIK, bukan mata manusia</div>
+    <p>Deteksi pola (flag/wedge di bawah) jalan lewat perhitungan matematis (regresi linear ke titik swing, cek kemiringan &amp; kerapatan) — <strong>APROKSIMASI</strong> dari yang manusia lihat di chart, bukan hal yang identik. Syarat minimalnya (2 titik sentuhan per garis) itu batas MINIMAL biar garisnya bisa dihitung, bukan jaminan pola itu keliatan rapi/meyakinkan kalau digambar manual. Karena itu Kaela dan Olan jalan <strong>"trabar" (trading bareng)</strong>: Olan cek/gambar pola secara visual, Kaela verifikasi ulang angkanya (SL/TP/sizing) — kombinasi mata manusia + disiplin angka, bukan algoritma jalan sendirian.</p>
+  </div>
+
+  <h2>🎯 Mode Sniper — breakout dari pola chart (update 10 Agustus 2026)</h2>
+  <p>Setelah menguji puluhan pendekatan algoritmik — 12+ strategi utama, ditambah ratusan kombinasi parameter khusus side-trading — satu kesimpulan tetap kokoh: <strong>strategi terbaik yang pernah ditemukan, diuji jujur lewat 9 tahun data, tetap Musiman (CAGR 73,8%/tahun, drawdown 0%)</strong>. Tidak ada algoritma otomatis lain yang mendekati — Sniper tetap sinyal <em>pelengkap</em>, bukan strategi utama.</p>
+  <p>Nama "Sniper" dipilih karena intensitasnya emang jarang tapi presisi (66 sinyal dalam 9 tahun, ~7x/tahun) — bukan trading harian/sering. Sinyal ini sempat beberapa kali ganti bentuk: algoritma otomatis murni (SuperTrend, dipensiunkan) → analisa manual/kolaboratif bareng Olan → analisa otomatis berbasis zona support/resistance umum. Sejak 10 Agustus 2026, mesinnya diganti total: <strong>breakout dari POLA CHART SPESIFIK</strong> (bull flag/pennant lanjutan tren, falling wedge pembalikan) — bukan lagi breakout dari zona swing high/low umum. Alasannya: Stop Loss yang nempel di LEBAR POLA-nya sendiri (yang secara definisi sempit) hasilnya jauh lebih baik daripada SL dari zona struktural yang bisa jauh dari harga.</p>
+
+  <h2>Cara kerja sekarang — deteksi pola + jaring pengaman</h2>
   <ul class="limits">
-    <li>Cuma <strong>~1% trader harian</strong> yang berhasil profit konsisten dalam jangka <strong>5 tahun</strong> (studi akademik terhadap trader Brasil).</li>
-    <li><strong>~97% trader harian merugi</strong> (riset terhadap hampir 20.000 trader selama 300 hari perdagangan).</li>
-    <li><strong>72% trader harian</strong> mengakhiri tahun dengan kerugian (data FINRA).</li>
-  </ul>
-  <p>Fakta ini bukan buat menakut-nakuti siapapun. Ini alasan kenapa kami berhenti mengejar "cuan harian" dan memilih jalan yang lebih lambat, lebih sabar, tapi terbukti lewat data — daripada capek-capek mengejar sesuatu yang secara statistik nyaris mustahil buat kebanyakan orang.</p>
-
-  <h2>Kenapa bukan trading harian?</h2>
-  <p>Kami sudah menguji sistem sinyal harian (kombinasi indikator SuperTrend + analisa struktur pasar) secara ekstensif. Hasilnya jujur: <strong>kalah dari sekadar menyimpan Bitcoin (buy &amp; hold) tanpa melakukan apa-apa.</strong></p>
-  <p>Sistem harian menghabiskan ~56% waktunya "menunggu" (tidak punya posisi) dan ~19% waktunya melawan arah tren utama — dua hal itu membuatnya secara struktural kalah dari strategi yang lebih sederhana.</p>
-
-  <h2>Kenapa bukan short (jual duluan pas harga turun)?</h2>
-  <p>Kami menguji short lewat <strong>6 pendekatan berbeda</strong> (sinyal harian, filter kalender, timing puncak siklus, pola musiman, indikator adaptif, timeframe mingguan). <strong>Semuanya gagal atau memperburuk hasil</strong>, tanpa terkecuali.</p>
-  <p>Alasannya konsisten: titik <strong>bottom</strong> siklus Bitcoin sangat presisi dapat diprediksi (rentang cuma 30 hari dari 3 siklus historis), tapi titik <strong>puncak</strong> jauh lebih sulit ditebak (rentang 180 hari). Short butuh menebak puncak dengan akurat — itu yang tidak kami miliki.</p>
-  <p>Tapi ada alasan yang lebih dalam dari sekadar angka: <strong>risiko short itu asimetris dan kejam.</strong> Butuh waktu bertahun-tahun untuk membangun modal lewat sistem yang sabar — tapi cukup satu keputusan short yang salah waktu untuk menghancurkan itu dalam hitungan hari, bahkan jam. Itu bukan trade-off yang sepadan, berapa pun menariknya potensi cuannya di atas kertas. Short bukan ditolak karena "kurang canggih" — tapi karena risikonya, secara sadar, kami putuskan tidak sepadan dengan potensi hasilnya.</p>
-
-  <h2>Kenapa siklus halving?</h2>
-  <p>Bitcoin memiliki pola 4 tahunan yang terikat pada pengurangan suplai baru (halving). Dari 3 siklus historis:</p>
-  <div class="table-scroll">
-  <table>
-    <tr><th>Halving</th><th>Bottom terbentuk</th><th>Jarak ke halving</th></tr>
-    <tr><td>2016-07-09</td><td>Jan 2015</td><td>542 hari sebelum</td></tr>
-    <tr><td>2020-05-11</td><td>Des 2018</td><td>513 hari sebelum</td></tr>
-    <tr><td>2024-04-19</td><td>Nov 2022</td><td>515 hari sebelum</td></tr>
-  </table>
-  </div>
-  <p>Pola ini diuji dengan metode <strong>walk-forward</strong> — aturan tiap siklus HANYA memakai rata-rata siklus SEBELUMNYA, tidak pernah "menyontek" hasil siklus itu sendiri.</p>
-
-  <div class="stat-total">
-    <div class="num">$500 → $288.911</div>
-    <div>CAGR 73,8%/tahun · Drawdown terealisasi 0% · 3 siklus penuh (2015-2025)</div>
-  </div>
-
-  <h2>Disiplin adalah kunci</h2>
-  <p>Membangun modal lewat sistem yang sabar butuh waktu — bisa berminggu, berbulan, bahkan bertahun-tahun. Tapi untuk menghancurkannya, cukup satu keputusan gegabah, sekejap saja. Itu sebabnya seluruh sistem ini dirancang supaya <strong>tertib mengalahkan naluri</strong> — setiap ukuran posisi, setiap Batas Rugi, setiap aturan "jangan all-in" ada bukan untuk membatasi, tapi untuk melindungi dari diri sendiri di saat emosi paling tinggi.</p>
-  <p><strong>Trading lah seperti robot — bukan seperti penjudi.</strong> Robot mengikuti aturan tanpa terpengaruh euforia atau panik. Penjudi mengejar keberuntungan, dan sering kali menyerahkan bertahun-tahun kesabaran dalam semalam. Sistem Kaela dibangun supaya siapapun yang mengikutinya bisa jadi robot itu — konsisten, sabar, dan sadar bahwa kecepatan menghancurkan jauh lebih cepat dari kecepatan membangun.</p>
-
-  <h2>Batasan yang jujur perlu diketahui</h2>
-  <ul class="limits">
-    <li>Ini hasil dari <strong>3 siklus historis</strong> — sample kecil secara statistik murni, meski konsisten.</li>
-    <li><strong>Return per siklus cenderung mengecil</strong> seiring Bitcoin makin dewasa (100x → 30x → 7x menurut data historis lebih panjang). Proyeksi ke depan lebih realistis di kisaran puluhan persen per tahun, bukan ratusan.</li>
-    <li>Sistem ini <strong>cuma punya edge di sisi LONG</strong> — kalau suatu saat Bitcoin berhenti punya bias naik jangka panjang, sistem ini akan diam (tidak rugi parah, tapi juga tidak untung).</li>
-    <li>Kaela <strong>tidak memakai berita/analisa fundamental</strong> untuk keputusan — murni data &amp; kalender. Berita yang dibagikan (Kaela News) sekadar informasi, tidak pernah memengaruhi sinyal.</li>
-    <li><strong>Wajib sebelum ikut</strong>: tentukan sendiri berapa yang siap hilang, sebelum Musim Tanam tiba. Bukan Kaela yang menentukan risiko Anda.</li>
-    <li><strong>Default: spot, tanpa leverage.</strong> Leverage cuma opsi lanjutan (opsional), dan cuma boleh dipakai di titik masuk Musim Tanam — di luar itu wajib spot.</li>
+    <li><strong>Trigger: candle HARIAN closing</strong> (~08:00 WITA, sinkron sama jadwal Binance).</li>
+    <li><strong>Bull Flag / Bull Pennant</strong> (pola LANJUTAN) — gerakan tajam ("tiang") diikuti konsolidasi sempit ("bendera"), breakout SEARAH tiang. SL di ujung lain bendera (alami tipis, bukan dipaksa).</li>
+    <li><strong>Falling Wedge</strong> (pola PEMBALIKAN) — dua trendline (dari swing high &amp; swing low) yang sama-sama menurun dan mengerucut (regresi linear, bukan ditarik tangan), breakout ke ATAS (kebalikan dari kemiringan wedge-nya sendiri). SL di swing low terakhir dalam pola.</li>
+    <li><strong>BUY ONLY</strong> — short (bear flag, rising wedge) TIDAK dipakai buat entry otomatis. Terbukti berkali-kali lewat backtest: short net-rugi di aset yang historis bias naik jangka panjang kayak BTC, walau win rate-nya kelihatan sama kayak long.</li>
+    <li><strong>Batas nyawa 20%</strong> — jaring pengaman, bukan pembatas aktif (nyawa terlebar yang pernah muncul di backtest cuma 20,5%). Sinyal yang kebetulan butuh nyawa lebih lebar dari itu DIINVALIDASI, bukan dipaksa masuk.</li>
+    <li><strong>Exit 2 TAHAP</strong> — target pertama di 2× risiko (jual separuh posisi, SL sisanya digeser ke breakeven -- gak bisa rugi lagi dari titik itu), sisanya di-trail pakai SMA10 harian (ditutup kalau momentum patah). "Lihat kelakuan candle" sebelum lepas semua sekaligus.</li>
+    <li><strong>Margin DIBATASI KERAS maksimal 20% dari modal</strong> — sizing pakai OLZ Exposure System asli, tapi kalau hasil hitungnya lebih dari 20% modal, sinyal DILEWATIN sepenuhnya (bukan dipaksa masuk dengan margin gede). Sniper itu prinsipnya cepat masuk-keluar risiko kecil, bukan investasi.</li>
   </ul>
 
-  <h2>FAQ Singkat</h2>
-  <div class="faq-q">Q: Kenapa Kaela diam berbulan-bulan?</div>
-  <div class="faq-a">A: Karena memang begitu sistemnya — sebagian besar waktu adalah menunggu Musim Tanam berikutnya, bukan bug.</div>
+  <p>Hasil backtest 9 tahun (2017-2026, modal $100, top-up $100/bulan sampai saldo $1.000, real): <strong>profit factor 2,51</strong>, drawdown terburuk <strong>38%</strong> (turun jauh dari versi zona-umum sebelumnya yang 90%+), margin per-trade TERBESAR di seluruh histori cuma 18,8% dari modal. Robustness dicek per-tahun — 2020 nyumbang 38% dari total keuntungan (sehat, gak dominan 1 tahun), tapi 2022 &amp; 2025 net rugi (market choppy/gak trending, breakout emang lemah di kondisi itu — diakui jujur, bukan disembunyikan).</p>
 
-  <div class="faq-q">Q: Kalau Musim Tanam kena Batas Rugi gimana?</div>
-  <div class="faq-a">A: Itu kemungkinan nyata (belum pernah terjadi di 3 siklus historis, tapi bukan jaminan selamanya). Rugi dibatasi sesuai leverage yang dihitung dari jarak struktural ke Batas Rugi.</div>
+  <h2>🎭 "Posisi Bayangan" — apa maksudnya?</h2>
+  <p>Begitu VALID, Kaela <strong>langsung catat posisi seolah entry di harga pasar saat itu juga</strong> — TP, SL, exposure, floating P&amp;L, semua dihitung dan ditampilkan live persis kayak posisi beneran. Tapi ini <strong>MURNI PERHITUNGAN</strong> — <strong>Kaela TIDAK PERNAH eksekusi transaksi finansial apapun</strong> (aturan keras, gak bisa diubah). Kalau Olan mau ikut sinyalnya, eksekusi ASLI tetap 100% manual sendiri di Binance, pakai angka yang udah Kaela hitung. Riwayat posisi yang udah SELESAI (kena TP atau SL, profit maupun loss) bisa dilihat lengkap di tab <strong>📓 Jurnal</strong> di Dashboard — statistik, equity curve, kalender P&amp;L, semua dari data ini.</p>
 
-  <div class="faq-q">Q: Kenapa gak all-in modal kalau yakin?</div>
-  <div class="faq-a">A: Ukuran posisi mengikuti OLZ Exposure System — berdasarkan total kekayaan masing-masing, bukan keyakinan sesaat.</div>
+  <p>🚨 <strong>Aturan ketat, wajib dipatuhi kalau mau ikut sinyal Sniper beneran pakai uang asli:</strong></p>
+  <ul class="limits">
+    <li><strong>DILARANG KERAS ALL-IN.</strong> Titik, tanpa pengecualian.</li>
+    <li><strong>Sediakan modal terpisah yang memang siap hilang ("modal aman")</strong> — jangan pernah pakai modal yang dialokasikan untuk Musiman atau kebutuhan hidup sehari-hari.</li>
+    <li>Leverage tinggi (kadang 50-100×+) adalah KONSEKUENSI MATEMATIS dari Batas Rugi yang ketat, bukan pilihan bebas gambling — tapi tetap pahami risikonya sebelum ikut.</li>
+    <li>Kalau tidak bisa tertib mengikuti aturan di atas, lebih baik tidak usah ikut Mode Sniper sama sekali. <strong>Disiplin adalah syarat, bukan saran.</strong></li>
+  </ul>
 
-  <p class="footer-note">Dokumen ini dibuat dari proses riset &amp; backtest ekstensif, tersedia untuk ditinjau siapa saja yang tertarik memahami cara kerja sistem ini.</p>
+  <h2>🔬 Riset yang lagi berjalan (belum live)</h2>
+  <p>Kaela terus backtest kemungkinan lain, TIDAK berhenti di versi sekarang. Rising wedge &amp; bear pennant (versi SHORT dari pola yang udah live) sengaja belum diaktifkan buat entry otomatis — konsisten sama temuan short net-rugi. <strong>Versi konfirmasi 4 JAM</strong> (bukan harian) juga masih riset — potensi lebih tinggi tapi drawdown jauh lebih berat (~50-85% tergantung parameter), belum matang buat live. Range-trading buat kondisi pasar datar udah diuji tapi belum cukup meyakinkan. Semua hasil riset — termasuk yang gagal — didokumentasikan jujur, bukan cuma yang berhasil.</p>
+
+  <p class="footer-note">Riwayat metodologi algoritmik paling lama (SuperTrend adaptive, sweep 315 kombinasi, CAGR 20,1%/tahun backtest) masih tersimpan di <code>backtest/nyopetSweep.js</code> buat riset — sudah tidak dipakai lagi buat sinyal live.</p>
 
   <script>
     if ('serviceWorker' in navigator) {

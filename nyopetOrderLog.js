@@ -1,4 +1,4 @@
-// Format pesan Nyopet Market MANUAL -- 4 momen (rencana/trigger/closed_tp/closed_sl), diposting
+// Format pesan Sniper MANUAL (rename dari "Nyopet Market", 12 Agu 2026) -- 4 momen (rencana/trigger/closed_tp/closed_sl), diposting
 // ke WEB (arsip) DAN grup WA "BTC Sniper Club". WA cuma dikirim pas ADA PERUBAHAN STATUS
 // (rencana dibuat / kena trigger / closed) -- BUKAN tiap kali dicek (hindari spam "masih floating"
 // tiap jam, lihat archive.js anti-dobel lesson). Floating P&L LIVE cukup di web (client-side).
@@ -24,7 +24,7 @@ function seqLabel(order) {
 
 function formatRencana(order) {
   const lines = [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 📋 RENCANA (analisa Kaela)`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 📋 RENCANA (analisa Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} · ${STRATEGY_LABEL[order.strategyType] || ''}`,
     '',
@@ -48,7 +48,7 @@ function formatRencana(order) {
 
 function formatTriggered(order) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ✅ KENA TRIGGER, SEKARANG FLOATING`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — ✅ KENA TRIGGER, SEKARANG FLOATING`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
     '',
@@ -68,7 +68,7 @@ function formatClosed(order) {
   const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)' };
   const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${exitLabel}`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — ${exitLabel}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -89,7 +89,7 @@ function formatClosed(order) {
 function formatPartialClosed(order) {
   const pnlSign = order.realizedPnlUsd >= 0 ? '+' : '-';
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -109,7 +109,7 @@ function formatPartialClosed(order) {
 // nyopet-trigger-state.json (lihat nyopetDailyTrigger.js).
 function formatDailyTrigger(btcPrice) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🔍 Kaela lagi kerja`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 🔍 Kaela lagi kerja`,
     '',
     `Lagi ngumpulin data & analisa BTC multi-timeframe (harga sekarang: ${fmt(btcPrice)})...`,
     'Kalau ada setup yang masuk akal, baru diinfoin di sini setelah VALID.',
@@ -121,7 +121,7 @@ function formatDailyTrigger(btcPrice) {
 
 function formatCancelled(order) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — 🚫 RENCANA DIBATALKAN`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 🚫 RENCANA DIBATALKAN`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ trigger ${fmt(order.triggerPrice)} -- dibatalkan sebelum kena trigger.`,
     '',
@@ -129,11 +129,11 @@ function formatCancelled(order) {
   ].join('\n');
 }
 
-// Analisa gabungan OTOMATIS harian (9 Agu 2026, nyopetAutoAnalysis.js) -- 3 bagian WAJIB
-// (keputusan Olan): Analisa Teknikal + Liquidation Heatmap + Kesimpulan VALID/INVALID.
-// VALID = posisi BAYANGAN langsung dibuka (murni perhitungan, TIDAK ADA uang bergerak -- Kaela
-// bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI (kalau Olan mau ikut)
-// tetap manual di Binance.
+// Analisa gabungan OTOMATIS harian (9 Agu 2026, nyopetAutoAnalysis.js) -- Analisa Teknikal +
+// Sentimen + On-chain + Kesimpulan VALID/INVALID (Liquidation Heatmap dicabut 12 Agu 2026, lihat
+// liqLine() di bawah). VALID = posisi BAYANGAN langsung dibuka (murni perhitungan, TIDAK ADA
+// uang bergerak -- Kaela bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI
+// (kalau Olan mau ikut) tetap manual di Binance.
 
 // Liquidation heatmap OTOMATIS DICABUT (12 Agu 2026) -- Kaela gak mampu akses data ini gratis
 // & akurat dari infrastruktur yang ada (Binance kemungkinan blokir WebSocket streaming dari IP
@@ -207,7 +207,7 @@ function rMultipleLevels(order) {
 function formatAutoValid({ order, ta, sentiment, onchain }) {
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ✅ VALID (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🤖 SNIPER — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
     ...rMultipleLevels(order),
@@ -245,7 +245,7 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
   const syaratLine = '📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.';
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} 🤖 NYOPET MARKET — ❌ INVALID (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.nyopet.emoji} 🤖 SNIPER — ❌ INVALID (analisa otomatis Kaela)`,
     'Belum ada posisi. Masih nunggu syarat terpenuhi.',
     '',
     '📊 ANALISA TEKNIKAL',

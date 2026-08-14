@@ -3,7 +3,9 @@
 // Cuma INFO, gak pernah eksekusi/rekomendasi keras -- disclaimer WAJIB lebih tegas dari Sniper
 // (leverage jauh lebih agresif, ~100x/nyawa 1%).
 
-const COINGLASS_LINK = 'https://www.coinglass.com/LiquidationData';
+// Link Liquidation Heat Map (15 Agu 2026, permintaan Olan -- lebih spesifik dari halaman
+// LiquidationData biasa, langsung nampilin peta panas buat cek kelakuan candle di zona).
+const COINGLASS_LINK = 'https://www.coinglass.com/pro/futures/LiquidationHeatMap';
 const KALKULATOR_LINK = 'https://kaela-btc-sinyal.netlify.app/kalkulator.html';
 
 function fmtUsd(n) {

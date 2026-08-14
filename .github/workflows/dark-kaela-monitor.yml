@@ -1,0 +1,63 @@
+name: Dark Kaela - Monitor Zona Likuiditas
+
+# SENGAJA MANUAL-ONLY dulu (belum ada `schedule`) -- 15 Agu 2026, fitur baru pertama kali
+# diaktifkan, WAJIB diverifikasi dry-run di runner asli dulu sebelum jadwal otomatis dinyalakan
+# (biar gak kejadian kayak insiden Sniper 14 Agu -- WA kekirim gak sengaja pas verifikasi).
+# Jadwal `schedule: cron '7,27,47 * * * *'` (tiap 20 menit) ditambah NANTI setelah Olan konfirmasi
+# siap live beneran.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (gak beneran kirim WA, cuma log)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: dark-kaela-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Cek zona likuiditas (darkKaelaMonitor.js) -- info doang, gak ada eksekusi/tracking
+        env:
+          DARK_KAELA_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: node darkKaelaMonitor.js
+
+      # Sama kayak workflow rutin lain (15 Agu 2026, arsitektur zero-deploy) -- cuma commit data,
+      # gak nyentuh web/*.html atau manggil buildDashboard.js (Dark Kaela belum punya tampilan web).
+      # SENGAJA tetap commit walau dry_run=true -- biar state konsisten kalau abis tes mau lanjut
+      # ke run beneran, gak double-signal gara-gara state ketinggalan.
+      - name: Commit & push dark-kaela-state.json (WAJIB tiap run kalau ada perubahan)
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f dark-kaela-state.json
+          git diff --staged --quiet || git commit -m "Auto: dark kaela monitor $(date -u +%Y-%m-%dT%H:%M)"
+          for i in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase origin master && git push && exit 0
+            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+            sleep 5
+          done
+          echo "::error::Gagal push dark-kaela-state.json setelah 5x percobaan."
+          exit 1

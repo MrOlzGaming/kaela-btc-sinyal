@@ -398,15 +398,14 @@ function renderNyopetOrdersPanel(state, latestStatusEntry, bankroll) {
   // (dipantau nyopetOrderMonitor.js), cuma gak dirender ke publik sampai beneran valid.
   const active = (state.orders || []).filter((o) => o.status === 'floating');
 
-  const balanceLine = state.balanceUpdatedAt
-    ? `<div class="order-balance">💰 Saldo Live Olan: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
-    : '';
-  // Bankroll bayangan Kaela (12 Agu 2026) -- TERPISAH dari saldo real Olan di atas. Mulai $100,
-  // top-up $100/bln tanggal 5 selama <$1000, compound dari P&L sinyal Sniper beneran -- ini
-  // yang dipakai buat SIZING sinyal (bukan saldo Olan), biar bisa dibandingin apel-ke-apel sama
-  // backtest yang udah tervalidasi ($100 -> $20.523/9 tahun).
+  // Saldo Live Olan DICABUT dari tampilan (12 Agu 2026, instruksi Olan: "hapus aja, murni semua
+  // saldo Kaela") -- panel ini sekarang murni bankroll BAYANGAN Kaela, gak nampilin saldo real
+  // Olan lagi sama sekali (data-nya tetap ada di nyopet-orders.json kalau suatu saat perlu, cuma
+  // gak ditampilkan di sini). Mulai $100, top-up $100/bln tanggal 5 selama <$1000, compound dari
+  // P&L sinyal Sniper beneran -- dipakai buat SIZING sinyal, biar bisa dibandingin apel-ke-apel
+  // sama backtest yang udah tervalidasi ($100 -> $20.523/9 tahun).
   const bankrollLine = bankroll
-    ? `<div class="order-balance">🤖 Bankroll Bayangan Kaela: <strong>${fmtUsdOrder(bankroll.balance)}</strong> <span class="order-balance-date">(mulai $100${bankroll.startedAt ? ', ' + fmtDateLong(new Date(bankroll.startedAt)) : ''} -- dipakai buat sizing sinyal)</span></div>`
+    ? `<div class="order-balance">🤖 Bankroll Bayangan Kaela: <strong>${fmtUsdOrder(bankroll.balance)}</strong> <span class="order-balance-date">(mulai $100${bankroll.startedAt ? ', ' + fmtDateLong(new Date(bankroll.startedAt)) : ''})</span></div>`
     : '';
 
   let activeHtml;
@@ -419,9 +418,8 @@ function renderNyopetOrdersPanel(state, latestStatusEntry, bankroll) {
   }
 
   return `<div class="nyopet-orders-panel">
-    ${balanceLine}
     ${bankrollLine}
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo Live Olan itu saldo trading ASLI (eksperimen riset, bukan simulasi) -- Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri, gak ada uang bergerak. Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
+    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri -- gak ada uang bergerak, aman ditampilkan apa adanya. Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
     ${activeHtml}
   </div>`;
 }

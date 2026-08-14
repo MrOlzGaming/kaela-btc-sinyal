@@ -13,10 +13,18 @@ function parseCandle(raw) {
   return { openTime: raw[0], open: +raw[1], high: +raw[2], low: +raw[3], close: +raw[4], closeTime: raw[6] };
 }
 
+// Fix 14 Agu 2026 (bug KRITIS ketauan pas audit): Binance selalu nyertain candle PALING BARU
+// yang MASIH JALAN (belum closed) sebagai elemen terakhir tiap query "N candle terakhir" --
+// tanpa filter ini, `daily[daily.length-1]` yang dipakai nyopetAutoAnalysis.js buat cek breakout
+// itu candle yang BARU MULAI beberapa menit lalu (open~=close candle sebelumnya, BUKAN candle
+// kemarin yang beneran closed) -- mentahin seluruh premis "tunggu candle harian CLOSE dulu baru
+// konfirmasi sinyal". Fetch limit+1 lalu filter closeTime<=now, biar caller tetap dapet `limit`
+// candle CLOSED penuh (bukan limit-1) kayak yang mereka minta.
 async function fetchCandles(symbol, interval, limit) {
-  const res = await fetchWithRetry(`${BASE_URL}?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=${symbol}&interval=${interval}&limit=${limit + 1}`);
   const raw = await res.json();
-  return raw.map(parseCandle);
+  const nowMs = Date.now();
+  return raw.map(parseCandle).filter((c) => c.closeTime <= nowMs).slice(-limit);
 }
 
 // ============ Indikator dasar ============

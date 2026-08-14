@@ -8,7 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { localDateKey } = require('./config');
+const { toLocal } = require('./config');
 
 const BANKROLL_PATH = path.join(__dirname, 'kaela-bankroll.json');
 const START_BALANCE = 100;
@@ -34,9 +34,12 @@ function save(state) {
 function checkAndApplyTopUp(now = new Date()) {
   const state = load();
   if (!state.startedAt) state.startedAt = now.toISOString();
-  const todayDate = new Date(localDateKey(now)); // ambil komponen kalender WITA
-  const curMonthKey = todayDate.getUTCFullYear() * 12 + todayDate.getUTCMonth();
-  const dayOfMonth = new Date(now.getTime() + 8 * 3600 * 1000).getUTCDate(); // WITA
+  // WAJIB lewat toLocal() (config.js), JANGAN hardcode offset jam sendiri -- fix 14 Agu 2026,
+  // ketauan pas audit: baris ini sempat nulis ulang +8 jam manual, padahal itu persis yang
+  // diwanti-wanti config.js buat dihindari (kalau WITA berubah suatu saat, ini bakal salah diam2).
+  const localNow = toLocal(now);
+  const curMonthKey = localNow.getUTCFullYear() * 12 + localNow.getUTCMonth();
+  const dayOfMonth = localNow.getUTCDate();
 
   if (dayOfMonth >= TOP_UP_DAY_OF_MONTH && curMonthKey !== state.lastTopUpMonthKey) {
     state.lastTopUpMonthKey = curMonthKey;

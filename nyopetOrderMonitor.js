@@ -38,7 +38,11 @@ async function fetchHourlyClosed(limit = 5) {
 async function fetchDailyClosed(limit = 30) {
   const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=1d&limit=${limit}`);
   const raw = await res.json();
-  return raw.map(parseCandle);
+  // Fix 14 Agu 2026 (ketauan pas audit): lupa filter closeTime kayak fetchHourlyClosed di atas --
+  // tanpa ini, candle HARIAN yang masih jalan (belum closed) ikut kehitung, bikin trailing-SMA
+  // exit bisa kepicu dari harga intraday yang masih goyang, bukan candle yang beneran closed.
+  const nowMs = Date.now();
+  return raw.map(parseCandle).filter((c) => c.closeTime <= nowMs);
 }
 
 function computePnl(order, exitPrice, fraction = 1) {

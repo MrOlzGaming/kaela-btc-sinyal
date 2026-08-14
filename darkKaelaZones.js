@@ -75,6 +75,19 @@ function findNearestCandidate(candle, zones, params = DEFAULT_PARAMS) {
   return candidates[0] || null;
 }
 
+// Cari zona TERDEKAT di KEDUA arah (support & resistance) dari harga sekarang -- BEDA dari
+// findNearestCandidate (yang nyari 1 pemenang gabungan buat mutusin sinyal) -- ini murni buat
+// KONTEKS tampilan (15 Agu 2026, permintaan Olan: "sertakan jarak harga sekarang dalam persen
+// ke likuiditas bawah dan atas" di tiap pesan sinyal), gak mempengaruhi logic sinyal sama sekali.
+function findNearestPair(price, zones) {
+  const nearestSupport = zones.support.slice().sort((a, b) => pctDist(a.price, price) - pctDist(b.price, price))[0] || null;
+  const nearestResistance = zones.resistance.slice().sort((a, b) => pctDist(a.price, price) - pctDist(b.price, price))[0] || null;
+  return {
+    support: nearestSupport ? { ...nearestSupport, distPct: pctDist(nearestSupport.price, price) } : null,
+    resistance: nearestResistance ? { ...nearestResistance, distPct: pctDist(nearestResistance.price, price) } : null,
+  };
+}
+
 // Cek apakah candle CLOSE (bukan wick) beneran ngelewatin zona yang lagi aktif.
 function isZoneBroken(candle, activeZone, params = DEFAULT_PARAMS) {
   const p = { ...DEFAULT_PARAMS, ...params };
@@ -83,4 +96,4 @@ function isZoneBroken(candle, activeZone, params = DEFAULT_PARAMS) {
   return candle.close > activeZone.price * (1 + p.BREAK_CONFIRM_PCT / 100);
 }
 
-module.exports = { DEFAULT_PARAMS, roundNumberStep, nearestRoundLevels, pctDist, detectZones, findNearestCandidate, isZoneBroken };
+module.exports = { DEFAULT_PARAMS, roundNumberStep, nearestRoundLevels, pctDist, detectZones, findNearestCandidate, findNearestPair, isZoneBroken };

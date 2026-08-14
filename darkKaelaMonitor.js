@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { fetchCandles } = require('./technicalAnalysis');
-const { detectZones, findNearestCandidate, isZoneBroken, pctDist, DEFAULT_PARAMS } = require('./darkKaelaZones');
+const { detectZones, findNearestCandidate, findNearestPair, isZoneBroken, pctDist, DEFAULT_PARAMS } = require('./darkKaelaZones');
 const { formatSignal, formatBroken } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 
@@ -68,7 +68,13 @@ async function main() {
   if (nearest) {
     const sameZone = state.activeZone && pctDist(nearest.price, state.activeZone.price) <= DEFAULT_PARAMS.CLUSTER_TOLERANCE_PCT;
     if (!sameZone) {
-      const signal = { direction: nearest.direction, zonePrice: nearest.price, zoneKind: nearest.kind, touches: nearest.touches, price: current.close };
+      // Konteks tambahan (permintaan Olan): jarak harga sekarang ke zona TERDEKAT di KEDUA arah,
+      // bukan cuma zona yang trigger sinyal -- biar keliatan seberapa "kejepit" harganya sekarang.
+      const pair = findNearestPair(current.close, zones);
+      const signal = {
+        direction: nearest.direction, zonePrice: nearest.price, zoneKind: nearest.kind, touches: nearest.touches, price: current.close,
+        nearestSupport: pair.support, nearestResistance: pair.resistance,
+      };
       const msg = formatSignal(signal, now);
       console.log(msg + '\n');
       await sendWhatsAppOrDryRun(msg);

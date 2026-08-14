@@ -21,11 +21,22 @@ function formatSignal(signal, now) {
   const zoneDesc = signal.zoneKind === 'round'
     ? 'angka bulat psikologis'
     : `swing, disentuh ${signal.touches}x sebelumnya`;
+  // Konteks jarak ke KEDUA arah (permintaan Olan, 15 Agu 2026) -- biar keliatan seberapa
+  // "kejepit" harga sekarang, bukan cuma info zona yang trigger sinyal ini doang.
+  const upLine = signal.nearestResistance
+    ? `📈 Likuiditas ATAS: ${fmtUsd(signal.nearestResistance.price)} (${signal.nearestResistance.distPct.toFixed(2)}% dari sekarang)`
+    : '📈 Likuiditas ATAS: -';
+  const downLine = signal.nearestSupport
+    ? `📉 Likuiditas BAWAH: ${fmtUsd(signal.nearestSupport.price)} (${signal.nearestSupport.distPct.toFixed(2)}% dari sekarang)`
+    : '📉 Likuiditas BAWAH: -';
   return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market
 ${dirLabel} (zona likuiditas)
 
 Harga sekarang: ${fmtUsd(signal.price)}
 Zona likuiditas: ${fmtUsd(signal.zonePrice)} (${zoneDesc})
+
+${upLine}
+${downLine}
 
 ⚠️ JANGAN LANGSUNG ENTRY. Cek dulu kelakuan candle di zona ini -- mantul atau ditembus:
 🔗 ${COINGLASS_LINK}

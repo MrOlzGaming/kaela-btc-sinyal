@@ -53,7 +53,14 @@ function computePnl(order, exitPrice, fraction = 1) {
   return { pnlPct, pnlUsd };
 }
 
-async function sendWhatsAppRespectMute(msg, label) {
+// `silent` (14 Agu 2026, buat order trial/simulasi "jangan pernah kasih tau WA") -- BEDA dari
+// isWaMuted() yang cuma nunda sementara: order silent SELAMANYA gak pernah kirim WA di
+// SEPANJANG hidupnya (trigger/partial/closed), tetap kecatat normal di web/jurnal/bankroll.
+async function sendWhatsAppRespectMute(msg, label, silent = false) {
+  if (silent) {
+    console.log(`[NyopetOrderMonitor] Order SILENT (trial/simulasi) -- ${label} TETAP tercatat di web, gak pernah dikirim ke grup.`);
+    return;
+  }
   if (isWaMuted()) {
     console.log(`[NyopetOrderMonitor] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
     return;
@@ -98,7 +105,7 @@ async function main() {
       const msg = formatTriggered(updated);
       console.log(msg + '\n');
       addEntry('nyopet', msg, now);
-      await sendWhatsAppRespectMute(msg, 'order kena trigger');
+      await sendWhatsAppRespectMute(msg, 'order kena trigger', order.silentTest);
       continue;
     }
 
@@ -119,7 +126,7 @@ async function main() {
           const msg = formatClosed(updated);
           console.log(msg + '\n');
           addEntry('nyopet', msg, now);
-          await sendWhatsAppRespectMute(msg, 'posisi kena SL');
+          await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
           continue;
         }
         if (hitPartial) {
@@ -133,7 +140,7 @@ async function main() {
             const msg = formatClosed(updated);
             console.log(msg + '\n');
             addEntry('nyopet', msg, now);
-            await sendWhatsAppRespectMute(msg, 'posisi kena SL');
+            await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
             continue;
           }
           const { pnlUsd: realizedPnlUsd } = computePnl(order, order.partialTp, 0.5);
@@ -144,7 +151,7 @@ async function main() {
           const msg = formatPartialClosed(updated);
           console.log(msg + '\n');
           addEntry('nyopet', msg, now);
-          await sendWhatsAppRespectMute(msg, 'target tahap 1 kena');
+          await sendWhatsAppRespectMute(msg, 'target tahap 1 kena', order.silentTest);
           continue;
         }
         continue; // belum kena apa-apa
@@ -176,7 +183,7 @@ async function main() {
       const msg = formatClosed(updated);
       console.log(msg + '\n');
       addEntry('nyopet', msg, now);
-      await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh');
+      await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh', order.silentTest);
       continue;
     }
 
@@ -203,7 +210,7 @@ async function main() {
     const msg = formatClosed(updated);
     console.log(msg + '\n');
     addEntry('nyopet', msg, now);
-    await sendWhatsAppRespectMute(msg, 'posisi ditutup');
+    await sendWhatsAppRespectMute(msg, 'posisi ditutup', order.silentTest);
   }
 }
 

@@ -67,6 +67,10 @@ function createOrder(order, date = new Date()) {
     remainingFraction: 1,
     trailSmaLen: order.trailSmaLen ?? null,
     realizedPnlUsd: 0,
+    // silentTest (14 Agu 2026, buat order trial/simulasi) -- tetap kecatat NORMAL di web/jurnal/
+    // bankroll, tapi nyopetOrderMonitor.js WAJIB skip WA SELAMANYA buat order ini (beda dari
+    // isWaMuted() yang cuma nunda sementara).
+    silentTest: order.silentTest === true,
     createdAt: date.toISOString(),
     triggeredAt: null,
     closedAt: null,

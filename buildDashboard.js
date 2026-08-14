@@ -155,6 +155,8 @@ const SHARED_STYLE = `
   .order-meta { font-size: 0.75rem; color: var(--clr-text-muted); }
   .order-live-price { font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 6px; }
   .order-live-price strong { color: var(--clr-text); font-variant-numeric: tabular-nums; }
+  .floating-banner { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1.5px solid var(--clr-primary); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); padding: 16px; margin: 18px 0; }
+  .floating-banner-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: var(--clr-primary); }
   .order-pnl-live { font-weight: 700; font-size: 1.05rem; margin-top: 6px; font-variant-numeric: tabular-nums; }
   .order-pnl-live.up { color: var(--clr-success); }
   .order-pnl-live.down { color: var(--clr-danger); }
@@ -654,6 +656,19 @@ function buildDashboardHtml() {
   // Tab Jurnal -- statistik + equity curve + kalender P/L, dari riwayat order closed/cancelled
   const jurnalTabHtml = renderJurnalPanel(ordersState, now, getFundReport());
 
+  // Banner posisi TERBUKA (14 Agu 2026, permintaan Olan: "pelihat yang masuk web langsung
+  // disuguhkan floating itu, sama kayak pas buka web langsung ada chart BTC") -- dulu posisi
+  // floating cuma keliatan kalau pengunjung klik tab Sniper dulu. Sekarang kalau ADA posisi
+  // aktif, langsung nongol PALING ATAS (sebelum chart) -- gak perlu navigasi buat tau ada
+  // posisi lagi jalan.
+  const activeFloating = (ordersState.orders || []).filter((o) => o.status === 'floating');
+  const floatingBannerHtml = activeFloating.length > 0
+    ? `<div class="floating-banner">
+        <div class="floating-banner-title">🔴 SNIPER LAGI OPEN POSISI -- pantau live di bawah</div>
+        <div class="order-grid">${activeFloating.map(renderOrderCard).join('')}</div>
+      </div>`
+    : '';
+
   return `<!doctype html>
 <html lang="id">
 <head>
@@ -676,6 +691,8 @@ function buildDashboardHtml() {
     (strategi utama, ~2 aksi per 4 tahun) + Sniper (sinyal pelengkap opsional). Murni data & kalender,
     tidak pernah dipengaruhi opini atau tebakan. <a href="metodologi-musiman.html">Baca metodologi lengkap →</a>
   </div>
+
+  ${floatingBannerHtml}
 
   <div class="price-widget">
     <div class="price-header">

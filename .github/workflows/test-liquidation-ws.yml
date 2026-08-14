@@ -1,0 +1,47 @@
+name: TEST liquidation WS (sementara, buat riset Dark Kaela)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test koneksi WS forceOrder BTC-only (60 detik)
+        run: |
+          node -e "
+          const ws = new WebSocket('wss://fstream.binance.com/ws/btcusdt@forceOrder');
+          let count = 0;
+          let closed = false;
+          ws.onopen = () => console.log('[OPEN]', new Date().toISOString());
+          ws.onmessage = (ev) => { count++; console.log('[MSG]', count, ev.data.slice(0, 200)); };
+          ws.onerror = (e) => console.log('[ERROR]', JSON.stringify(e.message || e));
+          ws.onclose = (e) => { closed = true; console.log('[CLOSE]', e.code, e.reason, new Date().toISOString()); };
+          setTimeout(() => {
+            console.log('[SUMMARY BTC-only] total msg dalam 60dtk:', count, '| masih connected:', !closed);
+            process.exit(0);
+          }, 60000);
+          "
+
+      - name: Test koneksi WS forceOrder ALL-MARKET (60 detik, buat perbandingan)
+        run: |
+          node -e "
+          const ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');
+          let count = 0;
+          let closed = false;
+          ws.onopen = () => console.log('[OPEN]', new Date().toISOString());
+          ws.onmessage = (ev) => { count++; if (count <= 3) console.log('[MSG]', count, ev.data.slice(0, 200)); };
+          ws.onerror = (e) => console.log('[ERROR]', JSON.stringify(e.message || e));
+          ws.onclose = (e) => { closed = true; console.log('[CLOSE]', e.code, e.reason, new Date().toISOString()); };
+          setTimeout(() => {
+            console.log('[SUMMARY ALL-MARKET] total msg dalam 60dtk:', count, '| masih connected:', !closed);
+            process.exit(0);
+          }, 60000);
+          "

@@ -1,0 +1,36 @@
+name: Deploy web/ ke Netlify (1x/hari + manual)
+
+# Diubah TOTAL 15 Agu 2026 -- versi lama ("deploy-on-push") jalan tiap ada push ke master, TAPI
+# hampir semua push ke master itu commit BOT rutin (sniper-hourly tiap jam, price-alert tiap
+# 5 menit, whale/news/laporan harian) yang MASING-MASING udah punya step deploy sendiri juga --
+# hasilnya deploy DOBEL/TRIPEL tiap kali data berubah, puluhan kali sehari. Itu yang ngabisin
+# 1000 kredit Netlify (ketauan pas deploy gagal "JSONHTTPError: Forbidden").
+#
+# Sekarang: SEMUA workflow rutin cuma commit data ke git (gratis, gak kena kredit) -- TIDAK ada
+# yang deploy sendiri lagi. Live site cuma keupdate lewat workflow INI, yang jalan:
+#   1. Terjadwal 1x/hari (abis sniper-daily-trigger + laporan pagi kelar, ~08:20 WITA) -- cukup
+#      buat nampilin semua update rutin harian (sinyal, whale, news, laporan) tanpa keteteran.
+#   2. workflow_dispatch manual -- dipicu Kaela begitu abis push fitur/kode BENERAN (bukan data
+#      rutin), biar perubahan itu langsung kelihatan gak perlu nunggu jadwal harian.
+
+on:
+  schedule:
+    - cron: '20 0 * * *' # 00:20 UTC = 08:20 WITA -- abis sniper-daily-trigger (08:05) + daily-report (07:03) kelar
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-daily
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy web/ ke Netlify
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

@@ -76,8 +76,6 @@ jobs:
           echo "::error::Gagal push whale-state.json setelah 5x percobaan -- state gak ke-simpan, run berikutnya bisa re-scan blok yang sama."
           exit 1
 
-      - name: Deploy web/ ke Netlify (cuma kalau ada perubahan)
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          npm install -g netlify-cli
-          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"
+      # Deploy Netlify DICABUT dari sini (15 Agu 2026, kredit abis gara-gara puluhan deploy/hari) --
+      # web/index.html tetap ke-rebuild+commit tiap run (di atas), tapi live site cuma keupdate
+      # lewat deploy-daily.yml (1x/hari terjadwal) atau manual workflow_dispatch.

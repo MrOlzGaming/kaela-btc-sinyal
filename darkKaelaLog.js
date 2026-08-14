@@ -19,7 +19,8 @@ function formatSignal(signal, now) {
   const zoneDesc = signal.zoneKind === 'round'
     ? 'angka bulat psikologis'
     : `swing, disentuh ${signal.touches}x sebelumnya`;
-  return `🥷 [Dark] Kaela — ${dirLabel} (zona likuiditas)
+  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market
+${dirLabel} (zona likuiditas)
 
 Harga sekarang: ${fmtUsd(signal.price)}
 Zona likuiditas: ${fmtUsd(signal.zonePrice)} (${zoneDesc})
@@ -39,7 +40,8 @@ ${fmtWita(now)}`;
 
 function formatBroken(activeZone, breakPrice, now) {
   const dirLabel = activeZone.direction === 'long' ? 'LONG' : 'SHORT';
-  return `🥷 [Dark] Kaela — ⚠️ ZONA ${fmtUsd(activeZone.price)} DITEMBUS
+  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market
+⚠️ ZONA ${fmtUsd(activeZone.price)} DITEMBUS
 
 Sinyal potensi ${dirLabel} sebelumnya gak jalan sesuai rencana -- harga nembus zona, bukan mantul (closing sekarang ${fmtUsd(breakPrice)}).
 

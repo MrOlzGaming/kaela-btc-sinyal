@@ -103,6 +103,42 @@ function formatPartialClosed(order) {
   ].join('\n');
 }
 
+// Laporan PEMANTAUAN harian (12 Agu 2026, permintaan Olan: "saat dipantau, tiap hari berarti
+// laporan sinyalnya dalam bentuk posisi dia sendiri yang dipantau") -- SELAMA ada posisi
+// floating, Kaela gak lagi diam total tiap hari (dulu skip penuh). Bukan sinyal BARU -- status
+// posisi yang UDAH terbuka: floating P&L hari ini, jarak ke SL/TP, udah berapa hari ditahan.
+function formatPositionMonitor(order, livePrice) {
+  const sign = order.direction === 'buy' ? 1 : -1;
+  const movePct = ((livePrice - order.entryPrice) / order.entryPrice) * 100 * sign;
+  const remFrac = order.remainingFraction !== undefined && order.remainingFraction !== null ? order.remainingFraction : 1;
+  const leverage = order.leverage || 1;
+  const floatingPnlUsd = order.marginUsd ? (order.marginUsd * remFrac * movePct * leverage) / 100 : null;
+  const totalPnlUsd = floatingPnlUsd !== null ? floatingPnlUsd + (order.realizedPnlUsd || 0) : null;
+  const daysHeld = order.triggeredAt ? Math.floor((Date.now() - new Date(order.triggeredAt).getTime()) / 86400000) : null;
+
+  const statusLine = order.partialDone
+    ? `🟡 Tahap 1 udah diamankan (${order.realizedPnlUsd >= 0 ? '+' : ''}${fmt(order.realizedPnlUsd || 0)}) -- SL sisa di BREAKEVEN (${fmt(order.entryPrice)}), sisa ${(remFrac * 100).toFixed(0)}% posisi di-trail SMA${order.trailSmaLen} harian.`
+    : `❌ SL: ${fmt(order.sl)}  🎯 TP tahap 1: ${fmt(order.partialTp)}`;
+
+  const lines = [
+    `${CATEGORY_COLOR.nyopet.emoji} 🎯 SNIPER — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
+    seqLabel(order),
+    `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} -- masih FLOATING, bukan sinyal baru.`,
+    '',
+    `Harga sekarang: ${fmt(livePrice)} (${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}% dari entry)`,
+    statusLine,
+  ];
+  if (totalPnlUsd !== null) lines.push(`P&L saat ini: ${totalPnlUsd >= 0 ? '+' : ''}${fmt(Math.abs(totalPnlUsd))}`);
+  lines.push(
+    '',
+    '🎭 Posisi bayangan, murni perhitungan -- eksekusi asli (kalau ikut) tetap manual sendiri di Binance.',
+    '',
+    nowStr(),
+    `🔗 ${WEB_URL}`,
+  );
+  return lines.join('\n');
+}
+
 // Heartbeat harian ~08:05 WITA (abis candle Daily closed) -- BUKAN sinyal, murni status +
 // ajakan Olan buka chat buat analisa multi-timeframe bareng. Gak diarsipkan ke web sama sekali
 // (konsisten kebijakan "belum valid = gak tampil dimanapun"), dedup dicek via
@@ -269,4 +305,4 @@ function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid };
+module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid };

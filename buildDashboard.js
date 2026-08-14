@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { load: loadKaelaBankroll } = require('./kaelaBankroll');
 const { getAll } = require('./archive');
 const { localDateKey } = require('./config');
 const {
@@ -340,11 +341,19 @@ function renderOrderCard(o) {
     </div>`;
   }
   if (o.status === 'floating') {
-    return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}">
+    // remainingFraction (12 Agu 2026, fix widget P&L live abis partial-exit) -- posisi yang
+    // udah kena tahap 1 cuma sisa SEBAGIAN (biasanya 0.5) yang masih floating, widget WAJIB
+    // tau ini biar gak overstate P&L pakai margin penuh.
+    const remFrac = o.remainingFraction !== undefined && o.remainingFraction !== null ? o.remainingFraction : 1;
+    const partialBadge = o.partialDone
+      ? `<div class="order-partial-note">🟡 Tahap 1 diamankan: ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)} -- SL sisa di breakeven, sisa ${(remFrac * 100).toFixed(0)}% posisi di-trail</div>`
+      : '';
+    return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}">
       ${idLine}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
       <div class="order-strategy">${strategy}</div>
       <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
+      ${partialBadge}
       <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
     </div>`;
   }
@@ -353,10 +362,19 @@ function renderOrderCard(o) {
   const badge = o.status === 'cancelled' ? '🚫 DIBATALKAN' : (won ? '✅ TP' : '❌ SL');
   const pnlLine = (o.pnlUsd !== null && o.pnlUsd !== undefined)
     ? `<div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${o.pnlPct.toFixed(2)}%)</div>` : '';
+  // Timeline 2-tahap (12 Agu 2026, permintaan Olan: "partial di jurnal juga") -- kalau order ini
+  // sempat kena tahap 1 sebelum full closed, tunjukkin timeline-nya, jangan cuma hasil akhir gabungan.
+  const partialTimeline = o.partialDone
+    ? `<div class="order-partial-timeline">
+        <div>🟡 Tahap 1 @ ${fmtUsdOrder(o.partialTp)}${o.partialClosedAt ? ` (${fmtDateLong(new Date(o.partialClosedAt))})` : ''}: ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)}</div>
+        <div>🏁 Tahap 2 (sisa) @ ${fmtUsdOrder(o.exitPrice ?? (won ? o.tp : o.sl))}${o.closedAt ? ` (${fmtDateLong(new Date(o.closedAt))})` : ''}: ${(o.pnlUsd - (o.realizedPnlUsd || 0)) >= 0 ? '+' : ''}${fmtUsdOrder((o.pnlUsd || 0) - (o.realizedPnlUsd || 0))}</div>
+      </div>`
+    : '';
   return `<div class="order-card closed" data-strategy="${o.strategyType || ''}">
     ${idLine}
     <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
     <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
+    ${partialTimeline}
     ${pnlLine}
   </div>`;
 }
@@ -373,7 +391,7 @@ function loadNyopetOrdersState() {
 // Kalau enggak, tampilkan 1 status TERAKHIR (biasanya "INVALID, masih nunggu" dari
 // nyopetAutoAnalysis.js) -- BUKAN daftar riwayat, cuma snapshot kondisi sekarang. Riwayat lengkap
 // yang UDAH SELESAI (closed_tp/closed_sl) itu tugas tab Jurnal, bukan di sini.
-function renderNyopetOrdersPanel(state, latestStatusEntry) {
+function renderNyopetOrdersPanel(state, latestStatusEntry, bankroll) {
   // Cuma FLOATING yang ditampilkan -- PENDING (belum ketrigger, belum valid) SENGAJA gak
   // ditampilkan di web publik sama sekali (permintaan Olan: "sinyal yang dikirim harus valid",
   // berlaku juga buat web bukan cuma WA). Rencana pending tetap tersimpan di nyopet-orders.json
@@ -381,7 +399,14 @@ function renderNyopetOrdersPanel(state, latestStatusEntry) {
   const active = (state.orders || []).filter((o) => o.status === 'floating');
 
   const balanceLine = state.balanceUpdatedAt
-    ? `<div class="order-balance">💰 Saldo Live Order: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
+    ? `<div class="order-balance">💰 Saldo Live Olan: <strong>${fmtUsdOrder(state.balance)}</strong> <span class="order-balance-date">(update ${fmtDateLong(new Date(state.balanceUpdatedAt))})</span></div>`
+    : '';
+  // Bankroll bayangan Kaela (12 Agu 2026) -- TERPISAH dari saldo real Olan di atas. Mulai $100,
+  // top-up $100/bln tanggal 5 selama <$1000, compound dari P&L sinyal Sniper beneran -- ini
+  // yang dipakai buat SIZING sinyal (bukan saldo Olan), biar bisa dibandingin apel-ke-apel sama
+  // backtest yang udah tervalidasi ($100 -> $20.523/9 tahun).
+  const bankrollLine = bankroll
+    ? `<div class="order-balance">🤖 Bankroll Bayangan Kaela: <strong>${fmtUsdOrder(bankroll.balance)}</strong> <span class="order-balance-date">(mulai $100${bankroll.startedAt ? ', ' + fmtDateLong(new Date(bankroll.startedAt)) : ''} -- dipakai buat sizing sinyal)</span></div>`
     : '';
 
   let activeHtml;
@@ -395,7 +420,8 @@ function renderNyopetOrdersPanel(state, latestStatusEntry) {
 
   return `<div class="nyopet-orders-panel">
     ${balanceLine}
-    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo yang ditampilkan adalah saldo trading ASLI (eksperimen riset, bukan simulasi). Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
+    ${bankrollLine}
+    <p class="order-disclaimer">🚨 Ini MONITOR/TRACKER doang -- gak ada eksekusi otomatis. Eksekusi asli tetap manual oleh Olan di Binance. Saldo Live Olan itu saldo trading ASLI (eksperimen riset, bukan simulasi) -- Bankroll Bayangan Kaela itu MURNI perhitungan buat sizing &amp; tracking performa Sniper sendiri, gak ada uang bergerak. Riwayat &amp; statistik lengkap ada di tab <strong>📓 Jurnal</strong>.</p>
     ${activeHtml}
   </div>`;
 }
@@ -542,7 +568,7 @@ function buildDashboardHtml() {
   // renderNyopetOrdersPanel). Order aktif kalau ada, kalau enggak baru status terakhir.
   const ordersState = loadNyopetOrdersState();
   const latestNyopetEntry = getAll('nyopet')[0] || null; // terbaru duluan
-  const nyopetTabHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry);
+  const nyopetTabHtml = renderNyopetOrdersPanel(ordersState, latestNyopetEntry, loadKaelaBankroll());
 
   // Tab Jurnal -- statistik + equity curve + kalender P/L, dari riwayat order closed/cancelled
   const jurnalTabHtml = renderJurnalPanel(ordersState, now);

@@ -12,6 +12,7 @@
 // Eksekusi ASLI tetap Olan manual di Binance -- ini cuma monitor, TIDAK PERNAH generate order baru.
 
 const { getActiveOrders, updateOrder } = require('./nyopetOrders');
+const { applyRealizedPnl } = require('./kaelaBankroll');
 const { formatTriggered, formatClosed, formatPartialClosed } = require('./nyopetOrderLog');
 const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
@@ -110,6 +111,7 @@ async function main() {
           const updated = updateOrder(order.id, {
             status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
           });
+          applyRealizedPnl(pnlUsd || 0, 'closed_sl', now); // update bankroll bayangan Kaela
           const msg = formatClosed(updated);
           console.log(msg + '\n');
           addEntry('nyopet', msg, now);
@@ -123,6 +125,7 @@ async function main() {
             const updated = updateOrder(order.id, {
               status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
             });
+            applyRealizedPnl(pnlUsd || 0, 'closed_sl', now);
             const msg = formatClosed(updated);
             console.log(msg + '\n');
             addEntry('nyopet', msg, now);
@@ -131,8 +134,9 @@ async function main() {
           }
           const { pnlUsd: realizedPnlUsd } = computePnl(order, order.partialTp, 0.5);
           const updated = updateOrder(order.id, {
-            partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd: realizedPnlUsd || 0,
+            partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd: realizedPnlUsd || 0, partialClosedAt: new Date(last.closeTime).toISOString(),
           });
+          applyRealizedPnl(realizedPnlUsd || 0, 'partial_tahap1', now); // update bankroll bayangan Kaela -- cuma separuh
           const msg = formatPartialClosed(updated);
           console.log(msg + '\n');
           addEntry('nyopet', msg, now);
@@ -162,6 +166,9 @@ async function main() {
         closeReason: hitBreakevenSl ? 'SL_BREAKEVEN' : 'TRAIL',
         exitPrice, pnlPct, pnlUsd: totalPnlUsd,
       });
+      // Bankroll bayangan Kaela: cuma sisa leg ini (restPnlUsd) -- porsi tahap 1 udah
+      // diaplikasikan pas partial kena, jangan dobel-hitung.
+      applyRealizedPnl(restPnlUsd || 0, hitBreakevenSl ? 'closed_sl_breakeven' : 'closed_trail', now);
       const msg = formatClosed(updated);
       console.log(msg + '\n');
       addEntry('nyopet', msg, now);

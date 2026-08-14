@@ -20,17 +20,29 @@
       const leverage = parseFloat(card.dataset.leverage) || 1;
       const margin = parseFloat(card.dataset.margin) || 0;
       const dir = card.dataset.direction === 'sell' ? -1 : 1;
+      // remainingFraction (12 Agu 2026, fix abis fitur partial-exit) -- kalau posisi udah kena
+      // tahap 1, cuma SEBAGIAN margin yang masih floating (sisanya udah direalisasi & dikunci
+      // ke breakeven) -- tanpa ini, P&L live overstate seolah masih full posisi.
+      const remFrac = card.dataset.remainingFraction !== undefined ? parseFloat(card.dataset.remainingFraction) : 1;
+      const realizedPnl = parseFloat(card.dataset.realizedPnl) || 0;
       const target = card.querySelector('[data-pnl-target]');
       if (!target || !entry) return;
 
       const priceMovePct = ((price - entry) / entry) * 100 * dir;
       const pnlPct = priceMovePct * leverage;
-      const pnlUsd = margin ? (margin * pnlPct) / 100 : null;
+      const floatingPnlUsd = margin ? (margin * remFrac * pnlPct) / 100 : null;
+      const totalPnlUsd = floatingPnlUsd !== null ? floatingPnlUsd + realizedPnl : null;
 
-      target.textContent = pnlUsd !== null
-        ? `${fmtUsd(pnlUsd)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%) @ $${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-        : `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% @ $${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-      target.className = 'order-pnl-live ' + (pnlPct >= 0 ? 'up' : 'down');
+      const priceStr = `@ $${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+      if (totalPnlUsd !== null) {
+        target.textContent = remFrac < 1
+          ? `${fmtUsd(totalPnlUsd)} total (realized ${fmtUsd(realizedPnl)} + floating ${fmtUsd(floatingPnlUsd)}) ${priceStr}`
+          : `${fmtUsd(totalPnlUsd)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%) ${priceStr}`;
+        target.className = 'order-pnl-live ' + (totalPnlUsd >= 0 ? 'up' : 'down');
+      } else {
+        target.textContent = `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% ${priceStr}`;
+        target.className = 'order-pnl-live ' + (pnlPct >= 0 ? 'up' : 'down');
+      }
     });
   }
 

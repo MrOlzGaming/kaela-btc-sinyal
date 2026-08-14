@@ -27,8 +27,8 @@ const { analyze, fetchCandles } = require('./technicalAnalysis');
 const { detectPatternSignal } = require('./chartPatterns');
 const { getActiveOrders, createOrder, updateOrder } = require('./nyopetOrders');
 const { hitung: hitungExposure } = require('./calculator');
-const { load: loadOrdersState } = require('./nyopetOrders');
-const { formatAutoValid, formatAutoInvalid } = require('./nyopetOrderLog');
+const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBankroll');
+const { formatAutoValid, formatAutoInvalid, formatPositionMonitor } = require('./nyopetOrderLog');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
@@ -128,7 +128,22 @@ async function main() {
 
   const active = getActiveOrders();
   if (active.length > 0) {
-    console.log('[NyopetAutoAnalysis]', now.toISOString(), '-- posisi bayangan masih aktif (', active[0].signalId, '), skip analisa baru.');
+    // Pemantauan harian (12 Agu 2026, permintaan Olan: "saat dipantau, tiap hari berarti
+    // laporan sinyalnya dalam bentuk posisi dia sendiri yang dipantau") -- SELAMA posisi masih
+    // floating, gak lagi diam total tiap hari (dulu skip penuh). Bukan nyari sinyal baru --
+    // cuma status posisi yang UDAH terbuka (floating P&L, jarak SL/TP, udah berapa hari).
+    const order = active[0];
+    if (order.status !== 'floating') {
+      console.log('[NyopetAutoAnalysis]', now.toISOString(), '-- posisi bayangan masih pending (', order.signalId, '), skip pemantauan (belum floating).');
+      return;
+    }
+    const livePrice = await fetchLivePrice();
+    const msg = formatPositionMonitor(order, livePrice);
+    console.log(msg + '\n');
+    addEntry('nyopet', msg, now);
+    await sendWhatsAppRespectMute(msg, 'pemantauan posisi terbuka');
+    saveTriggerState({ lastSentDate: todayKey });
+    console.log('[NyopetAutoAnalysis] Pemantauan posisi terbuka (', order.signalId, ') terkirim.');
     return;
   }
 
@@ -167,10 +182,15 @@ async function main() {
     return;
   }
 
-  const ordersState = loadOrdersState();
-  const modal = ordersState.balance || 0;
+  // Sizing pakai bankroll BAYANGAN Kaela sendiri (12 Agu 2026, permintaan Olan: "Kaela dikasih
+  // saldo bayangan $100") -- BUKAN saldo real Olan (nyopetOrders.js, tetap ada terpisah buat
+  // referensi dia pribadi). Bankroll ini mulai $100 + top-up $100/bln (tanggal 5, recurring
+  // selama <$1000), compound dari P&L trade Sniper beneran -- persis metodologi backtest yang
+  // udah tervalidasi ($100 -> $20.523/9 tahun), biar hasil live bisa dibandingin apel-ke-apel.
+  checkAndApplyTopUp(now);
+  const modal = getKaelaBalance();
   if (modal <= 0) {
-    console.log('[NyopetAutoAnalysis] Saldo belum diset (0), skip -- gak bisa hitung exposure.');
+    console.log('[NyopetAutoAnalysis] Bankroll Kaela abis (0), skip -- gak bisa hitung exposure.');
     return;
   }
   const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sl });

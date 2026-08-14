@@ -1,0 +1,13 @@
+{
+  "balance": 200,
+  "startedAt": "2026-08-14T14:33:07.768Z",
+  "lastTopUpMonthKey": 24319,
+  "topUpHistory": [
+    {
+      "date": "2026-08-14T14:33:07.768Z",
+      "amount": 100,
+      "balanceAfter": 200
+    }
+  ],
+  "pnlHistory": []
+}

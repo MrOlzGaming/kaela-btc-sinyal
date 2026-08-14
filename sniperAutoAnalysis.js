@@ -83,7 +83,17 @@ async function safeOnchain() {
 
 // Kirim WA respek mute sementara (config.js isWaMuted, aktif sampai 2026-08-14) -- tetap DIARSIP
 // ke web/archive.json apa adanya, cuma broadcast grup yang ditahan sampai pengumuman resmi.
-async function sendWhatsAppRespectMute(msg, label) {
+// BUG NYATA ketemu 14 Agu 2026: fungsi ini gak pernah dikasih parameter `silent` (beda dari
+// versi kembar di sniperOrderMonitor.js yang UDAH benar) -- akibatnya posisi TRIAL/SIMULASI
+// (silentTest:true, "jangan pernah kasih tau WA") tetap KEKIRIM WA beneran lewat jalur
+// pemantauan harian, karena isWaMuted() sekarang selalu false (mute udah dicabut 12 Agu).
+// Kejadian nyata: dispatch manual verifikasi rename nyopet->sniper (14 Agu 2026) gak sengaja
+// ngirim WA "PEMANTAUAN POSISI" buat order trial 2026081402 ke grup asli.
+async function sendWhatsAppRespectMute(msg, label, silent = false) {
+  if (silent) {
+    console.log(`[SniperAutoAnalysis] Order SILENT (trial/simulasi) -- ${label} TETAP tercatat di web, gak pernah dikirim ke grup.`);
+    return;
+  }
   if (isWaMuted()) {
     console.log(`[SniperAutoAnalysis] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
     return;
@@ -141,7 +151,7 @@ async function main() {
     const msg = formatPositionMonitor(order, livePrice);
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
-    await sendWhatsAppRespectMute(msg, 'pemantauan posisi terbuka');
+    await sendWhatsAppRespectMute(msg, 'pemantauan posisi terbuka', order.silentTest);
     saveTriggerState({ lastSentDate: todayKey });
     console.log('[SniperAutoAnalysis] Pemantauan posisi terbuka (', order.signalId, ') terkirim.');
     return;

@@ -75,6 +75,21 @@ function findNearestCandidate(candle, zones, params = DEFAULT_PARAMS) {
   return candidates[0] || null;
 }
 
+// Cek TOUCH beneran (wick nyentuh level zona), BUKAN cuma "deket" -- fix 15 Agu 2026 dari
+// komplain Olan: dipakai findNearestCandidate (NEAR_PCT) di 1h candle + polling 20 menit bikin
+// sinyal keluar telat, harga udah "terbang" jauh dari zona pas WA sampai. Dipakai live
+// (darkKaelaMonitor.js) di candle GRANULAR (5 menit) biar delay antara nyentuh & notifikasi
+// kecil. findNearestCandidate TETAP ada gak dihapus -- backtest & histori riset masih rujuk itu.
+function findTouchCandidate(candle, zones) {
+  const candidates = [
+    ...zones.support.filter((z) => candle.low <= z.price).map((z) => ({ ...z, direction: 'long' })),
+    ...zones.resistance.filter((z) => candle.high >= z.price).map((z) => ({ ...z, direction: 'short' })),
+  ];
+  // Kalau kebetulan nyentuh >1 zona di candle yang sama, ambil yang paling deket ke close.
+  candidates.sort((a, b) => pctDist(candle.close, a.price) - pctDist(candle.close, b.price));
+  return candidates[0] || null;
+}
+
 // Cari zona TERDEKAT di KEDUA arah (support & resistance) dari harga sekarang -- BEDA dari
 // findNearestCandidate (yang nyari 1 pemenang gabungan buat mutusin sinyal) -- ini murni buat
 // KONTEKS tampilan (15 Agu 2026, permintaan Olan: "sertakan jarak harga sekarang dalam persen
@@ -96,4 +111,4 @@ function isZoneBroken(candle, activeZone, params = DEFAULT_PARAMS) {
   return candle.close > activeZone.price * (1 + p.BREAK_CONFIRM_PCT / 100);
 }
 
-module.exports = { DEFAULT_PARAMS, roundNumberStep, nearestRoundLevels, pctDist, detectZones, findNearestCandidate, findNearestPair, isZoneBroken };
+module.exports = { DEFAULT_PARAMS, roundNumberStep, nearestRoundLevels, pctDist, detectZones, findNearestCandidate, findTouchCandidate, findNearestPair, isZoneBroken };

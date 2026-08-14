@@ -1,14 +1,20 @@
-name: Dark Kaela - Monitor Zona Likuiditas (tiap 20 menit)
+name: Dark Kaela - Monitor Zona Likuiditas (tiap 5 menit)
 
 # LIVE sejak 15 Agu 2026 -- sempat manual-only dulu (belum ada `schedule`) buat verifikasi
 # dry-run di runner asli (sukses, sinyal SHORT beneran ketemu @ $63.138 di tes, terkonfirmasi
 # gak ada WA/commit yang keluar pas dry_run=true). Setelah Olan konfirmasi eksplisit siap live,
 # jadwal beneran dinyalain di sini.
+#
+# Dipercepat dari 20 menit ke 5 menit (15 Agu 2026, komplain Olan: "sinyalmu keluar setelah
+# sentuh likuiditas tinggi lalu dah terbang, ketika di buy balik arah lumayan jauh") -- dibarengi
+# fix darkKaelaMonitor.js yang sekarang cek TOUCH beneran pakai candle 5 menit (bukan cuma
+# "deket" di candle 1 jam). Cron lebih sering doang gak cukup kalau deteksinya masih di candle
+# 1 jam -- makanya dua-duanya diubah bareng.
 on:
   schedule:
-    # Digeser 7 menit dari kelipatan 20 bulat (7/27/47) -- mitigasi delay jadwal jam bulat,
-    # pola sama kayak news-daily.yml/daily-report.yml.
-    - cron: '7,27,47 * * * *'
+    # Digeser 3 menit dari kelipatan 5 bulat -- mitigasi delay jadwal jam bulat, pola sama
+    # kayak workflow lain (news-daily.yml/daily-report.yml).
+    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
   workflow_dispatch:
     inputs:
       dry_run:

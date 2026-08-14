@@ -60,7 +60,7 @@
     {
       "id": "mst32s5jp9t5",
       "signalId": "2026081402",
-      "status": "floating",
+      "status": "cancelled",
       "direction": "buy",
       "strategyType": "breakout",
       "triggerPrice": 62682.01,
@@ -84,8 +84,8 @@
       "silentTest": true,
       "createdAt": "2026-08-14T15:10:03.271Z",
       "triggeredAt": "2026-08-14T15:10:03.271Z",
-      "closedAt": null,
-      "closeReason": null,
+      "closedAt": "2026-08-14T16:11:55.055Z",
+      "closeReason": "dibatalkan manual",
       "pnlUsd": null,
       "pnlPct": null
     }

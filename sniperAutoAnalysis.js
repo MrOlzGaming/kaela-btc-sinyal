@@ -136,7 +136,12 @@ async function main() {
     return;
   }
 
-  const active = getActiveOrders();
+  // Fix 15 Agu 2026 (bug KETEMU: laporan harian Sniper ilang total sehari penuh) -- order
+  // silentTest (trial/simulasi) sempat kebuat+floating sebentar terus dibatalin manual, tapi di
+  // ANTARA itu cron kepentok cabang "pemantauan posisi" ini dan nge-set dedup `lastSentDate`
+  // buat HARI ITU juga -- padahal gak ada analisa VALID/INVALID beneran yang jalan. Order
+  // silentTest WAJIB dianggap "gak ada" buat gate harian ini, biar analisa asli tetap jalan.
+  const active = getActiveOrders().filter((o) => !o.silentTest);
   if (active.length > 0) {
     // Pemantauan harian (12 Agu 2026, permintaan Olan: "saat dipantau, tiap hari berarti
     // laporan sinyalnya dalam bentuk posisi dia sendiri yang dipantau") -- SELAMA posisi masih

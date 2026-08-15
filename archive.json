@@ -688,5 +688,10 @@
     "type": "report-daily",
     "date": "2026-08-15T23:28:35.353Z",
     "content": "🟪 📊 Update BTC — 2026-08-16\nHarga sekarang: $63,043.56 (📉 -0.7% dari kemarin)\n⏳ Halving berikutnya: 607 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.21 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.77 (Normal)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-08-15T23:34:46.831Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-08-16\n160 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 394.097,91 BTC berpindah (~$24,870,514,242 / ~Rp443.316.802.758.195)\nTerbesar: 20.287,57 BTC dalam 1 transaksi.\nArah (best-effort): 0 masuk exchange (potensi tekanan jual) · 0 keluar exchange (potensi akumulasi) · 160 gak teridentifikasi.\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

@@ -19,25 +19,29 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Test koneksi WS allLiquidation Bybit BTCUSDT (90 detik)
+      - name: Test koneksi WS allLiquidation Bybit multi-symbol + ping (2 menit)
         run: |
           node -e "
+          const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT','DOGEUSDT','XRPUSDT','1000PEPEUSDT','SUIUSDT','ADAUSDT'];
           const ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
           let count = 0;
           let closed = false;
+          let pingTimer;
           ws.onopen = () => {
             console.log('[OPEN]', new Date().toISOString());
-            ws.send(JSON.stringify({ op: 'subscribe', args: ['allLiquidation.BTCUSDT'] }));
-            console.log('[SUB SENT] allLiquidation.BTCUSDT');
+            ws.send(JSON.stringify({ op: 'subscribe', args: SYMBOLS.map(s => 'allLiquidation.' + s) }));
+            console.log('[SUB SENT]', SYMBOLS.join(','));
+            pingTimer = setInterval(() => ws.send(JSON.stringify({ op: 'ping' })), 18000);
           };
           ws.onmessage = (ev) => {
             count++;
-            if (count <= 5) console.log('[MSG]', count, ev.data.slice(0, 300));
+            if (count <= 10) console.log('[MSG]', count, ev.data.slice(0, 300));
           };
           ws.onerror = (e) => console.log('[ERROR]', JSON.stringify(e.message || e));
           ws.onclose = (e) => { closed = true; console.log('[CLOSE]', e.code, e.reason, new Date().toISOString()); };
           setTimeout(() => {
-            console.log('[SUMMARY Bybit BTCUSDT] total msg dalam 90dtk:', count, '| masih connected:', !closed);
+            clearInterval(pingTimer);
+            console.log('[SUMMARY Bybit multi-symbol] total msg dalam 2 menit:', count, '| masih connected:', !closed);
             process.exit(0);
-          }, 90000);
+          }, 120000);
           "

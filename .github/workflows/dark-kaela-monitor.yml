@@ -1,24 +1,35 @@
-name: Dark Kaela - Monitor Zona Likuiditas (tiap 5 menit)
+name: Dark Kaela - Monitor Zona Likuiditas (loop internal ~5 menit)
 
 # LIVE sejak 15 Agu 2026 -- sempat manual-only dulu (belum ada `schedule`) buat verifikasi
 # dry-run di runner asli (sukses, sinyal SHORT beneran ketemu @ $63.138 di tes, terkonfirmasi
 # gak ada WA/commit yang keluar pas dry_run=true). Setelah Olan konfirmasi eksplisit siap live,
 # jadwal beneran dinyalain di sini.
 #
-# Dipercepat dari 20 menit ke 5 menit (15 Agu 2026, komplain Olan: "sinyalmu keluar setelah
-# sentuh likuiditas tinggi lalu dah terbang, ketika di buy balik arah lumayan jauh") -- dibarengi
-# fix darkKaelaMonitor.js yang sekarang cek TOUCH beneran pakai candle 5 menit (bukan cuma
-# "deket" di candle 1 jam). Cron lebih sering doang gak cukup kalau deteksinya masih di candle
-# 1 jam -- makanya dua-duanya diubah bareng.
+# Fix 15 Agu 2026 (Olan: "sinyalmu keluar setelah sentuh likuiditas tinggi lalu dah terbang") --
+# 2 lapis fix, jangan lupa masing-masing perlu keduanya:
+#   1. darkKaelaMonitor.js sekarang cek TOUCH beneran pakai candle 5 menit (bukan cuma "deket"
+#      di candle 1 jam).
+#   2. Cadence -- SEMPAT dipercepat ke `schedule: cron` tiap 5 menit doang, TAPI dicek ulang
+#      pakai riwayat run asli GitHub Actions: jadwal `schedule:` serapat itu TERNYATA cuma
+#      jalan tiap ~20-30 menit di praktiknya (bukan 5), bukan salah konfigurasi -- itu emang
+#      keterbatasan resmi GitHub ("schedule event bisa didelay signifikan pas load tinggi,
+#      terutama interval rapat" -- dikonfirmasi lewat riset & laporan komunitas GitHub, 15 Agu
+#      2026 malam). Solusi FINAL: 1 job jalan TERUS ~5,5 jam, loop internal (sleep 300 detik
+#      per iterasi, BUKAN nunggu `schedule` baru tiap kali) -- delay per cek jadi beneran ~5
+#      menit karena gak lagi minta GitHub dispatch job baru tiap kali. Di ujung loop, job
+#      nyalain job BERIKUTNYA sendiri (self-dispatch via `workflow_dispatch`, DIPERBOLEHKAN
+#      pakai GITHUB_TOKEN default -- beda dari event push/schedule biasa yang DIBLOKIR triggering
+#      workflow lain, workflow_dispatch/repository_dispatch itu PENGECUALIAN resmi). `schedule:`
+#      di bawah cuma jadi JARING PENGAMAN kasar (tiap 6 jam) buat nyalain ulang KALAU rantai
+#      self-dispatch putus (misal 1 run gagal total sebelum sempat manggil dispatch sendiri) --
+#      interval SEJARANG itu gak kena masalah delay yang sama (cuma interval RAPAT yang kena).
 on:
   schedule:
-    # Digeser 3 menit dari kelipatan 5 bulat -- mitigasi delay jadwal jam bulat, pola sama
-    # kayak workflow lain (news-daily.yml/daily-report.yml).
-    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
+    - cron: '11 */6 * * *' # jaring pengaman, BUKAN cadence utama -- lihat catatan di atas
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (gak beneran kirim WA, cuma log)'
+        description: 'Dry run (sekali cek doang, gak beneran kirim WA, cuma log)'
         type: boolean
         default: false
 
@@ -28,10 +39,12 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write # WAJIB buat self-dispatch di akhir loop
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 350 # di bawah batas keras GitHub 360 menit (6 jam) per job, sisa buffer
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,28 +60,45 @@ jobs:
           };
           EOF
 
-      - name: Cek zona likuiditas (darkKaelaMonitor.js) -- info doang, gak ada eksekusi/tracking
+      # dry_run: cuma sekali cek terus keluar (buat verifikasi manual cepat, BUKAN loop 5,5 jam).
+      # live: loop internal ~5j20m, cek+commit+push tiap iterasi, sleep 300dtk antar iterasi --
+      # ini yang beneran ngasih cadence ~5 menit (gak minta GitHub dispatch job baru tiap kali).
+      - name: Cek zona likuiditas -- sekali (dry-run) atau loop ~5,5 jam (live)
         env:
-          # event_name dicek eksplisit -- inputs.dry_run gak ada sama sekali pas trigger schedule
-          # (bukan workflow_dispatch), jangan asumsi bakal falsy dgn aman tanpa cek event dulu.
           DARK_KAELA_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
-        run: node darkKaelaMonitor.js
-
-      # Sama kayak workflow rutin lain (15 Agu 2026, arsitektur zero-deploy) -- cuma commit data,
-      # gak nyentuh web/*.html atau manggil buildDashboard.js (Dark Kaela belum punya tampilan web).
-      # Dry-run gak nulis state sama sekali (lihat darkKaelaMonitor.js) jadi step ini otomatis
-      # no-op kalau kebetulan run dry-run manual -- aman dijalanin apa adanya tanpa `if` tambahan.
-      - name: Commit & push dark-kaela-state.json (WAJIB tiap run kalau ada perubahan)
         run: |
+          if [ "$DARK_KAELA_DRY_RUN" = "1" ]; then
+            node darkKaelaMonitor.js
+            exit 0
+          fi
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f dark-kaela-state.json
-          git diff --staged --quiet || git commit -m "Auto: dark kaela monitor $(date -u +%Y-%m-%dT%H:%M)"
-          for i in 1 2 3 4 5; do
-            git rebase --abort 2>/dev/null || true
-            git pull --rebase origin master && git push && exit 0
-            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
-            sleep 5
+          END=$(( $(date +%s) + 5*3600 + 20*60 ))
+          while [ "$(date +%s)" -lt "$END" ]; do
+            node darkKaelaMonitor.js || echo "::warning::darkKaelaMonitor.js error kali ini, lanjut loop"
+            git add -f dark-kaela-state.json
+            if ! git diff --staged --quiet; then
+              git commit -m "Auto: dark kaela monitor $(date -u +%Y-%m-%dT%H:%M)"
+              for i in 1 2 3 4 5; do
+                git rebase --abort 2>/dev/null || true
+                git pull --rebase origin master && git push && break
+                echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+                sleep 5
+              done
+            fi
+            sleep 300
           done
-          echo "::error::Gagal push dark-kaela-state.json setelah 5x percobaan."
-          exit 1
+
+      # Nyalain job BERIKUTNYA sendiri begitu loop ~5,5 jam ini abis -- rantai gak akan putus
+      # selama tiap run sukses nyampe ujung. `if: always()` -- WAJIB tetap coba dispatch lagi
+      # walau ada step gagal di tengah, biar rantai gak berhenti gara-gara 1 error sesaat.
+      # Kalau kebetulan dry-run, JANGAN self-dispatch (jangan sampai 1 tes manual nyalain rantai
+      # loop 5,5 jam beneran).
+      - name: Nyalain job berikutnya (self-dispatch, biar loop lanjut terus)
+        if: always() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+        run: |
+          curl -s -o /dev/null -w "self-dispatch HTTP %{http_code}\n" -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/dark-kaela-monitor.yml/dispatches" \
+            -d '{"ref":"${{ github.ref_name }}"}'

@@ -1,0 +1,24 @@
+name: TEST self-dispatch GITHUB_TOKEN (sementara, verifikasi Dark Kaela loop)
+
+# Isolasi bagian paling berisiko dari redesign dark-kaela-monitor.yml (loop internal +
+# self-dispatch) SEBELUM di-push beneran -- biar gak perlu nunggu 5,5 jam loop live cuma buat
+# tau apa GITHUB_TOKEN + permission actions:write beneran cukup buat manggil workflow_dispatch
+# API ke workflow LAIN di repo yang sama.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coba dispatch dark-kaela-monitor.yml pakai GITHUB_TOKEN
+        run: |
+          curl -s -w "\nHTTP %{http_code}\n" -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/dark-kaela-monitor.yml/dispatches" \
+            -d '{"ref":"${{ github.ref_name }}", "inputs": {"dry_run": "true"}}'

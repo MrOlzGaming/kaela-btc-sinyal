@@ -143,6 +143,134 @@ function detectZones(candles, i) {
   return { resistance, support };
 }
 
+// ============ Ronde 6 (15 Agu 2026, permintaan Olan lanjut riset): zona dari candle HARIAN,
+// bukan jam-an -- hipotesis: zona likuiditas "institusional" beneran keliatan di swing HARIAN
+// (lebih signifikan, lebih sedikit noise), bukan swing jam-an yang lebih banyak micro-noise.
+// Eksekusi/touch-check TETAP pakai candle jam-an (CANDLES) buat presisi -- cuma STRUKTUR zonanya
+// yang ganti sumber. ZONE_WINDOW_DAYS dipakai (bukan ZONE_WINDOW_CANDLES yang satuannya jam).
+function detectZonesDaily(dailyCandles, dayIdx, windowDays) {
+  const start = Math.max(0, dayIdx - windowDays);
+  const window = dailyCandles.slice(start, dayIdx);
+  if (window.length < SWING_LOOKBACK * 4) return { resistance: [], support: [] };
+  const price = dailyCandles[dayIdx] ? dailyCandles[dayIdx].close : window[window.length - 1].close;
+  const { highs, lows } = findSwingPoints(window, SWING_LOOKBACK);
+  const resistance = clusterLevels(highs.filter((h) => h.price > price), CLUSTER_TOLERANCE_PCT)
+    .filter((z) => z.touches >= PARAMS.MIN_TOUCHES && (PARAMS.MAX_TOUCHES == null || z.touches <= PARAMS.MAX_TOUCHES))
+    .map((z) => ({ price: z.price, touches: z.touches, kind: 'swing' }));
+  const support = clusterLevels(lows.filter((l) => l.price < price), CLUSTER_TOLERANCE_PCT)
+    .filter((z) => z.touches >= PARAMS.MIN_TOUCHES && (PARAMS.MAX_TOUCHES == null || z.touches <= PARAMS.MAX_TOUCHES))
+    .map((z) => ({ price: z.price, touches: z.touches, kind: 'swing' }));
+  const [roundBelow, roundAbove] = nearestRoundLevels(price);
+  if (roundAbove) resistance.push({ price: roundAbove, touches: null, kind: 'round' });
+  if (roundBelow) support.push({ price: roundBelow, touches: null, kind: 'round' });
+  return { resistance, support };
+}
+
+// Cari index candle HARIAN terakhir yang closeTime <= timestamp (no lookahead, sama pola binary
+// search kayak getDailyTrendAt).
+function findDailyIndexAt(timestamp) {
+  let lo = 0, hi = DAILY_CANDLES.length - 1, ans = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (DAILY_CANDLES[mid].closeTime <= timestamp) { ans = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  return ans;
+}
+
+function runSweepModeDaily(windowDays) {
+  const events = [];
+  let lastZone = null;
+  const startIdx = CANDLES.findIndex((c) => findDailyIndexAt(c.closeTime) >= windowDays + SWING_LOOKBACK * 4);
+  for (let i = Math.max(0, startIdx); i < CANDLES.length; i++) {
+    const c = CANDLES[i];
+    if (PARAMS.SESSION_FILTER) {
+      const hour = new Date(c.closeTime).getUTCHours();
+      const [startH, endH] = PARAMS.SESSION_FILTER;
+      const inSession = startH < endH ? (hour >= startH && hour < endH) : (hour >= startH || hour < endH);
+      if (!inSession) continue;
+    }
+    const dayIdx = findDailyIndexAt(c.closeTime);
+    if (dayIdx < 0) continue;
+    const { resistance, support } = detectZonesDaily(DAILY_CANDLES, dayIdx, windowDays);
+
+    const candidates = [];
+    support.forEach((z) => {
+      if (c.low < z.price && c.close > z.price) candidates.push({ ...z, direction: 'long', dist: pctDist(c.low, z.price), sweepExtreme: c.low });
+    });
+    resistance.forEach((z) => {
+      if (c.high > z.price && c.close < z.price) candidates.push({ ...z, direction: 'short', dist: pctDist(c.high, z.price), sweepExtreme: c.high });
+    });
+    const trendFiltered = PARAMS.TREND_FILTER === 'off' ? candidates : candidates.filter((z) => {
+      const trend = getDailyTrendAt(c.closeTime);
+      if (trend === null) return true;
+      if (PARAMS.TREND_FILTER === 'strict') return z.direction === 'long' ? trend === 'bullish' : trend === 'bearish';
+      return z.direction === 'long' ? trend !== 'bearish' : trend !== 'bullish';
+    });
+    trendFiltered.sort((a, b) => a.dist - b.dist);
+    const nearest = trendFiltered[0];
+
+    if (nearest) {
+      const sameZone = lastZone && pctDist(nearest.price, lastZone.price) <= CLUSTER_TOLERANCE_PCT;
+      if (!sameZone) {
+        const tpPool = nearest.direction === 'long' ? resistance : support;
+        const tpZone = tpPool.slice().sort((a, b) => pctDist(a.price, c.close) - pctDist(b.price, c.close))[0] || null;
+        const slBuffer = 0.15;
+        const slPrice = nearest.direction === 'long'
+          ? nearest.sweepExtreme * (1 - slBuffer / 100)
+          : nearest.sweepExtreme * (1 + slBuffer / 100);
+        events.push({ index: i, time: c.closeTime, type: 'signal', direction: nearest.direction, zonePrice: nearest.price, zoneKind: nearest.kind, touches: nearest.touches, price: c.close, tpPrice: tpZone ? tpZone.price : null, slPrice });
+        lastZone = { price: nearest.price, direction: nearest.direction, resolved: false };
+      }
+    }
+  }
+  return events;
+}
+
+function summarizeTradesDaily(label, windowDays, overrides, excludeBefore) {
+  resetParams(overrides);
+  const events = runSweepModeDaily(windowDays);
+  let signals = events.filter((e) => e.type === 'signal');
+  if (excludeBefore) signals = signals.filter((s) => s.time >= excludeBefore);
+  const trades = signals.map((s) => simulateTrade(s));
+  const resolved = trades.filter((t) => t.result === 'tp' || t.result === 'sl');
+  const wins = resolved.filter((t) => t.result === 'tp');
+  const losses = resolved.filter((t) => t.result === 'sl');
+  const totalR = resolved.reduce((s, t) => s + t.r, 0);
+  const avgWinR = wins.length ? wins.reduce((s, t) => s + t.r, 0) / wins.length : 0;
+  const grossWinR = wins.reduce((s, t) => s + t.r, 0);
+  const grossLossR = Math.abs(losses.reduce((s, t) => s + t.r, 0));
+  const profitFactor = grossLossR > 0 ? grossWinR / grossLossR : null;
+  const winRate = resolved.length ? (wins.length / resolved.length) * 100 : 0;
+  const expectancy = resolved.length ? totalR / resolved.length : 0;
+  console.log(`\n[${label}]`);
+  console.log(`  Sinyal: ${signals.length} | resolved (TP/SL): ${resolved.length}`);
+  console.log(`  Win rate: ${winRate.toFixed(1)}% | Avg R menang: +${avgWinR.toFixed(2)}R | Profit factor: ${profitFactor === null ? '∞' : profitFactor.toFixed(2)}`);
+  console.log(`  Expectancy: ${expectancy >= 0 ? '+' : ''}${expectancy.toFixed(3)}R/trade | Total R (${resolved.length} trade): ${totalR >= 0 ? '+' : ''}${totalR.toFixed(1)}R`);
+  return { signals, trades, resolved };
+}
+
+function summarizeTradesDailyByYear(label, windowDays, overrides) {
+  resetParams(overrides);
+  const events = runSweepModeDaily(windowDays);
+  const signals = events.filter((e) => e.type === 'signal');
+  const byYear = {};
+  signals.forEach((s) => {
+    const t = simulateTrade(s);
+    if (t.r === null) return;
+    const year = new Date(s.time).getUTCFullYear();
+    if (!byYear[year]) byYear[year] = { count: 0, totalR: 0, wins: 0 };
+    byYear[year].count++;
+    byYear[year].totalR += t.r;
+    if (t.result === 'tp') byYear[year].wins++;
+  });
+  console.log(`\n[${label}] -- breakdown per tahun`);
+  Object.keys(byYear).sort().forEach((y) => {
+    const d = byYear[y];
+    console.log(`  ${y}: ${d.count} trade | win rate ${((d.wins / d.count) * 100).toFixed(1)}% | Total R: ${d.totalR >= 0 ? '+' : ''}${d.totalR.toFixed(1)}R | expectancy ${(d.totalR / d.count) >= 0 ? '+' : ''}${(d.totalR / d.count).toFixed(3)}R/trade`);
+  });
+  return byYear;
+}
+
 function pctDist(a, b) {
   return Math.abs(a - b) / b * 100;
 }
@@ -493,6 +621,40 @@ if (require.main === module) {
   // ternyata 1 tahun doang yang nyumbang, pola yang udah berulang kali ketemu malam ini.
   console.log('\n=== WAJIB: breakdown per tahun buat NY session (touches>=5, window=21, NY 13-16 UTC) ===');
   summarizeTradesByYear('NY session -- SEMUA tahun (termasuk 2017)', { MIN_TOUCHES: 5, ZONE_WINDOW_CANDLES: 24 * 21, SESSION_FILTER: [13, 16] }, true);
+
+  // Ronde 6 (15 Agu 2026, lanjut atas permintaan Olan) -- 2 arah baru:
+  // (a) filter tren STRICT diterapkan sistematis ke config FRESH terbaik Ronde 5 (belum pernah
+  //     digabung sebelumnya, trend filter cuma dites di 1 titik lama di Ronde 4).
+  // (b) struktur zona dari candle HARIAN (bukan jam-an) -- hipotesis: zona likuiditas
+  //     "institusional" beneran keliatan di swing harian, bukan micro-noise jam-an.
+  console.log('\n=== Ronde 6a: filter tren STRICT + config fresh (touches 2-3, window 21hari) ===');
+  summarizeTrades('fresh 2-3, trend=off (baseline)', { MIN_TOUCHES: 2, MAX_TOUCHES: 3, ZONE_WINDOW_CANDLES: 24 * 21, TREND_FILTER: 'off' }, EXCLUDE_2017, true);
+  summarizeTrades('fresh 2-3, trend=strict', { MIN_TOUCHES: 2, MAX_TOUCHES: 3, ZONE_WINDOW_CANDLES: 24 * 21, TREND_FILTER: 'strict' }, EXCLUDE_2017, true);
+  console.log('\n--- kalau trend=strict di atas positif, WAJIB cek per tahun sebelum dipercaya ---');
+  summarizeTradesByYear('fresh 2-3 trend=strict -- per tahun', { MIN_TOUCHES: 2, MAX_TOUCHES: 3, ZONE_WINDOW_CANDLES: 24 * 21, TREND_FILTER: 'strict' }, true);
+
+  console.log('\n=== Ronde 6b: struktur zona dari candle HARIAN (bukan jam-an) ===');
+  let bestDaily = null;
+  [30, 60, 90].forEach((wd) => {
+    [2, 3].forEach((t) => {
+      const res = summarizeTradesDaily(`daily-zone touches>=${t} window=${wd}hari`, wd, { MIN_TOUCHES: t }, EXCLUDE_2017);
+      const wins = res.resolved.filter((r) => r.result === 'tp');
+      const losses = res.resolved.filter((r) => r.result === 'sl');
+      const grossWin = wins.reduce((s, r) => s + r.r, 0);
+      const grossLoss = Math.abs(losses.reduce((s, r) => s + r.r, 0));
+      const pf = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? Infinity : 0);
+      if (res.resolved.length >= 30 && (bestDaily === null || pf > bestDaily.pf)) bestDaily = { wd, t, pf };
+    });
+  });
+  if (bestDaily) {
+    console.log(`\n--- daily-zone + filter tren strict, di titik TERBAIK ASLI (touches>=${bestDaily.t}, window=${bestDaily.wd}hari, PF=${bestDaily.pf.toFixed(2)}) ---`);
+    summarizeTradesDaily('daily-zone trend=off (baseline titik terbaik)', bestDaily.wd, { MIN_TOUCHES: bestDaily.t, TREND_FILTER: 'off' }, EXCLUDE_2017);
+    summarizeTradesDaily('daily-zone trend=strict', bestDaily.wd, { MIN_TOUCHES: bestDaily.t, TREND_FILTER: 'strict' }, EXCLUDE_2017);
+    console.log('\n--- WAJIB cek per tahun sebelum dipercaya ---');
+    summarizeTradesDailyByYear('daily-zone titik terbaik -- per tahun', bestDaily.wd, { MIN_TOUCHES: bestDaily.t, TREND_FILTER: 'off' });
+  } else {
+    console.log('\n(gak ada config daily-zone dengan >=30 trade resolved, skip follow-up)');
+  }
 }
 
 module.exports = { CANDLES, detectZones, run, runSweepMode, roundNumberStep, resolveOutcome, resolveOutcomeFromEntry, simulateTrade, summarize, summarizeTrades, summarizeTradesByYear, PARAMS };

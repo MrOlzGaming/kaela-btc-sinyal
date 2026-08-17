@@ -10,7 +10,10 @@
   const PRICE_URL = 'https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT';
 
   function fmtUsd(n) {
-    const sign = n >= 0 ? '+' : '';
+    // Bug ketemu 16 Agu 2026 (kepakai bareng widget Nyopet): sign cuma diisi '+' pas positif,
+    // Math.abs() buang tanda minus tanpa gantiin -- nilai rugi keliatan "$0.27" padahal
+    // -$0.27 (warna merah bener, tapi angkanya sendiri menyesatkan). Sign HARUS eksplisit dua-duanya.
+    const sign = n >= 0 ? '+' : '-';
     return sign + '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
 

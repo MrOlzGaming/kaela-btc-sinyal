@@ -528,20 +528,28 @@
       ${cell('Kalah', losses, 'down')}
     </div>`;
 
+    // Kartu posisi -- SENGAJA copy PERSIS kontrak class/data-attribute punya order-card floating
+    // Sniper (permintaan Olan 16 Agu 2026: "copy aja template sniper pas buka posisi"), biar
+    // sniper-orders-widget.js yang UDAH ADA (live price + P&L tiap 15dtk) otomatis jalan di kartu
+    // ini juga TANPA nulis widget baru -- cuma beda direction 'short'/'long' dinormalisasi ke
+    // 'sell'/'buy' biar dikenali logic widget yang sama. remainingFraction/realizedPnl SENGAJA
+    // gak disertain (posisi Nyopet gak ada partial-exit) -- widget udah default 1/0 kalau absen.
     const pos = nyopetState.openPosition;
     const posHtml = pos
-      ? `<div class="order-card floating">
+      ? `<div class="order-card floating" data-order-id="${pos.id}" data-direction="${pos.direction === 'short' ? 'sell' : 'buy'}" data-entry="${pos.entryPrice}" data-leverage="${pos.leverage}" data-margin="${pos.marginUsd}">
           <div class="order-header">
             <span class="order-dir">${pos.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</span>
-            <span class="order-status-badge floating">TERBUKA</span>
+            <span class="order-status-badge floating">🔵 TERBUKA (real)</span>
           </div>
+          <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
           <div class="order-levels">
-            <span>Entry: ${fmtUsdOrder(pos.entryPrice)}</span>
+            <span>Entry: <strong>${fmtUsdOrder(pos.entryPrice)}</strong></span>
             <span>Likuidasi: ${fmtUsdOrder(pos.liqPrice)}</span>
-            <span>Leverage: ${pos.leverage}x | Margin: ${fmtUsdOrder(pos.marginUsd)}</span>
           </div>
+          <div class="order-meta">Leverage ${pos.leverage}x · Margin ${fmtUsdOrder(pos.marginUsd)} · Ukuran ${fmtUsdOrder(pos.sizeUsd)}</div>
           ${pos.notes ? `<div class="order-note">${pos.notes}</div>` : ''}
-          <div class="order-meta">Dibuka ${fmtDateLong(new Date(pos.openedAt))} -- REAL, dibuka manual di exchange. Pantau notifikasi WA buat status live (likuidasi/-80%/+100% ROI).</div>
+          <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
+          <div class="order-meta">Dibuka ${fmtDateLong(new Date(pos.openedAt))} -- REAL, dibuka manual di exchange. Notifikasi WA otomatis kalau kena likuidasi/-80%/+100% ROI.</div>
         </div>`
       : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
 

@@ -1,15 +1,21 @@
 {
-  "openPosition": {
-    "id": "nyopet-1786964458193",
-    "direction": "short",
-    "entryPrice": 63596.1,
-    "liqPrice": 63944.48,
-    "marginUsd": 1.81,
-    "sizeUsd": 190.8,
-    "leverage": 100,
-    "profit100Notified": false,
-    "openedAt": "2026-08-17T11:00:58.193Z",
-    "notes": "Entry berdasar bacaan heatmap Coinglass -- likuiditas atas udah kesapu, target zona support 62.666-62.967."
-  },
-  "trades": []
+  "openPosition": null,
+  "trades": [
+    {
+      "id": "nyopet-1786964458193",
+      "direction": "short",
+      "entryPrice": 63596.1,
+      "liqPrice": 63944.48,
+      "marginUsd": 1.81,
+      "sizeUsd": 190.8,
+      "leverage": 100,
+      "profit100Notified": false,
+      "openedAt": "2026-08-17T11:00:58.193Z",
+      "notes": "Entry berdasar bacaan heatmap Coinglass -- likuiditas atas udah kesapu, target zona support 62.666-62.967.",
+      "exitPrice": 63962,
+      "exitReason": "liquidasi",
+      "result": "loss",
+      "closedAt": "2026-08-17T15:07:36.309Z"
+    }
+  ]
 }

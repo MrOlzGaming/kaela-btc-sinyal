@@ -23,7 +23,7 @@ function openPosition({ direction, entryPrice, liqPrice, marginUsd, sizeUsd, lev
   data.openPosition = {
     id: 'nyopet-' + now.getTime(),
     direction, entryPrice, liqPrice, marginUsd, sizeUsd, leverage,
-    profit100Notified: false,
+    profit100Notified: false, warning80Notified: false,
     openedAt: now.toISOString(), notes: notes || null,
   };
   save(data);
@@ -33,6 +33,11 @@ function openPosition({ direction, entryPrice, liqPrice, marginUsd, sizeUsd, lev
 function markProfit100Notified() {
   const data = load();
   if (data.openPosition) { data.openPosition.profit100Notified = true; save(data); }
+}
+
+function markWarning80Notified() {
+  const data = load();
+  if (data.openPosition) { data.openPosition.warning80Notified = true; save(data); }
 }
 
 function closePosition({ exitPrice, exitReason, result }, now = new Date()) {
@@ -55,4 +60,4 @@ function getSummary() {
   return { total, wins, losses, winRate, openPosition: data.openPosition, targetTrades: TARGET_TRADES, trades: data.trades };
 }
 
-module.exports = { load, save, openPosition, closePosition, markProfit100Notified, getSummary, JOURNAL_PATH, TARGET_TRADES };
+module.exports = { load, save, openPosition, closePosition, markProfit100Notified, markWarning80Notified, getSummary, JOURNAL_PATH, TARGET_TRADES };

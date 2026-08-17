@@ -40,6 +40,15 @@ Udah tembus 100% ROI -- keputusan close/tahan sepenuhnya di tangan Olan, ini cum
 ${fmtWita(now)}`;
 }
 
+function formatWarning80(pos, price, roiPct, now) {
+  return `🥷 [Dark] Kaela — ⚠️ POSISI NYOPET UDAH ${roiPct.toFixed(0)}% ROI (mepet likuidasi)
+${dirLabel(pos.direction)} @ ${fmtUsd(pos.entryPrice)} | Harga sekarang ${fmtUsd(price)} | Likuidasi di ${fmtUsd(pos.liqPrice)}
+
+Belum kena likuidasi, tapi udah deket. Ini pengingat DINI (bukan tunggu kena beneran) buat mutusin: tambah margin, tutup manual, atau biarin -- keputusan sepenuhnya di tangan Olan.
+
+${fmtWita(now)}`;
+}
+
 function formatManualClosed(trade, summary, now) {
   return `🥷 [Dark] Kaela — ✅ Posisi Nyopet DITUTUP manual
 ${dirLabel(trade.direction)} @ ${fmtUsd(trade.entryPrice)} -> ditutup @ ${fmtUsd(trade.exitPrice)} (${trade.result === 'win' ? 'MENANG' : 'KALAH'})
@@ -59,4 +68,4 @@ Ini titik yang udah disepakati buat evaluasi jujur apa strategi Nyopet (sinyal z
 ${fmtWita(now)}`;
 }
 
-module.exports = { formatOpened, formatLiquidated, formatProfit100, formatManualClosed, format100TradeEvaluasi };
+module.exports = { formatOpened, formatLiquidated, formatProfit100, formatWarning80, formatManualClosed, format100TradeEvaluasi };

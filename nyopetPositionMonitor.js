@@ -3,8 +3,8 @@
 // likuidasi/profit 100% ROI, catat hasilnya ke nyopet-journal.json, dan kirim WA -- TIDAK PERNAH
 // eksekusi apapun ke exchange asli (gak ada API key exchange sama sekali di sistem ini).
 
-const { getSummary, closePosition, markProfit100Notified } = require('./nyopetJournal');
-const { formatLiquidated, formatProfit100, format100TradeEvaluasi } = require('./nyopetJournalLog');
+const { getSummary, closePosition, markProfit100Notified, markWarning80Notified } = require('./nyopetJournal');
+const { formatLiquidated, formatProfit100, formatWarning80, format100TradeEvaluasi } = require('./nyopetJournalLog');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
 
@@ -51,6 +51,18 @@ async function main() {
       await sendWhatsAppOrDryRun(format100TradeEvaluasi(newSummary, new Date()));
     }
     console.log('[NyopetPositionMonitor] Posisi kena likuidasi @', price);
+    return;
+  }
+
+  // Peringatan DINI (16 Agu 2026, permintaan Olan: "jangan nunggu kena liq, tapi saat posisiku
+  // -80%") -- posisi MASIH terbuka (bukan closePosition, beda dari cabang liquidated di atas),
+  // cuma ngingetin lebih awal biar Olan sempat mutusin (tambah margin/tutup manual/biarin).
+  if (roiPct <= -80 && !pos.warning80Notified) {
+    const msg = formatWarning80(pos, price, roiPct, new Date());
+    console.log(msg + '\n');
+    await sendWhatsAppOrDryRun(msg);
+    if (!DRY_RUN) markWarning80Notified();
+    console.log('[NyopetPositionMonitor] Warning -80% ROI terkirim.');
     return;
   }
 

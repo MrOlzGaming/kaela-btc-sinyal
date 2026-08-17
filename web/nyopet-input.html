@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Input Posisi Nyopet — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Input posisi Nyopet Market real langsung dari web, Kaela pantau otomatis.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  .privacy-note { background: var(--clr-bg-elevated); border: 1px solid var(--clr-warning); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.85rem; color: var(--clr-warning); margin: 14px 0; line-height: 1.5; }
+  .field { margin: 14px 0; }
+  label { display: block; font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 6px; }
+  input, select, textarea { width: 100%; background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--clr-text); font-size: 1rem; font-family: inherit; }
+  textarea { min-height: 60px; resize: vertical; }
+  .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .mode-toggle button { flex: 1; background: var(--clr-bg-elevated); color: var(--clr-text); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 8px; cursor: pointer; }
+  .mode-toggle button.active { background: var(--clr-primary); color: #000; border-color: var(--clr-primary); font-weight: 600; }
+  .hidden { display: none; }
+  .btn { width: 100%; margin-top: 8px; background: var(--clr-primary); color: #14100a; border: none; border-radius: var(--radius-sm); padding: 13px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-box { margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.88rem; display: none; }
+  .status-box.ok { display: block; background: color-mix(in srgb, var(--clr-success) 12%, transparent); border: 1px solid var(--clr-success); color: var(--clr-success); }
+  .status-box.err { display: block; background: color-mix(in srgb, #e5484d 12%, transparent); border: 1px solid #e5484d; color: #e5484d; }
+  .setup-box { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 14px; margin: 14px 0; font-size: 0.85rem; line-height: 1.6; }
+  .setup-box summary { cursor: pointer; color: var(--clr-primary); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <h1>🥷 Input Posisi Nyopet</h1>
+  </div>
+
+  <div class="privacy-note">🔐 Halaman ini butuh PIN + token khusus (dijelaskan Kaela langsung, gak ditulis di sini) -- tanpa itu, submit gak akan ngapa-ngapain. Token disimpan cuma di HP/browser ini (localStorage), gak pernah dikirim ke server manapun selain langsung ke GitHub.</div>
+
+  <details class="setup-box">
+    <summary>⚙️ Setup token (isi SEKALI doang per HP/browser)</summary>
+    <div style="margin-top:10px;">
+      Token GitHub buat halaman ini beda dari yang Kaela pakai push kode -- SENGAJA dibatasi cuma bisa "jalanin workflow", gak bisa ubah kode apapun. Kaela yang kasih tau token-nya. Tempel di bawah, sekali aja, langsung kesimpan di HP ini.
+      <div class="field" style="margin-top:10px;">
+        <label for="ghToken">GitHub Token</label>
+        <input type="password" id="ghToken" placeholder="ghp_...">
+      </div>
+      <button type="button" class="btn" id="saveTokenBtn" style="margin-top:4px;">Simpan Token di HP Ini</button>
+    </div>
+  </details>
+
+  <div class="card">
+    <div class="mode-toggle">
+      <button type="button" id="mode-open" class="active">Buka Posisi</button>
+      <button type="button" id="mode-close">Tutup Posisi</button>
+    </div>
+
+    <div class="field">
+      <label for="pin">PIN</label>
+      <input type="password" id="pin" placeholder="6 digit" inputmode="numeric" maxlength="6">
+    </div>
+
+    <div id="open-fields">
+      <div class="field">
+        <label for="direction">Arah</label>
+        <select id="direction">
+          <option value="short">🔴 SHORT</option>
+          <option value="long">🟢 LONG</option>
+        </select>
+      </div>
+      <div class="field"><label for="entry">Harga Entry</label><input type="number" id="entry" step="any" placeholder="63596.10"></div>
+      <div class="field"><label for="liq">Harga Likuidasi</label><input type="number" id="liq" step="any" placeholder="63944.48"></div>
+      <div class="field"><label for="margin">Margin (USDT)</label><input type="number" id="margin" step="any" placeholder="1.81"></div>
+      <div class="field"><label for="size">Ukuran Posisi (USDT)</label><input type="number" id="size" step="any" placeholder="190.8"></div>
+      <div class="field"><label for="leverage">Leverage</label><input type="number" id="leverage" step="any" value="100"></div>
+      <div class="field"><label for="notes">Catatan (alasan entry, target TP, dst)</label><textarea id="notes" placeholder="Entry berdasar bacaan heatmap..."></textarea></div>
+    </div>
+
+    <div id="close-fields" class="hidden">
+      <div class="field"><label for="exitPrice">Harga Exit</label><input type="number" id="exitPrice" step="any" placeholder="63200"></div>
+      <p style="font-size:0.82rem;color:var(--clr-text-muted);">Menang/kalah dihitung otomatis dari arah + entry + exit posisi yang lagi terbuka -- gak perlu dipilih manual.</p>
+    </div>
+
+    <button type="button" class="btn" id="submitBtn">Kirim</button>
+    <div class="status-box" id="statusBox"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
+    <a href="nyopet-input.html" class="active"><span class="icon">🥷</span>Input Nyopet</a>
+  </nav>
+
+  <script>
+    (function () {
+      const REPO = 'MrOlzGaming/kaela-btc-sinyal';
+      const WORKFLOW = 'nyopet-web-input.yml';
+      const TOKEN_KEY = 'kaela_nyopet_gh_token';
+      const PIN_KEY = 'kaela_nyopet_pin';
+
+      const tokenInput = document.getElementById('ghToken');
+      const savedToken = localStorage.getItem(TOKEN_KEY);
+      if (savedToken) tokenInput.value = savedToken;
+      document.getElementById('saveTokenBtn').addEventListener('click', function () {
+        localStorage.setItem(TOKEN_KEY, tokenInput.value.trim());
+        alert('Token kesimpan di HP ini.');
+      });
+
+      const pinInput = document.getElementById('pin');
+      const savedPin = localStorage.getItem(PIN_KEY);
+      if (savedPin) pinInput.value = savedPin;
+
+      let mode = 'open';
+      const openBtn = document.getElementById('mode-open');
+      const closeBtn = document.getElementById('mode-close');
+      const openFields = document.getElementById('open-fields');
+      const closeFields = document.getElementById('close-fields');
+      function setMode(m) {
+        mode = m;
+        openBtn.classList.toggle('active', m === 'open');
+        closeBtn.classList.toggle('active', m === 'close');
+        openFields.classList.toggle('hidden', m !== 'open');
+        closeFields.classList.toggle('hidden', m !== 'close');
+      }
+      openBtn.addEventListener('click', function () { setMode('open'); });
+      closeBtn.addEventListener('click', function () { setMode('close'); });
+
+      const statusBox = document.getElementById('statusBox');
+      function showStatus(ok, text) {
+        statusBox.className = 'status-box ' + (ok ? 'ok' : 'err');
+        statusBox.textContent = text;
+      }
+
+      document.getElementById('submitBtn').addEventListener('click', async function () {
+        const token = tokenInput.value.trim();
+        const pin = pinInput.value.trim();
+        if (!token) { showStatus(false, 'Token belum diisi -- buka "Setup token" di atas dulu.'); return; }
+        if (!pin) { showStatus(false, 'PIN belum diisi.'); return; }
+        localStorage.setItem(PIN_KEY, pin);
+
+        const inputs = { kunci: pin, action: mode };
+        if (mode === 'open') {
+          inputs.direction = document.getElementById('direction').value;
+          inputs.entry = document.getElementById('entry').value;
+          inputs.liq = document.getElementById('liq').value;
+          inputs.margin = document.getElementById('margin').value;
+          inputs.size = document.getElementById('size').value;
+          inputs.leverage = document.getElementById('leverage').value;
+          inputs.notes = document.getElementById('notes').value;
+          if (!inputs.entry || !inputs.liq || !inputs.margin || !inputs.size) {
+            showStatus(false, 'Isi semua field angka dulu (entry/liq/margin/ukuran).');
+            return;
+          }
+        } else {
+          inputs.exit = document.getElementById('exitPrice').value;
+          if (!inputs.exit) { showStatus(false, 'Isi harga exit dulu.'); return; }
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        showStatus(true, 'Mengirim...');
+        try {
+          const res = await fetch('https://api.github.com/repos/' + REPO + '/actions/workflows/' + WORKFLOW + '/dispatches', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Accept': 'application/vnd.github+json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ref: 'master', inputs: inputs }),
+          });
+          if (res.status === 204) {
+            showStatus(true, '✅ Terkirim! Cek grup WA dalam ~1 menit buat konfirmasi (kalau PIN salah, gak akan ada pesan apapun).');
+          } else {
+            const body = await res.text();
+            showStatus(false, '❌ Gagal (HTTP ' + res.status + '): ' + body.slice(0, 200));
+          }
+        } catch (e) {
+          showStatus(false, '❌ Error: ' + e.message);
+        }
+        btn.disabled = false;
+      });
+    })();
+  </script>
+</body>
+</html>

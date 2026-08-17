@@ -1,0 +1,120 @@
+name: Nyopet - Input Posisi dari Web
+
+# 17 Agu 2026, permintaan Olan: "kasih aku metode input lewat web langsung.. karena sampe jumat
+# aku ga bisa input kayak tadi kasih foto disini". Form di web/nyopet-input.html manggil
+# workflow_dispatch ini pakai token client-side yang SENGAJA dibatasi SUPER SEMPIT (cuma bisa
+# trigger workflow, gak bisa nulis kode/push apapun) -- lihat catatan di web/nyopet-input.html.
+#
+# PIN (`kunci`) itu LAPISAN PERLINDUNGAN ASLI (bukan sekadar token scope) -- dicek di step
+# PERTAMA, SEBELUM checkout/node apapun jalan. Kalau salah, workflow gagal total di situ, gak ada
+# satupun baris nyopetJournal.js yang sempat jalan. Pola PERSIS KONFIG_KUNCI punya AMA-TMS.
+on:
+  workflow_dispatch:
+    inputs:
+      kunci:
+        description: 'PIN (WAJIB cocok sama secret NYOPET_KUNCI)'
+        required: true
+        type: string
+      action:
+        description: 'Buka posisi baru atau tutup yang lagi jalan'
+        required: true
+        type: choice
+        options: [open, close]
+      direction:
+        description: '(buka doang) Arah posisi'
+        type: choice
+        options: [short, long]
+        default: short
+      entry:
+        description: '(buka doang) Harga entry'
+        type: string
+      liq:
+        description: '(buka doang) Harga likuidasi'
+        type: string
+      margin:
+        description: '(buka doang) Margin (USDT)'
+        type: string
+      size:
+        description: '(buka doang) Ukuran posisi (USDT)'
+        type: string
+      leverage:
+        description: '(buka doang) Leverage'
+        type: string
+        default: '100'
+      notes:
+        description: '(buka doang) Catatan/alasan entry'
+        type: string
+      exit:
+        description: '(tutup doang) Harga exit'
+        type: string
+
+concurrency:
+  group: nyopet-web-input
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      # PIN dicek DULUAN, checkout kode aja belum jalan -- salah PIN = workflow berhenti di sini,
+      # titik. Perbandingan pakai file+diff (bukan `[ "$A" = "$B" ]` langsung) biar gak ada isu
+      # newline/whitespace tersembunyi dari secret yang bikin perbandingan salah.
+      - name: Cek PIN
+        env:
+          KUNCI_INPUT: ${{ inputs.kunci }}
+          KUNCI_ASLI: ${{ secrets.NYOPET_KUNCI }}
+        run: |
+          if [ "$KUNCI_INPUT" != "$KUNCI_ASLI" ]; then
+            echo "::error::PIN salah -- gak ada satupun perubahan yang dijalankan."
+            exit 1
+          fi
+          echo "PIN cocok, lanjut."
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Proses input posisi Nyopet (nyopetWebInput.js)
+        env:
+          NYOPET_ACTION: ${{ inputs.action }}
+          NYOPET_DIRECTION: ${{ inputs.direction }}
+          NYOPET_ENTRY: ${{ inputs.entry }}
+          NYOPET_LIQ: ${{ inputs.liq }}
+          NYOPET_MARGIN: ${{ inputs.margin }}
+          NYOPET_SIZE: ${{ inputs.size }}
+          NYOPET_LEVERAGE: ${{ inputs.leverage }}
+          NYOPET_NOTES: ${{ inputs.notes }}
+          NYOPET_EXIT: ${{ inputs.exit }}
+        run: node nyopetWebInput.js
+
+      - name: Commit & push nyopet-journal.json
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f nyopet-journal.json
+          git diff --staged --quiet || git commit -m "Nyopet: input via web (${{ inputs.action }}) $(date -u +%Y-%m-%dT%H:%M)"
+          for i in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase origin master && git push && exit 0
+            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+            sleep 5
+          done
+          echo "::error::Gagal push setelah 5x percobaan."
+          exit 1
+
+      - name: Purge jsDelivr cache
+        if: success()
+        run: curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/nyopet-journal.json" || true

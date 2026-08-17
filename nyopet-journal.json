@@ -1,17 +1,5 @@
 {
-  "openPosition": {
-    "id": "nyopet-1786981108630",
-    "direction": "short",
-    "entryPrice": 64011.4,
-    "liqPrice": 64362.15,
-    "marginUsd": 5.47,
-    "sizeUsd": 576.1,
-    "leverage": 100,
-    "profit100Notified": false,
-    "warning80Notified": false,
-    "openedAt": "2026-08-17T15:38:28.630Z",
-    "notes": "Re-short setelah likuiditas $63.627-$63.944 kesapu (trade #1 kena liq). Target TP: zona support $63.352 (8x ketolak, ~1,9R) sampai $62.825 (9x ketolak, ~3,4R, target terkuat)."
-  },
+  "openPosition": null,
   "trades": [
     {
       "id": "nyopet-1786964458193",
@@ -29,6 +17,24 @@
       "result": "loss",
       "pnlUsd": -1.81,
       "closedAt": "2026-08-17T15:07:36.309Z"
+    },
+    {
+      "id": "nyopet-1786981108630",
+      "direction": "short",
+      "entryPrice": 64011.4,
+      "liqPrice": 64362.15,
+      "marginUsd": 5.47,
+      "sizeUsd": 576.1,
+      "leverage": 100,
+      "profit100Notified": false,
+      "warning80Notified": false,
+      "openedAt": "2026-08-17T15:38:28.630Z",
+      "notes": "Re-short setelah likuiditas $63.627-$63.944 kesapu (trade #1 kena liq). Target TP: zona support $63.352 (8x ketolak, ~1,9R) sampai $62.825 (9x ketolak, ~3,4R, target terkuat).",
+      "exitPrice": 64421.99,
+      "exitReason": "liquidasi",
+      "result": "loss",
+      "pnlUsd": -5.47,
+      "closedAt": "2026-08-17T17:23:31.886Z"
     }
   ]
 }

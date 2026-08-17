@@ -63,12 +63,17 @@ jobs:
       # dry_run: cuma sekali cek terus keluar (buat verifikasi manual cepat, BUKAN loop 5,5 jam).
       # live: loop internal ~5j20m, cek+commit+push tiap iterasi, sleep 300dtk antar iterasi --
       # ini yang beneran ngasih cadence ~5 menit (gak minta GitHub dispatch job baru tiap kali).
-      - name: Cek zona likuiditas -- sekali (dry-run) atau loop ~5,5 jam (live)
+      #
+      # Ikut jalan bareng (16 Agu 2026, permintaan Olan): nyopetPositionMonitor.js -- mantau
+      # posisi Nyopet REAL yang dibuka MANUAL sama Olan di exchange asli (bukan sinyal zona),
+      # cek likuidasi/profit 100% ROI tiap iterasi yang sama, catat ke nyopet-journal.json.
+      - name: Cek zona likuiditas + posisi Nyopet real -- sekali (dry-run) atau loop ~5,5 jam (live)
         env:
           DARK_KAELA_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
         run: |
           if [ "$DARK_KAELA_DRY_RUN" = "1" ]; then
             node darkKaelaMonitor.js
+            node nyopetPositionMonitor.js
             exit 0
           fi
           git config user.name "Kaela Bot"
@@ -76,7 +81,8 @@ jobs:
           END=$(( $(date +%s) + 5*3600 + 20*60 ))
           while [ "$(date +%s)" -lt "$END" ]; do
             node darkKaelaMonitor.js || echo "::warning::darkKaelaMonitor.js error kali ini, lanjut loop"
-            git add -f dark-kaela-state.json
+            node nyopetPositionMonitor.js || echo "::warning::nyopetPositionMonitor.js error kali ini, lanjut loop"
+            git add -f dark-kaela-state.json nyopet-journal.json
             if ! git diff --staged --quiet; then
               git commit -m "Auto: dark kaela monitor $(date -u +%Y-%m-%dT%H:%M)"
               for i in 1 2 3 4 5; do

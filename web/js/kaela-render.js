@@ -507,10 +507,73 @@
     </div>`;
   }
 
+  // ============ Nyopet Market (Dark Kaela, posisi REAL) ============
+  // 16 Agu 2026, permintaan Olan: "trading jujur kita nyopet market.. buat jurnal jujur..
+  // tracking winrate 100 trade ke depan" -- BEDA dari Spot/Sniper (bankroll bayangan): posisi
+  // Nyopet REAL, dibuka manual di exchange asli, saldo/bankroll SENGAJA gak dihitung ("cuma
+  // mini game") -- yang ditrack cuma menang/kalah per trade jadi win rate.
+  function renderNyopetJurnalPanel(nyopetState, now) {
+    const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
+    const trades = nyopetState.trades || [];
+    const wins = trades.filter((t) => t.result === 'win').length;
+    const losses = trades.filter((t) => t.result === 'loss').length;
+    const total = trades.length;
+    const winRate = total ? (wins / total) * 100 : 0;
+    const target = 100;
+
+    const summaryHtml = `<div class="journal-stats-grid">
+      ${cell('Progress', `${total}/${target} trade`)}
+      ${cell('Win Rate', total ? winRate.toFixed(1) + '%' : '-', total ? (winRate >= 50 ? 'up' : 'down') : '')}
+      ${cell('Menang', wins, 'up')}
+      ${cell('Kalah', losses, 'down')}
+    </div>`;
+
+    const pos = nyopetState.openPosition;
+    const posHtml = pos
+      ? `<div class="order-card floating">
+          <div class="order-header">
+            <span class="order-dir">${pos.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</span>
+            <span class="order-status-badge floating">TERBUKA</span>
+          </div>
+          <div class="order-levels">
+            <span>Entry: ${fmtUsdOrder(pos.entryPrice)}</span>
+            <span>Likuidasi: ${fmtUsdOrder(pos.liqPrice)}</span>
+            <span>Leverage: ${pos.leverage}x | Margin: ${fmtUsdOrder(pos.marginUsd)}</span>
+          </div>
+          ${pos.notes ? `<div class="order-note">${pos.notes}</div>` : ''}
+          <div class="order-meta">Dibuka ${fmtDateLong(new Date(pos.openedAt))} -- REAL, dibuka manual di exchange. Pantau notifikasi WA buat status live (likuidasi/-80%/+100% ROI).</div>
+        </div>`
+      : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
+
+    const historyHtml = trades.length > 0
+      ? `<table class="spot-cycle-table">
+          <thead><tr><th>Arah</th><th>Entry</th><th>Exit</th><th>Alasan</th><th>Hasil</th><th>Tanggal</th></tr></thead>
+          <tbody>${trades.slice().reverse().map((t) => `<tr>
+            <td>${t.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</td>
+            <td>${fmtUsdOrder(t.entryPrice)}</td>
+            <td>${fmtUsdOrder(t.exitPrice)}</td>
+            <td>${t.exitReason}</td>
+            <td class="${t.result === 'win' ? 'up' : 'down'}">${t.result === 'win' ? 'MENANG' : 'KALAH'}</td>
+            <td>${fmtDateLong(new Date(t.closedAt))}</td>
+          </tr>`).join('')}</tbody>
+        </table>`
+      : `<div class="empty">Belum ada trade yang selesai.</div>`;
+
+    return `<div class="nyopet-panel">
+      <p class="order-disclaimer">🥷 Posisi Nyopet Market REAL -- dibuka MANUAL sama Olan di exchange asli, Kaela cuma mantau + catat (likuidasi/profit 100% ROI). Saldo/bankroll SENGAJA gak dihitung (mini game) -- yang dilacak cuma win rate sampai ${target} trade buat evaluasi jujur.</p>
+      ${summaryHtml}
+      <div class="journal-section-title">📌 Posisi Sekarang</div>
+      ${posHtml}
+      <div class="journal-section-title">📋 Riwayat Trade (${total})</div>
+      ${historyHtml}
+    </div>`;
+  }
+
   global.KaelaRender = {
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,
+    renderNyopetJurnalPanel,
     wireStrategyFilter,
   };
 })(window);

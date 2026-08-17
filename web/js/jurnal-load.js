@@ -18,10 +18,11 @@
 
   async function main() {
     const now = new Date();
-    const [ordersState, bankrollState, spotState] = await Promise.all([
+    const [ordersState, bankrollState, spotState, nyopetState] = await Promise.all([
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }),
       fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }),
       fetchJson('kaela-spot.json', { btcHeld: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, completedCycles: [], buyLog: [] }),
+      fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }),
     ]);
 
     const spotEl = document.querySelector('[data-panel="spot"]');
@@ -33,6 +34,9 @@
       sniperEl.innerHTML = KaelaRender.renderJurnalPanel(ordersState, now, fundReport);
       KaelaRender.wireStrategyFilter();
     }
+
+    const nyopetEl = document.querySelector('[data-panel="nyopet"]');
+    if (nyopetEl) nyopetEl.innerHTML = KaelaRender.renderNyopetJurnalPanel(nyopetState, now);
   }
 
   main();

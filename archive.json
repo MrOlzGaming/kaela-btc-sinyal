@@ -718,5 +718,10 @@
     "type": "whale-daily",
     "date": "2026-08-16T23:34:08.448Z",
     "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-08-17\n134 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 321.350,03 BTC berpindah (~$20,193,638,878 / ~Rp359.895.649.653.267)\nTerbesar: 20.287,36 BTC dalam 1 transaksi.\nArah (best-effort): 0 masuk exchange (potensi tekanan jual) · 0 keluar exchange (potensi akumulasi) · 134 gak teridentifikasi.\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-08-17T01:50:50.004Z",
+    "content": "🟧 🤖 SNIPER — ❌ INVALID (analisa otomatis Kaela)\nBelum ada posisi. Masih nunggu syarat terpenuhi.\n\n📊 ANALISA TEKNIKAL\nHarga: $62,918\nMA20 $63,847 / MA50 $63,624 / MA200 $69,280 -- Death Cross aktif\nRSI14: 42\nTrend Weekly: 📉 Bearish\nResistance kunci: $63,232 (tersentuh 5x)\nSupport kunci: $62,709 (tersentuh 4x)\nCandle harian terakhir close: $62,900 | Harga sekarang: $63,194\n\n🔥 LIQUIDATION HEATMAP\nLiquidation heatmap otomatis DIMATIKAN -- Kaela gak bisa akses data ini gratis & akurat dari infrastrukturnya. Cek manual: https://www.coinglass.com/LiquidationData\n\n🌊 SENTIMEN & POSISI PASAR\nFear & Greed Index: 31/100 (Fear)\nFunding Rate: 0.0100% (long bayar short)\nOpen Interest: 33,778 BTC\nLong/Short Ratio (akun): 69.4% long / 30.6% short\n\n⛓️ ON-CHAIN METRICS\nSOPR: 0.9994 (Breakeven (~1.0))\nNUPL: 0.1714 (Hope / Fear)\n\n📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.\n\n2026-08-17 09:50 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

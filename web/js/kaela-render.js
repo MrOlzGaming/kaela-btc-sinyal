@@ -71,6 +71,12 @@
   function fmtUsdOrder(n) {
     return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
   }
+  // Angka BERTANDA (PNL dst) -- fmtUsdOrder polos taruh minus SETELAH '$' ("$-1.81", dari
+  // toLocaleString), gak lazim dibaca. Sign WAJIB di depan "$" ("-$1.81").
+  function fmtSignedUsd(n) {
+    const num = Number(n);
+    return (num >= 0 ? '+' : '-') + fmtUsdOrder(Math.abs(num));
+  }
   function escapeHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -520,12 +526,17 @@
     const total = trades.length;
     const winRate = total ? (wins / total) * 100 : 0;
     const target = 100;
+    // PNL $ JUJUR (17 Agu 2026, permintaan Olan: "kasih dengan jujur pnl berjalan.. jadi nanti
+    // ketauan 100 trade minus apa plus") -- BEDA dari saldo/bankroll BERJALAN yang sengaja gak
+    // dihitung (gak ngaruh ke sizing trade berikutnya), ini murni AKUMULASI hasil $ apa adanya.
+    const totalPnlUsd = trades.reduce((sum, t) => sum + (t.pnlUsd || 0), 0);
 
     const summaryHtml = `<div class="journal-stats-grid">
       ${cell('Progress', `${total}/${target} trade`)}
       ${cell('Win Rate', total ? winRate.toFixed(1) + '%' : '-', total ? (winRate >= 50 ? 'up' : 'down') : '')}
       ${cell('Menang', wins, 'up')}
       ${cell('Kalah', losses, 'down')}
+      ${cell('Total PNL (jujur)', total ? fmtSignedUsd(totalPnlUsd) : '-', total ? (totalPnlUsd >= 0 ? 'up' : 'down') : '')}
     </div>`;
 
     // Kartu posisi -- SENGAJA copy PERSIS kontrak class/data-attribute punya order-card floating
@@ -555,13 +566,14 @@
 
     const historyHtml = trades.length > 0
       ? `<table class="spot-cycle-table">
-          <thead><tr><th>Arah</th><th>Entry</th><th>Exit</th><th>Alasan</th><th>Hasil</th><th>Tanggal</th></tr></thead>
+          <thead><tr><th>Arah</th><th>Entry</th><th>Exit</th><th>Alasan</th><th>Hasil</th><th>PNL</th><th>Tanggal</th></tr></thead>
           <tbody>${trades.slice().reverse().map((t) => `<tr>
             <td>${t.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</td>
             <td>${fmtUsdOrder(t.entryPrice)}</td>
             <td>${fmtUsdOrder(t.exitPrice)}</td>
             <td>${t.exitReason}</td>
             <td class="${t.result === 'win' ? 'up' : 'down'}">${t.result === 'win' ? 'MENANG' : 'KALAH'}</td>
+            <td class="${(t.pnlUsd || 0) >= 0 ? 'up' : 'down'}">${fmtSignedUsd(t.pnlUsd || 0)}</td>
             <td>${fmtDateLong(new Date(t.closedAt))}</td>
           </tr>`).join('')}</tbody>
         </table>`

@@ -91,6 +91,12 @@ jobs:
                 echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
                 sleep 5
               done
+              # Purge jsDelivr (17 Agu 2026) -- web fetch data lewat jsDelivr sekarang (raw.githubusercontent
+              # kena rate-limit), CDN-nya nyimpen cache ~12 jam kalau gak dipaksa refresh -- purge tiap
+              # abis push biar posisi Nyopet/zona baru langsung keliatan di web, gak nunggu cache basi ilang.
+              for f in dark-kaela-state.json nyopet-journal.json; do
+                curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/$f" || true
+              done
             fi
             sleep 300
           done

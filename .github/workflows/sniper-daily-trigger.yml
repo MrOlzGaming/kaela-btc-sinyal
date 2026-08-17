@@ -62,3 +62,12 @@ jobs:
           done
           echo "::error::Gagal push setelah 5x percobaan."
           exit 1
+
+      # Purge jsDelivr (17 Agu 2026) -- web fetch data lewat jsDelivr (raw.githubusercontent kena
+      # rate-limit HTTP 429), CDN-nya cache ~12 jam kalau gak dipaksa refresh tiap ada data baru.
+      - name: Purge jsDelivr cache
+        if: success()
+        run: |
+          for f in sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-bankroll.json; do
+            curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/$f" || true
+          done

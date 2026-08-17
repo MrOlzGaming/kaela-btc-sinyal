@@ -3,7 +3,9 @@
 // fresh tanpa perlu deploy Netlify tiap ada buy/trade baru.
 
 (function () {
-  const RAW_BASE = 'https://raw.githubusercontent.com/MrOlzGaming/kaela-btc-sinyal/master/';
+  // jsDelivr, bukan raw.githubusercontent.com langsung -- lihat catatan di dashboard-load.js
+  // (17 Agu 2026, ketemu HTTP 429 rate-limit pas Olan mantau posisi Nyopet real-time).
+  const RAW_BASE = 'https://cdn.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/';
 
   async function fetchJson(file, fallback) {
     try {

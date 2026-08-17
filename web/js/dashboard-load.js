@@ -3,7 +3,13 @@
 // Ini yang bikin dashboard SELALU fresh tanpa perlu Netlify deploy tiap ada sinyal/posisi baru.
 
 (function () {
-  const RAW_BASE = 'https://raw.githubusercontent.com/MrOlzGaming/kaela-btc-sinyal/master/';
+  // jsDelivr (BUKAN raw.githubusercontent.com langsung, 17 Agu 2026) -- raw.githubusercontent
+  // ternyata kena rate-limit (HTTP 429) kalau di-fetch berkali-kali dalam waktu singkat (Olan
+  // reload halaman pas mantau posisi Nyopet real-time + testing sesi ini gabung numpuk). jsDelivr
+  // itu CDN publik resmi yang mirror repo GitHub apa adanya, limit jauh lebih longgar -- dipakai
+  // luas buat kasus PERSIS ini. Cache-nya di-purge otomatis oleh workflow abis push data berubah
+  // (lihat .github/workflows/*.yml step "Purge jsDelivr"), jadi tetap fresh.
+  const RAW_BASE = 'https://cdn.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/';
 
   async function fetchJson(file, fallback) {
     try {

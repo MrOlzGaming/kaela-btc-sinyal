@@ -58,3 +58,11 @@ jobs:
           done
           echo "::error::Gagal push sniper-orders.json setelah 5x percobaan."
           exit 1
+
+      # Purge jsDelivr (17 Agu 2026) -- lihat catatan sama di daily-report.yml/sniper-daily-trigger.yml.
+      - name: Purge jsDelivr cache
+        if: success()
+        run: |
+          for f in archive.json sniper-orders.json kaela-bankroll.json; do
+            curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/$f" || true
+          done

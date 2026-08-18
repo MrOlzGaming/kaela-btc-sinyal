@@ -1,17 +1,5 @@
 {
-  "openPosition": {
-    "id": "nyopet-1787027855816",
-    "direction": "short",
-    "entryPrice": 64202.4,
-    "liqPrice": 64555.04,
-    "marginUsd": 1.83,
-    "sizeUsd": 192.7,
-    "leverage": 100,
-    "profit100Notified": false,
-    "warning80Notified": false,
-    "openedAt": "2026-08-18T04:37:35.816Z",
-    "notes": "kejar likuidasi dibawah tebal area 63.750"
-  },
+  "openPosition": null,
   "trades": [
     {
       "id": "nyopet-1786964458193",
@@ -65,6 +53,24 @@
       "result": "win",
       "pnlUsd": 3.418308839296574,
       "closedAt": "2026-08-18T04:16:20.132Z"
+    },
+    {
+      "id": "nyopet-1787027855816",
+      "direction": "short",
+      "entryPrice": 64202.4,
+      "liqPrice": 64555.04,
+      "marginUsd": 1.83,
+      "sizeUsd": 192.7,
+      "leverage": 100,
+      "profit100Notified": false,
+      "warning80Notified": false,
+      "openedAt": "2026-08-18T04:37:35.816Z",
+      "notes": "kejar likuidasi dibawah tebal area 63.750",
+      "exitPrice": 64800,
+      "exitReason": "liquidasi",
+      "result": "loss",
+      "pnlUsd": -1.83,
+      "closedAt": "2026-08-18T14:26:34.823Z"
     }
   ]
 }

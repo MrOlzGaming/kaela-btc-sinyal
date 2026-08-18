@@ -1,17 +1,5 @@
 {
-  "openPosition": {
-    "id": "nyopet-1787023957089",
-    "direction": "short",
-    "entryPrice": 64355.8,
-    "liqPrice": 64711.92,
-    "marginUsd": 8.6,
-    "sizeUsd": 897.3,
-    "leverage": 100,
-    "profit100Notified": false,
-    "warning80Notified": false,
-    "openedAt": "2026-08-18T03:32:37.089Z",
-    "notes": "Trade #3."
-  },
+  "openPosition": null,
   "trades": [
     {
       "id": "nyopet-1786964458193",
@@ -47,6 +35,24 @@
       "result": "loss",
       "pnlUsd": -5.47,
       "closedAt": "2026-08-17T17:23:31.886Z"
+    },
+    {
+      "id": "nyopet-1787023957089",
+      "direction": "short",
+      "entryPrice": 64355.8,
+      "liqPrice": 64711.92,
+      "marginUsd": 8.6,
+      "sizeUsd": 897.3,
+      "leverage": 100,
+      "profit100Notified": false,
+      "warning80Notified": false,
+      "openedAt": "2026-08-18T03:32:37.089Z",
+      "notes": "Trade #3.",
+      "exitPrice": 64100,
+      "exitReason": "manual",
+      "result": "win",
+      "pnlUsd": 3.418308839296574,
+      "closedAt": "2026-08-18T04:16:20.132Z"
     }
   ]
 }

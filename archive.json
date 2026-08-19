@@ -793,5 +793,10 @@
     "type": "econ-calendar",
     "date": "2026-08-19T23:31:14.145Z",
     "content": "⬜ 📅 JADWAL EKONOMI HARI INI — 2026-08-20\n(event USD dampak tinggi aja -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 02:00 WITA — Notulen Rapat FOMC\n   Forecast: - | Sebelumnya: -\n   📐 Pernyataan/Notulen FOMC (keyakinan: kualitatif) -- Gak ada angka forecast/actual buat dibandingkan -- arahnya ditentukan NADA pernyataan (hawkish vs dovish), bukan angka. Nada lebih hawkish dari ekspektasi pasar -> BTC biasanya tertekan, lebih dovish -> BTC biasanya diuntungkan.\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-08-19T23:36:26.458Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-08-20\n128 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 389.365,06 BTC berpindah (~$26,959,461,200 / ~Rp481.622.123.754.915)\nTerbesar: 20.255,74 BTC dalam 1 transaksi.\nArah (best-effort): 0 masuk exchange (potensi tekanan jual) · 0 keluar exchange (potensi akumulasi) · 128 gak teridentifikasi.\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

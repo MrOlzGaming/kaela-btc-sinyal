@@ -88,6 +88,38 @@
       "closeReason": "dibatalkan manual",
       "pnlUsd": null,
       "pnlPct": null
+    },
+    {
+      "id": "mszfmviedto9",
+      "signalId": "2026081901",
+      "status": "floating",
+      "direction": "buy",
+      "strategyType": "breakout",
+      "triggerPrice": 64403.17,
+      "testLevel": null,
+      "confirmationNote": "Breakout pola Falling Wedge -- candle harian CLOSE di atas batas pola ($64,725.42). SL nempel lebar pola itu sendiri (nyawa 3.8%), bukan zona jauh. Deteksi otomatis chartPatterns.js.",
+      "tpReasoning": "Target tahap 1 (jual separuh): 2x risiko @ $69,282. Sisanya di-trail pakai SMA10 harian (SL digeser breakeven abis tahap 1) -- \"lihat kelakuan candle\" sebelum lepas semua.",
+      "entryPrice": 64403.17,
+      "tp": 69282.26,
+      "sl": 61963.625,
+      "originalSl": 61963.625,
+      "exposure": 3,
+      "leverage": 26,
+      "marginUsd": 11.538461538461538,
+      "notes": "Analisa otomatis Kaela (strategi pola chart, 10 Agu 2026): posisi BAYANGAN, murni perhitungan, tidak ada uang bergerak. Eksekusi asli tetap manual Olan di Binance kalau mau ikut.",
+      "patternType": "wedge_falling",
+      "partialTp": 69282.26,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "trailSmaLen": 10,
+      "realizedPnlUsd": 0,
+      "silentTest": false,
+      "createdAt": "2026-08-19T01:48:13.190Z",
+      "triggeredAt": "2026-08-19T01:48:13.190Z",
+      "closedAt": null,
+      "closeReason": null,
+      "pnlUsd": null,
+      "pnlPct": null
     }
   ]
 }

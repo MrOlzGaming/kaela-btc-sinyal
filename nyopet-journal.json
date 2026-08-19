@@ -1,5 +1,17 @@
 {
-  "openPosition": null,
+  "openPosition": {
+    "id": "nyopet-1787182394972",
+    "direction": "short",
+    "entryPrice": 69315.26,
+    "liqPrice": 76215.34,
+    "marginUsd": 17,
+    "sizeUsd": 170,
+    "leverage": 10,
+    "profit100Notified": false,
+    "warning80Notified": false,
+    "openedAt": "2026-08-19T23:33:14.972Z",
+    "notes": "bandar short squeeze sukses, 2.74 milar dolar rekt, ke sapu dalam 24jam"
+  },
   "trades": [
     {
       "id": "nyopet-1786964458193",

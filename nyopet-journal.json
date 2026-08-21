@@ -1,17 +1,5 @@
 {
-  "openPosition": {
-    "id": "nyopet-1787182394972",
-    "direction": "short",
-    "entryPrice": 69315.26,
-    "liqPrice": 76215.34,
-    "marginUsd": 17,
-    "sizeUsd": 170,
-    "leverage": 10,
-    "profit100Notified": false,
-    "warning80Notified": true,
-    "openedAt": "2026-08-19T23:33:14.972Z",
-    "notes": "bandar short squeeze sukses, 2.74 milar dolar rekt, ke sapu dalam 24jam"
-  },
+  "openPosition": null,
   "trades": [
     {
       "id": "nyopet-1786964458193",
@@ -83,6 +71,24 @@
       "result": "loss",
       "pnlUsd": -1.83,
       "closedAt": "2026-08-18T14:26:34.823Z"
+    },
+    {
+      "id": "nyopet-1787182394972",
+      "direction": "short",
+      "entryPrice": 69315.26,
+      "liqPrice": 76215.34,
+      "marginUsd": 17,
+      "sizeUsd": 170,
+      "leverage": 10,
+      "profit100Notified": false,
+      "warning80Notified": true,
+      "openedAt": "2026-08-19T23:33:14.972Z",
+      "notes": "bandar short squeeze sukses, 2.74 milar dolar rekt, ke sapu dalam 24jam",
+      "exitPrice": 76612.36,
+      "exitReason": "liquidasi",
+      "result": "loss",
+      "pnlUsd": -17,
+      "closedAt": "2026-08-21T07:18:40.250Z"
     }
   ]
 }

@@ -38,14 +38,14 @@ Zona likuiditas: ${fmtUsd(signal.zonePrice)} (${zoneDesc})
 ${upLine}
 ${downLine}
 
-⚠️ JANGAN LANGSUNG ENTRY. Cek dulu kelakuan candle di zona ini -- mantul atau ditembus:
+⚠️ JANGAN LANGSUNG ENTRY. Ini cuma DETEKSI ZONA (struktur harga), bukan data likuidasi asli -- WAJIB dicek dulu sendiri di Coinglass:
 🔗 ${COINGLASS_LINK}
 
-Kalau beneran mantul & confirmed sendiri, baru pertimbangkan entry ${signal.direction === 'long' ? 'LONG' : 'SHORT'}.
+📊 Yang dicek: bandingin ketebalan likuidasi LONG vs SHORT di kedua sisi. Pergerakan biasanya "ditarik" ke sisi yang likuidasinya paling TEBAL (magnet buat market maker) -- kalau likuidasi di ATAS lebih tebal dari di BAWAH, itu lebih condong ke arah naik (dan sebaliknya). Baru putuskan arah ${signal.direction === 'long' ? 'LONG' : 'SHORT'} ini beneran cocok sama bacaan itu atau enggak.
 
 🚨 Risiko JAUH lebih tinggi dari Sniper -- leverage super agresif, SL tipis nempel zona. Ini murni info titik yang layak diperhatikan, BUKAN rekomendasi atau ajakan entry. Sepenuhnya keputusan & tanggung jawab sendiri.
 
-💡 JANGAN ALL-IN. Pakai Kalkulator Exposure buat nentuin sizing sesuai modal sendiri, jangan asal tebak:
+💡 JANGAN ALL-IN, modal SUPER KECIL aja. Pakai Kalkulator Exposure buat nentuin sizing sesuai modal sendiri, jangan asal tebak:
 🔗 ${KALKULATOR_LINK}
 
 ${fmtWita(now)}`;

@@ -171,14 +171,25 @@
     return o.direction === 'buy' ? o.entryPrice * (1 - distPct / 100) : o.entryPrice * (1 + distPct / 100);
   }
 
+  // ASSETS_WEB (22 Agu 2026, upgrade multi-aset) -- mirror manual dari assetConfig.js (Node,
+  // gak bisa di-require() di browser) -- JAGA DUA-DUANYA SINKRON kalau ada perubahan.
+  const ASSETS_WEB = {
+    btc: { symbol: 'BTCUSDT', label: 'BTC', emoji: '🟧' },
+    xau: { symbol: 'PAXGUSDT', label: 'XAU/Emas', emoji: '🟡' },
+  };
+  const MODE_LABEL_WEB = { fvg: 'FVG', sniper: 'Pola Chart' };
+
   function renderOrderCard(o) {
     const dir = DIR_LABEL_WEB[o.direction] || o.direction;
     const strategy = STRATEGY_LABEL_WEB[o.strategyType] || '';
     const slText = (o.sl !== null && o.sl !== undefined) ? fmtUsdOrder(o.sl) : '-';
     const idLine = o.signalId ? `<div class="order-id">🆔 ${o.signalId}</div>` : '';
+    const asset = ASSETS_WEB[o.asset] || ASSETS_WEB.btc;
+    const assetBadge = `<span class="order-asset-badge">${asset.emoji} ${asset.label} · ${MODE_LABEL_WEB[o.mode] || 'Pola Chart'}</span>`;
     if (o.status === 'pending') {
       return `<div class="order-card pending">
         ${idLine}
+        ${assetBadge}
         <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge pending">⏳ PENDING</span></div>
         <div class="order-strategy">${strategy}</div>
         <div class="order-levels"><span>Trigger: <strong>${fmtUsdOrder(o.triggerPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
@@ -196,11 +207,12 @@
       const tradeMetaLine = (o.leverage || o.marginUsd)
         ? `<div class="order-meta">Margin ${fmtUsdOrder(o.marginUsd)} · Leverage ${o.leverage}× · Volume ${volumeUsd !== null ? fmtUsdOrder(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmtUsdOrder(liqPrice)}` : ''}</div>`
         : '';
-      return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}">
+      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${asset.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}">
         ${idLine}
+        ${assetBadge}
         <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
         <div class="order-strategy">${strategy}</div>
-        <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
+        <div class="order-live-price">Harga ${asset.label} sekarang: <strong data-price-target>memuat...</strong></div>
         <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
         ${tradeMetaLine}
         ${partialBadge}
@@ -219,6 +231,7 @@
       : '';
     return `<div class="order-card closed" data-strategy="${o.strategyType || ''}">
       ${idLine}
+      ${assetBadge}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
       <div class="order-levels"><span>Entry: ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>Exit: ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
       ${partialTimeline}

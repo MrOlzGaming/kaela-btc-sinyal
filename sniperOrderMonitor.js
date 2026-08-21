@@ -19,6 +19,7 @@ const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
 const { sma } = require('./technicalAnalysis');
 const { isWaMuted } = require('./config');
+const { ASSETS } = require('./assetConfig');
 
 // data-api.binance.vision -- endpoint RESMI Binance khusus market data publik, gak kena
 // blokir geografis kayak api.binance.com (GitHub Actions runner ketauan HTTP 451 pas testing).
@@ -28,15 +29,17 @@ function parseCandle(raw) {
   return { openTime: raw[0], open: +raw[1], high: +raw[2], low: +raw[3], close: +raw[4], closeTime: raw[6] };
 }
 
-async function fetchHourlyClosed(limit = 5) {
-  const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=1h&limit=${limit}`);
+// symbol (22 Agu 2026, upgrade multi-aset) -- dulu hardcode BTCUSDT, sekarang parameter biar
+// bisa dipanggil per-aset (BTCUSDT/PAXGUSDT, lihat assetConfig.js).
+async function fetchHourlyClosed(symbol, limit = 5) {
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=${symbol}&interval=1h&limit=${limit}`);
   const raw = await res.json();
   const nowMs = Date.now();
   return raw.map(parseCandle).filter((c) => c.closeTime <= nowMs);
 }
 
-async function fetchDailyClosed(limit = 30) {
-  const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=1d&limit=${limit}`);
+async function fetchDailyClosed(symbol, limit = 30) {
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=${symbol}&interval=1d&limit=${limit}`);
   const raw = await res.json();
   // Fix 14 Agu 2026 (ketauan pas audit): lupa filter closeTime kayak fetchHourlyClosed di atas --
   // tanpa ini, candle HARIAN yang masih jalan (belum closed) ikut kehitung, bikin trailing-SMA
@@ -68,29 +71,23 @@ async function sendWhatsAppRespectMute(msg, label, silent = false) {
   await sendWhatsApp(msg);
 }
 
-async function main() {
-  const now = new Date();
-  const active = getActiveOrders();
-  if (active.length === 0) {
-    console.log('[SniperOrderMonitor]', now.toISOString(), '— gak ada order aktif, skip.');
-    return;
-  }
-
-  const candles = await fetchHourlyClosed(5);
+// Proses semua order 1 ASET (candle H1/daily udah difetch khusus buat aset itu) -- diekstrak
+// dari main() (22 Agu 2026, upgrade multi-aset) biar bisa dipanggil per-grup aset.
+async function processAsset(assetKey, ordersThisAsset, now) {
+  const assetCfg = ASSETS[assetKey] || ASSETS.btc;
+  const candles = await fetchHourlyClosed(assetCfg.symbol, 5);
   if (candles.length === 0) {
-    console.log('[SniperOrderMonitor] Belum ada candle H1 closed, skip.');
+    console.log(`[SniperOrderMonitor] ${assetCfg.label}: belum ada candle H1 closed, skip.`);
     return;
   }
   const last = candles[candles.length - 1];
 
-  // Cuma fetch daily kalau BENERAN ada order floating+partial yang butuh cek trailing SMA --
-  // gak worth-it fetch tiap jam kalau gak ada yang butuh (hemat request).
-  const needsDaily = active.some((o) => o.status === 'floating' && o.partialDone && o.trailSmaLen);
+  const needsDaily = ordersThisAsset.some((o) => o.status === 'floating' && o.partialDone && o.trailSmaLen);
   const dailyCandles = needsDaily
-    ? await fetchDailyClosed(Math.max(30, ...active.filter((o) => o.trailSmaLen).map((o) => o.trailSmaLen + 5)))
+    ? await fetchDailyClosed(assetCfg.symbol, Math.max(30, ...ordersThisAsset.filter((o) => o.trailSmaLen).map((o) => o.trailSmaLen + 5)))
     : null;
 
-  for (const order of active) {
+  for (const order of ordersThisAsset) {
     if (order.status === 'pending') {
       const closeConfirmed = order.direction === 'buy' ? last.close >= order.triggerPrice : last.close <= order.triggerPrice;
       const testConfirmed = order.testLevel == null
@@ -211,6 +208,26 @@ async function main() {
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'posisi ditutup', order.silentTest);
+  }
+}
+
+// main() (22 Agu 2026, upgrade multi-aset) -- kelompokin order aktif per ASET (order LAMA tanpa
+// field `asset` dianggap 'btc', backward-compat), proses tiap grup pakai candle aset itu sendiri.
+async function main() {
+  const now = new Date();
+  const active = getActiveOrders();
+  if (active.length === 0) {
+    console.log('[SniperOrderMonitor]', now.toISOString(), '— gak ada order aktif, skip.');
+    return;
+  }
+
+  const byAsset = {};
+  for (const order of active) {
+    const key = order.asset || 'btc';
+    (byAsset[key] = byAsset[key] || []).push(order);
+  }
+  for (const assetKey of Object.keys(byAsset)) {
+    await processAsset(assetKey, byAsset[assetKey], now);
   }
 }
 

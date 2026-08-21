@@ -7,7 +7,11 @@
   // data-api.binance.vision -- market data publik, gak kena blokir geografis (api.binance.com
   // biasa ke-block HTTP 451 di beberapa region termasuk US -- kalau pengunjung web kita dari
   // sana, harga bakal gagal muat juga kalau masih pakai endpoint lama).
-  const PRICE_URL = 'https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT';
+  // SYMBOLS (22 Agu 2026, upgrade multi-aset) -- dulu BTCUSDT doang, sekarang poll SEMUA simbol
+  // yang lagi dipakai kartu floating di halaman (data-symbol per kartu, lihat kaela-render.js).
+  function priceUrl(symbol) {
+    return `https://data-api.binance.vision/api/v3/ticker/price?symbol=${symbol}`;
+  }
 
   function fmtUsd(n) {
     // Bug ketemu 16 Agu 2026 (kepakai bareng widget Nyopet): sign cuma diisi '+' pas positif,
@@ -17,8 +21,12 @@
     return sign + '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
 
-  function updateCards(price) {
+  function updateCards(symbol, price) {
+    // Fallback ke BTCUSDT buat kartu LAMA yang belum punya data-symbol (sebelum upgrade
+    // multi-aset 22 Agu 2026) -- backward-compat, jangan sampai kartu lama gak keupdate.
     document.querySelectorAll('.order-card.floating[data-order-id]').forEach((card) => {
+      const cardSymbol = card.dataset.symbol || 'BTCUSDT';
+      if (cardSymbol !== symbol) return;
       const entry = parseFloat(card.dataset.entry);
       const leverage = parseFloat(card.dataset.leverage) || 1;
       const margin = parseFloat(card.dataset.margin) || 0;
@@ -53,14 +61,19 @@
   }
 
   async function tick() {
-    if (!document.querySelector('.order-card.floating[data-order-id]')) return; // gak ada floating order, gak usah fetch
-    try {
-      const res = await fetch(PRICE_URL);
-      const data = await res.json();
-      updateCards(parseFloat(data.price));
-    } catch (e) {
-      // diam -- kartu tetap nampilin nilai terakhir yang berhasil, gak perlu ganggu user
-    }
+    const cards = document.querySelectorAll('.order-card.floating[data-order-id]');
+    if (cards.length === 0) return; // gak ada floating order, gak usah fetch
+    const symbols = new Set();
+    cards.forEach((card) => symbols.add(card.dataset.symbol || 'BTCUSDT'));
+    await Promise.all([...symbols].map(async (symbol) => {
+      try {
+        const res = await fetch(priceUrl(symbol));
+        const data = await res.json();
+        updateCards(symbol, parseFloat(data.price));
+      } catch (e) {
+        // diam -- kartu tetap nampilin nilai terakhir yang berhasil, gak perlu ganggu user
+      }
+    }));
   }
 
   tick();

@@ -6,6 +6,17 @@
 const { WEB_URL, toLocal } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 const { getExtremeFearGreedNote } = require('./fearGreedInsight');
+const { ASSETS } = require('./assetConfig');
+
+// assetLabel (22 Agu 2026, upgrade multi-aset) -- semua fungsi format di bawah TERIMA order yang
+// sekarang punya field `order.asset` ('btc'/'xau') -- fallback ke ASSETS.btc kalau order LAMA
+// (dari sebelum upgrade ini) gak punya field itu.
+function assetOf(order) {
+  return ASSETS[order.asset] || ASSETS.btc;
+}
+function modeLabel(order) {
+  return order.mode === 'fvg' ? 'FVG' : 'Pola Chart';
+}
 
 function fmt(n) {
   return '$' + n.toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
@@ -65,8 +76,9 @@ function formatRencana(order) {
 }
 
 function formatTriggered(order) {
+  const asset = assetOf(order);
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ✅ KENA TRIGGER, SEKARANG FLOATING`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ✅ KENA TRIGGER, SEKARANG FLOATING`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
     '',
@@ -82,12 +94,13 @@ function formatTriggered(order) {
 }
 
 function formatClosed(order) {
+  const asset = assetOf(order);
   const won = order.status === 'closed_tp';
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
   const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)' };
   const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${exitLabel}`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ${exitLabel}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -106,9 +119,10 @@ function formatClosed(order) {
 // separuh di-trail pakai SMA harian sampai momentum patah. Notifikasi TERPISAH dari formatClosed
 // (posisi BELUM full closed, cuma dikurangin).
 function formatPartialClosed(order) {
+  const asset = assetOf(order);
   const pnlSign = order.realizedPnlUsd >= 0 ? '+' : '-';
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -126,7 +140,8 @@ function formatPartialClosed(order) {
 // laporan sinyalnya dalam bentuk posisi dia sendiri yang dipantau") -- SELAMA ada posisi
 // floating, Kaela gak lagi diam total tiap hari (dulu skip penuh). Bukan sinyal BARU -- status
 // posisi yang UDAH terbuka: floating P&L hari ini, jarak ke SL/TP, udah berapa hari ditahan.
-function formatPositionMonitor(order, livePrice) {
+function formatPositionMonitor(order, livePrice, assetCfgParam) {
+  const asset = assetCfgParam || assetOf(order);
   const sign = order.direction === 'buy' ? 1 : -1;
   const movePct = ((livePrice - order.entryPrice) / order.entryPrice) * 100 * sign;
   const remFrac = order.remainingFraction !== undefined && order.remainingFraction !== null ? order.remainingFraction : 1;
@@ -140,7 +155,7 @@ function formatPositionMonitor(order, livePrice) {
     : `❌ SL: ${fmt(order.sl)}  🎯 TP tahap 1: ${fmt(order.partialTp)}`;
 
   const lines = [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} -- masih FLOATING, bukan sinyal baru.`,
     '',
@@ -259,26 +274,25 @@ function rMultipleLevels(order) {
   ];
 }
 
-function formatAutoValid({ order, ta, sentiment, onchain }) {
+function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
+  const asset = assetCfg || assetOf(order);
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
+  // ta/sentiment/onchain CUMA ada buat BTC (metrik makro kripto, gak relevan/gak ada buat emas,
+  // 22 Agu 2026) -- bagian2 ini di-skip otomatis kalau null, bukan error.
+  const modeExplain = order.mode === 'fvg'
+    ? 'Mode FVG (Fair Value Gap): nyari zona harga yang "dilompatin" pas gerakan cepat, dianggap area support -- entry pas harga koreksi balik ke zona itu terus mantul.'
+    : 'Mode Pola Chart: nyari pola breakout klasik (bull flag/pennant lanjutan tren, atau falling wedge pembalikan) di candle harian.';
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ✅ VALID (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ${asset.emoji} ${asset.label} — ✅ VALID (analisa otomatis Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
     ...rMultipleLevels(order),
     '',
-    '📊 ANALISA TEKNIKAL',
-    ...taLines(ta),
-    '',
-    '🔥 LIQUIDATION HEATMAP',
-    liqLine(),
-    '',
-    '🌊 SENTIMEN & POSISI PASAR',
-    ...sentimentLines(sentiment),
-    ...(extremeNote ? ['', extremeNote] : []),
-    '',
-    '⛓️ ON-CHAIN METRICS',
-    ...onchainLines(onchain),
+    modeExplain,
+    ...(ta ? ['', '📊 ANALISA TEKNIKAL', ...taLines(ta)] : []),
+    ...(asset.key === 'btc' ? ['', '🔥 LIQUIDATION HEATMAP', liqLine()] : []),
+    ...(sentiment ? ['', '🌊 SENTIMEN & POSISI PASAR', ...sentimentLines(sentiment), ...(extremeNote ? ['', extremeNote] : [])] : []),
+    ...(onchain ? ['', '⛓️ ON-CHAIN METRICS', ...onchainLines(onchain)] : []),
     '',
     order.tpReasoning ? `📐 ${order.tpReasoning}` : '',
     `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
@@ -286,7 +300,7 @@ function formatAutoValid({ order, ta, sentiment, onchain }) {
     order.confirmationNote,
     '',
     '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
-    '🚨 JANGAN ALL-IN! Trading kripto resiko tinggi.',
+    '🚨 JANGAN ALL-IN! Trading resiko tinggi.',
     '⚠️ Deteksi pola ini pendekatan NUMERIK (regresi/aturan angka), bukan mata manusia -- cocokkan dulu sama chart aslinya sebelum diikuti.',
     '',
     '🍀 Semoga beruntung!',
@@ -296,28 +310,16 @@ function formatAutoValid({ order, ta, sentiment, onchain }) {
   ].join('\n');
 }
 
-function formatAutoInvalid({ ta, dailyClose, livePrice, sentiment, onchain }) {
-  const syaratLine = '📋 Syarat yang ditunggu: candle harian CLOSE breakout dari pola Bull Flag/Pennant (lanjutan tren naik) atau Falling Wedge (pembalikan ke atas) -- BUY only, sesuai riset backtest terbaru. Belum ada pola valid yang breakout hari ini.';
-  const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
+// formatAutoInvalid (22 Agu 2026, disederhanakan buat multi-aset) -- dulu 1 pesan panjang penuh
+// TA/sentimen/onchain buat BTC doang, sekarang 1 pesan RINGKAS ngerangkum status SEMUA aset
+// sekaligus (`notes` = array baris per-aset dari sniperAutoAnalysis.js) -- biar gak spam
+// beberapa pesan panjang terpisah tiap hari kalau kedua aset sama-sama belum ada sinyal.
+function formatAutoInvalid({ notes }) {
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ❌ INVALID (analisa otomatis Kaela)`,
-    'Belum ada posisi. Masih nunggu syarat terpenuhi.',
+    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ❌ BELUM ADA SINYAL (analisa otomatis Kaela)`,
+    'Belum ada posisi baru. Masih nunggu syarat terpenuhi.',
     '',
-    '📊 ANALISA TEKNIKAL',
-    ...taLines(ta),
-    `Candle harian terakhir close: ${fmt(dailyClose)} | Harga sekarang: ${fmt(livePrice)}`,
-    '',
-    '🔥 LIQUIDATION HEATMAP',
-    liqLine(),
-    '',
-    '🌊 SENTIMEN & POSISI PASAR',
-    ...sentimentLines(sentiment),
-    ...(extremeNote ? ['', extremeNote] : []),
-    '',
-    '⛓️ ON-CHAIN METRICS',
-    ...onchainLines(onchain),
-    '',
-    syaratLine,
+    ...(notes || []),
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,

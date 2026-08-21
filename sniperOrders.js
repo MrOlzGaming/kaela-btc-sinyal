@@ -47,6 +47,14 @@ function createOrder(order, date = new Date()) {
     id,
     signalId,
     status: 'pending', // pending -> floating -> closed_tp | closed_sl ; atau pending -> cancelled
+    // asset (22 Agu 2026, upgrade multi-aset -- lihat assetConfig.js) -- default 'btc' buat
+    // backward-compat sama order LAMA yang gak punya field ini (semua order sebelum upgrade ini
+    // emang BTC doang).
+    asset: order.asset || 'btc',
+    // mode (22 Agu 2026, upgrade multi-mode) -- 'sniper' (pola chart flag/wedge) atau 'fvg' (Fair
+    // Value Gap). Dipakai gate "1 posisi per mode per aset" biar bisa multi-posisi tapi terkendali.
+    mode: order.mode || 'sniper',
+    gapCreatedTime: order.gapCreatedTime ?? null, // cuma diisi kalau mode='fvg', buat exclude re-fire
     direction: order.direction,
     strategyType: order.strategyType || null,
     triggerPrice: order.triggerPrice,

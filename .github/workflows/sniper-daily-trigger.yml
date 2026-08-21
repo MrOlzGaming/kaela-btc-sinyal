@@ -51,7 +51,11 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json
+          # kaela-bankroll.json WAJIB ikut (21 Agu 2026, bug sama kayak sniper-hourly.yml) --
+          # sniperAutoAnalysis.js (checkAndApplyTopUp/sizing sinyal VALID) nulis file ini juga,
+          # kalau gak di-add jadi perubahan gak ke-stage -> `git pull --rebase` gagal terus ->
+          # push gagal 5x -> state gak pernah nyampe remote, run berikutnya ulang dari awal.
+          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-bankroll.json
           git diff --staged --quiet || git commit -m "Auto: sniper analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).

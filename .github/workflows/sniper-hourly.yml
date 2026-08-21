@@ -44,7 +44,16 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f archive.json sniper-orders.json
+          # kaela-bankroll.json WAJIB ikut (21 Agu 2026, bug KRITIS ketemu): sniperOrderMonitor.js
+          # manggil applyRealizedPnl() (partial TP/close) yang nulis file ini juga -- kalau gak
+          # ikut di-add, dia jadi PERUBAHAN GAK KE-STAGE pas commit, bikin `git pull --rebase`
+          # abis commit SELALU gagal ("cannot pull with rebase: you have unstaged changes"),
+          # push retry 5x gagal semua, sniper-orders.json (termasuk partialDone:true) GAK PERNAH
+          # nyampe remote. Run berikutnya checkout ulang state LAMA (partialDone masih false),
+          # deteksi ulang target tahap 1 "kena" lagi, kirim WA "TARGET TAHAP 1 KENA" LAGI -- infinite
+          # loop WA duplikat sampai kapanpun tanpa fix ini (ketemu dari laporan Olan: WA "jual
+          # separuh" kekirim berkali-kali tapi posisi beneran gak pernah keupdate).
+          git add -f archive.json sniper-orders.json kaela-bankroll.json
           git diff --staged --quiet || git commit -m "Auto: sniper order monitor $(date -u +%Y-%m-%dT%H:%M)"
           # Retry pull+push -- kalau push gagal dan gak diulang, sniper-orders.json GAK MAJU,
           # run berikutnya bisa anggap order yang UDAH ditrigger/ditutup sebagai belum, kirim WA

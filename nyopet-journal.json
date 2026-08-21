@@ -1,5 +1,17 @@
 {
-  "openPosition": null,
+  "openPosition": {
+    "id": "nyopet-1787299376611",
+    "direction": "short",
+    "entryPrice": 75,
+    "liqPrice": 82,
+    "marginUsd": 80,
+    "sizeUsd": 800,
+    "leverage": 10,
+    "profit100Notified": false,
+    "warning80Notified": false,
+    "openedAt": "2026-08-21T08:02:56.611Z",
+    "notes": "Short Squeeze!"
+  },
   "trades": [
     {
       "id": "nyopet-1786964458193",

@@ -36,6 +36,20 @@ async function fetchDailyCandles(limit) {
   return raw.map(parseCandle);
 }
 
+// Bug ketemu 21 Agu 2026 (lapor Olan: "harga yang dilaporkan hari ini malah closing hari
+// kemarin"): "Harga sekarang" di pesan grup dulu pakai close candle HARIAN TERAKHIR yang udah
+// closed -- pas cron jalan 07:03 WITA (23:03 UTC), candle harian hari itu (UTC) BELUM closed
+// (baru closed jam 00:00 UTC berikutnya), jadi "candle terakhir yang udah closed" itu candle
+// KEMARIN (UTC) -- bisa sampai ~23 jam basi, padahal labelnya "sekarang". Fix: harga sekarang
+// WAJIB dari ticker LIVE (sama endpoint kayak monitor.js), bukan candle close -- candle harian
+// TETAP dipakai buat titik pembanding (kemarin/minggu/bulan/tahun lalu), itu emang harus fixed
+// closing price biar perbandingan adil, cuma "harga SEKARANG"-nya yang harus live.
+async function fetchLivePrice() {
+  const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT');
+  const data = await res.json();
+  return parseFloat(data.price);
+}
+
 function closeDaysAgo(candles, daysAgo) {
   const idx = candles.length - 1 - daysAgo;
   return idx >= 0 ? candles[idx].close : null;
@@ -54,7 +68,7 @@ async function main() {
     return;
   }
 
-  const priceToday = closed[closed.length - 1].close;
+  const priceToday = await fetchLivePrice();
   const priceYesterday = closeDaysAgo(closed, 1);
   const priceLastWeek = closeDaysAgo(closed, 7);
   const priceLastMonth = closeDaysAgo(closed, 30);

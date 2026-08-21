@@ -1,7 +1,14 @@
 {
-  "balance": 100,
+  "balance": 111.3637806958881,
   "startedAt": "2026-08-14T16:11:55.055Z",
   "lastTopUpMonthKey": 24319,
   "topUpHistory": [],
-  "pnlHistory": []
+  "pnlHistory": [
+    {
+      "date": "2026-08-21T14:23:47.788Z",
+      "pnlUsd": 11.363780695888098,
+      "label": "partial_tahap1",
+      "balanceAfter": 111.3637806958881
+    }
+  ]
 }

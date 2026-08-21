@@ -86,7 +86,10 @@ async function fetchLivePrice(symbol) {
   return parseFloat(data.price);
 }
 
-const PATTERN_LABEL = { flag_bull: 'Bull Flag/Pennant', flag_bear: 'Bear Flag/Pennant', wedge_falling: 'Falling Wedge', wedge_rising: 'Rising Wedge', fvg_bounce: 'Fair Value Gap (pantulan)' };
+// PATTERN_LABEL (22 Agu 2026, dipisah flag vs pennant -- keduanya beda bentuk konsolidasi,
+// dulu digabung jadi 1 label krn deteksinya emang belum bisa bedain, sekarang udah bisa
+// via classifyConsolidationShape() di chartPatterns.js).
+const PATTERN_LABEL = { flag_bull: 'Bull Flag', pennant_bull: 'Bullish Pennant', flag_bear: 'Bear Flag', pennant_bear: 'Bearish Pennant', wedge_falling: 'Falling Wedge', wedge_rising: 'Rising Wedge', fvg_bounce: 'Fair Value Gap (pantulan)' };
 
 async function main() {
   const now = new Date();

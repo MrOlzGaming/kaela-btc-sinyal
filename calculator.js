@@ -16,6 +16,14 @@
 //   Modal $99.999  -> Exposure 0,75x
 //   Modal $100.000 -> Exposure 0,375x
 
+// Batas keras leverage (22 Agu 2026, permintaan Olan: "leverage max 50 aja, kalau nyawa 2% ya
+// leverage 50") -- dulu floor(100/nyawaPct) TANPA batas atas, jadi kalau nyawa kebetulan super
+// tipis (misal <2%), leverage bisa meledak (100x, 200x, dst). MAX_LEVERAGE bikin nyawa <2% tetap
+// dibatasin leverage 50x -- nilaiPosisi (exposure) TETAP SAMA, cuma margin-nya jadi lebih gede
+// (margin = nilaiPosisi/leverage, leverage dibatasin kecil = margin lebih gede) -- jaring
+// pengaman marginPct 20% di caller (sniperAutoAnalysis.js dkk) tetap jalan normal di atas ini.
+const MAX_LEVERAGE = 50;
+
 function getExposure(modal) {
   if (modal < 1) modal = 1;
   const magnitude = Math.floor(Math.log10(modal));
@@ -44,7 +52,7 @@ function hitung({ modal, nyawa, entry, stopLoss }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
   const exposure = getExposure(modal);
   const nilaiPosisi = modal * exposure;
-  const leverage = Math.floor(100 / nyawaPct);
+  const leverage = Math.min(MAX_LEVERAGE, Math.floor(100 / nyawaPct));
   const margin = nilaiPosisi / leverage;
   const marginPct = margin / modal * 100;
   const warning = assessMarginRisk(marginPct);
@@ -61,7 +69,7 @@ function hitung({ modal, nyawa, entry, stopLoss }) {
 // keseimbangan return-vs-drawdown.
 function hitungFixedRisk({ modal, targetRiskPct, nyawa, entry, stopLoss }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
-  const leverage = Math.max(1, Math.floor(100 / nyawaPct));
+  const leverage = Math.max(1, Math.min(MAX_LEVERAGE, Math.floor(100 / nyawaPct)));
   const margin = modal * (targetRiskPct / 100);
   const nilaiPosisi = margin * leverage;
   const exposure = nilaiPosisi / modal;
@@ -78,7 +86,7 @@ function format(modal, hasil) {
     (hasil.warning ? `\n\n⚠️ ${hasil.warning.message}` : '');
 }
 
-module.exports = { getExposure, nyawaFromEntrySL, hitung, hitungFixedRisk, format };
+module.exports = { getExposure, nyawaFromEntrySL, hitung, hitungFixedRisk, format, MAX_LEVERAGE };
 
 if (require.main === module) {
   console.log(format(50, hitung({ modal: 50, entry: 65500, stopLoss: 64500 })));

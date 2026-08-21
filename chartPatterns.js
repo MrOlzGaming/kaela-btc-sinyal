@@ -25,6 +25,24 @@ function linearRegression(points) {
   return { slope, intercept };
 }
 
+// Bedain FLAG (kanal konsolidasi kira-kira SEJAJAR/rectangular) dari PENNANT (segitiga kecil
+// yang MENGERUCUT) -- 22 Agu 2026, ketemu perlu krn kode lama nyamain dua-duanya jadi label
+// gabungan "Flag/Pennant" walau bentuknya beda. Cara paling robust buat window PENDEK (3-15
+// candle, kadang kurang buat regresi titik swing yang layak): bandingin lebar (high-low) SEPARUH
+// AWAL window vs SEPARUH AKHIR -- kalau separuh akhir MENGERUCUT signifikan (rasio <=0,6), itu
+// pennant (segitiga makin sempit ke ujung); kalau lebarnya relatif konsisten, itu flag.
+function classifyConsolidationShape(flagWindow) {
+  const mid = Math.floor(flagWindow.length / 2);
+  if (mid < 1) return 'flag';
+  const firstHalf = flagWindow.slice(0, mid);
+  const secondHalf = flagWindow.slice(mid);
+  const rangeOf = (w) => Math.max(...w.map((c) => c.high)) - Math.min(...w.map((c) => c.low));
+  const firstRange = rangeOf(firstHalf);
+  const secondRange = rangeOf(secondHalf);
+  if (firstRange <= 0) return 'flag';
+  return (secondRange / firstRange) <= 0.6 ? 'pennant' : 'flag';
+}
+
 // SCAN rentang panjang tiang & bendera yang FLEKSIBEL -- pola asli di pasar gak selalu persis
 // N hari, perlu discan beberapa kemungkinan panjang tiap hari.
 function detectFlag(daily, i, opts = {}) {
@@ -38,6 +56,7 @@ function detectFlag(daily, i, opts = {}) {
     const flagLow = Math.min(...flagWindow.map((c) => c.low));
     const flagRangePct = (flagHigh - flagLow) / flagLow * 100;
     if (flagRangePct > flagMaxRangePct) continue;
+    const shape = classifyConsolidationShape(flagWindow);
 
     for (let poleLen = poleLookbackRange[0]; poleLen <= poleLookbackRange[1]; poleLen++) {
       const poleStart = flagStart - poleLen;
@@ -46,10 +65,10 @@ function detectFlag(daily, i, opts = {}) {
       const poleClosePrice = daily[flagStart].close;
       const poleMovePct = (poleClosePrice - poleOpenPrice) / poleOpenPrice * 100;
       if (poleMovePct >= poleMinMovePct && flagHigh <= poleClosePrice * 1.02) {
-        return { type: 'bull', flagHigh, flagLow, poleMovePct, flagLen, poleLen };
+        return { type: 'bull', shape, flagHigh, flagLow, poleMovePct, flagLen, poleLen };
       }
       if (poleMovePct <= -poleMinMovePct && flagLow >= poleClosePrice * 0.98) {
-        return { type: 'bear', flagHigh, flagLow, poleMovePct, flagLen, poleLen };
+        return { type: 'bear', shape, flagHigh, flagLow, poleMovePct, flagLen, poleLen };
       }
     }
   }
@@ -101,11 +120,13 @@ function detectPatternSignal(daily, i, opts = {}) {
   const lastPrice = daily[i].close;
 
   const flag = detectFlag(daily, i, { ...opts, poleMinMovePct });
+  // patternType sekarang BEDA buat flag vs pennant (22 Agu 2026) -- shape ditentukan
+  // classifyConsolidationShape() di detectFlag(), bukan lagi gabungan "flag_bull" doang.
   if (flag && flag.type === 'bull' && lastPrice > flag.flagHigh) {
-    return { direction: 'buy', sl: flag.flagLow * (1 - slBufferPct / 100), patternType: 'flag_bull', pattern: flag };
+    return { direction: 'buy', sl: flag.flagLow * (1 - slBufferPct / 100), patternType: flag.shape === 'pennant' ? 'pennant_bull' : 'flag_bull', pattern: flag };
   }
   if (flag && flag.type === 'bear' && lastPrice < flag.flagLow && allowShort) {
-    return { direction: 'sell', sl: flag.flagHigh * (1 + slBufferPct / 100), patternType: 'flag_bear', pattern: flag };
+    return { direction: 'sell', sl: flag.flagHigh * (1 + slBufferPct / 100), patternType: flag.shape === 'pennant' ? 'pennant_bear' : 'flag_bear', pattern: flag };
   }
 
   const wedge = detectWedge(daily, i, opts);

@@ -6,6 +6,9 @@
 const {
   generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly,
 } = require('./groupReport');
+const {
+  generateGoldDaily, generateGoldWeekly, generateGoldMonthly, generateGoldYearly,
+} = require('./goldGroupReport');
 const { sendWhatsApp } = require('./fonnte');
 const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
@@ -30,8 +33,10 @@ function parseCandle(raw) {
   return { closeTime: raw[6], close: parseFloat(raw[4]) };
 }
 
-async function fetchDailyCandles(limit) {
-  const res = await fetchWithRetry(`${BASE_URL}?symbol=BTCUSDT&interval=1d&limit=${limit}`);
+// symbol (22 Agu 2026, upgrade laporan Emas) -- dulu hardcode BTCUSDT, sekarang parameter biar
+// bisa dipanggil buat PAXGUSDT (Emas) juga, satu fungsi dipakai bareng.
+async function fetchDailyCandles(symbol, limit) {
+  const res = await fetchWithRetry(`${BASE_URL}?symbol=${symbol}&interval=1d&limit=${limit}`);
   const raw = await res.json();
   return raw.map(parseCandle);
 }
@@ -44,8 +49,8 @@ async function fetchDailyCandles(limit) {
 // WAJIB dari ticker LIVE (sama endpoint kayak monitor.js), bukan candle close -- candle harian
 // TETAP dipakai buat titik pembanding (kemarin/minggu/bulan/tahun lalu), itu emang harus fixed
 // closing price biar perbandingan adil, cuma "harga SEKARANG"-nya yang harus live.
-async function fetchLivePrice() {
-  const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT');
+async function fetchLivePrice(symbol) {
+  const res = await fetchWithRetry(`https://data-api.binance.vision/api/v3/ticker/price?symbol=${symbol}`);
   const data = await res.json();
   return parseFloat(data.price);
 }
@@ -60,19 +65,35 @@ async function main() {
   const nowMs = now.getTime();
 
   // limit 400 candle harian (~13 bulan) cukup buat perbandingan kemarin/minggu/bulan/tahun lalu
-  const raw = await fetchDailyCandles(400);
+  const raw = await fetchDailyCandles('BTCUSDT', 400);
   const closed = raw.filter((c) => c.closeTime <= nowMs);
 
   if (closed.length < 8) {
-    console.log('[GroupMonitor] Data harian belum cukup, skip siklus ini.');
+    console.log('[GroupMonitor] Data harian BTC belum cukup, skip siklus ini.');
     return;
   }
 
-  const priceToday = await fetchLivePrice();
+  const priceToday = await fetchLivePrice('BTCUSDT');
   const priceYesterday = closeDaysAgo(closed, 1);
   const priceLastWeek = closeDaysAgo(closed, 7);
   const priceLastMonth = closeDaysAgo(closed, 30);
   const priceLastYear = closeDaysAgo(closed, 365);
+
+  // Emas/XAU (22 Agu 2026, permintaan Olan -- "biar gak terkesan bisu soal Emas") -- PAXGUSDT
+  // baru ada di Binance sejak Des 2025, jadi limit histori LEBIH PENDEK dari BTC (gak semua
+  // perbandingan (mis. setahun lalu) bakal selalu ada, null-safe kalau datanya belum cukup).
+  let goldClosed = [];
+  try {
+    const goldRaw = await fetchDailyCandles('PAXGUSDT', 400);
+    goldClosed = goldRaw.filter((c) => c.closeTime <= nowMs);
+  } catch (e) {
+    console.log('[GroupMonitor] Gagal ambil data Emas (dilewatin):', e.message);
+  }
+  const goldPriceToday = goldClosed.length > 0 ? await fetchLivePrice('PAXGUSDT') : null;
+  const goldPriceYesterday = closeDaysAgo(goldClosed, 1);
+  const goldPriceLastWeek = closeDaysAgo(goldClosed, 7);
+  const goldPriceLastMonth = closeDaysAgo(goldClosed, 30);
+  const goldPriceLastYear = closeDaysAgo(goldClosed, 365);
 
   // Hari/tanggal/bulan WAJIB dihitung dari kalender WITA (toLocal), BUKAN UTC mentah --
   // cron GitHub Actions jalan di UTC, jam 23:00 UTC hari-H = 07:00 WITA hari BERIKUTNYA,
@@ -92,6 +113,21 @@ async function main() {
   }
   if (local.getUTCMonth() === 0 && local.getUTCDate() === 1 && priceLastYear !== null) { // 1 Januari (WITA)
     items.push({ type: 'report-yearly', content: generateGroupYearly(now, priceToday, priceLastYear) });
+  }
+
+  // Laporan Emas -- jadwal SAMA kayak BTC (harian tiap hari, mingguan Senin, dst), key `type`
+  // BEDA (suffix -gold) biar dedup archive.js gak ketuker sama laporan BTC.
+  if (goldPriceToday !== null && goldPriceYesterday !== null) {
+    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday) });
+  }
+  if (local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null) {
+    items.push({ type: 'report-weekly-gold', content: generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek) });
+  }
+  if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {
+    items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth) });
+  }
+  if (local.getUTCMonth() === 0 && local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastYear !== null) {
+    items.push({ type: 'report-yearly-gold', content: generateGoldYearly(now, goldPriceToday, goldPriceLastYear) });
   }
 
   for (const item of items) {

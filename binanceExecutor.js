@@ -21,9 +21,12 @@ function loadSecrets() {
   }
 }
 
+// demo-fapi.binance.com (22 Agu 2026) -- Binance "Demo Trading" resmi, TERBARU, nempel ke akun
+// asli (bukan testnet.binancefuture.com yang lama/API key terpisah). Key yang di-generate dari
+// demo.binance.com/.../api-management CUMA jalan di endpoint ini, bukan endpoint testnet lama.
 function baseUrl() {
   const { isTestnet } = require('./killSwitch');
-  return isTestnet() ? 'https://testnet.binancefuture.com' : 'https://fapi.binance.com';
+  return isTestnet() ? 'https://demo-fapi.binance.com' : 'https://fapi.binance.com';
 }
 
 function sign(queryString, secret) {

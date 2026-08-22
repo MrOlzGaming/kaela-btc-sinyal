@@ -1,5 +1,5 @@
 {
-  "enabled": false,
-  "testnet": false,
+  "enabled": true,
+  "testnet": true,
   "_note": "enabled=false berarti Kaela GAK PERNAH kirim order real, apapun kondisinya -- ubah ke true HANYA kalau Olan udah setup BINANCE_API_KEY/BINANCE_API_SECRET dan siap. testnet=true pakai duit PALSU (testnet.binancefuture.com), testnet=false pakai duit ASLI -- dua saklar TERPISAH sengaja, biar transisi ke uang asli selalu keputusan sadar bukan kecelakaan."
 }

@@ -345,10 +345,17 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
 // TA/sentimen/onchain buat BTC doang, sekarang 1 pesan RINGKAS ngerangkum status SEMUA aset
 // sekaligus (`notes` = array baris per-aset dari sniperAutoAnalysis.js) -- biar gak spam
 // beberapa pesan panjang terpisah tiap hari kalau kedua aset sama-sama belum ada sinyal.
+// Header/intro beda kalau ADA ancang-ancang lagi diawasi (22 Agu 2026, patternWatchlist.js) --
+// biar gak kerasa "gak ada apa-apa" pas sebenernya ada pola lagi kebentuk, cuma belum konfirmasi.
 function formatAutoInvalid({ notes }) {
+  const hasWatch = (notes || []).some((n) => n.includes('ANCANG-ANCANG'));
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ❌ BELUM ADA SINYAL (analisa otomatis Kaela)`,
-    'Belum ada posisi baru. Masih nunggu syarat terpenuhi.',
+    hasWatch
+      ? `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — 👀 ANCANG-ANCANG (analisa otomatis Kaela)`
+      : `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ❌ BELUM ADA SINYAL (analisa otomatis Kaela)`,
+    hasWatch
+      ? 'Belum ada posisi baru, TAPI ada pola lagi diawasi -- lihat detail di bawah.'
+      : 'Belum ada posisi baru. Masih nunggu syarat terpenuhi.',
     '',
     ...(notes || []),
     '',

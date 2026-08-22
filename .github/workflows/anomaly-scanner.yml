@@ -1,0 +1,53 @@
+name: Anomaly Scanner (harian)
+
+on:
+  schedule:
+    - cron: '31 22 * * *' # 22:31 UTC = 06:31 WITA (sebelum laporan harian 07:03, biar data hari itu udah kerekam)
+  workflow_dispatch: {}
+
+concurrency:
+  group: anomaly-scanner
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Scan anomali indikator (anomalyScanner.js)
+        run: node anomalyScanner.js
+
+      - name: Commit & push anomaly-history.json + archive.json (WAJIB tiap run)
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f anomaly-history.json archive.json
+          git diff --staged --quiet || git commit -m "Auto: anomaly scanner $(date -u +%Y-%m-%dT%H:%M)"
+          for i in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase origin master && git push && exit 0
+            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+            sleep 5
+          done
+          echo "::error::Gagal push anomaly-history.json setelah 5x percobaan."
+          exit 1
+
+      - name: Purge jsDelivr cache
+        if: success()
+        run: curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/archive.json" || true

@@ -22,6 +22,7 @@ const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
 const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine, getTrackRecordSummary } = require('./trackRecord');
 const { fetchAdvancedMacroContext, classifyFedRateTrend, classifyCreditSpreadTrend } = require('./advancedMacro');
+const { checkGoldCotPriceDivergence, checkCalmBeforeStorm, checkPriceNuplDivergence, formatDivergenceLines } = require('./divergenceDetector');
 const fs = require('fs');
 const path = require('path');
 
@@ -200,9 +201,18 @@ async function main() {
       creditSpreadTrend: advancedMacro?.creditSpread ? classifyCreditSpreadTrend(advancedMacro.creditSpread) : null,
     });
     logVerdict('btc', now, conviction.score, conviction.verdict, priceToday);
+    // Divergence Detector (22 Agu 2026, lihat divergenceDetector.js) -- pakai data yang UDAH
+    // di-fetch di atas, gak nambah request. "Tenang di permukaan, stres di bawah" (DVOL+Credit
+    // Spread naik bareng walau Conviction gak bearish) + harga naik tapi NUPL gak ngonfirmasi.
+    const btcPriceChangePct = ((priceToday - priceLastWeek) / priceLastWeek) * 100;
+    const btcDivergences = [
+      checkCalmBeforeStorm(conviction.score, advancedMacro?.dvol, advancedMacro?.creditSpread),
+      checkPriceNuplDivergence(btcPriceChangePct, nupl),
+    ].filter(Boolean);
     const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime, advancedMacro: advancedMacro ? { dvol: advancedMacro.dvol, yieldCurve: advancedMacro.yieldCurve } : null })
       + '\n\n' + formatConvictionLines(conviction).join('\n')
-      + '\n' + formatTrackRecordLine('btc');
+      + '\n' + formatTrackRecordLine('btc')
+      + formatDivergenceLines(btcDivergences).join('\n');
     items.push({ type: 'report-weekly', content: weeklyMsg });
     dashboardData = dashboardData || {};
     dashboardData.btc = {
@@ -231,9 +241,12 @@ async function main() {
       fedRateTrend: advancedMacro?.fedRate ? classifyFedRateTrend(advancedMacro.fedRate) : null,
     });
     logVerdict('xau', now, conviction.score, conviction.verdict, goldPriceToday);
+    const goldPriceChangePct = ((goldPriceToday - goldPriceLastWeek) / goldPriceLastWeek) * 100;
+    const goldDivergences = [checkGoldCotPriceDivergence(cot, goldPriceChangePct)].filter(Boolean);
     const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null })
       + '\n\n' + formatConvictionLines(conviction).join('\n')
-      + '\n' + formatTrackRecordLine('xau');
+      + '\n' + formatTrackRecordLine('xau')
+      + formatDivergenceLines(goldDivergences).join('\n');
     items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });
     dashboardData = dashboardData || {};
     dashboardData.xau = {

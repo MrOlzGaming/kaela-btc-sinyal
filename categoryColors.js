@@ -15,6 +15,7 @@ const CATEGORY_COLOR = {
   econ: { emoji: '⬜', hex: '#8b949e', label: 'Jadwal Ekonomi' },
   priceAlert: { emoji: '🟫', hex: '#a16207', label: 'Pergerakan Harga' },
   squeeze: { emoji: '⬛', hex: '#111827', label: 'Squeeze Alert' },
+  anomaly: { emoji: '🟣', hex: '#7c3aed', label: 'Anomaly Scanner' }, // ungu-indigo, beda dari 🟪 laporan (persegi) biar gak ketuker
 };
 
 // type archive.json -> kategori (dipakai buildDashboard.js buat nentuin warna border kartu)
@@ -26,6 +27,7 @@ function categoryOfType(type) {
   if (type === 'econ-calendar') return 'econ';
   if (type === 'price-alert') return 'priceAlert';
   if (type === 'squeeze') return 'squeeze';
+  if (type === 'anomaly') return 'anomaly';
   return null;
 }
 

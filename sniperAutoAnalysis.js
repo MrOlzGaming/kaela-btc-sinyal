@@ -42,6 +42,7 @@ const { analyzeSentiment } = require('./marketSentiment');
 const { fetchTradeMetrics } = require('./onchainMetrics');
 const { ASSETS } = require('./assetConfig');
 const { isBtcBearWindow } = require('./halvingBearWindow');
+const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
 
 const MAX_MARGIN_PCT = 20;
 const MAX_NYAWA_PCT = 20;
@@ -181,20 +182,37 @@ async function main() {
     const dailyClose = daily[daily.length - 1].close;
     const ta = assetKey === 'btc' ? await analyze(assetCfg.symbol) : null;
 
+    const fvgOrdersThisAsset = [...allActive, ...closedOrders].filter((o) => o.asset === assetKey && o.mode === 'fvg' && o.gapCreatedTime);
+    const usedGapTimes = new Set(fvgOrdersThisAsset.map((o) => o.gapCreatedTime));
+
     const candidates = [];
     if (!hasSniperOpen) {
       const sig = detectPatternSignal(daily, daily.length - 1, { allowShort: false });
       if (sig) candidates.push({ mode: 'sniper', direction: sig.direction, sl: sig.sl, patternType: sig.patternType });
     }
     if (!hasFvgOpen) {
-      const fvgOrdersThisAsset = [...allActive, ...closedOrders].filter((o) => o.asset === assetKey && o.mode === 'fvg' && o.gapCreatedTime);
-      const usedGapTimes = new Set(fvgOrdersThisAsset.map((o) => o.gapCreatedTime));
       const sig = detectFvgSignal(daily, daily.length - 1, { usedGapTimes });
       if (sig) candidates.push({ mode: 'fvg', direction: sig.direction, sl: sig.sl, patternType: sig.patternType, gapCreatedTime: sig.gapCreatedTime, gapTop: sig.gapTop, gapBottom: sig.gapBottom });
     }
 
     if (candidates.length === 0) {
-      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: belum ada pola Sniper/FVG yang breakout hari ini.`);
+      // Ancang-ancang (22 Agu 2026, lihat patternWatchlist.js) -- belum breakout, tapi kalau ada
+      // pola/FVG lagi KEBENTUK, info itu duluan (bukan sinyal, gak buka posisi apapun) biar Olan
+      // gak kaget pas beneran valid besok-besok.
+      const watchNotes = [];
+      if (!hasSniperOpen) {
+        const watch = detectWatchingPattern(daily, { allowShort: false });
+        if (watch) watchNotes.push(`👀 ${assetCfg.emoji} ${assetLabelTag} (ANCANG-ANCANG): ${watch.note}`);
+      }
+      if (!hasFvgOpen) {
+        const watch = detectWatchingFvg(daily, { usedGapTimes });
+        if (watch) watchNotes.push(`👀 ${assetCfg.emoji} ${assetLabelTag} (ANCANG-ANCANG): ${watch.note}`);
+      }
+      if (watchNotes.length > 0) {
+        invalidNotes.push(...watchNotes);
+      } else {
+        invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: belum ada pola Sniper/FVG yang breakout hari ini.`);
+      }
       continue;
     }
 

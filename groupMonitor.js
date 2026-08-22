@@ -20,6 +20,7 @@ const { fetchBtcNasdaqRegime, fetchGoldDxyRegime } = require('./regimeTracker');
 const { fetchFearGreed } = require('./marketSentiment');
 const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
+const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine } = require('./trackRecord');
 const fs = require('fs');
 const path = require('path');
 
@@ -164,6 +165,11 @@ async function main() {
   const willSendWeekly = local.getUTCDay() === 1 && priceLastWeek !== null;
   const onchain = (priceYesterday !== null || willSendWeekly) ? await safeOnchain() : null;
 
+  // Nilai verdict Conviction Score LAMA yang udah cukup umur (>=7 hari) pakai harga SEKARANG,
+  // SEBELUM catat verdict baru -- urutan ini penting biar verdict yang barusan dibuat gak
+  // ketilep langsung ke-grade pas run yang sama. 1x panggil buat DUA aset sekaligus.
+  if (willSendWeekly) gradeMaturedVerdicts(now, { btc: priceToday, xau: goldPriceToday });
+
   if (priceYesterday !== null) {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
   }
@@ -179,7 +185,10 @@ async function main() {
       squeezeState: readSqueezeState(),
       halvingPhase: getWindowPhase(now),
     });
-    const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime }) + '\n\n' + formatConvictionLines(conviction).join('\n');
+    logVerdict('btc', now, conviction.score, conviction.verdict, priceToday);
+    const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime })
+      + '\n\n' + formatConvictionLines(conviction).join('\n')
+      + '\n' + formatTrackRecordLine('btc');
     items.push({ type: 'report-weekly', content: weeklyMsg });
   }
   if (local.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1 (WITA)
@@ -200,7 +209,10 @@ async function main() {
     const [macro, cot, regime] = await Promise.all([safeMacro(), safeCot(), safeRegime(fetchGoldDxyRegime, 'Emas-DXY')]);
     const goldRsi = rsi(goldClosed.map((c) => c.close), 14);
     const conviction = computeGoldConviction({ rsi: goldRsi, dxyTrend: macro?.dxy?.trend || null, realYieldTrend: macro?.realYield?.trend || null, cot });
-    const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime }) + '\n\n' + formatConvictionLines(conviction).join('\n');
+    logVerdict('xau', now, conviction.score, conviction.verdict, goldPriceToday);
+    const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime })
+      + '\n\n' + formatConvictionLines(conviction).join('\n')
+      + '\n' + formatTrackRecordLine('xau');
     items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });
   }
   if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {

@@ -1,16 +1,12 @@
-name: Kaela News (harian)
+name: Kaela News (Sore)
 
 on:
   schedule:
-    # 01:07 (bukan 01:00 persis) -- GitHub sendiri warning jadwal PERSIS di jam bulat rawan
-    # delay/skip karena rame (banyak workflow lain juga jadwalnya bulat jam). Geser dikit dari
-    # jam bulat itu mitigasi resmi yang direkomendasikan. Ketauan 9 Agu 2026: workflow ini belum
-    # pernah kepicu sendiri via cron sejak dibuat, padahal kodenya sendiri sukses pas ditrigger manual.
-    - cron: '7 1 * * *' # 01:07 UTC = 09:07 WITA
+    - cron: '19 10 * * *' # 10:19 UTC = 18:19 WITA
   workflow_dispatch: {}
 
 concurrency:
-  group: news-daily
+  group: news-sore
   cancel-in-progress: false
 
 permissions:
@@ -34,20 +30,16 @@ jobs:
           };
           EOF
 
-      - name: Cari & kirim berita (newsMonitor.js)
-        run: node newsMonitor.js
+      - name: Cari & kirim berita edisi Sore (newsMonitor.js)
+        run: node newsMonitor.js sore
 
-      # 15 Agu 2026: buildDashboard.js DICABUT -- entry news gak pernah dirender ke HTML
-      # (dashboard/jurnal cuma tampilin tipe 'sniper'), jadi rebuild di sini emang gak pernah
-      # ngubah apapun secara visual. Commit archive.json aja udah cukup buat jejak riwayat.
       - name: Commit & push archive
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
           git add -f archive.json
-          git diff --staged --quiet || git commit -m "Auto: berita harian $(date -u +%Y-%m-%d)"
+          git diff --staged --quiet || git commit -m "Auto: berita sore $(date -u +%Y-%m-%d)"
           for i in 1 2 3 4 5; do
-            # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
             git rebase --abort 2>/dev/null || true
             git pull --rebase origin master && git push && exit 0
             echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
@@ -56,7 +48,6 @@ jobs:
           echo "::error::Gagal push setelah 5x percobaan."
           exit 1
 
-      # Purge jsDelivr (17 Agu 2026) -- lihat catatan sama di daily-report.yml/sniper-daily-trigger.yml.
       - name: Purge jsDelivr cache
         if: success()
         run: curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/archive.json" || true

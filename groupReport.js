@@ -92,12 +92,19 @@ function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   return lines.join('\n');
 }
 
-function generateGroupWeekly(now, priceToday, priceLastWeek) {
+// Regime korelasi BTC-vs-Nasdaq (22 Agu 2026, lihat regimeTracker.js) -- opsional/best-effort.
+function regimeLines(regime) {
+  if (!regime) return [];
+  return [`📊 Regime (90 hari): korelasi ke Nasdaq ${regime.corr90.toFixed(2)} (${regime.label90}) -- ${regime.label90.includes('positif') ? 'BTC lagi condong gerak kayak aset risiko/saham teknologi' : regime.label90.includes('negatif') ? 'BTC lagi gerak BERLAWANAN Nasdaq' : 'BTC lagi decoupled/independen dari saham'}`];
+}
+
+function generateGroupWeekly(now, priceToday, priceLastWeek, opts = {}) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
     `${CATEGORY_COLOR.laporan.emoji} 📆 Laporan Mingguan BTC — minggu ${localDateKey(now)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
     halvingLine(now),
+    ...regimeLines(opts.regime),
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

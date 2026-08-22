@@ -29,6 +29,12 @@ function cotLines(cot) {
   return [`🏦 Smart Money (COT, per ${cot.date}): ${cot.label}`];
 }
 
+// Regime korelasi Emas-vs-DXY (22 Agu 2026, lihat regimeTracker.js) -- opsional/best-effort.
+function regimeLines(regime) {
+  if (!regime) return [];
+  return [`📊 Regime (90 hari): korelasi ke DXY ${regime.corr90.toFixed(2)} (${regime.label90}) -- ${regime.label90.includes('negatif') ? 'Emas lagi gerak "tekstbuk" (berlawanan dolar)' : 'Emas lagi didorong faktor LAIN (bukan cuma dolar -- misal pembelian bank sentral/safe-haven)'}`];
+}
+
 function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
   const change = pctChange(priceToday, priceYesterday);
   return [
@@ -47,6 +53,7 @@ function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
     ...macroLines(opts.macro),
     ...cotLines(opts.cot),
+    ...regimeLines(opts.regime),
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

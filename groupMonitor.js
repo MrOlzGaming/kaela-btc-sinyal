@@ -16,6 +16,7 @@ const { toLocal } = require('./config');
 const { fetchCycleMetrics } = require('./onchainMetrics');
 const { fetchMacroContext } = require('./macroData');
 const { fetchGoldCotContext } = require('./cotReport');
+const { fetchBtcNasdaqRegime, fetchGoldDxyRegime } = require('./regimeTracker');
 
 async function safeOnchain() {
   try {
@@ -42,6 +43,15 @@ async function safeCot() {
     return await fetchGoldCotContext();
   } catch (e) {
     console.log('[GroupMonitor] COT Report Emas (CFTC) gagal diambil (dilewatin):', e.message);
+    return null;
+  }
+}
+
+async function safeRegime(fetchFn, label) {
+  try {
+    return await fetchFn();
+  } catch (e) {
+    console.log(`[GroupMonitor] Regime ${label} gagal diambil (dilewatin):`, e.message);
     return null;
   }
 }
@@ -128,7 +138,8 @@ async function main() {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
   }
   if (local.getUTCDay() === 1 && priceLastWeek !== null) { // Senin (WITA)
-    items.push({ type: 'report-weekly', content: generateGroupWeekly(now, priceToday, priceLastWeek) });
+    const regime = await safeRegime(fetchBtcNasdaqRegime, 'BTC-Nasdaq');
+    items.push({ type: 'report-weekly', content: generateGroupWeekly(now, priceToday, priceLastWeek, { regime }) });
   }
   if (local.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1 (WITA)
     items.push({ type: 'report-monthly', content: generateGroupMonthly(now, priceToday, priceLastMonth) });
@@ -145,8 +156,8 @@ async function main() {
     items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro }) });
   }
   if (local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null) {
-    const [macro, cot] = await Promise.all([safeMacro(), safeCot()]);
-    items.push({ type: 'report-weekly-gold', content: generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot }) });
+    const [macro, cot, regime] = await Promise.all([safeMacro(), safeCot(), safeRegime(fetchGoldDxyRegime, 'Emas-DXY')]);
+    items.push({ type: 'report-weekly-gold', content: generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime }) });
   }
   if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {
     items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth) });

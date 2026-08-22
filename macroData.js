@@ -14,10 +14,11 @@ const { fetchWithRetry } = require('./httpRetry');
 
 const FRED_CSV_BASE = 'https://fred.stlouisfed.org/graph/fredgraph.csv';
 
-// Balikin { date, value } TERBARU + SEBELUMNYA (buat hitung perubahan) dari 1 seri FRED.
-// CSV formatnya: header lalu baris "YYYY-MM-DD,value" -- kadang value "." (hari libur/blm rilis),
-// difilter biar cuma ambil baris valid.
-async function fetchFredSeries(seriesId) {
+// Semua baris { date, value } valid dari 1 seri FRED, TERLAMA->TERBARU. CSV formatnya: header
+// lalu baris "YYYY-MM-DD,value" -- kadang value "." (hari libur/blm rilis), difilter biar cuma
+// ambil baris valid. Diekspos terpisah (bukan cuma latest/prev) buat kebutuhan korelasi rolling
+// (regimeTracker.js) yang butuh histori penuh, bukan cuma 2 titik terakhir.
+async function fetchFredSeriesRows(seriesId) {
   const res = await fetchWithRetry(`${FRED_CSV_BASE}?id=${seriesId}`);
   const text = await res.text();
   const rows = text.trim().split('\n').slice(1) // buang header
@@ -27,6 +28,12 @@ async function fetchFredSeries(seriesId) {
     })
     .filter((r) => !isNaN(r.value));
   if (rows.length === 0) throw new Error(`FRED ${seriesId}: gak ada data valid`);
+  return rows;
+}
+
+// Balikin { date, value } TERBARU + SEBELUMNYA (buat hitung perubahan) dari 1 seri FRED.
+async function fetchFredSeries(seriesId) {
+  const rows = await fetchFredSeriesRows(seriesId);
   const latest = rows[rows.length - 1];
   const prev = rows.length >= 2 ? rows[rows.length - 2] : null;
   return { latest, prev, changePct: prev ? ((latest.value - prev.value) / prev.value) * 100 : null };
@@ -76,7 +83,7 @@ async function fetchMacroContext() {
 }
 
 module.exports = {
-  fetchFredSeries, fetchDxy, fetchRealYield10Y, classifyDxyTrend, classifyRealYieldTrend, fetchMacroContext,
+  fetchFredSeriesRows, fetchFredSeries, fetchDxy, fetchRealYield10Y, classifyDxyTrend, classifyRealYieldTrend, fetchMacroContext,
 };
 
 if (require.main === module) {

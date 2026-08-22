@@ -19,7 +19,7 @@ const CATEGORY_COLOR = {
 
 // type archive.json -> kategori (dipakai buildDashboard.js buat nentuin warna border kartu)
 function categoryOfType(type) {
-  if (type === 'news') return 'news';
+  if (type === 'news' || type.startsWith('news-')) return 'news';
   if (type.startsWith('report-')) return 'laporan';
   if (type === 'sniper') return 'sniper';
   if (type === 'whale') return 'whale';

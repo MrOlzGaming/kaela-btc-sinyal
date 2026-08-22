@@ -16,11 +16,15 @@ const { CATEGORY_COLOR } = require('./categoryColors');
 
 const MAX_ITEMS = 20;
 
+const SLOT_LABEL = { pagi: 'PAGI', siang: 'SIANG', sore: 'SORE' };
+
 // item: { sentiment: 'positif'|'negatif'|'netral', headline: string, source: string, url: string }
-function formatNewsUpdate(now, items) {
+// slot (22 Agu 2026, upgrade 3x sehari): 'pagi'|'siang'|'sore'|null (null = 1 edisi/hari, format lama)
+function formatNewsUpdate(now, items, slot = null) {
   const capped = items.slice(0, MAX_ITEMS);
   const lines = [];
-  lines.push(`${CATEGORY_COLOR.news.emoji} 📰 KAELA NEWS — ${localDateKey(now)}`);
+  const slotTag = slot && SLOT_LABEL[slot] ? ` (${SLOT_LABEL[slot]})` : '';
+  lines.push(`${CATEGORY_COLOR.news.emoji} 📰 KAELA NEWS${slotTag} — ${localDateKey(now)}`);
   lines.push('');
   for (const item of capped) {
     const tag = item.sentiment === 'positif' ? '🟢' : item.sentiment === 'negatif' ? '🔴' : '⚪';

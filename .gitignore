@@ -9,11 +9,22 @@ backtest/yahoo-btc-*.json
 backtest/*-result.json
 
 # state runtime lokal (posisi terbuka, candle terakhir diproses) -- bukan source, beda tiap mesin
+# (CI tetap commit ini via `git add -f`, cuma disembunyiin dari git status LOKAL biar testing
+# manual gak numpuk noise "M ...state.json" tiap kali dites)
 state.json
 nyopet-state.json
 whale-state.json
 sniper-trigger-state.json
 price-alert-state.json
+squeeze-alert-state.json
+econ-calendar-notified.json
+conviction-track-record.json
+analyst-dashboard.json
+
+# hasil riset/sweep sesi lokal (bukan "-cache"/"-result" tapi tetep regeneratable dari script
+# backtest/*.js, terlalu besar buat di-commit) -- 22 Agu 2026
+backtest/btc-synthetic-future.json
+backtest/correlation-raw.json
 
 # file lepas, bukan bagian source
 *.jpeg

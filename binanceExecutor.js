@@ -123,11 +123,19 @@ async function getPositionRisk(symbol) {
   return positions[0] || null;
 }
 
+// Jaring pengaman TERAKHIR (22 Agu 2026) -- kalau SL/TP gagal nempel SETELAH entry berhasil,
+// posisi TIDAK BOLEH dibiarin nganggur tanpa proteksi. Market close LANGSUNG (arah kebalikan
+// entry, reduceOnly) -- lebih baik keluar rugi kecil/breakeven drpd nyangkut leverage tanpa SL.
+async function emergencyCloseMarket({ symbol, direction, quantity }) {
+  const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+  return signedRequest('POST', '/fapi/v1/order', { symbol, side: closeSide, type: 'MARKET', quantity, reduceOnly: true });
+}
+
 async function cancelAllOpenOrders(symbol) {
   return signedRequest('DELETE', '/fapi/v1/allOpenOrders', { symbol });
 }
 
 module.exports = {
   getAccountBalance, setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit,
-  getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
+  getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
 };

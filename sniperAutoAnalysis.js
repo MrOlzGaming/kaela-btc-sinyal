@@ -44,7 +44,7 @@ const { ASSETS } = require('./assetConfig');
 const { isBtcBearWindow } = require('./halvingBearWindow');
 const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
-const { setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit } = require('./binanceExecutor');
+const { setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
 
 const MAX_MARGIN_PCT = 20;
 const MAX_NYAWA_PCT = 20;
@@ -274,14 +274,26 @@ async function main() {
       // ditangkep di sini, dilaporin, run tetep lanjut normal.
       let liveExecution = null;
       if (isLiveTradingEnabled()) {
+        let entryFilledQty = null; // diisi begitu entry SUKSES -- dipakai jaring pengaman kalau SL gagal
         try {
           await setLeverage(assetCfg.symbol, calc.leverage);
           const entryOrder = await placeMarketEntry({ symbol: assetCfg.symbol, direction: cand.direction, notionalUsd: calc.nilaiPosisi, livePrice });
-          const filledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
-          await placeStopLoss({ symbol: assetCfg.symbol, direction: cand.direction, stopPrice: cand.sl, quantity: filledQty });
-          await placeTakeProfit({ symbol: assetCfg.symbol, direction: cand.direction, tpPrice: partialTp, quantity: filledQty });
-          liveExecution = { ok: true, filledQty, testnet: isTestnet() };
-          console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE (${isTestnet() ? 'testnet' : 'MAINNET ASLI'}) sukses -- qty ${filledQty}.`);
+          entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
+
+          try {
+            await placeStopLoss({ symbol: assetCfg.symbol, direction: cand.direction, stopPrice: cand.sl, quantity: entryFilledQty });
+          } catch (slError) {
+            // JARING PENGAMAN TERAKHIR -- entry udah masuk tapi SL gagal nempel, JANGAN biarin
+            // posisi nganggur tanpa proteksi. Tutup paksa, lebih baik rugi kecil/breakeven drpd
+            // nyangkut leverage tanpa stop-loss.
+            console.log(`[SniperAutoAnalysis] SL GAGAL nempel (${slError.message}) -- posisi udah masuk, tutup PAKSA demi keamanan.`);
+            await emergencyCloseMarket({ symbol: assetCfg.symbol, direction: cand.direction, quantity: entryFilledQty });
+            throw new Error(`Entry masuk tapi SL gagal nempel (${slError.message}) -- posisi UDAH DITUTUP PAKSA otomatis demi keamanan, gak ada yang nganggur tanpa proteksi.`);
+          }
+
+          await placeTakeProfit({ symbol: assetCfg.symbol, direction: cand.direction, tpPrice: partialTp, quantity: entryFilledQty });
+          liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet() };
+          console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE (${isTestnet() ? 'testnet' : 'MAINNET ASLI'}) sukses -- qty ${entryFilledQty}.`);
         } catch (e) {
           liveExecution = { ok: false, error: e.message, testnet: isTestnet() };
           console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE gagal (shadow tracking TETAP jalan normal): ${e.message}`);

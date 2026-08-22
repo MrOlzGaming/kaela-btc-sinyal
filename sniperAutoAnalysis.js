@@ -43,6 +43,8 @@ const { fetchTradeMetrics } = require('./onchainMetrics');
 const { ASSETS } = require('./assetConfig');
 const { isBtcBearWindow } = require('./halvingBearWindow');
 const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
+const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
+const { setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit } = require('./binanceExecutor');
 
 const MAX_MARGIN_PCT = 20;
 const MAX_NYAWA_PCT = 20;
@@ -266,7 +268,27 @@ async function main() {
       usedMargin += calc.margin;
       anyNewSignal = true;
 
-      const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg });
+      // Eksekusi LIVE (22 Agu 2026, permintaan Olan: "eksekusi sinyal Kaela, semua sesuai
+      // exposure") -- GATED total di kill switch (killSwitch.js, default OFF). Gagal eksekusi
+      // live TIDAK BOLEH gugurin shadow tracking (itu tetap "source of truth" buat backtest) --
+      // ditangkep di sini, dilaporin, run tetep lanjut normal.
+      let liveExecution = null;
+      if (isLiveTradingEnabled()) {
+        try {
+          await setLeverage(assetCfg.symbol, calc.leverage);
+          const entryOrder = await placeMarketEntry({ symbol: assetCfg.symbol, direction: cand.direction, notionalUsd: calc.nilaiPosisi, livePrice });
+          const filledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
+          await placeStopLoss({ symbol: assetCfg.symbol, direction: cand.direction, stopPrice: cand.sl, quantity: filledQty });
+          await placeTakeProfit({ symbol: assetCfg.symbol, direction: cand.direction, tpPrice: partialTp, quantity: filledQty });
+          liveExecution = { ok: true, filledQty, testnet: isTestnet() };
+          console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE (${isTestnet() ? 'testnet' : 'MAINNET ASLI'}) sukses -- qty ${filledQty}.`);
+        } catch (e) {
+          liveExecution = { ok: false, error: e.message, testnet: isTestnet() };
+          console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE gagal (shadow tracking TETAP jalan normal): ${e.message}`);
+        }
+      }
+
+      const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg, liveExecution });
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`);

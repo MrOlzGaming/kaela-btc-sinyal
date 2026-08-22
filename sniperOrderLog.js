@@ -304,7 +304,19 @@ function formatSignalInfoOnly({ direction, entryPrice, sl, patternType, mode, co
   ].join('\n');
 }
 
-function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
+// Status eksekusi LIVE (22 Agu 2026, lihat binanceExecutor.js/killSwitch.js) -- null kalau
+// kill switch OFF (default, gak perlu nampilin apa-apa soal ini). Kalau ON, WAJIB jelas ke Olan
+// apa beneran kejalan atau gagal -- ini uang beneran (atau testnet, ditandain jelas).
+function liveExecutionLines(liveExecution) {
+  if (!liveExecution) return [];
+  const modeLabel = liveExecution.testnet ? '🧪 TESTNET (duit palsu)' : '💰 MAINNET (UANG ASLI)';
+  if (liveExecution.ok) {
+    return ['', `${modeLabel} -- Order REAL berhasil masuk, qty ${liveExecution.filledQty}. SL+TP tahap 1 udah nempel di exchange.`];
+  }
+  return ['', `${modeLabel} -- ❌ Eksekusi REAL GAGAL: ${liveExecution.error}. Posisi bayangan tetap tercatat, tapi TIDAK ADA order beneran di Binance -- cek manual.`];
+}
+
+function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecution }) {
   const asset = assetCfg || assetOf(order);
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   // ta/sentiment/onchain CUMA ada buat BTC (metrik makro kripto, gak relevan/gak ada buat emas,
@@ -326,10 +338,13 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
     '',
     order.tpReasoning ? `📐 ${order.tpReasoning}` : '',
     `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
+    ...liveExecutionLines(liveExecution),
     '',
     order.confirmationNote,
     '',
-    '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
+    liveExecution
+      ? '🎭 Posisi bayangan TETAP dicatat buat tracking performa -- lihat status EKSEKUSI LIVE di atas buat tau apa order beneran kejalan.'
+      : '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
     '🚨 JANGAN ALL-IN! Trading resiko tinggi.',
     '⚠️ Deteksi pola ini pendekatan NUMERIK (regresi/aturan angka), bukan mata manusia -- cocokkan dulu sama chart aslinya sebelum diikuti.',
     '',

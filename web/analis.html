@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kaela Analyst Terminal — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Kaela Conviction Score, indikator makro, regime korelasi, dan track record -- BTC & Emas, gaya analis institusional.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; }
+  .brand { border-bottom: 1px solid var(--clr-border-soft); padding-bottom: 16px; margin-bottom: 4px; }
+  .page-intro { color: var(--clr-text-muted); font-size: 0.88rem; line-height: 1.6; margin: 12px 0 20px; }
+  .empty { color: var(--clr-text-muted); text-align: center; padding: 22px; background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); }
+  .analis-updated { color: var(--clr-text-muted); font-size: 0.8rem; margin-bottom: 14px; }
+  .analis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .analis-card { margin-bottom: 0; }
+  .analis-card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .analis-asset { font-weight: 700; font-size: 1.05rem; }
+  .analis-price { font-variant-numeric: tabular-nums; color: var(--clr-text-muted); }
+  .analis-empty { color: var(--clr-text-muted); font-size: 0.88rem; }
+  .analis-verdict { font-weight: 800; font-size: 1.15rem; margin-bottom: 4px; }
+  .analis-verdict.v-strong-bull, .analis-verdict.v-bull { color: var(--clr-success); }
+  .analis-verdict.v-strong-bear, .analis-verdict.v-bear { color: var(--clr-danger); }
+  .analis-verdict.v-neutral { color: var(--clr-neutral); }
+  .analis-score { color: var(--clr-text-muted); font-size: 0.82rem; margin-bottom: 12px; }
+  .analis-factors { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .analis-factor { display: flex; gap: 8px; font-size: 0.82rem; align-items: baseline; }
+  .analis-factor-tag { flex-shrink: 0; }
+  .analis-factor-label { flex-shrink: 0; font-weight: 600; color: var(--clr-text-muted); min-width: 110px; }
+  .analis-factor-reason { color: var(--clr-text); }
+  .analis-track { font-size: 0.82rem; color: var(--clr-text-muted); border-top: 1px solid var(--clr-border-soft); padding-top: 10px; }
+  .analis-macro-row { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--clr-border-soft); font-size: 0.85rem; flex-wrap: wrap; }
+  .analis-macro-row:last-child { border-bottom: none; }
+  .analis-macro-label { flex: 0 0 170px; font-weight: 600; color: var(--clr-text-muted); }
+  .analis-macro-value { flex: 0 0 90px; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .analis-macro-insight { color: var(--clr-text-muted); font-size: 0.8rem; }
+  .analis-disclaimer { color: var(--clr-text-muted); font-size: 0.78rem; background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-top: 18px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <h1>📊 Kaela Analyst Terminal</h1>
+  </div>
+  <div class="page-intro">Kaela Conviction Score + indikator makro + regime korelasi + track record, BTC & XAU/Emas -- semua sumber gratis/resmi (FRED, CFTC, Deribit, DefiLlama, OKX, Binance). Update tiap Senin, bareng laporan mingguan.</div>
+
+  <div id="analis-container"><div class="empty">Memuat...</div></div>
+
+  <div class="analis-disclaimer">⚠️ Ini SINTESIS heuristik dari sinyal individual (bukan backtest gabungan), murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen. Baca <a href="metodologi-sniper.html">metodologi lengkap</a> buat konteks tiap indikator.</div>
+
+  <script src="js/analis-render.js"></script>
+  <script src="js/analis-load.js"></script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
+    <a href="analis.html" class="active"><span class="icon">📊</span>Analis</a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
+    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
+    <a href="nyopet-input.html"><span class="icon">🥷</span>Input Nyopet</a>
+  </nav>
+</body>
+</html>

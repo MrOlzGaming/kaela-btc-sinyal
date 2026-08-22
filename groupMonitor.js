@@ -20,7 +20,7 @@ const { fetchBtcNasdaqRegime, fetchGoldDxyRegime } = require('./regimeTracker');
 const { fetchFearGreed } = require('./marketSentiment');
 const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
-const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine } = require('./trackRecord');
+const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine, getTrackRecordSummary } = require('./trackRecord');
 const { fetchAdvancedMacroContext, classifyFedRateTrend, classifyCreditSpreadTrend } = require('./advancedMacro');
 const fs = require('fs');
 const path = require('path');
@@ -174,6 +174,10 @@ async function main() {
   // Diisi di blok weekly BTC di bawah, dipakai lagi di blok weekly Emas (1x fetch dipakai bareng
   // 2 laporan -- DVOL/Stablecoin/YieldCurve/M2 sama-sama relevan buat kedua aset).
   let advancedMacro = null;
+  // Snapshot buat web/analis.html (Kaela Analyst Terminal, 22 Agu 2026) -- data yang SAMA persis
+  // yang dikirim ke WA, ditulis juga ke JSON biar bisa direfer kapan aja lewat web, bukan cuma
+  // sekali lewat pas pesan WA muncul terus ilang ketimbun chat.
+  let dashboardData = null;
 
   if (priceYesterday !== null) {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
@@ -200,6 +204,10 @@ async function main() {
       + '\n\n' + formatConvictionLines(conviction).join('\n')
       + '\n' + formatTrackRecordLine('btc');
     items.push({ type: 'report-weekly', content: weeklyMsg });
+    dashboardData = dashboardData || {};
+    dashboardData.btc = {
+      price: priceToday, conviction, trackRecord: getTrackRecordSummary('btc'), regime, advancedMacro,
+    };
   }
   if (local.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1 (WITA)
     items.push({ type: 'report-monthly', content: generateGroupMonthly(now, priceToday, priceLastMonth) });
@@ -227,6 +235,16 @@ async function main() {
       + '\n\n' + formatConvictionLines(conviction).join('\n')
       + '\n' + formatTrackRecordLine('xau');
     items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });
+    dashboardData = dashboardData || {};
+    dashboardData.xau = {
+      price: goldPriceToday, conviction, trackRecord: getTrackRecordSummary('xau'), regime, macro, cot,
+      yieldCurve: advancedMacro?.yieldCurve || null,
+    };
+  }
+
+  if (dashboardData) {
+    dashboardData.updatedAt = now.toISOString();
+    fs.writeFileSync(path.join(__dirname, 'analyst-dashboard.json'), JSON.stringify(dashboardData, null, 2));
   }
   if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {
     items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth) });

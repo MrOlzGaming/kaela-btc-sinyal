@@ -16,6 +16,14 @@
 //
 // Sentimen (Fear&Greed+funding) dan on-chain (SOPR/NUPL) itu metrik MAKRO KRIPTO -- gak
 // relevan/gak ada buat emas, jadi CUMA di-fetch buat BTC.
+//
+// ⚠️ Batas margin 20% DICABUT (22 Agu 2026, permintaan eksplisit Olan: "gas terus, jangan
+// patokan modal Kaela/Olan yang tipis kayak tisu.. posisimu juga cuma bayangan.. tetep on") --
+// mode AGRESIF sengaja buat fase "kanak-kanak" bankroll bayangan Kaela ($100-1000-an), sadar
+// bikin performa live Kaela BEDA dari backtest yang selalu hormat batas 20% (backtest TETAP
+// acuan riset terpisah, gak ikut berubah). Topup $100/bln sampai $1000 tetap jalan sbg jaring
+// pemulihan. MAX_NYAWA_PCT (kualitas pola, BUKAN soal ukuran modal) TETAP berlaku, gak dicabut.
+// Kalkulator exposure (leverage cap 50x) tetap jaring pengaman terakhir yang jalan.
 
 const fs = require('fs');
 const path = require('path');
@@ -211,10 +219,14 @@ async function main() {
       if (partialTp <= 0) continue;
 
       const calc = hitungExposure({ modal: availableBalance, entry: livePrice, stopLoss: cand.sl });
+      // Batas margin 20% DICABUT (22 Agu 2026, permintaan Olan eksplisit: "gas terus, jangan
+      // patokan modal yang tipis kayak tisu.. posisimu juga cuma bayangan.. tetep on") -- mode
+      // AGRESIF sengaja buat fase awal/kecil bankroll bayangan Kaela ("masa kanak-kanak"), sadar
+      // ini bikin performa live Kaela BEDA dari backtest yang selalu hormat batas 20% (backtest
+      // TETAP jadi acuan riset terpisah, gak diubah). Kalkulator exposure (leverage cap 50x) TETAP
+      // jaring pengaman terakhir yang jalan -- cuma batas marginPct% doang yang dicabut.
       if (calc.marginPct > MAX_MARGIN_PCT) {
-        console.log(`[SniperAutoAnalysis] ${assetCfg.label} ${cand.mode}: margin ${calc.marginPct.toFixed(1)}% saldo available ngelewatin batas ${MAX_MARGIN_PCT}% -- skip.`);
-        invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi margin ${calc.marginPct.toFixed(1)}% saldo available kelewat gede (batas ${MAX_MARGIN_PCT}%) -- skip, sinyal DILEWATIN.`);
-        continue;
+        console.log(`[SniperAutoAnalysis] ${assetCfg.label} ${cand.mode}: margin ${calc.marginPct.toFixed(1)}% saldo available (di atas ${MAX_MARGIN_PCT}% lama) -- TETAP JALAN, mode agresif bankroll kecil.`);
       }
 
       const patternLabel = PATTERN_LABEL[cand.patternType] || cand.patternType;

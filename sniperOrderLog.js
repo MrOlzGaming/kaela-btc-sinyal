@@ -274,6 +274,36 @@ function rMultipleLevels(order) {
   ];
 }
 
+// formatSignalInfoOnly (22 Agu 2026, permintaan Olan: "sinyal gas terus, jangan patokan modal
+// Kaela/Olan yang tipis kayak tisu") -- dipakai pas pola KETEMU tapi margin-nya kegedean buat
+// bankroll bayangan KAELA sendiri (kecil, $100-1000-an). Kaela GAK buka posisi bayangan (biar
+// tracking performa-nya tetap konsisten sama backtest yang selalu hormat batas margin) -- tapi
+// INFO sinyalnya (arah/entry/SL/alasan) tetap disiarkan penuh, biar siapapun yang modalnya lebih
+// gede bisa hitung sizing SENDIRI di kalkulator.html tanpa nunggu Kaela.
+function formatSignalInfoOnly({ direction, entryPrice, sl, patternType, mode, confirmationNote, assetCfg, nyawaPct }) {
+  const risk = Math.abs(entryPrice - sl);
+  const sign = direction === 'buy' ? 1 : -1;
+  const at = (r) => entryPrice + sign * risk * r;
+  const modeLabel = mode === 'fvg' ? 'FVG' : 'Pola Chart';
+  return [
+    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ${assetCfg.emoji} ${assetCfg.label} (${modeLabel}) — 🔔 SINYAL KETEMU (info doang)`,
+    `${DIR_LABEL[direction] || direction} @ ${fmt(entryPrice)}`,
+    `❌ SL: ${fmt(sl)} (nyawa ${nyawaPct.toFixed(1)}%)`,
+    `🎯 TP 1:1 = ${fmt(at(1))}  |  1:2 = ${fmt(at(2))}  |  1:3 = ${fmt(at(3))}`,
+    '',
+    confirmationNote,
+    '',
+    `💡 Bankroll bayangan Kaela sendiri kekecilan buat sinyal ini (margin kelewat batas 20%) -- Kaela SKIP biar tracking performanya tetap konsisten sama backtest. Tapi sinyalnya VALID -- kalau modal kamu lebih gede, hitung sizing sendiri di kalkulator.html.`,
+    `🧮 ${WEB_URL}/kalkulator.html`,
+    '',
+    '🎭 Bukan posisi bayangan Kaela -- ini murni INFO pola yang kedeteksi. Eksekusi & sizing sepenuhnya keputusan sendiri.',
+    '🚨 JANGAN ALL-IN! Trading resiko tinggi.',
+    '',
+    nowStr(),
+    `🔗 ${WEB_URL}`,
+  ].join('\n');
+}
+
 function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
   const asset = assetCfg || assetOf(order);
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
@@ -326,4 +356,4 @@ function formatAutoInvalid({ notes }) {
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid };
+module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid, formatSignalInfoOnly };

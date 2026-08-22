@@ -362,13 +362,20 @@
   }
 
   // getFundReport client-side (port dari kaelaBankroll.js getFundReport, ambil bankrollState mentah)
-  function computeFundReport(bankrollState) {
-    const START_BALANCE = 100;
-    const totalContributed = START_BALANCE + bankrollState.topUpHistory.reduce((s, t) => s + t.amount, 0);
+  // isDemoMode (22 Agu 2026, permintaan Olan) -- START_BALANCE gak lagi HARDCODE $100 di sini
+  // (itu penyebab bug: begitu Node-side kaelaBankroll.js START_BALANCE diganti, sisi web ini
+  // ketinggalan, hasilnya "Total Disetor" $100 dibandingin ke saldo Binance Demo $18rban =
+  // Return % keliatan puluhan ribu persen, menyesatkan). START_BALANCE sekarang dihitung MUNDUR
+  // dari balance sekarang minus semua topup+pnl yang tercatat -- selalu konsisten sama data asli,
+  // gak pernah nge-drift dari sumber kebenaran (kaela-bankroll.json).
+  function computeFundReport(bankrollState, opts = {}) {
+    const totalTopUp = bankrollState.topUpHistory.reduce((s, t) => s + t.amount, 0);
     const totalRealizedPnl = bankrollState.pnlHistory.reduce((s, p) => s + p.pnlUsd, 0);
+    const startBalance = bankrollState.balance - totalTopUp - totalRealizedPnl;
+    const totalContributed = startBalance + totalTopUp;
     const returnOnContributedPct = totalContributed > 0 ? (totalRealizedPnl / totalContributed) * 100 : 0;
     const events = [
-      { date: bankrollState.startedAt || new Date().toISOString(), type: 'start', balanceAfter: START_BALANCE },
+      { date: bankrollState.startedAt || new Date().toISOString(), type: 'start', balanceAfter: startBalance },
     ].concat(
       bankrollState.topUpHistory.map((t) => Object.assign({}, t, { type: 'topup' })),
       bankrollState.pnlHistory.map((p) => Object.assign({}, p, { type: 'pnl' })),
@@ -376,21 +383,41 @@
     return {
       balance: bankrollState.balance,
       startedAt: bankrollState.startedAt,
+      startBalance,
       totalContributed,
       totalRealizedPnl,
       returnOnContributedPct,
       tradeCount: bankrollState.pnlHistory.length,
       events,
+      isDemoMode: opts.isDemoMode !== false,
     };
   }
 
+  // isDemoMode (22 Agu 2026) -- selama akun masih Binance Demo, saldo itu duit virtual dari
+  // faucet, BUKAN setoran beneran. Tampilin "Total Disetor"/"Return%" di sini bakal menyesatkan
+  // (itu persis bug yang dilaporin Olan: "$100 disetor" vs saldo demo $18rban = ribuan persen).
+  // Jadi selama demo, cuma tampilin angka polos dolar -- Saldo + P&L trading. Framing fund-manager
+  // lengkap (Total Disetor/Return%) balik lagi otomatis begitu isDemoMode false (udah uang asli).
   function renderFundReportSection(report) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
+
+    if (report.isDemoMode) {
+      return `<div class="fund-report-section">
+        <div class="journal-section-title">🧪 Laporan Bankroll Kaela -- Binance Demo</div>
+        <p class="order-disclaimer" style="margin-top:0;">Saldo di bawah ini duit VIRTUAL dari Binance Demo (bukan uang asli, bukan setoran) -- makanya persen "return" gak ditampilin dulu di fase ini, biar gak menyesatkan. Begitu pindah ke akun asli dengan setoran beneran, laporan lengkap ala fund manager (Total Disetor vs Return%) bakal aktif lagi.</p>
+        <div class="journal-stats-grid">
+          ${cell('Saldo Sekarang (Demo)', fmtUsdOrder(report.balance))}
+          ${cell('P&amp;L Trading (murni)', `${report.totalRealizedPnl >= 0 ? '+' : ''}${fmtUsdOrder(report.totalRealizedPnl)}`, report.totalRealizedPnl >= 0 ? 'up' : 'down')}
+          ${cell('Jumlah Trade', report.tradeCount)}
+        </div>
+      </div>`;
+    }
+
     const totalGrowthUsd = report.balance - report.totalContributed;
     const totalGrowthPct = report.totalContributed > 0 ? (totalGrowthUsd / report.totalContributed) * 100 : 0;
     return `<div class="fund-report-section">
-      <div class="journal-section-title">🤖 Laporan Fund Kaela -- Bankroll Bayangan</div>
-      <p class="order-disclaimer" style="margin-top:0;">Murni perhitungan (posisi bayangan), gak ada uang bergerak beneran -- tapi dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
+      <div class="journal-section-title">🤖 Laporan Fund Kaela</div>
+      <p class="order-disclaimer" style="margin-top:0;">Dikelola &amp; dilaporkan SEPERSIS mungkin kayak fund manager asli: setoran (top-up) dipisah tegas dari performa (P&amp;L trading), biar gak menyesatkan.</p>
       <div class="journal-stats-grid">
         ${cell('Saldo Sekarang', fmtUsdOrder(report.balance))}
         ${cell('Total Disetor', fmtUsdOrder(report.totalContributed))}
@@ -399,7 +426,7 @@
         ${cell('Total Growth (gabungan)', `${totalGrowthPct >= 0 ? '+' : ''}${totalGrowthPct.toFixed(1)}%`, totalGrowthPct >= 0 ? 'up' : 'down')}
         ${cell('Jumlah Trade', report.tradeCount)}
       </div>
-      <div class="journal-section-title">📈 Equity Curve Bankroll (mulai $100${report.startedAt ? ', ' + fmtDateLong(new Date(report.startedAt)) : ''})</div>
+      <div class="journal-section-title">📈 Equity Curve Bankroll${report.startedAt ? ' (mulai ' + fmtDateLong(new Date(report.startedAt)) + ')' : ''}</div>
       ${renderFundEquitySvg(report.events)}
       <p class="order-disclaimer">🟧 Kotak oranye di grafik = momen top-up (setoran baru), BUKAN hasil trading -- biar kenaikan dari 2 sumber ini gampang dibedain sekilas.</p>
     </div>`;

@@ -20,17 +20,21 @@
 
   async function main() {
     const now = new Date();
-    const [ordersState, bankrollState, spotState, nyopetState] = await Promise.all([
+    const [ordersState, bankrollState, spotState, nyopetState, liveConfig] = await Promise.all([
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }),
       fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }),
       fetchJson('kaela-spot.json', { btcHeld: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, completedCycles: [], buyLog: [] }),
       fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }),
+      fetchJson('live-trading-config.json', { enabled: false, testnet: true }),
     ]);
 
     const spotEl = document.querySelector('[data-panel="spot"]');
     if (spotEl) spotEl.innerHTML = KaelaRender.renderSpotJurnalPanel(spotState, now);
 
-    const fundReport = KaelaRender.computeFundReport(bankrollState);
+    // isDemoMode (22 Agu 2026) -- selama testnet=true (Binance Demo, duit virtual), framing
+    // "fund manager" (Total Disetor/Return%) DIMATIKAN -- saldo demo dari faucet BUKAN setoran
+    // beneran, bandingin ke situ bikin angka % menyesatkan (bisa keliatan puluhan ribu persen).
+    const fundReport = KaelaRender.computeFundReport(bankrollState, { isDemoMode: liveConfig.testnet !== false });
     const sniperEl = document.querySelector('[data-panel="sniper"]');
     if (sniperEl) {
       sniperEl.innerHTML = KaelaRender.renderJurnalPanel(ordersState, now, fundReport);

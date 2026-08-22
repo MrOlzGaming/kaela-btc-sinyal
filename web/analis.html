@@ -39,6 +39,13 @@
   .analis-macro-value { flex: 0 0 90px; font-variant-numeric: tabular-nums; font-weight: 700; }
   .analis-macro-insight { color: var(--clr-text-muted); font-size: 0.8rem; }
   .analis-disclaimer { color: var(--clr-text-muted); font-size: 0.78rem; background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-top: 18px; line-height: 1.5; }
+  .analis-about { margin-top: 22px; }
+  .analis-about summary { cursor: pointer; color: var(--clr-primary); font-weight: 700; padding: 4px 0; }
+  .analis-about-body { font-size: 0.87rem; line-height: 1.7; margin-top: 12px; }
+  .analis-about-body h3 { font-size: 0.92rem; margin: 16px 0 6px; }
+  .analis-about-body ul { margin: 4px 0 0; padding-left: 20px; }
+  .analis-about-body li { margin-bottom: 4px; }
+  .analis-source-tag { color: var(--clr-text-muted); font-size: 0.78rem; }
 </style>
 </head>
 <body>
@@ -51,6 +58,37 @@
   <div id="analis-container"><div class="empty">Memuat...</div></div>
 
   <div class="analis-disclaimer">⚠️ Ini SINTESIS heuristik dari sinyal individual (bukan backtest gabungan), murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen. Baca <a href="metodologi-sniper.html">metodologi lengkap</a> buat konteks tiap indikator.</div>
+
+  <details class="analis-about">
+    <summary>ℹ️ Apa ini & gimana cara bacanya?</summary>
+    <div class="analis-about-body">
+      <p>Kaela Analyst Terminal itu upaya bikin "Bloomberg terminal versi kita sendiri" -- gabungin semua sinyal terpisah (teknikal, on-chain, sentimen, makro, posisi institusional, korelasi antar-aset) jadi satu pembacaan yang jelas per aset, LENGKAP sama alasan tiap faktor -- bukan sekadar angka mentah yang dilempar begitu aja.</p>
+
+      <h3>🎯 Kaela Conviction Score</h3>
+      <p>Tiap faktor (RSI, MVRV/NUPL on-chain, Fear & Greed, Squeeze Setup, fase siklus halving, Stablecoin Supply, M2, Fed Funds Rate, Credit Spread, DXY, Real Yield, COT) ngasih 1 "vote": 🟢 bullish, 🔴 bearish, atau ⚪ netral -- SELALU dengan alasan singkat. Semua vote dijumlah jadi 1 skor, terus diterjemahin ke verdict (Bullish Kuat / Condong Bullish / Netral / Condong Bearish / Bearish Kuat). Faktor yang datanya gagal diambil hari itu DILEWATIN dari skor (bukan dianggap netral) -- "gak tau" beda maknanya sama "netral".</p>
+      <p class="analis-source-tag">Update tiap Senin, bareng laporan mingguan grup WA.</p>
+
+      <h3>📈 Track Record</h3>
+      <p>Tiap verdict yang Kaela catat dinilai balik 7 hari kemudian -- arah verdict (bullish/bearish) dibandingin arah harga BENERAN. Verdict netral dikecualikan (itu bukan "panggilan arah", gak adil dinilai benar/salah). Ini biar kredibilitas Kaela dibangun dari rekam jejak terukur, bukan klaim kosong.</p>
+
+      <h3>📊 Indikator Makro</h3>
+      <ul>
+        <li><strong>DVOL</strong> -- ekspektasi volatilitas BTC 30 hari ke depan, dari pasar opsi Deribit (kayak VIX-nya BTC)</li>
+        <li><strong>Fed Funds Rate</strong> -- tren suku bunga The Fed 90 hari (dipotong = dovish = bullish, dinaikkan = hawkish = bearish)</li>
+        <li><strong>Credit Spread</strong> -- selisih bunga obligasi korporasi berisiko vs pemerintah aman, ukur "stres kredit" pasar</li>
+        <li><strong>Yield Curve 10Y-2Y</strong> -- indikator resesi klasik; kalau terbalik, efeknya KEBALIKAN buat BTC (headwind) vs Emas (tailwind)</li>
+        <li><strong>M2 Money Supply</strong> -- pertumbuhan uang beredar AS, likuiditas buat aset risiko</li>
+        <li><strong>Stablecoin Supply</strong> -- suplai USDT+USDC beredar, "dana siap masuk crypto"</li>
+        <li><strong>DXY & Real Yield</strong> -- dua penggerak fundamental utama Emas</li>
+        <li><strong>COT Report</strong> -- posisi "smart money" beneran (hedge fund) di futures Gold COMEX, dari CFTC</li>
+      </ul>
+
+      <h3>🔗 Regime / Korelasi</h3>
+      <p>Korelasi rolling 30/90 hari BTC-vs-Nasdaq dan Emas-vs-DXY. Analis institusional selalu mikir "rezim apa sekarang" sebelum baca sinyal lain -- BTC kadang gerak kayak saham teknologi (risk-on), kadang independen. Emas kadang gerak "tekstbuk" lawan dolar, kadang didorong faktor lain (bank sentral dsb).</p>
+
+      <p class="analis-source-tag">Semua sumber data GRATIS & RESMI (FRED, CFTC, Deribit, DefiLlama, OKX, Binance) -- gak ada API berbayar. Ini bukan backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, murni sintesis heuristik buat konteks tambahan.</p>
+    </div>
+  </details>
 
   <script src="js/analis-render.js"></script>
   <script src="js/analis-load.js"></script>

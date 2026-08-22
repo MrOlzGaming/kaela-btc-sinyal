@@ -336,6 +336,7 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
     '🍀 Semoga beruntung!',
     '',
     nowStr(),
+    `🧮 Hitung volume/margin sendiri (WAJIB kalau modal beda dari bayangan Kaela): ${WEB_URL}/kalkulator.html`,
     `🔗 ${WEB_URL}`,
   ].join('\n');
 }

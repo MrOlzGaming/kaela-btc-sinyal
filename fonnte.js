@@ -1,5 +1,6 @@
-// Kirim pesan ke grup WA "BTC Sniper Club" lewat Fonnte.
-// Searah total: Kaela cuma KIRIM ke 1 Group ID spesifik, gak pernah baca command atau balas DM.
+// Kirim pesan WA lewat Fonnte -- default ke grup "BTC Sniper Club", tapi bisa override `target`
+// buat DM ke nomor spesifik (dipakai nyopetOtp.js buat kirim kode OTP ke WA pribadi Olan doang,
+// 22 Agu 2026). Searah total: Kaela cuma KIRIM, gak pernah baca command atau balas apapun masuk.
 // Tanpa secrets.js (belum di-setup di mesin ini), fungsi ini otomatis no-op -- aman buat dev/testing lokal.
 
 const { fetchRetryNetworkErrorOnly } = require('./httpRetry');
@@ -47,7 +48,7 @@ async function sendWhatsApp(message, target) {
       console.error('[Fonnte] Fonnte nolak pesan:', JSON.stringify(data));
       return { ok: false, data };
     }
-    console.log('[Fonnte] Terkirim ke grup WA.');
+    console.log(target ? `[Fonnte] Terkirim ke ${target}.` : '[Fonnte] Terkirim ke grup WA.');
     return { ok: true, data };
   } catch (e) {
     console.error('[Fonnte] Gagal kirim WA setelah retry:', e.message);

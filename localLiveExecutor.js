@@ -13,7 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { getActiveOrders, updateOrder } = require('./sniperOrders');
+const { getActiveOrders, updateOrder, setBalance } = require('./sniperOrders');
 const { getAccountBalance, setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
 const { hitung: hitungExposure } = require('./calculator');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
@@ -82,6 +82,17 @@ async function main() {
   if (!isLiveTradingEnabled()) {
     console.log('[LocalLiveExecutor] Kill switch OFF (live-trading-config.json enabled=false) -- gak ngapa-ngapain.');
     return;
+  }
+
+  // Sync saldo web dashboard ke saldo Binance REAL tiap kali script ini jalan (22 Agu 2026,
+  // permintaan Olan: "semua berbau bayangan replace jadi Binance Demo") -- gak nunggu ada
+  // sinyal baru buat update ini, biar dashboard selalu kebaca fresh.
+  try {
+    const balance = await getAccountBalance();
+    setBalance(balance);
+    console.log(`[LocalLiveExecutor] Saldo web disinkronin: $${balance.toFixed(2)}`);
+  } catch (e) {
+    console.log('[LocalLiveExecutor] Gagal sync saldo (dilewatin, gak fatal):', e.message);
   }
 
   const pending = getActiveOrders().filter((o) =>

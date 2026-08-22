@@ -4,6 +4,7 @@
 
 const { WEB_URL, toLocal, localDateKey } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
+const { dvolInsight, yieldCurveInsight } = require('./advancedMacro');
 
 const NEXT_HALVING_EST = new Date('2028-04-13T13:11:00Z'); // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WINDOW_START = new Date('2026-10-19T00:00:00Z');
@@ -98,6 +99,17 @@ function regimeLines(regime) {
   return [`📊 Regime (90 hari): korelasi ke Nasdaq ${regime.corr90.toFixed(2)} (${regime.label90}) -- ${regime.label90.includes('positif') ? 'BTC lagi condong gerak kayak aset risiko/saham teknologi' : regime.label90.includes('negatif') ? 'BTC lagi gerak BERLAWANAN Nasdaq' : 'BTC lagi decoupled/independen dari saham'}`];
 }
 
+// DVOL + Yield Curve (22 Agu 2026, lihat advancedMacro.js) -- opsional/best-effort, KONTEKS
+// doang (bukan vote Conviction Score -- DVOL ngukur BESARAN gerakan, bukan ARAH; yield curve
+// efeknya ke BTC lebih nuanced/lag, gak dipaksa jadi vote langsung).
+function advancedMacroLines(adv) {
+  if (!adv) return [];
+  const lines = [];
+  if (adv.dvol) lines.push(`🌊 DVOL (volatilitas implisit BTC): ${adv.dvol.value.toFixed(1)} -- ${dvolInsight(adv.dvol)}`);
+  if (adv.yieldCurve) lines.push(`📉 Yield Curve 10Y-2Y: ${adv.yieldCurve.value.toFixed(2)} -- ${yieldCurveInsight(adv.yieldCurve)}`);
+  return lines;
+}
+
 function generateGroupWeekly(now, priceToday, priceLastWeek, opts = {}) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
@@ -105,6 +117,7 @@ function generateGroupWeekly(now, priceToday, priceLastWeek, opts = {}) {
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
     halvingLine(now),
     ...regimeLines(opts.regime),
+    ...advancedMacroLines(opts.advancedMacro),
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

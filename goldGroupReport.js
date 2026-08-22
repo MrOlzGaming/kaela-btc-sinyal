@@ -4,6 +4,7 @@
 
 const { WEB_URL, localDateKey } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
+const { yieldCurveInsight } = require('./advancedMacro');
 
 function pctChange(today, prev) {
   return ((today - prev) / prev) * 100;
@@ -27,6 +28,18 @@ function macroLines(macro) {
 function cotLines(cot) {
   if (!cot) return [];
   return [`🏦 Smart Money (COT, per ${cot.date}): ${cot.label}`];
+}
+
+// Yield Curve (22 Agu 2026, lihat advancedMacro.js) -- KONTEKS makro bersama (dipakai juga di
+// laporan BTC), tapi implikasi ke Emas beda: kurva terbalik → ekspektasi The Fed bakal potong
+// suku bunga → real yield turun → historis JUSTRU tailwind buat Emas (bukan headwind kayak BTC).
+function yieldCurveLines(yieldCurve) {
+  if (!yieldCurve) return [];
+  const base = `📉 Yield Curve 10Y-2Y: ${yieldCurve.value.toFixed(2)} -- ${yieldCurveInsight(yieldCurve)}`;
+  const emasNote = yieldCurve.inverted
+    ? ' -- buat Emas: ekspektasi Fed potong bunga historis jadi tailwind (beda dari BTC yang biasanya lihat ini sbg sinyal risk-off)'
+    : '';
+  return [base + emasNote];
 }
 
 // Regime korelasi Emas-vs-DXY (22 Agu 2026, lihat regimeTracker.js) -- opsional/best-effort.
@@ -54,6 +67,7 @@ function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
     ...macroLines(opts.macro),
     ...cotLines(opts.cot),
     ...regimeLines(opts.regime),
+    ...yieldCurveLines(opts.yieldCurve),
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

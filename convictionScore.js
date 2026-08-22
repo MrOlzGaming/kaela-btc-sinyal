@@ -63,6 +63,21 @@ function computeBtcConviction(data) {
     factors.push({ label: 'Squeeze Setup', v, reason: label });
   }
 
+  // Stablecoin supply growth (22 Agu 2026, lihat advancedMacro.js) -- suplai USDT+USDC beredar
+  // NAIK berarti dana segar lagi disiapin masuk crypto (leading indicator), TURUN berarti dana
+  // lagi keluar/di-redeem. Ambang 1% mingguan cukup buat nandain gerakan berarti (bukan noise).
+  if (data.stablecoinGrowth) {
+    const v = data.stablecoinGrowth.changePct > 1 ? 1 : data.stablecoinGrowth.changePct < -1 ? -1 : 0;
+    factors.push({ label: 'Stablecoin Supply', v, reason: `${data.stablecoinGrowth.changePct >= 0 ? '+' : ''}${data.stablecoinGrowth.changePct.toFixed(2)}% (7 hari) -- ${v > 0 ? 'dana segar masuk' : v < 0 ? 'dana keluar/redeem' : 'stabil'}` });
+  }
+
+  // M2 Money Supply YoY (22 Agu 2026, lihat advancedMacro.js) -- likuiditas global, BTC historis
+  // korelasi ke pertumbuhan M2 (lebih banyak uang beredar = lebih banyak dana cari aset risiko).
+  if (data.m2Growth && data.m2Growth.changePctYoY != null) {
+    const v = data.m2Growth.changePctYoY > 5 ? 1 : data.m2Growth.changePctYoY < 0 ? -1 : 0;
+    factors.push({ label: 'M2 Money Supply (YoY)', v, reason: `${data.m2Growth.changePctYoY.toFixed(1)}% -- ${v > 0 ? 'likuiditas melimpah, tailwind' : v < 0 ? 'likuiditas mengetat, headwind' : 'netral'}` });
+  }
+
   if (data.halvingPhase) {
     const v = data.halvingPhase === 'TANAM' ? 1 : data.halvingPhase === 'PANEN' ? -1 : 0;
     factors.push({ label: 'Fase Siklus Halving', v, reason: data.halvingPhase || 'di luar window aktif' });

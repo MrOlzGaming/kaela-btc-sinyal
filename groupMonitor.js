@@ -21,6 +21,7 @@ const { fetchFearGreed } = require('./marketSentiment');
 const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
 const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine } = require('./trackRecord');
+const { fetchAdvancedMacroContext } = require('./advancedMacro');
 const fs = require('fs');
 const path = require('path');
 
@@ -170,6 +171,10 @@ async function main() {
   // ketilep langsung ke-grade pas run yang sama. 1x panggil buat DUA aset sekaligus.
   if (willSendWeekly) gradeMaturedVerdicts(now, { btc: priceToday, xau: goldPriceToday });
 
+  // Diisi di blok weekly BTC di bawah, dipakai lagi di blok weekly Emas (1x fetch dipakai bareng
+  // 2 laporan -- DVOL/Stablecoin/YieldCurve/M2 sama-sama relevan buat kedua aset).
+  let advancedMacro = null;
+
   if (priceYesterday !== null) {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
   }
@@ -179,14 +184,17 @@ async function main() {
       safe(async () => (await fetchTradeMetrics()).nupl, 'NUPL'),
       safe(fetchFearGreed, 'Fear & Greed'),
     ]);
+    advancedMacro = await safe(fetchAdvancedMacroContext, 'Advanced Macro (DVOL/Stablecoin/YieldCurve/M2)');
     const btcRsi = rsi(closed.map((c) => c.close), 14);
     const conviction = computeBtcConviction({
       rsi: btcRsi, mvrv: onchain?.mvrv || null, nupl, fearGreed,
       squeezeState: readSqueezeState(),
       halvingPhase: getWindowPhase(now),
+      stablecoinGrowth: advancedMacro?.stablecoin || null,
+      m2Growth: advancedMacro?.m2 || null,
     });
     logVerdict('btc', now, conviction.score, conviction.verdict, priceToday);
-    const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime })
+    const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime, advancedMacro: advancedMacro ? { dvol: advancedMacro.dvol, yieldCurve: advancedMacro.yieldCurve } : null })
       + '\n\n' + formatConvictionLines(conviction).join('\n')
       + '\n' + formatTrackRecordLine('btc');
     items.push({ type: 'report-weekly', content: weeklyMsg });
@@ -210,7 +218,7 @@ async function main() {
     const goldRsi = rsi(goldClosed.map((c) => c.close), 14);
     const conviction = computeGoldConviction({ rsi: goldRsi, dxyTrend: macro?.dxy?.trend || null, realYieldTrend: macro?.realYield?.trend || null, cot });
     logVerdict('xau', now, conviction.score, conviction.verdict, goldPriceToday);
-    const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime })
+    const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null })
       + '\n\n' + formatConvictionLines(conviction).join('\n')
       + '\n' + formatTrackRecordLine('xau');
     items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });

@@ -1,0 +1,53 @@
+name: Nyopet - Minta OTP
+
+# 22 Agu 2026 -- ganti PIN statis jadi OTP sekali pakai via WA DM (permintaan Olan: "permudah
+# cara input, pake otp japri aja, ga password-password an"). Gerbang akses PERTAMA tetap token
+# GitHub scoped-sempit di browser (sama kayak sebelumnya, lihat nyopet-input.html) -- workflow
+# ini kirim kode 6 digit ke WA PRIBADI Olan (081299303888), BUKAN grup. nyopet-web-input.yml
+# verifikasi kode itu sebagai gerbang KEDUA sebelum beneran ubah data.
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: nyopet-request-otp
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Generate + kirim OTP (nyopetRequestOtp.js)
+        run: node nyopetRequestOtp.js
+
+      - name: Commit & push nyopet-otp-state.json
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f nyopet-otp-state.json
+          git diff --staged --quiet || git commit -m "Nyopet: OTP baru diminta $(date -u +%Y-%m-%dT%H:%M)"
+          for i in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase origin master && git push && exit 0
+            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+            sleep 5
+          done
+          echo "::error::Gagal push setelah 5x percobaan."
+          exit 1

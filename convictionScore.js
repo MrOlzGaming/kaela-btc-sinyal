@@ -83,11 +83,25 @@ function computeBtcConviction(data) {
     factors.push({ label: 'Fase Siklus Halving', v, reason: data.halvingPhase || 'di luar window aktif' });
   }
 
+  // Fed Funds Rate trend (22 Agu 2026, lihat advancedMacro.js) -- dipotong = dovish = bullish
+  // aset risiko, dinaikkan = hawkish = bearish. Vote dari TREN 90 hari, bukan level absolut.
+  if (data.fedRateTrend) {
+    const v = data.fedRateTrend.arah.includes('DIPOTONG') ? 1 : data.fedRateTrend.arah.includes('DINAIKKAN') ? -1 : 0;
+    factors.push({ label: 'Fed Funds Rate', v, reason: `${data.fedRateTrend.arah} -- ${data.fedRateTrend.efek}` });
+  }
+
+  // Credit Spread High-Yield (22 Agu 2026, lihat advancedMacro.js) -- BTC-only (efeknya ke Emas
+  // ambigu/gak konsisten, gak dipaksa vote di sana). Melebar = risk-off = bearish BTC.
+  if (data.creditSpreadTrend) {
+    const v = data.creditSpreadTrend.arah === 'MENYEMPIT' ? 1 : data.creditSpreadTrend.arah === 'MELEBAR' ? -1 : 0;
+    factors.push({ label: 'Credit Spread (High-Yield)', v, reason: `${data.creditSpreadTrend.arah} -- ${data.creditSpreadTrend.efek}` });
+  }
+
   const score = factors.reduce((s, f) => s + f.v, 0);
   return { score, verdict: verdictLabel(score, factors.length), factors, totalFactors: factors.length };
 }
 
-// data: { rsi, dxyTrend, realYieldTrend, cot } -- semua opsional/null-safe.
+// data: { rsi, dxyTrend, realYieldTrend, cot, fedRateTrend } -- semua opsional/null-safe.
 function computeGoldConviction(data) {
   const factors = [];
 
@@ -105,6 +119,13 @@ function computeGoldConviction(data) {
   if (data.realYieldTrend) {
     const v = data.realYieldTrend.arah === 'TURUN' ? 1 : data.realYieldTrend.arah === 'NAIK' ? -1 : 0;
     factors.push({ label: 'Real Yield 10Y', v, reason: `${data.realYieldTrend.arah} -- Emas ${data.realYieldTrend.efekEmas}` });
+  }
+
+  // Fed Funds Rate trend -- sama arahnya kayak BTC (dipotong = bullish Emas juga, biaya peluang
+  // pegang Emas ikut turun bareng suku bunga).
+  if (data.fedRateTrend) {
+    const v = data.fedRateTrend.arah.includes('DIPOTONG') ? 1 : data.fedRateTrend.arah.includes('DINAIKKAN') ? -1 : 0;
+    factors.push({ label: 'Fed Funds Rate', v, reason: `${data.fedRateTrend.arah} -- ${data.fedRateTrend.efek}` });
   }
 
   // COT: net positioning EKSTREM (>=40% OI) diperlakukan sbg CAUTION (v=0, ditandain "crowded"),

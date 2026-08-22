@@ -78,6 +78,53 @@ function m2Insight(m2) {
   return `tumbuh pelan ${m2.changePctYoY.toFixed(1)}% YoY -- netral`;
 }
 
+// ============ Fed Funds Rate (FRED DFF, harian) ============
+// SINYAL diambil dari TREN (naik/turun 90 hari), BUKAN level absolut -- level 3,63% artinya beda
+// tergantung konteks (siklus 2020 vs 2024 vs sekarang), tapi ARAH pergerakannya (lagi dipotong
+// The Fed = dovish, lagi dinaikkan = hawkish) konsisten maknanya kapan pun -- sama pola kayak
+// classifyDxyTrend/classifyRealYieldTrend di macroData.js.
+async function fetchFedFundsRate() {
+  const rows = await fetchFredSeriesRows('DFF');
+  const latest = rows[rows.length - 1];
+  const targetDate = new Date(latest.date);
+  targetDate.setDate(targetDate.getDate() - 90);
+  const candidates = rows.filter((r) => new Date(r.date) <= targetDate);
+  const ago90d = candidates.length ? candidates[candidates.length - 1] : null;
+  const changeBps = ago90d ? (latest.value - ago90d.value) * 100 : null; // basis poin
+  return { value: latest.value, date: latest.date, changeBps };
+}
+
+// Ambang 25bp = 1x langkah standar The Fed (naik/turun 0,25%) -- di bawah itu dianggap "ditahan".
+function classifyFedRateTrend(fed) {
+  if (fed.changeBps == null) return { arah: 'TIDAK DIKETAHUI', efek: 'data histori kurang' };
+  if (fed.changeBps <= -25) return { arah: 'DIPOTONG (dovish)', efek: 'historis BULLISH buat aset risiko (BTC) & Emas -- likuiditas lebih longgar, biaya peluang pegang Emas turun' };
+  if (fed.changeBps >= 25) return { arah: 'DINAIKKAN (hawkish)', efek: 'historis BEARISH buat aset risiko (BTC) & Emas -- likuiditas mengetat, biaya peluang pegang Emas naik' };
+  return { arah: 'DITAHAN', efek: 'netral, The Fed lagi wait-and-see' };
+}
+
+// ============ Credit Spread High-Yield (FRED BAMLH0A0HYM2, harian) ============
+// Selisih bunga obligasi korporasi BERISIKO vs obligasi pemerintah AMAN -- melebar = investor
+// mulai takut/minta kompensasi lebih (risk-off), menyempit = pede/risk-on. Beda dari yield curve
+// (itu bandingin JATUH TEMPO beda, ini bandingin RISIKO KREDIT beda) -- nangkep jenis stres pasar
+// yang beda, sering duluan gerak sebelum kelihatan di harga saham/crypto.
+async function fetchCreditSpread() {
+  const rows = await fetchFredSeriesRows('BAMLH0A0HYM2');
+  const latest = rows[rows.length - 1];
+  const targetDate = new Date(latest.date);
+  targetDate.setDate(targetDate.getDate() - 30);
+  const candidates = rows.filter((r) => new Date(r.date) <= targetDate);
+  const ago30d = candidates.length ? candidates[candidates.length - 1] : null;
+  const changeBps = ago30d ? (latest.value - ago30d.value) * 100 : null;
+  return { value: latest.value, date: latest.date, changeBps };
+}
+
+function classifyCreditSpreadTrend(cs) {
+  if (cs.changeBps == null) return { arah: 'TIDAK DIKETAHUI', efek: 'data histori kurang' };
+  if (cs.changeBps >= 30) return { arah: 'MELEBAR', efek: 'pasar kredit mulai waspada/risk-off -- historis headwind buat BTC (aset risiko)' };
+  if (cs.changeBps <= -30) return { arah: 'MENYEMPIT', efek: 'pasar kredit pede/risk-on -- historis tailwind buat BTC' };
+  return { arah: 'STABIL', efek: 'netral' };
+}
+
 async function safe(fn, label) {
   try {
     return await fn();
@@ -88,18 +135,21 @@ async function safe(fn, label) {
 }
 
 async function fetchAdvancedMacroContext() {
-  const [dvol, stablecoin, yieldCurve, m2] = await Promise.all([
+  const [dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread] = await Promise.all([
     safe(fetchBtcDvol, 'DVOL'),
     safe(fetchStablecoinSupplyGrowth, 'Stablecoin Supply'),
     safe(fetchYieldCurve, 'Yield Curve'),
     safe(fetchM2Growth, 'M2 Money Supply'),
+    safe(fetchFedFundsRate, 'Fed Funds Rate'),
+    safe(fetchCreditSpread, 'Credit Spread'),
   ]);
-  return { dvol, stablecoin, yieldCurve, m2 };
+  return { dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread };
 }
 
 module.exports = {
   fetchBtcDvol, dvolInsight, fetchStablecoinSupplyGrowth, fetchYieldCurve, yieldCurveInsight,
-  fetchM2Growth, m2Insight, fetchAdvancedMacroContext,
+  fetchM2Growth, m2Insight, fetchFedFundsRate, classifyFedRateTrend, fetchCreditSpread,
+  classifyCreditSpreadTrend, fetchAdvancedMacroContext,
 };
 
 if (require.main === module) {

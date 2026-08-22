@@ -21,7 +21,7 @@ const { fetchFearGreed } = require('./marketSentiment');
 const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
 const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine } = require('./trackRecord');
-const { fetchAdvancedMacroContext } = require('./advancedMacro');
+const { fetchAdvancedMacroContext, classifyFedRateTrend, classifyCreditSpreadTrend } = require('./advancedMacro');
 const fs = require('fs');
 const path = require('path');
 
@@ -192,6 +192,8 @@ async function main() {
       halvingPhase: getWindowPhase(now),
       stablecoinGrowth: advancedMacro?.stablecoin || null,
       m2Growth: advancedMacro?.m2 || null,
+      fedRateTrend: advancedMacro?.fedRate ? classifyFedRateTrend(advancedMacro.fedRate) : null,
+      creditSpreadTrend: advancedMacro?.creditSpread ? classifyCreditSpreadTrend(advancedMacro.creditSpread) : null,
     });
     logVerdict('btc', now, conviction.score, conviction.verdict, priceToday);
     const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime, advancedMacro: advancedMacro ? { dvol: advancedMacro.dvol, yieldCurve: advancedMacro.yieldCurve } : null })
@@ -216,7 +218,10 @@ async function main() {
   if (local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null) {
     const [macro, cot, regime] = await Promise.all([safeMacro(), safeCot(), safeRegime(fetchGoldDxyRegime, 'Emas-DXY')]);
     const goldRsi = rsi(goldClosed.map((c) => c.close), 14);
-    const conviction = computeGoldConviction({ rsi: goldRsi, dxyTrend: macro?.dxy?.trend || null, realYieldTrend: macro?.realYield?.trend || null, cot });
+    const conviction = computeGoldConviction({
+      rsi: goldRsi, dxyTrend: macro?.dxy?.trend || null, realYieldTrend: macro?.realYield?.trend || null, cot,
+      fedRateTrend: advancedMacro?.fedRate ? classifyFedRateTrend(advancedMacro.fedRate) : null,
+    });
     logVerdict('xau', now, conviction.score, conviction.verdict, goldPriceToday);
     const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null })
       + '\n\n' + formatConvictionLines(conviction).join('\n')

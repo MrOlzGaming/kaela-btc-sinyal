@@ -14,21 +14,35 @@
 const fs = require('fs');
 const path = require('path');
 const { getActiveOrders, updateOrder } = require('./sniperOrders');
-const { setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
+const { getAccountBalance, setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
+const { hitung: hitungExposure } = require('./calculator');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const { ASSETS } = require('./assetConfig');
+const { fetchWithRetry } = require('./httpRetry');
 
+async function fetchLivePrice(symbol) {
+  const res = await fetchWithRetry(`https://data-api.binance.vision/api/v3/ticker/price?symbol=${symbol}`);
+  return parseFloat((await res.json()).price);
+}
+
+// 22 Agu 2026 (permintaan Olan: "replace semua yang berbau bayangan jadi Binance Demo") -- sizing
+// GAK LAGI reuse margin/leverage dari order shadow (itu dihitung dari bankroll bayangan yang
+// TERPISAH dari Binance). Dihitung ULANG di sini pakai saldo REAL Binance + harga LIVE sekarang --
+// arah/SL/pola tetap dari sinyal shadow (itu bagian ANALISA yang gak berubah), tapi UKURAN
+// posisinya sepenuhnya dari kondisi real saat eksekusi.
 async function executeOne(order) {
   const assetCfg = ASSETS[order.asset] || ASSETS.btc;
-  console.log(`\n[LocalLiveExecutor] Eksekusi ${assetCfg.label} ${order.mode} (${order.direction}) @ $${order.entryPrice}...`);
+  console.log(`\n[LocalLiveExecutor] Eksekusi ${assetCfg.label} ${order.mode} (${order.direction})...`);
 
   let entryFilledQty = null;
   try {
-    await setLeverage(assetCfg.symbol, order.leverage);
-    // nilaiPosisi = margin * leverage (kebalikan rumus calculator.js: margin = nilaiPosisi/leverage)
-    const notionalUsd = order.marginUsd * order.leverage;
+    const [modal, livePrice] = await Promise.all([getAccountBalance(), fetchLivePrice(assetCfg.symbol)]);
+    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: order.sl });
+    console.log(`[LocalLiveExecutor] Saldo available: $${modal.toFixed(2)} | Harga live: $${livePrice} | Exposure ${calc.exposure}x | Leverage ${calc.leverage}x | Margin $${calc.margin.toFixed(2)}`);
+
+    await setLeverage(assetCfg.symbol, calc.leverage);
     const entryOrder = await placeMarketEntry({
-      symbol: assetCfg.symbol, direction: order.direction, notionalUsd, livePrice: order.entryPrice,
+      symbol: assetCfg.symbol, direction: order.direction, notionalUsd: calc.nilaiPosisi, livePrice,
     });
     entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
 
@@ -44,7 +58,10 @@ async function executeOne(order) {
 
     updateOrder(order.id, {
       liveExecutedAt: new Date().toISOString(),
-      liveExecution: { ok: true, filledQty: entryFilledQty, testnet: isTestnet() },
+      liveExecution: {
+        ok: true, filledQty: entryFilledQty, testnet: isTestnet(),
+        modal, livePrice, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
+      },
     });
     console.log(`[LocalLiveExecutor] ✅ SUKSES -- qty ${entryFilledQty} (${isTestnet() ? 'Demo Trading' : 'MAINNET ASLI'}).`);
   } catch (e) {

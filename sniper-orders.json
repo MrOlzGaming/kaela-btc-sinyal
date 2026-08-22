@@ -98,7 +98,7 @@
     {
       "id": "mszfmviedto9",
       "signalId": "2026081901",
-      "status": "floating",
+      "status": "cancelled",
       "direction": "buy",
       "strategyType": "breakout",
       "triggerPrice": 64403.17,
@@ -122,8 +122,8 @@
       "silentTest": false,
       "createdAt": "2026-08-19T01:48:13.190Z",
       "triggeredAt": "2026-08-19T01:48:13.190Z",
-      "closedAt": null,
-      "closeReason": null,
+      "closedAt": "2026-08-22T19:55:18.782Z",
+      "closeReason": "Sistem migrasi ke Binance Demo (22 Agu 2026) -- posisi bayangan lama ditutup, tracking selanjutnya pakai saldo Binance Demo real.",
       "pnlUsd": null,
       "pnlPct": null,
       "partialClosedAt": "2026-08-21T13:59:59.999Z",
@@ -133,7 +133,7 @@
     {
       "id": "mt3sr9w8j33j",
       "signalId": "2026082201",
-      "status": "floating",
+      "status": "cancelled",
       "asset": "xau",
       "mode": "fvg",
       "gapCreatedTime": 1786233599999,
@@ -160,8 +160,8 @@
       "silentTest": false,
       "createdAt": "2026-08-22T03:06:38.168Z",
       "triggeredAt": "2026-08-22T03:06:38.168Z",
-      "closedAt": null,
-      "closeReason": null,
+      "closedAt": "2026-08-22T19:55:18.782Z",
+      "closeReason": "Sistem migrasi ke Binance Demo (22 Agu 2026) -- posisi bayangan lama ditutup, tracking selanjutnya pakai saldo Binance Demo real.",
       "pnlUsd": null,
       "pnlPct": null
     }

@@ -33,7 +33,7 @@ function sign(queryString, secret) {
   return crypto.createHmac('sha256', secret).update(queryString).digest('hex');
 }
 
-async function signedRequest(method, path, params = {}) {
+async function signedRequestOnce(method, path, params) {
   const secrets = loadSecrets();
   if (!secrets.BINANCE_API_KEY || !secrets.BINANCE_API_SECRET) {
     throw new Error('BINANCE_API_KEY/BINANCE_API_SECRET belum di-setup (secrets.js atau env var) -- gak bisa eksekusi order real.');
@@ -48,9 +48,28 @@ async function signedRequest(method, path, params = {}) {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(`Binance API error (HTTP ${res.status}): ${JSON.stringify(data)}`);
+    const err = new Error(`Binance API error (HTTP ${res.status}): ${JSON.stringify(data)}`);
+    err.binanceCode = data.code;
+    throw err;
   }
   return data;
+}
+
+// Retry SEKALI (22 Agu 2026, ketemu pas tes -- error -1021 timestamp/recvWindow sesekali kejadian
+// murni gangguan jaringan sesaat, BUKAN masalah jam sistem -- dicek langsung, selisih cuma ~1,5
+// detik, jauh di bawah batas 5 detik). Timestamp DIGENERATE ULANG tiap percobaan (signedRequestOnce
+// bikin baru tiap dipanggil), jadi retry beneran dapet timestamp fresh, bukan yang basi.
+async function signedRequest(method, path, params = {}) {
+  try {
+    return await signedRequestOnce(method, path, params);
+  } catch (e) {
+    if (e.binanceCode === -1021) {
+      console.log('[BinanceExecutor] Timestamp/recvWindow error, retry sekali...');
+      await new Promise((r) => setTimeout(r, 500));
+      return signedRequestOnce(method, path, params);
+    }
+    throw e;
+  }
 }
 
 // ============ Info simbol (precision/stepSize) -- WAJIB dicek sebelum kirim quantity, Binance
@@ -103,21 +122,27 @@ async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
 
 // SL/TP sebagai order EXCHANGE-NATIVE (STOP_MARKET/TAKE_PROFIT_MARKET, reduceOnly=true) -- tetap
 // eksekusi walau server/internet kita lagi mati, gak nunggu monitoring manual.
+//
+// FIX 22 Agu 2026 (ketemu pas tes demo beneran, error -4120): Binance migrasi SEMUA conditional
+// order (STOP_MARKET/TAKE_PROFIT_MARKET/dst) ke endpoint BARU /fapi/v1/algoOrder per 9 Des 2025 --
+// endpoint /fapi/v1/order LAMA nolak order jenis ini sekarang ("gunakan Algo Order API").
+// Bedanya: path beda, WAJIB `algoType: 'CONDITIONAL'`, param harga trigger namanya `triggerPrice`
+// (bukan `stopPrice` lagi).
 async function placeStopLoss({ symbol, direction, stopPrice, quantity }) {
   const closeSide = direction === 'buy' ? 'SELL' : 'BUY'; // order penutup arahnya KEBALIKAN dari entry
   const { pricePrecision } = await getSymbolInfo(symbol);
-  return signedRequest('POST', '/fapi/v1/order', {
-    symbol, side: closeSide, type: 'STOP_MARKET',
-    stopPrice: stopPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
+  return signedRequest('POST', '/fapi/v1/algoOrder', {
+    algoType: 'CONDITIONAL', symbol, side: closeSide, type: 'STOP_MARKET',
+    triggerPrice: stopPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
   });
 }
 
 async function placeTakeProfit({ symbol, direction, tpPrice, quantity }) {
   const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
   const { pricePrecision } = await getSymbolInfo(symbol);
-  return signedRequest('POST', '/fapi/v1/order', {
-    symbol, side: closeSide, type: 'TAKE_PROFIT_MARKET',
-    stopPrice: tpPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
+  return signedRequest('POST', '/fapi/v1/algoOrder', {
+    algoType: 'CONDITIONAL', symbol, side: closeSide, type: 'TAKE_PROFIT_MARKET',
+    triggerPrice: tpPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
   });
 }
 

@@ -309,11 +309,11 @@ function formatSignalInfoOnly({ direction, entryPrice, sl, patternType, mode, co
 // apa beneran kejalan atau gagal -- ini uang beneran (atau testnet, ditandain jelas).
 function liveExecutionLines(liveExecution) {
   if (!liveExecution) return [];
-  const modeLabel = liveExecution.testnet ? '🧪 TESTNET (duit palsu)' : '💰 MAINNET (UANG ASLI)';
+  const modeLabel = liveExecution.testnet ? '🧪 BINANCE DEMO (duit virtual)' : '💰 MAINNET (UANG ASLI)';
   if (liveExecution.ok) {
-    return ['', `${modeLabel} -- Order REAL berhasil masuk, qty ${liveExecution.filledQty}. SL+TP tahap 1 udah nempel di exchange.`];
+    return ['', `${modeLabel} -- Order berhasil masuk, qty ${liveExecution.filledQty}. SL+TP udah nempel di exchange.`];
   }
-  return ['', `${modeLabel} -- ❌ Eksekusi REAL GAGAL: ${liveExecution.error}. Posisi bayangan tetap tercatat, tapi TIDAK ADA order beneran di Binance -- cek manual.`];
+  return ['', `${modeLabel} -- ❌ Eksekusi GAGAL: ${liveExecution.error} -- TIDAK ADA order di Binance, cek manual.`];
 }
 
 function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecution }) {
@@ -342,8 +342,8 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
     '',
     order.confirmationNote,
     '',
-    liveExecution
-      ? '🎭 Posisi bayangan TETAP dicatat buat tracking performa -- lihat status EKSEKUSI LIVE di atas buat tau apa order beneran kejalan.'
+liveExecution
+      ? '🤖 Posisi RIIL di Binance Demo (duit virtual, bukan bayangan lagi) -- lihat status EKSEKUSI di atas.'
       : '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
     '🚨 JANGAN ALL-IN! Trading resiko tinggi.',
     '⚠️ Deteksi pola ini pendekatan NUMERIK (regresi/aturan angka), bukan mata manusia -- cocokkan dulu sama chart aslinya sebelum diikuti.',

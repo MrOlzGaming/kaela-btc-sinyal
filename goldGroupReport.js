@@ -12,21 +12,41 @@ function fmtPct(p) {
   return `${p >= 0 ? '📈 +' : '📉 '}${p.toFixed(1)}%`;
 }
 
-function generateGoldDaily(now, priceToday, priceYesterday) {
+// Konteks makro DXY + real yield (22 Agu 2026, lihat macroData.js) -- opsional/best-effort,
+// null-safe kalau FRED gagal diambil. Ini yang beneran gerakin Emas secara fundamental, bukan
+// cuma chart pattern.
+function macroLines(macro) {
+  if (!macro) return [];
+  const lines = [];
+  if (macro.dxy) lines.push(`💵 DXY: ${macro.dxy.latest.value.toFixed(1)} (${macro.dxy.trend.arah}) -- Emas ${macro.dxy.trend.efekEmas}`);
+  if (macro.realYield) lines.push(`📉 Real Yield 10Y: ${macro.realYield.latest.value.toFixed(2)}% (${macro.realYield.trend.arah}) -- Emas ${macro.realYield.trend.efekEmas}`);
+  return lines;
+}
+
+// Posisi smart money COMEX (COT Report CFTC, mingguan -- lihat cotReport.js) -- opsional/best-effort.
+function cotLines(cot) {
+  if (!cot) return [];
+  return [`🏦 Smart Money (COT, per ${cot.date}): ${cot.label}`];
+}
+
+function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
   const change = pctChange(priceToday, priceYesterday);
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 Update XAU/Emas — ${localDateKey(now)}`,
     `Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`,
+    ...macroLines(opts.macro),
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');
 }
 
-function generateGoldWeekly(now, priceToday, priceLastWeek) {
+function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 📆 Laporan Mingguan Emas — minggu ${localDateKey(now)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
+    ...macroLines(opts.macro),
+    ...cotLines(opts.cot),
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

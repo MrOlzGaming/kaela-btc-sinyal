@@ -1,0 +1,53 @@
+name: Jadwal Ekonomi (peringatan dini, tiap 6 jam)
+
+on:
+  schedule:
+    - cron: '11 */6 * * *' # geser dikit dari jam bulat, lihat catatan di news-daily.yml
+  workflow_dispatch: {}
+
+concurrency:
+  group: econ-calendar
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
+            FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+          };
+          EOF
+
+      - name: Cek jadwal ekonomi 48 jam ke depan (econCalendarMonitor.js)
+        run: node econCalendarMonitor.js
+
+      - name: Commit & push econ-calendar-notified.json + archive.json (WAJIB tiap run)
+        run: |
+          git config user.name "Kaela Bot"
+          git config user.email "kaela-bot@users.noreply.github.com"
+          git add -f econ-calendar-notified.json archive.json
+          git diff --staged --quiet || git commit -m "Auto: jadwal ekonomi $(date -u +%Y-%m-%dT%H:%M)"
+          for i in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase origin master && git push && exit 0
+            echo "Push percobaan $i gagal, coba lagi dalam 5 detik..."
+            sleep 5
+          done
+          echo "::error::Gagal push econ-calendar-notified.json setelah 5x percobaan."
+          exit 1
+
+      - name: Purge jsDelivr cache
+        if: success()
+        run: curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/archive.json" || true

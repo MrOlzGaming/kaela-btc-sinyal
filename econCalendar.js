@@ -15,23 +15,35 @@ async function fetchWeekCalendar() {
   return res.json();
 }
 
-// Event USD + High impact aja, tanggal WITA-nya sama kayak `now` (hari ini). `directionalView`
-// (permintaan Olan 11 Agu 2026: "berani memperkirakan arah") dicari dari judul ASLI bahasa
-// Inggris SEBELUM diterjemahkan -- econDirectionalView.js cocokin ke kamus yang sama dipakai
-// econTranslate.js. null kalau event-nya gak ada mapping dikenal (jangan maksa nebak).
-function getTodayHighImpactUsdEvents(allEvents, now = new Date()) {
-  const todayKey = localDateKey(now);
+// Event USD + High impact yang jatuh dalam `lookaheadHours` jam ke depan dari SEKARANG (bukan
+// "tanggal kalender hari ini") -- fix 22 Agu 2026: model lama filter by "tanggal WITA == hari
+// ini" DAN cuma dicek 1x/hari jam 07:03 WITA (lihat econCalendarMonitor.js) -- event yang jatuh
+// dini hari WITA (misal FOMC ~02:00 WITA) UDAH LEWAT beberapa jam sebelum pengecekan sempat
+// jalan, jadi "info"-nya nyampe SETELAH kejadian, bukan peringatan dini (kasus nyata dilaporkan
+// Olan). Model baru: window relatif ke waktu sekarang + `key` stabil per event (buat dedup DI
+// LUAR fungsi ini, lihat econCalendarMonitor.js) + label tanggal eksplisit (bisa "hari ini" atau
+// "besok" tergantung event-nya jatuh kapan, gak diasumsikan selalu hari ini lagi).
+function getUpcomingHighImpactUsdEvents(allEvents, now = new Date(), lookaheadHours = 48) {
+  const windowEndMs = now.getTime() + lookaheadHours * 60 * 60 * 1000;
   return allEvents
     .filter((e) => e.country === 'USD' && e.impact === 'High')
-    .filter((e) => localDateKey(new Date(e.date)) === todayKey)
-    .map((e) => ({
-      title: translateEventTitle(e.title),
-      time: toLocal(new Date(e.date)).toISOString().slice(11, 16), // HH:MM WITA
-      forecast: e.forecast || '-',
-      previous: e.previous || '-',
-      directionalView: getDirectionalView(e.title),
-    }))
-    .sort((a, b) => a.time.localeCompare(b.time));
+    .filter((e) => {
+      const t = new Date(e.date).getTime();
+      return t > now.getTime() && t <= windowEndMs; // cuma yang BELUM terjadi
+    })
+    .map((e) => {
+      const d = new Date(e.date);
+      return {
+        key: `${e.date}__${e.title}`, // stabil per (waktu, judul asli) -- dipakai dedup state file
+        title: translateEventTitle(e.title),
+        dateKey: localDateKey(d), // buat label "hari ini"/"besok"/tanggal lain di formatter
+        time: toLocal(d).toISOString().slice(11, 16), // HH:MM WITA
+        forecast: e.forecast || '-',
+        previous: e.previous || '-',
+        directionalView: getDirectionalView(e.title),
+      };
+    })
+    .sort((a, b) => (a.dateKey + a.time).localeCompare(b.dateKey + b.time));
 }
 
-module.exports = { fetchWeekCalendar, getTodayHighImpactUsdEvents };
+module.exports = { fetchWeekCalendar, getUpcomingHighImpactUsdEvents };

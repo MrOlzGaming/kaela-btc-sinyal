@@ -38,8 +38,9 @@ jobs:
       - name: Laporan grup WA (groupMonitor.js)
         run: node groupMonitor.js
 
-      - name: Jadwal ekonomi hari ini (econCalendarMonitor.js)
-        run: node econCalendarMonitor.js
+      # econCalendarMonitor.js DIPINDAH ke workflow sendiri (econ-calendar.yml, tiap 6 jam) --
+      # 22 Agu 2026, fix bug event dini hari WITA (misal FOMC) kelewat karena cuma dicek 1x/hari
+      # di sini. Lihat catatan lengkap di econCalendarMonitor.js.
 
       # 15 Agu 2026: buildDashboard.js DICABUT -- state.json difetch LANGSUNG di browser
       # pengunjung (web/js/dashboard-load.js), jadi commit di bawah ini aja udah cukup buat

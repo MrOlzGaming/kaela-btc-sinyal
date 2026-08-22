@@ -22,13 +22,23 @@ function directionalLines(e) {
   ];
 }
 
+// Label hari relatif ke `now` -- "HARI INI"/"BESOK"/tanggal biasa (event bisa jatuh lebih dari
+// 1 hari ke depan karena window sekarang 48 jam, bukan cuma hari kalender ini lagi).
+function dayLabel(dateKey, now) {
+  const todayKey = localDateKey(now);
+  const tomorrowKey = localDateKey(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  if (dateKey === todayKey) return 'HARI INI';
+  if (dateKey === tomorrowKey) return 'BESOK';
+  return dateKey;
+}
+
 function formatEconCalendar(now, events) {
   const lines = [];
-  lines.push(`${CATEGORY_COLOR.econ.emoji} 📅 JADWAL EKONOMI HARI INI — ${localDateKey(now)}`);
-  lines.push('(event USD dampak tinggi aja -- paling relevan buat BTC lewat sentimen risiko)');
+  lines.push(`${CATEGORY_COLOR.econ.emoji} 📅 JADWAL EKONOMI MENDATANG (peringatan dini)`);
+  lines.push('(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)');
   lines.push('');
   for (const e of events) {
-    lines.push(`🕐 ${e.time} WITA — ${e.title}`);
+    lines.push(`🕐 ${dayLabel(e.dateKey, now)}, ${e.time} WITA — ${e.title}`);
     lines.push(`   Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`);
     lines.push(...directionalLines(e));
     lines.push('');
@@ -43,8 +53,8 @@ module.exports = { formatEconCalendar };
 
 if (require.main === module) {
   const example = [
-    { title: 'Non-Farm Employment Change', time: '20:30', forecast: '85K', previous: '57K' },
-    { title: 'Unemployment Rate', time: '20:30', forecast: '4.2%', previous: '4.2%' },
+    { title: 'Non-Farm Employment Change', dateKey: localDateKey(new Date()), time: '20:30', forecast: '85K', previous: '57K' },
+    { title: 'Unemployment Rate', dateKey: localDateKey(new Date()), time: '20:30', forecast: '4.2%', previous: '4.2%' },
   ];
   console.log(formatEconCalendar(new Date(), example));
 }

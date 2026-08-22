@@ -14,12 +14,34 @@ const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal } = require('./config');
 const { fetchCycleMetrics } = require('./onchainMetrics');
+const { fetchMacroContext } = require('./macroData');
+const { fetchGoldCotContext } = require('./cotReport');
 
 async function safeOnchain() {
   try {
     return await fetchCycleMetrics();
   } catch (e) {
     console.log('[GroupMonitor] On-chain metrics gagal diambil (dilewatin):', e.message);
+    return null;
+  }
+}
+
+// macroData.js sendiri udah null-safe per-field (DXY/real yield independen), tapi bungkus lagi
+// jaga-jaga kalau FRED down total -- laporan Emas TETAP kirim tanpa konteks makro, bukan gagal total.
+async function safeMacro() {
+  try {
+    return await fetchMacroContext();
+  } catch (e) {
+    console.log('[GroupMonitor] Konteks makro (FRED) gagal diambil (dilewatin):', e.message);
+    return null;
+  }
+}
+
+async function safeCot() {
+  try {
+    return await fetchGoldCotContext();
+  } catch (e) {
+    console.log('[GroupMonitor] COT Report Emas (CFTC) gagal diambil (dilewatin):', e.message);
     return null;
   }
 }
@@ -118,10 +140,13 @@ async function main() {
   // Laporan Emas -- jadwal SAMA kayak BTC (harian tiap hari, mingguan Senin, dst), key `type`
   // BEDA (suffix -gold) biar dedup archive.js gak ketuker sama laporan BTC.
   if (goldPriceToday !== null && goldPriceYesterday !== null) {
-    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday) });
+    // Makro cuma di-fetch kalau laporan Emas beneran mau dikirim (hemat request, sama pola kayak onchain).
+    const macro = await safeMacro();
+    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro }) });
   }
   if (local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null) {
-    items.push({ type: 'report-weekly-gold', content: generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek) });
+    const [macro, cot] = await Promise.all([safeMacro(), safeCot()]);
+    items.push({ type: 'report-weekly-gold', content: generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot }) });
   }
   if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {
     items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth) });

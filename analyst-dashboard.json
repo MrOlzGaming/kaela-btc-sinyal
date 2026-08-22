@@ -1,1 +1,181 @@
-{}
+{
+  "btc": {
+    "price": 76936,
+    "conviction": {
+      "score": 0,
+      "verdict": "⚪ NETRAL / Campuran",
+      "factors": [
+        {
+          "label": "RSI Teknikal",
+          "v": -1,
+          "reason": "RSI 88 overbought -- rawan technical pullback"
+        },
+        {
+          "label": "MVRV (on-chain)",
+          "v": 0,
+          "reason": "1.50 -- Fair value / akumulasi"
+        },
+        {
+          "label": "NUPL (on-chain)",
+          "v": 0,
+          "reason": "0.33 -- Optimism / Anxiety"
+        },
+        {
+          "label": "Fear & Greed",
+          "v": 0,
+          "reason": "71/100 -- Greed (kontrarian)"
+        },
+        {
+          "label": "Stablecoin Supply",
+          "v": 0,
+          "reason": "+0.65% (7 hari) -- stabil"
+        },
+        {
+          "label": "M2 Money Supply (YoY)",
+          "v": 1,
+          "reason": "6.1% -- likuiditas melimpah, tailwind"
+        },
+        {
+          "label": "Fed Funds Rate",
+          "v": 0,
+          "reason": "DITAHAN -- netral, The Fed lagi wait-and-see"
+        },
+        {
+          "label": "Credit Spread (High-Yield)",
+          "v": 0,
+          "reason": "STABIL -- netral"
+        }
+      ],
+      "totalFactors": 8
+    },
+    "trackRecord": null,
+    "regime": {
+      "corr30": 0.23576397822657919,
+      "corr90": 0.3537068103747048,
+      "label30": "lemah/gak konsisten",
+      "label90": "moderat positif",
+      "sampleDays": 81,
+      "latestDate": "2026-08-21"
+    },
+    "advancedMacro": {
+      "dvol": {
+        "value": 41.26,
+        "changePct": 18.597298074159237
+      },
+      "stablecoin": {
+        "current": 256851407093.13782,
+        "weekAgo": 255197902132.95703,
+        "changePct": 0.6479304674375093
+      },
+      "yieldCurve": {
+        "value": 0.5,
+        "date": "2026-08-21",
+        "inverted": false
+      },
+      "m2": {
+        "value": 23290.1,
+        "date": "2026-07-06",
+        "changePctYoY": 6.109106482240801
+      },
+      "fedRate": {
+        "value": 3.63,
+        "date": "2026-08-20",
+        "changeBps": 0.9999999999999787
+      },
+      "creditSpread": {
+        "value": 2.75,
+        "date": "2026-08-20",
+        "changeBps": 6.000000000000005
+      }
+    }
+  },
+  "xau": {
+    "price": 4590.57,
+    "conviction": {
+      "score": 0,
+      "verdict": "⚪ NETRAL / Campuran",
+      "factors": [
+        {
+          "label": "RSI Teknikal",
+          "v": 0,
+          "reason": "RSI 70 netral"
+        },
+        {
+          "label": "DXY (Dolar)",
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
+        },
+        {
+          "label": "Real Yield 10Y",
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
+        },
+        {
+          "label": "Fed Funds Rate",
+          "v": 0,
+          "reason": "DITAHAN -- netral, The Fed lagi wait-and-see"
+        },
+        {
+          "label": "COT Smart Money",
+          "v": 0,
+          "reason": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade) -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote"
+        }
+      ],
+      "totalFactors": 5
+    },
+    "trackRecord": null,
+    "regime": {
+      "corr30": -0.3543229848889389,
+      "corr90": -0.5195195478732744,
+      "label30": "moderat negatif",
+      "label90": "moderat negatif",
+      "sampleDays": 76,
+      "latestDate": "2026-08-14"
+    },
+    "macro": {
+      "dxy": {
+        "latest": {
+          "date": "2026-08-14",
+          "value": 118.9028
+        },
+        "prev": {
+          "date": "2026-08-13",
+          "value": 119.1848
+        },
+        "changePct": -0.23660735261543123,
+        "trend": {
+          "arah": "STABIL",
+          "efekEmas": "netral"
+        }
+      },
+      "realYield": {
+        "latest": {
+          "date": "2026-08-20",
+          "value": 2.35
+        },
+        "prev": {
+          "date": "2026-08-19",
+          "value": 2.35
+        },
+        "changePct": 0,
+        "trend": {
+          "arah": "STABIL",
+          "efekEmas": "netral"
+        }
+      }
+    },
+    "cot": {
+      "date": "2026-08-18",
+      "net": 222189,
+      "netPctOi": 54.691330674937234,
+      "label": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade)",
+      "weekChangeContracts": 4249
+    },
+    "yieldCurve": {
+      "value": 0.5,
+      "date": "2026-08-21",
+      "inverted": false
+    }
+  },
+  "updatedAt": "2026-08-22T09:48:01.855Z"
+}

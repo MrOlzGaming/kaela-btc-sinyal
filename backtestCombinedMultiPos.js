@@ -43,6 +43,11 @@ function runCombinedBacktest(daily, opts = {}) {
     // 20%+20% independen.
     sharedRiskBudget = false,
     chopPeriod = null, chopThreshold = 45, // chopPeriod=null = filter mati (perilaku lama)
+    // Ide #2 (22 Agu 2026, diagnosa drawdown lanjutan) -- CEGAH 2 mode numpuk BARENGAN di ASET
+    // YANG SAMA (beda dari sharedRiskBudget yang NGURANGIN UKURAN posisi -- ini nunda salah satu
+    // mode sampai yang lain kelar, bukan ngecilin keduanya). false = perilaku lama (maks 1 per
+    // mode per aset, jadi 2 mode BISA bareng di 1 aset).
+    singlePositionPerAsset = false,
     // Aturan Turtle Traders (Richard Dennis, riset 22 Agu 2026 -- Olan minta cari trader top):
     // LEWATIN sinyal baru kalau sinyal SEBELUMNYA (mode yang SAMA) dalam skipWindowDays terakhir
     // itu MENANG -- logika: jarang ada 2 breakout menang beruntun di window pendek, yg kedua
@@ -54,7 +59,15 @@ function runCombinedBacktest(daily, opts = {}) {
     // kasar: 26 trade yang entry-nya jatuh di window ini RUGI -$19.753 total, 98 trade di luar
     // UNTUNG +$58.109 -- window ini kemungkinan besar nangkep fase bear/crash pasca-puncak siklus.
     haltInBearWindow = false,
+    // Ide #3 (22 Agu 2026) -- BUKAN nyegah sinyal (4 percobaan gitu semua gagal, lihat memory),
+    // tapi NGECILIN UKURAN posisi begitu lagi kena rentetan kalah beruntun (anti-martingale, gaya
+    // Turtle asli). Semua sinyal TETAP dieksekusi (gak ada yang di-skip), cuma marginPct efektifnya
+    // diciutin. Streak dihitung GABUNGAN lintas mode (Sniper+FVG), reset begitu ada 1 kemenangan.
+    // streakSizeSteps = [{minStreak, sizeMult}] urut naik. lossStreakSizing=false = mati (lama).
+    lossStreakSizing = false,
+    streakSizeSteps = [{ minStreak: 3, sizeMult: 0.5 }, { minStreak: 6, sizeMult: 0.25 }],
   } = opts;
+  let lossStreak = 0;
   const HALVINGS_FOR_BEAR = ['2016-07-09', '2020-05-11', '2024-04-19', '2028-04-13'];
   const bearWindows = [];
   for (let hi = 0; hi < HALVINGS_FOR_BEAR.length - 1; hi++) {
@@ -88,6 +101,7 @@ function runCombinedBacktest(daily, opts = {}) {
     capitalSeries.push({ time: exitTime, capital });
     const modeKey = pos.patternType.startsWith('fvg') ? 'fvg' : 'sniper';
     lastResultByMode[modeKey] = { won: pnlUsd > 0, exitTime };
+    if (pnlUsd > 0) lossStreak = 0; else lossStreak += 1; // anti-martingale: reset pas menang
   }
 
   for (let i = warmupDays; i < daily.length; i++) {
@@ -154,6 +168,8 @@ function runCombinedBacktest(daily, opts = {}) {
     }
 
     const modesInUse = new Set(openPositions.map((p) => p.patternType.startsWith('fvg') ? 'fvg' : 'sniper'));
+    // 1 aset di file ini -- singlePositionPerAsset jadi "1 posisi TOTAL" (gak peduli mode).
+    if (singlePositionPerAsset && openPositions.length > 0) continue;
 
     function skippedByTurtleRule(modeKey) {
       if (skipWindowDays === null) return false;
@@ -196,7 +212,15 @@ function runCombinedBacktest(daily, opts = {}) {
       if (riskDistance <= 0) continue;
       const nyawaPct = riskDistance / cand.entryPrice * 100;
       if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
-      const { nilaiPosisi, margin } = hitungExposure({ modal: availNow, entry: cand.entryPrice, stopLoss: cand.sl });
+      let { nilaiPosisi, margin } = hitungExposure({ modal: availNow, entry: cand.entryPrice, stopLoss: cand.sl });
+      // Ide #3 -- anti-martingale: begitu lossStreak nyentuh ambang, ukuran posisi (nilaiPosisi+
+      // margin) diciutin pakai sizeMult step TERTINGGI yang kepenuhi. Ambil langkah TERBESAR
+      // (streak makin panjang = makin kecil), bukan cuma langkah pertama yang kesentuh.
+      if (lossStreakSizing) {
+        let sizeMult = 1;
+        for (const step of streakSizeSteps) if (lossStreak >= step.minStreak) sizeMult = Math.min(sizeMult === 1 ? step.sizeMult : sizeMult, step.sizeMult);
+        if (sizeMult < 1) { nilaiPosisi *= sizeMult; margin *= sizeMult; }
+      }
       if (margin > availNow) continue;
       const marginPct = margin / availNow * 100;
       if (marginPct > maxMarginPct) continue;

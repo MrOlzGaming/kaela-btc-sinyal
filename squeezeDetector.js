@@ -7,8 +7,12 @@
 //   -> rawan SHORT SQUEEZE (harga bisa tiba-tiba MELONJAK, short kepaksa beli balik).
 // - Funding rate SANGAT POSITIF + Open Interest lagi NAIK = long numpuk (crowded longs)
 //   -> rawan LONG SQUEEZE (harga bisa tiba-tiba ANJLOK, long kepaksa jual paksa).
-// Data semua GRATIS dari endpoint publik Binance Futures (gak perlu API key/biaya), jadi
-// gak nambah cost apapun ke sistem -- konsisten sama prinsip proyek ini (semua modul gratis).
+// Data funding+OI dari Bybit (v5 public API), BUKAN Binance Futures -- dicoba dulu fapi.binance.com,
+// ternyata GitHub Actions (IP Azure US) kena block HTTP 451 "restricted location" dari Binance buat
+// endpoint futures (beda dari data-api.binance.vision yang dipakai modul lain, itu khusus spot &
+// gak kena block). Bybit gak ada batasan ini buat data publik. Harga/RSI tetap dari Binance spot
+// (data-api.binance.vision) kayak modul lain -- cuma funding+OI yang pindah sumber.
+// Semua GRATIS, gak perlu API key/biaya -- konsisten sama prinsip proyek ini.
 //
 // Ini MURNI radar/peringatan dini, BUKAN sinyal entry. Kaela gak buka posisi dari ini.
 
@@ -28,7 +32,7 @@ const { WEB_URL } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 
 const STATE_PATH = path.join(__dirname, 'squeeze-alert-state.json');
-const FAPI_BASE = 'https://fapi.binance.com';
+const BYBIT_BASE = 'https://api.bybit.com';
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return { lastType: null, lastAlertTime: null };
@@ -39,14 +43,20 @@ function saveState(state) {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 }
 
+// Bybit v5, category 'linear' (USDT perpetual) -- balikin { fundingRate, timestamp(ms) }[]
 async function fetchFundingHistory(symbol, limit) {
-  const res = await fetchWithRetry(`${FAPI_BASE}/fapi/v1/fundingRate?symbol=${symbol}&limit=${limit}`);
-  return res.json();
+  const res = await fetchWithRetry(`${BYBIT_BASE}/v5/market/funding/history?category=linear&symbol=${symbol}&limit=${limit}`);
+  const data = await res.json();
+  if (data.retCode !== 0) throw new Error(`Bybit funding error: ${data.retMsg}`);
+  return data.result.list.map((f) => ({ fundingRate: f.fundingRate, timestamp: +f.fundingRateTimestamp }));
 }
 
-async function fetchOpenInterestHist(symbol, period, limit) {
-  const res = await fetchWithRetry(`${FAPI_BASE}/futures/data/openInterestHist?symbol=${symbol}&period=${period}&limit=${limit}`);
-  return res.json();
+// Bybit v5 open interest -- balikin { openInterest, timestamp(ms) }[]
+async function fetchOpenInterestHist(symbol, intervalTime, limit) {
+  const res = await fetchWithRetry(`${BYBIT_BASE}/v5/market/open-interest?category=linear&symbol=${symbol}&intervalTime=${intervalTime}&limit=${limit}`);
+  const data = await res.json();
+  if (data.retCode !== 0) throw new Error(`Bybit open-interest error: ${data.retMsg}`);
+  return data.result.list.map((o) => ({ openInterest: o.openInterest, timestamp: +o.timestamp }));
 }
 
 async function fetchFearGreed() {
@@ -99,7 +109,7 @@ async function main() {
 
   const avgFundingPct = (fundingHist.reduce((sum, f) => sum + parseFloat(f.fundingRate), 0) / fundingHist.length) * 100;
 
-  const oiSorted = oiHist.map((o) => ({ oi: parseFloat(o.sumOpenInterest), t: o.timestamp })).sort((a, b) => a.t - b.t);
+  const oiSorted = oiHist.map((o) => ({ oi: parseFloat(o.openInterest), t: o.timestamp })).sort((a, b) => a.t - b.t);
   const oiChangePct = oiSorted.length >= 2
     ? ((oiSorted[oiSorted.length - 1].oi - oiSorted[0].oi) / oiSorted[0].oi) * 100
     : 0;

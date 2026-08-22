@@ -7,11 +7,15 @@
 //   -> rawan SHORT SQUEEZE (harga bisa tiba-tiba MELONJAK, short kepaksa beli balik).
 // - Funding rate SANGAT POSITIF + Open Interest lagi NAIK = long numpuk (crowded longs)
 //   -> rawan LONG SQUEEZE (harga bisa tiba-tiba ANJLOK, long kepaksa jual paksa).
-// Data funding+OI dari Bybit (v5 public API), BUKAN Binance Futures -- dicoba dulu fapi.binance.com,
-// ternyata GitHub Actions (IP Azure US) kena block HTTP 451 "restricted location" dari Binance buat
-// endpoint futures (beda dari data-api.binance.vision yang dipakai modul lain, itu khusus spot &
-// gak kena block). Bybit gak ada batasan ini buat data publik. Harga/RSI tetap dari Binance spot
-// (data-api.binance.vision) kayak modul lain -- cuma funding+OI yang pindah sumber.
+// Data funding+OI dari OKX (public API) -- Binance Futures (fapi.binance.com) DAN Bybit sama-sama
+// kena block (HTTP 451 / 403 CloudFront "restricted location") dari server GitHub Actions (Azure
+// US), dicek langsung lewat workflow diagnostik 22 Agu 2026. OKX satu-satunya dari 6 exchange yang
+// dites yang lolos. Harga/RSI tetap dari Binance spot (data-api.binance.vision, gak kena block --
+// beda dari endpoint futures) kayak modul lain.
+// OKX gak sediakan histori Open Interest publik (cuma snapshot SEKARANG) -- jadi trend OI dihitung
+// SENDIRI: tiap run nyimpen snapshot OI ke state file, dibandingin sama snapshot ~OI_LOOKBACK_DAYS
+// hari lalu. Butuh state numpuk dulu beberapa hari sebelum trend OI valid (skip evaluasi kalau
+// belum cukup data).
 // Semua GRATIS, gak perlu API key/biaya -- konsisten sama prinsip proyek ini.
 //
 // Ini MURNI radar/peringatan dini, BUKAN sinyal entry. Kaela gak buka posisi dari ini.
@@ -32,31 +36,34 @@ const { WEB_URL } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 
 const STATE_PATH = path.join(__dirname, 'squeeze-alert-state.json');
-const BYBIT_BASE = 'https://api.bybit.com';
+const OKX_BASE = 'https://www.okx.com';
+const OKX_INST = 'BTC-USDT-SWAP';
 
 function loadState() {
-  if (!fs.existsSync(STATE_PATH)) return { lastType: null, lastAlertTime: null };
-  return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
+  if (!fs.existsSync(STATE_PATH)) return { lastType: null, lastAlertTime: null, oiHistory: [] };
+  const s = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
+  if (!s.oiHistory) s.oiHistory = [];
+  return s;
 }
 
 function saveState(state) {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 }
 
-// Bybit v5, category 'linear' (USDT perpetual) -- balikin { fundingRate, timestamp(ms) }[]
-async function fetchFundingHistory(symbol, limit) {
-  const res = await fetchWithRetry(`${BYBIT_BASE}/v5/market/funding/history?category=linear&symbol=${symbol}&limit=${limit}`);
+// OKX -- balikin { fundingRate, timestamp(ms) }[]
+async function fetchFundingHistory(instId, limit) {
+  const res = await fetchWithRetry(`${OKX_BASE}/api/v5/public/funding-rate-history?instId=${instId}&limit=${limit}`);
   const data = await res.json();
-  if (data.retCode !== 0) throw new Error(`Bybit funding error: ${data.retMsg}`);
-  return data.result.list.map((f) => ({ fundingRate: f.fundingRate, timestamp: +f.fundingRateTimestamp }));
+  if (data.code !== '0') throw new Error(`OKX funding error: ${data.msg}`);
+  return data.data.map((f) => ({ fundingRate: f.fundingRate, timestamp: +f.fundingTime }));
 }
 
-// Bybit v5 open interest -- balikin { openInterest, timestamp(ms) }[]
-async function fetchOpenInterestHist(symbol, intervalTime, limit) {
-  const res = await fetchWithRetry(`${BYBIT_BASE}/v5/market/open-interest?category=linear&symbol=${symbol}&intervalTime=${intervalTime}&limit=${limit}`);
+// OKX cuma sediain SNAPSHOT sekarang (gak ada histori publik) -- balikin OI sekarang dalam BTC (oiCcy)
+async function fetchOpenInterestNow(instId) {
+  const res = await fetchWithRetry(`${OKX_BASE}/api/v5/public/open-interest?instId=${instId}`);
   const data = await res.json();
-  if (data.retCode !== 0) throw new Error(`Bybit open-interest error: ${data.retMsg}`);
-  return data.result.list.map((o) => ({ openInterest: o.openInterest, timestamp: +o.timestamp }));
+  if (data.code !== '0') throw new Error(`OKX open-interest error: ${data.msg}`);
+  return { openInterest: parseFloat(data.data[0].oiCcy), timestamp: +data.data[0].ts };
 }
 
 async function fetchFearGreed() {
@@ -100,25 +107,34 @@ async function main() {
   const now = new Date();
   const state = loadState();
 
-  const [fundingHist, oiHist, dailyCandles, fearGreed] = await Promise.all([
-    fetchFundingHistory('BTCUSDT', 9), // ~3 hari (funding tiap 8 jam)
-    fetchOpenInterestHist('BTCUSDT', '1d', OI_LOOKBACK_DAYS + 1),
+  const [fundingHist, oiNow, dailyCandles, fearGreed] = await Promise.all([
+    fetchFundingHistory(OKX_INST, 9), // ~3 hari (funding tiap 8 jam)
+    fetchOpenInterestNow(OKX_INST),
     fetchCandles('BTCUSDT', '1d', 30),
     fetchFearGreed(),
   ]);
 
   const avgFundingPct = (fundingHist.reduce((sum, f) => sum + parseFloat(f.fundingRate), 0) / fundingHist.length) * 100;
 
-  const oiSorted = oiHist.map((o) => ({ oi: parseFloat(o.openInterest), t: o.timestamp })).sort((a, b) => a.t - b.t);
-  const oiChangePct = oiSorted.length >= 2
-    ? ((oiSorted[oiSorted.length - 1].oi - oiSorted[0].oi) / oiSorted[0].oi) * 100
-    : 0;
+  // Numpukin snapshot OI SENDIRI (OKX gak sediain histori publik) -- buang yang lebih tua dari 2x lookback
+  const oiHistory = [...state.oiHistory, { oi: oiNow.openInterest, t: oiNow.timestamp }]
+    .filter((s) => now.getTime() - s.t <= OI_LOOKBACK_DAYS * 2 * 24 * 60 * 60 * 1000);
+
+  const lookbackMs = OI_LOOKBACK_DAYS * 24 * 60 * 60 * 1000;
+  const oldEnough = oiHistory.filter((s) => now.getTime() - s.t >= lookbackMs);
+  const baseline = oldEnough.length ? oldEnough.reduce((a, b) => (a.t > b.t ? a : b)) : null; // paling BARU di antara yang udah cukup umur
+  const oiChangePct = baseline ? ((oiNow.openInterest - baseline.oi) / baseline.oi) * 100 : null;
 
   const closes = dailyCandles.map((c) => c.close);
   const rsiVal = rsi(closes, 14);
   const price = closes[closes.length - 1];
 
   let type = 'normal';
+  if (oiChangePct == null) {
+    console.log(`[SqueezeDetector] ${now.toISOString()} -- belum cukup histori OI (butuh ${OI_LOOKBACK_DAYS} hari numpuk dulu), skip evaluasi. funding avg 3h: ${fmtPct(avgFundingPct)}, RSI: ${rsiVal}, F&G: ${fearGreed}`);
+    saveState({ ...state, oiHistory });
+    return;
+  }
   if (avgFundingPct <= FUNDING_SHORT_THRESHOLD_PCT && oiChangePct >= OI_RISE_THRESHOLD_PCT) type = 'short_squeeze_setup';
   else if (avgFundingPct >= FUNDING_LONG_THRESHOLD_PCT && oiChangePct >= OI_RISE_THRESHOLD_PCT) type = 'long_squeeze_setup';
 
@@ -126,13 +142,14 @@ async function main() {
 
   if (type === 'normal') {
     if (state.lastType) console.log('[SqueezeDetector] Kondisi udah normal lagi, reset state.');
-    saveState({ lastType: null, lastAlertTime: null });
+    saveState({ lastType: null, lastAlertTime: null, oiHistory });
     return;
   }
 
   const cooldownOk = state.lastType !== type || !state.lastAlertTime || now.getTime() - new Date(state.lastAlertTime).getTime() > COOLDOWN_MS;
   if (!cooldownOk) {
     console.log(`[SqueezeDetector] ${type} masih sama & masih cooldown, skip kirim.`);
+    saveState({ ...state, oiHistory });
     return;
   }
 
@@ -140,7 +157,7 @@ async function main() {
   console.log(msg + '\n');
   addEntry('squeeze', msg, now);
   await sendWhatsApp(msg);
-  saveState({ lastType: type, lastAlertTime: now.toISOString() });
+  saveState({ lastType: type, lastAlertTime: now.toISOString(), oiHistory });
 }
 
 main().catch((e) => {

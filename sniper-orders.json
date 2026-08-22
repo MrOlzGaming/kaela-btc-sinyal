@@ -23,7 +23,9 @@
       "closeReason": "dibatalkan manual",
       "pnlUsd": null,
       "pnlPct": null,
-      "signalId": "2026080801"
+      "signalId": "2026080801",
+      "asset": "btc",
+      "mode": "sniper"
     },
     {
       "id": "mst31n2c7elb",
@@ -55,7 +57,9 @@
       "closedAt": "2026-08-14T15:09:26.560Z",
       "closeReason": "dibatalkan (margin lewat batas, dibuat ulang)",
       "pnlUsd": null,
-      "pnlPct": null
+      "pnlPct": null,
+      "asset": "btc",
+      "mode": "sniper"
     },
     {
       "id": "mst32s5jp9t5",
@@ -87,7 +91,9 @@
       "closedAt": "2026-08-14T16:11:55.055Z",
       "closeReason": "dibatalkan manual",
       "pnlUsd": null,
-      "pnlPct": null
+      "pnlPct": null,
+      "asset": "btc",
+      "mode": "sniper"
     },
     {
       "id": "mszfmviedto9",
@@ -120,7 +126,9 @@
       "closeReason": null,
       "pnlUsd": null,
       "pnlPct": null,
-      "partialClosedAt": "2026-08-21T13:59:59.999Z"
+      "partialClosedAt": "2026-08-21T13:59:59.999Z",
+      "asset": "btc",
+      "mode": "sniper"
     },
     {
       "id": "mt3sr9w8j33j",

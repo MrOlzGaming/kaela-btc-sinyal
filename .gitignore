@@ -20,6 +20,7 @@ squeeze-alert-state.json
 econ-calendar-notified.json
 conviction-track-record.json
 analyst-dashboard.json
+nyopet-otp-state.json
 
 # hasil riset/sweep sesi lokal (bukan "-cache"/"-result" tapi tetep regeneratable dari script
 # backtest/*.js, terlalu besar buat di-commit) -- 22 Agu 2026

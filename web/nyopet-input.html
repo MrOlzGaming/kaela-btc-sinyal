@@ -36,7 +36,7 @@
     <h1>🥷 Input Posisi Nyopet</h1>
   </div>
 
-  <div class="privacy-note">🔐 Halaman ini butuh PIN + token khusus (dijelaskan Kaela langsung, gak ditulis di sini) -- tanpa itu, submit gak akan ngapa-ngapain. Token disimpan cuma di HP/browser ini (localStorage), gak pernah dikirim ke server manapun selain langsung ke GitHub.</div>
+  <div class="privacy-note">🔐 Halaman ini butuh token khusus (dijelaskan Kaela langsung, gak ditulis di sini) + kode OTP sekali pakai yang dikirim ke WA PRIBADI Olan tiap mau submit -- tanpa dua-duanya, gak ngapa-ngapain. Token disimpan cuma di HP/browser ini (localStorage), gak pernah dikirim ke server manapun selain langsung ke GitHub. OTP gak disimpan -- sekali pakai, expire 10 menit.</div>
 
   <details class="setup-box">
     <summary>⚙️ Setup token (isi SEKALI doang per HP/browser)</summary>
@@ -57,8 +57,12 @@
     </div>
 
     <div class="field">
-      <label for="pin">PIN</label>
-      <input type="password" id="pin" placeholder="6 digit" inputmode="numeric" maxlength="6">
+      <label for="otp">Kode OTP</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="otp" placeholder="6 digit dari WA" inputmode="numeric" maxlength="6" style="flex:1;">
+        <button type="button" class="btn" id="requestOtpBtn" style="width:auto; white-space:nowrap; padding:10px 14px;">Minta OTP</button>
+      </div>
+      <p id="otpStatus" style="font-size:0.8rem;color:var(--clr-text-muted);margin-top:6px;"></p>
     </div>
 
     <div id="open-fields">
@@ -98,8 +102,8 @@
     (function () {
       const REPO = 'MrOlzGaming/kaela-btc-sinyal';
       const WORKFLOW = 'nyopet-web-input.yml';
+      const OTP_WORKFLOW = 'nyopet-request-otp.yml';
       const TOKEN_KEY = 'kaela_nyopet_gh_token';
-      const PIN_KEY = 'kaela_nyopet_pin';
 
       const tokenInput = document.getElementById('ghToken');
       const savedToken = localStorage.getItem(TOKEN_KEY);
@@ -109,9 +113,28 @@
         alert('Token kesimpan di HP ini.');
       });
 
-      const pinInput = document.getElementById('pin');
-      const savedPin = localStorage.getItem(PIN_KEY);
-      if (savedPin) pinInput.value = savedPin;
+      const otpInput = document.getElementById('otp');
+      const otpStatus = document.getElementById('otpStatus');
+      document.getElementById('requestOtpBtn').addEventListener('click', async function () {
+        const token = tokenInput.value.trim();
+        if (!token) { otpStatus.textContent = 'Isi token dulu (Setup token di atas).'; return; }
+        const btn = this;
+        btn.disabled = true;
+        otpStatus.textContent = 'Minta OTP...';
+        try {
+          const res = await fetch('https://api.github.com/repos/' + REPO + '/actions/workflows/' + OTP_WORKFLOW + '/dispatches', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ref: 'master' }),
+          });
+          otpStatus.textContent = res.status === 204
+            ? '✅ Kode dikirim ke WA kamu -- cek dalam ~30 detik, berlaku 10 menit.'
+            : '❌ Gagal minta OTP (HTTP ' + res.status + ').';
+        } catch (e) {
+          otpStatus.textContent = '❌ Error: ' + e.message;
+        }
+        btn.disabled = false;
+      });
 
       let mode = 'open';
       const openBtn = document.getElementById('mode-open');
@@ -136,12 +159,11 @@
 
       document.getElementById('submitBtn').addEventListener('click', async function () {
         const token = tokenInput.value.trim();
-        const pin = pinInput.value.trim();
+        const otp = otpInput.value.trim();
         if (!token) { showStatus(false, 'Token belum diisi -- buka "Setup token" di atas dulu.'); return; }
-        if (!pin) { showStatus(false, 'PIN belum diisi.'); return; }
-        localStorage.setItem(PIN_KEY, pin);
+        if (!otp) { showStatus(false, 'Kode OTP belum diisi -- klik "Minta OTP" dulu, cek WA.'); return; }
 
-        const inputs = { kunci: pin, action: mode };
+        const inputs = { otp: otp, action: mode };
         if (mode === 'open') {
           inputs.direction = document.getElementById('direction').value;
           inputs.entry = document.getElementById('entry').value;
@@ -173,7 +195,7 @@
             body: JSON.stringify({ ref: 'master', inputs: inputs }),
           });
           if (res.status === 204) {
-            showStatus(true, '✅ Terkirim! Cek grup WA dalam ~1 menit buat konfirmasi (kalau PIN salah, gak akan ada pesan apapun).');
+            showStatus(true, '✅ Terkirim! Cek grup WA dalam ~1 menit buat konfirmasi (kalau OTP salah/expired, gak akan ada pesan apapun -- minta OTP baru).');
           } else {
             const body = await res.text();
             showStatus(false, '❌ Gagal (HTTP ' + res.status + '): ' + body.slice(0, 200));

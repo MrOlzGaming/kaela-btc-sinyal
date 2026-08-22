@@ -5,14 +5,15 @@ name: Nyopet - Input Posisi dari Web
 # workflow_dispatch ini pakai token client-side yang SENGAJA dibatasi SUPER SEMPIT (cuma bisa
 # trigger workflow, gak bisa nulis kode/push apapun) -- lihat catatan di web/nyopet-input.html.
 #
-# PIN (`kunci`) itu LAPISAN PERLINDUNGAN ASLI (bukan sekadar token scope) -- dicek di step
-# PERTAMA, SEBELUM checkout/node apapun jalan. Kalau salah, workflow gagal total di situ, gak ada
-# satupun baris nyopetJournal.js yang sempat jalan. Pola PERSIS KONFIG_KUNCI punya AMA-TMS.
+# GERBANG AKSES (diganti 22 Agu 2026, dari PIN statis ke OTP sekali pakai lewat WA DM -- lihat
+# nyopetOtp.js). Beda dari PIN lama yang dicek SEBELUM checkout, OTP WAJIB dicek SETELAH checkout
+# (butuh baca nyopet-otp-state.json dari repo) -- pengecekannya sekarang ada di nyopetWebInput.js
+# (paling atas main(), sebelum efek samping apapun), BUKAN di step terpisah workflow ini.
 on:
   workflow_dispatch:
     inputs:
-      kunci:
-        description: 'PIN (WAJIB cocok sama secret NYOPET_KUNCI)'
+      otp:
+        description: 'Kode OTP (6 digit, dikirim ke WA pribadi -- lihat workflow "Nyopet - Minta OTP")'
         required: true
         type: string
       action:
@@ -59,20 +60,6 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      # PIN dicek DULUAN, checkout kode aja belum jalan -- salah PIN = workflow berhenti di sini,
-      # titik. Perbandingan pakai file+diff (bukan `[ "$A" = "$B" ]` langsung) biar gak ada isu
-      # newline/whitespace tersembunyi dari secret yang bikin perbandingan salah.
-      - name: Cek PIN
-        env:
-          KUNCI_INPUT: ${{ inputs.kunci }}
-          KUNCI_ASLI: ${{ secrets.NYOPET_KUNCI }}
-        run: |
-          if [ "$KUNCI_INPUT" != "$KUNCI_ASLI" ]; then
-            echo "::error::PIN salah -- gak ada satupun perubahan yang dijalankan."
-            exit 1
-          fi
-          echo "PIN cocok, lanjut."
-
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -87,8 +74,9 @@ jobs:
           };
           EOF
 
-      - name: Proses input posisi Nyopet (nyopetWebInput.js)
+      - name: Proses input posisi Nyopet (nyopetWebInput.js -- OTP dicek di dalam sini duluan)
         env:
+          NYOPET_OTP: ${{ inputs.otp }}
           NYOPET_ACTION: ${{ inputs.action }}
           NYOPET_DIRECTION: ${{ inputs.direction }}
           NYOPET_ENTRY: ${{ inputs.entry }}
@@ -100,11 +88,11 @@ jobs:
           NYOPET_EXIT: ${{ inputs.exit }}
         run: node nyopetWebInput.js
 
-      - name: Commit & push nyopet-journal.json
+      - name: Commit & push nyopet-journal.json + nyopet-otp-state.json (OTP kepake)
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f nyopet-journal.json
+          git add -f nyopet-journal.json nyopet-otp-state.json
           git diff --staged --quiet || git commit -m "Nyopet: input via web (${{ inputs.action }}) $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             git rebase --abort 2>/dev/null || true

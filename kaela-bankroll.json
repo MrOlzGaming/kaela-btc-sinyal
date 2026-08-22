@@ -1,5 +1,5 @@
 {
-  "balance": 111.3637806958881,
+  "balance": 6397.21186192,
   "startedAt": "2026-08-14T16:11:55.055Z",
   "lastTopUpMonthKey": 24319,
   "topUpHistory": [],
@@ -9,6 +9,13 @@
       "pnlUsd": 11.363780695888098,
       "label": "partial_tahap1",
       "balanceAfter": 111.3637806958881
+    },
+    {
+      "date": "2026-08-22T20:13:38.023Z",
+      "pnlUsd": 0,
+      "label": "sync_binance_demo",
+      "balanceAfter": 6397.21186192,
+      "note": "Migrasi ke Binance Demo -- saldo disamain sama akun real"
     }
   ]
 }

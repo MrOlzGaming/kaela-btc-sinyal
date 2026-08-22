@@ -16,6 +16,7 @@ const path = require('path');
 const { getActiveOrders, updateOrder, setBalance } = require('./sniperOrders');
 const { getAccountBalance, setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
 const { hitung: hitungExposure } = require('./calculator');
+const { load: loadBankroll, save: saveBankroll } = require('./kaelaBankroll');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const { ASSETS } = require('./assetConfig');
 const { fetchWithRetry } = require('./httpRetry');
@@ -89,7 +90,10 @@ async function main() {
   // sinyal baru buat update ini, biar dashboard selalu kebaca fresh.
   try {
     const balance = await getAccountBalance();
-    setBalance(balance);
+    setBalance(balance); // sniper-orders.json (panel Sniper)
+    const bankroll = loadBankroll();
+    bankroll.balance = balance; // kaela-bankroll.json (Jurnal Fund Report)
+    saveBankroll(bankroll);
     console.log(`[LocalLiveExecutor] Saldo web disinkronin: $${balance.toFixed(2)}`);
   } catch (e) {
     console.log('[LocalLiveExecutor] Gagal sync saldo (dilewatin, gak fatal):', e.message);

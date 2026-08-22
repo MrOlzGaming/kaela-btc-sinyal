@@ -4,7 +4,7 @@
 // Weekly kirim tiap Senin, Monthly tiap tanggal 1, Yearly tiap 1 Januari (semua kalender WITA).
 
 const {
-  generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly,
+  generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly, getWindowPhase,
 } = require('./groupReport');
 const {
   generateGoldDaily, generateGoldWeekly, generateGoldMonthly, generateGoldYearly,
@@ -13,10 +13,36 @@ const { sendWhatsApp } = require('./fonnte');
 const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal } = require('./config');
-const { fetchCycleMetrics } = require('./onchainMetrics');
+const { fetchCycleMetrics, fetchTradeMetrics } = require('./onchainMetrics');
 const { fetchMacroContext } = require('./macroData');
 const { fetchGoldCotContext } = require('./cotReport');
 const { fetchBtcNasdaqRegime, fetchGoldDxyRegime } = require('./regimeTracker');
+const { fetchFearGreed } = require('./marketSentiment');
+const { rsi } = require('./technicalAnalysis');
+const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
+const fs = require('fs');
+const path = require('path');
+
+// Baca state squeeze detector (squeezeDetector.js) -- read-only, dipakai sbg salah satu faktor
+// Conviction Score. `lastType` null kalau kondisi lagi normal (gak ada setup aktif).
+function readSqueezeState() {
+  try {
+    const p = path.join(__dirname, 'squeeze-alert-state.json');
+    if (!fs.existsSync(p)) return null;
+    return JSON.parse(fs.readFileSync(p, 'utf8')).lastType || null;
+  } catch {
+    return null;
+  }
+}
+
+async function safe(fn, label) {
+  try {
+    return await fn();
+  } catch (e) {
+    console.log(`[GroupMonitor] ${label} gagal diambil (dilewatin):`, e.message);
+    return null;
+  }
+}
 
 async function safeOnchain() {
   try {
@@ -132,14 +158,29 @@ async function main() {
   // jadi getUTCDate() mentah bakal salah 1 hari kalau gak digeser dulu.
   const local = toLocal(now);
   const items = [];
+  // On-chain (MVRV+Puell) cuma di-fetch kalau ADA laporan yang beneran mau dikirim (hemat quota
+  // 10req/jam) -- 1x fetch DIPAKAI BARENG daily (MVRV+Puell) & weekly (MVRV doang, buat Conviction
+  // Score), biar gak dobel panggil onchainMetrics.js dalam 1 run yang sama.
+  const willSendWeekly = local.getUTCDay() === 1 && priceLastWeek !== null;
+  const onchain = (priceYesterday !== null || willSendWeekly) ? await safeOnchain() : null;
+
   if (priceYesterday !== null) {
-    // On-chain cuma di-fetch kalau laporan daily beneran mau dikirim (hemat quota 10req/jam).
-    const onchain = await safeOnchain();
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
   }
-  if (local.getUTCDay() === 1 && priceLastWeek !== null) { // Senin (WITA)
-    const regime = await safeRegime(fetchBtcNasdaqRegime, 'BTC-Nasdaq');
-    items.push({ type: 'report-weekly', content: generateGroupWeekly(now, priceToday, priceLastWeek, { regime }) });
+  if (willSendWeekly) {
+    const [regime, nupl, fearGreed] = await Promise.all([
+      safeRegime(fetchBtcNasdaqRegime, 'BTC-Nasdaq'),
+      safe(async () => (await fetchTradeMetrics()).nupl, 'NUPL'),
+      safe(fetchFearGreed, 'Fear & Greed'),
+    ]);
+    const btcRsi = rsi(closed.map((c) => c.close), 14);
+    const conviction = computeBtcConviction({
+      rsi: btcRsi, mvrv: onchain?.mvrv || null, nupl, fearGreed,
+      squeezeState: readSqueezeState(),
+      halvingPhase: getWindowPhase(now),
+    });
+    const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime }) + '\n\n' + formatConvictionLines(conviction).join('\n');
+    items.push({ type: 'report-weekly', content: weeklyMsg });
   }
   if (local.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1 (WITA)
     items.push({ type: 'report-monthly', content: generateGroupMonthly(now, priceToday, priceLastMonth) });
@@ -157,7 +198,10 @@ async function main() {
   }
   if (local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null) {
     const [macro, cot, regime] = await Promise.all([safeMacro(), safeCot(), safeRegime(fetchGoldDxyRegime, 'Emas-DXY')]);
-    items.push({ type: 'report-weekly-gold', content: generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime }) });
+    const goldRsi = rsi(goldClosed.map((c) => c.close), 14);
+    const conviction = computeGoldConviction({ rsi: goldRsi, dxyTrend: macro?.dxy?.trend || null, realYieldTrend: macro?.realYield?.trend || null, cot });
+    const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime }) + '\n\n' + formatConvictionLines(conviction).join('\n');
+    items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });
   }
   if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {
     items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth) });

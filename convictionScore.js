@@ -1,0 +1,127 @@
+// Kaela Conviction Score -- gabungin SEMUA sinyal terpisah (teknikal, on-chain, sentimen, makro,
+// posisi institusional, regime) jadi SATU skor/verdict per aset, gaya Bloomberg Intelligence:
+// kesimpulan jelas + alasan pendukung, BUKAN sinyal-sinyal lepas yang pembaca harus rangkai
+// sendiri. 22 Agu 2026 -- bagian terakhir dari "Kaela analis tier Bloomberg" (lihat memori
+// project-kaela-analyst-tier), nyatuin semua modul yang udah dibangun sesi ini (macroData.js,
+// cotReport.js, regimeTracker.js, onchainMetrics.js, marketSentiment.js, squeezeDetector.js).
+//
+// PRINSIP: SETIAP faktor nge-vote +1 (bullish)/-1 (bearish)/0 (netral) DENGAN ALASAN eksplisit
+// yang ditampilkan -- bukan black box. Faktor yang datanya gagal diambil dilewatin (bukan
+// dianggap 0/netral -- itu beda makna, "gak tau" vs "netral"), skor dihitung dari yang KETAHUAN
+// aja + jujur soal berapa dari total yang missing. BUKAN backtest -- ini sintesis heuristik dari
+// sinyal2 individual yang masing2 punya level keyakinan sendiri (mirip econDirectionalView.js).
+
+function vote(condition, positiveIf, negativeIf, reasonPos, reasonNeg, reasonNeutral) {
+  if (condition == null) return null;
+  if (positiveIf(condition)) return { v: 1, reason: reasonPos };
+  if (negativeIf(condition)) return { v: -1, reason: reasonNeg };
+  return { v: 0, reason: reasonNeutral };
+}
+
+function verdictLabel(score, maxAbs) {
+  const norm = maxAbs > 0 ? score / maxAbs : 0;
+  if (norm >= 0.6) return '🟢 BULLISH KUAT';
+  if (norm >= 0.25) return '🟢 Condong Bullish';
+  if (norm <= -0.6) return '🔴 BEARISH KUAT';
+  if (norm <= -0.25) return '🔴 Condong Bearish';
+  return '⚪ NETRAL / Campuran';
+}
+
+// data: { rsi, mvrv, nupl, fearGreed, squeezeState, halvingPhase } -- semua opsional/null-safe,
+// null = data gak ke-fetch (dilewatin dari skor, BUKAN dianggap netral).
+function computeBtcConviction(data) {
+  const factors = [];
+
+  const rsiVote = vote(data.rsi, (v) => v < 30, (v) => v > 70,
+    `RSI ${data.rsi?.toFixed(0)} oversold -- rawan technical bounce`,
+    `RSI ${data.rsi?.toFixed(0)} overbought -- rawan technical pullback`,
+    `RSI ${data.rsi?.toFixed(0)} netral`);
+  if (rsiVote) factors.push({ label: 'RSI Teknikal', ...rsiVote });
+
+  if (data.mvrv) {
+    const mv = data.mvrv.classification;
+    const v = mv.includes('Undervalued') ? 1 : mv.includes('Overvalued') ? -1 : 0;
+    factors.push({ label: 'MVRV (on-chain)', v, reason: `${data.mvrv.value.toFixed(2)} -- ${mv}` });
+  }
+
+  if (data.nupl) {
+    const nu = data.nupl.classification;
+    const v = nu === 'Capitulation' ? 1 : nu === 'Euphoria / Greed' ? -1 : 0;
+    factors.push({ label: 'NUPL (on-chain)', v, reason: `${data.nupl.value.toFixed(2)} -- ${nu}` });
+  }
+
+  if (data.fearGreed) {
+    const c = data.fearGreed.classification;
+    const v = c === 'Extreme Fear' ? 1 : c === 'Extreme Greed' ? -1 : 0;
+    factors.push({ label: 'Fear & Greed', v, reason: `${data.fearGreed.value}/100 -- ${c} (kontrarian)` });
+  }
+
+  if (data.squeezeState) {
+    const v = data.squeezeState === 'short_squeeze_setup' ? 1 : data.squeezeState === 'long_squeeze_setup' ? -1 : 0;
+    const label = data.squeezeState === 'short_squeeze_setup' ? 'short numpuk, risiko harga MELONJAK'
+      : data.squeezeState === 'long_squeeze_setup' ? 'long numpuk, risiko harga ANJLOK' : 'gak ada setup squeeze aktif';
+    factors.push({ label: 'Squeeze Setup', v, reason: label });
+  }
+
+  if (data.halvingPhase) {
+    const v = data.halvingPhase === 'TANAM' ? 1 : data.halvingPhase === 'PANEN' ? -1 : 0;
+    factors.push({ label: 'Fase Siklus Halving', v, reason: data.halvingPhase || 'di luar window aktif' });
+  }
+
+  const score = factors.reduce((s, f) => s + f.v, 0);
+  return { score, verdict: verdictLabel(score, factors.length), factors, totalFactors: factors.length };
+}
+
+// data: { rsi, dxyTrend, realYieldTrend, cot } -- semua opsional/null-safe.
+function computeGoldConviction(data) {
+  const factors = [];
+
+  const rsiVote = vote(data.rsi, (v) => v < 30, (v) => v > 70,
+    `RSI ${data.rsi?.toFixed(0)} oversold -- rawan technical bounce`,
+    `RSI ${data.rsi?.toFixed(0)} overbought -- rawan technical pullback`,
+    `RSI ${data.rsi?.toFixed(0)} netral`);
+  if (rsiVote) factors.push({ label: 'RSI Teknikal', ...rsiVote });
+
+  if (data.dxyTrend) {
+    const v = data.dxyTrend.arah === 'MELEMAH' ? 1 : data.dxyTrend.arah === 'MENGUAT' ? -1 : 0;
+    factors.push({ label: 'DXY (Dolar)', v, reason: `${data.dxyTrend.arah} -- Emas ${data.dxyTrend.efekEmas}` });
+  }
+
+  if (data.realYieldTrend) {
+    const v = data.realYieldTrend.arah === 'TURUN' ? 1 : data.realYieldTrend.arah === 'NAIK' ? -1 : 0;
+    factors.push({ label: 'Real Yield 10Y', v, reason: `${data.realYieldTrend.arah} -- Emas ${data.realYieldTrend.efekEmas}` });
+  }
+
+  // COT: net positioning EKSTREM (>=40% OI) diperlakukan sbg CAUTION (v=0, ditandain "crowded"),
+  // BUKAN vote directional -- posisi ekstrem itu ambigu (bisa dibaca "smart money yakin" ATAU
+  // "crowded trade, rawan unwind"), jujur gak dipaksa milih 1 arah. Moderat (15-40%) baru dianggap
+  // vote directional ngikut arah posisinya.
+  if (data.cot) {
+    const abs = Math.abs(data.cot.netPctOi);
+    let v = 0, reason;
+    if (abs >= 40) {
+      reason = `${data.cot.label} -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote`;
+    } else if (abs >= 15) {
+      v = data.cot.net > 0 ? 1 : -1;
+      reason = data.cot.label;
+    } else {
+      reason = data.cot.label;
+    }
+    factors.push({ label: 'COT Smart Money', v, reason });
+  }
+
+  const score = factors.reduce((s, f) => s + f.v, 0);
+  return { score, verdict: verdictLabel(score, factors.length), factors, totalFactors: factors.length };
+}
+
+function formatConvictionLines(result) {
+  const lines = [`🎯 KAELA CONVICTION SCORE: ${result.verdict} (${result.score >= 0 ? '+' : ''}${result.score} dari ${result.totalFactors} faktor)`];
+  for (const f of result.factors) {
+    const tag = f.v > 0 ? '🟢' : f.v < 0 ? '🔴' : '⚪';
+    lines.push(`   ${tag} ${f.label}: ${f.reason}`);
+  }
+  lines.push('   ⚠️ Ini SINTESIS heuristik dari sinyal individual (bukan backtest gabungan) -- level keyakinan beda dari sinyal Sniper/Musiman yang diuji data historis.');
+  return lines;
+}
+
+module.exports = { computeBtcConviction, computeGoldConviction, formatConvictionLines };

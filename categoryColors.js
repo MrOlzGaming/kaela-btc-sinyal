@@ -14,6 +14,7 @@ const CATEGORY_COLOR = {
   whale: { emoji: '🟨', hex: '#eab308', label: 'Whale Alert' },
   econ: { emoji: '⬜', hex: '#8b949e', label: 'Jadwal Ekonomi' },
   priceAlert: { emoji: '🟫', hex: '#a16207', label: 'Pergerakan Harga' },
+  squeeze: { emoji: '⬛', hex: '#111827', label: 'Squeeze Alert' },
 };
 
 // type archive.json -> kategori (dipakai buildDashboard.js buat nentuin warna border kartu)
@@ -24,6 +25,7 @@ function categoryOfType(type) {
   if (type === 'whale') return 'whale';
   if (type === 'econ-calendar') return 'econ';
   if (type === 'price-alert') return 'priceAlert';
+  if (type === 'squeeze') return 'squeeze';
   return null;
 }
 

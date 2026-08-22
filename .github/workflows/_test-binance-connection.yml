@@ -1,0 +1,28 @@
+name: TEST Binance Connection (sementara, hapus abis dipakai)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Tulis secrets.js dari GitHub Secrets
+        run: |
+          cat > secrets.js << EOF
+          module.exports = {
+            BINANCE_API_KEY: '${{ secrets.BINANCE_API_KEY }}',
+            BINANCE_API_SECRET: '${{ secrets.BINANCE_API_SECRET }}',
+          };
+          EOF
+
+      - name: Tes koneksi (read-only)
+        run: node _testBinanceConnection.js

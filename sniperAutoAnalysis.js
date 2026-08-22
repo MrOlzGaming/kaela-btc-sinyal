@@ -135,10 +135,17 @@ async function main() {
 
   for (const assetKey of Object.keys(ASSETS)) {
     const assetCfg = ASSETS[assetKey];
+    // (22 Agu 2026, bug ketemu -- Olan lapor "analisa Emas mana?" pas sinyal ketemu tapi ditolak
+    // margin, gak nongol SAMA SEKALI di pesan harian) -- SEKARANG tiap aset WAJIB dapat MINIMAL
+    // 1 baris status per hari, apapun hasilnya (halt/gak ada pola/ada pola tapi ditolak sizing/
+    // valid). `continue` polos yang lama diganti pola push-lalu-continue biar konsisten -- gak
+    // ada jalur yang bisa "senyap total" lagi (kecuali 2 edge-case data rusak yang emang gak
+    // perlu dilaporin -- riskDistance=0 / partialTp<=0, itu murni jaring pengaman teknis).
+    const assetLabelTag = `Sniper (${assetCfg.label})`;
 
     if (assetCfg.useHalvingBearWindow && isBtcBearWindow(now)) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: lagi window istirahat siklus halving (fase pasca-puncak, historis rawan bear) -- sinyal baru DIMATIKAN sementara.`);
-      invalidNotes.push(`${assetCfg.emoji} ${assetCfg.label}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
+      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
       continue;
     }
 
@@ -146,6 +153,7 @@ async function main() {
     const hasFvgOpen = allActive.some((o) => o.asset === assetKey && o.mode === 'fvg');
     if (hasSniperOpen && hasFvgOpen) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: kedua slot (Sniper+FVG) udah floating, skip cek sinyal baru.`);
+      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: 2 posisi (Pola Chart+FVG) lagi floating bareng, gak cek sinyal baru dulu.`);
       continue;
     }
 
@@ -159,6 +167,7 @@ async function main() {
       }
     } catch (e) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal ambil data (${e.message}), skip aset ini giliran ini.`);
+      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: gagal ambil data harga hari ini (${e.message}), dicoba lagi besok.`);
       continue;
     }
     const dailyClose = daily[daily.length - 1].close;
@@ -177,19 +186,25 @@ async function main() {
     }
 
     if (candidates.length === 0) {
-      invalidNotes.push(`${assetCfg.emoji} ${assetCfg.label}: belum ada pola Sniper/FVG yang breakout hari ini.`);
+      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: belum ada pola Sniper/FVG yang breakout hari ini.`);
       continue;
     }
 
     for (const cand of candidates) {
+      const modeLabelId = cand.mode === 'fvg' ? 'FVG' : 'Pola Chart';
       const availableBalance = Math.max(0, totalBalance - usedMargin);
-      if (availableBalance <= 1) { console.log(`[SniperAutoAnalysis] Saldo available abis, skip sisa sinyal.`); continue; }
+      if (availableBalance <= 1) {
+        console.log(`[SniperAutoAnalysis] Saldo available abis, skip sisa sinyal.`);
+        invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi saldo available abis, gak sempat entry.`);
+        continue;
+      }
 
       const riskDistance = Math.abs(livePrice - cand.sl);
-      if (riskDistance === 0) continue;
+      if (riskDistance === 0) { console.log('[SniperAutoAnalysis] Jarak SL 0, skip -- lebih aman diam.'); continue; }
       const nyawaPct = riskDistance / livePrice * 100;
       if (nyawaPct > MAX_NYAWA_PCT) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label} ${cand.mode}: nyawa ${nyawaPct.toFixed(1)}% ngelewatin batas ${MAX_NYAWA_PCT}% -- invalidasi diterima.`);
+        invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi nyawa ${nyawaPct.toFixed(1)}% kelewat lebar (batas ${MAX_NYAWA_PCT}%) -- invalidasi diterima.`);
         continue;
       }
       const partialTp = cand.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
@@ -198,6 +213,7 @@ async function main() {
       const calc = hitungExposure({ modal: availableBalance, entry: livePrice, stopLoss: cand.sl });
       if (calc.marginPct > MAX_MARGIN_PCT) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label} ${cand.mode}: margin ${calc.marginPct.toFixed(1)}% saldo available ngelewatin batas ${MAX_MARGIN_PCT}% -- skip.`);
+        invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi margin ${calc.marginPct.toFixed(1)}% saldo available kelewat gede (batas ${MAX_MARGIN_PCT}%) -- skip, sinyal DILEWATIN.`);
         continue;
       }
 

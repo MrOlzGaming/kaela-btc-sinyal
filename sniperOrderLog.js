@@ -283,7 +283,7 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg }) {
     ? 'Mode FVG (Fair Value Gap): nyari zona harga yang "dilompatin" pas gerakan cepat, dianggap area support -- entry pas harga koreksi balik ke zona itu terus mantul.'
     : 'Mode Pola Chart: nyari pola breakout klasik (bull flag/pennant lanjutan tren, atau falling wedge pembalikan) di candle harian.';
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ${asset.emoji} ${asset.label} — ✅ VALID (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ${asset.emoji} ${asset.label} — ✅ VALID 🐂🚀 (analisa otomatis Kaela)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
     ...rMultipleLevels(order),

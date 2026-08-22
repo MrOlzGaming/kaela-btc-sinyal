@@ -928,5 +928,10 @@
     "type": "sniper",
     "date": "2026-08-22T03:06:38.168Z",
     "content": "🟧 🤖 SNIPER — 🟡 XAU/Emas — ✅ VALID 🐂🚀 (analisa otomatis Kaela)\n🆔 ID Sinyal: 2026082201\n🟢 BUY @ $4,592 (harga pasar, langsung entry -- bukan nunggu order)\n❌ SL: $4,297 (nyawa 6.4% -- jarak entry-SL, biar gampang diinput ulang manual)\n🎯 TP 1:1 = $4,887  |  1:2 = $5,182  |  1:3 = $5,477\n   (eksekusi beneran: partial di 1:2 -- jual separuh, sisanya di-trail SMA harian sampai momentum patah)\n\nMode FVG (Fair Value Gap): nyari zona harga yang \"dilompatin\" pas gerakan cepat, dianggap area support -- entry pas harga koreksi balik ke zona itu terus mantul.\n\n📐 Target tahap 1 (jual separuh): 2x risiko @ $5,182. Sisanya di-trail pakai SMA10 harian (SL digeser breakeven abis tahap 1).\nExposure 6× · Leverage 15× · Margin $39.93\n\nFair Value Gap terbentuk @ $4,296.98-$4,333.27 (candle harian XAU/Emas tutup balik di atas batas atas gap, tanda pantulan). SL di bawah batas bawah gap (nyawa 6.4%) -- kalau gap keisi penuh, thesis-nya gugur. Deteksi otomatis fvgDetector.js.\n\n🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.\n🚨 JANGAN ALL-IN! Trading resiko tinggi.\n⚠️ Deteksi pola ini pendekatan NUMERIK (regresi/aturan angka), bukan mata manusia -- cocokkan dulu sama chart aslinya sebelum diikuti.\n\n🍀 Semoga beruntung!\n\n2026-08-22 11:06 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-08-22T07:00:20.166Z",
+    "content": "🟪 🟡 Update XAU/Emas — 2026-08-22\nHarga sekarang: $4,585.33 (📈 +1.6% dari kemarin)\n💵 DXY: 118.9 (STABIL) -- Emas netral\n📉 Real Yield 10Y: 2.35% (STABIL) -- Emas netral\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

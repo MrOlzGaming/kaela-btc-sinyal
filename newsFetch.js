@@ -8,6 +8,12 @@ const FEEDS = [
   { url: 'https://news.google.com/rss/search?q=bitcoin%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Bitcoin' },
   { url: 'https://news.google.com/rss/search?q=ekonomi%20global%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Ekonomi Global' },
   { url: 'https://news.google.com/rss/search?q=ekonomi%20indonesia%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Ekonomi Indonesia' },
+  // Force majeure (22 Agu 2026, permintaan Olan: "bencana alam dan perang itu sesuatu force
+  // majure boleh dimasukkan, karena bakal mengait ke ekonomi juga baik low atau signifikan") --
+  // gempa/bencana + perang/konflik geopolitik, dua-duanya bisa gerakin pasar (rantai pasok,
+  // harga komoditas/energi, selera risiko) walau gak selalu keliatan langsung di berita "ekonomi".
+  { url: 'https://news.google.com/rss/search?q=(bencana%20alam%20OR%20gempa%20OR%20banjir)%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Bencana Alam' },
+  { url: 'https://news.google.com/rss/search?q=(perang%20OR%20konflik%20geopolitik)%20when:1d&hl=id&gl=ID&ceid=ID:id', label: 'Perang & Konflik' },
 ];
 
 // 🟢 kata yang jelas nada POSITIF (hati-hati kata ambigu kayak "melonjak"/"naik tajam" SENGAJA
@@ -41,6 +47,20 @@ function stripTags(s) {
   return s.replace(/<[^>]+>/g, '');
 }
 
+// Google News RSS nulis <title> format "Headline - Nama Sumber" (redundan -- sumbernya UDAH
+// kita tampilin sendiri di baris terpisah). Fix 22 Agu 2026 (lapor Olan: "link link nge bug" --
+// investigasi: link REDIRECT-nya sendiri sah/jalan normal, yang KELIHATAN buggy itu suffix
+// " - Sumber" nempel di headline yang KADANG kepotong Google sendiri di tengah kata pas
+// headline aslinya panjang, jadi kesannya "Judul kepotong aneh - Sumber" dobel sama baris
+// sumber di bawahnya). Buang suffix " - <persis nama sumber>" kalau cocok PERSIS -- jangan
+// buang tanda "-" biasa yang emang bagian asli headline (banyak judul berita pakai " - " buat
+// klausa, jangan disangka semua itu suffix sumber).
+function stripSourceSuffix(title, source) {
+  if (!source) return title;
+  const suffix = ` - ${source}`;
+  return title.endsWith(suffix) ? title.slice(0, -suffix.length).trim() : title;
+}
+
 function parseRssItems(xml) {
   const items = [];
   const blocks = xml.split('<item>').slice(1);
@@ -49,10 +69,12 @@ function parseRssItems(xml) {
     const linkMatch = block.match(/<link>([\s\S]*?)<\/link>/);
     const sourceMatch = block.match(/<source[^>]*>([\s\S]*?)<\/source>/);
     if (!titleMatch) continue;
+    const source = sourceMatch ? decodeEntities(stripTags(sourceMatch[1])).trim() : 'Google News';
+    const rawHeadline = decodeEntities(stripTags(titleMatch[1])).trim();
     items.push({
-      headline: decodeEntities(stripTags(titleMatch[1])).trim(),
+      headline: stripSourceSuffix(rawHeadline, source),
       url: linkMatch ? decodeEntities(stripTags(linkMatch[1])).trim() : '',
-      source: sourceMatch ? decodeEntities(stripTags(sourceMatch[1])).trim() : 'Google News',
+      source,
     });
   }
   return items;

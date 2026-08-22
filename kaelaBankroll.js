@@ -1,17 +1,17 @@
-// Bankroll BAYANGAN milik Kaela sendiri (12 Agu 2026, permintaan Olan: "Kaela akan dikasih
-// saldo bayangan $100") -- TERPISAH dari saldo real Olan di sniper-orders.json (yang tetap
-// apa adanya, murni referensi Olan pribadi). Sizing sinyal Sniper & tracking performa SEKARANG
-// pakai bankroll INI, biar hasil live bisa dibandingin apel-ke-apel sama backtest yang udah
-// tervalidasi (backtestFlagBreakout.js: modal $100, top-up $100/bulan tiap tanggal 5 selama
-// saldo <$1000, compound dari P&L trade beneran) -- BUKAN tercampur saldo real Olan yang naik-
-// turun karena hal lain di luar strategi Sniper.
+// Bankroll Kaela (12 Agu 2026, mulai dari "bayangan $100" -- 22 Agu 2026, MIGRASI ke Binance
+// Demo: permintaan Olan "semua berbau bayangan replace jadi Binance Demo", saldo direset ke
+// kekayaan gabungan real Binance Demo ($18.497 -- USDT+USDC+BTC) sbg starting point ERA BARU.
+// topUpHistory/pnlHistory di-reset kosong bareng migrasi ini (halaman baru, bukan lanjutan
+// cerita $100 lama) -- START_BALANCE JADI TITIK NOL BARU buat "Total Disetor"/equity curve
+// Jurnal, BUKAN top-up bulanan lama (mekanisme top-up TETAP ada, tinggal nunggu saldo turun
+// di bawah TOP_UP_STOP_AT lagi baru aktif ulang).
 
 const fs = require('fs');
 const path = require('path');
 const { toLocal } = require('./config');
 
 const BANKROLL_PATH = path.join(__dirname, 'kaela-bankroll.json');
-const START_BALANCE = 100;
+const START_BALANCE = 18497.23; // reset 22 Agu 2026 -- saldo Binance Demo gabungan (USDT+USDC+BTC) saat migrasi
 const TOP_UP_AMOUNT = 100;
 const TOP_UP_STOP_AT = 1000;
 const TOP_UP_DAY_OF_MONTH = 5;

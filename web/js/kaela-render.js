@@ -255,6 +255,17 @@
     </div>`;
   }
 
+  // Panel ringkas buat Home (23 Agu 2026) -- format senada renderSniperOrdersPanel, cuma sumber
+  // datanya nyopet-journal.json. Riwayat lengkap tetap di Jurnal (link di disclaimer), Home cuma
+  // nunjukkin posisi TERBUKA biar Olan langsung liat begitu buka web tanpa pindah halaman.
+  function renderNyopetHomePanel(nyopetState) {
+    const posHtml = renderNyopetPositionCard(nyopetState.openPosition);
+    return `<div class="sniper-orders-panel">
+      <p class="order-disclaimer">🥷 Posisi Nyopet Market REAL -- dibuka MANUAL sama Olan di exchange asli, Kaela cuma mantau + catat. Riwayat lengkap &amp; win rate ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
+      ${posHtml}
+    </div>`;
+  }
+
   // ============ Jurnal Sniper: statistik + equity curve + kalender ============
   function computeJournalStats(trades) {
     if (trades.length === 0) return null;
@@ -558,6 +569,32 @@
   // tracking winrate 100 trade ke depan" -- BEDA dari Spot/Sniper (bankroll bayangan): posisi
   // Nyopet REAL, dibuka manual di exchange asli, saldo/bankroll SENGAJA gak dihitung ("cuma
   // mini game") -- yang ditrack cuma menang/kalah per trade jadi win rate.
+  // Diextract dari renderNyopetJurnalPanel (23 Agu 2026, permintaan Olan: "buat sistem copetnya
+  // di web kayak di sniper... floatingnya juga muncul di home dan di jurnal") -- SATU fungsi
+  // dipakai di DUA tempat (Home + Jurnal) biar gak ada 2 salinan markup yang bisa diam-diam
+  // divergen. Kontrak class/data-attribute PERSIS `order-card floating` Sniper tetap dipertahanin
+  // (lihat catatan lama di bawah) -- itu yang bikin sniper-orders-widget.js (query GLOBAL
+  // `.order-card.floating[data-order-id]`, bukan di-scope ke 1 container) otomatis nyalain live
+  // price+PNL di kartu ini juga di HALAMAN MANAPUN dia dipasang, tanpa widget baru.
+  function renderNyopetPositionCard(pos) {
+    if (!pos) return `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
+    return `<div class="order-card floating" data-order-id="${pos.id}" data-direction="${pos.direction === 'short' ? 'sell' : 'buy'}" data-entry="${pos.entryPrice}" data-leverage="${pos.leverage}" data-margin="${pos.marginUsd}">
+        <div class="order-header">
+          <span class="order-dir">${pos.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</span>
+          <span class="order-status-badge floating">🔵 TERBUKA (real)</span>
+        </div>
+        <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
+        <div class="order-levels">
+          <span>Entry: <strong>${fmtUsdOrder(pos.entryPrice)}</strong></span>
+          <span>Likuidasi: ${fmtUsdOrder(pos.liqPrice)}</span>
+        </div>
+        <div class="order-meta">Leverage ${pos.leverage}x · Margin ${fmtUsdOrder(pos.marginUsd)} · Ukuran ${fmtUsdOrder(pos.sizeUsd)}</div>
+        ${pos.notes ? `<div class="order-note">${pos.notes}</div>` : ''}
+        <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
+        <div class="order-meta">Dibuka ${fmtDateLong(new Date(pos.openedAt))} -- REAL, dibuka manual di exchange. Notifikasi WA otomatis kalau kena likuidasi/-80%/+100% ROI.</div>
+      </div>`;
+  }
+
   function renderNyopetJurnalPanel(nyopetState, now) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
     const trades = nyopetState.trades || [];
@@ -579,30 +616,7 @@
       ${cell('Total PNL (jujur)', total ? fmtSignedUsd(totalPnlUsd) : '-', total ? (totalPnlUsd >= 0 ? 'up' : 'down') : '')}
     </div>`;
 
-    // Kartu posisi -- SENGAJA copy PERSIS kontrak class/data-attribute punya order-card floating
-    // Sniper (permintaan Olan 16 Agu 2026: "copy aja template sniper pas buka posisi"), biar
-    // sniper-orders-widget.js yang UDAH ADA (live price + P&L tiap 15dtk) otomatis jalan di kartu
-    // ini juga TANPA nulis widget baru -- cuma beda direction 'short'/'long' dinormalisasi ke
-    // 'sell'/'buy' biar dikenali logic widget yang sama. remainingFraction/realizedPnl SENGAJA
-    // gak disertain (posisi Nyopet gak ada partial-exit) -- widget udah default 1/0 kalau absen.
-    const pos = nyopetState.openPosition;
-    const posHtml = pos
-      ? `<div class="order-card floating" data-order-id="${pos.id}" data-direction="${pos.direction === 'short' ? 'sell' : 'buy'}" data-entry="${pos.entryPrice}" data-leverage="${pos.leverage}" data-margin="${pos.marginUsd}">
-          <div class="order-header">
-            <span class="order-dir">${pos.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</span>
-            <span class="order-status-badge floating">🔵 TERBUKA (real)</span>
-          </div>
-          <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
-          <div class="order-levels">
-            <span>Entry: <strong>${fmtUsdOrder(pos.entryPrice)}</strong></span>
-            <span>Likuidasi: ${fmtUsdOrder(pos.liqPrice)}</span>
-          </div>
-          <div class="order-meta">Leverage ${pos.leverage}x · Margin ${fmtUsdOrder(pos.marginUsd)} · Ukuran ${fmtUsdOrder(pos.sizeUsd)}</div>
-          ${pos.notes ? `<div class="order-note">${pos.notes}</div>` : ''}
-          <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
-          <div class="order-meta">Dibuka ${fmtDateLong(new Date(pos.openedAt))} -- REAL, dibuka manual di exchange. Notifikasi WA otomatis kalau kena likuidasi/-80%/+100% ROI.</div>
-        </div>`
-      : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
+    const posHtml = renderNyopetPositionCard(nyopetState.openPosition);
 
     const historyHtml = trades.length > 0
       ? `<table class="spot-cycle-table">
@@ -633,7 +647,7 @@
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,
-    renderNyopetJurnalPanel,
+    renderNyopetJurnalPanel, renderNyopetPositionCard, renderNyopetHomePanel,
     wireStrategyFilter,
   };
 })(window);

@@ -24,10 +24,11 @@
 
   async function main() {
     const now = new Date();
-    const [state, ordersState, archive] = await Promise.all([
+    const [state, ordersState, archive, nyopetState] = await Promise.all([
       fetchJson('state.json', { status: 'TUNAI', position: null }),
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }),
       fetchJson('archive.json', []),
+      fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }),
     ]);
 
     const musimanEl = document.getElementById('musiman-container');
@@ -37,6 +38,11 @@
     const latestSniperEntry = sniperEntries[0] || null;
     const sniperEl = document.getElementById('sniper-container');
     if (sniperEl) sniperEl.innerHTML = KaelaRender.renderSniperOrdersPanel(ordersState, latestSniperEntry);
+
+    // Nyopet muncul di Home juga (23 Agu 2026, permintaan Olan: "floatingnya juga muncul di
+    // home dan di jurnal") -- sebelumnya cuma ada di tab Jurnal.
+    const nyopetEl = document.getElementById('nyopet-container');
+    if (nyopetEl) nyopetEl.innerHTML = KaelaRender.renderNyopetHomePanel(nyopetState);
   }
 
   main();

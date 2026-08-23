@@ -583,18 +583,28 @@
   function renderNyopetOrderCard(o) {
     const dirLabel = o.direction === 'sell' ? '🔴 SHORT' : '🟢 LONG';
     const modeLabel = NYOPET_MODE_LABEL_WEB[o.mode] || o.mode;
+    // BUG KETEMU 25 Agu 2026 (Olan: "Nyawa: $NaN") -- order Nyopet gak punya field `sl` sama
+    // sekali (skema-nya pakai `liqPrice`, beda dari sniper-orders.json yang emang punya `sl`),
+    // jadi `fmtUsdOrder(o.sl)` SELALU NaN buat kartu Nyopet. Fix: baca `liqPrice` (field yang
+    // BENERAN ada), fallback ke `sl` doang buat jaga-jaga skema lama, guard null/undefined kayak
+    // pola aman yang UDAH ADA di renderOrderCard (Sniper) baris ~185.
+    const nyawaVal = o.liqPrice != null ? o.liqPrice : o.sl;
+    const nyawaText = nyawaVal != null ? fmtUsdOrder(nyawaVal) : '-';
+    // Label harga hidup asset-aware (25 Agu 2026) -- sebelumnya hardcode "Harga BTC sekarang"
+    // padahal Nyopet udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
+    const assetInfo = ASSETS_WEB[o.asset] || ASSETS_WEB.btc;
     if (o.status === 'floating') {
-      return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}">
+      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}">
           <div class="order-header">
             <span class="order-dir">${dirLabel}</span>
             <span class="order-status-badge floating">🔵 FLOATING (Demo)</span>
           </div>
           <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
-          <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
+          <div class="order-live-price">Harga ${assetInfo.label} sekarang: <strong data-price-target>memuat...</strong></div>
           <div class="order-levels">
             <span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span>
             <span>TP: ${fmtUsdOrder(o.tp)}</span>
-            <span>Nyawa: ${fmtUsdOrder(o.sl)}</span>
+            <span>Nyawa: ${nyawaText}</span>
           </div>
           <div class="order-meta">Leverage ${o.leverage}x · Margin ${fmtUsdOrder(o.marginUsd)} · Zona ${fmtUsdOrder(o.zonePrice)}</div>
           <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>

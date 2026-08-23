@@ -63,4 +63,45 @@ Kalau sempat entry berdasar sinyal itu dan belum keluar, ini pengingat buat dice
 ${fmtWita(now)}`;
 }
 
-module.exports = { formatSignal, formatBroken, COINGLASS_LINK };
+// ============ Auto-trader ping-pong (23 Agu 2026) -- BEDA dari formatSignal/formatBroken di atas
+// (yang murni ALERT, v1 lama "kaela ga usah open posisi") -- dua fungsi di bawah ini buat era BARU
+// Nyopet Binance Demo: Kaela BENERAN buka/tutup posisi sendiri (nyopetAutoTrader.js), pesan ini
+// ngasih tau APA YANG BARU DILAKUKAN + KENAPA (bukan cuma info titik kayak dulu). Wajib jelasin
+// alasan tiap sinyal (lihat memory feedback-selalu-ada-alasan) + link kalkulator di tiap pesan.
+function formatAutoOpen(pos, now) {
+  const dirLabel = pos.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
+  const modeDesc = pos.mode === 'fade'
+    ? `Harga nyentuh zona ${fmtUsd(pos.zonePrice)} (${pos.zoneKind === 'round' ? 'angka bulat psikologis' : pos.zoneTouches ? `swing, disentuh ${pos.zoneTouches}x sebelumnya` : 'swing'}) -- asumsi DEFAULT selalu mantul di sini, jadi counter posisi ngelawan arah gerak barusan.`
+    : `Zona ${fmtUsd(pos.zonePrice)} DITEMBUS (gagal nahan, bukan mantul) -- ikutin arah tembusan (momentum), bukan counter lagi.`;
+  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market (Binance Demo)
+🔵 POSISI DIBUKA -- ${dirLabel}
+
+Alasan: ${modeDesc}
+
+Entry: ${fmtUsd(pos.entryPrice)}
+Nyawa (SL, 1% flat): ${fmtUsd(pos.sl)}
+Target (zona ${pos.mode === 'fade' ? 'lawan' : 'berikutnya'}): ${fmtUsd(pos.tp)}
+Leverage ${pos.leverage}× · Margin ${fmtUsd(pos.marginUsd)}
+
+🧪 Ini BINANCE DEMO (duit virtual, riset/latihan) -- bukan uang beneran. Ping-pong otomatis TANPA HENTI antar 2 zona, gak pakai target R:R tetap -- murni ngikutin zona likuiditas.
+
+🧮 Hitung volume/margin sendiri (WAJIB kalau modal beda dari saldo Demo Kaela): ${KALKULATOR_LINK}
+
+${fmtWita(now)}`;
+}
+
+function formatAutoClosed(trade, now) {
+  const won = trade.pnlUsd >= 0;
+  const dirLabel = trade.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
+  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market (Binance Demo)
+${won ? '✅ KENA TARGET' : '❌ KENA NYAWA'} -- ${dirLabel}
+
+Entry ${fmtUsd(trade.entryPrice)} -> Exit ${fmtUsd(trade.exitPrice)}
+PNL: ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsd(trade.pnlUsd)}
+
+${won ? 'Langsung REVERSE -- posisi baru dibuka arah kebalikan, nembak balik ke zona asal.' : 'Langsung buka posisi baru lagi di zona terdekat -- siklus jalan terus, gak berhenti.'}
+
+${fmtWita(now)}`;
+}
+
+module.exports = { formatSignal, formatBroken, formatAutoOpen, formatAutoClosed, COINGLASS_LINK, KALKULATOR_LINK };

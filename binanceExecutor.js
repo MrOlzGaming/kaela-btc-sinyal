@@ -98,10 +98,13 @@ function roundToStepSize(quantity, stepSize, precision) {
 
 // ============ Fungsi publik ============
 
-async function getAccountBalance() {
+// asset param (23 Agu 2026, permintaan Olan: "usdt untuk sniper, usdc untuk nyopet" -- 2 wallet
+// margin TERPISAH di Binance Demo, `multiAssetsMargin` OFF jadi USDT/USDC gak saling nyambung
+// buat margin) -- default TETAP 'USDT' biar caller lama (Sniper) gak perlu ubah apa-apa.
+async function getAccountBalance(asset = 'USDT') {
   const balances = await signedRequest('GET', '/fapi/v2/balance', {});
-  const usdt = balances.find((b) => b.asset === 'USDT');
-  return usdt ? parseFloat(usdt.availableBalance) : 0;
+  const bal = balances.find((b) => b.asset === asset);
+  return bal ? parseFloat(bal.availableBalance) : 0;
 }
 
 async function setLeverage(symbol, leverage) {

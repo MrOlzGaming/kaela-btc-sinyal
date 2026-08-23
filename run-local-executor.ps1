@@ -41,11 +41,20 @@ try {
   Log "localLiveExecutor.js ERROR: $($_.Exception.Message)"
 }
 
-$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json
+# Nyopet Auto-Trader (23 Agu 2026) -- ping-pong zona likuiditas, numpang cadence yang sama (BTCUSDC
+# beda wallet dari Sniper BTCUSDT jadi aman jalan bareng, gak rebutan margin).
+try {
+  $output2 = node nyopetAutoTrader.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output2 -Encoding utf8
+} catch {
+  Log "nyopetAutoTrader.js ERROR: $($_.Exception.Message)"
+}
+
+$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'
   $ghToken = (Get-Content -Path (Join-Path $projectDir '.gh-token-mrolzgaming') -Raw).Trim()
-  git add sniper-orders.json kaela-bankroll.json
+  git add sniper-orders.json kaela-bankroll.json nyopet-journal.json
   git commit -m "Auto: sync eksekusi live (run-local-executor) $(Get-Date -Format 'yyyy-MM-dd HH:mm')" --quiet
   $authHeader = "Authorization: Basic $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("x-access-token:$ghToken")))"
   git -c http.extraHeader="$authHeader" push origin-new master --quiet

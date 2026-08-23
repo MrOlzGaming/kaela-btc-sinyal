@@ -259,9 +259,12 @@
   // datanya nyopet-journal.json. Riwayat lengkap tetap di Jurnal (link di disclaimer), Home cuma
   // nunjukkin posisi TERBUKA biar Olan langsung liat begitu buka web tanpa pindah halaman.
   function renderNyopetHomePanel(nyopetState) {
-    const posHtml = renderNyopetPositionCard(nyopetState.openPosition);
+    const floating = (nyopetState.orders || []).filter((o) => o.status === 'floating');
+    const posHtml = floating.length > 0
+      ? `<div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
+      : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
     return `<div class="sniper-orders-panel">
-      <p class="order-disclaimer">🥷 Posisi Nyopet Market REAL -- dibuka MANUAL sama Olan di exchange asli, Kaela cuma mantau + catat. Riwayat lengkap &amp; win rate ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
+      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis zona likuiditas di Binance Demo (USDC). Riwayat lengkap &amp; win rate ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
       ${posHtml}
     </div>`;
   }
@@ -569,72 +572,87 @@
   // tracking winrate 100 trade ke depan" -- BEDA dari Spot/Sniper (bankroll bayangan): posisi
   // Nyopet REAL, dibuka manual di exchange asli, saldo/bankroll SENGAJA gak dihitung ("cuma
   // mini game") -- yang ditrack cuma menang/kalah per trade jadi win rate.
-  // Diextract dari renderNyopetJurnalPanel (23 Agu 2026, permintaan Olan: "buat sistem copetnya
-  // di web kayak di sniper... floatingnya juga muncul di home dan di jurnal") -- SATU fungsi
-  // dipakai di DUA tempat (Home + Jurnal) biar gak ada 2 salinan markup yang bisa diam-diam
-  // divergen. Kontrak class/data-attribute PERSIS `order-card floating` Sniper tetap dipertahanin
-  // (lihat catatan lama di bawah) -- itu yang bikin sniper-orders-widget.js (query GLOBAL
-  // `.order-card.floating[data-order-id]`, bukan di-scope ke 1 container) otomatis nyalain live
-  // price+PNL di kartu ini juga di HALAMAN MANAPUN dia dipasang, tanpa widget baru.
-  function renderNyopetPositionCard(pos) {
-    if (!pos) return `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
-    return `<div class="order-card floating" data-order-id="${pos.id}" data-direction="${pos.direction === 'short' ? 'sell' : 'buy'}" data-entry="${pos.entryPrice}" data-leverage="${pos.leverage}" data-margin="${pos.marginUsd}">
+  const NYOPET_MODE_LABEL_WEB = { fade: 'Fade (asumsi mantul)', follow: 'Follow (ikutin tembusan)' };
+
+  // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "nyopet ga dibatasi
+  // 100 trade.. 100% sama kayak sniper pencatatanya") -- {balance, orders[]}, tiap order punya
+  // `status` (floating/closed_tp/closed_sl) + `direction` (buy/sell), BUKAN openPosition+trades[]
+  // terpisah kayak versi lama. Kartu posisi REUSE kontrak class/data-attribute `order-card
+  // floating` Sniper -- sniper-orders-widget.js (query GLOBAL, gak di-scope ke 1 container)
+  // otomatis nyalain live price+PNL di kartu ini juga tanpa widget baru.
+  function renderNyopetOrderCard(o) {
+    const dirLabel = o.direction === 'sell' ? '🔴 SHORT' : '🟢 LONG';
+    const modeLabel = NYOPET_MODE_LABEL_WEB[o.mode] || o.mode;
+    if (o.status === 'floating') {
+      return `<div class="order-card floating" data-order-id="${o.id}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}">
+          <div class="order-header">
+            <span class="order-dir">${dirLabel}</span>
+            <span class="order-status-badge floating">🔵 FLOATING (Demo)</span>
+          </div>
+          <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
+          <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
+          <div class="order-levels">
+            <span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span>
+            <span>TP: ${fmtUsdOrder(o.tp)}</span>
+            <span>Nyawa: ${fmtUsdOrder(o.sl)}</span>
+          </div>
+          <div class="order-meta">Leverage ${o.leverage}x · Margin ${fmtUsdOrder(o.marginUsd)} · Zona ${fmtUsdOrder(o.zonePrice)}</div>
+          <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
+        </div>`;
+    }
+    const won = o.status === 'closed_tp';
+    return `<div class="order-card closed">
         <div class="order-header">
-          <span class="order-dir">${pos.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</span>
-          <span class="order-status-badge floating">🔵 TERBUKA (real)</span>
+          <span class="order-dir">${dirLabel}</span>
+          <span class="order-status-badge closed">${won ? '✅ TARGET' : '❌ NYAWA'}</span>
         </div>
-        <div class="order-live-price">Harga BTC sekarang: <strong data-price-target>memuat...</strong></div>
-        <div class="order-levels">
-          <span>Entry: <strong>${fmtUsdOrder(pos.entryPrice)}</strong></span>
-          <span>Likuidasi: ${fmtUsdOrder(pos.liqPrice)}</span>
-        </div>
-        <div class="order-meta">Leverage ${pos.leverage}x · Margin ${fmtUsdOrder(pos.marginUsd)} · Ukuran ${fmtUsdOrder(pos.sizeUsd)}</div>
-        ${pos.notes ? `<div class="order-note">${pos.notes}</div>` : ''}
-        <div class="order-pnl-live" data-pnl-target>Memuat P&amp;L live...</div>
-        <div class="order-meta">Dibuka ${fmtDateLong(new Date(pos.openedAt))} -- REAL, dibuka manual di exchange. Notifikasi WA otomatis kalau kena likuidasi/-80%/+100% ROI.</div>
+        <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
+        <div class="order-levels"><span>Entry: ${fmtUsdOrder(o.entryPrice)}</span><span>Exit: ${fmtUsdOrder(o.exitPrice)}</span></div>
+        <div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${(o.pnlPct || 0).toFixed(1)}%)</div>
       </div>`;
   }
 
   function renderNyopetJurnalPanel(nyopetState, now) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
-    const trades = nyopetState.trades || [];
-    const wins = trades.filter((t) => t.result === 'win').length;
-    const losses = trades.filter((t) => t.result === 'loss').length;
-    const total = trades.length;
+    const orders = nyopetState.orders || [];
+    const floating = orders.filter((o) => o.status === 'floating');
+    const closed = orders.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl').slice().reverse();
+    const wins = closed.filter((o) => o.status === 'closed_tp').length;
+    const losses = closed.filter((o) => o.status === 'closed_sl').length;
+    const total = closed.length;
     const winRate = total ? (wins / total) * 100 : 0;
-    const target = 100;
-    // PNL $ JUJUR (17 Agu 2026, permintaan Olan: "kasih dengan jujur pnl berjalan.. jadi nanti
-    // ketauan 100 trade minus apa plus") -- BEDA dari saldo/bankroll BERJALAN yang sengaja gak
-    // dihitung (gak ngaruh ke sizing trade berikutnya), ini murni AKUMULASI hasil $ apa adanya.
-    const totalPnlUsd = trades.reduce((sum, t) => sum + (t.pnlUsd || 0), 0);
+    // PNL $ JUJUR -- murni akumulasi hasil $ apa adanya, gak nyampur sama saldo/balance.
+    const totalPnlUsd = closed.reduce((sum, o) => sum + (o.pnlUsd || 0), 0);
 
     const summaryHtml = `<div class="journal-stats-grid">
-      ${cell('Progress', `${total}/${target} trade`)}
+      ${cell('Saldo Demo (USDC)', fmtUsdOrder(nyopetState.balance || 0))}
       ${cell('Win Rate', total ? winRate.toFixed(1) + '%' : '-', total ? (winRate >= 50 ? 'up' : 'down') : '')}
       ${cell('Menang', wins, 'up')}
       ${cell('Kalah', losses, 'down')}
       ${cell('Total PNL (jujur)', total ? fmtSignedUsd(totalPnlUsd) : '-', total ? (totalPnlUsd >= 0 ? 'up' : 'down') : '')}
     </div>`;
 
-    const posHtml = renderNyopetPositionCard(nyopetState.openPosition);
+    const posHtml = floating.length > 0
+      ? `<div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
+      : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
 
-    const historyHtml = trades.length > 0
+    const historyHtml = closed.length > 0
       ? `<table class="spot-cycle-table">
-          <thead><tr><th>Arah</th><th>Entry</th><th>Exit</th><th>Alasan</th><th>Hasil</th><th>PNL</th><th>Tanggal</th></tr></thead>
-          <tbody>${trades.slice().reverse().map((t) => `<tr>
-            <td>${t.direction === 'short' ? '🔴 SHORT' : '🟢 LONG'}</td>
-            <td>${fmtUsdOrder(t.entryPrice)}</td>
-            <td>${fmtUsdOrder(t.exitPrice)}</td>
-            <td>${t.exitReason}</td>
-            <td class="${t.result === 'win' ? 'up' : 'down'}">${t.result === 'win' ? 'MENANG' : 'KALAH'}</td>
-            <td class="${(t.pnlUsd || 0) >= 0 ? 'up' : 'down'}">${fmtSignedUsd(t.pnlUsd || 0)}</td>
-            <td>${fmtDateLong(new Date(t.closedAt))}</td>
+          <thead><tr><th>Arah</th><th>Mode</th><th>Entry</th><th>Exit</th><th>Hasil</th><th>PNL</th><th>Tanggal</th></tr></thead>
+          <tbody>${closed.map((o) => `<tr>
+            <td>${o.direction === 'sell' ? '🔴 SHORT' : '🟢 LONG'}</td>
+            <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
+            <td>${fmtUsdOrder(o.entryPrice)}</td>
+            <td>${fmtUsdOrder(o.exitPrice)}</td>
+            <td class="${o.status === 'closed_tp' ? 'up' : 'down'}">${o.status === 'closed_tp' ? 'MENANG' : 'KALAH'}</td>
+            <td class="${(o.pnlUsd || 0) >= 0 ? 'up' : 'down'}">${fmtSignedUsd(o.pnlUsd || 0)}</td>
+            <td>${fmtDateLong(new Date(o.closedAt))}</td>
           </tr>`).join('')}</tbody>
         </table>`
       : `<div class="empty">Belum ada trade yang selesai.</div>`;
 
     return `<div class="nyopet-panel">
-      <p class="order-disclaimer">🥷 Posisi Nyopet Market REAL -- dibuka MANUAL sama Olan di exchange asli, Kaela cuma mantau + catat (likuidasi/profit 100% ROI). Saldo/bankroll SENGAJA gak dihitung (mini game) -- yang dilacak cuma win rate sampai ${target} trade buat evaluasi jujur.</p>
+      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (USDC, duit virtual). Trigger MURNI zona (gak pakai target R:R), nyawa 1% flat tiap posisi. Profit maupun loss ditampilin apa adanya.</p>
       ${summaryHtml}
       <div class="journal-section-title">📌 Posisi Sekarang</div>
       ${posHtml}
@@ -647,7 +665,7 @@
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,
-    renderNyopetJurnalPanel, renderNyopetPositionCard, renderNyopetHomePanel,
+    renderNyopetJurnalPanel, renderNyopetOrderCard, renderNyopetHomePanel,
     wireStrategyFilter,
   };
 })(window);

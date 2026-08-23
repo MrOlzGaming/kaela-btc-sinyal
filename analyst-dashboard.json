@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 76936,
+    "price": 77652.42,
     "conviction": {
       "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
@@ -8,27 +8,27 @@
         {
           "label": "RSI Teknikal",
           "v": -1,
-          "reason": "RSI 88 overbought -- rawan technical pullback"
+          "reason": "RSI 82 overbought -- rawan technical pullback"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.50 -- Fair value / akumulasi"
+          "reason": "1.47 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.33 -- Optimism / Anxiety"
+          "reason": "0.32 -- Optimism / Anxiety"
         },
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "71/100 -- Greed (kontrarian)"
+          "reason": "66/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "+0.65% (7 hari) -- stabil"
+          "reason": "+0.71% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -59,13 +59,13 @@
     },
     "advancedMacro": {
       "dvol": {
-        "value": 41.26,
-        "changePct": 18.597298074159237
+        "value": 43.25,
+        "changePct": 23.00910125142208
       },
       "stablecoin": {
-        "current": 256851407093.13782,
-        "weekAgo": 255197902132.95703,
-        "changePct": 0.6479304674375093
+        "current": 256868203847.71182,
+        "weekAgo": 255068494579.2551,
+        "changePct": 0.705578817731062
       },
       "yieldCurve": {
         "value": 0.5,
@@ -90,7 +90,7 @@
     }
   },
   "xau": {
-    "price": 4590.57,
+    "price": 4606.27,
     "conviction": {
       "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
@@ -98,7 +98,7 @@
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 70 netral"
+          "reason": "RSI 69 netral"
         },
         {
           "label": "DXY (Dolar)",
@@ -177,5 +177,5 @@
       "inverted": false
     }
   },
-  "updatedAt": "2026-08-22T09:48:01.855Z"
+  "updatedAt": "2026-08-23T23:29:40.226Z"
 }

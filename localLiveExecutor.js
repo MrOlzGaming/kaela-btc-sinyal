@@ -14,7 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getActiveOrders, updateOrder, setBalance } = require('./sniperOrders');
-const { getAccountBalance, setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
+const { getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeTakeProfit, getSymbolInfo, roundToStepSize } = require('./binanceExecutor');
 const { hitung: hitungExposure } = require('./calculator');
 const { load: loadBankroll, save: saveBankroll } = require('./kaelaBankroll');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
@@ -41,27 +41,41 @@ async function executeOne(order) {
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: order.sl });
     console.log(`[LocalLiveExecutor] Saldo available: $${modal.toFixed(2)} | Harga live: $${livePrice} | Exposure ${calc.exposure}x | Leverage ${calc.leverage}x | Margin $${calc.margin.toFixed(2)}`);
 
+    // Gak pakai order SL terpisah (23 Agu 2026, permintaan Olan: "sl stop loss = liq" -- berlaku
+    // Sniper JUGA, bukan cuma Nyopet) -- leverage-nya UDAH dihitung dari nyawa (jarak entry->SL
+    // pola chart) via hitungExposure di atas, jadi likuidasi ISOLATED margin otomatis mendekati
+    // level SL itu tanpa perlu order STOP_MARKET terpisah. TP TETAP order eksplisit (placeTakeProfit
+    // di bawah) -- itu WAJIB presisi ambil profit, likuidasi gak bisa gantiin itu.
+    // CATATAN: ini cuma buat SL AWAL. Breakeven-SL abis partial-exit (2R) masih perlu ditangani
+    // terpisah di sniperOrderMonitor.js -- liquidation gak bisa presisi ke harga breakeven arbitrer.
+    await setIsolatedMargin(assetCfg.symbol);
     await setLeverage(assetCfg.symbol, calc.leverage);
     const entryOrder = await placeMarketEntry({
       symbol: assetCfg.symbol, direction: order.direction, notionalUsd: calc.nilaiPosisi, livePrice,
     });
-    entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
+    entryFilledQty = parseFloat(entryOrder.executedQty);
 
-    try {
-      await placeStopLoss({ symbol: assetCfg.symbol, direction: order.direction, stopPrice: order.sl, quantity: entryFilledQty });
-    } catch (slError) {
-      console.log(`[LocalLiveExecutor] SL GAGAL nempel (${slError.message}) -- tutup PAKSA demi keamanan.`);
-      await emergencyCloseMarket({ symbol: assetCfg.symbol, direction: order.direction, quantity: entryFilledQty });
-      throw new Error(`Entry masuk tapi SL gagal (${slError.message}) -- posisi UDAH DITUTUP PAKSA otomatis.`);
+    // TP buat SEPARUH doang (23 Agu 2026, bug ketemu: sebelumnya kirim FULL qty ke harga partial
+    // -- itu nutup SELURUH posisi di 2R, ngilangin edge "biarin separuh lari ikutin trend" yang
+    // justru divalidasi backtest). Native partial-close Binance (quantity < posisi = OK, sisanya
+    // TETAP kebuka) -- gak perlu workaround apapun buat leg PERTAMA ini.
+    const { stepSize, quantityPrecision } = await getSymbolInfo(assetCfg.symbol);
+    const halfQtyRaw = entryFilledQty / 2;
+    const halfQty = roundToStepSize(halfQtyRaw, stepSize, quantityPrecision);
+    const tpPrice = order.partialTp || order.tp;
+    if (halfQty > 0) {
+      await placeTakeProfit({ symbol: assetCfg.symbol, direction: order.direction, tpPrice, quantity: halfQty });
+    } else {
+      // Posisi kekecilan buat dibagi 2 (stepSize gede relatif ke qty) -- TP full aja drpd 0.
+      await placeTakeProfit({ symbol: assetCfg.symbol, direction: order.direction, tpPrice, quantity: entryFilledQty });
     }
-
-    await placeTakeProfit({ symbol: assetCfg.symbol, direction: order.direction, tpPrice: order.partialTp || order.tp, quantity: entryFilledQty });
 
     updateOrder(order.id, {
       liveExecutedAt: new Date().toISOString(),
       liveExecution: {
-        ok: true, filledQty: entryFilledQty, testnet: isTestnet(),
+        ok: true, filledQty: entryFilledQty, halfQty: halfQty > 0 ? halfQty : entryFilledQty, testnet: isTestnet(),
         modal, livePrice, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
+        entryPriceReal: parseFloat(entryOrder.avgPrice), leg2: null, fullyClosedAt: null,
       },
     });
     console.log(`[LocalLiveExecutor] ✅ SUKSES -- qty ${entryFilledQty} (${isTestnet() ? 'Demo Trading' : 'MAINNET ASLI'}).`);

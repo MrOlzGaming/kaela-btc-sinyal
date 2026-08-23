@@ -41,6 +41,15 @@ try {
   Log "localLiveExecutor.js ERROR: $($_.Exception.Message)"
 }
 
+# Pantau leg2/partial-exit posisi Sniper yang UDAH live (23 Agu 2026) -- localLiveExecutor.js
+# cuma nanganin ENTRY, ini yang nanganin partial-TP->reopen-breakeven + trailing SMA10.
+try {
+  $output3 = node sniperLiveMonitor.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output3 -Encoding utf8
+} catch {
+  Log "sniperLiveMonitor.js ERROR: $($_.Exception.Message)"
+}
+
 # Nyopet Auto-Trader (23 Agu 2026) -- ping-pong zona likuiditas, numpang cadence yang sama (BTCUSDC
 # beda wallet dari Sniper BTCUSDT jadi aman jalan bareng, gak rebutan margin).
 try {

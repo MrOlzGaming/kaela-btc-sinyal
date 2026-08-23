@@ -69,19 +69,24 @@ ${fmtWita(now)}`;
 // ngasih tau APA YANG BARU DILAKUKAN + KENAPA (bukan cuma info titik kayak dulu). Wajib jelasin
 // alasan tiap sinyal (lihat memory feedback-selalu-ada-alasan) + link kalkulator di tiap pesan.
 function formatAutoOpen(pos, now) {
-  const dirLabel = pos.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
+  const { formatWinRateLine } = require('./winRate');
+  const { formatSignalCore } = require('./signalCore');
+  const fs = require('fs');
+  const path = require('path');
+  const journal = JSON.parse(fs.readFileSync(path.join(__dirname, 'nyopet-journal.json'), 'utf8'));
+  const winRateLine = formatWinRateLine(journal.orders || []);
   const modeDesc = pos.mode === 'fade'
     ? `Harga nyentuh zona ${fmtUsd(pos.zonePrice)} (${pos.zoneKind === 'round' ? 'angka bulat psikologis' : pos.zoneTouches ? `swing, disentuh ${pos.zoneTouches}x sebelumnya` : 'swing'}) -- asumsi DEFAULT selalu mantul di sini, jadi counter posisi ngelawan arah gerak barusan.`
     : `Zona ${fmtUsd(pos.zonePrice)} DITEMBUS (gagal nahan, bukan mantul) -- ikutin arah tembusan (momentum), bukan counter lagi.`;
+  const coreLines = formatSignalCore({
+    direction: pos.direction, entryPrice: pos.entryPrice, tp: pos.tp, sl: pos.sl,
+    leverage: pos.leverage, marginUsd: pos.marginUsd, reason: modeDesc,
+  });
   return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market (Binance Demo)
-🔵 POSISI DIBUKA -- ${dirLabel}
+🔵 POSISI DIBUKA
 
-Alasan: ${modeDesc}
-
-Entry: ${fmtUsd(pos.entryPrice)}
-Nyawa (SL, 1% flat): ${fmtUsd(pos.sl)}
-Target (zona ${pos.mode === 'fade' ? 'lawan' : 'berikutnya'}): ${fmtUsd(pos.tp)}
-Leverage ${pos.leverage}× · Margin ${fmtUsd(pos.marginUsd)}
+${coreLines.join('\n')}
+${winRateLine}
 
 🧪 Ini BINANCE DEMO (duit virtual, riset/latihan) -- bukan uang beneran. Ping-pong otomatis TANPA HENTI antar 2 zona, gak pakai target R:R tetap -- murni ngikutin zona likuiditas.
 

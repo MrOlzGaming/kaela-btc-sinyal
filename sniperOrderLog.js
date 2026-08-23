@@ -319,25 +319,34 @@ function liveExecutionLines(liveExecution) {
 function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecution }) {
   const asset = assetCfg || assetOf(order);
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
+  const { formatWinRateLine } = require('./winRate');
+  const { formatSignalCore } = require('./signalCore');
+  const { getClosedOrders } = require('./sniperOrders');
+  const winRateLine = formatWinRateLine(getClosedOrders());
   // ta/sentiment/onchain CUMA ada buat BTC (metrik makro kripto, gak relevan/gak ada buat emas,
   // 22 Agu 2026) -- bagian2 ini di-skip otomatis kalau null, bukan error.
   const modeExplain = order.mode === 'fvg'
     ? 'Mode FVG (Fair Value Gap): nyari zona harga yang "dilompatin" pas gerakan cepat, dianggap area support -- entry pas harga koreksi balik ke zona itu terus mantul.'
     : 'Mode Pola Chart: nyari pola breakout klasik (bull flag/pennant lanjutan tren, atau falling wedge pembalikan) di candle harian.';
+  // Blok inti SERAGAM sama Nyopet (23 Agu 2026, permintaan Olan) -- TP dipakai order.partialTp
+  // (2R) karena itu PERSIS harga yang beneran dipasang jadi order TP live (lihat
+  // localLiveExecutor.js) -- separuh diamanin situ, sisanya di-reopen breakeven abis kena (lihat
+  // sniperLiveMonitor.js), bukan lari sampai R:R jauh kayak dulu.
+  const coreLines = formatSignalCore({
+    direction: order.direction, entryPrice: order.entryPrice, tp: order.partialTp || order.tp, sl: order.sl,
+    leverage: order.leverage, marginUsd: order.marginUsd,
+    reason: modeExplain + (order.tpReasoning ? ` ${order.tpReasoning}` : '') + ' Separuh diamanin di TP, sisanya di-reopen breakeven (likuidasi = SL) buat lanjut trail SMA10.',
+  });
   return [
     `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ${asset.emoji} ${asset.label} — ✅ VALID 🐂🚀 (analisa otomatis Kaela)`,
     seqLabel(order),
-    `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} (harga pasar, langsung entry -- bukan nunggu order)`,
-    ...rMultipleLevels(order),
-    '',
-    modeExplain,
+    ...coreLines,
     ...(ta ? ['', '📊 ANALISA TEKNIKAL', ...taLines(ta)] : []),
     ...(asset.key === 'btc' ? ['', '🔥 LIQUIDATION HEATMAP', liqLine()] : []),
     ...(sentiment ? ['', '🌊 SENTIMEN & POSISI PASAR', ...sentimentLines(sentiment), ...(extremeNote ? ['', extremeNote] : [])] : []),
     ...(onchain ? ['', '⛓️ ON-CHAIN METRICS', ...onchainLines(onchain)] : []),
     '',
-    order.tpReasoning ? `📐 ${order.tpReasoning}` : '',
-    `Exposure ${order.exposure}× · Leverage ${order.leverage}× · Margin ${fmt(order.marginUsd)}`,
+    winRateLine,
     ...liveExecutionLines(liveExecution),
     '',
     order.confirmationNote,

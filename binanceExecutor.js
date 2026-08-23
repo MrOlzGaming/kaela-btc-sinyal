@@ -111,6 +111,20 @@ async function setLeverage(symbol, leverage) {
   return signedRequest('POST', '/fapi/v1/leverage', { symbol, leverage });
 }
 
+// Isolated margin -- "pastiin buka pake isolated" (23 Agu 2026, permintaan Olan buat Nyopet: gak
+// pakai order SL terpisah, LIKUIDASI isolated itu sendiri yang jadi SL). Kalau posisi udah kebuka
+// duluan di symbol itu, Binance nolak ganti marginType (-4046 "No need to change margin type") --
+// itu BUKAN error fatal, artinya emang udah isolated dari awal (default akun ini, dicek berkali2
+// sepanjang sesi selalu isolated), aman diabaikan.
+async function setIsolatedMargin(symbol) {
+  try {
+    return await signedRequest('POST', '/fapi/v1/marginType', { symbol, marginType: 'ISOLATED' });
+  } catch (e) {
+    if (e.binanceCode === -4046) return { alreadyIsolated: true };
+    throw e;
+  }
+}
+
 // BUG ketemu 23 Agu 2026 (posisi short beneran kejadian live): respons LANGSUNG dari POST
 // /fapi/v1/order MARKET kadang balik SEBELUM fill-nya kelar diproses di demo-fapi.binance.com --
 // executedQty/avgPrice masih "0"/kosong padahal order itu SENDIRI beneran udah FILLED sepersekian
@@ -184,6 +198,6 @@ async function cancelAllOpenOrders(symbol) {
 }
 
 module.exports = {
-  getAccountBalance, setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit,
+  getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
   getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
 };

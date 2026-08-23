@@ -70,9 +70,16 @@ function buildJournalHook(account) {
   };
 }
 
+// Link PRIVAT Kaela Access disertain di notif -- TAPI CUMA buat posisi yang beneran kebuka
+// otomatis lewat akun member sendiri (23 Agu 2026, logika Olan: "sinyal Kaela link tetep yang
+// sekarang buat member external.. tapi kalo dia dah open posisi otomatis, infonya sertain link
+// kaela yang privat itu"). Link publik sinyal grup TETAP terpisah, TIDAK diubah di sini.
+const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
+
 function buildSendWA(account) {
   return async (message) => {
-    await kaela.notifyMember(account.phone, `[Kaela Pro Trader -- ${account.mode.toUpperCase()}]\n\n${message}`);
+    const full = `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}\n\nCek jurnal/status posisi kamu: ${KAELA_ACCESS_URL}`;
+    await kaela.notifyMember(account.phone, full);
   };
 }
 

@@ -39,3 +39,4 @@ secrets.js
 
 # PAT GitHub buat push manual ke origin-new (MrOlzGaming) dari sesi lokal -- JANGAN PERNAH commit.
 .gh-token-mrolzgaming
+local-executor.log

@@ -79,6 +79,16 @@ async function executeOne(order) {
 // buat sinyal yang triggeredAt-nya beberapa hari lalu bakal entry di harga yang salah sama sekali.
 const LIVE_TRADING_CUTOFF = new Date('2026-08-22T20:00:00Z');
 
+// Kadaluarsa (23 Agu 2026, permintaan Olan: skema "catch-up begitu komputer nyambung lagi" GANTI
+// sewa VPS -- gak masalah eksekusi telat NUNGGU komputer/jaringan hidup lagi, TAPI kalau matinya
+// KELAMAAN, entry di harga SEKARANG udah gak nyambung sama sinyal aslinya (pola breakout udah basi,
+// SL yang dihitung dari zona swing waktu itu bisa udah gak relevan/harga udah lewat jauh). 48 jam =
+// 2x lipat timeframe candle HARIAN yang jadi basis deteksi pola (flag/wedge/FVG), cukup longgar buat
+// nutup downtime wajar (mati lampu semalam, jaringan ngambek berjam-jam) tapi masih nolak kalau
+// telat berhari-hari. Order yang kadaluarsa ditandai (BUKAN dicoba eksekusi) biar gak nyangkut
+// selamanya nunggu retry yang gak akan pernah bener.
+const STALE_THRESHOLD_HOURS = 48;
+
 async function main() {
   if (!isLiveTradingEnabled()) {
     console.log('[LocalLiveExecutor] Kill switch OFF (live-trading-config.json enabled=false) -- gak ngapa-ngapain.');
@@ -108,7 +118,17 @@ async function main() {
   }
 
   console.log(`[LocalLiveExecutor] Ketemu ${pending.length} posisi belum dieksekusi live.`);
+  const now = new Date();
   for (const order of pending) {
+    const ageHours = (now - new Date(order.triggeredAt || order.createdAt)) / 3600000;
+    if (ageHours > STALE_THRESHOLD_HOURS) {
+      updateOrder(order.id, {
+        liveExecutedAt: now.toISOString(),
+        liveExecution: { ok: false, expired: true, error: `Sinyal udah ${ageHours.toFixed(1)} jam (>${STALE_THRESHOLD_HOURS} jam) -- kadaluarsa, TIDAK dieksekusi (harga sekarang udah gak nyambung sama setup aslinya).` },
+      });
+      console.log(`[LocalLiveExecutor] ⏳ ${order.asset || 'btc'} ${order.mode} kadaluarsa (${ageHours.toFixed(1)} jam) -- dilewatin, ditandai gak dieksekusi.`);
+      continue;
+    }
     await executeOne(order);
   }
   console.log('\n[LocalLiveExecutor] Selesai -- JANGAN LUPA "git add sniper-orders.json && git commit && git push" biar status ke-simpen.');

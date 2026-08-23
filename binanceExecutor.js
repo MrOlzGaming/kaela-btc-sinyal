@@ -108,6 +108,22 @@ async function setLeverage(symbol, leverage) {
   return signedRequest('POST', '/fapi/v1/leverage', { symbol, leverage });
 }
 
+// BUG ketemu 23 Agu 2026 (posisi short beneran kejadian live): respons LANGSUNG dari POST
+// /fapi/v1/order MARKET kadang balik SEBELUM fill-nya kelar diproses di demo-fapi.binance.com --
+// executedQty/avgPrice masih "0"/kosong padahal order itu SENDIRI beneran udah FILLED sepersekian
+// detik kemudian (dicek manual pakai GET /fapi/v1/order, ketauan status FILLED + executedQty benar).
+// Caller (SL/TP attach, emergency-close) yang percaya buta ke angka 0 itu bisa nyangka quantity-nya
+// nol -> SL gagal nempel -> posisi kebuka TELANJANG tanpa proteksi. Fix: begitu POST balik, poll
+// ULANG statusnya (GET /fapi/v1/order) sampai FILLED, JANGAN percaya angka di respons POST awal.
+async function waitForFill(symbol, orderId, attempts = 6, delayMs = 400) {
+  for (let i = 0; i < attempts; i++) {
+    const order = await signedRequest('GET', '/fapi/v1/order', { symbol, orderId });
+    if (order.status === 'FILLED' && parseFloat(order.executedQty) > 0) return order;
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  throw new Error(`Order ${orderId} (${symbol}) belum FILLED setelah ${attempts}x cek -- cek manual via getPositionRisk sebelum lanjut apapun.`);
+}
+
 // Entry MARKET order. `notionalUsd` = nilai posisi dalam USD (hasil calculator.js `nilaiPosisi`),
 // dikonversi ke quantity base-asset (BTC/dst) pakai harga live, dibulatin ke stepSize simbol.
 async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
@@ -117,7 +133,8 @@ async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
   if (quantity <= 0) throw new Error(`Quantity kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat stepSize ${stepSize}) -- order gak dikirim.`);
 
   const side = direction === 'buy' ? 'BUY' : 'SELL';
-  return signedRequest('POST', '/fapi/v1/order', { symbol, side, type: 'MARKET', quantity });
+  const placed = await signedRequest('POST', '/fapi/v1/order', { symbol, side, type: 'MARKET', quantity });
+  return waitForFill(symbol, placed.orderId);
 }
 
 // SL/TP sebagai order EXCHANGE-NATIVE (STOP_MARKET/TAKE_PROFIT_MARKET, reduceOnly=true) -- tetap

@@ -105,6 +105,13 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return signedRequest('POST', '/fapi/v1/leverage', { symbol, leverage });
   }
 
+  // Riwayat income (23-24 Agu 2026, buat laporan saldo admin Kaela Pro Trader) -- Binance udah
+  // misahin sendiri per incomeType: 'TRANSFER' (setor/tarik dana) vs 'REALIZED_PNL'/'FUNDING_FEE'/
+  // 'COMMISSION'/dst (hasil trading beneran). Gak butuh symbol -- ambil SEMUA aset di akun itu.
+  async function getIncomeHistory(startTimeMs, limit = 1000) {
+    return signedRequest('GET', '/fapi/v1/income', { startTime: startTimeMs, limit });
+  }
+
   // Isolated margin -- LIKUIDASI isolated itu sendiri jadi SL (gak pakai order SL terpisah).
   // -4046 "No need to change margin type" BUKAN error fatal -- artinya emang udah isolated.
   async function setIsolatedMargin(symbol) {
@@ -178,7 +185,7 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-    getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
+    getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
   };
 }
 

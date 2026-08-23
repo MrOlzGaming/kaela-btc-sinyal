@@ -36,6 +36,17 @@ async function updateJournalEntry(entryId, patch) {
   return callGas('updateJournalEntry', { entryId, patch: JSON.stringify(patch) });
 }
 
+// Laporan saldo admin (23-24 Agu 2026) -- GAS gak bisa manggil Binance langsung (diblokir server
+// Google, lihat catatan BinanceAdmin.gs) -- komputer Olan yang ambil datanya, GAS tinggal simpen.
+async function getAllAccountsWithKeys() {
+  const data = await callGas('getAllAccountsWithKeys');
+  return data.accounts; // [{ phone, name, apiKey, apiSecret }]
+}
+
+async function recordBalanceReport(phone, name, report) {
+  return callGas('recordBalanceReport', { phone, name, report: JSON.stringify(report) });
+}
+
 async function notifyMember(phone, message) {
   try {
     return await callGas('notifyMember', { phone, message });
@@ -45,4 +56,4 @@ async function notifyMember(phone, message) {
   }
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport };

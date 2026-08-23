@@ -113,9 +113,57 @@ async function processAccount(account, sharedSniperOrders) {
   }
 }
 
+// Laporan saldo admin (23-24 Agu 2026, permintaan Olan: "aku mau bisa lihat saldo memberku, biar
+// bisa deteksi trading Kaela vs trading di luar Kaela vs setor/tarik") -- jalan di KOMPUTER OLAN
+// (IP Indonesia, gak diblokir Binance -- GAS langsung diblokir HTTP 451, ketauan pas tes live 23
+// Agu 2026, sama pola kayak GitHub Actions dulu). CUMA REAL yang dilaporin, JALAN TERUS regardless
+// kill switch (ini monitoring read-only, bukan eksekusi -- Olan tetap mau bisa pantau walau lagi
+// mode kill-switch off). "Trading Kaela" vs "di luar Kaela" DIPISAHIN DI SISI GAS (baca Sheet
+// Journal langsung) -- di sini cuma kirim angka MENTAH hasil Binance.
+async function runBalanceReports() {
+  console.log('\n[MultiAccountExecutor] === Laporan Saldo Member (owner) ===');
+  let accountsWithKeys;
+  try {
+    accountsWithKeys = await kaela.getAllAccountsWithKeys();
+  } catch (e) {
+    console.log('[MultiAccountExecutor] Gagal ambil daftar akun+key buat laporan saldo (skip):', e.message);
+    return;
+  }
+  if (!accountsWithKeys || accountsWithKeys.length === 0) {
+    console.log('[MultiAccountExecutor] Belum ada akun dgn API key buat dilaporin.');
+    return;
+  }
+
+  const days = 7;
+  const sinceMs = Date.now() - days * 24 * 60 * 60 * 1000;
+  for (const acc of accountsWithKeys) {
+    try {
+      const client = createBinanceClient({ apiKey: acc.apiKey, apiSecret: acc.apiSecret, testnet: false }); // REAL doang -- yang beneran perlu diawasi
+      const [balanceUsdt, balanceUsdc, income] = await Promise.all([
+        client.getAccountBalance('USDT'),
+        client.getAccountBalance('USDC'),
+        client.getIncomeHistory(sinceMs),
+      ]);
+      let transferTotal = 0, tradingTotal = 0;
+      income.forEach((inc) => {
+        const amt = Number(inc.income) || 0;
+        if (inc.incomeType === 'TRANSFER') transferTotal += amt;
+        else tradingTotal += amt; // REALIZED_PNL + FUNDING_FEE + COMMISSION + dst
+      });
+      await kaela.recordBalanceReport(acc.phone, acc.name, { balanceUsdt, balanceUsdc, transferTotal, tradingTotal, days });
+      console.log(`[MultiAccountExecutor] Laporan saldo ${acc.name} tersimpan.`);
+    } catch (e) {
+      await kaela.recordBalanceReport(acc.phone, acc.name, { error: e.message }).catch(() => {});
+      console.log(`[MultiAccountExecutor] Laporan saldo ${acc.name} GAGAL:`, e.message);
+    }
+  }
+}
+
 async function main() {
+  await runBalanceReports().catch((e) => console.log('[MultiAccountExecutor] runBalanceReports ERROR:', e.message));
+
   if (!isLiveTradingEnabled()) {
-    console.log('[MultiAccountExecutor] Kill switch OFF -- gak ngapa-ngapain.');
+    console.log('[MultiAccountExecutor] Kill switch OFF -- skip bagian eksekusi trading.');
     return;
   }
 

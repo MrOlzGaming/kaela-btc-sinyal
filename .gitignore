@@ -41,3 +41,8 @@ secrets.js
 .gh-token-mrolzgaming
 local-executor.log
 .KAELA-TRASH/
+
+# Data trading PERSONAL member Kaela Pro Trader (23 Agu 2026) -- repo ini PUBLIC, data member
+# (entry/SL/TP/PNL pribadi) TIDAK BOLEH ke situ walau gak ada secret di dalamnya. Sumber kebenaran
+# aslinya tetap Sheet "Journal" di GAS (APPS/kaela-multi-akun/) -- file lokal ini cuma state kerja.
+multi-account-state/

@@ -21,183 +21,198 @@ function loadSecrets() {
   }
 }
 
-// demo-fapi.binance.com (22 Agu 2026) -- Binance "Demo Trading" resmi, TERBARU, nempel ke akun
-// asli (bukan testnet.binancefuture.com yang lama/API key terpisah). Key yang di-generate dari
-// demo.binance.com/.../api-management CUMA jalan di endpoint ini, bukan endpoint testnet lama.
-function baseUrl() {
-  const { isTestnet } = require('./killSwitch');
-  return isTestnet() ? 'https://demo-fapi.binance.com' : 'https://fapi.binance.com';
-}
-
-function sign(queryString, secret) {
-  return crypto.createHmac('sha256', secret).update(queryString).digest('hex');
-}
-
-async function signedRequestOnce(method, path, params) {
-  const secrets = loadSecrets();
-  if (!secrets.BINANCE_API_KEY || !secrets.BINANCE_API_SECRET) {
-    throw new Error('BINANCE_API_KEY/BINANCE_API_SECRET belum di-setup (secrets.js atau env var) -- gak bisa eksekusi order real.');
-  }
-  const query = new URLSearchParams({ ...params, timestamp: Date.now(), recvWindow: 5000 }).toString();
-  const signature = sign(query, secrets.BINANCE_API_SECRET);
-  const url = `${baseUrl()}${path}?${query}&signature=${signature}`;
-
-  const res = await fetch(url, {
-    method,
-    headers: { 'X-MBX-APIKEY': secrets.BINANCE_API_KEY },
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    const err = new Error(`Binance API error (HTTP ${res.status}): ${JSON.stringify(data)}`);
-    err.binanceCode = data.code;
-    throw err;
-  }
-  return data;
-}
-
-// Retry SEKALI (22 Agu 2026, ketemu pas tes -- error -1021 timestamp/recvWindow sesekali kejadian
-// murni gangguan jaringan sesaat, BUKAN masalah jam sistem -- dicek langsung, selisih cuma ~1,5
-// detik, jauh di bawah batas 5 detik). Timestamp DIGENERATE ULANG tiap percobaan (signedRequestOnce
-// bikin baru tiap dipanggil), jadi retry beneran dapet timestamp fresh, bukan yang basi.
-async function signedRequest(method, path, params = {}) {
-  try {
-    return await signedRequestOnce(method, path, params);
-  } catch (e) {
-    if (e.binanceCode === -1021) {
-      console.log('[BinanceExecutor] Timestamp/recvWindow error, retry sekali...');
-      await new Promise((r) => setTimeout(r, 500));
-      return signedRequestOnce(method, path, params);
-    }
-    throw e;
-  }
-}
-
-// ============ Info simbol (precision/stepSize) -- WAJIB dicek sebelum kirim quantity, Binance
-// nolak order kalau jumlah desimalnya gak sesuai aturan tiap simbol. ============
-let symbolInfoCache = null;
-async function getSymbolInfo(symbol) {
-  if (!symbolInfoCache) {
-    const res = await fetch(`${baseUrl()}/fapi/v1/exchangeInfo`);
-    const data = await res.json();
-    symbolInfoCache = {};
-    for (const s of data.symbols) symbolInfoCache[s.symbol] = s;
-  }
-  const info = symbolInfoCache[symbol];
-  if (!info) throw new Error(`Simbol ${symbol} gak ketemu di exchangeInfo Binance Futures.`);
-  const lotSizeFilter = info.filters.find((f) => f.filterType === 'LOT_SIZE');
-  const stepSize = parseFloat(lotSizeFilter.stepSize);
-  const quantityPrecision = info.quantityPrecision;
-  return { stepSize, quantityPrecision, pricePrecision: info.pricePrecision };
-}
-
 // Bulatin quantity ke stepSize simbol -- WAJIB, order dengan presisi salah otomatis DITOLAK Binance.
+// (Fungsi murni, gak butuh kredensial -- tetap top-level, dipakai caller di luar client juga.)
 function roundToStepSize(quantity, stepSize, precision) {
   const rounded = Math.floor(quantity / stepSize) * stepSize;
   return parseFloat(rounded.toFixed(precision));
 }
 
-// ============ Fungsi publik ============
-
-// asset param (23 Agu 2026, permintaan Olan: "usdt untuk sniper, usdc untuk nyopet" -- 2 wallet
-// margin TERPISAH di Binance Demo, `multiAssetsMargin` OFF jadi USDT/USDC gak saling nyambung
-// buat margin) -- default TETAP 'USDT' biar caller lama (Sniper) gak perlu ubah apa-apa.
-async function getAccountBalance(asset = 'USDT') {
-  const balances = await signedRequest('GET', '/fapi/v2/balance', {});
-  const bal = balances.find((b) => b.asset === asset);
-  return bal ? parseFloat(bal.availableBalance) : 0;
-}
-
-async function setLeverage(symbol, leverage) {
-  return signedRequest('POST', '/fapi/v1/leverage', { symbol, leverage });
-}
-
-// Isolated margin -- "pastiin buka pake isolated" (23 Agu 2026, permintaan Olan buat Nyopet: gak
-// pakai order SL terpisah, LIKUIDASI isolated itu sendiri yang jadi SL). Kalau posisi udah kebuka
-// duluan di symbol itu, Binance nolak ganti marginType (-4046 "No need to change margin type") --
-// itu BUKAN error fatal, artinya emang udah isolated dari awal (default akun ini, dicek berkali2
-// sepanjang sesi selalu isolated), aman diabaikan.
-async function setIsolatedMargin(symbol) {
-  try {
-    return await signedRequest('POST', '/fapi/v1/marginType', { symbol, marginType: 'ISOLATED' });
-  } catch (e) {
-    if (e.binanceCode === -4046) return { alreadyIsolated: true };
-    throw e;
+// ============ Factory client (23 Agu 2026) -- REFACTOR biar bisa dipakai MULTI-AKUN sekaligus
+// (eksekutor Kaela Pro Trader, APPS/kaela-multi-akun/) TANPA ubah perilaku pemakai LAMA (Sniper
+// live monitor, Nyopet auto-trader, localLiveExecutor.js -- semua itu masih pakai akun Olan
+// sendiri dari secrets.js/env var, TIDAK BOLEH regresi). Sebelumnya semua fungsi baca kredensial
+// & isTestnet() dari GLOBAL state (loadSecrets()/killSwitch.js) -- gak bisa dipanggil paralel buat
+// akun BEDA (state ke-share/ketimpa). Sekarang: createBinanceClient({apiKey, apiSecret, testnet})
+// balikin OBJECT independen isinya semua fungsi yang sama, kredensial+base URL ke-CLOSURE per
+// instance -- symbolInfoCache juga per-instance (bukan module-level lagi) biar aman dipanggil
+// PARALEL buat banyak akun tanpa numpuk cache silang exchange (harusnya sama isinya sih, tapi
+// per-instance lebih aman dan gampang dinalar).
+function createBinanceClient({ apiKey, apiSecret, testnet }) {
+  if (!apiKey || !apiSecret) {
+    throw new Error('createBinanceClient: apiKey/apiSecret wajib diisi.');
   }
-}
+  const baseUrl = testnet ? 'https://demo-fapi.binance.com' : 'https://fapi.binance.com';
+  let symbolInfoCache = null;
 
-// BUG ketemu 23 Agu 2026 (posisi short beneran kejadian live): respons LANGSUNG dari POST
-// /fapi/v1/order MARKET kadang balik SEBELUM fill-nya kelar diproses di demo-fapi.binance.com --
-// executedQty/avgPrice masih "0"/kosong padahal order itu SENDIRI beneran udah FILLED sepersekian
-// detik kemudian (dicek manual pakai GET /fapi/v1/order, ketauan status FILLED + executedQty benar).
-// Caller (SL/TP attach, emergency-close) yang percaya buta ke angka 0 itu bisa nyangka quantity-nya
-// nol -> SL gagal nempel -> posisi kebuka TELANJANG tanpa proteksi. Fix: begitu POST balik, poll
-// ULANG statusnya (GET /fapi/v1/order) sampai FILLED, JANGAN percaya angka di respons POST awal.
-async function waitForFill(symbol, orderId, attempts = 6, delayMs = 400) {
-  for (let i = 0; i < attempts; i++) {
-    const order = await signedRequest('GET', '/fapi/v1/order', { symbol, orderId });
-    if (order.status === 'FILLED' && parseFloat(order.executedQty) > 0) return order;
-    await new Promise((r) => setTimeout(r, delayMs));
+  function sign(queryString) {
+    return crypto.createHmac('sha256', apiSecret).update(queryString).digest('hex');
   }
-  throw new Error(`Order ${orderId} (${symbol}) belum FILLED setelah ${attempts}x cek -- cek manual via getPositionRisk sebelum lanjut apapun.`);
+
+  async function signedRequestOnce(method, path, params) {
+    const query = new URLSearchParams({ ...params, timestamp: Date.now(), recvWindow: 5000 }).toString();
+    const signature = sign(query);
+    const url = `${baseUrl}${path}?${query}&signature=${signature}`;
+    const res = await fetch(url, { method, headers: { 'X-MBX-APIKEY': apiKey } });
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(`Binance API error (HTTP ${res.status}): ${JSON.stringify(data)}`);
+      err.binanceCode = data.code;
+      throw err;
+    }
+    return data;
+  }
+
+  // Retry SEKALI (22 Agu 2026, ketemu pas tes -- error -1021 timestamp/recvWindow sesekali
+  // kejadian murni gangguan jaringan sesaat). Timestamp DIGENERATE ULANG tiap percobaan.
+  async function signedRequest(method, path, params = {}) {
+    try {
+      return await signedRequestOnce(method, path, params);
+    } catch (e) {
+      if (e.binanceCode === -1021) {
+        console.log('[BinanceExecutor] Timestamp/recvWindow error, retry sekali...');
+        await new Promise((r) => setTimeout(r, 500));
+        return signedRequestOnce(method, path, params);
+      }
+      throw e;
+    }
+  }
+
+  async function getSymbolInfo(symbol) {
+    if (!symbolInfoCache) {
+      const res = await fetch(`${baseUrl}/fapi/v1/exchangeInfo`);
+      const data = await res.json();
+      symbolInfoCache = {};
+      for (const s of data.symbols) symbolInfoCache[s.symbol] = s;
+    }
+    const info = symbolInfoCache[symbol];
+    if (!info) throw new Error(`Simbol ${symbol} gak ketemu di exchangeInfo Binance Futures.`);
+    const lotSizeFilter = info.filters.find((f) => f.filterType === 'LOT_SIZE');
+    const stepSize = parseFloat(lotSizeFilter.stepSize);
+    const quantityPrecision = info.quantityPrecision;
+    return { stepSize, quantityPrecision, pricePrecision: info.pricePrecision };
+  }
+
+  // asset param (23 Agu 2026, "usdt untuk sniper, usdc untuk nyopet" -- 2 wallet margin TERPISAH,
+  // multiAssetsMargin OFF) -- default TETAP 'USDT' biar caller lama (Sniper) gak perlu ubah apa-apa.
+  async function getAccountBalance(asset = 'USDT') {
+    const balances = await signedRequest('GET', '/fapi/v2/balance', {});
+    const bal = balances.find((b) => b.asset === asset);
+    return bal ? parseFloat(bal.availableBalance) : 0;
+  }
+
+  async function setLeverage(symbol, leverage) {
+    return signedRequest('POST', '/fapi/v1/leverage', { symbol, leverage });
+  }
+
+  // Isolated margin -- LIKUIDASI isolated itu sendiri jadi SL (gak pakai order SL terpisah).
+  // -4046 "No need to change margin type" BUKAN error fatal -- artinya emang udah isolated.
+  async function setIsolatedMargin(symbol) {
+    try {
+      return await signedRequest('POST', '/fapi/v1/marginType', { symbol, marginType: 'ISOLATED' });
+    } catch (e) {
+      if (e.binanceCode === -4046) return { alreadyIsolated: true };
+      throw e;
+    }
+  }
+
+  // BUG ketemu 23 Agu 2026: respons LANGSUNG dari POST /fapi/v1/order MARKET kadang balik
+  // SEBELUM fill-nya kelar diproses -- executedQty/avgPrice masih "0" padahal beneran FILLED
+  // sepersekian detik kemudian. Fix: poll ULANG (GET /fapi/v1/order) sampai FILLED.
+  async function waitForFill(symbol, orderId, attempts = 6, delayMs = 400) {
+    for (let i = 0; i < attempts; i++) {
+      const order = await signedRequest('GET', '/fapi/v1/order', { symbol, orderId });
+      if (order.status === 'FILLED' && parseFloat(order.executedQty) > 0) return order;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    throw new Error(`Order ${orderId} (${symbol}) belum FILLED setelah ${attempts}x cek -- cek manual via getPositionRisk sebelum lanjut apapun.`);
+  }
+
+  // Entry MARKET order. `notionalUsd` = nilai posisi dalam USD (hasil calculator.js `nilaiPosisi`),
+  // dikonversi ke quantity base-asset (BTC/dst) pakai harga live, dibulatin ke stepSize simbol.
+  async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
+    const { stepSize, quantityPrecision } = await getSymbolInfo(symbol);
+    const rawQuantity = notionalUsd / livePrice;
+    const quantity = roundToStepSize(rawQuantity, stepSize, quantityPrecision);
+    if (quantity <= 0) throw new Error(`Quantity kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat stepSize ${stepSize}) -- order gak dikirim.`);
+    const side = direction === 'buy' ? 'BUY' : 'SELL';
+    const placed = await signedRequest('POST', '/fapi/v1/order', { symbol, side, type: 'MARKET', quantity });
+    return waitForFill(symbol, placed.orderId);
+  }
+
+  // SL/TP sebagai order EXCHANGE-NATIVE (STOP_MARKET/TAKE_PROFIT_MARKET via /fapi/v1/algoOrder,
+  // reduceOnly=true, migrasi Binance per 9 Des 2025) -- tetap eksekusi walau server kita mati.
+  async function placeStopLoss({ symbol, direction, stopPrice, quantity }) {
+    const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+    const { pricePrecision } = await getSymbolInfo(symbol);
+    return signedRequest('POST', '/fapi/v1/algoOrder', {
+      algoType: 'CONDITIONAL', symbol, side: closeSide, type: 'STOP_MARKET',
+      triggerPrice: stopPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
+    });
+  }
+
+  async function placeTakeProfit({ symbol, direction, tpPrice, quantity }) {
+    const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+    const { pricePrecision } = await getSymbolInfo(symbol);
+    return signedRequest('POST', '/fapi/v1/algoOrder', {
+      algoType: 'CONDITIONAL', symbol, side: closeSide, type: 'TAKE_PROFIT_MARKET',
+      triggerPrice: tpPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
+    });
+  }
+
+  async function getPositionRisk(symbol) {
+    const positions = await signedRequest('GET', '/fapi/v2/positionRisk', { symbol });
+    return positions[0] || null;
+  }
+
+  // Jaring pengaman TERAKHIR -- kalau SL/TP gagal nempel SETELAH entry berhasil, posisi TIDAK
+  // BOLEH dibiarin nganggur tanpa proteksi. Market close LANGSUNG (arah kebalikan entry).
+  async function emergencyCloseMarket({ symbol, direction, quantity }) {
+    const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+    return signedRequest('POST', '/fapi/v1/order', { symbol, side: closeSide, type: 'MARKET', quantity, reduceOnly: true });
+  }
+
+  async function cancelAllOpenOrders(symbol) {
+    return signedRequest('DELETE', '/fapi/v1/allOpenOrders', { symbol });
+  }
+
+  return {
+    getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
+    getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
+  };
 }
 
-// Entry MARKET order. `notionalUsd` = nilai posisi dalam USD (hasil calculator.js `nilaiPosisi`),
-// dikonversi ke quantity base-asset (BTC/dst) pakai harga live, dibulatin ke stepSize simbol.
-async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
-  const { stepSize, quantityPrecision } = await getSymbolInfo(symbol);
-  const rawQuantity = notionalUsd / livePrice;
-  const quantity = roundToStepSize(rawQuantity, stepSize, quantityPrecision);
-  if (quantity <= 0) throw new Error(`Quantity kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat stepSize ${stepSize}) -- order gak dikirim.`);
-
-  const side = direction === 'buy' ? 'BUY' : 'SELL';
-  const placed = await signedRequest('POST', '/fapi/v1/order', { symbol, side, type: 'MARKET', quantity });
-  return waitForFill(symbol, placed.orderId);
+// ============ Wrapper backward-compatible (akun Olan sendiri, secrets.js/env + killSwitch.js) --
+// SEMUA caller LAMA (sniperLiveMonitor.js, nyopetAutoTrader.js, localLiveExecutor.js) tetap panggil
+// gaya lama (module-level function, gak per-instance) -- ZERO perubahan perilaku, cuma nge-delegate
+// ke createBinanceClient() pakai kredensial GLOBAL yang sama kayak sebelumnya. SINGLETON per proses
+// (bukan bikin instance baru tiap panggilan) -- biar symbolInfoCache-nya TETAP kepakai lintas
+// pemanggilan dalam 1x run kayak perilaku asli SEBELUM refactor ini (module-level cache).
+let _defaultClientInstance = null;
+function _defaultClient() {
+  if (_defaultClientInstance) return _defaultClientInstance;
+  const secrets = loadSecrets();
+  if (!secrets.BINANCE_API_KEY || !secrets.BINANCE_API_SECRET) {
+    throw new Error('BINANCE_API_KEY/BINANCE_API_SECRET belum di-setup (secrets.js atau env var) -- gak bisa eksekusi order real.');
+  }
+  const { isTestnet } = require('./killSwitch');
+  _defaultClientInstance = createBinanceClient({ apiKey: secrets.BINANCE_API_KEY, apiSecret: secrets.BINANCE_API_SECRET, testnet: isTestnet() });
+  return _defaultClientInstance;
 }
 
-// SL/TP sebagai order EXCHANGE-NATIVE (STOP_MARKET/TAKE_PROFIT_MARKET, reduceOnly=true) -- tetap
-// eksekusi walau server/internet kita lagi mati, gak nunggu monitoring manual.
-//
-// FIX 22 Agu 2026 (ketemu pas tes demo beneran, error -4120): Binance migrasi SEMUA conditional
-// order (STOP_MARKET/TAKE_PROFIT_MARKET/dst) ke endpoint BARU /fapi/v1/algoOrder per 9 Des 2025 --
-// endpoint /fapi/v1/order LAMA nolak order jenis ini sekarang ("gunakan Algo Order API").
-// Bedanya: path beda, WAJIB `algoType: 'CONDITIONAL'`, param harga trigger namanya `triggerPrice`
-// (bukan `stopPrice` lagi).
-async function placeStopLoss({ symbol, direction, stopPrice, quantity }) {
-  const closeSide = direction === 'buy' ? 'SELL' : 'BUY'; // order penutup arahnya KEBALIKAN dari entry
-  const { pricePrecision } = await getSymbolInfo(symbol);
-  return signedRequest('POST', '/fapi/v1/algoOrder', {
-    algoType: 'CONDITIONAL', symbol, side: closeSide, type: 'STOP_MARKET',
-    triggerPrice: stopPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
-  });
-}
-
-async function placeTakeProfit({ symbol, direction, tpPrice, quantity }) {
-  const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
-  const { pricePrecision } = await getSymbolInfo(symbol);
-  return signedRequest('POST', '/fapi/v1/algoOrder', {
-    algoType: 'CONDITIONAL', symbol, side: closeSide, type: 'TAKE_PROFIT_MARKET',
-    triggerPrice: tpPrice.toFixed(pricePrecision), quantity, reduceOnly: true,
-  });
-}
-
-async function getPositionRisk(symbol) {
-  const positions = await signedRequest('GET', '/fapi/v2/positionRisk', { symbol });
-  return positions[0] || null;
-}
-
-// Jaring pengaman TERAKHIR (22 Agu 2026) -- kalau SL/TP gagal nempel SETELAH entry berhasil,
-// posisi TIDAK BOLEH dibiarin nganggur tanpa proteksi. Market close LANGSUNG (arah kebalikan
-// entry, reduceOnly) -- lebih baik keluar rugi kecil/breakeven drpd nyangkut leverage tanpa SL.
-async function emergencyCloseMarket({ symbol, direction, quantity }) {
-  const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
-  return signedRequest('POST', '/fapi/v1/order', { symbol, side: closeSide, type: 'MARKET', quantity, reduceOnly: true });
-}
-
-async function cancelAllOpenOrders(symbol) {
-  return signedRequest('DELETE', '/fapi/v1/allOpenOrders', { symbol });
-}
+async function getAccountBalance(asset = 'USDT') { return _defaultClient().getAccountBalance(asset); }
+async function setLeverage(symbol, leverage) { return _defaultClient().setLeverage(symbol, leverage); }
+async function setIsolatedMargin(symbol) { return _defaultClient().setIsolatedMargin(symbol); }
+async function placeMarketEntry(args) { return _defaultClient().placeMarketEntry(args); }
+async function placeStopLoss(args) { return _defaultClient().placeStopLoss(args); }
+async function placeTakeProfit(args) { return _defaultClient().placeTakeProfit(args); }
+async function getPositionRisk(symbol) { return _defaultClient().getPositionRisk(symbol); }
+async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOpenOrders(symbol); }
+async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
+async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
 
 module.exports = {
+  createBinanceClient,
   getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
   getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
 };

@@ -59,6 +59,16 @@ try {
   Log "nyopetAutoTrader.js ERROR: $($_.Exception.Message)"
 }
 
+# Kaela Pro Trader -- eksekutor MULTI-AKUN (23 Agu 2026) -- JALAN TERAKHIR (butuh sniper-orders.json
+# yang UDAH fresh dari cycle Olan barusan buat di-mirror ke member lain). Skip aman-sendiri kalau
+# SERVICE_KEY belum diisi di secrets.js (lihat pesan errornya di log kalau mau cek).
+try {
+  $output4 = node multiAccountExecutor.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output4 -Encoding utf8
+} catch {
+  Log "multiAccountExecutor.js ERROR: $($_.Exception.Message)"
+}
+
 $changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'

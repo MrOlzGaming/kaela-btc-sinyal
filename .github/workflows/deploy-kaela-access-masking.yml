@@ -5,10 +5,17 @@ name: Deploy Kaela Access - Masking Site (manual)
 # akun "Toko Prestasi" yang gak punya akses ke site kaela-access (site_id beda, kepunyaan akun
 # lain). Solusinya: pakai jalur yang SUDAH kebukti kerja -- secrets.NETLIFY_AUTH_TOKEN yang sama
 # kayak dipakai deploy-daily.yml (repo ini), TAPI target site-nya kaela-access (bukan
-# kaela-btc-sinyal). Kalau token ini kepunyaan akun yang emang bikin site kaela-access, deploy
-# bakal sukses -- kalau bukan, gagal 401/403 (ketauan dari sini, gak nebak-nebak lagi).
-# Konten index.html DITULIS INLINE di sini (bukan checkout dari lokal Olan, itu gak keliatan
-# dari GitHub Actions) -- update workflow ini tiap kali masking/index.html lokal berubah.
+# kaela-btc-sinyal).
+#
+# Konten index.html DITULIS INLINE (base64, 1 baris) -- bukan checkout dari lokal Olan (itu gak
+# keliatan dari GitHub Actions). BUG KETEMU di percobaan pertama: heredoc HTML multi-baris TANPA
+# indentasi di dalam block scalar YAML `run: |` bikin YAML nganggep scalar-nya SELESAI begitu
+# ketemu baris kurang indentasi -> sisanya (HTML) dicoba diparse sbg YAML baru -> rusak total,
+# GitHub gagal baca `on: workflow_dispatch`. Fix: base64 1 baris (gak ada masalah indentasi sama
+# sekali), didekode balik jadi HTML pas run.
+#
+# Update workflow ini tiap kali masking/index.html lokal berubah -- generate base64 baru pakai:
+#   base64 -w0 "APPS/kaela-multi-akun/masking/index.html"
 
 on:
   workflow_dispatch: {}
@@ -20,28 +27,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Tulis index.html
+      - name: Tulis index.html (dari base64)
+        env:
+          INDEX_HTML_B64: PCFkb2N0eXBlIGh0bWw+CjxodG1sIGxhbmc9ImlkIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KPHRpdGxlPkthZWxhIEFjY2VzczwvdGl0bGU+CjxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsIGluaXRpYWwtc2NhbGU9MSI+CjxtZXRhIG5hbWU9InJvYm90cyIgY29udGVudD0ibm9pbmRleCwgbm9mb2xsb3ciPgo8bGluayByZWw9Imljb24iIGhyZWY9ImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDY0IDY0Jz48cmVjdCB3aWR0aD0nNjQnIGhlaWdodD0nNjQnIHJ4PScxNCcgZmlsbD0nJTIzMDUwYTEwJy8+PGNpcmNsZSBjeD0nMzInIGN5PSczMicgcj0nMjMnIGZpbGw9J25vbmUnIHN0cm9rZT0nJTIzMmRkNGYwJyBzdHJva2Utd2lkdGg9JzMnLz48dGV4dCB4PSczMicgeT0nNDMnIGZvbnQtZmFtaWx5PSdHZW9yZ2lhLHNlcmlmJyBmb250LXNpemU9JzI4JyBmb250LXdlaWdodD0nNzAwJyBmaWxsPSclMjMyZGQ0ZjAnIHRleHQtYW5jaG9yPSdtaWRkbGUnPks8L3RleHQ+PC9zdmc+Ij4KPHN0eWxlPgogIGh0bWwsIGJvZHkgeyBtYXJnaW46IDA7IHBhZGRpbmc6IDA7IHdpZHRoOiAxMDAlOyBoZWlnaHQ6IDEwMCU7IG92ZXJmbG93OiBoaWRkZW47IGJhY2tncm91bmQ6ICMwNTBhMTA7IH0KICBpZnJhbWUgeyB3aWR0aDogMTAwJTsgaGVpZ2h0OiAxMDAlOyBib3JkZXI6IG5vbmU7IGRpc3BsYXk6IGJsb2NrOyB9Cjwvc3R5bGU+CjwvaGVhZD4KPGJvZHk+CjxpZnJhbWUgc3JjPSJodHRwczovL3NjcmlwdC5nb29nbGUuY29tL21hY3Jvcy9zL0FLZnljYnhETEtZcGF0MTI0TEp5REFicWJYMmFjOFFHOVBxRVRfT2ZJNDFJOWlwczUxV3VNX0g4c041azBlM0FLb0dTd2hPdS9leGVjP3BhZ2U9ZGFzaGJvYXJkIiB0aXRsZT0iS2FlbGEgQWNjZXNzIiBhbGxvdz0iY2xpcGJvYXJkLXdyaXRlIj48L2lmcmFtZT4KPC9ib2R5Pgo8L2h0bWw+Cg==
         run: |
           mkdir -p masking-site
-          cat > masking-site/index.html << 'HTMLEOF'
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<title>Kaela Access</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23050a10'/><circle cx='32' cy='32' r='23' fill='none' stroke='%232dd4f0' stroke-width='3'/><text x='32' y='43' font-family='Georgia,serif' font-size='28' font-weight='700' fill='%232dd4f0' text-anchor='middle'>K</text></svg>">
-<style>
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #050a10; }
-  iframe { width: 100%; height: 100%; border: none; display: block; }
-</style>
-</head>
-<body>
-<iframe src="https://script.google.com/macros/s/AKfycbxDLKYpat124LJyDAbqbX2ac8QG9PqET_OfI41I9ips51WuM_H8sN5k0e3AKoGSwhOu/exec?page=dashboard" title="Kaela Access" allow="clipboard-write"></iframe>
-</body>
-</html>
-HTMLEOF
+          echo "$INDEX_HTML_B64" | base64 -d > masking-site/index.html
+          cat masking-site/index.html
 
       - name: Deploy ke Netlify (site kaela-access)
         run: |

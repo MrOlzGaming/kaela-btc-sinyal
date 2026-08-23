@@ -38,7 +38,7 @@ const { isLiveTradingEnabled } = require('./killSwitch');
 
 const SYMBOL = 'BTCUSDC';
 const MARGIN_ASSET = 'USDC';
-const NYAWA_PCT = 1; // flat, dipakai buat nentuin LEVERAGE (bukan buat SL order -- itu gak ada lagi)
+const NYAWA_PCT = 2; // flat (23 Agu 2026, direvisi dari 1% -> 2%), dipakai buat nentuin LEVERAGE (bukan buat SL order -- itu gak ada lagi, likuidasi yang jadi SL)
 const JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
 // "Modal aktif" = 1/5 saldo (23 Agu 2026, permintaan Olan) -- BUKAN all-in tiap posisi, biar tahan
 // beberapa siklus rugi beruntun tanpa ngabisin saldo sekaligus. Kalkulator exposure TETAP dipakai

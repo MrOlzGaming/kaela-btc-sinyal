@@ -612,34 +612,32 @@
       </div>`;
   }
 
+  // Diseragamkan sama renderJurnalPanel Sniper (23 Agu 2026, permintaan Olan: "samain jurnal
+  // sniper dan nyopet") -- reuse LANGSUNG computeJournalStats/renderJournalStatsGrid/
+  // renderEquityCurveSvg/renderPnlCalendar Sniper, aman dipakai karena skema data udah 100% sama
+  // (status/pnlUsd/marginUsd/closedAt). Posisi FLOATING gak ditampilin lagi di sini (dobel sama
+  // Home) -- persis pola Sniper yang juga cuma nampilin stats+riwayat di Jurnal, bukan floating.
   function renderNyopetJurnalPanel(nyopetState, now) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
     const orders = nyopetState.orders || [];
-    const floating = orders.filter((o) => o.status === 'floating');
     const closed = orders.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl').slice().reverse();
-    const wins = closed.filter((o) => o.status === 'closed_tp').length;
-    const losses = closed.filter((o) => o.status === 'closed_sl').length;
-    const total = closed.length;
-    const winRate = total ? (wins / total) * 100 : 0;
-    // PNL $ JUJUR -- murni akumulasi hasil $ apa adanya, gak nyampur sama saldo/balance.
-    const totalPnlUsd = closed.reduce((sum, o) => sum + (o.pnlUsd || 0), 0);
+    const stats = computeJournalStats(closed);
 
-    const summaryHtml = `<div class="journal-stats-grid">
-      ${cell('Saldo Demo (USDC)', fmtUsdOrder(nyopetState.balance || 0))}
-      ${cell('Win Rate', total ? winRate.toFixed(1) + '%' : '-', total ? (winRate >= 50 ? 'up' : 'down') : '')}
-      ${cell('Menang', wins, 'up')}
-      ${cell('Kalah', losses, 'down')}
-      ${cell('Total PNL (jujur)', total ? fmtSignedUsd(totalPnlUsd) : '-', total ? (totalPnlUsd >= 0 ? 'up' : 'down') : '')}
-    </div>`;
+    const saldoCell = cell('Saldo Demo (USDC)', fmtUsdOrder(nyopetState.balance || 0));
 
-    const posHtml = floating.length > 0
-      ? `<div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
-      : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
+    if (!stats) {
+      return `<div class="nyopet-panel">
+        <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo. Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi.</p>
+        <div class="journal-stats-grid">${saldoCell}</div>
+        <div class="empty">📓 Belum ada trade yang selesai. Statistik bakal keisi otomatis begitu ada posisi Nyopet yang kena target/nyawa.</div>
+      </div>`;
+    }
 
     const historyHtml = closed.length > 0
       ? `<table class="spot-cycle-table">
-          <thead><tr><th>Arah</th><th>Mode</th><th>Entry</th><th>Exit</th><th>Hasil</th><th>PNL</th><th>Tanggal</th></tr></thead>
+          <thead><tr><th>Aset</th><th>Arah</th><th>Mode</th><th>Entry</th><th>Exit</th><th>Hasil</th><th>PNL</th><th>Tanggal</th></tr></thead>
           <tbody>${closed.map((o) => `<tr>
+            <td>${ASSETS_WEB[o.asset] ? ASSETS_WEB[o.asset].emoji + ' ' + ASSETS_WEB[o.asset].label : '🟧 BTC'}</td>
             <td>${o.direction === 'sell' ? '🔴 SHORT' : '🟢 LONG'}</td>
             <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
             <td>${fmtUsdOrder(o.entryPrice)}</td>
@@ -652,11 +650,14 @@
       : `<div class="empty">Belum ada trade yang selesai.</div>`;
 
     return `<div class="nyopet-panel">
-      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (USDC, duit virtual). Trigger MURNI zona (gak pakai target R:R), nyawa 1% flat tiap posisi. Profit maupun loss ditampilin apa adanya.</p>
-      ${summaryHtml}
-      <div class="journal-section-title">📌 Posisi Sekarang</div>
-      ${posHtml}
-      <div class="journal-section-title">📋 Riwayat Trade (${total})</div>
+      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (BTC di USDC, PAXG numpang USDT). Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi. Profit maupun loss ditampilin apa adanya.</p>
+      <div class="journal-stats-grid">${saldoCell}</div>
+      ${renderJournalStatsGrid(stats)}
+      <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
+      ${renderEquityCurveSvg(closed)}
+      <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
+      ${renderPnlCalendar(closed, now)}
+      <div class="journal-section-title">📋 Riwayat Trade (${closed.length})</div>
       ${historyHtml}
     </div>`;
   }

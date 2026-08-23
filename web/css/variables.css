@@ -85,6 +85,14 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
 .brand h1 { margin: 0; border: none; padding: 0; }
 
 /* Navigasi tab bawah — konsisten di semua halaman, ikon SVG (bukan emoji) */
+/* Mode "embedded" (23 Agu 2026) -- kepake pas halaman ini di-iframe dari Kaela Pro Trader
+   (dashboard.html, GAS project APPS/kaela-multi-akun/) yang UDAH punya nav-nya sendiri di luar
+   iframe -- nav bawaan di sini jadi DOBEL/redundan kalau tetep muncul (dilaporin Olan: "tombol
+   double double, tampilan jadi gepeng"). Class `embedded` di-set dari script kecil tiap
+   halaman (deteksi window.self !== window.top), CSS-nya SATU tempat di sini biar konsisten. */
+html.embedded .bottom-nav { display: none !important; }
+html.embedded body { padding-bottom: 20px !important; }
+
 .bottom-nav {
   position: fixed;
   left: 0;

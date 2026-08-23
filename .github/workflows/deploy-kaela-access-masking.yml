@@ -1,0 +1,49 @@
+name: Deploy Kaela Access - Masking Site (manual)
+
+# 25 Agu 2026 -- masking/index.html (APPS/kaela-multi-akun/masking/, di komputer Olan) itu
+# TIDAK ada di git repo manapun (folder lokal murni), dan Netlify CLI di komputer Olan login ke
+# akun "Toko Prestasi" yang gak punya akses ke site kaela-access (site_id beda, kepunyaan akun
+# lain). Solusinya: pakai jalur yang SUDAH kebukti kerja -- secrets.NETLIFY_AUTH_TOKEN yang sama
+# kayak dipakai deploy-daily.yml (repo ini), TAPI target site-nya kaela-access (bukan
+# kaela-btc-sinyal). Kalau token ini kepunyaan akun yang emang bikin site kaela-access, deploy
+# bakal sukses -- kalau bukan, gagal 401/403 (ketauan dari sini, gak nebak-nebak lagi).
+# Konten index.html DITULIS INLINE di sini (bukan checkout dari lokal Olan, itu gak keliatan
+# dari GitHub Actions) -- update workflow ini tiap kali masking/index.html lokal berubah.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tulis index.html
+        run: |
+          mkdir -p masking-site
+          cat > masking-site/index.html << 'HTMLEOF'
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kaela Access</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23050a10'/><circle cx='32' cy='32' r='23' fill='none' stroke='%232dd4f0' stroke-width='3'/><text x='32' y='43' font-family='Georgia,serif' font-size='28' font-weight='700' fill='%232dd4f0' text-anchor='middle'>K</text></svg>">
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #050a10; }
+  iframe { width: 100%; height: 100%; border: none; display: block; }
+</style>
+</head>
+<body>
+<iframe src="https://script.google.com/macros/s/AKfycbxDLKYpat124LJyDAbqbX2ac8QG9PqET_OfI41I9ips51WuM_H8sN5k0e3AKoGSwhOu/exec?page=dashboard" title="Kaela Access" allow="clipboard-write"></iframe>
+</body>
+</html>
+HTMLEOF
+
+      - name: Deploy ke Netlify (site kaela-access)
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --dir=masking-site --prod --site "cdb40300-4ea1-403c-99da-2ce2cf3e4200" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"

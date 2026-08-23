@@ -93,6 +93,12 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
 html.embedded .bottom-nav { display: none !important; }
 html.embedded body { padding-bottom: 20px !important; }
 
+/* 25 Agu 2026 -- nav internal ".meta-toggle" (Musiman/Sniper/Dark Kaela di halaman metodologi)
+   NUMPUK sama subnav "Belajar" yang udah dibangun di Kaela Access (APPS/kaela-multi-akun) --
+   dobel navigasi buat hal yang sama + labelnya beda ("Nyopet" di luar vs "Dark Kaela" di sini,
+   bikin bingung). Disembunyiin kalau di-iframe, sama pola kayak bottom-nav di atas. */
+html.embedded .meta-toggle { display: none !important; }
+
 .bottom-nav {
   position: fixed;
   left: 0;

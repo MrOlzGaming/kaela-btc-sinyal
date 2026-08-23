@@ -1,25 +1,28 @@
 {
-  "balance": 9304.31914838,
+  "balance": 9296.96347316,
   "orders": [
     {
-      "id": "nyopet-demo-1787463868653",
-      "direction": "buy",
+      "id": "nyopet-demo-1787470523936",
+      "direction": "sell",
       "status": "floating",
       "mode": "fade",
-      "entryPrice": 76240.16388888887,
-      "sl": 75462.354,
-      "tp": 78794.415,
+      "entryPrice": 76150.7,
+      "liqPrice": 77330.52408865,
+      "tp": 75000,
       "qty": 0.036,
       "leverage": 50,
-      "marginUsd": 54.93505273,
-      "zonePrice": 76425.63666666666,
+      "marginUsd": 55.78178083896,
+      "zonePrice": 78794.415,
       "zoneKind": "swing",
-      "triggeredAt": "2026-08-23T05:44:28.653Z"
+      "zoneTouches": null,
+      "triggeredAt": "2026-08-23T07:35:23.936Z"
     }
   ],
   "watchZone": {
-    "price": 76425.63666666666,
-    "side": "support"
+    "price": 78794.415,
+    "side": "resistance",
+    "zoneKind": "swing",
+    "touches": null
   },
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",
   "demoEraNote": "Nyopet REAL manual (posisi real di exchange asli) DIGANTIKAN PENUH oleh Nyopet Binance Demo (USDC) mulai titik ini -- riwayat trade REAL lama direset (era baru, bukan lanjutan). Pemisahan bankroll penuh (kayak kaela-bankroll.json Sniper) NANTI, fokus sementara latihan Demo dulu. Skema disamain 100% sama sniper-orders.json (orders[]+status) 23 Agu 2026 -- gak ada lagi batas 100 trade."

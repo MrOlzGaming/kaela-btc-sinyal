@@ -1,10 +1,10 @@
 {
-  "balance": 9296.96347316,
+  "balance": 9242.12056917,
   "orders": [
     {
       "id": "nyopet-demo-1787470523936",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "fade",
       "entryPrice": 76150.7,
       "liqPrice": 77330.52408865,
@@ -16,7 +16,28 @@
       "zoneKind": "swing",
       "zoneTouches": null,
       "triggeredAt": "2026-08-23T07:35:23.936Z",
-      "asset": "btc"
+      "asset": "btc",
+      "exitPrice": 77674.11399972222,
+      "pnlUsd": -54.842903989999996,
+      "pnlPct": -98.31687544779089,
+      "closedAt": "2026-08-23T13:24:06.318Z"
+    },
+    {
+      "id": "nyopet-demo-1787491450760",
+      "asset": "btc",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 77450.7,
+      "liqPrice": 78653.94540324,
+      "tp": 76538.526,
+      "qty": 0.035,
+      "leverage": 50,
+      "marginUsd": 55.45272341502,
+      "zonePrice": 78794.415,
+      "zoneKind": "swing",
+      "zoneTouches": null,
+      "triggeredAt": "2026-08-23T13:24:10.760Z"
     }
   ],
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",

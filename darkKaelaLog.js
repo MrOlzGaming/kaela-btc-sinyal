@@ -74,7 +74,9 @@ function formatAutoOpen(pos, now) {
   const fs = require('fs');
   const path = require('path');
   const journal = JSON.parse(fs.readFileSync(path.join(__dirname, 'nyopet-journal.json'), 'utf8'));
-  const winRateLine = formatWinRateLine(journal.orders || []);
+  // Win rate per-ASET (23 Agu 2026, multi-aset) -- BTC dan PAXG kondisinya beda (leverage/nyawa
+  // sama, tapi karakter harga beda), win rate gabungan bisa nyamarin performa salah satu.
+  const winRateLine = formatWinRateLine((journal.orders || []).filter((o) => o.asset === pos.asset));
   const modeDesc = pos.mode === 'fade'
     ? `Harga nyentuh zona ${fmtUsd(pos.zonePrice)} (${pos.zoneKind === 'round' ? 'angka bulat psikologis' : pos.zoneTouches ? `swing, disentuh ${pos.zoneTouches}x sebelumnya` : 'swing'}) -- asumsi DEFAULT selalu mantul di sini, jadi counter posisi ngelawan arah gerak barusan.`
     : `Zona ${fmtUsd(pos.zonePrice)} DITEMBUS (gagal nahan, bukan mantul) -- ikutin arah tembusan (momentum), bukan counter lagi.`;
@@ -82,7 +84,7 @@ function formatAutoOpen(pos, now) {
     direction: pos.direction, entryPrice: pos.entryPrice, tp: pos.tp, sl: pos.sl,
     leverage: pos.leverage, marginUsd: pos.marginUsd, reason: modeDesc,
   });
-  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market (Binance Demo)
+  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market — ${pos.assetLabel || 'BTC'} (Binance Demo)
 🔵 POSISI DIBUKA
 
 ${coreLines.join('\n')}
@@ -98,7 +100,7 @@ ${fmtWita(now)}`;
 function formatAutoClosed(trade, now) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
-  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market (Binance Demo)
+  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market — ${trade.assetLabel || 'BTC'} (Binance Demo)
 ${won ? '✅ KENA TARGET' : '❌ KENA NYAWA'} -- ${dirLabel}
 
 Entry ${fmtUsd(trade.entryPrice)} -> Exit ${fmtUsd(trade.exitPrice)}

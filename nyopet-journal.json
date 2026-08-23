@@ -15,15 +15,18 @@
       "zonePrice": 78794.415,
       "zoneKind": "swing",
       "zoneTouches": null,
-      "triggeredAt": "2026-08-23T07:35:23.936Z"
+      "triggeredAt": "2026-08-23T07:35:23.936Z",
+      "asset": "btc"
     }
   ],
-  "watchZone": {
-    "price": 78794.415,
-    "side": "resistance",
-    "zoneKind": "swing",
-    "touches": null
-  },
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",
-  "demoEraNote": "Nyopet REAL manual (posisi real di exchange asli) DIGANTIKAN PENUH oleh Nyopet Binance Demo (USDC) mulai titik ini -- riwayat trade REAL lama direset (era baru, bukan lanjutan). Pemisahan bankroll penuh (kayak kaela-bankroll.json Sniper) NANTI, fokus sementara latihan Demo dulu. Skema disamain 100% sama sniper-orders.json (orders[]+status) 23 Agu 2026 -- gak ada lagi batas 100 trade."
+  "demoEraNote": "Nyopet REAL manual (posisi real di exchange asli) DIGANTIKAN PENUH oleh Nyopet Binance Demo (USDC) mulai titik ini -- riwayat trade REAL lama direset (era baru, bukan lanjutan). Pemisahan bankroll penuh (kayak kaela-bankroll.json Sniper) NANTI, fokus sementara latihan Demo dulu. Skema disamain 100% sama sniper-orders.json (orders[]+status) 23 Agu 2026 -- gak ada lagi batas 100 trade.",
+  "watchZoneByAsset": {
+    "btc": {
+      "price": 78794.415,
+      "side": "resistance",
+      "zoneKind": "swing",
+      "touches": null
+    }
+  }
 }

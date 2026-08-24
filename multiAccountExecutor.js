@@ -133,6 +133,8 @@ async function processAccount(account, sharedSniperOrders) {
       .map((p) => ({
         symbol: p.symbol, positionAmt: p.positionAmt, entryPrice: p.entryPrice,
         markPrice: p.markPrice, unRealizedProfit: p.unRealizedProfit,
+        leverage: p.leverage, liquidationPrice: p.liquidationPrice,
+        marginType: p.marginType, notional: p.notional,
       }));
     await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions);
     console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT, $${balanceUsdc.toFixed(2)} USDC, ${positions.length} posisi.`);

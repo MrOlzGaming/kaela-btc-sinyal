@@ -135,6 +135,7 @@ async function processAccount(account, sharedSniperOrders) {
         markPrice: p.markPrice, unRealizedProfit: p.unRealizedProfit,
       }));
     await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions);
+    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT, $${balanceUsdc.toFixed(2)} USDC, ${positions.length} posisi.`);
   } catch (e) {
     console.log(`[MultiAccountExecutor] recordMemberStatus ERROR (${account.phone}/${account.mode}):`, e.message);
   }

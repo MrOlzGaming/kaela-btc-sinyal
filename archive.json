@@ -1033,5 +1033,15 @@
     "type": "econ-calendar",
     "date": "2026-08-24T13:12:23.347Z",
     "content": "⬜ 📅 JADWAL EKONOMI MENDATANG (peringatan dini)\n(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 2026-08-26, 20:30 WITA — Indeks Harga PCE Inti Bulanan\n   Forecast: 0.2% | Sebelumnya: 0.1%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n🕐 2026-08-26, 20:30 WITA — Pertumbuhan PDB Sementara (Kuartalan)\n   Forecast: 1.5% | Sebelumnya: 1.5%\n   📐 Pertumbuhan PDB (keyakinan: campuran):\n      • Kalau ACTUAL > forecast -> ↔️ Efek CAMPURAN, gak konsisten\n      • Kalau ACTUAL < forecast -> ↔️ Efek CAMPURAN, gak konsisten\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-08-24T23:29:40.747Z",
+    "content": "🟪 📊 Update BTC — 2026-08-25\nHarga sekarang: $78,923 (📈 +2.4% dari kemarin)\n⏳ Halving berikutnya: 598 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.48 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.88 (Normal)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-08-24T23:29:40.747Z",
+    "content": "🟪 🟡 Update XAU/Emas — 2026-08-25\nHarga sekarang: $4,663.41 (📈 +1.6% dari kemarin)\n💵 DXY: 118.1 (STABIL) -- Emas netral\n📉 Real Yield 10Y: 2.40% (NAIK) -- Emas cenderung TERTEKAN (biaya peluang pegang Emas naik)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

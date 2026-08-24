@@ -67,4 +67,11 @@ async function claimLeadership(machineId) {
   return { isLeader: data.isLeader, leaderId: data.leaderId, myId: data.myId };
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership };
+// Status member (25 Agu 2026, "mau lihat saldo sendiri + posisi kebuka langsung di web") --
+// dititip tiap siklus 15 menit, GAS gak bisa manggil Binance langsung (lihat catatan geo-block).
+// `positions` array biasa, di-JSON.stringify di sini (GAS Main.gs yang parse balik).
+async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positions) {
+  return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []) });
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus };

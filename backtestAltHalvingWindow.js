@@ -3,78 +3,56 @@
 // sebelum dipakai live, pola sama kayak riset Astronacci/Fibonacci Time Zone sebelumnya: bandingin
 // hasil DENGAN filter window vs TANPA, jangan asumsi doang.
 //
-// v2 (Olan tanya: "SL kejauhan/kedeketan?" + "leverage alt di-cap 3x gimana?") -- nambah 4 varian
-// sizing/SL buat tes 2 hipotesis itu EMPIRIS, bukan debat doang: baseline (sama kayak BTC live),
-// SL buffer lebih lebar (1.5% drpd 0.5%), leverage di-cap 3x, dan gabungan keduanya.
+// v2 (Olan tanya: "SL kejauhan/kedeketan?" + "leverage alt di-cap 3x gimana?") -- 4 varian
+// sizing/SL, kesimpulan: baseline udah paling bagus, JANGAN diubah (lihat memory).
 //
-// Metodologi: reuse detektor pola (flag/wedge) + mesin backtest (runFlagBacktest) yang SAMA
-// persis dipakai Sniper BTC live -- cuma allowShort:false (long-only) dan sesudahnya trade
-// di-SPLIT berdasar tanggal entry (di dalam/luar window Tanam-Panen BTC), BUKAN filter di
-// tengah-simulasi -- biar apple-to-apple ngebandingin "seleksi sinyal yang sama, filter tanggal
-// beda" (metodologi identik kayak yang dipakai validasi window istirahat BTC di
-// backtestCombinedMultiPos.js, lihat catatan halvingBearWindow.js).
+// v3 (Olan: "modal awal $100 gak deposit KECUALI kena drawdown $50 dari modal awal, backtest
+// ulang lapor hasilnya jadi berapa") -- simulasi bankroll REALISTIS: entry DIGERBANG di dalam
+// loop (bukan post-hoc split) pakai window Tanam-Panen (biar urutan compounding beneran kayak
+// live), gak ada topUp bulanan, HANYA rescue deposit $50 begitu capital jatuh ke $50 (nambah $50
+// balik ke $100). Laporan: finalCapital & maxDrawdown per akun (independen, tiap alt $100 sendiri
+// -- BUKAN 1 bankroll gabungan buat 6 alt, matching desain "tiap alt akun sendiri" yang direncanain).
 
-const { runFlagBacktest, fetchAllCandles, summarize } = require('./backtestFlagBreakout');
+const { runFlagBacktest, fetchAllCandles } = require('./backtestFlagBreakout');
 const { HALVINGS } = require('./halvingBearWindow');
 
 const TANAM_MAX_DAYS = 542, PANEN_END_DAYS = 549;
 const DAY_MS = 86400000;
-
 const activeWindows = HALVINGS.map((h) => {
   const t = new Date(h).getTime();
-  return { start: t - TANAM_MAX_DAYS * DAY_MS, end: t + PANEN_END_DAYS * DAY_MS, halving: h };
+  return { start: t - TANAM_MAX_DAYS * DAY_MS, end: t + PANEN_END_DAYS * DAY_MS };
 });
-function inActiveWindow(ms) {
+function inActiveWindow(dateObj) {
+  const ms = dateObj.getTime();
   return activeWindows.some((w) => ms >= w.start && ms <= w.end);
 }
 
 const ALT_SYMBOLS = ['ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'DOGEUSDT'];
 const START_TIME = new Date('2018-01-01').getTime();
 
-const VARIANTS = {
-  'A. Baseline (sama BTC live)': { allowShort: false },
-  'B. SL buffer lebar (1.5%)': { allowShort: false, slBufferPct: 1.5 },
-  'C. Leverage cap 3x': { allowShort: false, maxLeverage: 3 },
-  'D. SL lebar + leverage 3x': { allowShort: false, slBufferPct: 1.5, maxLeverage: 3 },
-};
-
-function splitByWindow(trades) {
-  return {
-    inWin: trades.filter((t) => inActiveWindow(t.entryTime)),
-    outWin: trades.filter((t) => !inActiveWindow(t.entryTime)),
-  };
-}
-
 (async () => {
-  // Fetch data SEKALI per simbol, dipakai ulang buat semua varian (hemat network).
-  const dailyBySymbol = {};
+  let totalStart = 0, totalFinal = 0;
   for (const symbol of ALT_SYMBOLS) {
+    let daily;
     try {
-      const daily = await fetchAllCandles(symbol, '1d', START_TIME);
-      if (daily.length < 100) { console.log(`${symbol}: data kelewat pendek, skip.`); continue; }
-      dailyBySymbol[symbol] = daily;
-      console.log(`${symbol}: ${daily.length} candle OK`);
+      daily = await fetchAllCandles(symbol, '1d', START_TIME);
     } catch (e) {
       console.log(`${symbol}: gagal ambil data (${e.message})`);
+      continue;
     }
-  }
+    if (daily.length < 100) { console.log(`${symbol}: data kelewat pendek, skip.`); continue; }
 
-  for (const [variantName, opts] of Object.entries(VARIANTS)) {
-    console.log(`\n\n########## VARIAN: ${variantName} ##########`);
-    const allTrades = [];
-    for (const symbol of Object.keys(dailyBySymbol)) {
-      const { trades } = runFlagBacktest(dailyBySymbol[symbol], opts);
-      trades.forEach((t) => { t.symbol = symbol; });
-      allTrades.push(...trades);
-    }
-    const { inWin, outWin } = splitByWindow(allTrades);
-    console.log('  DALAM window Tanam-Panen:', JSON.stringify(summarize(inWin)));
-    console.log('  LUAR window:', JSON.stringify(summarize(outWin)));
-    // Rata-rata leverage yang KEPAKE beneran (buktiin cap-nya ngefek, bukan cuma parameter kosong).
-    if (inWin.length) {
-      // leverage gak disimpen langsung di trade record -- derive dari nilaiPosisi/margin.
-      const avgLev = inWin.reduce((s, t) => s + (t.margin ? t.nilaiPosisi / t.margin : 0), 0) / inWin.length;
-      console.log('  Rata-rata leverage (dalam window):', avgLev.toFixed(1) + 'x');
-    }
+    const { trades, finalCapital, maxDrawdownPct } = runFlagBacktest(daily, {
+      allowShort: false,
+      startCapital: 100,
+      topUpAmount: 0,
+      rescueDrawdownUsd: 50,
+      rescueDepositUsd: 50,
+      entryDateFilter: inActiveWindow,
+    });
+    console.log(`${symbol}: ${trades.length} trade | Modal akhir: $${finalCapital.toFixed(2)} | Max DD: ${maxDrawdownPct.toFixed(1)}%`);
+    totalStart += 100;
+    totalFinal += finalCapital;
   }
+  console.log(`\nTOTAL (${ALT_SYMBOLS.length} akun $100 independen, modal gabungan $${totalStart}): $${totalFinal.toFixed(2)} (${((totalFinal / totalStart - 1) * 100).toFixed(0)}%)`);
 })();

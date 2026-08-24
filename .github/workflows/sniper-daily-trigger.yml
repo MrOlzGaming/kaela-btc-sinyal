@@ -46,6 +46,13 @@ jobs:
       - name: DCA Spot Musiman (spotDca.js)
         run: node spotDca.js
 
+      # Compound Alt DCA BAYANGAN, 10 koin (25 Agu 2026, "biar aku dan temen-temen tiru") -- $10/
+      # koin tanggal 5 selama window Tanam, stop pas halving, jual hari ke-536 pasca halving.
+      # BEDA dari spotDca.js: ini LOUD ke grup WA di 3 titik (beli/stop/jual, template diapprove
+      # Olan) -- state kaela-spot-alt.json, ditampilkan tab Compound Alt halaman Jurnal.
+      - name: Compound Alt DCA (spotDcaAlt.js)
+        run: node spotDcaAlt.js
+
       # 15 Agu 2026: buildDashboard.js DICABUT -- web/*.html shell statis, gak butuh rebuild
       # tiap data berubah. Pengunjung fetch data terbaru langsung dari file JSON di bawah ini
       # (client-side, lihat web/js/jurnal-load.js/dashboard-load.js) -- commit aja udah cukup.
@@ -57,7 +64,7 @@ jobs:
           # sniperAutoAnalysis.js (checkAndApplyTopUp/sizing sinyal VALID) nulis file ini juga,
           # kalau gak di-add jadi perubahan gak ke-stage -> `git pull --rebase` gagal terus ->
           # push gagal 5x -> state gak pernah nyampe remote, run berikutnya ulang dari awal.
-          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-bankroll.json
+          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-spot-alt.json kaela-bankroll.json
           git diff --staged --quiet || git commit -m "Auto: sniper analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).
@@ -74,6 +81,6 @@ jobs:
       - name: Purge jsDelivr cache
         if: success()
         run: |
-          for f in sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-bankroll.json; do
+          for f in sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-spot-alt.json kaela-bankroll.json; do
             curl -s -o /dev/null "https://purge.jsdelivr.net/gh/${{ github.repository }}@master/$f" || true
           done

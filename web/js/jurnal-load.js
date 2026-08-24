@@ -18,18 +18,32 @@
     }
   }
 
+  // Default kosong buat kaela-spot-alt.json -- 1 sub-objek per koin (SAMA bentuknya kayak
+  // spotDcaAlt.js load()), dipakai kalau file belum ada di repo (belum sempat commit pertama).
+  function defaultAltState() {
+    const coins = {};
+    KaelaRender.ALT10_SYMBOLS.forEach((s) => {
+      coins[s] = { heldQty: 0, totalInvestedCurrentCycle: 0, cycleStartedAt: null, totalRealizedCash: 0, completedCycles: [], buyLog: [] };
+    });
+    return { coins, lastBuyMonthKey: null, halvingStopNotified: false };
+  }
+
   async function main() {
     const now = new Date();
-    const [ordersState, bankrollState, spotState, nyopetState, liveConfig] = await Promise.all([
+    const [ordersState, bankrollState, spotState, altState, nyopetState, liveConfig] = await Promise.all([
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }),
       fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }),
       fetchJson('kaela-spot.json', { btcHeld: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, completedCycles: [], buyLog: [] }),
+      fetchJson('kaela-spot-alt.json', defaultAltState()),
       fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }),
       fetchJson('live-trading-config.json', { enabled: false, testnet: true }),
     ]);
 
     const spotEl = document.querySelector('[data-panel="spot"]');
     if (spotEl) spotEl.innerHTML = KaelaRender.renderSpotJurnalPanel(spotState, now);
+
+    const altEl = document.querySelector('[data-panel="compoundalt"]');
+    if (altEl) altEl.innerHTML = KaelaRender.renderSpotAltJurnalPanel(altState, now);
 
     // isDemoMode (22 Agu 2026) -- selama testnet=true (Binance Demo, duit virtual), framing
     // "fund manager" (Total Disetor/Return%) DIMATIKAN -- saldo demo dari faucet BUKAN setoran

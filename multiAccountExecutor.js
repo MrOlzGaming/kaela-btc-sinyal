@@ -25,8 +25,10 @@ const fs = require('fs');
 const path = require('path');
 const { load: loadSniperOrders } = require('./sniperOrders');
 const { createBinanceClient } = require('./binanceExecutor');
+const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
 const { createSniperAccountTrader } = require('./sniperMultiAccount');
+const { createSpotDcaAltAccountTrader } = require('./spotDcaAltAccount');
 const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
 
@@ -110,6 +112,23 @@ async function processAccount(account, sharedSniperOrders) {
     await sniperTrader.runCycle(sharedSniperOrders);
   } catch (e) {
     console.log(`[MultiAccountExecutor] Sniper ERROR (${account.phone}/${account.mode}):`, e.message);
+  }
+
+  // Compound Alt DCA (25 Agu 2026) -- TOGGLE TERPISAH (account.compoundAltEnabled), beda dari
+  // Sniper/Nyopet yang jalan otomatis buat SEMUA akun aktif -- member wajib opt-in eksplisit ke
+  // strategi ini (dana ngendon ~1,5 tahun/siklus). Client-nya BEDA (Spot+Earn, bukan Futures) tapi
+  // API key/secret SAMA (1 API key Binance bisa punya izin Spot+Futures sekaligus).
+  if (account.compoundAltEnabled) {
+    try {
+      const spotEarnClient = createBinanceSpotEarnClient({ apiKey: account.apiKey, apiSecret: account.apiSecret });
+      const compoundAltTrader = createSpotDcaAltAccountTrader({
+        client: spotEarnClient, statePath: path.join(STATE_DIR, `${key}-compoundalt.json`),
+        sendWA, onEvent: journalHook,
+      });
+      await compoundAltTrader.runCycle(new Date());
+    } catch (e) {
+      console.log(`[MultiAccountExecutor] Compound Alt DCA ERROR (${account.phone}/${account.mode}):`, e.message);
+    }
   }
 }
 

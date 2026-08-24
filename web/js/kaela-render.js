@@ -26,6 +26,17 @@
     return Math.round((HALVING_DATE.getTime() - now.getTime()) / 86400000);
   }
 
+  // Compound Alt DCA (25 Agu 2026) -- duplikat dari spotDcaAltShared.js (Node), sumber kebenaran
+  // ada DI SANA, di sini cuma buat render. WINDOW_START/HALVING_DATE dipakai bareng sama Spot BTC
+  // di atas (siklus halving yang sama), PANEN_SELL_DAYS beda (536, bukan 459) krn dihitung dari
+  // rata-rata hari puncak HISTORIS (lihat _findpeaks.js), bukan titik tengah rentang.
+  const ALT10_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'DOGEUSDT', 'ZILUSDT', 'TRXUSDT', 'XLMUSDT'];
+  const PER_COIN_USD = 10;
+  const ALT_PANEN_SELL_DAYS = 536;
+  function altSellTriggerDate() {
+    return new Date(HALVING_DATE.getTime() + ALT_PANEN_SELL_DAYS * 86400000);
+  }
+
   // Duplikat dari categoryColors.js (tetap harus disinkron manual kalau warna kategori berubah).
   const CATEGORY_COLOR = {
     news: { emoji: '🟦', hex: '#3b82f6' },
@@ -567,6 +578,99 @@
     </div>`;
   }
 
+  // ============ Compound Alt DCA (10 dompet, 25 Agu 2026) ============
+  // Olan: "buat 10 dompet kaela itu biar aku dan temen-temen tiru.. tiap dompet bakal keisi berapa
+  // dan tiap dompet bisa diklik history DCA". Tiap koin PUNYA dompet SENDIRI (independen, gak
+  // dipool -- lihat spotDcaAltShared.js) -- kartu grid, klik toggle buka riwayat beli+siklus per koin.
+  function coinLabelAlt(symbol) { return symbol.replace('USDT', ''); }
+
+  function renderWalletCard(symbol, coinState) {
+    const label = coinLabelAlt(symbol);
+    const held = coinState.heldQty > 0;
+    const valueLabel = held ? `${coinState.heldQty.toFixed(6)} ${label}` : (coinState.totalRealizedCash > 0 ? fmtUsdOrder(coinState.totalRealizedCash) : '$0');
+    const subLabel = held ? `Modal: ${fmtUsdOrder(coinState.totalInvestedCurrentCycle)}` : (coinState.totalRealizedCash > 0 ? 'Nunggu Tanam berikutnya (all-in)' : 'Belum mulai');
+    return `<div class="wallet-card" id="wallet-card-${symbol}" onclick="KaelaRender.toggleWalletDetail('${symbol}')">
+      <div class="wallet-coin">${label}</div>
+      <div class="wallet-value" data-wallet-qty="${coinState.heldQty}" data-wallet-symbol="${symbol}USDT">${valueLabel}</div>
+      <div class="wallet-sub">${subLabel}</div>
+    </div>`;
+  }
+
+  function renderWalletDetail(symbol, coinState) {
+    const label = coinLabelAlt(symbol);
+    const buyLogHtml = coinState.buyLog.length > 0
+      ? `<div class="spot-buy-log"><table>
+          <thead><tr><th>Tanggal</th><th>Jumlah</th><th>Harga</th><th>Qty</th></tr></thead>
+          <tbody>${coinState.buyLog.slice().reverse().map((b) => `<tr><td>${fmtDateLong(new Date(b.date))}</td><td>${fmtUsdOrder(b.usdAmount)}</td><td>${fmtUsdOrder(b.price)}</td><td>${b.qty.toFixed(6)}</td></tr>`).join('')}</tbody>
+        </table></div>`
+      : `<div class="empty">Belum ada pembelian ${label} di siklus ini.</div>`;
+    const cyclesHtml = coinState.completedCycles.length > 0
+      ? `<table class="spot-cycle-table">
+          <thead><tr><th>Mulai Beli</th><th>Terjual</th><th>Modal</th><th>Hasil Jual</th><th>P&amp;L</th></tr></thead>
+          <tbody>${coinState.completedCycles.slice().reverse().map((c) => `<tr>
+            <td>${c.buyWindowStart ? fmtDateLong(new Date(c.buyWindowStart)) : '-'}</td>
+            <td>${fmtDateLong(new Date(c.soldAt))}</td>
+            <td>${fmtUsdOrder(c.totalInvested)}</td>
+            <td>${fmtUsdOrder(c.proceedsUsd)}</td>
+            <td class="${c.pnlUsd >= 0 ? 'up' : 'down'}">${c.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(c.pnlUsd)} (${c.pnlPct >= 0 ? '+' : ''}${c.pnlPct.toFixed(1)}%)</td>
+          </tr>`).join('')}</tbody>
+        </table>`
+      : '';
+    return `<div class="wallet-detail" id="wallet-detail-${symbol}">
+      <div class="journal-section-title">🧾 Dompet ${label} — Jurnal Pembelian</div>
+      ${buyLogHtml}
+      ${coinState.completedCycles.length > 0 ? `<div class="journal-section-title">📜 Dompet ${label} — Riwayat Siklus</div>${cyclesHtml}` : ''}
+    </div>`;
+  }
+
+  function renderSpotAltJurnalPanel(altState, now) {
+    const sellDate = altSellTriggerDate();
+    let badgeClass, badgeText, phaseNote;
+    const anyHeld = ALT10_SYMBOLS.some((s) => altState.coins[s] && altState.coins[s].heldQty > 0);
+    if (anyHeld) {
+      if (now < HALVING_DATE) {
+        badgeClass = 'phase-tanam';
+        badgeText = '🌱 SEDANG DCA (Musim Tanam)';
+        phaseNote = `Beli $${PER_COIN_USD}/koin (10 koin) tiap tanggal 5 sampai halving tiba (~${fmtDateLong(HALVING_DATE)}).`;
+      } else {
+        badgeClass = 'phase-panen';
+        badgeText = '🌾 TAHAN, MENUNGGU PANEN';
+        phaseNote = `Halving udah lewat, DCA berhenti. Jual otomatis semua koin sekitar ${fmtDateLong(sellDate)} (rata-rata historis hari puncak siklus).`;
+      }
+    } else if (now >= WINDOW_START && now < HALVING_DATE) {
+      badgeClass = 'phase-tanam';
+      badgeText = '🌱 WINDOW TANAM -- DCA BERJALAN';
+      phaseNote = `DCA $${PER_COIN_USD}/koin tiap tanggal 5 lagi berjalan (posisi belum keupdate di data terakhir, nunggu tick berikutnya).`;
+    } else {
+      badgeClass = 'phase-tunai';
+      badgeText = '⚪ TUNAI -- MENUNGGU WINDOW TANAM';
+      phaseNote = `DCA mulai otomatis begitu window Musim Tanam tiba (${fmtDateLong(WINDOW_START)}), tanggal 5 tiap bulan sampai halving (~${fmtDateLong(HALVING_DATE)}).`;
+    }
+
+    const totalInvested = ALT10_SYMBOLS.reduce((sum, s) => sum + ((altState.coins[s] && altState.coins[s].totalInvestedCurrentCycle) || 0), 0);
+    const totalRealized = ALT10_SYMBOLS.reduce((sum, s) => sum + ((altState.coins[s] && altState.coins[s].totalRealizedCash) || 0), 0);
+    const totalCyclesDone = ALT10_SYMBOLS.reduce((sum, s) => sum + ((altState.coins[s] && altState.coins[s].completedCycles.length) || 0), 0);
+
+    const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
+    const summaryHtml = `<div class="spot-summary-grid">
+      ${cell('Modal Siklus Ini (10 koin)', fmtUsdOrder(totalInvested))}
+      ${cell('Saldo Terealisasi (nunggu Tanam)', fmtUsdOrder(totalRealized))}
+      ${cell('Total Lot Siklus Selesai', totalCyclesDone)}
+    </div>`;
+
+    const walletCardsHtml = ALT10_SYMBOLS.map((s) => renderWalletCard(s, altState.coins[s] || { heldQty: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, buyLog: [], completedCycles: [] })).join('');
+    const walletDetailsHtml = ALT10_SYMBOLS.map((s) => renderWalletDetail(s, altState.coins[s] || { heldQty: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, buyLog: [], completedCycles: [] })).join('');
+
+    return `<div class="spot-panel">
+      <div class="phase-badge ${badgeClass}">${badgeText}</div>
+      <p class="halving-note" style="margin-top:0;">${phaseNote}</p>
+      <p class="order-disclaimer">🎭 Compound Alt DCA BAYANGAN Kaela sendiri -- modal $${PER_COIN_USD}/koin/bulan FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper/Nyopet/Spot BTC. Kaela info tiap aksi (beli/stop/jual) ke grup WA biar bisa diikutin manual.</p>
+      ${summaryHtml}
+      <div class="journal-section-title">👛 10 Dompet (klik buat lihat riwayat)</div>
+      <div class="wallet-grid">${walletCardsHtml}${walletDetailsHtml}</div>
+    </div>`;
+  }
+
   // ============ Nyopet Market (Dark Kaela, posisi REAL) ============
   // 16 Agu 2026, permintaan Olan: "trading jujur kita nyopet market.. buat jurnal jujur..
   // tracking winrate 100 trade ke depan" -- BEDA dari Spot/Sniper (bankroll bayangan): posisi
@@ -672,10 +776,22 @@
     </div>`;
   }
 
+  // Buka/tutup riwayat 1 dompet (kartu wallet-grid) -- toggle simpel, 1 dompet kebuka di satu
+  // waktu gak dipaksa (boleh banyak kebuka bareng, biar gampang bandingin).
+  function toggleWalletDetail(symbol) {
+    const card = document.getElementById(`wallet-card-${symbol}`);
+    const detail = document.getElementById(`wallet-detail-${symbol}`);
+    if (!card || !detail) return;
+    const willOpen = !detail.classList.contains('open');
+    card.classList.toggle('open', willOpen);
+    detail.classList.toggle('open', willOpen);
+  }
+
   global.KaelaRender = {
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,
+    renderSpotAltJurnalPanel, toggleWalletDetail, ALT10_SYMBOLS,
     renderNyopetJurnalPanel, renderNyopetOrderCard, renderNyopetHomePanel,
     wireStrategyFilter,
   };

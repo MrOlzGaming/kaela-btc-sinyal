@@ -62,6 +62,16 @@ function runFlagBacktest(daily, opts = {}) {
     // global di calculator.js), diisi angka buat cap lebih ketat khusus riset ini (BTC live TIDAK
     // kepengaruh, cuma diterapin kalau dikirim eksplisit).
     maxLeverage,
+    // rescueDrawdownUsd/rescueDepositUsd (25 Agu 2026, riset alt-Sniper -- Olan: "modal awal $100
+    // gak deposit KECUALI kena drawdown $50 dari modal awal itu") -- null = perilaku lama (topUp
+    // bulanan biasa). Diisi -> topUp bulanan TETAP jalan kalau opts.topUpAmount juga diisi (caller
+    // yang atur mati-nyalain topUp bulanan sendiri, dua mekanisme independen) -- rescue trigger
+    // begitu capital <= startCapital-rescueDrawdownUsd, nambah rescueDepositUsd (default = sama
+    // kayak rescueDrawdownUsd kalau gak diisi terpisah).
+    rescueDrawdownUsd = null, rescueDepositUsd = null,
+    // entryDateFilter(dateObj)->bool -- gerbang window Tanam-Panen (atau filter tanggal lain).
+    // undefined = perilaku lama, entry kapan aja.
+    entryDateFilter,
     // Pola mana yang mau di-scan tiap hari -- flag/pennant (lanjutan) dan/atau wedge (pembalikan).
     usePatterns = ['flag', 'wedge'],
     // wedgeMinTouches=2 (bukan 3 kayak "aturan textbook") -- dites 10 Agu 2026, TERBUKTI lebih
@@ -98,6 +108,10 @@ function runFlagBacktest(daily, opts = {}) {
     if (todayDate.getUTCDate() >= topUpDayOfMonth && curMonthKey !== lastTopUpMonthKey) {
       lastTopUpMonthKey = curMonthKey;
       if (capital < topUpStopAt) { capital += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
+    }
+    if (rescueDrawdownUsd !== null && capital <= startCapital - rescueDrawdownUsd) {
+      capital += (rescueDepositUsd !== null ? rescueDepositUsd : rescueDrawdownUsd);
+      capitalSeries.push({ time: today.closeTime, capital });
     }
 
     if (openPos) {
@@ -158,6 +172,11 @@ function runFlagBacktest(daily, opts = {}) {
       }
     }
     if (!direction) continue;
+    // entryDateFilter (25 Agu 2026, riset alt-Sniper -- gerbang window Tanam-Panen) -- OPSIONAL,
+    // undefined = perilaku lama (entry kapan aja). Dicek DI DALAM loop (bukan post-hoc split
+    // kayak riset R-multiple sebelumnya) biar urutan capital compounding-nya BENERAN kayak live
+    // (entry di luar window gak pernah kejadian sama sekali, bukan cuma "dikategoriin beda").
+    if (entryDateFilter && !entryDateFilter(todayDate)) continue;
 
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;

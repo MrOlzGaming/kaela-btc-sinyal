@@ -24,6 +24,7 @@
 const fs = require('fs');
 const path = require('path');
 const { load: loadSniperOrders } = require('./sniperOrders');
+const { ASSETS } = require('./assetConfig');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
@@ -112,6 +113,30 @@ async function processAccount(account, sharedSniperOrders) {
     await sniperTrader.runCycle(sharedSniperOrders);
   } catch (e) {
     console.log(`[MultiAccountExecutor] Sniper ERROR (${account.phone}/${account.mode}):`, e.message);
+  }
+
+  // Saldo + posisi kebuka (25 Agu 2026, "member minta liat saldo sendiri di web") -- dititip ke
+  // Sheet MemberStatus tiap siklus, sama pola kayak laporan saldo admin (BinanceAdmin.gs) --
+  // GAS gak bisa manggil Binance langsung. USDT = wallet Sniper, USDC = wallet Nyopet (BEDA
+  // collateral per strategi, lihat assetConfig.js/nyopetAutoTrader.js). Posisi dicek dari 2
+  // simbol yang dipakai Sniper+Nyopet (SAMA-SAMA BTCUSDT/PAXGUSDT, cuma beda margin asset).
+  try {
+    const [balanceUsdt, balanceUsdc] = await Promise.all([
+      client.getAccountBalance('USDT'),
+      client.getAccountBalance('USDC'),
+    ]);
+    const positionsRaw = await Promise.all(
+      Object.values(ASSETS).map((a) => client.getPositionRisk(a.symbol).catch(() => null))
+    );
+    const positions = positionsRaw
+      .filter((p) => p && Math.abs(parseFloat(p.positionAmt)) > 0)
+      .map((p) => ({
+        symbol: p.symbol, positionAmt: p.positionAmt, entryPrice: p.entryPrice,
+        markPrice: p.markPrice, unRealizedProfit: p.unRealizedProfit,
+      }));
+    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions);
+  } catch (e) {
+    console.log(`[MultiAccountExecutor] recordMemberStatus ERROR (${account.phone}/${account.mode}):`, e.message);
   }
 
   // Compound Alt DCA (25 Agu 2026) -- TOGGLE TERPISAH (account.compoundAltEnabled), beda dari

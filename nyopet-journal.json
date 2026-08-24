@@ -1,5 +1,5 @@
 {
-  "balance": 9242.12056917,
+  "balance": 9308.81250987,
   "orders": [
     {
       "id": "nyopet-demo-1787470523936",
@@ -26,7 +26,7 @@
       "id": "nyopet-demo-1787491450760",
       "asset": "btc",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "fade",
       "entryPrice": 77450.7,
       "liqPrice": 78653.94540324,
@@ -37,16 +37,61 @@
       "zonePrice": 78794.415,
       "zoneKind": "swing",
       "zoneTouches": null,
-      "triggeredAt": "2026-08-23T13:24:10.760Z"
+      "triggeredAt": "2026-08-23T13:24:10.760Z",
+      "exitPrice": 78653.94540324,
+      "pnlUsd": -54.345,
+      "pnlPct": -98,
+      "closedAt": "2026-08-24T12:42:49.000Z",
+      "reconciliationNote": "API key secrets.js rusak (401) 23-24 Agu, posisi gak kedeteksi kelikuidasi sampe Olan cek manual + key diganti. Direkonsiliasi 24 Agu pakai data ASLI /fapi/v1/income Binance (bukan tebakan): komisi -1.2198, funding 3x +0.8125, realized_pnl -44.7685, insurance_clear -9.1691 = net -54.345."
+    },
+    {
+      "id": "nyopet-demo-1787577259178",
+      "asset": "btc",
+      "direction": "buy",
+      "status": "floating",
+      "mode": "follow",
+      "entryPrice": 79150.9,
+      "liqPrice": 77915.16054719,
+      "tp": 80000,
+      "qty": 0.034,
+      "leverage": 50,
+      "marginUsd": 55.126653475080005,
+      "zonePrice": 77896.66,
+      "zoneKind": "swing",
+      "zoneTouches": 3,
+      "triggeredAt": "2026-08-24T13:14:19.178Z"
+    },
+    {
+      "id": "nyopet-demo-1787577340214",
+      "asset": "xau",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 4644.26,
+      "liqPrice": 4712.31987129,
+      "tp": 4586.152857142858,
+      "qty": 0.598,
+      "leverage": 50,
+      "marginUsd": 55.852875059220004,
+      "zonePrice": 4750,
+      "zoneKind": "round",
+      "zoneTouches": null,
+      "triggeredAt": "2026-08-24T13:15:40.214Z"
     }
   ],
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",
   "demoEraNote": "Nyopet REAL manual (posisi real di exchange asli) DIGANTIKAN PENUH oleh Nyopet Binance Demo (USDC) mulai titik ini -- riwayat trade REAL lama direset (era baru, bukan lanjutan). Pemisahan bankroll penuh (kayak kaela-bankroll.json Sniper) NANTI, fokus sementara latihan Demo dulu. Skema disamain 100% sama sniper-orders.json (orders[]+status) 23 Agu 2026 -- gak ada lagi batas 100 trade.",
   "watchZoneByAsset": {
     "btc": {
-      "price": 78794.415,
+      "price": 77896.66,
       "side": "resistance",
       "zoneKind": "swing",
+      "touches": 3
+    },
+    "xau": {
+      "price": 4750,
+      "side": "resistance",
+      "zoneKind": "round",
       "touches": null
     }
   }

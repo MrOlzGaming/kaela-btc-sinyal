@@ -237,9 +237,18 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
       return;
     }
 
-    const touched = findTouchCandidate(latest5m, zones);
-    if (!touched) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada zona ke-touch, dan belum ada watchZone -- tunggu siklus depan.`); return; }
     const pair = findNearestPair(latest5m.close, zones);
+    let touched = findTouchCandidate(latest5m, zones);
+    if (!touched) {
+      // Olan (25 Agu 2026): "nyopet jalan terus, nonstop posisi -- kalo dicek gak ada posisi,
+      // follow the last signal, pingpong dan follow" -- kalau BELUM PERNAH ada watchZone sama
+      // sekali (aset baru/belum pernah sinyal, kayak XAU yang harganya lama di tengah range),
+      // JANGAN nunggu harga presisi nyentuh -- langsung anggap zona TERDEKAT (support/resistance,
+      // mana yang jaraknya lebih deket) sebagai target fade, biar Nyopet selalu ada posisi.
+      const nearest = pair.support && (!pair.resistance || pair.support.distPct <= pair.resistance.distPct) ? pair.support : pair.resistance;
+      if (!nearest) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada zona kedetect sama sekali -- tunggu siklus depan.`); return; }
+      touched = { direction: nearest === pair.support ? 'long' : 'short', price: nearest.price, kind: nearest.kind, touches: nearest.touches };
+    }
     const tp = touched.direction === 'long' ? pair.resistance : pair.support;
     await openPosition(assetCfg, { direction: touched.direction === 'long' ? 'buy' : 'sell', tp: tp ? tp.price : touched.price, mode: 'fade', zoneCtx: { price: touched.price, kind: touched.kind, touches: touched.touches, side: touched.direction === 'long' ? 'support' : 'resistance' } });
   }

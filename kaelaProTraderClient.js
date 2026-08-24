@@ -56,14 +56,15 @@ async function notifyMember(phone, message) {
   }
 }
 
-// Heartbeat multi-mesin (25 Agu 2026) -- lihat heartbeatCoordinator.js buat logika leader/standby.
-async function reportHeartbeat(machineId) {
-  return callGas('reportHeartbeat', { machineId });
+// Heartbeat multi-mesin (25 Agu 2026, HARDENED -- lihat catatan panjang di claimLeadership()
+// Sheet.gs) -- 1 panggilan ATOMIK (LockService di sisi GAS), gantiin pola lama reportHeartbeat+
+// getHeartbeats terpisah yang punya celah race condition teoretis kalau 2 mesin manggil hampir
+// bersamaan PERSIS. reportHeartbeat/getHeartbeats TETAP ada (dipakai claimLeadership secara
+// internal di GAS), tapi Node TIDAK PERNAH manggil dua itu lagi buat nentuin leader -- SELALU
+// claimLeadership.
+async function claimLeadership(machineId) {
+  const data = await callGas('claimLeadership', { machineId });
+  return { isLeader: data.isLeader, leaderId: data.leaderId, myId: data.myId };
 }
 
-async function getHeartbeats() {
-  const data = await callGas('getHeartbeats');
-  return data.heartbeats; // [{ machineId, lastSeenAt }]
-}
-
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, reportHeartbeat, getHeartbeats };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership };

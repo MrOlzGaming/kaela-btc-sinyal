@@ -58,6 +58,10 @@ function runFlagBacktest(daily, opts = {}) {
     warmupDays = 60, poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
     slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10, allowShort = true,
     startCapital = 100, topUpAmount = 100, topUpStopAt = 1000, topUpDayOfMonth = 5,
+    // maxLeverage (25 Agu 2026, riset alt-Sniper) -- undefined = perilaku lama (cap MAX_LEVERAGE
+    // global di calculator.js), diisi angka buat cap lebih ketat khusus riset ini (BTC live TIDAK
+    // kepengaruh, cuma diterapin kalau dikirim eksplisit).
+    maxLeverage,
     // Pola mana yang mau di-scan tiap hari -- flag/pennant (lanjutan) dan/atau wedge (pembalikan).
     usePatterns = ['flag', 'wedge'],
     // wedgeMinTouches=2 (bukan 3 kayak "aturan textbook") -- dites 10 Agu 2026, TERBUKTI lebih
@@ -164,7 +168,7 @@ function runFlagBacktest(daily, opts = {}) {
     // margin/marginPct di bawah tetap dibandingin ke CAPITAL PENUH (bukan sizingModal) -- itu
     // jaring pengaman "berapa % modal TOTAL yang dipertaruhkan", bukan berubah maknanya.
     const sizingModal = direction === 'sell' ? capital / shortModalDivisor : capital;
-    const { nilaiPosisi, margin } = hitungExposure({ modal: sizingModal, entry: lastPrice, stopLoss: sl });
+    const { nilaiPosisi, margin } = hitungExposure({ modal: sizingModal, entry: lastPrice, stopLoss: sl, maxLeverage });
     if (margin > capital) continue;
     const marginPct = margin / capital * 100;
     if (marginPct > maxMarginPct) continue; // jaring pengaman keras -- nyopet, bukan investasi

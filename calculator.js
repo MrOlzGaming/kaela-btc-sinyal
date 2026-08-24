@@ -48,11 +48,16 @@ function assessMarginRisk(marginPct) {
   return null;
 }
 
-function hitung({ modal, nyawa, entry, stopLoss }) {
+// maxLeverage (25 Agu 2026, riset alt-Sniper -- Olan tanya "leverage alt di-cap 3x gimana?")
+// -- OPSIONAL, default TETAP MAX_LEVERAGE (50) kalau gak diisi, jadi ZERO perubahan perilaku
+// buat semua caller yang udah ada (BTC live Sniper, backtest lain). Cuma dipakai riset backtest
+// alt yang butuh cap leverage lebih ketat dari default.
+function hitung({ modal, nyawa, entry, stopLoss, maxLeverage }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
   const exposure = getExposure(modal);
   const nilaiPosisi = modal * exposure;
-  const leverage = Math.min(MAX_LEVERAGE, Math.floor(100 / nyawaPct));
+  const cap = maxLeverage !== undefined ? maxLeverage : MAX_LEVERAGE;
+  const leverage = Math.max(1, Math.min(cap, Math.floor(100 / nyawaPct)));
   const margin = nilaiPosisi / leverage;
   const marginPct = margin / modal * 100;
   const warning = assessMarginRisk(marginPct);

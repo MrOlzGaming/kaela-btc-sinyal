@@ -47,6 +47,7 @@ const { formatAutoOpen, formatAutoClosed } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert } = require('./balanceAlert');
 
 const NYAWA_PCT = 2; // flat (23 Agu 2026, direvisi dari 1% -> 2%), dipakai buat nentuin LEVERAGE (bukan buat SL order -- itu gak ada lagi, likuidasi yang jadi SL)
 const DEFAULT_JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
@@ -130,7 +131,18 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
 
     await c.setIsolatedMargin(symbol);
     await c.setLeverage(symbol, calc.leverage);
-    const entryOrder = await c.placeMarketEntry({ symbol, direction, notionalUsd: calc.nilaiPosisi, livePrice });
+    let entryOrder;
+    try {
+      entryOrder = await c.placeMarketEntry({ symbol, direction, notionalUsd: calc.nilaiPosisi, livePrice });
+    } catch (e) {
+      // 24 Agu 2026, permintaan Olan: member REAL yang sinyalnya kelewat krn saldo kurang WAJIB
+      // dikasih tau (bukan cuma nyampah di log lokal) -- Demo gak usah (solusinya beda, reset
+      // Testnet, bukan isi saldo beneran).
+      if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
+        await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction, entry: livePrice, tp }));
+      }
+      throw e;
+    }
     const qty = parseFloat(entryOrder.executedQty);
     const entryPrice = parseFloat(entryOrder.avgPrice);
     const posRisk = await c.getPositionRisk(symbol);

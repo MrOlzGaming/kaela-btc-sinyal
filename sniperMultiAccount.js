@@ -16,6 +16,7 @@ const { ASSETS } = require('./assetConfig');
 const { hitung: hitungExposure } = require('./calculator');
 const { fetchCandles, sma } = require('./technicalAnalysis');
 const { roundToStepSize } = require('./binanceExecutor');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert } = require('./balanceAlert');
 
 function createSniperAccountTrader({ client, statePath, sendWA, getModalBase, apiCreds, onEvent }) {
   const notify = sendWA || (async () => {});
@@ -163,7 +164,17 @@ function createSniperAccountTrader({ client, statePath, sendWA, getModalBase, ap
   async function runCycle(originalActiveOrders) {
     const closedEntries = [];
     for (const o of originalActiveOrders) {
-      try { await mirrorEntry(o); } catch (e) { console.log(`[SniperMultiAccount] mirrorEntry ${o.id} ERROR:`, e.message); }
+      try {
+        await mirrorEntry(o);
+      } catch (e) {
+        console.log(`[SniperMultiAccount] mirrorEntry ${o.id} ERROR:`, e.message);
+        // 24 Agu 2026, permintaan Olan: member REAL yang sinyalnya kelewat krn saldo kurang WAJIB
+        // dikasih tau, sama pola kayak nyopetAutoTrader.js (lihat balanceAlert.js).
+        if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
+          const assetCfg = ASSETS[o.asset] || ASSETS.btc;
+          await notify(formatInsufficientBalanceAlert({ strategy: 'Sniper', assetLabel: assetCfg.label, direction: o.direction, entry: o.entry || o.entryPrice, tp: o.partialTp || o.tp, sl: o.sl }));
+        }
+      }
     }
     const state = loadState();
     for (const mirror of state.orders.filter((o) => o.status === 'floating')) {

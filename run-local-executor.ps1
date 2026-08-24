@@ -34,6 +34,16 @@ try {
   exit 1
 }
 
+# Cek giliran (25 Agu 2026, "2 komputer saling backup") -- cuma 1 mesin yang boleh eksekusi order
+# real tiap siklus, biar gak dobel-eksekusi (lihat heartbeatCoordinator.js). Exit 0 = leader
+# (lanjut), exit 1 = standby (skip eksekusi, cuma lapor hidup -- BUKAN error, jangan alarm).
+$leaderOutput = node checkLeader.js 2>&1 | Out-String
+Add-Content -Path $logFile -Value $leaderOutput -Encoding utf8
+if ($LASTEXITCODE -ne 0) {
+  Log '--- Standby siklus ini (bukan leader), run selesai tanpa eksekusi ---'
+  exit 0
+}
+
 try {
   $output = node localLiveExecutor.js 2>&1 | Out-String
   Add-Content -Path $logFile -Value $output -Encoding utf8

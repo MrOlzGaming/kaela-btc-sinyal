@@ -56,4 +56,14 @@ async function notifyMember(phone, message) {
   }
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport };
+// Heartbeat multi-mesin (25 Agu 2026) -- lihat heartbeatCoordinator.js buat logika leader/standby.
+async function reportHeartbeat(machineId) {
+  return callGas('reportHeartbeat', { machineId });
+}
+
+async function getHeartbeats() {
+  const data = await callGas('getHeartbeats');
+  return data.heartbeats; // [{ machineId, lastSeenAt }]
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, reportHeartbeat, getHeartbeats };

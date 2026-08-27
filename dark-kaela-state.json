@@ -1,9 +1,9 @@
 {
   "activeZone": {
-    "price": 80000,
+    "price": 79531.85500000001,
     "direction": "short",
-    "zoneKind": "round",
-    "touches": null,
-    "signaledAt": "2026-08-27T09:29:52.055Z"
+    "zoneKind": "swing",
+    "touches": 2,
+    "signaledAt": "2026-08-27T12:15:35.291Z"
   }
 }

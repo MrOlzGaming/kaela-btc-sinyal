@@ -47,59 +47,98 @@
   .analis-about-body ul { margin: 4px 0 0; padding-left: 20px; }
   .analis-about-body li { margin-bottom: 4px; }
   .analis-source-tag { color: var(--clr-text-muted); font-size: 0.78rem; }
+  .lang-toggle-row { display: flex; justify-content: flex-end; margin: 10px 0 -6px; }
+  .lang-toggle-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); border: 1px solid var(--clr-border); background: var(--clr-bg-elevated); color: var(--clr-text-muted); cursor: pointer; }
+  .analis-lang-note { color: var(--clr-text-muted); font-size: 0.76rem; font-style: italic; margin-top: 4px; }
 </style>
 </head>
 <body>
   <div class="brand">
     <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <h1>📊 Kaela Analyst Terminal</h1>
+    <h1 data-i18n="h1_title">📊 Kaela Analyst Terminal</h1>
   </div>
-  <div class="page-intro">Kaela Conviction Score + indikator makro + regime korelasi + track record, BTC & XAU/Emas -- semua sumber gratis/resmi (FRED, CFTC, Deribit, DefiLlama, OKX, Binance). Update tiap Senin, bareng laporan mingguan.</div>
+  <div class="lang-toggle-row"><button type="button" class="lang-toggle-btn" id="metaLangBtn" onclick="toggleMetaLang()">🇬🇧 English</button></div>
+  <div class="page-intro" data-i18n="page_intro">Kaela Conviction Score + indikator makro + regime korelasi + track record, BTC &amp; XAU/Emas -- semua sumber gratis/resmi (FRED, CFTC, Deribit, DefiLlama, OKX, Binance). Update tiap Senin, bareng laporan mingguan.</div>
 
-  <div id="analis-container"><div class="empty">Memuat...</div></div>
+  <div id="analis-container"><div class="empty" data-i18n="loading_text">Memuat...</div></div>
+  <p class="analis-lang-note" data-i18n="dynamic_note">ℹ️ Verdict/alasan tiap faktor di atas dihasilkan otomatis tiap Senin, dan untuk sekarang masih dalam Bahasa Indonesia -- terjemahan otomatisnya belum ada.</p>
 
-  <div class="analis-disclaimer">⚠️ Ini SINTESIS heuristik dari sinyal individual (bukan backtest gabungan), murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen. Baca <a href="metodologi-sniper.html">metodologi lengkap</a> buat konteks tiap indikator.</div>
+  <div class="analis-disclaimer" data-i18n="disclaimer">⚠️ Ini SINTESIS heuristik dari sinyal individual (bukan backtest gabungan), murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen. Baca <a href="metodologi-sniper.html">metodologi lengkap</a> buat konteks tiap indikator.</div>
 
   <details class="analis-about">
-    <summary>ℹ️ Apa ini & gimana cara bacanya?</summary>
+    <summary data-i18n="about_summary">ℹ️ Apa ini &amp; gimana cara bacanya?</summary>
     <div class="analis-about-body">
-      <p>Halaman ini gabungin semua sinyal terpisah (teknikal, on-chain, sentimen, makro, posisi institusional, korelasi antar-aset) jadi satu pembacaan yang jelas per aset, LENGKAP sama alasan tiap faktor -- bukan sekadar angka mentah yang dilempar begitu aja. Dibangun buat kebutuhan sendiri, masih tahap belajar -- bukan klaim setara produk profesional manapun.</p>
+      <p data-i18n="about_p1">Halaman ini gabungin semua sinyal terpisah (teknikal, on-chain, sentimen, makro, posisi institusional, korelasi antar-aset) jadi satu pembacaan yang jelas per aset, LENGKAP sama alasan tiap faktor -- bukan sekadar angka mentah yang dilempar begitu aja. Dibangun buat kebutuhan sendiri, masih tahap belajar -- bukan klaim setara produk profesional manapun.</p>
 
-      <h3>🎯 Kaela Conviction Score</h3>
-      <p>Tiap faktor (RSI, MVRV/NUPL on-chain, Fear & Greed, Squeeze Setup, fase siklus halving, Stablecoin Supply, M2, Fed Funds Rate, Credit Spread, DXY, Real Yield, COT) ngasih 1 "vote": 🟢 bullish, 🔴 bearish, atau ⚪ netral -- SELALU dengan alasan singkat. Semua vote dijumlah jadi 1 skor, terus diterjemahin ke verdict (Bullish Kuat / Condong Bullish / Netral / Condong Bearish / Bearish Kuat). Faktor yang datanya gagal diambil hari itu DILEWATIN dari skor (bukan dianggap netral) -- "gak tau" beda maknanya sama "netral".</p>
-      <p class="analis-source-tag">Update tiap Senin, bareng laporan mingguan grup WA.</p>
+      <h3 data-i18n="h3_conviction">🎯 Kaela Conviction Score</h3>
+      <p data-i18n="about_conviction">Tiap faktor (RSI, MVRV/NUPL on-chain, Fear &amp; Greed, Squeeze Setup, fase siklus halving, Stablecoin Supply, M2, Fed Funds Rate, Credit Spread, DXY, Real Yield, COT) ngasih 1 "vote": 🟢 bullish, 🔴 bearish, atau ⚪ netral -- SELALU dengan alasan singkat. Semua vote dijumlah jadi 1 skor, terus diterjemahin ke verdict (Bullish Kuat / Condong Bullish / Netral / Condong Bearish / Bearish Kuat). Faktor yang datanya gagal diambil hari itu DILEWATIN dari skor (bukan dianggap netral) -- "gak tau" beda maknanya sama "netral".</p>
+      <p class="analis-source-tag" data-i18n="source_weekly">Update tiap Senin, bareng laporan mingguan grup WA.</p>
 
-      <h3>📈 Track Record</h3>
-      <p>Tiap verdict yang Kaela catat dinilai balik 7 hari kemudian -- arah verdict (bullish/bearish) dibandingin arah harga BENERAN. Verdict netral dikecualikan (itu bukan "panggilan arah", gak adil dinilai benar/salah). Ini biar kredibilitas Kaela dibangun dari rekam jejak terukur, bukan klaim kosong.</p>
+      <h3 data-i18n="h3_track">📈 Track Record</h3>
+      <p data-i18n="about_track">Tiap verdict yang Kaela catat dinilai balik 7 hari kemudian -- arah verdict (bullish/bearish) dibandingin arah harga BENERAN. Verdict netral dikecualikan (itu bukan "panggilan arah", gak adil dinilai benar/salah). Ini biar kredibilitas Kaela dibangun dari rekam jejak terukur, bukan klaim kosong.</p>
 
-      <h3>📊 Indikator Makro</h3>
+      <h3 data-i18n="h3_macro">📊 Indikator Makro</h3>
       <ul>
-        <li><strong>DVOL</strong> -- ekspektasi volatilitas BTC 30 hari ke depan, dari pasar opsi Deribit (kayak VIX-nya BTC)</li>
-        <li><strong>Fed Funds Rate</strong> -- tren suku bunga The Fed 90 hari (dipotong = dovish = bullish, dinaikkan = hawkish = bearish)</li>
-        <li><strong>Credit Spread</strong> -- selisih bunga obligasi korporasi berisiko vs pemerintah aman, ukur "stres kredit" pasar</li>
-        <li><strong>Yield Curve 10Y-2Y</strong> -- indikator resesi klasik; kalau terbalik, efeknya KEBALIKAN buat BTC (headwind) vs Emas (tailwind)</li>
-        <li><strong>M2 Money Supply</strong> -- pertumbuhan uang beredar AS, likuiditas buat aset risiko</li>
-        <li><strong>Stablecoin Supply</strong> -- suplai USDT+USDC beredar, "dana siap masuk crypto"</li>
-        <li><strong>DXY & Real Yield</strong> -- dua penggerak fundamental utama Emas</li>
-        <li><strong>COT Report</strong> -- posisi "smart money" beneran (hedge fund) di futures Gold COMEX, dari CFTC</li>
+        <li data-i18n="li_dvol"><strong>DVOL</strong> -- ekspektasi volatilitas BTC 30 hari ke depan, dari pasar opsi Deribit (kayak VIX-nya BTC)</li>
+        <li data-i18n="li_fedfunds"><strong>Fed Funds Rate</strong> -- tren suku bunga The Fed 90 hari (dipotong = dovish = bullish, dinaikkan = hawkish = bearish)</li>
+        <li data-i18n="li_credit"><strong>Credit Spread</strong> -- selisih bunga obligasi korporasi berisiko vs pemerintah aman, ukur "stres kredit" pasar</li>
+        <li data-i18n="li_yield"><strong>Yield Curve 10Y-2Y</strong> -- indikator resesi klasik; kalau terbalik, efeknya KEBALIKAN buat BTC (headwind) vs Emas (tailwind)</li>
+        <li data-i18n="li_m2"><strong>M2 Money Supply</strong> -- pertumbuhan uang beredar AS, likuiditas buat aset risiko</li>
+        <li data-i18n="li_stable"><strong>Stablecoin Supply</strong> -- suplai USDT+USDC beredar, "dana siap masuk crypto"</li>
+        <li data-i18n="li_dxy"><strong>DXY &amp; Real Yield</strong> -- dua penggerak fundamental utama Emas</li>
+        <li data-i18n="li_cot"><strong>COT Report</strong> -- posisi "smart money" beneran (hedge fund) di futures Gold COMEX, dari CFTC</li>
       </ul>
 
-      <h3>🔗 Regime / Korelasi</h3>
-      <p>Korelasi rolling 30/90 hari BTC-vs-Nasdaq dan Emas-vs-DXY. Analis institusional selalu mikir "rezim apa sekarang" sebelum baca sinyal lain -- BTC kadang gerak kayak saham teknologi (risk-on), kadang independen. Emas kadang gerak "tekstbuk" lawan dolar, kadang didorong faktor lain (bank sentral dsb).</p>
+      <h3 data-i18n="h3_regime">🔗 Regime / Korelasi</h3>
+      <p data-i18n="about_regime">Korelasi rolling 30/90 hari BTC-vs-Nasdaq dan Emas-vs-DXY. Analis institusional selalu mikir "rezim apa sekarang" sebelum baca sinyal lain -- BTC kadang gerak kayak saham teknologi (risk-on), kadang independen. Emas kadang gerak "tekstbuk" lawan dolar, kadang didorong faktor lain (bank sentral dsb).</p>
 
-      <p class="analis-source-tag">Semua sumber data GRATIS & RESMI (FRED, CFTC, Deribit, DefiLlama, OKX, Binance) -- gak ada API berbayar. Ini bukan backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, murni sintesis heuristik buat konteks tambahan.</p>
+      <p class="analis-source-tag" data-i18n="source_free">Semua sumber data GRATIS &amp; RESMI (FRED, CFTC, Deribit, DefiLlama, OKX, Binance) -- gak ada API berbayar. Ini bukan backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, murni sintesis heuristik buat konteks tambahan.</p>
     </div>
   </details>
 
   <script src="js/analis-render.js"></script>
   <script src="js/analis-load.js"></script>
 
+  <script src="js/i18n-meta.js"></script>
+  <script>
+    I18N_META.h1_title = { id: '📊 Kaela Analyst Terminal', en: '📊 Kaela Analyst Terminal' };
+    I18N_META.page_intro = { id: 'Kaela Conviction Score + indikator makro + regime korelasi + track record, BTC &amp; XAU/Emas -- semua sumber gratis/resmi (FRED, CFTC, Deribit, DefiLlama, OKX, Binance). Update tiap Senin, bareng laporan mingguan.', en: 'Kaela Conviction Score + macro indicators + correlation regime + track record, BTC &amp; XAU/Gold -- all free/official sources (FRED, CFTC, Deribit, DefiLlama, OKX, Binance). Updated every Monday, alongside the weekly report.' };
+    I18N_META.loading_text = { id: 'Memuat...', en: 'Loading...' };
+    I18N_META.dynamic_note = { id: 'ℹ️ Verdict/alasan tiap faktor di atas dihasilkan otomatis tiap Senin, dan untuk sekarang masih dalam Bahasa Indonesia -- terjemahan otomatisnya belum ada.', en: 'ℹ️ The verdicts/reasons for each factor above are auto-generated every Monday, and for now are still in Indonesian -- automatic translation for that part does not exist yet.' };
+    I18N_META.disclaimer = { id: '⚠️ Ini SINTESIS heuristik dari sinyal individual (bukan backtest gabungan), murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen. Baca <a href="metodologi-sniper.html">metodologi lengkap</a> buat konteks tiap indikator.', en: '⚠️ This is a heuristic SYNTHESIS of individual signals (not a combined backtest), informational only -- it does not affect Sniper signals or Planting/Harvest Season decisions. Read the <a href="metodologi-sniper.html">full methodology</a> for context on each indicator.' };
+    I18N_META.about_summary = { id: 'ℹ️ Apa ini &amp; gimana cara bacanya?', en: 'ℹ️ What is this &amp; how do I read it?' };
+    I18N_META.about_p1 = { id: 'Halaman ini gabungin semua sinyal terpisah (teknikal, on-chain, sentimen, makro, posisi institusional, korelasi antar-aset) jadi satu pembacaan yang jelas per aset, LENGKAP sama alasan tiap faktor -- bukan sekadar angka mentah yang dilempar begitu aja. Dibangun buat kebutuhan sendiri, masih tahap belajar -- bukan klaim setara produk profesional manapun.', en: 'This page combines all the separate signals (technical, on-chain, sentiment, macro, institutional positioning, cross-asset correlation) into one clear reading per asset, COMPLETE with the reason for each factor -- not just raw numbers thrown at you. Built for personal use, still a learning stage project -- not a claim of matching any professional product.' };
+    I18N_META.h3_conviction = { id: '🎯 Kaela Conviction Score', en: '🎯 Kaela Conviction Score' };
+    I18N_META.about_conviction = { id: 'Tiap faktor (RSI, MVRV/NUPL on-chain, Fear &amp; Greed, Squeeze Setup, fase siklus halving, Stablecoin Supply, M2, Fed Funds Rate, Credit Spread, DXY, Real Yield, COT) ngasih 1 "vote": 🟢 bullish, 🔴 bearish, atau ⚪ netral -- SELALU dengan alasan singkat. Semua vote dijumlah jadi 1 skor, terus diterjemahin ke verdict (Bullish Kuat / Condong Bullish / Netral / Condong Bearish / Bearish Kuat). Faktor yang datanya gagal diambil hari itu DILEWATIN dari skor (bukan dianggap netral) -- "gak tau" beda maknanya sama "netral".', en: 'Each factor (RSI, on-chain MVRV/NUPL, Fear &amp; Greed, Squeeze Setup, halving cycle phase, Stablecoin Supply, M2, Fed Funds Rate, Credit Spread, DXY, Real Yield, COT) casts 1 "vote": 🟢 bullish, 🔴 bearish, or ⚪ neutral -- ALWAYS with a short reason. All votes are summed into one score, then translated into a verdict (Strong Bullish / Leaning Bullish / Neutral / Leaning Bearish / Strong Bearish). A factor whose data fails to fetch that day is SKIPPED from the score (not counted as neutral) -- "unknown" means something different from "neutral".' };
+    I18N_META.source_weekly = { id: 'Update tiap Senin, bareng laporan mingguan grup WA.', en: 'Updated every Monday, alongside the WA group weekly report.' };
+    I18N_META.h3_track = { id: '📈 Track Record', en: '📈 Track Record' };
+    I18N_META.about_track = { id: 'Tiap verdict yang Kaela catat dinilai balik 7 hari kemudian -- arah verdict (bullish/bearish) dibandingin arah harga BENERAN. Verdict netral dikecualikan (itu bukan "panggilan arah", gak adil dinilai benar/salah). Ini biar kredibilitas Kaela dibangun dari rekam jejak terukur, bukan klaim kosong.', en: 'Every verdict Kaela logs is graded 7 days later -- the verdict\'s direction (bullish/bearish) is compared against the ACTUAL price direction. Neutral verdicts are excluded (that\'s not a "directional call", it wouldn\'t be fair to grade it right/wrong). This way Kaela\'s credibility is built from a measurable track record, not an empty claim.' };
+    I18N_META.h3_macro = { id: '📊 Indikator Makro', en: '📊 Macro Indicators' };
+    I18N_META.li_dvol = { id: '<strong>DVOL</strong> -- ekspektasi volatilitas BTC 30 hari ke depan, dari pasar opsi Deribit (kayak VIX-nya BTC)', en: '<strong>DVOL</strong> -- 30-day forward BTC volatility expectation, from Deribit\'s options market (like BTC\'s version of the VIX)' };
+    I18N_META.li_fedfunds = { id: '<strong>Fed Funds Rate</strong> -- tren suku bunga The Fed 90 hari (dipotong = dovish = bullish, dinaikkan = hawkish = bearish)', en: '<strong>Fed Funds Rate</strong> -- the Fed\'s 90-day interest rate trend (cut = dovish = bullish, hiked = hawkish = bearish)' };
+    I18N_META.li_credit = { id: '<strong>Credit Spread</strong> -- selisih bunga obligasi korporasi berisiko vs pemerintah aman, ukur "stres kredit" pasar', en: '<strong>Credit Spread</strong> -- the interest gap between risky corporate bonds and safe government bonds, measuring market "credit stress"' };
+    I18N_META.li_yield = { id: '<strong>Yield Curve 10Y-2Y</strong> -- indikator resesi klasik; kalau terbalik, efeknya KEBALIKAN buat BTC (headwind) vs Emas (tailwind)', en: '<strong>10Y-2Y Yield Curve</strong> -- a classic recession indicator; when inverted, its effect is OPPOSITE for BTC (headwind) vs Gold (tailwind)' };
+    I18N_META.li_m2 = { id: '<strong>M2 Money Supply</strong> -- pertumbuhan uang beredar AS, likuiditas buat aset risiko', en: '<strong>M2 Money Supply</strong> -- growth of US money in circulation, liquidity available for risk assets' };
+    I18N_META.li_stable = { id: '<strong>Stablecoin Supply</strong> -- suplai USDT+USDC beredar, "dana siap masuk crypto"', en: '<strong>Stablecoin Supply</strong> -- circulating USDT+USDC supply, "capital ready to enter crypto"' };
+    I18N_META.li_dxy = { id: '<strong>DXY &amp; Real Yield</strong> -- dua penggerak fundamental utama Emas', en: '<strong>DXY &amp; Real Yield</strong> -- the two main fundamental drivers of Gold' };
+    I18N_META.li_cot = { id: '<strong>COT Report</strong> -- posisi "smart money" beneran (hedge fund) di futures Gold COMEX, dari CFTC', en: '<strong>COT Report</strong> -- actual "smart money" (hedge fund) positioning in COMEX Gold futures, from the CFTC' };
+    I18N_META.h3_regime = { id: '🔗 Regime / Korelasi', en: '🔗 Regime / Correlation' };
+    I18N_META.about_regime = { id: 'Korelasi rolling 30/90 hari BTC-vs-Nasdaq dan Emas-vs-DXY. Analis institusional selalu mikir "rezim apa sekarang" sebelum baca sinyal lain -- BTC kadang gerak kayak saham teknologi (risk-on), kadang independen. Emas kadang gerak "tekstbuk" lawan dolar, kadang didorong faktor lain (bank sentral dsb).', en: 'Rolling 30/90-day correlation of BTC-vs-Nasdaq and Gold-vs-DXY. Institutional analysts always think about "what regime are we in" before reading other signals -- BTC sometimes moves like a tech stock (risk-on), sometimes independently. Gold sometimes moves "textbook" against the dollar, sometimes driven by other factors (central banks, etc.).' };
+    I18N_META.source_free = { id: 'Semua sumber data GRATIS &amp; RESMI (FRED, CFTC, Deribit, DefiLlama, OKX, Binance) -- gak ada API berbayar. Ini bukan backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, murni sintesis heuristik buat konteks tambahan.', en: 'All data sources are FREE &amp; OFFICIAL (FRED, CFTC, Deribit, DefiLlama, OKX, Binance) -- no paid APIs. This is not a historical backtest like the Sniper/Seasonal signals -- its confidence level is different, purely a heuristic synthesis for additional context.' };
+    I18N_META.nav_dashboard = { id: 'Dashboard', en: 'Dashboard' };
+    I18N_META.nav_jurnal = { id: 'Jurnal', en: 'Journal' };
+    I18N_META.nav_analis = { id: 'Analis', en: 'Analyst' };
+    I18N_META.nav_kalkulator = { id: 'Kalkulator', en: 'Calculator' };
+    I18N_META.nav_metodologi = { id: 'Metodologi', en: 'Methodology' };
+    applyMetaLang();
+  </script>
+
   <nav class="bottom-nav">
-    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
-    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
-    <a href="analis.html" class="active"><span class="icon">📊</span>Analis</a>
-    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
-    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_jurnal">Jurnal</span></a>
+    <a href="analis.html" class="active"><span class="icon">📊</span><span data-i18n="nav_analis">Analis</span></a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span><span data-i18n="nav_kalkulator">Kalkulator</span></a>
+    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_metodologi">Metodologi</span></a>
   </nav>
 </body>
 </html>

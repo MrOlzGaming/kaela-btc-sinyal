@@ -32,6 +32,7 @@ const { createSniperAccountTrader } = require('./sniperMultiAccount');
 const { createSpotDcaAltAccountTrader } = require('./spotDcaAltAccount');
 const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
+const { checkEmptyWallet } = require('./emptyWalletWatchdog');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
 
@@ -157,6 +158,11 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       }));
     await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions);
     console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT, $${balanceUsdc.toFixed(2)} USDC, ${positions.length} posisi.`);
+
+    // 28 Agu 2026, permintaan Olan: "dompet kosong, japri -- 3 hari beruntun gak diisi, matiin
+    // otomatis" -- numpang saldo yang UDAH DIAMBIL di atas, gak fetch Binance lagi.
+    await checkEmptyWallet({ phone: account.phone, mode: account.mode, name: account.name, balanceUsdt, balanceUsdc, sendWA })
+      .catch((e) => console.log(`[MultiAccountExecutor] emptyWalletWatchdog ERROR (${account.phone}/${account.mode}):`, e.message));
   } catch (e) {
     console.log(`[MultiAccountExecutor] recordMemberStatus ERROR (${account.phone}/${account.mode}):`, e.message);
   }

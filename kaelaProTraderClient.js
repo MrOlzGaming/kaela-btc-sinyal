@@ -99,4 +99,10 @@ async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positio
   return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []) });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests };
+// 28 Agu 2026 -- matiin toggle trading member SECARA OTOMATIS (dompet kosong 3 hari beruntun,
+// lihat emptyWalletWatchdog.js). BUKAN dipanggil dari aksi member sendiri.
+async function setTradingToggleForExecutor(phone, mode, enabled) {
+  return callGas('setTradingToggleForExecutor', { phone, mode, enabled: enabled ? 'true' : 'false' });
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor };

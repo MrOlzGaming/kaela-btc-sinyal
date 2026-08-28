@@ -32,9 +32,15 @@ function roundToStepSize(quantity, stepSize, precision) {
   return parseFloat(rounded.toFixed(precision));
 }
 
-function createBinanceSpotEarnClient({ apiKey, apiSecret }) {
+// testnet (29 Agu 2026, permintaan Olan: "Compound Alt harus demo dulu kayak Sniper/Nyopet") --
+// Spot Testnet itu SISTEM TERPISAH TOTAL dari Demo Futures yang udah dipakai Sniper/Nyopet
+// (demo-fapi.binance.com) -- base URL beda (testnet.binance.vision), akun/saldo/API key BEDA,
+// daftar lewat login GitHub di testnet.binance.vision (bukan akun Binance biasa). Simple Earn
+// TIDAK ADA di testnet (produk Earn cuma di mainnet) -- ensureSpotBalance/redeem otomatis
+// di-skip kalau testnet=true, langsung asumsi saldo Spot testnet cukup (dari faucet).
+function createBinanceSpotEarnClient({ apiKey, apiSecret, testnet }) {
   if (!apiKey || !apiSecret) throw new Error('createBinanceSpotEarnClient: apiKey/apiSecret wajib diisi.');
-  const baseUrl = 'https://api.binance.com';
+  const baseUrl = testnet ? 'https://testnet.binance.vision' : 'https://api.binance.com';
   let symbolInfoCache = null;
 
   function sign(queryString) {
@@ -78,6 +84,7 @@ function createBinanceSpotEarnClient({ apiKey, apiSecret }) {
   async function ensureSpotBalance(neededAmount, asset = 'USDT') {
     let spotBal = await getSpotBalance(asset);
     if (spotBal >= neededAmount) return { source: 'spot', redeemedTotal: 0, spotBalance: spotBal };
+    if (testnet) throw new Error(`Saldo Spot Testnet ${asset} kurang ($${spotBal.toFixed(2)} < $${neededAmount}) -- testnet gak punya Simple Earn buat di-redeem, minta faucet lagi di testnet.binance.vision.`);
 
     let shortfall = neededAmount - spotBal;
     const positions = await getEarnFlexiblePositions(asset);

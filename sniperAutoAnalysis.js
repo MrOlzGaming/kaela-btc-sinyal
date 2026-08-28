@@ -262,7 +262,10 @@ async function main() {
         exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
         patternType: cand.patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
         gapCreatedTime: cand.gapCreatedTime ?? null,
-        notes: `Analisa otomatis Kaela (${assetCfg.label}, mode ${cand.mode === 'fvg' ? 'Fair Value Gap' : 'pola chart'}, 22 Agu 2026): posisi BAYANGAN, murni perhitungan, tidak ada uang bergerak. Eksekusi asli tetap manual Olan kalau mau ikut.`,
+        // 29 Agu 2026: teks lama bilang "posisi BAYANGAN, gak ada uang bergerak" -- itu udah
+        // OUTDATED sejak localLiveExecutor.js jalan (22 Agu). Sinyal ini eksekusi LIVE beneran
+        // ke Binance Demo di siklus lokal berikutnya, bukan cuma catatan.
+        notes: `Analisa otomatis Kaela (${assetCfg.label}, mode ${cand.mode === 'fvg' ? 'Fair Value Gap' : 'pola chart'}): eksekusi LIVE otomatis ke Binance Demo di siklus lokal berikutnya (~15 menit).`,
       }, now);
       const opened = updateOrder(created.id, { status: 'floating', entryPrice: livePrice, triggeredAt: now.toISOString() });
       usedMargin += calc.margin;

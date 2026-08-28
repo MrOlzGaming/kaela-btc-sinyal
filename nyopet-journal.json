@@ -213,7 +213,7 @@
       "id": "nyopet-demo-1787927962168",
       "asset": "xau",
       "direction": "buy",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "fade",
       "entryPrice": 4568.67,
       "liqPrice": 4523.89453781,
@@ -223,7 +223,12 @@
       "marginUsd": 59.86467982644,
       "zonePrice": 4578.328461538462,
       "zoneKind": "swing",
-      "triggeredAt": "2026-08-28T14:39:22.168Z"
+      "triggeredAt": "2026-08-28T14:39:22.168Z",
+      "exitPrice": 4459.55,
+      "pnlUsd": -85.5381,
+      "pnlPct": -71.1,
+      "closedAt": "2026-08-28T19:31:00.359Z",
+      "reconciliationNote": "Entry ke-DOBEL: sinyal yang sama kekirim 2x dalam <1 detik (28 Agu 14:39:22, bug sleep/wake eksekutor yang sama kayak insiden BTC -$14.041 -- SUDAH DIPERBAIKI di sesi ini) -- qty asli 0,657+0,655=1,312 (bukan 0,655 doang kayak yang kecatet). Karena ukuran dobel, kena partial-liquidation Binance (28 Agu 15:57, insurance fund fee $16,62) nyisain 0,410. Ditutup manual 29 Agu, direkonsiliasi pakai data ASLI /fapi/v1/income (bukan tebakan): realized -$64,82, komisi -$3,91, insurance-clear -$16,62, funding -$0,19 = net -$85,54."
     },
     {
       "id": "nyopet-demo-1787933352953",

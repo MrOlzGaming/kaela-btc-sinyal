@@ -1,6 +1,6 @@
 {
   "balance": 4928.26764249,
-  "balanceUpdatedAt": "2026-08-28T19:45:06.802Z",
+  "balanceUpdatedAt": "2026-08-28T19:54:09.796Z",
   "orders": [
     {
       "id": "msjxg28s99ky",
@@ -244,7 +244,13 @@
       "closedAt": null,
       "closeReason": null,
       "pnlUsd": null,
-      "pnlPct": null
+      "pnlPct": null,
+      "liveExecutedAt": "2026-08-28T19:54:11.669Z",
+      "liveExecution": {
+        "ok": false,
+        "error": "Binance API error (HTTP 400): {\"code\":-2019,\"msg\":\"Margin is insufficient.\"}",
+        "testnet": true
+      }
     }
   ]
 }

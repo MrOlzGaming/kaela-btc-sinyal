@@ -115,10 +115,25 @@ try {
   Log "multiAccountExecutor.js ERROR: $($_.Exception.Message)"
 }
 
-$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json
+# Compound Alt DCA -- eksekusi live (29 Agu 2026) -- spotDcaAlt.js (cloud, GitHub Actions) cuma
+# nyatet RENCANA beli/jual bulanan ke pendingLiveBuy/pendingLiveSell, no-op kalau gak ada yang
+# baru (paling sering, cuma aktif tanggal 5 pas window Musim Tanam -- mulai 19 Okt 2026).
+try {
+  $output5 = node spotAltLiveExecutor.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output5 -Encoding utf8
+} catch {
+  Log "spotAltLiveExecutor.js ERROR: $($_.Exception.Message)"
+}
+
+$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'
-  git add sniper-orders.json kaela-bankroll.json nyopet-journal.json
+  # Per-file safe (29 Agu 2026, nambah kaela-spot-alt.json -- file itu BELUM TENTU ada dulu sampai
+  # buy pertama kejadian, 19 Okt 2026+. `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
+  # -- pola sama kayak bug git-add-f di workflow GH Actions, dicegah di sini juga).
+  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json')) {
+    if (Test-Path $f) { git add $f }
+  }
   git commit -m "Auto: sync eksekusi live (run-local-executor) $(Get-Date -Format 'yyyy-MM-dd HH:mm')" --quiet
   # 28 Agu 2026, bug NYATA ketemu langsung: dulu masukin -c http.extraHeader pakai token DARI FILE
   # (.gh-token-mrolzgaming) yang BEDA dari token yang udah ketanam di URL remote origin-new sendiri

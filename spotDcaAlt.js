@@ -25,7 +25,7 @@ function load() {
   ALT10_SYMBOLS.forEach((s) => {
     coins[s] = { heldQty: 0, totalInvestedCurrentCycle: 0, cycleStartedAt: null, totalRealizedCash: 0, completedCycles: [], buyLog: [] };
   });
-  return { coins, lastBuyMonthKey: null, halvingStopNotified: false };
+  return { coins, lastBuyMonthKey: null, halvingStopNotified: false, pendingLiveBuy: null, pendingLiveSell: null };
 }
 function save(state) { fs.writeFileSync(SPOT_ALT_PATH, JSON.stringify(state, null, 2)); }
 
@@ -60,6 +60,15 @@ async function runBuyStep(now, state) {
   }
 
   state.lastBuyMonthKey = monthKey(now);
+  // Antrian buat eksekusi LIVE (29 Agu 2026, permintaan Olan: "tradingan Kaela itu pionir buat
+  // diikuti realistic" -- gak boleh shadow doang lagi) -- ini jalan di GitHub Actions (cloud),
+  // Binance DIBLOKIR dari sana (HTTP 451, sama kasus kayak Sniper) jadi CUMA nyatet rencana beli
+  // di sini, eksekusi beneran nyusul spotAltLiveExecutor.js (LOCAL, komputer Olan) siklus berikutnya.
+  state.pendingLiveBuy = { monthKey: state.lastBuyMonthKey, amounts: {}, createdAt: now.toISOString() };
+  for (const symbol of ALT10_SYMBOLS) {
+    const lastLog = state.coins[symbol].buyLog[state.coins[symbol].buyLog.length - 1];
+    if (lastLog) state.pendingLiveBuy.amounts[symbol] = lastLog.usdAmount;
+  }
   save(state);
 
   const totalInvestedAll = ALT10_SYMBOLS.reduce((sum, s) => sum + state.coins[s].totalInvestedCurrentCycle, 0);
@@ -91,10 +100,14 @@ async function runSellStep(now, state) {
   const prices = await fetchLivePrices();
   const results = [];
   let totalProceeds = 0, totalInvestedAll = 0;
+  // Antrian jual LIVE (29 Agu 2026) -- pola sama kayak pendingLiveBuy, qty diambil SEBELUM
+  // coinState.heldQty di-nolin di bawah (posisi shadow di-reset abis dicatat, bukan sebelum).
+  const pendingLiveSell = { symbols: {}, createdAt: now.toISOString() };
 
   for (const symbol of ALT10_SYMBOLS) {
     const coinState = state.coins[symbol];
     if (coinState.heldQty <= 0) continue;
+    pendingLiveSell.symbols[symbol] = coinState.heldQty;
     const price = prices[symbol];
     if (!price) { results.push(`${coinLabel(symbol)}: gagal ambil harga, skip jual`); continue; }
 
@@ -116,6 +129,7 @@ async function runSellStep(now, state) {
 
   if (results.length === 0) return { action: 'none' };
   state.halvingStopNotified = false;
+  state.pendingLiveSell = pendingLiveSell;
   save(state);
   const pctTotal = totalInvestedAll > 0 ? ((totalProceeds / totalInvestedAll - 1) * 100) : 0;
   const message = `🌾 Compound Alt DCA — JUAL SEKARANG!\n\n` +

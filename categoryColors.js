@@ -16,6 +16,7 @@ const CATEGORY_COLOR = {
   priceAlert: { emoji: '🟫', hex: '#a16207', label: 'Pergerakan Harga' },
   squeeze: { emoji: '⬛', hex: '#111827', label: 'Squeeze Alert' },
   anomaly: { emoji: '🟣', hex: '#7c3aed', label: 'Anomaly Scanner' }, // ungu-indigo, beda dari 🟪 laporan (persegi) biar gak ketuker
+  dxy: { emoji: '💵', hex: '#16a34a', label: 'DXY (Dolar Index)' }, // 28 Agu 2026, konteks makro doang -- bukan sinyal trading
 };
 
 // type archive.json -> kategori (dipakai buildDashboard.js buat nentuin warna border kartu)
@@ -28,6 +29,7 @@ function categoryOfType(type) {
   if (type === 'price-alert') return 'priceAlert';
   if (type === 'squeeze') return 'squeeze';
   if (type === 'anomaly') return 'anomaly';
+  if (type === 'dxy-zone') return 'dxy';
   return null;
 }
 

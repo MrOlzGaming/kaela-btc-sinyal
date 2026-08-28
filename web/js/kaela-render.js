@@ -45,6 +45,7 @@
     whale: { emoji: '🟨', hex: '#eab308' },
     econ: { emoji: '⬜', hex: '#8b949e' },
     priceAlert: { emoji: '🟫', hex: '#a16207' },
+    dxy: { emoji: '💵', hex: '#16a34a' },
   };
   function categoryOfType(type) {
     if (type === 'news') return 'news';
@@ -53,6 +54,7 @@
     if (type === 'whale') return 'whale';
     if (type === 'econ-calendar') return 'econ';
     if (type === 'price-alert') return 'priceAlert';
+    if (type === 'dxy-zone') return 'dxy';
     return null;
   }
   const TYPE_LABEL = {
@@ -64,6 +66,7 @@
     sniper: `${CATEGORY_COLOR.sniper.emoji} 🎯 Sniper`,
     whale: `${CATEGORY_COLOR.whale.emoji} 🐋 Whale Alert`,
     'econ-calendar': `${CATEGORY_COLOR.econ.emoji} 📅 Jadwal Ekonomi`,
+    'dxy-zone': `${CATEGORY_COLOR.dxy.emoji} 💵 Zona DXY`,
   };
 
   // localDateKey (duplikat config.js) -- WITA (+8), dipakai kalender P&L bulan ini.

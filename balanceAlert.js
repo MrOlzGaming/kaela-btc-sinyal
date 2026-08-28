@@ -8,7 +8,42 @@
 // KHUSUS mode REAL -- Demo gak dapet notif ini (beda solusi: Demo tinggal reset saldo Testnet,
 // Real harus beneran isi dana, jadi pesannya beda konteks & gak worth di-otomasi buat Demo).
 
+const fs = require('fs');
+const path = require('path');
+
 const KALKULATOR_URL = 'https://kaela-btc-sinyal.netlify.app/kalkulator.html';
+
+// Cegah SPAM (29 Agu 2026, dilaporin Olan: "sinyal xau real spam.. dompetku memang nol.. tapi dia
+// whatsap terus") -- sebelum ini, tiap sinyal gagal kirim alert TANPA cooldown sama sekali (BTC+XAU
+// beda cadence zona, bisa berkali-kali sehari -- makin sering sejak eksekutor jalan di 2 mesin
+// bareng, Vultr+rumah). Sekarang: max 1x per (akun, mode, strategi, aset) per HARI (WITA), pola
+// dedupe SAMA kayak emptyWalletWatchdog.js.
+const ALERT_STATE_PATH = path.join(__dirname, 'multi-account-state', 'insufficient-balance-alert-tracking.json');
+
+function witaDateKey(d = new Date()) {
+  return new Date(d.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+function loadAlertState() {
+  if (!fs.existsSync(ALERT_STATE_PATH)) return {};
+  try { return JSON.parse(fs.readFileSync(ALERT_STATE_PATH, 'utf8')); } catch { return {}; }
+}
+
+function saveAlertState(s) {
+  fs.mkdirSync(path.dirname(ALERT_STATE_PATH), { recursive: true });
+  fs.writeFileSync(ALERT_STATE_PATH, JSON.stringify(s, null, 2));
+}
+
+// true = boleh kirim (belum pernah/beda hari) -- otomatis nyatet begitu diizinin, panggil PERSIS
+// SEKALI per kandidat kirim (jangan dipanggil buat cek doang).
+function shouldAlertInsufficientBalance(key) {
+  const state = loadAlertState();
+  const today = witaDateKey();
+  if (state[key] === today) return false;
+  state[key] = today;
+  saveAlertState(state);
+  return true;
+}
 
 // Cocokin pola error saldo-kurang yang UDAH KETEMU nyata di log (24 Agu 2026) -- kalau nemu pola
 // baru di masa depan, tambahin di sini, JANGAN taro string baru di tempat lain.
@@ -41,4 +76,4 @@ function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry
     + `Kalau gak sempat, gapapa -- sinyal berikutnya otomatis jalan begitu saldo cukup 🙏`;
 }
 
-module.exports = { isInsufficientBalanceError, formatInsufficientBalanceAlert };
+module.exports = { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance };

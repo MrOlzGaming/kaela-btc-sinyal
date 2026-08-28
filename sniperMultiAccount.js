@@ -16,7 +16,8 @@ const { ASSETS } = require('./assetConfig');
 const { hitung: hitungExposure } = require('./calculator');
 const { fetchCandles, sma } = require('./technicalAnalysis');
 const { roundToStepSize } = require('./binanceExecutor');
-const { isInsufficientBalanceError, formatInsufficientBalanceAlert } = require('./balanceAlert');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
+const path = require('path');
 
 function createSniperAccountTrader({ client, statePath, sendWA, getModalBase, apiCreds, onEvent }) {
   const notify = sendWA || (async () => {});
@@ -172,7 +173,10 @@ function createSniperAccountTrader({ client, statePath, sendWA, getModalBase, ap
         // dikasih tau, sama pola kayak nyopetAutoTrader.js (lihat balanceAlert.js).
         if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
           const assetCfg = ASSETS[o.asset] || ASSETS.btc;
-          await notify(formatInsufficientBalanceAlert({ strategy: 'Sniper', assetLabel: assetCfg.label, direction: o.direction, entry: o.entry || o.entryPrice, tp: o.partialTp || o.tp, sl: o.sl }));
+          const alertKey = `${path.basename(statePath, '.json')}-sniper-${assetCfg.label}`;
+          if (shouldAlertInsufficientBalance(alertKey)) {
+            await notify(formatInsufficientBalanceAlert({ strategy: 'Sniper', assetLabel: assetCfg.label, direction: o.direction, entry: o.entry || o.entryPrice, tp: o.partialTp || o.tp, sl: o.sl }));
+          }
         }
       }
     }

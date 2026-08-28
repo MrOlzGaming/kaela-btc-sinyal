@@ -47,7 +47,7 @@ const { formatAutoOpen, formatAutoClosed } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
-const { isInsufficientBalanceError, formatInsufficientBalanceAlert } = require('./balanceAlert');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
 const { formatDxyLine } = require('./dxyContext');
 
 const NYAWA_PCT = 2; // flat (23 Agu 2026, direvisi dari 1% -> 2%), dipakai buat nentuin LEVERAGE (bukan buat SL order -- itu gak ada lagi, likuidasi yang jadi SL)
@@ -144,7 +144,10 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
       // dikasih tau (bukan cuma nyampah di log lokal) -- Demo gak usah (solusinya beda, reset
       // Testnet, bukan isi saldo beneran).
       if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
-        await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction, entry: livePrice, tp }));
+        const alertKey = `${path.basename(journalPath, '.json')}-nyopet-${assetCfg.label}`;
+        if (shouldAlertInsufficientBalance(alertKey)) {
+          await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction, entry: livePrice, tp }));
+        }
       }
       throw e;
     }

@@ -87,7 +87,12 @@ const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
 function buildSendWA(account, adminRelay) {
   return async (message) => {
     const full = `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}\n\nCek jurnal/status posisi kamu: ${KAELA_ACCESS_URL}`;
-    await kaela.notifyMember(account.phone, full);
+    // 29 Agu 2026, permintaan Olan: "ga semua minta notif demo" -- opt-out PRIBADI per member
+    // (account.notifyDemo, default true, lihat Sheet.gs getActiveTradingUsers). Real TIDAK di-gate --
+    // itu duit sungguhan, semua member wajib tau tanpa kecuali.
+    if (account.mode !== 'demo' || account.notifyDemo !== false) {
+      await kaela.notifyMember(account.phone, full);
+    }
 
     const isSelf = adminRelay && safeKey(account.phone) === safeKey(adminRelay.masterNomor);
     const relayOn = adminRelay && (account.mode === 'real' ? adminRelay.notifyReal : adminRelay.notifyDemo);

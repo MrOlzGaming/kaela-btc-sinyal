@@ -1,5 +1,5 @@
 {
-  "balance": 5000,
+  "balance": 5009.36267725,
   "orders": [
     {
       "id": "nyopet-demo-1787470523936",
@@ -108,7 +108,7 @@
       "id": "nyopet-demo-1787924355461",
       "asset": "xau",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_tp",
       "mode": "fade",
       "entryPrice": 4587.4206442,
       "liqPrice": 4638.63831935,
@@ -119,7 +119,27 @@
       "zonePrice": 4750,
       "zoneKind": "round",
       "zoneTouches": null,
-      "triggeredAt": "2026-08-28T13:39:15.461Z"
+      "triggeredAt": "2026-08-28T13:39:15.461Z",
+      "exitPrice": 4578.328461538462,
+      "pnlUsd": 2.9640515476615747,
+      "pnlPct": 9.880171825538582,
+      "closedAt": "2026-08-28T14:21:10.619Z"
+    },
+    {
+      "id": "nyopet-demo-1787926878202",
+      "asset": "xau",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "follow",
+      "entryPrice": 4537.74,
+      "liqPrice": 4596.92666337,
+      "tp": 4578.328461538462,
+      "qty": 0.329,
+      "leverage": 50,
+      "marginUsd": 30.0561760635,
+      "zonePrice": 4578.328461538462,
+      "zoneKind": "swing",
+      "triggeredAt": "2026-08-28T14:21:18.202Z"
     }
   ],
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",
@@ -132,10 +152,9 @@
       "touches": 3
     },
     "xau": {
-      "price": 4750,
-      "side": "resistance",
-      "zoneKind": "round",
-      "touches": null
+      "price": 4578.328461538462,
+      "side": "support",
+      "zoneKind": "swing"
     }
   }
 }

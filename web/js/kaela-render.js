@@ -85,6 +85,16 @@
   function fmtUsdOrder(n) {
     return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
   }
+  // Tanggal+jam WITA posisi kebuka (29 Agu 2026, permintaan Olan: "kasih tanggal dan jam buka
+  // biar tau dari kapan itu buka") -- statis, dirender sekali. Durasi count-up-nya (jalan terus,
+  // update tiap menit) ada di sniper-orders-widget.js lewat [data-duration-target].
+  function fmtOpenedDate(iso) {
+    try {
+      const d = new Date(new Date(iso).getTime() + 8 * 3600 * 1000); // WITA = UTC+8
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} WITA`;
+    } catch (e) { return '-'; }
+  }
   // Angka BERTANDA (PNL dst) -- fmtUsdOrder polos taruh minus SETELAH '$' ("$-1.81", dari
   // toLocaleString), gak lazim dibaca. Sign WAJIB di depan "$" ("-$1.81").
   function fmtSignedUsd(n) {
@@ -221,11 +231,18 @@
       const tradeMetaLine = (o.leverage || o.marginUsd)
         ? `<div class="order-meta">Margin ${fmtUsdOrder(o.marginUsd)} · Leverage ${o.leverage}× · Volume ${volumeUsd !== null ? fmtUsdOrder(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmtUsdOrder(liqPrice)}` : ''}</div>`
         : '';
-      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${asset.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}">
+      // Demo/Real (29 Agu 2026, permintaan Olan: "tandai mana yang real mana yang demo") --
+      // liveExecution.testnet cuma keisi SETELAH localLiveExecutor.js beneran eksekusi; sebelum
+      // itu (masih di GitHub Actions, blm sempat dieksekusi lokal) fallback ke label netral.
+      const modeBadge = o.liveExecution
+        ? (o.liveExecution.testnet ? '<span class="order-mode-badge demo">DEMO</span>' : '<span class="order-mode-badge real">REAL</span>')
+        : '<span class="order-mode-badge pending-exec">belum dieksekusi</span>';
+      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${asset.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}" data-opened-at="${o.triggeredAt || ''}">
         ${idLine}
         ${assetBadge}
-        <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span></div>
+        <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">🔵 FLOATING</span>${modeBadge}</div>
         <div class="order-strategy">${strategy}</div>
+        ${o.triggeredAt ? `<div class="order-opened-since">🕐 Dibuka ${fmtOpenedDate(o.triggeredAt)} · <span data-duration-target>menghitung...</span></div>` : ''}
         <div class="order-live-price">Harga ${asset.label} sekarang: <strong data-price-target>memuat...</strong></div>
         <div class="order-levels"><span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>TP: ${fmtUsdOrder(o.tp)}</span><span>SL: ${slText}</span></div>
         ${tradeMetaLine}
@@ -701,12 +718,13 @@
     // padahal Nyopet udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
     const assetInfo = ASSETS_WEB[o.asset] || ASSETS_WEB.btc;
     if (o.status === 'floating') {
-      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}">
+      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}" data-opened-at="${o.triggeredAt || ''}">
           <div class="order-header">
             <span class="order-dir">${dirLabel}</span>
             <span class="order-status-badge floating">🔵 FLOATING (Demo)</span>
           </div>
           <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
+          ${o.triggeredAt ? `<div class="order-opened-since">🕐 Dibuka ${fmtOpenedDate(o.triggeredAt)} · <span data-duration-target>menghitung...</span></div>` : ''}
           <div class="order-live-price">Harga ${assetInfo.label} sekarang: <strong data-price-target>memuat...</strong></div>
           <div class="order-levels">
             <span>Entry: <strong>${fmtUsdOrder(o.entryPrice)}</strong></span>

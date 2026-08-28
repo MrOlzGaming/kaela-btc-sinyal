@@ -63,6 +63,12 @@
   .order-dir { font-weight: 700; }
   .order-status-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--clr-bg); }
   .order-status-badge.floating { color: var(--clr-primary); }
+  .order-mode-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 6px; letter-spacing: 0.03em; }
+  .order-mode-badge.demo { background: rgba(240,136,62,0.15); color: var(--clr-warning); }
+  .order-mode-badge.real { background: rgba(248,81,73,0.18); color: var(--clr-danger); }
+  .order-mode-badge.pending-exec { background: var(--clr-bg); color: var(--clr-text-muted); }
+  .order-opened-since { font-size: 0.76rem; color: var(--clr-text-muted); margin-bottom: 6px; }
+
   .order-id { color: var(--clr-text-muted); font-size: 0.72rem; font-family: var(--font-mono); margin-bottom: 4px; }
   .order-asset-badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--clr-surface-alt, rgba(255,255,255,0.08)); margin-bottom: 6px; }
   .order-strategy { color: var(--clr-text-muted); font-size: 0.82rem; margin-bottom: 8px; }
@@ -151,7 +157,7 @@
   <div class="lang-toggle-row" style="display:flex; justify-content:flex-end; margin:10px 0 -6px;"><button type="button" class="lang-toggle-btn" id="metaLangBtn" onclick="toggleMetaLang()" style="width:auto; padding:6px 12px; font-size:0.78rem; border-radius:var(--radius-sm); border:1px solid var(--clr-border); background:var(--clr-bg-elevated); color:var(--clr-text-muted); cursor:pointer;">🇬🇧 English</button></div>
 
   <div class="welcome" data-i18n="welcome">
-    📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll bayangan yang berjalan, riwayat lengkap tiap
+    📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll yang berjalan, riwayat lengkap tiap
     trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya,
     jujur, gak disaring atau dipilih-pilih.
   </div>
@@ -186,7 +192,7 @@
 
   <script src="js/i18n-meta.js"></script>
   <script>
-    I18N_META.welcome = { id: '📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll bayangan yang berjalan, riwayat lengkap tiap trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya, jujur, gak disaring atau dipilih-pilih.', en: "📓 <strong>Kaela Trading Journal</strong> — the running shadow bankroll balance, complete history of every trade, and a balance growth chart over time. Profit and loss are both shown as-is, honestly, never filtered or cherry-picked." };
+    I18N_META.welcome = { id: '📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll yang berjalan, riwayat lengkap tiap trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya, jujur, gak disaring atau dipilih-pilih.', en: "📓 <strong>Kaela Trading Journal</strong> — the running bankroll balance, complete history of every trade, and a balance growth chart over time. Profit and loss are both shown as-is, honestly, never filtered or cherry-picked." };
     I18N_META.dynamic_note = { id: 'ℹ️ Detail trade/statistik di bawah ini (kartu posisi, angka, riwayat) dihasilkan otomatis dan untuk sekarang masih dalam Bahasa Indonesia -- terjemahan otomatisnya belum ada.', en: 'ℹ️ The trade details/statistics below (position cards, numbers, history) are auto-generated and for now are still in Indonesian -- automatic translation for that part does not exist yet.' };
     I18N_META.tab_spot = { id: '🌱 Spot', en: '🌱 Spot' };
     I18N_META.tab_compoundalt = { id: '🪙 Compound Alt', en: '🪙 Compound Alt' };

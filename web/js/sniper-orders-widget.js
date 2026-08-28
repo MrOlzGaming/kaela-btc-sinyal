@@ -76,6 +76,35 @@
     }));
   }
 
+  // Countup "udah kebuka berapa lama" (29 Agu 2026, permintaan Olan: "kasih countup posisi biar
+  // tau dah kebuka brapa jam/hari" -- update sendiri LIVE, gak perlu reload manual). Jalan
+  // terpisah dari tick() harga (gak butuh network, murni hitung Date.now() - data-opened-at).
+  function fmtDuration(ms) {
+    if (!(ms > 0)) return 'baru aja';
+    const totalMin = Math.floor(ms / 60000);
+    const days = Math.floor(totalMin / 1440);
+    const hours = Math.floor((totalMin % 1440) / 60);
+    const mins = totalMin % 60;
+    const parts = [];
+    if (days) parts.push(days + 'h');
+    if (hours || days) parts.push(hours + 'j');
+    parts.push(mins + 'm');
+    return 'sudah ' + parts.join(' ');
+  }
+  function tickDurations() {
+    document.querySelectorAll('.order-card.floating[data-opened-at]').forEach((card) => {
+      const iso = card.dataset.openedAt;
+      if (!iso) return;
+      const target = card.querySelector('[data-duration-target]');
+      if (!target) return;
+      const openedMs = new Date(iso).getTime();
+      if (isNaN(openedMs)) { target.textContent = '-'; return; }
+      target.textContent = fmtDuration(Date.now() - openedMs);
+    });
+  }
+
   tick();
+  tickDurations();
   setInterval(tick, 15000);
+  setInterval(tickDurations, 30000); // durasi gak butuh presisi detik, 30dtk cukup buat "live" tanpa reload
 })();

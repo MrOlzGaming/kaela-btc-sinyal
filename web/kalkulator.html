@@ -33,55 +33,58 @@
   .risk-warning.perhatian { background: color-mix(in srgb, var(--clr-warning) 12%, transparent); border: 1px solid var(--clr-warning); color: var(--clr-warning); }
   .risk-warning.bahaya { background: color-mix(in srgb, #e5484d 12%, transparent); border: 1px solid #e5484d; color: #e5484d; }
   .risk-warning.hidden { display: none; }
+  .lang-toggle-row { display: flex; justify-content: flex-end; margin: 10px 0 -6px; }
+  .lang-toggle-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); border: 1px solid var(--clr-border); background: var(--clr-bg-elevated); color: var(--clr-text-muted); cursor: pointer; }
 </style>
 </head>
 <body>
   <div class="brand">
     <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <h1>Kalkulator Exposure</h1>
+    <h1 data-i18n="h1_title">Kalkulator Exposure</h1>
   </div>
+  <div class="lang-toggle-row"><button type="button" class="lang-toggle-btn" id="metaLangBtn" onclick="toggleMetaLang()">🇬🇧 English</button></div>
 
-  <div class="privacy-note">🔒 100% dihitung di HP/browser kamu sendiri. Tidak ada data (modal, hasil) yang dikirim atau disimpan kemana pun.</div>
+  <div class="privacy-note" data-i18n="privacy_note">🔒 100% dihitung di HP/browser kamu sendiri. Tidak ada data (modal, hasil) yang dikirim atau disimpan kemana pun.</div>
 
   <div class="card">
     <div class="field">
-      <label for="modal">Modal (USD)</label>
-      <input type="number" id="modal" placeholder="misal: 500" min="1" step="any">
+      <label for="modal" data-i18n="label_modal">Modal (USD)</label>
+      <input type="number" id="modal" placeholder="misal: 500" min="1" step="any" data-i18n-ph="ph_modal">
     </div>
 
     <div class="mode-toggle">
-      <button type="button" id="mode-nyawa" class="active">Pakai Nyawa (%)</button>
-      <button type="button" id="mode-entry">Pakai Entry + SL/Liq</button>
+      <button type="button" id="mode-nyawa" class="active" data-i18n="btn_mode_nyawa">Pakai Nyawa (%)</button>
+      <button type="button" id="mode-entry" data-i18n="btn_mode_entry">Pakai Entry + SL/Liq</button>
     </div>
 
     <div id="nyawa-fields" class="field">
-      <label for="nyawa">Nyawa (jarak Entry ke Stop Loss/Area Liquidasi, %)</label>
-      <input type="number" id="nyawa" placeholder="misal: 1.53" min="0.01" step="any">
+      <label for="nyawa" data-i18n="label_nyawa">Nyawa (jarak Entry ke Stop Loss/Area Liquidasi, %)</label>
+      <input type="number" id="nyawa" placeholder="misal: 1.53" min="0.01" step="any" data-i18n-ph="ph_nyawa">
     </div>
 
     <div id="entry-fields" class="hidden">
       <div class="field">
-        <label for="entry">Harga Order Entry</label>
-        <input type="number" id="entry" placeholder="misal: 65500" min="0" step="any">
+        <label for="entry" data-i18n="label_entry">Harga Order Entry</label>
+        <input type="number" id="entry" placeholder="misal: 65500" min="0" step="any" data-i18n-ph="ph_entry">
       </div>
       <div class="field">
-        <label for="sl">Harga Stop Loss / Area Liquidasi</label>
-        <input type="number" id="sl" placeholder="misal: 64500" min="0" step="any">
+        <label for="sl" data-i18n="label_sl">Harga Stop Loss / Area Liquidasi</label>
+        <input type="number" id="sl" placeholder="misal: 64500" min="0" step="any" data-i18n-ph="ph_sl">
       </div>
     </div>
 
-    <button class="btn" id="hitung">Hitung</button>
+    <button class="btn" id="hitung" data-i18n="btn_hitung">Hitung</button>
 
     <div class="result hidden" id="result">
-      <div class="result-row"><span class="result-label">Exposure (dari Modal)</span><span class="result-value" id="r-exposure">-</span></div>
-      <div class="result-row"><span class="result-label">🔥 Leverage</span><span class="result-value" id="r-leverage">-</span></div>
-      <div class="result-row"><span class="result-label">🎯 Nilai Posisi</span><span class="result-value" id="r-nilai">-</span></div>
-      <div class="result-row"><span class="result-label">💰 Margin</span><span class="result-value" id="r-margin">-</span></div>
+      <div class="result-row"><span class="result-label" data-i18n="r_exposure_label">Exposure (dari Modal)</span><span class="result-value" id="r-exposure">-</span></div>
+      <div class="result-row"><span class="result-label" data-i18n="r_leverage_label">🔥 Leverage</span><span class="result-value" id="r-leverage">-</span></div>
+      <div class="result-row"><span class="result-label" data-i18n="r_nilai_label">🎯 Nilai Posisi</span><span class="result-value" id="r-nilai">-</span></div>
+      <div class="result-row"><span class="result-label" data-i18n="r_margin_label">💰 Margin</span><span class="result-value" id="r-margin">-</span></div>
     </div>
     <div class="risk-warning hidden" id="r-warning"></div>
   </div>
 
-  <div class="disclaimer">
+  <div class="disclaimer" data-i18n="disclaimer">
     ⚠️ <strong>Ini jalur LANJUTAN (opsional).</strong> Default kami: beli spot biasa, tanpa leverage, tanpa risiko likuidasi.
     Kalkulator ini buat yang paham & berani ambil risiko tambahan, kelola sendiri. Leverage cuma boleh dipakai di titik masuk
     Musim Tanam — di luar itu wajib spot. Bukan nasihat finansial.
@@ -100,8 +103,8 @@
     // <10% drawdown historis terkendali, >20% drawdown historis berat. Bukan pembatas keras --
     // tetap bisa dihitung/dipakai, cuma dikasih tau porsi modal yang nyangkut di 1 trade ini.
     function assessMarginRisk(marginPct) {
-      if (marginPct > 20) return { level: 'bahaya', message: `⚠️ Nyawa ini kegedean buat modal segini -- margin yang kepake ${marginPct.toFixed(1)}% dari modal. Riskan banget kalau kena SL.` };
-      if (marginPct > 10) return { level: 'perhatian', message: `⚠️ Nyawa lumayan lebar -- margin yang kepake ${marginPct.toFixed(1)}% dari modal. Pertimbangkan modal lebih besar atau nyawa lebih tipis.` };
+      if (marginPct > 20) return { level: 'bahaya', message: T_META('warn_bahaya').replace('{pct}', marginPct.toFixed(1)) };
+      if (marginPct > 10) return { level: 'perhatian', message: T_META('warn_perhatian').replace('{pct}', marginPct.toFixed(1)) };
       return null;
     }
     function hitung(modal, nyawaPct) {
@@ -140,16 +143,16 @@
 
     document.getElementById('hitung').onclick = () => {
       const modal = parseFloat(document.getElementById('modal').value);
-      if (!modal || modal <= 0) { alert('Isi Modal dulu.'); return; }
+      if (!modal || modal <= 0) { alert(T_META('alert_modal')); return; }
 
       let nyawaPct;
       if (mode === 'nyawa') {
         nyawaPct = parseFloat(document.getElementById('nyawa').value);
-        if (!nyawaPct || nyawaPct <= 0) { alert('Isi Nyawa (%) dulu.'); return; }
+        if (!nyawaPct || nyawaPct <= 0) { alert(T_META('alert_nyawa')); return; }
       } else {
         const entry = parseFloat(document.getElementById('entry').value);
         const sl = parseFloat(document.getElementById('sl').value);
-        if (!entry || !sl) { alert('Isi Entry dan Stop Loss dulu.'); return; }
+        if (!entry || !sl) { alert(T_META('alert_entry_sl')); return; }
         nyawaPct = nyawaFromEntrySL(entry, sl);
       }
 
@@ -175,12 +178,45 @@
     }
   </script>
 
+  <script src="js/i18n-meta.js"></script>
+  <script>
+    I18N_META.h1_title = { id: 'Kalkulator Exposure', en: 'Exposure Calculator' };
+    I18N_META.privacy_note = { id: '🔒 100% dihitung di HP/browser kamu sendiri. Tidak ada data (modal, hasil) yang dikirim atau disimpan kemana pun.', en: "🔒 100% calculated on your own phone/browser. No data (capital, results) is ever sent or stored anywhere." };
+    I18N_META.label_modal = { id: 'Modal (USD)', en: 'Capital (USD)' };
+    I18N_META.ph_modal = { id: 'misal: 500', en: 'e.g. 500' };
+    I18N_META.btn_mode_nyawa = { id: 'Pakai Nyawa (%)', en: 'Use Life Margin (%)' };
+    I18N_META.btn_mode_entry = { id: 'Pakai Entry + SL/Liq', en: 'Use Entry + SL/Liq' };
+    I18N_META.label_nyawa = { id: 'Nyawa (jarak Entry ke Stop Loss/Area Liquidasi, %)', en: 'Life Margin (distance from Entry to Stop Loss/Liquidation, %)' };
+    I18N_META.ph_nyawa = { id: 'misal: 1.53', en: 'e.g. 1.53' };
+    I18N_META.label_entry = { id: 'Harga Order Entry', en: 'Entry Order Price' };
+    I18N_META.ph_entry = { id: 'misal: 65500', en: 'e.g. 65500' };
+    I18N_META.label_sl = { id: 'Harga Stop Loss / Area Liquidasi', en: 'Stop Loss / Liquidation Area Price' };
+    I18N_META.ph_sl = { id: 'misal: 64500', en: 'e.g. 64500' };
+    I18N_META.btn_hitung = { id: 'Hitung', en: 'Calculate' };
+    I18N_META.r_exposure_label = { id: 'Exposure (dari Modal)', en: 'Exposure (from Capital)' };
+    I18N_META.r_leverage_label = { id: '🔥 Leverage', en: '🔥 Leverage' };
+    I18N_META.r_nilai_label = { id: '🎯 Nilai Posisi', en: '🎯 Position Value' };
+    I18N_META.r_margin_label = { id: '💰 Margin', en: '💰 Margin' };
+    I18N_META.disclaimer = { id: '⚠️ <strong>Ini jalur LANJUTAN (opsional).</strong> Default kami: beli spot biasa, tanpa leverage, tanpa risiko likuidasi. Kalkulator ini buat yang paham & berani ambil risiko tambahan, kelola sendiri. Leverage cuma boleh dipakai di titik masuk Musim Tanam — di luar itu wajib spot. Bukan nasihat finansial.', en: "⚠️ <strong>This is an ADVANCED (optional) path.</strong> Our default: buy regular spot, no leverage, no liquidation risk. This calculator is for those who understand it & are willing to take on extra risk, managed on their own. Leverage may only be used at the Planting Season entry point — outside that, spot is mandatory. Not financial advice." };
+    I18N_META.warn_bahaya = { id: '⚠️ Nyawa ini kegedean buat modal segini -- margin yang kepake {pct}% dari modal. Riskan banget kalau kena SL.', en: "⚠️ This Life Margin is too wide for this amount of capital -- margin used is {pct}% of capital. Very risky if the SL gets hit." };
+    I18N_META.warn_perhatian = { id: '⚠️ Nyawa lumayan lebar -- margin yang kepake {pct}% dari modal. Pertimbangkan modal lebih besar atau nyawa lebih tipis.', en: "⚠️ Life Margin is fairly wide -- margin used is {pct}% of capital. Consider more capital or a tighter Life Margin." };
+    I18N_META.alert_modal = { id: 'Isi Modal dulu.', en: 'Fill in Capital first.' };
+    I18N_META.alert_nyawa = { id: 'Isi Nyawa (%) dulu.', en: 'Fill in Life Margin (%) first.' };
+    I18N_META.alert_entry_sl = { id: 'Isi Entry dan Stop Loss dulu.', en: 'Fill in Entry and Stop Loss first.' };
+    I18N_META.nav_dashboard = { id: 'Dashboard', en: 'Dashboard' };
+    I18N_META.nav_jurnal = { id: 'Jurnal', en: 'Journal' };
+    I18N_META.nav_analis = { id: 'Analis', en: 'Analyst' };
+    I18N_META.nav_kalkulator = { id: 'Kalkulator', en: 'Calculator' };
+    I18N_META.nav_metodologi = { id: 'Metodologi', en: 'Methodology' };
+    applyMetaLang();
+  </script>
+
   <nav class="bottom-nav">
-    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
-    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
-    <a href="analis.html"><span class="icon">📊</span>Analis</a>
-    <a href="kalkulator.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
-    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_jurnal">Jurnal</span></a>
+    <a href="analis.html"><span class="icon">📊</span><span data-i18n="nav_analis">Analis</span></a>
+    <a href="kalkulator.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span><span data-i18n="nav_kalkulator">Kalkulator</span></a>
+    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_metodologi">Metodologi</span></a>
   </nav>
 </body>
 </html>

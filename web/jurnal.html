@@ -148,22 +148,25 @@
 <body>
   <div class="brand"><span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span><h1>Kaela BTC Sinyal</h1></div>
 
-  <div class="welcome">
+  <div class="lang-toggle-row" style="display:flex; justify-content:flex-end; margin:10px 0 -6px;"><button type="button" class="lang-toggle-btn" id="metaLangBtn" onclick="toggleMetaLang()" style="width:auto; padding:6px 12px; font-size:0.78rem; border-radius:var(--radius-sm); border:1px solid var(--clr-border); background:var(--clr-bg-elevated); color:var(--clr-text-muted); cursor:pointer;">🇬🇧 English</button></div>
+
+  <div class="welcome" data-i18n="welcome">
     📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll bayangan yang berjalan, riwayat lengkap tiap
     trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya,
     jujur, gak disaring atau dipilih-pilih.
   </div>
+  <p class="analis-lang-note" style="color:var(--clr-text-muted); font-size:0.76rem; font-style:italic; margin-top:4px;" data-i18n="dynamic_note">ℹ️ Detail trade/statistik di bawah ini (kartu posisi, angka, riwayat) dihasilkan otomatis dan untuk sekarang masih dalam Bahasa Indonesia -- terjemahan otomatisnya belum ada.</p>
 
   <div class="dash-tabs">
-    <button class="dash-tab-btn active" data-tab="spot">🌱 Spot</button>
-    <button class="dash-tab-btn" data-tab="compoundalt">🪙 Compound Alt</button>
-    <button class="dash-tab-btn" data-tab="sniper">🎯 Sniper</button>
-    <button class="dash-tab-btn" data-tab="nyopet">🥷 Nyopet</button>
+    <button class="dash-tab-btn active" data-tab="spot" data-i18n="tab_spot">🌱 Spot</button>
+    <button class="dash-tab-btn" data-tab="compoundalt" data-i18n="tab_compoundalt">🪙 Compound Alt</button>
+    <button class="dash-tab-btn" data-tab="sniper" data-i18n="tab_sniper">🎯 Sniper</button>
+    <button class="dash-tab-btn" data-tab="nyopet" data-i18n="tab_nyopet">🥷 Nyopet</button>
   </div>
-  <div class="dash-panel active" data-panel="spot"><div class="empty">Memuat...</div></div>
-  <div class="dash-panel" data-panel="compoundalt"><div class="empty">Memuat...</div></div>
-  <div class="dash-panel" data-panel="sniper"><div class="empty">Memuat...</div></div>
-  <div class="dash-panel" data-panel="nyopet"><div class="empty">Memuat...</div></div>
+  <div class="dash-panel active" data-panel="spot"><div class="empty" data-i18n="loading_text">Memuat...</div></div>
+  <div class="dash-panel" data-panel="compoundalt"><div class="empty" data-i18n="loading_text">Memuat...</div></div>
+  <div class="dash-panel" data-panel="sniper"><div class="empty" data-i18n="loading_text">Memuat...</div></div>
+  <div class="dash-panel" data-panel="nyopet"><div class="empty" data-i18n="loading_text">Memuat...</div></div>
 
   <script src="js/kaela-render.js"></script>
   <script src="js/jurnal-load.js"></script>
@@ -181,12 +184,29 @@
     });
   </script>
 
+  <script src="js/i18n-meta.js"></script>
+  <script>
+    I18N_META.welcome = { id: '📓 <strong>Jurnal Trading Kaela</strong> — saldo bankroll bayangan yang berjalan, riwayat lengkap tiap trade, dan grafik pertumbuhan saldo dari waktu ke waktu. Profit maupun loss ditampilkan apa adanya, jujur, gak disaring atau dipilih-pilih.', en: "📓 <strong>Kaela Trading Journal</strong> — the running shadow bankroll balance, complete history of every trade, and a balance growth chart over time. Profit and loss are both shown as-is, honestly, never filtered or cherry-picked." };
+    I18N_META.dynamic_note = { id: 'ℹ️ Detail trade/statistik di bawah ini (kartu posisi, angka, riwayat) dihasilkan otomatis dan untuk sekarang masih dalam Bahasa Indonesia -- terjemahan otomatisnya belum ada.', en: 'ℹ️ The trade details/statistics below (position cards, numbers, history) are auto-generated and for now are still in Indonesian -- automatic translation for that part does not exist yet.' };
+    I18N_META.tab_spot = { id: '🌱 Spot', en: '🌱 Spot' };
+    I18N_META.tab_compoundalt = { id: '🪙 Compound Alt', en: '🪙 Compound Alt' };
+    I18N_META.tab_sniper = { id: '🎯 Sniper', en: '🎯 Sniper' };
+    I18N_META.tab_nyopet = { id: '🥷 Nyopet', en: '🥷 Nyopet' };
+    I18N_META.loading_text = { id: 'Memuat...', en: 'Loading...' };
+    I18N_META.nav_dashboard = { id: 'Dashboard', en: 'Dashboard' };
+    I18N_META.nav_jurnal = { id: 'Jurnal', en: 'Journal' };
+    I18N_META.nav_analis = { id: 'Analis', en: 'Analyst' };
+    I18N_META.nav_kalkulator = { id: 'Kalkulator', en: 'Calculator' };
+    I18N_META.nav_metodologi = { id: 'Metodologi', en: 'Methodology' };
+    applyMetaLang();
+  </script>
+
   <nav class="bottom-nav">
-    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dashboard</a>
-    <a href="jurnal.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Jurnal</a>
-    <a href="analis.html"><span class="icon">📊</span>Analis</a>
-    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span>Kalkulator</a>
-    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Metodologi</a>
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="jurnal.html" class="active"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_jurnal">Jurnal</span></a>
+    <a href="analis.html"><span class="icon">📊</span><span data-i18n="nav_analis">Analis</span></a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span><span data-i18n="nav_kalkulator">Kalkulator</span></a>
+    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_metodologi">Metodologi</span></a>
   </nav>
 </body>
 </html>

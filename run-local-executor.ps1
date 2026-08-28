@@ -128,6 +128,14 @@ if ($changed) {
   try {
     Invoke-GitTimeout -GitArgs @('push', 'origin-new', 'master', '--quiet') -TimeoutSec 30
     Log 'Push selesai.'
+    # Purge jsDelivr (29 Agu 2026, bug ketemu: cuma workflow GitHub Actions yang purge CDN,
+    # executor LOKAL ini nge-push tapi gak pernah purge -- web bisa nunjukkin saldo/posisi basi
+    # sampai 12 jam walau data di GitHub udah fresh. Root cause dari beberapa laporan "ghost
+    # position"/"saldo belum konek" Olan yang ternyata cache doang. Sama pola kayak workflow YAML.
+    foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json')) {
+      try { Invoke-WebRequest -Uri "https://purge.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/$f" -UseBasicParsing -TimeoutSec 10 | Out-Null } catch {}
+    }
+    Log 'Purge jsDelivr selesai.'
   } catch {
     Log "Push GAGAL/timeout (state ke-commit lokal tetap, dicoba lagi push polos siklus berikutnya): $($_.Exception.Message)"
   }

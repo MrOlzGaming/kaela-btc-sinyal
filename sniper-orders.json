@@ -210,6 +210,41 @@
         "leverage": 5,
         "marginUsd": 2741.9555156610004
       }
+    },
+    {
+      "id": "mtdd3dos4xq5",
+      "signalId": "2026082901",
+      "status": "floating",
+      "asset": "xau",
+      "mode": "fvg",
+      "gapCreatedTime": 1787443199999,
+      "direction": "buy",
+      "strategyType": "breakout",
+      "triggerPrice": 4463.17,
+      "testLevel": null,
+      "confirmationNote": "Fair Value Gap terbentuk @ $4,528.97-$4,573 (candle harian XAU/Emas tutup balik di atas batas atas gap, tanda pantulan). SL di bawah batas bawah gap (nyawa 1.5%) -- kalau gap keisi penuh, thesis-nya gugur. Deteksi otomatis fvgDetector.js.",
+      "tpReasoning": "Target tahap 1 (jual separuh): 2x risiko @ $4,595. Sisanya di-trail pakai SMA10 harian (SL digeser breakeven abis tahap 1).",
+      "entryPrice": 4463.17,
+      "tp": 4594.77,
+      "sl": 4528.97,
+      "originalSl": 4528.97,
+      "exposure": 1.5,
+      "leverage": 50,
+      "marginUsd": 147.8480292747,
+      "notes": "Analisa otomatis Kaela (XAU/Emas, mode Fair Value Gap, 22 Agu 2026): posisi BAYANGAN, murni perhitungan, tidak ada uang bergerak. Eksekusi asli tetap manual Olan kalau mau ikut.",
+      "patternType": "fvg_bounce",
+      "partialTp": 4594.77,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "trailSmaLen": 10,
+      "realizedPnlUsd": 0,
+      "silentTest": false,
+      "createdAt": "2026-08-28T19:45:50.860Z",
+      "triggeredAt": "2026-08-28T19:45:50.860Z",
+      "closedAt": null,
+      "closeReason": null,
+      "pnlUsd": null,
+      "pnlPct": null
     }
   ]
 }

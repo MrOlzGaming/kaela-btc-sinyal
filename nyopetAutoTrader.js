@@ -76,6 +76,10 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
                                        // Trader, multiAccountExecutor.js) -- default no-op, ZERO efek
                                        // samping buat akun Olan sendiri (dia gak butuh hook ini).
   const baseUrl = apiCreds && apiCreds.testnet === false ? 'https://fapi.binance.com' : 'https://demo-fapi.binance.com';
+  // 29 Agu 2026: pesan WA dulu HARDCODE "(Binance Demo)" -- gak masalah selama Real belum pernah
+  // beneran ngirim pesan, TAPI bakal MENYESATKAN begitu Real jalan (nunjuk "Demo" padahal duit
+  // asli). isDemo dipakai formatAutoOpen/formatAutoClosed biar labelnya selalu bener.
+  const isDemo = !(apiCreds && apiCreds.testnet === false);
 
   function loadJournal() {
     if (!fs.existsSync(jPath)) return { balance: 0, orders: [], watchZoneByAsset: {} };
@@ -161,7 +165,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     saveJournal(journal);
 
     const dxyLine = await formatDxyLine().catch(() => '');
-    const msg = formatAutoOpen({ ...order, sl: order.liqPrice, assetLabel: assetCfg.label }, new Date(), dxyLine);
+    const msg = formatAutoOpen({ ...order, sl: order.liqPrice, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, direction, entryPrice, sl: order.liqPrice, tp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: mode === 'follow' ? 'Follow (zona ditembus)' : 'Fade (zona mantul)' });
@@ -200,7 +204,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     if (reconciliationNote) target.reconciliationNote = reconciliationNote;
     saveJournal(journal);
 
-    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date())
+    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date(), isDemo)
       + (alreadyClosed ? '\n\n(⏳ Kelikuidasi PAS lagi offline -- baru kesinkronin sekarang begitu online lagi.)' : '')
       + (manualNote ? `\n\n(${manualNote})` : '');
     console.log(msg + '\n');

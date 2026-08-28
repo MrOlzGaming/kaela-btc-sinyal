@@ -77,47 +77,24 @@ ${fmtWita(now)}`;
 // Nyopet Binance Demo: Kaela BENERAN buka/tutup posisi sendiri (nyopetAutoTrader.js), pesan ini
 // ngasih tau APA YANG BARU DILAKUKAN + KENAPA (bukan cuma info titik kayak dulu). Wajib jelasin
 // alasan tiap sinyal (lihat memory feedback-selalu-ada-alasan) + link kalkulator di tiap pesan.
-function formatAutoOpen(pos, now, dxyLine) {
-  const { formatWinRateLine } = require('./winRate');
-  const { formatSignalCore } = require('./signalCore');
-  const fs = require('fs');
-  const path = require('path');
-  const journal = JSON.parse(fs.readFileSync(path.join(__dirname, 'nyopet-journal.json'), 'utf8'));
-  // Win rate per-ASET (23 Agu 2026, multi-aset) -- BTC dan PAXG kondisinya beda (leverage/nyawa
-  // sama, tapi karakter harga beda), win rate gabungan bisa nyamarin performa salah satu.
-  const winRateLine = formatWinRateLine((journal.orders || []).filter((o) => o.asset === pos.asset));
-  const modeDesc = pos.mode === 'fade'
-    ? `Harga nyentuh zona ${fmtUsd(pos.zonePrice)} (${pos.zoneKind === 'round' ? 'angka bulat psikologis' : pos.zoneTouches ? `swing, disentuh ${pos.zoneTouches}x sebelumnya` : 'swing'}) -- asumsi DEFAULT selalu mantul di sini, jadi counter posisi ngelawan arah gerak barusan.`
-    : `Zona ${fmtUsd(pos.zonePrice)} DITEMBUS (gagal nahan, bukan mantul) -- ikutin arah tembusan (momentum), bukan counter lagi.`;
-  const coreLines = formatSignalCore({
-    direction: pos.direction, entryPrice: pos.entryPrice, tp: pos.tp, sl: pos.sl,
-    leverage: pos.leverage, marginUsd: pos.marginUsd, reason: modeDesc,
-  });
-  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market — ${pos.assetLabel || 'BTC'} (Binance Demo)
-🔵 POSISI DIBUKA ${shortId(pos.id)}
-
-${coreLines.join('\n')}
-${winRateLine}
-${dxyLine ? '\n' + dxyLine + '\n' : ''}
-🧪 Ini BINANCE DEMO (duit virtual, riset/latihan) -- bukan uang beneran. Ping-pong otomatis TANPA HENTI antar 2 zona, gak pakai target R:R tetap -- murni ngikutin zona likuiditas.
-
-🧮 Hitung volume/margin sendiri (WAJIB kalau modal beda dari saldo Demo Kaela): ${KALKULATOR_LINK}
-
-${fmtWita(now)}`;
+// 29 Agu 2026, permintaan Olan: "nyopet ga usah kepanjangan -- posisi kebuka Kaela sendiri UDAH
+// jadi sinyalnya, ikut/enggak tinggal aktifin toggle di web" -- pesan ini SENGAJA dipangkas (buang
+// alasan panjang/disclaimer/link kalkulator yang dulu wajib tiap pesan, lihat memory
+// feedback-selalu-ada-alasan) -- keputusan sadar Olan buat KHUSUS pesan ping-pong Nyopet ini,
+// bukan pembatalan aturan itu buat sinyal lain. Tag mode (Fade/Follow) tetap ditinggal 1 kata
+// biar masih ada KONTEKS minimal tanpa balik panjang.
+function formatAutoOpen(pos, now, dxyLine, isDemo) {
+  const dirLabel = pos.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT';
+  const modeTag = pos.mode === 'fade' ? 'Fade' : 'Follow';
+  return `🥷 Nyopet ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(pos.id)}
+${dirLabel} @ ${fmtUsd(pos.entryPrice)} → TP ${fmtUsd(pos.tp)} (${modeTag})${dxyLine ? '\n' + dxyLine : ''}`;
 }
 
-function formatAutoClosed(trade, now) {
+function formatAutoClosed(trade, now, isDemo) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
-  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market — ${trade.assetLabel || 'BTC'} (Binance Demo)
-${won ? '✅ KENA TARGET' : '❌ KENA NYAWA'} -- ${dirLabel} ${shortId(trade.id)}
-
-Entry ${fmtUsd(trade.entryPrice)} -> Exit ${fmtUsd(trade.exitPrice)}
-PNL: ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsd(trade.pnlUsd)}
-
-${won ? 'Langsung REVERSE -- posisi baru dibuka arah kebalikan, nembak balik ke zona asal.' : 'Langsung buka posisi baru lagi di zona terdekat -- siklus jalan terus, gak berhenti.'}
-
-${fmtWita(now)}`;
+  return `🥷 Nyopet ${trade.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(trade.id)}
+${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)}→${fmtUsd(trade.exitPrice)} | ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsd(trade.pnlUsd)}`;
 }
 
 module.exports = { formatSignal, formatBroken, formatAutoOpen, formatAutoClosed, COINGLASS_LINK, KALKULATOR_LINK };

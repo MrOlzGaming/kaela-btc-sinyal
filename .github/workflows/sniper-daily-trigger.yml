@@ -64,7 +64,13 @@ jobs:
           # sniperAutoAnalysis.js (checkAndApplyTopUp/sizing sinyal VALID) nulis file ini juga,
           # kalau gak di-add jadi perubahan gak ke-stage -> `git pull --rebase` gagal terus ->
           # push gagal 5x -> state gak pernah nyampe remote, run berikutnya ulang dari awal.
-          git add -f sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-spot-alt.json kaela-bankroll.json
+          # 29 Agu 2026, bug NYATA ketemu: `git add -f` satu baris gugur TOTAL (exit 128, "pathspec
+          # did not match") kalau SATU AJA dari file ini belum ada (mis. kaela-spot-alt.json belum
+          # pernah ke-generate) -- gugur di titik ini artinya commit+push GAK PERNAH kejalanin sama
+          # sekali, state 3 hari (26-28 Agu) ilang gak ke-push. Fix: add satu-satu, lewatin yang belum ada.
+          for f in sniper-trigger-state.json archive.json sniper-orders.json kaela-spot.json kaela-spot-alt.json kaela-bankroll.json; do
+            [ -f "$f" ] && git add -f "$f"
+          done
           git diff --staged --quiet || git commit -m "Auto: sniper analisa harian $(date -u +%Y-%m-%dT%H:%M)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).

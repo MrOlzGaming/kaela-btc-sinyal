@@ -82,7 +82,7 @@ jobs:
           while [ "$(date +%s)" -lt "$END" ]; do
             node darkKaelaMonitor.js || echo "::warning::darkKaelaMonitor.js error kali ini, lanjut loop"
             node nyopetPositionMonitor.js || echo "::warning::nyopetPositionMonitor.js error kali ini, lanjut loop"
-            git add -f dark-kaela-state.json nyopet-journal.json
+            for f in dark-kaela-state.json nyopet-journal.json; do [ -f "$f" ] && git add -f "$f"; done
             if ! git diff --staged --quiet; then
               git commit -m "Auto: dark kaela monitor $(date -u +%Y-%m-%dT%H:%M)"
               for i in 1 2 3 4 5; do

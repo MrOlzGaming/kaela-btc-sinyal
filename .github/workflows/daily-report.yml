@@ -49,7 +49,7 @@ jobs:
         run: |
           git config user.name "Kaela Bot"
           git config user.email "kaela-bot@users.noreply.github.com"
-          git add -f state.json archive.json conviction-track-record.json analyst-dashboard.json
+          for f in state.json archive.json conviction-track-record.json analyst-dashboard.json; do [ -f "$f" ] && git add -f "$f"; done
           git diff --staged --quiet || git commit -m "Auto: laporan harian $(date -u +%Y-%m-%d)"
           for i in 1 2 3 4 5; do
             # Buang state rebase stuck dari percobaan sebelumnya (12 Agu 2026, fix bug whale-alert).

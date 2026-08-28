@@ -1,7 +1,7 @@
 // DCA Spot Musiman -- BAYANGAN Kaela sendiri (15 Agu 2026, permintaan Olan), TERPISAH TOTAL dari
 // bankroll Sniper (kaelaBankroll.js) DAN dari rencana real Olan (state.json/renderSiklusHalvingPanel).
 // Mekanisme: tiap hari kalender WITA SELAMA window Musim Tanam (WINDOW_START) sampai HARI HALVING
-// tiba, Kaela "beli" $2 BTC spot (modal BARU tiap hari, bukan ditarik dari saldo lama -- keputusan
+// tiba, Kaela "beli" $5 BTC spot (modal BARU tiap hari, bukan ditarik dari saldo lama -- keputusan
 // eksplisit Olan biar gak pernah macet kehabisan modal walau siklus awal kecil). Begitu halving
 // lewat, STOP beli, TAHAN sampai titik jual otomatis (lihat SELL_AFTER_HALVING_DAYS di bawah), baru
 // jual SEMUA sekaligus -- hasil jual masuk `totalRealizedCash` (akumulasi lintas siklus, TERUS
@@ -23,7 +23,11 @@ const { WINDOW_START, NEXT_HALVING_EST } = require('./groupReport');
 const { fetchWithRetry } = require('./httpRetry');
 
 const SPOT_PATH = path.join(__dirname, 'kaela-spot.json');
-const DAILY_BUY_USD = 2;
+// 29 Agu 2026: dinaikin dari $2 -> $5 (permintaan Olan, "musiman auto 2 dolar/day" awalnya) --
+// Binance Spot punya batas MINIMUM_NOTIONAL $5/order buat BTCUSDT, $2 GAGAL TERUS pas dites live
+// (HTTP 400 "Filter failure: NOTIONAL"). $5 dipilih drpd numpuk-dulu-baru-beli biar tetap 1 beli/hari
+// simpel (bukan 1 beli tiap ~3 hari), Olan pilih opsi ini pas ditawarin.
+const DAILY_BUY_USD = 5;
 // Titik tengah rentang Musim Panen (368-549 hari setelah halving, sama persis sama rentang yang
 // udah dipakai buat rencana real Olan) -- Panen ASLI itu diskresioner/manual (gak ada tanggal
 // pasti), tapi simulasi BAYANGAN ini WAJIB deterministik biar bisa otomatis, jadi dipilih titik
@@ -35,6 +39,7 @@ function load() {
     return {
       btcHeld: 0, totalInvestedCurrentCycle: 0, cycleStartedAt: null,
       totalRealizedCash: 0, completedCycles: [], buyLog: [], lastBuyDateKey: null,
+      pendingLiveBuy: null, pendingLiveSell: null,
     };
   }
   return JSON.parse(fs.readFileSync(SPOT_PATH, 'utf8'));
@@ -69,6 +74,11 @@ async function runDailyTick(now = new Date()) {
     state.totalInvestedCurrentCycle += DAILY_BUY_USD;
     state.buyLog.push({ date: now.toISOString(), usdAmount: DAILY_BUY_USD, price, btcBought });
     state.lastBuyDateKey = dayKey;
+    // Antrian eksekusi LIVE (29 Agu 2026, permintaan Olan: "musiman juga auto... semua bisa ditiru
+    // persis auto di real" -- gak boleh shadow doang lagi, sama pola kayak Compound Alt). Cloud
+    // (GitHub Actions) DIBLOKIR Binance -- cuma nyatet rencana, eksekusi beneran di spotAltLiveExecutor.js
+    // (LOCAL, jalan tiap siklus, sekarang nangani Musiman JUGA -- BUKAN cuma Compound Alt).
+    state.pendingLiveBuy = { dateKey: dayKey, usdAmount: DAILY_BUY_USD, createdAt: now.toISOString() };
     save(state);
     console.log(`[SpotDca] Beli $${DAILY_BUY_USD} BTC @ $${price.toFixed(2)} -> ${btcBought.toFixed(8)} BTC. Total held: ${state.btcHeld.toFixed(8)} BTC.`);
     return { action: 'buy', btcBought, price };
@@ -80,6 +90,8 @@ async function runDailyTick(now = new Date()) {
     const avgCostUsd = state.totalInvestedCurrentCycle / state.btcHeld;
     const pnlUsd = proceedsUsd - state.totalInvestedCurrentCycle;
     const pnlPct = state.totalInvestedCurrentCycle > 0 ? (pnlUsd / state.totalInvestedCurrentCycle) * 100 : 0;
+    // qty diambil SEBELUM state.btcHeld di-nolin di bawah -- pola sama kayak spotDcaAlt.js.
+    state.pendingLiveSell = { qty: state.btcHeld, createdAt: now.toISOString() };
 
     state.completedCycles.push({
       buyWindowStart: state.cycleStartedAt,

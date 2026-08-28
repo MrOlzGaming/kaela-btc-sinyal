@@ -17,7 +17,9 @@
   const WINDOW_START = new Date('2026-10-19T00:00:00Z');
   const WINDOW_END = new Date('2026-11-17T00:00:00Z');
   const HALVING_DATE = new Date('2028-04-13T13:11:00Z');
-  const SPOT_DAILY_BUY_USD = 2;
+  // 29 Agu 2026: $2 -> $5 (Binance Spot minimum notional $5/order buat BTCUSDT, $2 ketolak terus
+  // pas dites live) -- mirror manual dari spotDca.js (Node, gak bisa di-require() di browser).
+  const SPOT_DAILY_BUY_USD = 5;
   const SELL_AFTER_HALVING_DAYS = 459; // titik tengah rentang Panen 368-549 hari, lihat spotDca.js
   function spotSellTriggerDate() {
     return new Date(HALVING_DATE.getTime() + SELL_AFTER_HALVING_DAYS * 86400000);
@@ -602,7 +604,7 @@
     return `<div class="spot-panel">
       <div class="phase-badge ${badgeClass}">${badgeText}</div>
       <p class="halving-note" style="margin-top:0;">${phaseNote}</p>
-      <p class="order-disclaimer">🎭 DCA Spot BAYANGAN Kaela sendiri -- modal $${SPOT_DAILY_BUY_USD}/hari FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper. Gak pernah dikirim ke WhatsApp, murni tercatat di sini.</p>
+      <p class="order-disclaimer">🧪 <strong>DEMO</strong> -- DCA Spot $${SPOT_DAILY_BUY_USD}/hari sekarang dieksekusi OTOMATIS di akun Binance Demo (Spot Testnet, duit virtual) -- bukan cuma catatan bayangan lagi, terpisah total dari bankroll Sniper.</p>
       ${summaryHtml}
       ${liveValueHtml}
       <div class="journal-section-title">🧾 Jurnal Pembelian (siklus berjalan)</div>
@@ -697,7 +699,7 @@
     return `<div class="spot-panel">
       <div class="phase-badge ${badgeClass}">${badgeText}</div>
       <p class="halving-note" style="margin-top:0;">${phaseNote}</p>
-      <p class="order-disclaimer">🎭 Compound Alt DCA BAYANGAN Kaela sendiri -- modal $${PER_COIN_USD}/koin/bulan FIKTIF (bukan uang beneran), terpisah total dari bankroll Sniper/Nyopet/Spot BTC. Kaela info tiap aksi (beli/stop/jual) ke grup WA biar bisa diikutin manual.</p>
+      <p class="order-disclaimer">🧪 <strong>DEMO</strong> -- Compound Alt DCA $${PER_COIN_USD}/koin/bulan (10 koin, total $${PER_COIN_USD * 10}/bulan) sekarang dieksekusi OTOMATIS di akun Binance Demo (Spot Testnet, duit virtual), terpisah total dari bankroll Sniper/Nyopet/Spot BTC. Kaela info tiap aksi (beli/stop/jual) ke grup WA biar bisa diikutin manual. Mulai 19 Oktober 2026.</p>
       ${summaryHtml}
       <div class="journal-section-title">👛 10 Dompet (klik buat lihat riwayat)</div>
       <div class="wallet-grid">${walletCardsHtml}${walletDetailsHtml}</div>

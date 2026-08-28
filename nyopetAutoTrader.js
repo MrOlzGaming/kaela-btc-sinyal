@@ -168,9 +168,22 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
 
   async function closePosition(assetCfg, order, { alreadyClosed, realPnlUsd, won }) {
     const { symbol } = assetCfg;
-    let pnlUsd, exitPrice, pnlPct;
+    let pnlUsd, exitPrice, pnlPct, reconciliationNote;
     if (alreadyClosed) {
-      pnlUsd = realPnlUsd;
+      // 28 Agu 2026, bug nyata: `fetchRealizedPnlSince` jumlahin SEMUA income simbol ini sejak
+      // triggeredAt -- kalau eksekutor mati lama (komputer sleep berjam-jam) dan simbol yang sama
+      // kepake trade LAIN (akun ini numpang banyak eksperimen), hasilnya kebablasan jauh dari
+      // margin yang beneran dipasang. Isolated margin GAK MUNGKIN rugi lebih dari margin sendiri --
+      // clamp ke -marginUsd persis (pola sama kayak [[project-dark-kaela]] Dark Kaela lama) kalau
+      // hasil mentahnya gak masuk akal, JANGAN percaya buta angka fetchRealizedPnlSince.
+      const maxLoss = -order.marginUsd;
+      if (realPnlUsd < maxLoss) {
+        reconciliationNote = `PnL mentah dari income history ($${realPnlUsd.toFixed(2)}) gak masuk akal (isolated margin max rugi $${maxLoss.toFixed(2)}) -- kemungkinan kecampur aktivitas simbol lain pas eksekutor offline lama. Di-clamp ke -marginUsd.`;
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: ${reconciliationNote}`);
+        pnlUsd = maxLoss;
+      } else {
+        pnlUsd = realPnlUsd;
+      }
       exitPrice = order.direction === 'buy' ? order.entryPrice + pnlUsd / order.qty : order.entryPrice - pnlUsd / order.qty;
     } else {
       const closeOrder = await c.emergencyCloseMarket({ symbol, direction: order.direction, quantity: order.qty });
@@ -182,6 +195,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     const journal = loadJournal();
     const target = journal.orders.find((o) => o.id === order.id);
     Object.assign(target, { status: won ? 'closed_tp' : 'closed_sl', exitPrice, pnlUsd, pnlPct, closedAt: new Date().toISOString() });
+    if (reconciliationNote) target.reconciliationNote = reconciliationNote;
     saveJournal(journal);
 
     const msg = formatAutoClosed({ direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date())

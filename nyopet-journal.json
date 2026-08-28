@@ -60,10 +60,11 @@
       "zoneKind": "swing",
       "zoneTouches": 3,
       "triggeredAt": "2026-08-24T13:14:19.178Z",
-      "exitPrice": -333825.968227647,
-      "pnlUsd": -14041.21351974,
-      "pnlPct": -25470.825153729544,
-      "closedAt": "2026-08-28T13:39:11.127Z"
+      "exitPrice": 77529.52783896824,
+      "pnlUsd": -55.126653475080005,
+      "pnlPct": -100,
+      "closedAt": "2026-08-28T13:39:11.127Z",
+      "reconciliationNote": "PnL mentah dari income history (-$14041.21) gak masuk akal (isolated margin max rugi $-55.13) -- kecampur aktivitas simbol lain (BTCUSDC) pas eksekutor offline ~4 hari (komputer sleep/hibernate 26-28 Agu). Dikoreksi manual 28 Agu 2026 pakai clamp yang sama dgn fix kode (closePosition, nyopetAutoTrader.js)."
     },
     {
       "id": "nyopet-demo-1787577340214",

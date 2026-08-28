@@ -1,5 +1,4 @@
 {
-  "balance": 5000,
   "orders": [
     {
       "id": "nyopet-demo-1787947752419",
@@ -51,5 +50,7 @@
       "zoneKind": "round",
       "touches": null
     }
-  }
+  },
+  "balanceUsdc": 4969.65566601,
+  "balanceUsdt": 4969.94324265
 }

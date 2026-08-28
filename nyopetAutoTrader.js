@@ -198,7 +198,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     if (reconciliationNote) target.reconciliationNote = reconciliationNote;
     saveJournal(journal);
 
-    const msg = formatAutoClosed({ direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date())
+    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date())
       + (alreadyClosed ? '\n\n(⏳ Kelikuidasi PAS lagi offline -- baru kesinkronin sekarang begitu online lagi.)' : '');
     console.log(msg + '\n');
     await notify(msg);

@@ -16,6 +16,15 @@ function fmtWita(date) {
   return new Date(date.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' WITA';
 }
 
+// 28 Agu 2026, permintaan Olan: "kaela perlu tanda buat sinyal nyopetnya, id transaksi/sinyal
+// gitu" -- biar gampang dicocokin pas nanya manual ("sinyal yang mana yang bengong"). Id asli
+// (`nyopet-demo-<timestamp>`) kepanjangan buat disebut lisan/WA -- ambil 6 digit terakhir timestamp
+// aja, cukup unik buat referensi jangka pendek (bukan buat storage/lookup presisi).
+function shortId(id) {
+  const digits = String(id || '').replace(/[^0-9]/g, '');
+  return '#' + (digits.slice(-6) || '000000');
+}
+
 function formatSignal(signal, now) {
   const dirLabel = signal.direction === 'long' ? '🟢 POTENSI LONG' : '🔴 POTENSI SHORT';
   const zoneDesc = signal.zoneKind === 'round'
@@ -85,7 +94,7 @@ function formatAutoOpen(pos, now) {
     leverage: pos.leverage, marginUsd: pos.marginUsd, reason: modeDesc,
   });
   return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market — ${pos.assetLabel || 'BTC'} (Binance Demo)
-🔵 POSISI DIBUKA
+🔵 POSISI DIBUKA ${shortId(pos.id)}
 
 ${coreLines.join('\n')}
 ${winRateLine}
@@ -101,7 +110,7 @@ function formatAutoClosed(trade, now) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
   return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market — ${trade.assetLabel || 'BTC'} (Binance Demo)
-${won ? '✅ KENA TARGET' : '❌ KENA NYAWA'} -- ${dirLabel}
+${won ? '✅ KENA TARGET' : '❌ KENA NYAWA'} -- ${dirLabel} ${shortId(trade.id)}
 
 Entry ${fmtUsd(trade.entryPrice)} -> Exit ${fmtUsd(trade.exitPrice)}
 PNL: ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsd(trade.pnlUsd)}

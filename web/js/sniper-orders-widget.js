@@ -92,7 +92,11 @@
     return 'sudah ' + parts.join(' ');
   }
   function tickDurations() {
-    document.querySelectorAll('.order-card.floating[data-opened-at]').forEach((card) => {
+    // Selector dilebarin dari '.order-card.floating[data-opened-at]' jadi bare '[data-opened-at]'
+    // (29 Agu 2026) -- Musiman/Compound Alt sekarang juga pakai countup durasi (siklus DCA jalan
+    // berapa lama), bukan cuma floating position Sniper/Nyopet. Attribute-nya udah cukup spesifik,
+    // aman dilebarin.
+    document.querySelectorAll('[data-opened-at]').forEach((card) => {
       const iso = card.dataset.openedAt;
       if (!iso) return;
       const target = card.querySelector('[data-duration-target]');

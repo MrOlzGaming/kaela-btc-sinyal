@@ -360,7 +360,9 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
     '',
 liveExecution
       ? '🤖 Posisi RIIL di Binance Demo (duit virtual, bukan bayangan lagi) -- lihat status EKSEKUSI di atas.'
-      : '🎭 Ini POSISI BAYANGAN -- murni perhitungan Kaela, TIDAK ADA uang bergerak. Eksekusi asli (kalau mau ikut) tetap manual sendiri di Binance.',
+      // Fallback kalau kill switch lagi OFF (maintenance) -- BUKAN "ajakan ikut manual" lagi (29
+      // Agu 2026, standing rule: buka posisi Kaela sendiri UDAH jadi sinyalnya, gak ada ajakan).
+      : '⏸️ Eksekusi live lagi dimatiin sementara (kill switch OFF, maintenance) -- sinyal ini TETAP tercatat lengkap, TIDAK ADA order ke Binance sampai dinyalain lagi.',
     '🚨 JANGAN ALL-IN! Trading resiko tinggi.',
     '⚠️ Deteksi pola ini pendekatan NUMERIK (regresi/aturan angka), bukan mata manusia -- cocokkan dulu sama chart aslinya sebelum diikuti.',
     '',

@@ -574,8 +574,16 @@
       ${cell('Siklus Selesai', spotState.completedCycles.length)}
     </div>`;
 
+    // Countup "udah jalan berapa lama" (29 Agu 2026, permintaan Olan: "cara jurnal di nyopet.. itu
+    // tiru buat semua") -- DCA gak punya TP/SL/liq kayak Sniper/Nyopet, tapi konsep "dibuka sejak
+    // + durasi live" tetap relevan (siklus Tanam ini udah jalan berapa lama). Reuse data-opened-at
+    // + tickDurations() yang UDAH ADA di sniper-orders-widget.js (query GLOBAL, otomatis kepakai).
+    const startedSince = spotState.cycleStartedAt
+      ? `<div class="order-opened-since">🕐 Siklus dimulai ${fmtOpenedDate(spotState.cycleStartedAt)} · <span data-duration-target>menghitung...</span></div>`
+      : '';
     const liveValueHtml = spotState.btcHeld > 0
-      ? `<div data-spot-btc-held="${spotState.btcHeld}" data-spot-invested="${spotState.totalInvestedCurrentCycle}">
+      ? `<div data-opened-at="${spotState.cycleStartedAt || ''}" data-spot-btc-held="${spotState.btcHeld}" data-spot-invested="${spotState.totalInvestedCurrentCycle}">
+          ${startedSince}
           <div class="order-live-price">Nilai sekarang: <strong data-spot-value-target>memuat...</strong></div>
           <div class="order-pnl-live" data-spot-pnl-target>Menghitung P&amp;L live...</div>
         </div>`
@@ -624,10 +632,16 @@
     const held = coinState.heldQty > 0;
     const valueLabel = held ? `${coinState.heldQty.toFixed(6)} ${label}` : (coinState.totalRealizedCash > 0 ? fmtUsdOrder(coinState.totalRealizedCash) : '$0');
     const subLabel = held ? `Modal: ${fmtUsdOrder(coinState.totalInvestedCurrentCycle)}` : (coinState.totalRealizedCash > 0 ? 'Nunggu Tanam berikutnya (all-in)' : 'Belum mulai');
+    // Countup durasi (29 Agu 2026, "cara jurnal di nyopet.. itu tiru buat semua") -- dompet ini
+    // udah nyicil berapa lama, sama konsep kayak "Dibuka sejak" Sniper/Nyopet.
+    const startedSince = held && coinState.cycleStartedAt
+      ? `<div class="wallet-sub" data-opened-at="${coinState.cycleStartedAt}">🕐 <span data-duration-target>menghitung...</span></div>`
+      : '';
     return `<div class="wallet-card" id="wallet-card-${symbol}" onclick="KaelaRender.toggleWalletDetail('${symbol}')">
       <div class="wallet-coin">${label}</div>
       <div class="wallet-value" data-wallet-qty="${coinState.heldQty}" data-wallet-symbol="${symbol}USDT">${valueLabel}</div>
       <div class="wallet-sub">${subLabel}</div>
+      ${startedSince}
     </div>`;
   }
 

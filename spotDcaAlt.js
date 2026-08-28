@@ -72,9 +72,11 @@ async function runBuyStep(now, state) {
   save(state);
 
   const totalInvestedAll = ALT10_SYMBOLS.reduce((sum, s) => sum + state.coins[s].totalInvestedCurrentCycle, 0);
+  // "Mau ikut?" DIBUANG (29 Agu 2026, permintaan Olan: "udah gak ada ajakan lagi, buka posisi/buy
+  // demo sendiri udah jadi sinyalnya") -- Compound Alt sekarang eksekusi LIVE otomatis (bukan
+  // shadow), jadi pesannya laporan FAKTUAL apa yang Kaela lakuin, bukan tawaran buat diikuti.
   const message = `🌱 Compound Alt DCA — Musim Tanam, waktunya beli!\n\n` +
-    `Kaela beli $10 di masing-masing 10 koin ini (total $100):\n\n${bought.join('\n')}\n\n` +
-    `Mau ikut? Beli di harga pasar sekarang, tahan sampai Kaela kasih sinyal jual.\n\n` +
+    `🧪 DEMO — Kaela beli $10 di masing-masing 10 koin ini (total $100) di akun Binance Demo (Spot Testnet, eksekusi live nyusul ~15 menit lewat sinkronisasi lokal):\n\n${bought.join('\n')}\n\n` +
     `DCA ke-${dcaCountThisCoin} siklus ini · Total modal masuk siklus ini: $${totalInvestedAll.toFixed(2)}`;
   await sendWhatsApp(message);
   console.log('[SpotDcaAlt]', message);

@@ -1,5 +1,5 @@
 {
-  "balance": 9308.81250987,
+  "balance": 5000,
   "orders": [
     {
       "id": "nyopet-demo-1787470523936",
@@ -48,7 +48,7 @@
       "id": "nyopet-demo-1787577259178",
       "asset": "btc",
       "direction": "buy",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "follow",
       "entryPrice": 79150.9,
       "liqPrice": 77915.16054719,
@@ -59,13 +59,17 @@
       "zonePrice": 77896.66,
       "zoneKind": "swing",
       "zoneTouches": 3,
-      "triggeredAt": "2026-08-24T13:14:19.178Z"
+      "triggeredAt": "2026-08-24T13:14:19.178Z",
+      "exitPrice": -333825.968227647,
+      "pnlUsd": -14041.21351974,
+      "pnlPct": -25470.825153729544,
+      "closedAt": "2026-08-28T13:39:11.127Z"
     },
     {
       "id": "nyopet-demo-1787577340214",
       "asset": "xau",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "fade",
       "entryPrice": 4644.26,
       "liqPrice": 4712.31987129,
@@ -76,7 +80,45 @@
       "zonePrice": 4750,
       "zoneKind": "round",
       "zoneTouches": null,
-      "triggeredAt": "2026-08-24T13:15:40.214Z"
+      "triggeredAt": "2026-08-24T13:15:40.214Z",
+      "exitPrice": 4651.343120635452,
+      "pnlUsd": -4.23570614,
+      "pnlPct": -7.583685057410099,
+      "closedAt": "2026-08-28T13:39:14.001Z"
+    },
+    {
+      "id": "nyopet-demo-1787924353571",
+      "asset": "btc",
+      "direction": "buy",
+      "status": "floating",
+      "mode": "follow",
+      "entryPrice": 79218.9,
+      "liqPrice": 77972.38024766,
+      "tp": 79531.85500000001,
+      "qty": 0.018,
+      "leverage": 50,
+      "marginUsd": 30,
+      "zonePrice": 77896.66,
+      "zoneKind": "swing",
+      "zoneTouches": 3,
+      "triggeredAt": "2026-08-28T13:39:13.572Z"
+    },
+    {
+      "id": "nyopet-demo-1787924355461",
+      "asset": "xau",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 4587.4206442,
+      "liqPrice": 4638.63831935,
+      "tp": 4578.328461538462,
+      "qty": 0.326,
+      "leverage": 50,
+      "marginUsd": 30,
+      "zonePrice": 4750,
+      "zoneKind": "round",
+      "zoneTouches": null,
+      "triggeredAt": "2026-08-28T13:39:15.461Z"
     }
   ],
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",

@@ -182,9 +182,20 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
   // Sniper/Nyopet yang jalan otomatis buat SEMUA akun aktif -- member wajib opt-in eksplisit ke
   // strategi ini (dana ngendon ~1,5 tahun/siklus). Client-nya BEDA (Spot+Earn, bukan Futures) tapi
   // API key/secret SAMA (1 API key Binance bisa punya izin Spot+Futures sekaligus).
-  if (account.compoundAltEnabled) {
+  //
+  // BUG BAHAYA ketemu 29 Agu 2026: `testnet` gak pernah dioper ke sini -- createBinanceSpotEarnClient
+  // defaultnya MAINNET ASLI (lihat binanceSpotEarnExecutor.js), jadi akun mode 'demo' pun bakal
+  // KENA UANG ASLI kalau toggle ini nyala. Fix: SEMENTARA account.mode==='real' doang yang boleh
+  // (mainnet Spot Earn) -- 'demo' DIBLOKIR TOTAL (bukan diarahin ke Spot Testnet, itu butuh API key
+  // TERPISAH member per-orang yang belum ada UI-nya, testnet.binance.vision beda sistem dari
+  // account.apiKey member yang emang buat Futures Demo/Real). Compound Alt demo Kaela Access buat
+  // member nanti perlu onboarding key testnet sendiri dulu (belum dibangun) -- BUKAN skip diam-diam,
+  // notify + skip biar Olan sadar kalau ada member nyalain toggle sebelum itu siap.
+  if (account.compoundAltEnabled && account.mode !== 'real') {
+    console.log(`[MultiAccountExecutor] Compound Alt DCA SKIP (${account.phone}/${account.mode}): mode demo belum didukung (butuh API key Spot Testnet terpisah, belum ada onboarding-nya).`);
+  } else if (account.compoundAltEnabled) {
     try {
-      const spotEarnClient = createBinanceSpotEarnClient({ apiKey: account.apiKey, apiSecret: account.apiSecret });
+      const spotEarnClient = createBinanceSpotEarnClient({ apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: false });
       const compoundAltTrader = createSpotDcaAltAccountTrader({
         client: spotEarnClient, statePath: path.join(STATE_DIR, `${key}-compoundalt.json`),
         sendWA, onEvent: journalHook,

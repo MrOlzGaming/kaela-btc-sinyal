@@ -6,7 +6,10 @@
 // bersih khusus buat emas, tapi itu batasan Binance, bukan pilihan desain.
 const NYOPET_ASSETS = {
   btc: { key: 'btc', symbol: 'BTCUSDC', marginAsset: 'USDC', zoneSymbol: 'BTCUSDT', label: 'BTC', emoji: '🟧' },
-  xau: { key: 'xau', symbol: 'PAXGUSDT', marginAsset: 'USDT', zoneSymbol: 'PAXGUSDT', label: 'XAU/Emas', emoji: '🟡' },
+  // Label kasih ticker eksplisit (29 Agu 2026, Olan bingung cek posisi di app Binance -- ketikan
+  // "PAXGUSDT" doang di sana, gak ada yang ketulis "XAU" -- dikira posisinya beda/ilang padahal
+  // sama, cuma beda penamaan). Sertain ticker di LABEL biar user gampang cocokin ke app Binance.
+  xau: { key: 'xau', symbol: 'PAXGUSDT', marginAsset: 'USDT', zoneSymbol: 'PAXGUSDT', label: 'XAU/Emas (PAXGUSDT)', emoji: '🟡' },
 };
 
 module.exports = { NYOPET_ASSETS };

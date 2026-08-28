@@ -18,7 +18,9 @@ const ASSETS = {
   xau: {
     key: 'xau',
     symbol: 'PAXGUSDT',
-    label: 'XAU/Emas',
+    // Ticker eksplisit di label (29 Agu 2026, Olan bingung nyocokin posisi di app Binance --
+    // di sana cuma keliatan "PAXGUSDT", gak ada "XAU" -- dikira posisi beda/ilang).
+    label: 'XAU/Emas (PAXGUSDT)',
     emoji: '🟡',
     useHalvingBearWindow: false,
   },

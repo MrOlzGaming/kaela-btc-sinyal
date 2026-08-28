@@ -199,7 +199,7 @@
   // gak bisa di-require() di browser) -- JAGA DUA-DUANYA SINKRON kalau ada perubahan.
   const ASSETS_WEB = {
     btc: { symbol: 'BTCUSDT', label: 'BTC', emoji: '🟧' },
-    xau: { symbol: 'PAXGUSDT', label: 'XAU/Emas', emoji: '🟡' },
+    xau: { symbol: 'PAXGUSDT', label: 'XAU/Emas (PAXGUSDT)', emoji: '🟡' },
   };
   const MODE_LABEL_WEB = { fvg: 'FVG', sniper: 'Pola Chart' };
 

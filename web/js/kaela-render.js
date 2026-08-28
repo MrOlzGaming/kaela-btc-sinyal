@@ -30,7 +30,10 @@
   // ada DI SANA, di sini cuma buat render. WINDOW_START/HALVING_DATE dipakai bareng sama Spot BTC
   // di atas (siklus halving yang sama), PANEN_SELL_DAYS beda (536, bukan 459) krn dihitung dari
   // rata-rata hari puncak HISTORIS (lihat _findpeaks.js), bukan titik tengah rentang.
-  const ALT10_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'DOGEUSDT', 'ZILUSDT', 'TRXUSDT', 'XLMUSDT'];
+  // BTC dicabut (29 Agu 2026, permintaan Olan: udah punya jalur sendiri di Musiman, double-exposure
+  // kalau ikut di sini) -- diganti SOL. Mirror manual dari spotDcaAltShared.js (Node, gak bisa
+  // di-require() di browser) -- JAGA DUA-DUANYA SINKRON kalau ada perubahan basket.
+  const ALT10_SYMBOLS = ['ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'DOGEUSDT', 'ZILUSDT', 'TRXUSDT', 'XLMUSDT', 'SOLUSDT'];
   const PER_COIN_USD = 10;
   const ALT_PANEN_SELL_DAYS = 536;
   function altSellTriggerDate() {

@@ -3,8 +3,12 @@
 // Kaela Access) -- biar logika window/basket/hari-jual PERSIS SAMA di dua tempat, gak nyimpang.
 //
 // Spesifikasi (dikonfirmasi Olan lewat backtest & diskusi 25 Agu 2026):
-// - Basket 10 koin: BTC + ETH/BNB/XRP/ADA/LTC/DOGE (6 alt lama) + ZIL/TRX/XLM (3 kandidat baru,
-//   ZIL request Olan, TRX+XLM usul Kaela -- OG alt listing lama di Binance).
+// - Basket 10 koin: ETH/BNB/XRP/ADA/LTC/DOGE (6 alt lama) + ZIL/TRX/XLM (3 kandidat baru,
+//   ZIL request Olan, TRX+XLM usul Kaela -- OG alt listing lama di Binance) + SOL.
+//   (29 Agu 2026: BTC DICABUT dari basket -- Olan sadar BTC udah punya jalur sendiri, Musiman/
+//   Siklus Halving, jadi ikut nongol lagi di sini bikin double-exposure & ngurangin makna "alt"
+//   (diversifikasi DI LUAR BTC). Diganti SOL. AMAN, window Musim Tanam belum mulai (mulai
+//   2026-10-19) jadi belum ada beli sama sekali -- gak ada bucket lama yang perlu dimigrasiin.)
 // - $10/koin tiap TANGGAL 5 kalender, SELAMA window Musim Tanam (WINDOW_START s/d HALVING_DATE).
 // - Pas halving: STOP DCA, cuma tahan.
 // - Jual di hari ke PANEN_SELL_DAYS_AFTER_HALVING setelah halving -- angka ini BUKAN tebakan,
@@ -23,7 +27,7 @@ const DAY_MS = 86400000;
 const MONTHLY_BUY_DAY = 5; // tanggal 5 kalender (UTC)
 const PER_COIN_USD = 10;
 
-const ALT10_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'DOGEUSDT', 'ZILUSDT', 'TRXUSDT', 'XLMUSDT'];
+const ALT10_SYMBOLS = ['ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'LTCUSDT', 'DOGEUSDT', 'ZILUSDT', 'TRXUSDT', 'XLMUSDT', 'SOLUSDT'];
 
 function sellTriggerDate(halvingDate = HALVING_DATE) {
   return new Date(halvingDate.getTime() + PANEN_SELL_DAYS_AFTER_HALVING * DAY_MS);

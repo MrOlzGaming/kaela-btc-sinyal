@@ -1,7 +1,55 @@
 {
-  "balance": 5027.26894312,
-  "orders": [],
+  "balance": 5000,
+  "orders": [
+    {
+      "id": "nyopet-demo-1787947752419",
+      "asset": "btc",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 77459.8263,
+      "liqPrice": 78707.21076116,
+      "tp": 76635.08,
+      "qty": 0.019,
+      "leverage": 50,
+      "marginUsd": 30,
+      "zonePrice": 77896.66,
+      "zoneKind": "swing",
+      "zoneTouches": 3,
+      "triggeredAt": "2026-08-28T20:09:12.419Z"
+    },
+    {
+      "id": "nyopet-demo-1787947753925",
+      "asset": "xau",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 4459.34,
+      "liqPrice": 4501.54947027,
+      "tp": 4376.61,
+      "qty": 0.336,
+      "leverage": 50,
+      "marginUsd": 30,
+      "zonePrice": 4500,
+      "zoneKind": "round",
+      "zoneTouches": null,
+      "triggeredAt": "2026-08-28T20:09:13.926Z"
+    }
+  ],
   "demoEraStartedAt": "2026-08-28T20:00:02.119Z",
   "demoEraNote": "Reset total 29 Agu 2026 atas permintaan Olan -- riwayat lama (termasuk insiden entry-dobel XAU yang direkonsiliasi) dihapus, mulai bersih dari sini. Saldo Binance Demo di-reset manual sendiri (tombol reset Binance).",
-  "watchZoneByAsset": {}
+  "watchZoneByAsset": {
+    "btc": {
+      "price": 77896.66,
+      "side": "resistance",
+      "zoneKind": "swing",
+      "touches": 3
+    },
+    "xau": {
+      "price": 4500,
+      "side": "resistance",
+      "zoneKind": "round",
+      "touches": null
+    }
+  }
 }

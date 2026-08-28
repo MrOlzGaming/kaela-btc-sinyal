@@ -313,6 +313,13 @@ function liveExecutionLines(liveExecution) {
   if (liveExecution.ok) {
     return ['', `${modeLabel} -- Order berhasil masuk, qty ${liveExecution.filledQty}. SL+TP udah nempel di exchange.`];
   }
+  // Kasus TERDUGA & SELALU KEJADIAN (29 Agu 2026, bikin Olan bingung liat "ERROR" di web padahal
+  // bukan bug) -- analisa ini jalan di GitHub Actions (cloud), yang MEMANG sengaja gak dikasih
+  // kredensial Binance (Demo diblokir dari cloud, lihat localLiveExecutor.js) -- pesan tenang,
+  // bukan alarm, karena eksekusi beneran nyusul otomatis siklus lokal berikutnya (~15 menit).
+  if (/BINANCE_API_KEY\/BINANCE_API_SECRET belum di-setup/.test(liveExecution.error || '')) {
+    return ['', `${modeLabel} -- ⏳ Analisa ini jalan di server cloud (sengaja gak pegang kunci Binance) -- eksekusi beneran nyusul otomatis di siklus komputer lokal berikutnya (~15 menit), TIDAK PERLU aksi manual.`];
+  }
   return ['', `${modeLabel} -- ❌ Eksekusi GAGAL: ${liveExecution.error} -- TIDAK ADA order di Binance, cek manual.`];
 }
 

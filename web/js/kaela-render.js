@@ -285,33 +285,32 @@
     </div>`;
   }
 
+  // Ringkasan doang buat Home (29 Agu 2026, permintaan Olan: "kartu posisi floating bagusnya
+  // semua pindah ke jurnal aja" -- biar gak kepisah 2 halaman/2 tampilan beda). Home cuma nunjukkin
+  // JUMLAH posisi aktif + link, kartu detail lengkap (badge arah/mode/countup/P&L live) SEKARANG
+  // CUMA ada di Jurnal, satu tempat, satu timeline (floating -> closed).
   function renderSniperOrdersPanel(state, latestStatusEntry) {
     const active = (state.orders || []).filter((o) => o.status === 'floating');
-    let activeHtml;
-    if (active.length > 0) {
-      activeHtml = `<div class="order-grid">${active.map(renderOrderCard).join('')}</div>`;
-    } else if (latestStatusEntry) {
-      activeHtml = renderEntry(latestStatusEntry, { highlight: true });
-    } else {
-      activeHtml = `<div class="empty">🎯 Belum ada analisa Sniper.</div>`;
-    }
+    const summaryLine = active.length > 0
+      ? `📡 <strong>${active.length} posisi Sniper lagi terbuka</strong> -- detail lengkap di <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.`
+      : (latestStatusEntry
+        ? `📡 Belum ada posisi terbuka -- analisa terakhir: lihat di <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.`
+        : `🎯 Belum ada analisa Sniper.`);
     return `<div class="sniper-orders-panel">
-      <p class="order-disclaimer">🤖 Sinyal VALID sekarang dieksekusi OTOMATIS di akun Binance Demo (duit virtual, riset/uji coba) -- bukan cuma monitor bayangan lagi. Saldo, riwayat &amp; statistik lengkap ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
-      ${activeHtml}
+      <p class="order-disclaimer">🤖 Sinyal VALID sekarang dieksekusi OTOMATIS di akun Binance Demo (duit virtual, riset/uji coba) -- bukan cuma monitor bayangan lagi.</p>
+      <div class="empty">${summaryLine}</div>
     </div>`;
   }
 
-  // Panel ringkas buat Home (23 Agu 2026) -- format senada renderSniperOrdersPanel, cuma sumber
-  // datanya nyopet-journal.json. Riwayat lengkap tetap di Jurnal (link di disclaimer), Home cuma
-  // nunjukkin posisi TERBUKA biar Olan langsung liat begitu buka web tanpa pindah halaman.
+  // Ringkasan doang buat Home (29 Agu 2026) -- sama alasan kayak renderSniperOrdersPanel di atas.
   function renderNyopetHomePanel(nyopetState) {
     const floating = (nyopetState.orders || []).filter((o) => o.status === 'floating');
-    const posHtml = floating.length > 0
-      ? `<div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
-      : `<div class="empty">Gak ada posisi Nyopet yang lagi terbuka.</div>`;
+    const summaryLine = floating.length > 0
+      ? `📡 <strong>${floating.length} posisi Nyopet lagi terbuka</strong> -- detail lengkap di <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.`
+      : `Gak ada posisi Nyopet yang lagi terbuka.`;
     return `<div class="sniper-orders-panel">
-      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis zona likuiditas di Binance Demo (USDC). Riwayat lengkap &amp; win rate ada di halaman <a href="jurnal.html"><strong>📓 Jurnal</strong></a>.</p>
-      ${posHtml}
+      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis zona likuiditas di Binance Demo (USDC).</p>
+      <div class="empty">${summaryLine}</div>
     </div>`;
   }
 
@@ -493,6 +492,13 @@
   }
 
   function renderJurnalPanel(state, now, fundReport) {
+    // Kartu posisi FLOATING (29 Agu 2026, permintaan Olan: "kartu posisi floating semua pindah
+    // ke jurnal aja" -- gak lagi kepisah Home/Jurnal, satu timeline utuh floating->closed di sini).
+    const active = (state.orders || []).filter((o) => o.status === 'floating');
+    const floatingHtml = active.length > 0
+      ? `<div class="journal-section-title">📡 Posisi Terbuka (${active.length})</div><div class="order-grid">${active.map(renderOrderCard).join('')}</div>`
+      : '';
+
     const closedAll = (state.orders || []).filter((o) => o.status.indexOf('closed') === 0 || o.status === 'cancelled').slice().reverse();
     const trades = closedAll.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl');
     const stats = computeJournalStats(trades);
@@ -501,6 +507,7 @@
     if (!stats) {
       return `<div class="jurnal-panel">
         ${fundHtml}
+        ${floatingHtml}
         <div class="empty">📓 Belum ada trade yang selesai. Statistik per-trade bakal keisi otomatis begitu ada order Sniper yang kena TP/SL.</div>
       </div>`;
     }
@@ -515,6 +522,7 @@
 
     return `<div class="jurnal-panel">
       ${fundHtml}
+      ${floatingHtml}
       ${renderJournalStatsGrid(stats)}
       <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
       ${renderEquityCurveSvg(trades)}
@@ -779,11 +787,15 @@
   // Diseragamkan sama renderJurnalPanel Sniper (23 Agu 2026, permintaan Olan: "samain jurnal
   // sniper dan nyopet") -- reuse LANGSUNG computeJournalStats/renderJournalStatsGrid/
   // renderEquityCurveSvg/renderPnlCalendar Sniper, aman dipakai karena skema data udah 100% sama
-  // (status/pnlUsd/marginUsd/closedAt). Posisi FLOATING gak ditampilin lagi di sini (dobel sama
-  // Home) -- persis pola Sniper yang juga cuma nampilin stats+riwayat di Jurnal, bukan floating.
+  // (status/pnlUsd/marginUsd/closedAt). Posisi FLOATING SEKARANG DITAMPILIN di sini (29 Agu 2026,
+  // dicabut dari Home -- "kartu posisi floating semua pindah ke jurnal aja"), satu timeline utuh.
   function renderNyopetJurnalPanel(nyopetState, now) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
     const orders = nyopetState.orders || [];
+    const floating = orders.filter((o) => o.status === 'floating');
+    const floatingHtml = floating.length > 0
+      ? `<div class="journal-section-title">📡 Posisi Terbuka (${floating.length})</div><div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
+      : '';
     const closed = orders.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl').slice().reverse();
     const stats = computeJournalStats(closed);
 
@@ -797,6 +809,7 @@
       return `<div class="nyopet-panel">
         <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo. Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi.</p>
         <div class="journal-stats-grid">${saldoCell}</div>
+        ${floatingHtml}
         <div class="empty">📓 Belum ada trade yang selesai. Statistik bakal keisi otomatis begitu ada posisi Nyopet yang kena target/nyawa.</div>
       </div>`;
     }
@@ -820,6 +833,7 @@
     return `<div class="nyopet-panel">
       <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (BTC di USDC, PAXG numpang USDT). Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi. Profit maupun loss ditampilin apa adanya.</p>
       <div class="journal-stats-grid">${saldoCell}</div>
+      ${floatingHtml}
       ${renderJournalStatsGrid(stats)}
       <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
       ${renderEquityCurveSvg(closed)}

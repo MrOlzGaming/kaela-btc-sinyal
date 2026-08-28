@@ -1,5 +1,5 @@
 {
-  "balance": 5029.5213458,
+  "balance": 5027.26894312,
   "orders": [
     {
       "id": "nyopet-demo-1787470523936",
@@ -229,7 +229,7 @@
       "id": "nyopet-demo-1787933352953",
       "asset": "btc",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_tp",
       "mode": "follow",
       "entryPrice": 78139.8,
       "liqPrice": 79398.20962623,
@@ -239,14 +239,34 @@
       "marginUsd": 30.177128074800002,
       "zonePrice": 78538.24666666666,
       "zoneKind": "swing",
-      "triggeredAt": "2026-08-28T16:09:12.953Z"
+      "triggeredAt": "2026-08-28T16:09:12.953Z",
+      "exitPrice": 77741.79000000001,
+      "pnlUsd": 7.562189999999901,
+      "pnlPct": 25.059342894577348,
+      "closedAt": "2026-08-28T16:24:09.194Z"
+    },
+    {
+      "id": "nyopet-demo-1787934251522",
+      "asset": "btc",
+      "direction": "buy",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 78188,
+      "liqPrice": 76555.99798774,
+      "tp": 78794.415,
+      "qty": 0.019,
+      "leverage": 50,
+      "marginUsd": 30.16361365872,
+      "zonePrice": 77741.79000000001,
+      "zoneKind": "swing",
+      "triggeredAt": "2026-08-28T16:24:11.522Z"
     }
   ],
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",
   "demoEraNote": "Nyopet REAL manual (posisi real di exchange asli) DIGANTIKAN PENUH oleh Nyopet Binance Demo (USDC) mulai titik ini -- riwayat trade REAL lama direset (era baru, bukan lanjutan). Pemisahan bankroll penuh (kayak kaela-bankroll.json Sniper) NANTI, fokus sementara latihan Demo dulu. Skema disamain 100% sama sniper-orders.json (orders[]+status) 23 Agu 2026 -- gak ada lagi batas 100 trade.",
   "watchZoneByAsset": {
     "btc": {
-      "price": 78538.24666666666,
+      "price": 77741.79000000001,
       "side": "support",
       "zoneKind": "swing"
     },

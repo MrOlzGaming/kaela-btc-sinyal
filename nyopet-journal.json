@@ -1,5 +1,5 @@
 {
-  "balance": 4998.13404889,
+  "balance": 4988.72331887,
   "orders": [
     {
       "id": "nyopet-demo-1787470523936",
@@ -91,7 +91,7 @@
       "id": "nyopet-demo-1787924353571",
       "asset": "btc",
       "direction": "buy",
-      "status": "floating",
+      "status": "closed_tp",
       "mode": "follow",
       "entryPrice": 79218.9,
       "liqPrice": 77972.38024766,
@@ -102,7 +102,11 @@
       "zonePrice": 77896.66,
       "zoneKind": "swing",
       "zoneTouches": 3,
-      "triggeredAt": "2026-08-28T13:39:13.572Z"
+      "triggeredAt": "2026-08-28T13:39:13.572Z",
+      "exitPrice": 79531.85500000001,
+      "pnlUsd": 5.633190000000293,
+      "pnlPct": 18.777300000000977,
+      "closedAt": "2026-08-28T14:39:18.135Z"
     },
     {
       "id": "nyopet-demo-1787924355461",
@@ -169,7 +173,7 @@
       "id": "nyopet-demo-1787927636267",
       "asset": "xau",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_tp",
       "mode": "follow",
       "entryPrice": 4558.91,
       "liqPrice": 4603.80712145,
@@ -179,17 +183,52 @@
       "marginUsd": 59.97760858668,
       "zonePrice": 4578.328461538462,
       "zoneKind": "swing",
-      "triggeredAt": "2026-08-28T14:33:56.267Z"
+      "triggeredAt": "2026-08-28T14:33:56.267Z",
+      "exitPrice": 4578.328461538462,
+      "pnlUsd": -12.757929230769532,
+      "pnlPct": -21.271153571139298,
+      "closedAt": "2026-08-28T14:39:21.080Z"
+    },
+    {
+      "id": "nyopet-demo-1787927960624",
+      "asset": "btc",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 79591,
+      "liqPrice": 80823.80881474,
+      "tp": 78538.24666666666,
+      "qty": 0.018,
+      "leverage": 50,
+      "marginUsd": 30.03246863898,
+      "zonePrice": 79531.85500000001,
+      "zoneKind": "swing",
+      "triggeredAt": "2026-08-28T14:39:20.625Z"
+    },
+    {
+      "id": "nyopet-demo-1787927962168",
+      "asset": "xau",
+      "direction": "buy",
+      "status": "floating",
+      "mode": "fade",
+      "entryPrice": 4568.67,
+      "liqPrice": 4523.89453781,
+      "tp": 4614.543333333334,
+      "qty": 0.655,
+      "leverage": 50,
+      "marginUsd": 59.86467982644,
+      "zonePrice": 4578.328461538462,
+      "zoneKind": "swing",
+      "triggeredAt": "2026-08-28T14:39:22.168Z"
     }
   ],
   "demoEraStartedAt": "2026-08-23T05:26:52.285Z",
   "demoEraNote": "Nyopet REAL manual (posisi real di exchange asli) DIGANTIKAN PENUH oleh Nyopet Binance Demo (USDC) mulai titik ini -- riwayat trade REAL lama direset (era baru, bukan lanjutan). Pemisahan bankroll penuh (kayak kaela-bankroll.json Sniper) NANTI, fokus sementara latihan Demo dulu. Skema disamain 100% sama sniper-orders.json (orders[]+status) 23 Agu 2026 -- gak ada lagi batas 100 trade.",
   "watchZoneByAsset": {
     "btc": {
-      "price": 77896.66,
+      "price": 79531.85500000001,
       "side": "resistance",
-      "zoneKind": "swing",
-      "touches": 3
+      "zoneKind": "swing"
     },
     "xau": {
       "price": 4578.328461538462,

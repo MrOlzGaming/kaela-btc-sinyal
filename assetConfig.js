@@ -10,7 +10,10 @@ const ASSETS = {
   btc: {
     key: 'btc',
     symbol: 'BTCUSDT',
-    label: 'BTC',
+    // Label = PERSIS simbol Binance (29 Agu 2026, permintaan Olan: "kalo di akun binance pasang
+    // paxg ya di web paxg juga bukan malah xau" -- gak ada terjemahan/nama cantik lagi, samain
+    // 1:1 sama yang keliatan di app Binance biar gak perlu mikir cocokin).
+    label: 'BTCUSDT',
     emoji: '🟧',
     // Window "istirahat" (siklus halving) CUMA berlaku BTC -- lihat halvingBearWindow.js.
     useHalvingBearWindow: true,
@@ -18,9 +21,10 @@ const ASSETS = {
   xau: {
     key: 'xau',
     symbol: 'PAXGUSDT',
-    // Ticker eksplisit di label (29 Agu 2026, Olan bingung nyocokin posisi di app Binance --
-    // di sana cuma keliatan "PAXGUSDT", gak ada "XAU" -- dikira posisi beda/ilang).
-    label: 'XAU/Emas (PAXGUSDT)',
+    // Label = PERSIS simbol Binance (29 Agu 2026, Olan: "kalo di akun binance pasang paxg ya di
+    // web paxg juga bukan malah xau, biar ga muter muter kepalaku" -- dulu dicoba "XAU/Emas
+    // (PAXGUSDT)" tapi masih bikin bingung krn ada 2 nama, sekarang SATU nama doang = PAXGUSDT).
+    label: 'PAXGUSDT',
     emoji: '🟡',
     useHalvingBearWindow: false,
   },

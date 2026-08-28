@@ -5,11 +5,12 @@
 // exchangeInfo cuma balikin PAXGUSDT) -- pemisahan wallet USDT=Sniper/USDC=Nyopet jadi gak 100%
 // bersih khusus buat emas, tapi itu batasan Binance, bukan pilihan desain.
 const NYOPET_ASSETS = {
-  btc: { key: 'btc', symbol: 'BTCUSDC', marginAsset: 'USDC', zoneSymbol: 'BTCUSDT', label: 'BTC', emoji: '🟧' },
-  // Label kasih ticker eksplisit (29 Agu 2026, Olan bingung cek posisi di app Binance -- ketikan
-  // "PAXGUSDT" doang di sana, gak ada yang ketulis "XAU" -- dikira posisinya beda/ilang padahal
-  // sama, cuma beda penamaan). Sertain ticker di LABEL biar user gampang cocokin ke app Binance.
-  xau: { key: 'xau', symbol: 'PAXGUSDT', marginAsset: 'USDT', zoneSymbol: 'PAXGUSDT', label: 'XAU/Emas (PAXGUSDT)', emoji: '🟡' },
+  // Label = PERSIS simbol Binance (29 Agu 2026, Olan: "kalo di akun binance pasang paxg ya di
+  // web paxg juga bukan malah xau, biar ga muter muter kepalaku") -- Nyopet BTC pakai wallet
+  // USDC jadi tikernya BTCUSDC, BEDA dari Sniper (BTCUSDT).
+  btc: { key: 'btc', symbol: 'BTCUSDC', marginAsset: 'USDC', zoneSymbol: 'BTCUSDT', label: 'BTCUSDC', emoji: '🟧' },
+  // Sama -- SATU nama doang, persis ticker app Binance, gak ada "XAU/Emas" lagi.
+  xau: { key: 'xau', symbol: 'PAXGUSDT', marginAsset: 'USDT', zoneSymbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
 };
 
 module.exports = { NYOPET_ASSETS };

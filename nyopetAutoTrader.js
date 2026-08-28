@@ -82,7 +82,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
   const isDemo = !(apiCreds && apiCreds.testnet === false);
 
   function loadJournal() {
-    if (!fs.existsSync(jPath)) return { balance: 0, orders: [], watchZoneByAsset: {} };
+    if (!fs.existsSync(jPath)) return { balanceUsdc: 0, balanceUsdt: 0, orders: [], watchZoneByAsset: {} };
     const j = JSON.parse(fs.readFileSync(jPath, 'utf8'));
     let migrated = false;
     for (const o of j.orders || []) {
@@ -162,7 +162,6 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
       zoneTouches: zoneCtx.touches, triggeredAt: new Date().toISOString(),
     };
     const journal = loadJournal();
-    journal.balance = modalFull; // catatan: field balance tunggal, USDT/USDC dicampur kalau 2 aset kepake -- cukup buat sizing display, detail per-wallet ada di liveExecution tiap order kalau perlu
     journal.orders.push(order);
     journal.watchZoneByAsset[assetKey] = { price: zoneCtx.price, side: zoneCtx.side, zoneKind: zoneCtx.kind, touches: zoneCtx.touches };
     saveJournal(journal);
@@ -297,6 +296,24 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
         console.log(`[NyopetAutoTrader] ERROR ${assetCfg.label}:`, e.message);
       }
     }
+    await syncBalances();
+  }
+
+  // Sinkron saldo LIVE tiap siklus (29 Agu 2026, bug ketemu: journal.balance cuma keupdate pas
+  // openPosition() -- begitu udah gak ada posisi baru dibuka, angkanya STALE mulu, beda dari
+  // Sniper yang emang disinkron tiap siklus di localLiveExecutor.js). Nyopet pakai 2 wallet beda
+  // (BTC=USDC, XAU=PAXGUSDT=USDT) jadi field-nya WAJIB dipisah, gak boleh digabung 1 angka lagi.
+  async function syncBalances() {
+    try {
+      const [balanceUsdc, balanceUsdt] = await Promise.all([c.getAccountBalance('USDC'), c.getAccountBalance('USDT')]);
+      const journal = loadJournal();
+      journal.balanceUsdc = balanceUsdc;
+      journal.balanceUsdt = balanceUsdt;
+      delete journal.balance; // field lama ambigu (USDT/USDC ketuker tergantung aset mana yang terakhir buka posisi) -- dibuang, ganti 2 field eksplisit di atas
+      saveJournal(journal);
+    } catch (e) {
+      console.log('[NyopetAutoTrader] Gagal sinkron saldo:', e.message);
+    }
   }
 
   // 28 Agu 2026, permintaan Olan: "user pengen fasilitas tutup posisi dari Kaela Access, aku
@@ -317,7 +334,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     return { ok: true };
   }
 
-  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition };
+  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition, syncBalances };
 }
 
 // ============ Wrapper backward-compatible (akun Olan sendiri) -- ZERO perubahan perilaku, path

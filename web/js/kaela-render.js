@@ -197,9 +197,19 @@
 
   // ASSETS_WEB (22 Agu 2026, upgrade multi-aset) -- mirror manual dari assetConfig.js (Node,
   // gak bisa di-require() di browser) -- JAGA DUA-DUANYA SINKRON kalau ada perubahan.
+  // Label = PERSIS simbol Binance (29 Agu 2026, Olan: "kalo di akun binance pasang paxg ya di
+  // web paxg juga bukan malah xau, biar ga muter muter kepalaku") -- gak ada nama cantik/
+  // terjemahan lagi, SATU nama = ticker asli, sama persis kayak yang keliatan di app Binance.
   const ASSETS_WEB = {
-    btc: { symbol: 'BTCUSDT', label: 'BTC', emoji: '🟧' },
-    xau: { symbol: 'PAXGUSDT', label: 'XAU/Emas (PAXGUSDT)', emoji: '🟡' },
+    btc: { symbol: 'BTCUSDT', label: 'BTCUSDT', emoji: '🟧' },
+    xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
+  };
+  // Mirror TERPISAH khusus Nyopet -- Nyopet BTC pakai wallet USDC (ticker BTCUSDC), BEDA dari
+  // Sniper (BTCUSDT) -- pakai ASSETS_WEB biasa bikin kartu Nyopet salah nunjukkin ticker (dan
+  // salah poll harga live-nya, sniper-orders-widget.js baca data-symbol dari sini).
+  const NYOPET_ASSETS_WEB = {
+    btc: { symbol: 'BTCUSDC', label: 'BTCUSDC', emoji: '🟧' },
+    xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
   };
   const MODE_LABEL_WEB = { fvg: 'FVG', sniper: 'Pola Chart' };
 
@@ -716,7 +726,7 @@
     const nyawaText = nyawaVal != null ? fmtUsdOrder(nyawaVal) : '-';
     // Label harga hidup asset-aware (25 Agu 2026) -- sebelumnya hardcode "Harga BTC sekarang"
     // padahal Nyopet udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
-    const assetInfo = ASSETS_WEB[o.asset] || ASSETS_WEB.btc;
+    const assetInfo = NYOPET_ASSETS_WEB[o.asset] || NYOPET_ASSETS_WEB.btc;
     if (o.status === 'floating') {
       return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}" data-opened-at="${o.triggeredAt || ''}">
           <div class="order-header">
@@ -758,7 +768,11 @@
     const closed = orders.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl').slice().reverse();
     const stats = computeJournalStats(closed);
 
-    const saldoCell = cell('Saldo Demo (USDC)', fmtUsdOrder(nyopetState.balance || 0));
+    // 2 wallet terpisah (29 Agu 2026, fix bug saldo stale -- lihat nyopetAutoTrader.js
+    // syncBalances) -- BTCUSDC buat posisi BTC, PAXGUSDT buat posisi PAXG, JANGAN digabung 1
+    // angka lagi (dulu ketuker/nimpa satu sama lain tergantung aset mana yang terakhir buka posisi).
+    const saldoCell = cell('Saldo Demo BTCUSDC', fmtUsdOrder(nyopetState.balanceUsdc || 0))
+      + cell('Saldo Demo PAXGUSDT', fmtUsdOrder(nyopetState.balanceUsdt || 0));
 
     if (!stats) {
       return `<div class="nyopet-panel">
@@ -772,7 +786,7 @@
       ? `<table class="spot-cycle-table">
           <thead><tr><th>Aset</th><th>Arah</th><th>Mode</th><th>Entry</th><th>Exit</th><th>Hasil</th><th>PNL</th><th>Tanggal</th></tr></thead>
           <tbody>${closed.map((o) => `<tr>
-            <td>${ASSETS_WEB[o.asset] ? ASSETS_WEB[o.asset].emoji + ' ' + ASSETS_WEB[o.asset].label : '🟧 BTC'}</td>
+            <td>${NYOPET_ASSETS_WEB[o.asset] ? NYOPET_ASSETS_WEB[o.asset].emoji + ' ' + NYOPET_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
             <td>${o.direction === 'sell' ? '🔴 SHORT' : '🟢 LONG'}</td>
             <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
             <td>${fmtUsdOrder(o.entryPrice)}</td>

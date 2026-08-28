@@ -47,6 +47,18 @@ async function recordBalanceReport(phone, name, report) {
   return callGas('recordBalanceReport', { phone, name, report: JSON.stringify(report) });
 }
 
+// 28 Agu 2026 -- toggle notif master admin ("info trading real/demo ke Olan"). Fail-safe: kalau
+// GAS error/belum ke-deploy, anggap dua2nya OFF (jangan spam Olan kalau settingnya gak kebaca).
+async function getAdminNotifySettings() {
+  try {
+    const data = await callGas('getAdminNotifySettingsForExecutor');
+    return data.settings;
+  } catch (e) {
+    console.log('[KaelaProTraderClient] getAdminNotifySettings gagal (dianggap OFF):', e.message);
+    return { notifyReal: false, notifyDemo: false };
+  }
+}
+
 async function notifyMember(phone, message) {
   try {
     return await callGas('notifyMember', { phone, message });
@@ -74,4 +86,4 @@ async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positio
   return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []) });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings };

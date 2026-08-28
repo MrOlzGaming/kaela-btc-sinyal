@@ -79,20 +79,32 @@ function buildJournalHook(account) {
 // kaela yang privat itu"). Link publik sinyal grup TETAP terpisah, TIDAK diubah di sini.
 const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
 
-function buildSendWA(account) {
+// 28 Agu 2026, permintaan Olan: "khusus olan master admin, baik demo dan real info aja ke olan"
+// -- relay COPY notif ke Olan (toggle-able di Setting, lihat Config.gs getAdminNotifySettings),
+// TERPISAH dari notif ke member itu sendiri. `adminRelay` = { masterNomor, notifyReal, notifyDemo }
+// diambil SEKALI per siklus (bukan per-akun) di main(), biar gak spam GAS call berkali-kali.
+function buildSendWA(account, adminRelay) {
   return async (message) => {
     const full = `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}\n\nCek jurnal/status posisi kamu: ${KAELA_ACCESS_URL}`;
     await kaela.notifyMember(account.phone, full);
+
+    const isSelf = adminRelay && safeKey(account.phone) === safeKey(adminRelay.masterNomor);
+    const relayOn = adminRelay && (account.mode === 'real' ? adminRelay.notifyReal : adminRelay.notifyDemo);
+    if (adminRelay && relayOn && !isSelf) {
+      const adminCopy = `[Kaela Access -- INFO ADMIN, ${account.mode.toUpperCase()}]\n\nMember: ${account.name} (${account.phone})\n\n${message}`;
+      await kaela.notifyMember(adminRelay.masterNomor, adminCopy).catch((e) =>
+        console.log(`[MultiAccountExecutor] Relay notif admin gagal (${account.phone}):`, e.message));
+    }
   };
 }
 
-async function processAccount(account, sharedSniperOrders) {
+async function processAccount(account, sharedSniperOrders, adminRelay) {
   console.log(`\n[MultiAccountExecutor] === ${account.name} (${account.phone}) -- ${account.mode.toUpperCase()} ===`);
   const client = createBinanceClient({ apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' });
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' };
   const modalOverride = buildModalOverride(account, client);
   const journalHook = buildJournalHook(account);
-  const sendWA = buildSendWA(account);
+  const sendWA = buildSendWA(account, adminRelay);
   const key = safeKey(account.phone) + '-' + account.mode;
 
   try {
@@ -247,8 +259,11 @@ async function main() {
   const sharedSniperOrders = (sniperState.orders || []).filter((o) => o.liveExecution && o.liveExecution.ok && !o.liveExecution.fullyClosedAt);
   console.log(`[MultiAccountExecutor] ${active.length} akun aktif, ${sharedSniperOrders.length} sinyal Sniper live buat di-mirror.`);
 
+  const adminNotify = await kaela.getAdminNotifySettings();
+  const adminRelay = { masterNomor, notifyReal: adminNotify.notifyReal, notifyDemo: adminNotify.notifyDemo };
+
   for (const account of active) {
-    await processAccount(account, sharedSniperOrders);
+    await processAccount(account, sharedSniperOrders, adminRelay);
   }
   console.log('\n[MultiAccountExecutor] Selesai.');
 }

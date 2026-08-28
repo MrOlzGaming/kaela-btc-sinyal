@@ -82,7 +82,7 @@
       <div class="analis-updated">Terakhir diperbarui: ${esc(updatedStr)} (tiap Senin)</div>
       <div class="analis-grid">
         ${renderConvictionCard('BTC', '🟧', dashboardData.btc)}
-        ${renderConvictionCard('XAU/Emas', '🟡', dashboardData.xau)}
+        ${renderConvictionCard('PAXGUSDT', '🟡', dashboardData.xau)}
       </div>
       ${renderMacroPanel(dashboardData)}
       ${renderRegimePanel(dashboardData)}

@@ -25,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const { load: loadSniperOrders } = require('./sniperOrders');
 const { ASSETS } = require('./assetConfig');
+const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
@@ -150,8 +151,13 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       client.getAccountBalance('USDT'),
       client.getAccountBalance('USDC'),
     ]);
+    // Bug ketemu 29 Agu 2026 (Olan: "jurnal versi real tampilan ngarang") -- loop ini CUMA cek
+    // symbol Sniper (assetConfig.js: BTCUSDT+PAXGUSDT), Nyopet BTC pakai symbol BEDA (BTCUSDC,
+    // nyopetAssetConfig.js) -- posisi Nyopet BTC real gak PERNAH kecek/muncul di "Posisi Kebuka".
+    // PAXGUSDT overlap (dipakai Sniper DAN Nyopet XAU) -- Set biar gak double-fetch.
+    const allSymbols = [...new Set([...Object.values(ASSETS).map((a) => a.symbol), ...Object.values(NYOPET_ASSETS).map((a) => a.symbol)])];
     const positionsRaw = await Promise.all(
-      Object.values(ASSETS).map((a) => client.getPositionRisk(a.symbol).catch(() => null))
+      allSymbols.map((symbol) => client.getPositionRisk(symbol).catch(() => null))
     );
     const positions = positionsRaw
       .filter((p) => p && Math.abs(parseFloat(p.positionAmt)) > 0)

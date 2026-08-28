@@ -23,14 +23,50 @@ function Log($msg) {
   Add-Content -Path $logFile -Value $line -Encoding utf8
 }
 
+# 28 Agu 2026 -- insiden nyata: git push nyangkut TANPA batas waktu (bukan error, diem aja), dan
+# kill proses INDUK (powershell.exe) TERNYATA GAK ikut matiin proses ANAK git.exe-nya -- 2 push
+# jadi zombie bareng >23 jam, `MultipleInstances: IgnoreNew` bikin SEMUA siklus 15-menit berikutnya
+# di-skip DIAM-DIAM tanpa log error apapun. Fix: WAJIB timeout eksplisit + `taskkill /T` (matiin
+# SELURUH process tree, bukan cuma proses utama -- .NET Process.Kill() PS 5.1 gak bisa tree-kill).
+function Invoke-GitTimeout {
+  param([string[]]$GitArgs, [int]$TimeoutSec = 30)
+  # 28 Agu 2026: `Start-Process -PassThru` (cmdlet) ternyata ExitCode-nya GAK RELIABLE di PS 5.1
+  # (ketauan langsung pas tes -- HasExited=True tapi ExitCode kosong). Pindah ke .NET
+  # System.Diagnostics.Process murni (bukan cmdlet) -- lebih rendah level, ExitCode konsisten.
+  # Baca stdout/stderr ASYNC (bukan nunggu proses exit dulu baru baca) -- kalau nunggu sinkron,
+  # proses anak bisa DEADLOCK kalau OS pipe buffer-nya penuh sebelum sempat dibaca.
+  $argLine = ($GitArgs | ForEach-Object { if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ } }) -join ' '
+  $psi = New-Object System.Diagnostics.ProcessStartInfo
+  $psi.FileName = 'git'
+  $psi.Arguments = $argLine
+  $psi.WorkingDirectory = $projectDir
+  $psi.UseShellExecute = $false
+  $psi.RedirectStandardOutput = $true
+  $psi.RedirectStandardError = $true
+  $psi.CreateNoWindow = $true
+  $proc = New-Object System.Diagnostics.Process
+  $proc.StartInfo = $psi
+  [void]$proc.Start()
+  $stderrTask = $proc.StandardError.ReadToEndAsync()
+  [void]$proc.StandardOutput.ReadToEndAsync()
+  if (-not $proc.WaitForExit($TimeoutSec * 1000)) {
+    Start-Process -FilePath 'taskkill' -ArgumentList "/PID $($proc.Id) /T /F" -NoNewWindow -Wait -ErrorAction SilentlyContinue
+    throw "git $($GitArgs -join ' ') TIMEOUT setelah ${TimeoutSec}s -- proses (+anak2nya) dipaksa berhenti paksa."
+  }
+  $proc.WaitForExit()
+  if ($proc.ExitCode -ne 0) {
+    throw "git $($GitArgs -join ' ') gagal, exit code $($proc.ExitCode): $($stderrTask.Result)"
+  }
+}
+
 Set-Location $projectDir
 Log '--- Run mulai ---'
 
 try {
-  git pull origin-new master --quiet 2>&1 | Out-Null
+  Invoke-GitTimeout -GitArgs @('pull', 'origin-new', 'master', '--quiet') -TimeoutSec 30
   Log 'git pull sukses.'
 } catch {
-  Log "git pull GAGAL (kemungkinan belum ada internet) -- coba lagi run berikutnya: $($_.Exception.Message)"
+  Log "git pull GAGAL (kemungkinan belum ada internet, atau timeout) -- coba lagi run berikutnya: $($_.Exception.Message)"
   exit 1
 }
 
@@ -82,12 +118,19 @@ try {
 $changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'
-  $ghToken = (Get-Content -Path (Join-Path $projectDir '.gh-token-mrolzgaming') -Raw).Trim()
   git add sniper-orders.json kaela-bankroll.json nyopet-journal.json
   git commit -m "Auto: sync eksekusi live (run-local-executor) $(Get-Date -Format 'yyyy-MM-dd HH:mm')" --quiet
-  $authHeader = "Authorization: Basic $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("x-access-token:$ghToken")))"
-  git -c http.extraHeader="$authHeader" push origin-new master --quiet
-  Log 'Push selesai.'
+  # 28 Agu 2026, bug NYATA ketemu langsung: dulu masukin -c http.extraHeader pakai token DARI FILE
+  # (.gh-token-mrolzgaming) yang BEDA dari token yang udah ketanam di URL remote origin-new sendiri
+  # -- 2 kredensial numpuk bikin git bingung & nyoba prompt password interaktif, NYANGKUT SELAMANYA
+  # (>23 jam sekali kejadian, gak ada di sesi manapun yang keliatan) krn "terminal prompts disabled".
+  # Fix: remote origin-new UDAH BAWA token sendiri (`git remote set-url`, permanen) -- push POLOS aja.
+  try {
+    Invoke-GitTimeout -GitArgs @('push', 'origin-new', 'master', '--quiet') -TimeoutSec 30
+    Log 'Push selesai.'
+  } catch {
+    Log "Push GAGAL/timeout (state ke-commit lokal tetap, dicoba lagi push polos siklus berikutnya): $($_.Exception.Message)"
+  }
 } else {
   Log 'Gak ada perubahan state, gak perlu push.'
 }

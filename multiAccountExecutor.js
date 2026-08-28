@@ -31,6 +31,7 @@ const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
 const { createSniperAccountTrader } = require('./sniperMultiAccount');
 const { createSpotDcaAltAccountTrader } = require('./spotDcaAltAccount');
+const { createSpotDcaAccountTrader } = require('./spotDcaAccount');
 const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { checkEmptyWallet } = require('./emptyWalletWatchdog');
@@ -203,6 +204,25 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       await compoundAltTrader.runCycle(new Date());
     } catch (e) {
       console.log(`[MultiAccountExecutor] Compound Alt DCA ERROR (${account.phone}/${account.mode}):`, e.message);
+    }
+  }
+
+  // Musiman/Spot BTC DCA (29 Agu 2026, "copy sistem demo semua ke real, siapin") -- TOGGLE
+  // TERPISAH (account.musimanEnabled), pola SAMA PERSIS kayak Compound Alt di atas (termasuk
+  // gerbang demo-belum-didukung yang sama -- Spot Testnet butuh API key terpisah per-member,
+  // belum ada onboarding UI-nya).
+  if (account.musimanEnabled && account.mode !== 'real') {
+    console.log(`[MultiAccountExecutor] Musiman DCA SKIP (${account.phone}/${account.mode}): mode demo belum didukung (butuh API key Spot Testnet terpisah, belum ada onboarding-nya).`);
+  } else if (account.musimanEnabled) {
+    try {
+      const spotEarnClient = createBinanceSpotEarnClient({ apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: false });
+      const musimanTrader = createSpotDcaAccountTrader({
+        client: spotEarnClient, statePath: path.join(STATE_DIR, `${key}-musiman.json`),
+        sendWA, onEvent: journalHook,
+      });
+      await musimanTrader.runCycle(new Date());
+    } catch (e) {
+      console.log(`[MultiAccountExecutor] Musiman DCA ERROR (${account.phone}/${account.mode}):`, e.message);
     }
   }
 }

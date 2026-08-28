@@ -98,7 +98,7 @@ function buildSendWA(account, adminRelay) {
   };
 }
 
-async function processAccount(account, sharedSniperOrders, adminRelay) {
+async function processAccount(account, sharedSniperOrders, adminRelay, closeRequests) {
   console.log(`\n[MultiAccountExecutor] === ${account.name} (${account.phone}) -- ${account.mode.toUpperCase()} ===`);
   const client = createBinanceClient({ apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' });
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' };
@@ -112,6 +112,13 @@ async function processAccount(account, sharedSniperOrders, adminRelay) {
       client, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
       sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
     });
+    // 28 Agu 2026 -- eksekusi antrian tutup posisi manual DULUAN, sebelum siklus normal (biar
+    // kalau ada sinyal baru abis ditutup, "nonstop posisi" tetep jalan alami di main() bawahnya).
+    const myCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode);
+    for (const req of myCloseRequests) {
+      const result = await nyopetTrader.forceClosePosition(req.asset, req.requestedBy);
+      console.log(`[MultiAccountExecutor] Tutup manual ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
+    }
     await nyopetTrader.main();
   } catch (e) {
     console.log(`[MultiAccountExecutor] Nyopet ERROR (${account.phone}/${account.mode}):`, e.message);
@@ -261,9 +268,11 @@ async function main() {
 
   const adminNotify = await kaela.getAdminNotifySettings();
   const adminRelay = { masterNomor, notifyReal: adminNotify.notifyReal, notifyDemo: adminNotify.notifyDemo };
+  const closeRequests = await kaela.getPendingCloseRequests();
+  if (closeRequests.length) console.log(`[MultiAccountExecutor] ${closeRequests.length} permintaan tutup posisi manual di antrian.`);
 
   for (const account of active) {
-    await processAccount(account, sharedSniperOrders, adminRelay);
+    await processAccount(account, sharedSniperOrders, adminRelay, closeRequests);
   }
   console.log('\n[MultiAccountExecutor] Selesai.');
 }

@@ -77,7 +77,7 @@ ${fmtWita(now)}`;
 // Nyopet Binance Demo: Kaela BENERAN buka/tutup posisi sendiri (nyopetAutoTrader.js), pesan ini
 // ngasih tau APA YANG BARU DILAKUKAN + KENAPA (bukan cuma info titik kayak dulu). Wajib jelasin
 // alasan tiap sinyal (lihat memory feedback-selalu-ada-alasan) + link kalkulator di tiap pesan.
-function formatAutoOpen(pos, now) {
+function formatAutoOpen(pos, now, dxyLine) {
   const { formatWinRateLine } = require('./winRate');
   const { formatSignalCore } = require('./signalCore');
   const fs = require('fs');
@@ -98,7 +98,7 @@ function formatAutoOpen(pos, now) {
 
 ${coreLines.join('\n')}
 ${winRateLine}
-
+${dxyLine ? '\n' + dxyLine + '\n' : ''}
 🧪 Ini BINANCE DEMO (duit virtual, riset/latihan) -- bukan uang beneran. Ping-pong otomatis TANPA HENTI antar 2 zona, gak pakai target R:R tetap -- murni ngikutin zona likuiditas.
 
 🧮 Hitung volume/margin sendiri (WAJIB kalau modal beda dari saldo Demo Kaela): ${KALKULATOR_LINK}

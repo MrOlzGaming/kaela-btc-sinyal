@@ -59,6 +59,19 @@ async function getAdminNotifySettings() {
   }
 }
 
+// 28 Agu 2026 -- antrian tutup posisi manual (member sendiri ATAU owner bantu member lain, lihat
+// Sheet.gs requestClosePosition). Fail-safe: kalau gagal, anggap KOSONG (bukan fatal, coba lagi
+// siklus berikutnya -- permintaan gak ilang krn GAS baru NGOSONGIN abis berhasil dibaca).
+async function getPendingCloseRequests() {
+  try {
+    const data = await callGas('getPendingCloseRequests');
+    return data.requests || [];
+  } catch (e) {
+    console.log('[KaelaProTraderClient] getPendingCloseRequests gagal (dilewatin):', e.message);
+    return [];
+  }
+}
+
 async function notifyMember(phone, message) {
   try {
     return await callGas('notifyMember', { phone, message });
@@ -86,4 +99,4 @@ async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positio
   return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []) });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests };

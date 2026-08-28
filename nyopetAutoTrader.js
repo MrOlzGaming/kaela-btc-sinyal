@@ -48,6 +48,7 @@ const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert } = require('./balanceAlert');
+const { formatDxyLine } = require('./dxyContext');
 
 const NYAWA_PCT = 2; // flat (23 Agu 2026, direvisi dari 1% -> 2%), dipakai buat nentuin LEVERAGE (bukan buat SL order -- itu gak ada lagi, likuidasi yang jadi SL)
 const DEFAULT_JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
@@ -159,14 +160,15 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     journal.watchZoneByAsset[assetKey] = { price: zoneCtx.price, side: zoneCtx.side, zoneKind: zoneCtx.kind, touches: zoneCtx.touches };
     saveJournal(journal);
 
-    const msg = formatAutoOpen({ ...order, sl: order.liqPrice, assetLabel: assetCfg.label }, new Date());
+    const dxyLine = await formatDxyLine().catch(() => '');
+    const msg = formatAutoOpen({ ...order, sl: order.liqPrice, assetLabel: assetCfg.label }, new Date(), dxyLine);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, direction, entryPrice, sl: order.liqPrice, tp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: mode === 'follow' ? 'Follow (zona ditembus)' : 'Fade (zona mantul)' });
     return order;
   }
 
-  async function closePosition(assetCfg, order, { alreadyClosed, realPnlUsd, won }) {
+  async function closePosition(assetCfg, order, { alreadyClosed, realPnlUsd, won, manualNote }) {
     const { symbol } = assetCfg;
     let pnlUsd, exitPrice, pnlPct, reconciliationNote;
     if (alreadyClosed) {
@@ -199,7 +201,8 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     saveJournal(journal);
 
     const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date())
-      + (alreadyClosed ? '\n\n(⏳ Kelikuidasi PAS lagi offline -- baru kesinkronin sekarang begitu online lagi.)' : '');
+      + (alreadyClosed ? '\n\n(⏳ Kelikuidasi PAS lagi offline -- baru kesinkronin sekarang begitu online lagi.)' : '')
+      + (manualNote ? `\n\n(${manualNote})` : '');
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'close', status: won ? 'closed' : 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt });
@@ -289,7 +292,25 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     }
   }
 
-  return { processAsset, main, loadJournal, getFloatingOrder };
+  // 28 Agu 2026, permintaan Olan: "user pengen fasilitas tutup posisi dari Kaela Access, aku
+  // sebagai master juga diizinkan bantu buka/tutup posisi member" -- dipanggil dari
+  // multiAccountExecutor.js kalau ada antrian di Sheet CloseRequests (lihat Sheet.gs) yang cocok
+  // sama akun ini. `requestedBy` cuma buat catatan di pesan WA (siapa yang minta tutup).
+  async function forceClosePosition(assetKey, requestedBy) {
+    const assetCfg = Object.values(NYOPET_ASSETS).find((a) => a.key === assetKey);
+    if (!assetCfg) return { ok: false, error: `Asset "${assetKey}" gak dikenal.` };
+    const journal = loadJournal();
+    const order = getFloatingOrder(journal, assetKey);
+    if (!order) return { ok: false, error: `Gak ada posisi floating buat ${assetCfg.label}.` };
+
+    const livePrice = await fetchLivePrice(assetCfg.symbol);
+    const won = order.direction === 'buy' ? livePrice >= order.entryPrice : livePrice <= order.entryPrice;
+    const manualNote = requestedBy ? `🙋 Ditutup MANUAL atas permintaan ${requestedBy}` : '🙋 Ditutup MANUAL';
+    await closePosition(assetCfg, order, { alreadyClosed: false, won, manualNote });
+    return { ok: true };
+  }
+
+  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition };
 }
 
 // ============ Wrapper backward-compatible (akun Olan sendiri) -- ZERO perubahan perilaku, path

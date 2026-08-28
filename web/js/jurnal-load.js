@@ -6,10 +6,13 @@
   // jsDelivr, bukan raw.githubusercontent.com langsung -- lihat catatan di dashboard-load.js
   // (17 Agu 2026, ketemu HTTP 429 rate-limit pas Olan mantau posisi Nyopet real-time).
   const RAW_BASE = 'https://cdn.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/';
+  // GitHub langsung buat file POSISI -- lihat catatan lengkap di dashboard-load.js (29 Agu 2026).
+  const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/MrOlzGaming/kaela-btc-sinyal/master/';
 
-  async function fetchJson(file, fallback) {
+  async function fetchJson(file, fallback, opts) {
+    const base = (opts && opts.freshOnly) ? GITHUB_RAW_BASE : RAW_BASE;
     try {
-      const res = await fetch(RAW_BASE + file + '?t=' + Date.now());
+      const res = await fetch(base + file + '?t=' + Date.now());
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return await res.json();
     } catch (e) {
@@ -31,11 +34,11 @@
   async function main() {
     const now = new Date();
     const [ordersState, bankrollState, spotState, altState, nyopetState, liveConfig] = await Promise.all([
-      fetchJson('sniper-orders.json', { balance: 0, orders: [] }),
-      fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }),
+      fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
+      fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }, { freshOnly: true }),
       fetchJson('kaela-spot.json', { btcHeld: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, completedCycles: [], buyLog: [] }),
       fetchJson('kaela-spot-alt.json', defaultAltState()),
-      fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }),
+      fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }, { freshOnly: true }),
       fetchJson('live-trading-config.json', { enabled: false, testnet: true }),
     ]);
 

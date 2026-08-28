@@ -10,10 +10,18 @@
   // luas buat kasus PERSIS ini. Cache-nya di-purge otomatis oleh workflow abis push data berubah
   // (lihat .github/workflows/*.yml step "Purge jsDelivr"), jadi tetap fresh.
   const RAW_BASE = 'https://cdn.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/';
+  // GitHub langsung, BUKAN jsDelivr (29 Agu 2026) -- khusus file POSISI yang berubah tiap siklus
+  // (sniper-orders.json, nyopet-journal.json). Ketemu jsDelivr purge gak mempan berkali-kali sesi
+  // ini (throttled terus walau udah nunggu lama), CDN nyangkut nunjukkin data JAM-AN lama padahal
+  // GitHub-nya udah fresh -- bikin Olan liat posisi Nyopet yang UDAH DITUTUP/di-reset kayak masih
+  // kebuka. raw.githubusercontent.com TANPA cache CDN sama sekali (langsung dari GitHub), resiko
+  // rate-limit (429) cuma kalau banyak visitor bareng dalam waktu singkat -- worth it drpd data basi.
+  const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/MrOlzGaming/kaela-btc-sinyal/master/';
 
-  async function fetchJson(file, fallback) {
+  async function fetchJson(file, fallback, opts) {
+    const base = (opts && opts.freshOnly) ? GITHUB_RAW_BASE : RAW_BASE;
     try {
-      const res = await fetch(RAW_BASE + file + '?t=' + Date.now()); // cache-bust ringan
+      const res = await fetch(base + file + '?t=' + Date.now()); // cache-bust ringan
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return await res.json();
     } catch (e) {
@@ -26,9 +34,9 @@
     const now = new Date();
     const [state, ordersState, archive, nyopetState] = await Promise.all([
       fetchJson('state.json', { status: 'TUNAI', position: null }),
-      fetchJson('sniper-orders.json', { balance: 0, orders: [] }),
+      fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
       fetchJson('archive.json', []),
-      fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }),
+      fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }, { freshOnly: true }),
     ]);
 
     const musimanEl = document.getElementById('musiman-container');

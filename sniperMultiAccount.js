@@ -190,7 +190,36 @@ function createSniperAccountTrader({ client, statePath, sendWA, getModalBase, ap
     return { state: loadState(), closedEntries };
   }
 
-  return { runCycle, loadState };
+  // Tutup MANUAL (29 Agu 2026, permintaan Olan: "member telfon minta ditutupin, aku kayak pialang
+  // saham" -- WAJIB ada tombol close, dulu cuma Nyopet yang punya). Beda dari Nyopet: Sniper bisa
+  // di FASE LEG1 (belum kena partial TP, posisi masih filledQty utuh, ADA limit-TP order nempel
+  // yang WAJIB dibatalin dulu) atau LEG2 (udah breakeven-trail, gak ada order nempel). Qty yang
+  // ditutup diambil dari POSISI ASLI Binance (posRisk), bukan dari catatan lokal -- lebih akurat
+  // kalau ada selisih kecil dari fee/partial-fill.
+  async function forceClosePosition(assetKey, requestedBy) {
+    const assetCfg = ASSETS[assetKey] || ASSETS.btc;
+    const state = loadState();
+    const mirror = state.orders.find((o) => o.asset === assetKey && o.status === 'floating');
+    if (!mirror) return { ok: false, error: `Gak ada posisi Sniper floating buat ${assetCfg.label}.` };
+
+    const posRisk = await client.getPositionRisk(assetCfg.symbol);
+    const posQty = Math.abs(parseFloat(posRisk.positionAmt));
+    if (posQty <= 0) return { ok: false, error: `Posisi ${assetCfg.label} udah gak ada di Binance (kemungkinan kelikuidasi/kena TP duluan) -- nunggu siklus normal buat sinkronin.` };
+
+    await client.cancelAllOpenOrders(assetCfg.symbol); // batalin limit-TP nempel (fase leg1) -- aman no-op kalau gak ada
+    const closeOrder = await client.emergencyCloseMarket({ symbol: assetCfg.symbol, direction: mirror.direction, quantity: posQty });
+    const exitPrice = parseFloat(closeOrder.avgPrice);
+    const refEntry = mirror.leg2 ? mirror.leg2.entryPrice : mirror.entryPriceReal;
+    const refQty = mirror.leg2 ? mirror.leg2.qty : mirror.filledQty;
+    const pnlUsd = mirror.direction === 'buy' ? (exitPrice - refEntry) * refQty : (refEntry - exitPrice) * refQty;
+
+    const closed = finalize(mirror, pnlUsd);
+    const manualNote = requestedBy ? `🙋 Ditutup MANUAL atas permintaan ${requestedBy}` : '🙋 Ditutup MANUAL';
+    await notify(`🎯 [Sniper] ${assetCfg.label}: ditutup manual @ ${exitPrice} -- PNL ${pnlUsd >= 0 ? '+' : ''}$${pnlUsd.toFixed(2)}.\n\n(${manualNote})`);
+    return { ok: true, closed };
+  }
+
+  return { runCycle, loadState, forceClosePosition };
 }
 
 module.exports = { createSniperAccountTrader };

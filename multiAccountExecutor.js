@@ -122,10 +122,12 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     });
     // 28 Agu 2026 -- eksekusi antrian tutup posisi manual DULUAN, sebelum siklus normal (biar
     // kalau ada sinyal baru abis ditutup, "nonstop posisi" tetep jalan alami di main() bawahnya).
-    const myCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode);
-    for (const req of myCloseRequests) {
+    // 29 Agu 2026: difilter `strategy === 'nyopet'` (dulu semua request diasumsikan Nyopet -- field
+    // Strategy baru ditambahin biar Sniper juga bisa ditutup manual, lihat blok Sniper di bawah).
+    const myNyopetCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode && r.strategy === 'nyopet');
+    for (const req of myNyopetCloseRequests) {
       const result = await nyopetTrader.forceClosePosition(req.asset, req.requestedBy);
-      console.log(`[MultiAccountExecutor] Tutup manual ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
+      console.log(`[MultiAccountExecutor] Tutup manual Nyopet ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
     }
     await nyopetTrader.main();
   } catch (e) {
@@ -137,6 +139,13 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       client, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
       sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
     });
+    // 29 Agu 2026 -- sama pola kayak antrian tutup manual Nyopet di atas, DULUAN sebelum runCycle
+    // normal (permintaan Olan: "tombol close manual baik sniper dan nyopet").
+    const mySniperCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode && r.strategy === 'sniper');
+    for (const req of mySniperCloseRequests) {
+      const result = await sniperTrader.forceClosePosition(req.asset, req.requestedBy);
+      console.log(`[MultiAccountExecutor] Tutup manual Sniper ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
+    }
     await sniperTrader.runCycle(sharedSniperOrders);
   } catch (e) {
     console.log(`[MultiAccountExecutor] Sniper ERROR (${account.phone}/${account.mode}):`, e.message);

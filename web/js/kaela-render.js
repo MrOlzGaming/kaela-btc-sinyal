@@ -755,10 +755,15 @@
     // padahal Nyopet udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
     const assetInfo = NYOPET_ASSETS_WEB[o.asset] || NYOPET_ASSETS_WEB.btc;
     if (o.status === 'floating') {
+      // Badge (Demo)/(Real) (29 Agu 2026, bug ketemu: dulu hardcode "(Demo)" -- gak masalah
+      // selama Nyopet publik SELALU Demo, tapi kartu ini SEKARANG dipakai bareng Kaela Access
+      // buat posisi Real member juga (renderNyopetOrderCard dipanggil langsung dari sana, "kenapa
+      // ga copy 100%"), jadi WAJIB dinamis. Default Demo kalau liveExecution gak diisi (publik).
+      const floatingModeLabel = o.liveExecution && o.liveExecution.testnet === false ? 'Real' : 'Demo';
       return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}" data-opened-at="${o.triggeredAt || ''}">
           <div class="order-header">
             <span class="order-dir">${dirLabel}</span>
-            <span class="order-status-badge floating">🔵 FLOATING (Demo)</span>
+            <span class="order-status-badge floating">🔵 FLOATING (${floatingModeLabel})</span>
           </div>
           <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
           ${o.triggeredAt ? `<div class="order-opened-since">🕐 Dibuka ${fmtOpenedDate(o.triggeredAt)} · <span data-duration-target>menghitung...</span></div>` : ''}

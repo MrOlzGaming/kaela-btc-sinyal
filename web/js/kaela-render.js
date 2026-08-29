@@ -520,14 +520,23 @@
         </div>`
       : '';
 
-    return `<div class="jurnal-panel">
-      ${fundHtml}
-      ${floatingHtml}
-      ${renderJournalStatsGrid(stats)}
+    // Statistik ringkasan (Win Rate/Profit Factor/dll) baru ditampilin kalau minimal 2 trade
+    // (29 Agu 2026, konsisten sama syarat Equity Curve yang emang udah nolak render di bawah 2
+    // titik) -- n=1 bikin angka kayak "Win Rate 100%"/"Profit Factor 0.00" MENYESATKAN (keliatan
+    // definitif padahal cuma 1 sampel). Riwayat Trade tetap SELALU ditampilin (trade tunggal itu
+    // tetap valid buat dilihat), cuma bungkus statistik+equity+kalender yang ditahan dulu.
+    const summaryHtml = trades.length < 2
+      ? `<div class="empty">📓 Baru ${trades.length} trade selesai -- statistik ringkasan (win rate, profit factor, equity curve, dll) baru ditampilin begitu minimal 2 trade, biar gak menyesatkan dari sampel kekecilan.</div>`
+      : `${renderJournalStatsGrid(stats)}
       <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
       ${renderEquityCurveSvg(trades)}
       <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
-      ${renderPnlCalendar(trades, now)}
+      ${renderPnlCalendar(trades, now)}`;
+
+    return `<div class="jurnal-panel">
+      ${fundHtml}
+      ${floatingHtml}
+      ${summaryHtml}
       <div class="journal-section-title">📋 Riwayat Trade (${closedAll.length})</div>
       ${filterHtml}
       <div class="order-grid" id="jurnal-trade-grid">${closedAll.map(renderOrderCard).join('')}</div>
@@ -835,15 +844,21 @@
         </table>`
       : `<div class="empty">Belum ada trade yang selesai.</div>`;
 
+    // Sama kayak fix renderJurnalPanel Sniper (29 Agu 2026) -- statistik ringkasan ditahan dulu
+    // di bawah 2 trade, biar Win Rate/Profit Factor gak keliatan definitif dari 1 sampel doang.
+    const nyopetSummaryHtml = closed.length < 2
+      ? `<div class="empty">📓 Baru ${closed.length} trade selesai -- statistik ringkasan (win rate, profit factor, equity curve, dll) baru ditampilin begitu minimal 2 trade, biar gak menyesatkan dari sampel kekecilan.</div>`
+      : `${renderJournalStatsGrid(stats)}
+      <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
+      ${renderEquityCurveSvg(closed)}
+      <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
+      ${renderPnlCalendar(closed, now)}`;
+
     return `<div class="nyopet-panel">
       <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (BTC di USDC, PAXG numpang USDT). Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi. Profit maupun loss ditampilin apa adanya.</p>
       <div class="journal-stats-grid">${saldoCell}</div>
       ${floatingHtml}
-      ${renderJournalStatsGrid(stats)}
-      <div class="journal-section-title">📈 Equity Curve (per-trade P&amp;L)</div>
-      ${renderEquityCurveSvg(closed)}
-      <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
-      ${renderPnlCalendar(closed, now)}
+      ${nyopetSummaryHtml}
       <div class="journal-section-title">📋 Riwayat Trade (${closed.length})</div>
       ${historyHtml}
     </div>`;

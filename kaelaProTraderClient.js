@@ -105,4 +105,19 @@ async function setTradingToggleForExecutor(phone, mode, enabled) {
   return callGas('setTradingToggleForExecutor', { phone, mode, enabled: enabled ? 'true' : 'false' });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor };
+// 30 Agu 2026 -- "japri aku kalo ada error diam-diam, biar bisa segera diperbaiki" (Olan, abis
+// insiden lock Vultr macet 14 jam). Dipanggil run-local-executor.ps1/run-vultr-executor.sh di
+// UJUNG tiap siklus, kirim baris2 log yang match ERROR/GAGAL cycle INI SAJA -- dedup+cooldown per
+// baris ada di sisi GAS (Watchdog.gs reportCycleErrors), biar error yang sama gak nge-spam WA
+// tiap 15 menit selama belum kefix. Fail-safe DI SINI JUGA (bukan cuma caller) -- reporting error
+// gagal BUKAN alasan buat gagalin cycle utama.
+async function reportCycleErrors(machineId, errorsText) {
+  try {
+    return await callGas('reportCycleErrors', { machineId, errors: errorsText });
+  } catch (e) {
+    console.log('[KaelaProTraderClient] reportCycleErrors gagal (dilewatin, gak fatal):', e.message);
+    return { ok: false };
+  }
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, reportCycleErrors };

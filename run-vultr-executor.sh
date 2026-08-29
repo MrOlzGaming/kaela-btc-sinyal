@@ -53,13 +53,21 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"; }
 
 log '--- Run mulai ---'
 
+# Titik acu buat nangkep "baris log siklus INI SAJA" nanti (30 Agu 2026, "japri aku kalo ada
+# error diam-diam") -- dedup+cooldown per baris beneran ada di GAS, lihat reportCycleErrors.js.
+CYCLE_LOG_START=$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)
+
+# Baris pendek buat dilaporin kalau exit dini di bawah -- CYCLE_ERRORS full (tail+grep) gak
+# kepake di jalur ini karena scriptnya keburu exit sebelum nyampe blok laporan di akhir file.
+report_and_exit() { node reportCycleErrors.js 'vultr-sg' "$1" >> "$LOG_FILE" 2>&1 || true; exit "$2"; }
+
 if ! timeout -k 10 30 git fetch origin-new master --quiet >> "$LOG_FILE" 2>&1; then
   log 'git fetch GAGAL/timeout -- coba lagi run berikutnya.'
-  exit 1
+  report_and_exit 'git fetch GAGAL/timeout di vultr-sg' 1
 fi
 if ! git reset --hard origin-new/master --quiet >> "$LOG_FILE" 2>&1; then
   log 'git reset --hard GAGAL -- coba lagi run berikutnya.'
-  exit 1
+  report_and_exit 'git reset --hard GAGAL di vultr-sg' 1
 fi
 log 'git sync sukses (fetch+reset --hard).'
 
@@ -108,6 +116,15 @@ if [ -n "$CHANGED" ]; then
   fi
 else
   log 'Gak ada perubahan state, gak perlu push.'
+fi
+
+# Ambil baris ERROR/GAGAL siklus INI SAJA (bukan seluruh history log) -- lapor ke GAS, yang
+# putusin mana yang BARU (langsung WA Olan) vs yang UDAH pernah dilaporin baru2 ini (didiemin,
+# cooldown 60 menit -- lihat Watchdog.gs). Gagal lapor BUKAN alasan gagalin siklus (reportCycleErrors.js
+# udah try/catch sendiri + exit 0 selalu, tapi tetep dibungkus true di sini buat jaga-jaga).
+CYCLE_ERRORS=$(tail -n +"$((CYCLE_LOG_START + 1))" "$LOG_FILE" | grep -iE 'error|gagal' | sort -u | head -20 || true)
+if [ -n "$CYCLE_ERRORS" ]; then
+  node reportCycleErrors.js 'vultr-sg' "$CYCLE_ERRORS" >> "$LOG_FILE" 2>&1 || true
 fi
 
 log '--- Run selesai ---'

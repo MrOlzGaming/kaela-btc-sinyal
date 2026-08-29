@@ -62,11 +62,21 @@ function Invoke-GitTimeout {
 Set-Location $projectDir
 Log '--- Run mulai ---'
 
+# Titik acu buat nangkep "baris log siklus INI SAJA" nanti (30 Agu 2026, Olan: "japri aku kalo
+# ada error diam-diam.. biar aku bisa segera perbaiki dengan Kaela di Claude"). Dedup+cooldown
+# per baris beneran ada di GAS (Watchdog.gs reportCycleErrors), ini cuma transport.
+function Report-CycleErrors($ErrorsText) {
+  if ([string]::IsNullOrWhiteSpace($ErrorsText)) { return }
+  try { node reportCycleErrors.js 'komputer-utama' $ErrorsText 2>&1 | Out-String | ForEach-Object { Add-Content -Path $logFile -Value $_ -Encoding utf8 } } catch {}
+}
+$cycleLogStartLine = (Get-Content $logFile -ErrorAction SilentlyContinue | Measure-Object -Line).Lines
+
 try {
   Invoke-GitTimeout -GitArgs @('pull', 'origin-new', 'master', '--quiet') -TimeoutSec 30
   Log 'git pull sukses.'
 } catch {
   Log "git pull GAGAL (kemungkinan belum ada internet, atau timeout) -- coba lagi run berikutnya: $($_.Exception.Message)"
+  Report-CycleErrors 'git pull GAGAL/timeout di komputer-utama'
   exit 1
 }
 
@@ -157,5 +167,11 @@ if ($changed) {
 } else {
   Log 'Gak ada perubahan state, gak perlu push.'
 }
+
+# Ambil baris ERROR/GAGAL siklus INI SAJA (bukan seluruh history log) -- GAS yang mutusin mana
+# yang BARU (langsung WA Olan) vs udah pernah dilaporin baru2 ini (didiemin, cooldown 60 menit).
+$cycleLines = Get-Content $logFile -ErrorAction SilentlyContinue | Select-Object -Skip $cycleLogStartLine
+$cycleErrors = ($cycleLines | Where-Object { $_ -match 'error|gagal' } | Select-Object -Unique | Select-Object -First 20) -join "`n"
+Report-CycleErrors $cycleErrors
 
 Log '--- Run selesai ---'

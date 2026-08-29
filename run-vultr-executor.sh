@@ -12,13 +12,40 @@
 # nge-commit state file di detik yang beda tapi masih dalam window yang sama, itu bikin history
 # beneran cabang). Box ini SEHARUSNYA murni FOLLOWER origin (gak ada history lokal yang perlu
 # dijaga) -- fetch+reset --hard AMAN dan BENAR di sini, beda dari repo development biasa.
+#
+# FIX KRITIS #2 30 Agu 2026 (Olan: "keseringan tidur diam-diam, eror diam-diam" -- box ini macet
+# TOTAL ~14 jam, puluhan siklus cron nembak tapi NOL baris log ketulis, ketauan gak sengaja pas
+# dicek manual). Root cause: `timeout 30 git fetch/push` cuma ngirim sinyal ke proses `git`
+# LANGSUNG -- tapi git-over-HTTPS motorin transportnya lewat proses ANAK `git-remote-https` yang
+# kadang macet total di level TCP/network TANPA timeout internal sendiri. Proses anak itu WARIS fd
+# lock (200) dari shell ini, jadi kalau dia gak ikut mati pas induknya di-timeout, lock TETAP
+# kepegang SELAMANYA -- semua siklus cron berikutnya kena `flock -n 200 || exit 0` DIAM-DIAM,
+# gak sempat nulis 1 baris log pun (log() baru dipanggil SETELAH baris flock). Fix 2 lapis:
+# (1) git http.lowSpeedLimit/Time -- bikin git SENDIRI yang nyerah kalau koneksi macet >20 detik,
+#     jadi gak pernah nyampe hang selamanya di awal (ini fix UTAMA, bukan cuma nambah timeout luar).
+# (2) HEARTBEAT_FILE ditulis SEBELUM nyoba flock -- jadi walau lock lagi kepegang/macet, tetep ada
+#     bukti "cron beneran nembak jam segini" -- gak ada lagi 14 jam kosong tanpa jejak sama sekali.
 set -uo pipefail
 PROJECT_DIR="/root/kaela-engine"
 LOG_FILE="$PROJECT_DIR/local-executor.log"
 LOCK_FILE="/tmp/kaela-executor.lock"
+HEARTBEAT_FILE="$PROJECT_DIR/cron-heartbeat.log"
+
+# Selalu ketulis, TIDAK PEDULI lock/apapun di bawah berhasil atau nggak -- ini "bukti hidup" cron
+# yang paling dasar. Dipangkas biar gak numpuk selamanya (simpan 500 baris terakhir doang).
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] cron nembak" >> "$HEARTBEAT_FILE"
+tail -n 500 "$HEARTBEAT_FILE" > "$HEARTBEAT_FILE.tmp" 2>/dev/null && mv "$HEARTBEAT_FILE.tmp" "$HEARTBEAT_FILE"
+
+# Idempoten, murah dijalanin tiap siklus -- jamin git PUNYA sendiri nyerah duluan sebelum sempat
+# hang selamanya, gak nunggu ketolong `timeout` luar (yang kebukti gak cukup, lihat catatan di atas).
+git config --global http.lowSpeedLimit 1000
+git config --global http.lowSpeedTime 20
 
 exec 200>"$LOCK_FILE"
-flock -n 200 || exit 0
+if ! flock -n 200; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Lock lagi kepegang (mungkin run sebelumnya masih jalan/macet) -- skip siklus ini." >> "$LOG_FILE"
+  exit 0
+fi
 
 cd "$PROJECT_DIR" || exit 1
 
@@ -26,7 +53,7 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"; }
 
 log '--- Run mulai ---'
 
-if ! timeout 30 git fetch origin-new master --quiet >> "$LOG_FILE" 2>&1; then
+if ! timeout -k 10 30 git fetch origin-new master --quiet >> "$LOG_FILE" 2>&1; then
   log 'git fetch GAGAL/timeout -- coba lagi run berikutnya.'
   exit 1
 fi
@@ -70,7 +97,7 @@ if [ -n "$CHANGED" ]; then
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1
-  if timeout 30 git push origin-new master --quiet >> "$LOG_FILE" 2>&1; then
+  if timeout -k 10 30 git push origin-new master --quiet >> "$LOG_FILE" 2>&1; then
     log 'Push selesai.'
     for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json; do
       curl -s -o /dev/null "https://purge.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/$f" || true

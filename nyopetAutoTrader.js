@@ -237,8 +237,12 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const floating = getFloatingOrder(journal, assetKey);
 
     if (floating) {
+      // ⚠️ BUG ketemu 30 Agu 2026 (dari laporan watchdog "Cannot read properties of null") --
+      // beda perilaku Binance vs MEXC: Binance getPositionRisk BIASANYA tetap balikin object
+      // (positionAmt="0") walau posisi flat, tapi MEXC open_positions cuma balikin posisi yang
+      // BENERAN aktif -- gak ada = null. Kode lama asumsi selalu ada object, crash pas null.
       const posRisk = await exec.getPositionRisk(symbol);
-      const stillOpen = Math.abs(parseFloat(posRisk.positionAmt)) > 0;
+      const stillOpen = posRisk ? Math.abs(parseFloat(posRisk.positionAmt)) > 0 : false;
 
       if (!stillOpen) {
         console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi UDAH GAK ADA (kelikuidasi/offline) -- rekonsiliasi income history.`);

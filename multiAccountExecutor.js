@@ -389,7 +389,7 @@ async function main() {
   console.log(`[MultiAccountExecutor] ${active.length} akun aktif, ${sharedSniperOrders.length} sinyal Sniper live buat di-mirror.`);
 
   const adminNotify = await kaela.getAdminNotifySettings();
-  const adminRelay = { masterNomor, notifyReal: adminNotify.notifyReal, notifyDemo: adminNotify.notifyDemo };
+  const adminRelay = { masterNomor: MASTER_NOMOR, notifyReal: adminNotify.notifyReal, notifyDemo: adminNotify.notifyDemo };
   const closeRequests = await kaela.getPendingCloseRequests();
   if (closeRequests.length) console.log(`[MultiAccountExecutor] ${closeRequests.length} permintaan tutup posisi manual di antrian.`);
 

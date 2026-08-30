@@ -21,13 +21,26 @@ const crypto = require('crypto');
 const { getActiveOrders, updateOrder } = require('./sniperOrders');
 const { ASSETS } = require('./assetConfig');
 const { hitung: hitungExposure } = require('./calculator');
-const { getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, emergencyCloseMarket, getPositionRisk, cancelAllOpenOrders } = require('./binanceExecutor');
+const binanceClient = require('./binanceExecutor');
+const mexcClient = require('./mexcExecutor');
 const { fetchCandles, sma } = require('./technicalAnalysis');
 const { applyRealizedPnl } = require('./kaelaBankroll');
 
+// ⚠️ Sama pola fix 31 Agu 2026 kayak localLiveExecutor.js (lihat komentar di sana) -- file ini
+// JUGA ketinggalan dari migrasi MEXC. Belum pernah nyata kena karena main() cuma proses order
+// liveExecution.ok=true, dan sebelum fix localLiveExecutor.js gak ada satupun order XAU yang
+// pernah SUKSES live (selalu gagal -4161) -- tapi kalau dibiarin, begitu ada XAU yang berhasil
+// entry (abis fix), monitor INI bakal mecahin lagi (Binance/symbol salah) pas coba pantau/tutup.
+function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mexcClient : binanceClient; }
+
 function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('hex'); }
 
-async function fetchRealizedPnlSince(symbol, startTime) {
+// MEXC BELUM ada versi endpoint income-history (sama keterbatasan yang UDAH didokumentasiin di
+// nyopetAutoTrader.js) -- gagal JELAS drpd diem-diem manggil endpoint Binance pakai simbol MEXC.
+async function fetchRealizedPnlSince(symbol, startTime, exchange = 'binance') {
+  if (exchange === 'mexc') {
+    throw new Error(`Rekonsiliasi income history MEXC (${symbol}) BELUM DIDUKUNG -- fetchRealizedPnlSince cuma ada versi Binance. Cek manual dulu di MEXC.`);
+  }
   const secrets = require('./secrets');
   const params = { symbol, startTime, timestamp: Date.now(), recvWindow: 5000, limit: 1000 };
   const query = new URLSearchParams(params).toString();
@@ -46,21 +59,31 @@ function finalize(order, realPnl) {
   console.log(`[SniperLiveMonitor] ${order.id} SELESAI -- PNL real (income history) $${realPnl.toFixed(2)}.`);
 }
 
+async function fetchLivePrice(symbol, exchange = 'binance') {
+  if (exchange === 'mexc') {
+    const res = await fetch(`https://contract.mexc.com/api/v1/contract/ticker?symbol=${symbol}`);
+    return parseFloat((await res.json()).data.lastPrice);
+  }
+  const res = await fetch(`https://demo-fapi.binance.com/fapi/v1/ticker/price?symbol=${symbol}`);
+  return parseFloat((await res.json()).price);
+}
+
 async function closeThenReopenBreakeven(order, assetCfg, remainingQty) {
-  await cancelAllOpenOrders(assetCfg.symbol); // buang TP order lama (qty-nya udah gak nyambung, sisa beda dari awal)
-  await emergencyCloseMarket({ symbol: assetCfg.symbol, direction: order.direction, quantity: remainingQty });
+  const exec = execFor(assetCfg);
+  const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
+  await exec.cancelAllOpenOrders(execSymbol); // buang TP order lama (qty-nya udah gak nyambung, sisa beda dari awal)
+  await exec.emergencyCloseMarket({ symbol: execSymbol, direction: order.direction, quantity: remainingQty });
 
   const le = order.liveExecution;
-  const [modalFull, priceRes] = await Promise.all([
-    getAccountBalance(),
-    fetch(`https://demo-fapi.binance.com/fapi/v1/ticker/price?symbol=${assetCfg.symbol}`),
+  const [modalFull, livePrice] = await Promise.all([
+    exec.getAccountBalance('USDT'),
+    fetchLivePrice(execSymbol, assetCfg.exchange),
   ]);
-  const livePrice = parseFloat((await priceRes.json()).price);
   // stopLoss = ENTRY AWAL (bukan zona pola lagi) -- inilah trik breakeven-via-likuidasi.
   const calc = hitungExposure({ modal: modalFull, entry: livePrice, stopLoss: le.entryPriceReal });
-  await setIsolatedMargin(assetCfg.symbol);
-  await setLeverage(assetCfg.symbol, calc.leverage);
-  const reopenOrder = await placeMarketEntry({ symbol: assetCfg.symbol, direction: order.direction, notionalUsd: remainingQty * livePrice, livePrice });
+  await exec.setIsolatedMargin(execSymbol);
+  await exec.setLeverage(execSymbol, calc.leverage);
+  const reopenOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: order.direction, notionalUsd: remainingQty * livePrice, livePrice });
   const leg2Qty = parseFloat(reopenOrder.executedQty);
   const leg2Entry = parseFloat(reopenOrder.avgPrice);
 
@@ -72,14 +95,16 @@ async function closeThenReopenBreakeven(order, assetCfg, remainingQty) {
 
 async function processOrder(order) {
   const assetCfg = ASSETS[order.asset] || ASSETS.btc;
+  const exec = execFor(assetCfg);
+  const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
   const le = order.liveExecution;
-  const posRisk = await getPositionRisk(assetCfg.symbol);
+  const posRisk = await exec.getPositionRisk(execSymbol);
   const posQty = Math.abs(parseFloat(posRisk.positionAmt));
 
   if (!le.leg2) {
     if (posQty <= 0) {
       console.log(`[SniperLiveMonitor] ${assetCfg.label} ${order.id} -- posisi abis SEBELUM sempat partial (kelikuidasi/SL=liq kena).`);
-      const realPnl = await fetchRealizedPnlSince(assetCfg.symbol, new Date(order.triggeredAt).getTime());
+      const realPnl = await fetchRealizedPnlSince(execSymbol, new Date(order.triggeredAt).getTime(), assetCfg.exchange);
       finalize(order, realPnl);
       return;
     }
@@ -97,7 +122,7 @@ async function processOrder(order) {
   // Udah ada leg2.
   if (posQty <= 0) {
     console.log(`[SniperLiveMonitor] ${assetCfg.label} ${order.id} -- leg2 ilang (kelikuidasi/tertutup selama offline).`);
-    const realPnl = await fetchRealizedPnlSince(assetCfg.symbol, new Date(order.triggeredAt).getTime());
+    const realPnl = await fetchRealizedPnlSince(execSymbol, new Date(order.triggeredAt).getTime(), assetCfg.exchange);
     finalize(order, realPnl);
     return;
   }
@@ -109,8 +134,8 @@ async function processOrder(order) {
   const trendBroken = order.direction === 'buy' ? lastClose < trailSma : lastClose > trailSma;
   if (trendBroken) {
     console.log(`[SniperLiveMonitor] ${assetCfg.label} ${order.id} -- trend patah (close ${lastClose} vs SMA10 ${trailSma.toFixed(2)}), tutup leg2.`);
-    await emergencyCloseMarket({ symbol: assetCfg.symbol, direction: order.direction, quantity: le.leg2.qty });
-    const realPnl = await fetchRealizedPnlSince(assetCfg.symbol, new Date(order.triggeredAt).getTime());
+    await exec.emergencyCloseMarket({ symbol: execSymbol, direction: order.direction, quantity: le.leg2.qty });
+    const realPnl = await fetchRealizedPnlSince(execSymbol, new Date(order.triggeredAt).getTime(), assetCfg.exchange);
     finalize(order, realPnl);
   } else {
     console.log(`[SniperLiveMonitor] ${assetCfg.label} ${order.id} -- leg2 masih floating (trail SMA10 blm patah, close ${lastClose} vs SMA10 ${trailSma.toFixed(2)}).`);

@@ -60,6 +60,7 @@
     demo: { id: 'DEMO', en: 'DEMO' },
     real: { id: 'REAL', en: 'REAL' },
     not_executed_yet: { id: 'belum dieksekusi', en: 'not executed yet' },
+    live_exec_failed: { id: 'bayangan, gagal live', en: 'shadow only, live failed' },
     opened: { id: '🕐 Dibuka', en: '🕐 Opened' },
     calculating: { id: 'menghitung...', en: 'calculating...' },
     price_now: { id: 'Harga', en: 'Price of' },
@@ -425,7 +426,16 @@
       // Demo/Real (29 Agu 2026, permintaan Olan: "tandai mana yang real mana yang demo") --
       // liveExecution.testnet cuma keisi SETELAH localLiveExecutor.js beneran eksekusi; sebelum
       // itu (masih di GitHub Actions, blm sempat dieksekusi lokal) fallback ke label netral.
-      const modeBadge = o.liveExecution
+      // ⚠️ BUG KETEMU 31 Agu 2026 (Olan: "ada posisi jalan padahal di demo ga ada") -- badge di
+      // atas SEBELUMNYA cuma baca `liveExecution.testnet`, gak pernah cek `liveExecution.ok`.
+      // Order yang GAGAL dieksekusi live (mis. -4161 "Leverage reduction not supported") TETAP
+      // status:'floating' di data (posisi BAYANGAN/shadow tetap jalan buat tracking performa),
+      // tapi badge-nya nunjukin "DEMO" polos -- keliatan kayak posisi Demo BENERAN ada di Binance
+      // padahal enggak sama sekali. Fix: cek `ok===false` DULUAN, badge merah tegas beda dari
+      // "DEMO" normal, biar gak ketuker sama posisi yang beneran live.
+      const modeBadge = (o.liveExecution && o.liveExecution.ok === false)
+        ? `<span class="order-mode-badge failed-exec" title="${(o.liveExecution.error || '').replace(/"/g, '&quot;')}">⚠️ ${rt('live_exec_failed')}</span>`
+        : o.liveExecution
         ? (o.liveExecution.testnet ? `<span class="order-mode-badge demo">${rt('demo')}</span>` : `<span class="order-mode-badge real">${rt('real')}</span>`)
         : `<span class="order-mode-badge pending-exec">${rt('not_executed_yet')}</span>`;
       return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${asset.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${o.sl || ''}" data-leverage="${o.leverage || 1}" data-margin="${o.marginUsd || 0}" data-remaining-fraction="${remFrac}" data-realized-pnl="${o.realizedPnlUsd || 0}" data-opened-at="${o.triggeredAt || ''}">

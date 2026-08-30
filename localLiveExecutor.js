@@ -14,14 +14,33 @@
 const fs = require('fs');
 const path = require('path');
 const { getActiveOrders, updateOrder, setBalance } = require('./sniperOrders');
-const { getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeTakeProfit, getSymbolInfo, roundToStepSize } = require('./binanceExecutor');
+const binanceClient = require('./binanceExecutor');
+const { roundToStepSize } = require('./binanceExecutor');
+const mexcClient = require('./mexcExecutor');
 const { hitung: hitungExposure } = require('./calculator');
 const { load: loadBankroll, save: saveBankroll } = require('./kaelaBankroll');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const { ASSETS } = require('./assetConfig');
 const { fetchWithRetry } = require('./httpRetry');
 
-async function fetchLivePrice(symbol) {
+// ⚠️ BUG KRITIS ditemukan+fix 31 Agu 2026 (Olan: "ada posisi jalan padahal di demo ga ada", XAU
+// order gagal "-4161 Leverage reduction is not supported... with open positions"): file ini
+// KETINGGALAN dari migrasi eksekusi Emas ke MEXC (30 Agu 2026, lihat memori
+// project-kaela-multi-exchange) -- masih manggil Binance LANGSUNG pakai `assetCfg.symbol`
+// (PAXGUSDT, simbol CHART bukan eksekusi) buat SEMUA aset, padahal `sniperMultiAccount.js`
+// (versi multi-akun) UDAH BENER pakai `execFor(assetCfg)`+`execSymbol` sejak migrasi itu. Akibatnya
+// SETIAP sinyal XAU Olan sendiri nyoba nempel ke posisi Binance PAXGUSDT yang UDAH ADA dari
+// percobaan2 sebelumnya (leverage beda), Binance nolak ganti leverage sementara ada posisi terbuka
+// -> gagal terus-menerus, order shadow tetap 'floating' (buat tracking performa) tapi TIDAK PERNAH
+// beneran ada di Binance/MEXC -- kartu web nunjukin "DEMO" padahal itu 100% bayangan doang.
+// Fix: port PERSIS pola execFor/execSymbol dari sniperMultiAccount.js ke sini.
+function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mexcClient : binanceClient; }
+
+async function fetchLivePrice(symbol, exchange = 'binance') {
+  if (exchange === 'mexc') {
+    const res = await fetchWithRetry(`https://contract.mexc.com/api/v1/contract/ticker?symbol=${symbol}`);
+    return parseFloat((await res.json()).data.lastPrice);
+  }
   const res = await fetchWithRetry(`https://data-api.binance.vision/api/v3/ticker/price?symbol=${symbol}`);
   return parseFloat((await res.json()).price);
 }
@@ -33,11 +52,13 @@ async function fetchLivePrice(symbol) {
 // posisinya sepenuhnya dari kondisi real saat eksekusi.
 async function executeOne(order) {
   const assetCfg = ASSETS[order.asset] || ASSETS.btc;
-  console.log(`\n[LocalLiveExecutor] Eksekusi ${assetCfg.label} ${order.mode} (${order.direction})...`);
+  const exec = execFor(assetCfg);
+  const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
+  console.log(`\n[LocalLiveExecutor] Eksekusi ${assetCfg.label} ${order.mode} (${order.direction}) via ${assetCfg.exchange || 'binance'}...`);
 
   let entryFilledQty = null;
   try {
-    const [modal, livePrice] = await Promise.all([getAccountBalance(), fetchLivePrice(assetCfg.symbol)]);
+    const [modal, livePrice] = await Promise.all([exec.getAccountBalance('USDT'), fetchLivePrice(execSymbol, assetCfg.exchange)]);
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: order.sl });
     console.log(`[LocalLiveExecutor] Saldo available: $${modal.toFixed(2)} | Harga live: $${livePrice} | Exposure ${calc.exposure}x | Leverage ${calc.leverage}x | Margin $${calc.margin.toFixed(2)}`);
 
@@ -48,10 +69,10 @@ async function executeOne(order) {
     // di bawah) -- itu WAJIB presisi ambil profit, likuidasi gak bisa gantiin itu.
     // CATATAN: ini cuma buat SL AWAL. Breakeven-SL abis partial-exit (2R) masih perlu ditangani
     // terpisah di sniperOrderMonitor.js -- liquidation gak bisa presisi ke harga breakeven arbitrer.
-    await setIsolatedMargin(assetCfg.symbol);
-    await setLeverage(assetCfg.symbol, calc.leverage);
-    const entryOrder = await placeMarketEntry({
-      symbol: assetCfg.symbol, direction: order.direction, notionalUsd: calc.nilaiPosisi, livePrice,
+    await exec.setIsolatedMargin(execSymbol);
+    await exec.setLeverage(execSymbol, calc.leverage);
+    const entryOrder = await exec.placeMarketEntry({
+      symbol: execSymbol, direction: order.direction, notionalUsd: calc.nilaiPosisi, livePrice,
     });
     entryFilledQty = parseFloat(entryOrder.executedQty);
 
@@ -59,15 +80,15 @@ async function executeOne(order) {
     // -- itu nutup SELURUH posisi di 2R, ngilangin edge "biarin separuh lari ikutin trend" yang
     // justru divalidasi backtest). Native partial-close Binance (quantity < posisi = OK, sisanya
     // TETAP kebuka) -- gak perlu workaround apapun buat leg PERTAMA ini.
-    const { stepSize, quantityPrecision } = await getSymbolInfo(assetCfg.symbol);
+    const { stepSize, quantityPrecision } = await exec.getSymbolInfo(execSymbol);
     const halfQtyRaw = entryFilledQty / 2;
     const halfQty = roundToStepSize(halfQtyRaw, stepSize, quantityPrecision);
     const tpPrice = order.partialTp || order.tp;
     if (halfQty > 0) {
-      await placeTakeProfit({ symbol: assetCfg.symbol, direction: order.direction, tpPrice, quantity: halfQty });
+      await exec.placeTakeProfit({ symbol: execSymbol, direction: order.direction, tpPrice, quantity: halfQty });
     } else {
       // Posisi kekecilan buat dibagi 2 (stepSize gede relatif ke qty) -- TP full aja drpd 0.
-      await placeTakeProfit({ symbol: assetCfg.symbol, direction: order.direction, tpPrice, quantity: entryFilledQty });
+      await exec.placeTakeProfit({ symbol: execSymbol, direction: order.direction, tpPrice, quantity: entryFilledQty });
     }
 
     updateOrder(order.id, {
@@ -113,8 +134,8 @@ async function main() {
   // permintaan Olan: "semua berbau bayangan replace jadi Binance Demo") -- gak nunggu ada
   // sinyal baru buat update ini, biar dashboard selalu kebaca fresh.
   try {
-    const balance = await getAccountBalance();
-    setBalance(balance); // sniper-orders.json (panel Sniper)
+    const balance = await binanceClient.getAccountBalance();
+    setBalance(balance); // sniper-orders.json (panel Sniper) -- BTC/Binance doang, sama kayak sebelumnya
     const bankroll = loadBankroll();
     bankroll.balance = balance; // kaela-bankroll.json (Jurnal Fund Report)
     saveBankroll(bankroll);

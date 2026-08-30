@@ -109,6 +109,12 @@ async function setTradingToggleForExecutor(phone, mode, enabled) {
   return callGas('setTradingToggleForExecutor', { phone, mode, enabled: enabled ? 'true' : 'false' });
 }
 
+// 31 Agu 2026, one-off buat akun Olan sendiri: "semuanya on.. spot sniper nyopet demo" -- nyalain
+// Demo+Real+CompoundAlt+Musiman sekaligus (Sheet.gs setAllTogglesForExecutor).
+async function setAllTogglesForExecutor(phone) {
+  return callGas('setAllTogglesForExecutor', { phone });
+}
+
 // 30 Agu 2026 -- "japri aku kalo ada error diam-diam, biar bisa segera diperbaiki" (Olan, abis
 // insiden lock Vultr macet 14 jam). Dipanggil run-local-executor.ps1/run-vultr-executor.sh di
 // UJUNG tiap siklus, kirim baris2 log yang match ERROR/GAGAL cycle INI SAJA -- dedup+cooldown per
@@ -124,4 +130,4 @@ async function reportCycleErrors(machineId, errorsText) {
   }
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, reportCycleErrors };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors };

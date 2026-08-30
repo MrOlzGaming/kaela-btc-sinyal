@@ -39,6 +39,13 @@ const { checkEmptyWallet } = require('./emptyWalletWatchdog');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
 
+// Nomor Olan sendiri (owner/master Kaela Pro Trader) -- BUKAN secret, penanda dipakai di 2 tempat:
+// skip "Demo Olan = sistem lama" (bawah) DAN exempt dari auto-shutoff emptyWalletWatchdog (31 Agu
+// 2026, permintaan Olan: "auto tradingnya buat on terus walau saldo ga cukup, ga ada auto mati
+// sendiri.. kan dia masternya.. semuanya on, spot sniper nyopet demo"). Kalau nomor Olan pernah
+// ganti, update di SATU tempat ini.
+const MASTER_NOMOR = '6281299303888';
+
 function ensureStateDir() {
   if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
 }
@@ -223,8 +230,16 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
 
     // 28 Agu 2026, permintaan Olan: "dompet kosong, japri -- 3 hari beruntun gak diisi, matiin
     // otomatis" -- numpang saldo yang UDAH DIAMBIL di atas, gak fetch Binance lagi.
-    await checkEmptyWallet({ phone: account.phone, mode: account.mode, name: account.name, balanceUsdt, balanceUsdc, sendWA })
-      .catch((e) => console.log(`[MultiAccountExecutor] emptyWalletWatchdog ERROR (${account.phone}/${account.mode}):`, e.message));
+    // ⛔ EXEMPT buat Olan sendiri (31 Agu 2026): "auto tradingnya buat on terus walau saldo ga
+    // cukup, ga ada auto mati sendiri.. kan dia masternya.. semuanya on, spot sniper nyopet demo"
+    // -- SEMUA mode (Real+Demo) punya Olan SAMA SEKALI gak pernah kena auto-shutoff, siapapun
+    // member lain (Abdu/Nirwan/dst) TETAP kena aturan 3-hari seperti biasa.
+    if (safeKey(account.phone) === MASTER_NOMOR) {
+      console.log(`[MultiAccountExecutor] Skip emptyWalletWatchdog buat Olan (master) -- exempt permanen dari auto-shutoff.`);
+    } else {
+      await checkEmptyWallet({ phone: account.phone, mode: account.mode, name: account.name, balanceUsdt, balanceUsdc, sendWA })
+        .catch((e) => console.log(`[MultiAccountExecutor] emptyWalletWatchdog ERROR (${account.phone}/${account.mode}):`, e.message));
+    }
   } catch (e) {
     console.log(`[MultiAccountExecutor] recordMemberStatus ERROR (${account.phone}/${account.mode}):`, e.message);
   }
@@ -357,11 +372,8 @@ async function main() {
 
   ensureStateDir();
 
-  // Nomor Olan sendiri (owner/MASTER_NOMOR Kaela Pro Trader) -- BUKAN secret, cuma penanda buat
-  // skip-rule "Demo Olan = sistem lama" di atas. Kalau nomor Olan pernah ganti, update di sini.
-  const masterNomor = '6281299303888';
   const active = accounts.filter((a) => {
-    if (safeKey(a.phone) === masterNomor && a.mode === 'demo') {
+    if (safeKey(a.phone) === MASTER_NOMOR && a.mode === 'demo') {
       console.log('[MultiAccountExecutor] Skip Demo Olan sendiri -- itu sistem lama (localLiveExecutor.js dkk), bukan tanggung jawab modul ini.');
       return false;
     }

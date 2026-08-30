@@ -329,18 +329,27 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // openPosition() -- begitu udah gak ada posisi baru dibuka, angkanya STALE mulu, beda dari
   // Sniper yang emang disinkron tiap siklus di localLiveExecutor.js).
   //
-  // 30 Agu 2026, migrasi Emas ke MEXC -- BTC (USDC/Binance) dan Emas (USDT/MEXC) sekarang 2
+  // 30 Agu 2026, migrasi Emas ke MEXC -- BTC (USDC/Binance) dan Emas (MEXC) sekarang 2
   // EXCHANGE BEDA, bukan cuma 2 asset margin beda di Binance yang sama. `journal.balanceUsdc`/
   // `balanceUsdt` DIPERTAHANKAN (nama lama, backward-compat -- dashboard/notif lama masih baca
   // field ini) TAPI sekarang diisi PER-ASSET pakai exec yang bener (`execFor`), bukan 1 client
-  // buat dua-duanya lagi. Kalau MEXC belum disetup, balanceUsdt gagal SENDIRI (try/catch per
+  // buat dua-duanya lagi. Kalau MEXC belum disetup, saldo MEXC gagal SENDIRI (try/catch per
   // asset) -- BTC/USDC (Binance) TETAP sinkron normal, gak ikut gagal bareng.
+  //
+  // BUG ketemu 30 Agu 2026 (sore) -- pas Nyopet Emas dipindah ke margin USDC (PAXG_USDC, biar
+  // TRUE 4 dompet sama pola Binance), field-nya JADI TABRAKAN sama Nyopet BTC (BTCUSDC) -- dua-
+  // duanya marginAsset='USDC' tapi EXCHANGE beda (Binance vs MEXC), kalau cuma dikunci nama
+  // marginAsset doang ('balanceUsdc') satu nimpa satunya (yang jalan belakangan menang). FIX:
+  // field dikunci exchange+marginAsset -- Binance TETAP 'balanceUsdc'/'balanceUsdt' (nama lama,
+  // dibaca jurnal publik/dashboard.html), MEXC pakai 'mexcBalanceUsdc'/'mexcBalanceUsdt' (SAMA
+  // pola nama kayak multiAccountExecutor.js/Sheet.gs member-status, biar konsisten 1 sistem).
   async function syncBalances() {
     const journal = loadJournal();
     for (const assetCfg of Object.values(NYOPET_ASSETS)) {
       try {
         const bal = await execFor(assetCfg).getAccountBalance(assetCfg.marginAsset);
-        const field = 'balance' + assetCfg.marginAsset.charAt(0) + assetCfg.marginAsset.slice(1).toLowerCase(); // USDC -> balanceUsdc, USDT -> balanceUsdt
+        const capMargin = assetCfg.marginAsset.charAt(0) + assetCfg.marginAsset.slice(1).toLowerCase(); // USDC -> Usdc, USDT -> Usdt
+        const field = (assetCfg.exchange === 'mexc' ? 'mexcBalance' : 'balance') + capMargin;
         journal[field] = bal;
       } catch (e) {
         console.log(`[NyopetAutoTrader] Gagal sinkron saldo ${assetCfg.label} (${assetCfg.exchange}):`, e.message);

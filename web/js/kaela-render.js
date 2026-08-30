@@ -803,7 +803,14 @@
   // renderEquityCurveSvg/renderPnlCalendar Sniper, aman dipakai karena skema data udah 100% sama
   // (status/pnlUsd/marginUsd/closedAt). Posisi FLOATING SEKARANG DITAMPILIN di sini (29 Agu 2026,
   // dicabut dari Home -- "kartu posisi floating semua pindah ke jurnal aja"), satu timeline utuh.
-  function renderNyopetJurnalPanel(nyopetState, now) {
+  // `opts` (30 Agu 2026, OPSIONAL -- default undefined jaga behavior lama 100% sama buat caller
+  // lama yang gak kirim, spt jurnal-load.js/demo publik) -- dibutuhin krn kaela-multi-akun
+  // dashboard.html manggil fungsi ini juga buat kartu REAL member (bukan cuma demo publik Olan
+  // sendiri), dan pasca migrasi Emas ke MEXC label+sumber saldo wallet-2 BEDA per mode/exchange
+  // (Demo tetap Binance PAXGUSDT, Real sekarang MEXC PAXG_USDC) -- lihat memori
+  // project-kaela-multi-exchange. opts: { wallet1Label, wallet1Value, wallet2Label, wallet2Value,
+  // disclaimer, disclaimerFull }.
+  function renderNyopetJurnalPanel(nyopetState, now, opts) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
     const orders = nyopetState.orders || [];
     const floating = orders.filter((o) => o.status === 'floating');
@@ -816,12 +823,16 @@
     // 2 wallet terpisah (29 Agu 2026, fix bug saldo stale -- lihat nyopetAutoTrader.js
     // syncBalances) -- BTCUSDC buat posisi BTC, PAXGUSDT buat posisi PAXG, JANGAN digabung 1
     // angka lagi (dulu ketuker/nimpa satu sama lain tergantung aset mana yang terakhir buka posisi).
-    const saldoCell = cell('Saldo Demo BTCUSDC', fmtUsdOrder(nyopetState.balanceUsdc || 0))
-      + cell('Saldo Demo PAXGUSDT', fmtUsdOrder(nyopetState.balanceUsdt || 0));
+    const wallet1Label = (opts && opts.wallet1Label) || 'Saldo Demo BTCUSDC';
+    const wallet1Value = (opts && opts.wallet1Value !== undefined) ? opts.wallet1Value : (nyopetState.balanceUsdc || 0);
+    const wallet2Label = (opts && opts.wallet2Label) || 'Saldo Demo PAXGUSDT';
+    const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (nyopetState.balanceUsdt || 0);
+    const saldoCell = cell(wallet1Label, fmtUsdOrder(wallet1Value)) + cell(wallet2Label, fmtUsdOrder(wallet2Value));
+    const disclaimer = (opts && opts.disclaimer) || '🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo. Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi.';
 
     if (!stats) {
       return `<div class="nyopet-panel">
-        <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo. Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi.</p>
+        <p class="order-disclaimer">${disclaimer}</p>
         <div class="journal-stats-grid">${saldoCell}</div>
         ${floatingHtml}
         <div class="empty">📓 Belum ada trade yang selesai. Statistik bakal keisi otomatis begitu ada posisi Nyopet yang kena target/nyawa.</div>
@@ -854,8 +865,9 @@
       <div class="journal-section-title">🗓️ Kalender P&amp;L Bulan Ini</div>
       ${renderPnlCalendar(closed, now)}`;
 
+    const disclaimerFull = (opts && opts.disclaimerFull) || '🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (BTC di USDC, PAXG numpang USDT). Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi. Profit maupun loss ditampilin apa adanya.';
     return `<div class="nyopet-panel">
-      <p class="order-disclaimer">🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (BTC di USDC, PAXG numpang USDT). Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi. Profit maupun loss ditampilin apa adanya.</p>
+      <p class="order-disclaimer">${disclaimerFull}</p>
       <div class="journal-stats-grid">${saldoCell}</div>
       ${floatingHtml}
       ${nyopetSummaryHtml}

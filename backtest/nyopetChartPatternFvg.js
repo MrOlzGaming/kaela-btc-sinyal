@@ -144,6 +144,9 @@ function runNyopetV2Backtest(candles, opts = {}) {
     // Redirect (31 Agu 2026, Olan: "kalo dah ga top up isinya ke btc spot terus dan emas terus")
     // -- begitu slot capped, setoran bulanan dilempar ke callback ini, gak hilang.
     onRedirectedTopUp = null,
+    // Konfirmasi DXY (31 Agu 2026, permintaan Olan) -- sama pola backtestCrossAsset.js, cek di
+    // titik ENTRY doang, opsional (null = tanpa filter, backward-compatible).
+    dxyFilter = null,
     // Titik mulai SERAGAM (31 Agu 2026, Olan: "backtest harus sama startnya.. dari 2020 aja, itu
     // pertama aku kenal kripto") -- candle SEBELUM startMs tetap dilewatin/dipakai buat SMA/pola
     // (loop & pattern-detection function baca array PENUH candles seperti biasa), tapi modal cuma
@@ -235,6 +238,13 @@ function runNyopetV2Backtest(candles, opts = {}) {
       if (fvgSig) { direction = fvgSig.direction; sl = fvgSig.sl; patternType = fvgSig.patternType; }
     }
     if (!direction) continue;
+
+    // Filter DXY -- sistem long-only (allowShort=false buat config live), cuma butuh dolar LEMAH
+    // sbg konfirmasi arah buy. null (data DXY blm ada di titik itu) = treat LOLOS, bukan gagal.
+    if (dxyFilter && direction === 'buy') {
+      const dxyWeak = dxyFilter(today.closeTime);
+      if (dxyWeak === false) continue;
+    }
 
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;

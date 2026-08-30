@@ -35,6 +35,11 @@ function runCrossAssetBacktest(assets, opts = {}) {
     // pertama aku kenal kripto") -- histori SEBELUM startMs tetap dipakai buat SMA/pola/FVG (biar
     // indikator gak "kosong" pas start), tapi modal/topup/entry BARU AKTIF begitu dateMs>=startMs.
     startMs = null,
+    // Konfirmasi DXY (31 Agu 2026, permintaan Olan: "setiap entry juga diyakinkan dengan dxy")
+    // -- OPSIONAL, fungsi (timestampMs) => boolean|null dari dxyFilter.js. null default = TANPA
+    // filter (backward-compatible). Cek di titik ENTRY (bukan exit) -- posisi yang UDAH kebuka
+    // tetap dipantau normal walau DXY berubah arah setelahnya (SL/TP tetap yang nentuin exit).
+    dxyFilter = null,
   } = opts;
 
   const assetNames = Object.keys(assets);
@@ -175,6 +180,13 @@ function runCrossAssetBacktest(assets, opts = {}) {
       }
 
       for (const cand of candidates) {
+        // Filter DXY -- cuma LONG (satu2nya arah, sistem udah long-only) yang butuh dolar LEMAH
+        // sbg konfirmasi. dxyFilter balikin null kalau data DXY blm ada di titik itu -- treat sbg
+        // LOLOS (bukan gagal), biar gak nge-skip histori awal yang emang di luar cakupan data DXY.
+        if (dxyFilter) {
+          const dxyWeak = dxyFilter(today.closeTime);
+          if (dxyWeak === false) continue;
+        }
         const availNow = availableCapital();
         if (availNow <= 1) break;
         const riskDistance = cand.entryPrice - cand.sl;

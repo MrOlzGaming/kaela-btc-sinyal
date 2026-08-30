@@ -49,7 +49,7 @@ const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
-const { formatDxyLine } = require('./dxyContext');
+const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 
 const DEFAULT_JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
 // "Modal aktif" = 1/5 saldo -- konvensi LAMA dipertahanin (bukan hal baru dari riset v2, cuma
@@ -391,6 +391,17 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       if (fvgSig) sig = fvgSig;
     }
     if (!sig) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada sinyal (flag/wedge/FVG) -- tunggu siklus depan.`); return; }
+
+    // Konfirmasi DXY (31 Agu 2026, permintaan Olan: "setiap entry juga diyakinkan dengan dxy")
+    // -- KHUSUS Nyopet (lolos 2 tes ketat: split era + sensitivitas parameter, lihat backtest/
+    // dxySniperScrutiny.js vs dxyNyopetScrutiny.js). Sniper SENGAJA TIDAK dikasih ini (gagal di
+    // dua tes yang sama). null (fetch DXY gagal) = treat LOLOS, jangan block trading gara2 DXY
+    // down -- ini konfirmasi TAMBAHAN, bukan syarat mutlak.
+    const dxyWeak = await isDxyWeak(20).catch(() => null);
+    if (dxyWeak === false) {
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ${sig.patternType} ketemu TAPI DXY lagi kuat (dolar menguat) -- skip, tunggu konfirmasi dolar lemah.`);
+      return;
+    }
 
     await openPosition(assetCfg, sig, candles4h[i].close);
   }

@@ -31,6 +31,12 @@ function applyMetaLang() {
   document.querySelectorAll('[data-i18n]').forEach(function (el) {
     el.innerHTML = T_META(el.getAttribute('data-i18n'));
   });
+  // 30 Agu 2026, bug ketemu (Olan: "sudah ganti inggris tapi masih ada bahasa" -- placeholder
+  // input kalkulator.html, mis. "misal: 500", gak ikut kepindah ke Inggris) -- data-i18n-ph gak
+  // pernah ditangani sama sekali di sini, cuma data-i18n (innerHTML) doang. Fix: placeholder juga.
+  document.querySelectorAll('[data-i18n-ph]').forEach(function (el) {
+    el.placeholder = T_META(el.getAttribute('data-i18n-ph'));
+  });
   var btn = document.getElementById('metaLangBtn');
   if (btn) btn.textContent = currentMetaLang === 'id' ? '🇬🇧 English' : '🇮🇩 Indonesia';
 }

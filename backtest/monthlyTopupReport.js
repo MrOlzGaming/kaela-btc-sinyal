@@ -119,8 +119,8 @@ function byYearNyopet(trades) {
 function yearsSpan(startMs, endMs) { return (endMs - startMs) / (365.25 * DAY_MS); }
 function dateOf(ms) { return new Date(ms).toISOString().slice(0, 10); }
 
-function printSlot(label, r, s, candles, byYearFn) {
-  const startMs = candles[0].closeTime, endMs = candles[candles.length - 1].closeTime;
+function printSlot(label, r, s, candles, byYearFn, displayStartMs) {
+  const startMs = displayStartMs || candles[0].closeTime, endMs = candles[candles.length - 1].closeTime;
   const span = yearsSpan(startMs, endMs);
   console.log(`\n=== ${label} ===`);
   console.log(`Rentang data: ${dateOf(startMs)} -> ${dateOf(endMs)} (~${span.toFixed(2)} tahun)`);
@@ -136,7 +136,13 @@ function printSlot(label, r, s, candles, byYearFn) {
   return { label, ...s, totalDeposited: r.totalDeposited, finalCapital: r.finalCapital, maxDrawdownPct: r.maxDrawdownPct, rentang: `${dateOf(startMs)} -> ${dateOf(endMs)}`, tahunData: +span.toFixed(2), sinyalPerTahun: +(s.n / span).toFixed(1), perTahun: py };
 }
 
+// Titik mulai SERAGAM buat SEMUA slot (31 Agu 2026, Olan: "backtest harus sama startnya..
+// dari 2020 aja, itu pertama aku kenal kripto") -- histori sebelum ini TETAP dipakai internal
+// buat SMA/pola (warmup), tapi modal/topup/entry cuma aktif mulai titik ini.
+const BACKTEST_START = new Date('2020-01-01T00:00:00Z').getTime();
+
 console.log('=== Laporan Top-Up Bulanan $50/bulan (cap saldo $1.000/slot) + Redirect ke Spot BTC/Emas ===');
+console.log(`Semua slot mulai dari titik SAMA: ${dateOf(BACKTEST_START)} (permintaan Olan)`);
 
 const btcDaily = JSON.parse(fs.readFileSync(path.join(ROOT, 'backtest', 'daily-cache.json'), 'utf8'));
 const goldDaily = JSON.parse(fs.readFileSync(path.join(ROOT, 'backtest', 'gold-daily-cache.json'), 'utf8'));
@@ -147,30 +153,32 @@ const results = [];
 
 // 1. Sniper BTC (solo, halt window istirahat halving -- config live)
 {
-  const r = runCrossAssetBacktest({ btc: btcDaily }, { ...TOPUP, haltBtcInBearWindow: true, onRedirectedTopUp: (amt, ms) => btcRedirects.push({ dateMs: ms, amount: amt }) });
+  const r = runCrossAssetBacktest({ btc: btcDaily }, { ...TOPUP, haltBtcInBearWindow: true, startMs: BACKTEST_START, onRedirectedTopUp: (amt, ms) => btcRedirects.push({ dateMs: ms, amount: amt }) });
   const s = summarizeSniper(r.trades);
-  results.push(printSlot('1. SNIPER BTC (harian)', r, s, btcDaily, byYearSniper));
+  results.push(printSlot('1. SNIPER BTC (harian)', r, s, btcDaily, byYearSniper, BACKTEST_START));
 }
 
 // 2. Sniper Emas (solo, TANPA halt -- config live)
 {
-  const r = runCrossAssetBacktest({ gold: goldDaily }, { ...TOPUP, haltBtcInBearWindow: false, onRedirectedTopUp: (amt, ms) => goldRedirects.push({ dateMs: ms, amount: amt }) });
+  const r = runCrossAssetBacktest({ gold: goldDaily }, { ...TOPUP, haltBtcInBearWindow: false, startMs: BACKTEST_START, onRedirectedTopUp: (amt, ms) => goldRedirects.push({ dateMs: ms, amount: amt }) });
   const s = summarizeSniper(r.trades);
-  results.push(printSlot('2. SNIPER EMAS (harian, data GC=F 25th)', r, s, goldDaily, byYearSniper));
+  results.push(printSlot('2. SNIPER EMAS (harian, data GC=F 25th)', r, s, goldDaily, byYearSniper, BACKTEST_START));
 }
 
 // 3. Nyopet BTC (4H, long-only, modal/5 -- config live)
 {
-  const r = runNyopetV2Backtest(CANDLES_4H, { ...RESCALED_4H, allowShort: false, modalDivisor: 5, ...TOPUP, onRedirectedTopUp: (amt, ms) => btcRedirects.push({ dateMs: ms, amount: amt }) });
+  const r = runNyopetV2Backtest(CANDLES_4H, { ...RESCALED_4H, allowShort: false, modalDivisor: 5, ...TOPUP, startMs: BACKTEST_START, onRedirectedTopUp: (amt, ms) => btcRedirects.push({ dateMs: ms, amount: amt }) });
   const s = summarizeNyopet(r.trades);
-  results.push(printSlot('3. NYOPET BTC (4H)', r, s, CANDLES_4H, byYearNyopet));
+  results.push(printSlot('3. NYOPET BTC (4H)', r, s, CANDLES_4H, byYearNyopet, BACKTEST_START));
 }
 
-// 4. Nyopet Emas (4H, long-only, modal/5 -- config live)
+// 4. Nyopet Emas (4H, long-only, modal/5 -- config live) -- data PAXGUSDT baru ada dari
+// 2020-08-28 (listing Binance), jadi walau BACKTEST_START=2020-01-01, aktif barunya
+// ~Agu 2020 -- ini keterbatasan DATA, bukan pilihan.
 if (CANDLES_4H_GOLD) {
-  const r = runNyopetV2Backtest(CANDLES_4H_GOLD, { ...RESCALED_4H, allowShort: false, modalDivisor: 5, ...TOPUP, onRedirectedTopUp: (amt, ms) => goldRedirects.push({ dateMs: ms, amount: amt }) });
+  const r = runNyopetV2Backtest(CANDLES_4H_GOLD, { ...RESCALED_4H, allowShort: false, modalDivisor: 5, ...TOPUP, startMs: BACKTEST_START, onRedirectedTopUp: (amt, ms) => goldRedirects.push({ dateMs: ms, amount: amt }) });
   const s = summarizeNyopet(r.trades);
-  results.push(printSlot('4. NYOPET EMAS (4H, PAXGUSDT)', r, s, CANDLES_4H_GOLD, byYearNyopet));
+  results.push(printSlot('4. NYOPET EMAS (4H, PAXGUSDT)', r, s, CANDLES_4H_GOLD, byYearNyopet, Math.max(BACKTEST_START, CANDLES_4H_GOLD[0].closeTime)));
 }
 
 console.log('\n=== RINGKASAN 4 SLOT TRADING ===');

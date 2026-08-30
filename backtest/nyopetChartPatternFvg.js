@@ -144,18 +144,34 @@ function runNyopetV2Backtest(candles, opts = {}) {
     // Redirect (31 Agu 2026, Olan: "kalo dah ga top up isinya ke btc spot terus dan emas terus")
     // -- begitu slot capped, setoran bulanan dilempar ke callback ini, gak hilang.
     onRedirectedTopUp = null,
+    // Titik mulai SERAGAM (31 Agu 2026, Olan: "backtest harus sama startnya.. dari 2020 aja, itu
+    // pertama aku kenal kripto") -- candle SEBELUM startMs tetap dilewatin/dipakai buat SMA/pola
+    // (loop & pattern-detection function baca array PENUH candles seperti biasa), tapi modal cuma
+    // diseed begitu closeTime candle >= startMs (sebelum itu capital=0, otomatis gak ada entry
+    // kelolos krn cek margin>capital yang UDAH ADA).
+    startMs = null,
   } = opts;
   const trades = [];
   let openPos = null;
-  let capital = startCapital;
-  let totalDeposited = startCapital;
+  let capital = startMs ? 0 : startCapital;
+  let totalDeposited = startMs ? 0 : startCapital;
+  let activated = !startMs;
   let lastTopUpMonthKey = null;
-  const capitalSeries = [{ time: candles[warmupCandles] ? candles[warmupCandles].closeTime : 0, capital }];
+  // Kalau startMs diisi, JANGAN seed capitalSeries dgn titik capital=0 (bikin NaN di kalkulasi
+  // drawdown, peak=0 -> pembagian 0/0) -- titik pertama yang valid didorong pas activation di bawah.
+  const capitalSeries = startMs ? [] : [{ time: candles[warmupCandles] ? candles[warmupCandles].closeTime : 0, capital }];
 
   for (let i = warmupCandles; i < candles.length; i++) {
     const today = candles[i];
 
-    if (topUpAmount > 0) {
+    if (!activated && (!startMs || today.closeTime >= startMs)) {
+      activated = true;
+      capital = startCapital; totalDeposited = startCapital;
+      capitalSeries.push({ time: today.closeTime, capital });
+    }
+    if (!activated) continue; // belum aktif -- skip position mgmt & signal search, capital masih 0
+
+    if (topUpAmount > 0 && activated) {
       const d = new Date(today.closeTime);
       const monthKey = d.getUTCFullYear() * 12 + d.getUTCMonth();
       if (d.getUTCDate() >= topUpDayOfMonth && monthKey !== lastTopUpMonthKey) {

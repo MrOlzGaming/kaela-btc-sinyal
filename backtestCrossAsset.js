@@ -31,6 +31,10 @@ function runCrossAssetBacktest(assets, opts = {}) {
     // gak hilang, dilempar ke callback ini (amount, dateMs) biar caller bisa alihin ke pool lain
     // (spot DCA). Optional, no-op kalau gak diisi -- backward-compatible.
     onRedirectedTopUp = null,
+    // Titik mulai SERAGAM (31 Agu 2026, Olan: "backtest harus sama startnya.. dari 2020 aja, itu
+    // pertama aku kenal kripto") -- histori SEBELUM startMs tetap dipakai buat SMA/pola/FVG (biar
+    // indikator gak "kosong" pas start), tapi modal/topup/entry BARU AKTIF begitu dateMs>=startMs.
+    startMs = null,
   } = opts;
 
   const assetNames = Object.keys(assets);
@@ -51,10 +55,13 @@ function runCrossAssetBacktest(assets, opts = {}) {
   const trades = [];
   let openPositions = []; // { asset, ...posFields }
   let activeFvgsByAsset = {}; for (const n of assetNames) activeFvgsByAsset[n] = [];
-  let capital = startCapital;
-  let totalDeposited = startCapital;
+  let capital = startMs ? 0 : startCapital;
+  let totalDeposited = startMs ? 0 : startCapital;
+  let activated = !startMs;
   let lastTopUpMonthKey = null;
-  const capitalSeries = [{ time: sortedDays[0] * 86400000, capital }];
+  // Kalau startMs diisi, JANGAN seed capitalSeries dgn titik capital=0 (bikin NaN di kalkulasi
+  // drawdown, peak=0 -> pembagian 0/0) -- titik pertama valid didorong pas activation di bawah.
+  const capitalSeries = startMs ? [] : [{ time: sortedDays[0] * 86400000, capital }];
 
   function availableCapital() {
     return Math.max(0, capital - openPositions.reduce((s, p) => s + p.margin, 0));
@@ -69,6 +76,14 @@ function runCrossAssetBacktest(assets, opts = {}) {
   for (const dayKey of sortedDays) {
     if (dayKey < warmupCutoff) continue;
     const dateMs = dayKey * 86400000;
+
+    if (!activated) {
+      if (startMs && dateMs < startMs) continue; // histori dilewatin buat entry/modal (indikator tetap kehitung normal di bawah lewat pattern-detection functions yg baca array PENUH)
+      activated = true;
+      capital = startCapital; totalDeposited = startCapital;
+      capitalSeries.push({ time: dateMs, capital });
+    }
+
     const dateObj = new Date(dateMs);
     const curMonthKey = dateObj.getUTCFullYear() * 12 + dateObj.getUTCMonth();
     if (dateObj.getUTCDate() >= topUpDayOfMonth && curMonthKey !== lastTopUpMonthKey) {

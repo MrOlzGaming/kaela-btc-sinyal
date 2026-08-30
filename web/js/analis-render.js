@@ -1,10 +1,25 @@
 // Render Kaela Analyst Terminal (analis.html) -- konsumsi analyst-dashboard.json yang ditulis
-// groupMonitor.js tiap Senin (lihat memori project-kaela-analyst-tier). Semua fungsi murni
-// (data in, HTML string out), gak nyentuh DOM langsung -- konsisten sama kaela-render.js.
+// groupMonitor.js TIAP HARI (30 Agu 2026, dulu cuma Senin -- lihat memori project-kaela-watchdog
+// & project-kaela-analyst-tier). Semua fungsi murni (data in, HTML string out), gak nyentuh DOM
+// langsung -- konsisten sama kaela-render.js.
 
 (function () {
   function esc(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // 30 Agu 2026 -- "bikin gak kerasa mati" (Olan: "dah lama mati kek nya" pas dicek tengah minggu,
+  // ternyata cuma jadwal mingguan, bukan macet). Tanggal mentah gampang salah diinterpretasi orang
+  // yang gak inget jadwalnya -- "X lalu" relatif langsung kebaca stale atau nggak tanpa mikir.
+  function relativeTimeId(date) {
+    const diffMs = Date.now() - date.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'barusan';
+    if (mins < 60) return `${mins} menit lalu`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    const days = Math.floor(hours / 24);
+    return `${days} hari lalu`;
   }
 
   function verdictClass(verdict) {
@@ -79,7 +94,7 @@
     const updated = new Date(dashboardData.updatedAt);
     const updatedStr = updated.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
     return `
-      <div class="analis-updated">Terakhir diperbarui: ${esc(updatedStr)} (tiap Senin)</div>
+      <div class="analis-updated">Terakhir diperbarui: ${esc(relativeTimeId(updated))} (${esc(updatedStr)}) -- Conviction Score diitung ulang tiap hari, dikirim ke grup WA tiap Senin</div>
       <div class="analis-grid">
         ${renderConvictionCard('BTC', '🟧', dashboardData.btc)}
         ${renderConvictionCard('PAXGUSDT', '🟡', dashboardData.xau)}

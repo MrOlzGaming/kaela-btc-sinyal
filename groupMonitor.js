@@ -1,7 +1,11 @@
 // Jalankan tiap hari jam 07:00 WITA (sama jadwal ikut closing candle kayak monitor.js).
 // Beda dari monitor.js -- itu laporan PRIBADI Olan (dailyReport.js, cuma console+arsip).
 // Ini laporan buat GRUP WA "BTC Sniper Club" (groupReport.js) -- dikirim ke WEB (arsip) DAN Fonnte.
-// Weekly kirim tiap Senin, Monthly tiap tanggal 1, Yearly tiap 1 Januari (semua kalender WITA).
+// BROADCAST WA: Weekly kirim tiap Senin, Monthly tiap tanggal 1, Yearly tiap 1 Januari (semua
+// kalender WITA). Kaela Conviction Score (analyst-dashboard.json, web/analis.html) BEDA jadwal
+// (30 Agu 2026, "naikin frekuensi") -- dihitung ulang + ditulis TIAP HARI, biar web-nya kerasa
+// hidup; cuma BROADCAST-nya ke grup WA yang tetap mingguan (COT Report Emas juga tetap weekly --
+// data CFTC-nya sendiri emang cuma terbit tiap Jumat).
 
 const {
   generateGroupDaily, generateGroupWeekly, generateGroupMonthly, generateGroupYearly, getWindowPhase,
@@ -161,29 +165,40 @@ async function main() {
   // jadi getUTCDate() mentah bakal salah 1 hari kalau gak digeser dulu.
   const local = toLocal(now);
   const items = [];
-  // On-chain (MVRV+Puell) cuma di-fetch kalau ADA laporan yang beneran mau dikirim (hemat quota
-  // 10req/jam) -- 1x fetch DIPAKAI BARENG daily (MVRV+Puell) & weekly (MVRV doang, buat Conviction
-  // Score), biar gak dobel panggil onchainMetrics.js dalam 1 run yang sama.
   const willSendWeekly = local.getUTCDay() === 1 && priceLastWeek !== null;
-  const onchain = (priceYesterday !== null || willSendWeekly) ? await safeOnchain() : null;
+  const willSendWeeklyGold = local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null;
+  // On-chain (MVRV+Puell) di-fetch kalau ADA laporan harian ATAU Conviction Score beneran mau
+  // dihitung (hemat quota 10req/jam) -- 1x fetch DIPAKAI BARENG daily (MVRV+Puell) & Conviction
+  // Score (MVRV doang), biar gak dobel panggil onchainMetrics.js dalam 1 run yang sama.
+  const onchain = priceYesterday !== null ? await safeOnchain() : null;
 
-  // Nilai verdict Conviction Score LAMA yang udah cukup umur (>=7 hari) pakai harga SEKARANG,
-  // SEBELUM catat verdict baru -- urutan ini penting biar verdict yang barusan dibuat gak
-  // ketilep langsung ke-grade pas run yang sama. 1x panggil buat DUA aset sekaligus.
-  if (willSendWeekly) gradeMaturedVerdicts(now, { btc: priceToday, xau: goldPriceToday });
+  // 30 Agu 2026 -- "Naikin frekuensi Conviction Score" (Olan: "dah lama mati kek nya" -- ternyata
+  // BUKAN mati, emang sengaja cuma diitung ulang hari Senin). Sekarang Conviction Score + dashboard
+  // + track record diitung TIAP HARI (web/analis.html jadi kerasa hidup, bukan diem seminggu) --
+  // yang TETAP mingguan cuma BROADCAST WA-nya (`willSendWeekly` dst, biar grup gak kebanjiran
+  // pesan makro panjang tiap hari) + COT Report (data CFTC ITU SENDIRI cuma terbit mingguan tiap
+  // Jumat -- fetch harian gak nambah info apa2, tetap di-gate weekly di gold block).
+  //
+  // Nilai verdict LAMA yang udah cukup umur (>=7 hari) pakai harga SEKARANG, SEBELUM catat verdict
+  // BARU -- urutan ini penting biar verdict yang barusan dibuat gak ketilep langsung ke-grade pas
+  // run yang sama. Sekarang jalan TIAP HARI (dulu cuma Senin) -- verdict harian matang 7 hari
+  // kemudian di HARI YANG SAMA minggu depannya, gak nunggu Senin berikutnya lagi.
+  gradeMaturedVerdicts(now, { btc: priceToday, xau: goldPriceToday });
 
-  // Diisi di blok weekly BTC di bawah, dipakai lagi di blok weekly Emas (1x fetch dipakai bareng
-  // 2 laporan -- DVOL/Stablecoin/YieldCurve/M2 sama-sama relevan buat kedua aset).
+  // Diisi di blok BTC di bawah, dipakai lagi di blok Emas (1x fetch dipakai bareng 2 laporan --
+  // DVOL/Stablecoin/YieldCurve/M2 sama-sama relevan buat kedua aset).
   let advancedMacro = null;
   // Snapshot buat web/analis.html (Kaela Analyst Terminal, 22 Agu 2026) -- data yang SAMA persis
-  // yang dikirim ke WA, ditulis juga ke JSON biar bisa direfer kapan aja lewat web, bukan cuma
-  // sekali lewat pas pesan WA muncul terus ilang ketimbun chat.
+  // yang dikirim ke WA (pas Senin), ditulis juga ke JSON tiap hari biar bisa direfer kapan aja
+  // lewat web, gak nunggu WA mingguan.
   let dashboardData = null;
 
   if (priceYesterday !== null) {
     items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
   }
-  if (willSendWeekly) {
+  // computeConviction -- SYARAT SAMA kayak laporan harian sendiri (priceYesterday tersedia),
+  // BUKAN lagi terkunci ke hari Senin.
+  if (priceYesterday !== null) {
     const [regime, nupl, fearGreed] = await Promise.all([
       safeRegime(fetchBtcNasdaqRegime, 'BTC-Nasdaq'),
       safe(async () => (await fetchTradeMetrics()).nupl, 'NUPL'),
@@ -201,23 +216,26 @@ async function main() {
       creditSpreadTrend: advancedMacro?.creditSpread ? classifyCreditSpreadTrend(advancedMacro.creditSpread) : null,
     });
     logVerdict('btc', now, conviction.score, conviction.verdict, priceToday);
-    // Divergence Detector (22 Agu 2026, lihat divergenceDetector.js) -- pakai data yang UDAH
-    // di-fetch di atas, gak nambah request. "Tenang di permukaan, stres di bawah" (DVOL+Credit
-    // Spread naik bareng walau Conviction gak bearish) + harga naik tapi NUPL gak ngonfirmasi.
-    const btcPriceChangePct = ((priceToday - priceLastWeek) / priceLastWeek) * 100;
-    const btcDivergences = [
-      checkCalmBeforeStorm(conviction.score, advancedMacro?.dvol, advancedMacro?.creditSpread),
-      checkPriceNuplDivergence(btcPriceChangePct, nupl),
-    ].filter(Boolean);
-    const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime, advancedMacro: advancedMacro ? { dvol: advancedMacro.dvol, yieldCurve: advancedMacro.yieldCurve } : null })
-      + '\n\n' + formatConvictionLines(conviction).join('\n')
-      + '\n' + formatTrackRecordLine('btc')
-      + formatDivergenceLines(btcDivergences).join('\n');
-    items.push({ type: 'report-weekly', content: weeklyMsg });
     dashboardData = dashboardData || {};
     dashboardData.btc = {
       price: priceToday, conviction, trackRecord: getTrackRecordSummary('btc'), regime, advancedMacro,
     };
+
+    if (willSendWeekly) {
+      // Divergence Detector (22 Agu 2026, lihat divergenceDetector.js) -- pakai data yang UDAH
+      // di-fetch di atas, gak nambah request. "Tenang di permukaan, stres di bawah" (DVOL+Credit
+      // Spread naik bareng walau Conviction gak bearish) + harga naik tapi NUPL gak ngonfirmasi.
+      const btcPriceChangePct = ((priceToday - priceLastWeek) / priceLastWeek) * 100;
+      const btcDivergences = [
+        checkCalmBeforeStorm(conviction.score, advancedMacro?.dvol, advancedMacro?.creditSpread),
+        checkPriceNuplDivergence(btcPriceChangePct, nupl),
+      ].filter(Boolean);
+      const weeklyMsg = generateGroupWeekly(now, priceToday, priceLastWeek, { regime, advancedMacro: advancedMacro ? { dvol: advancedMacro.dvol, yieldCurve: advancedMacro.yieldCurve } : null })
+        + '\n\n' + formatConvictionLines(conviction).join('\n')
+        + '\n' + formatTrackRecordLine('btc')
+        + formatDivergenceLines(btcDivergences).join('\n');
+      items.push({ type: 'report-weekly', content: weeklyMsg });
+    }
   }
   if (local.getUTCDate() === 1 && priceLastMonth !== null) { // tanggal 1 (WITA)
     items.push({ type: 'report-monthly', content: generateGroupMonthly(now, priceToday, priceLastMonth) });
@@ -228,31 +246,40 @@ async function main() {
 
   // Laporan Emas -- jadwal SAMA kayak BTC (harian tiap hari, mingguan Senin, dst), key `type`
   // BEDA (suffix -gold) biar dedup archive.js gak ketuker sama laporan BTC.
+  let goldMacro = null;
   if (goldPriceToday !== null && goldPriceYesterday !== null) {
-    // Makro cuma di-fetch kalau laporan Emas beneran mau dikirim (hemat request, sama pola kayak onchain).
-    const macro = await safeMacro();
-    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro }) });
+    goldMacro = await safeMacro();
+    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro: goldMacro }) });
   }
-  if (local.getUTCDay() === 1 && goldPriceToday !== null && goldPriceLastWeek !== null) {
-    const [macro, cot, regime] = await Promise.all([safeMacro(), safeCot(), safeRegime(fetchGoldDxyRegime, 'Emas-DXY')]);
+  // computeGoldConviction -- SYARAT SAMA kayak laporan harian Emas, BUKAN lagi terkunci Senin.
+  // COT (CFTC) TETAP di-gate weekly (`willSendWeeklyGold`) -- itu data itu sendiri cuma terbit
+  // mingguan tiap Jumat, fetch harian cuma buang request tanpa nambah info baru.
+  if (goldPriceToday !== null && goldPriceYesterday !== null) {
+    const [regime, cot] = await Promise.all([
+      safeRegime(fetchGoldDxyRegime, 'Emas-DXY'),
+      willSendWeeklyGold ? safeCot() : Promise.resolve(null),
+    ]);
     const goldRsi = rsi(goldClosed.map((c) => c.close), 14);
     const conviction = computeGoldConviction({
-      rsi: goldRsi, dxyTrend: macro?.dxy?.trend || null, realYieldTrend: macro?.realYield?.trend || null, cot,
+      rsi: goldRsi, dxyTrend: goldMacro?.dxy?.trend || null, realYieldTrend: goldMacro?.realYield?.trend || null, cot,
       fedRateTrend: advancedMacro?.fedRate ? classifyFedRateTrend(advancedMacro.fedRate) : null,
     });
     logVerdict('xau', now, conviction.score, conviction.verdict, goldPriceToday);
-    const goldPriceChangePct = ((goldPriceToday - goldPriceLastWeek) / goldPriceLastWeek) * 100;
-    const goldDivergences = [checkGoldCotPriceDivergence(cot, goldPriceChangePct)].filter(Boolean);
-    const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null })
-      + '\n\n' + formatConvictionLines(conviction).join('\n')
-      + '\n' + formatTrackRecordLine('xau')
-      + formatDivergenceLines(goldDivergences).join('\n');
-    items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });
     dashboardData = dashboardData || {};
     dashboardData.xau = {
-      price: goldPriceToday, conviction, trackRecord: getTrackRecordSummary('xau'), regime, macro, cot,
+      price: goldPriceToday, conviction, trackRecord: getTrackRecordSummary('xau'), regime, macro: goldMacro, cot,
       yieldCurve: advancedMacro?.yieldCurve || null,
     };
+
+    if (willSendWeeklyGold) {
+      const goldPriceChangePct = ((goldPriceToday - goldPriceLastWeek) / goldPriceLastWeek) * 100;
+      const goldDivergences = [checkGoldCotPriceDivergence(cot, goldPriceChangePct)].filter(Boolean);
+      const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro: goldMacro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null })
+        + '\n\n' + formatConvictionLines(conviction).join('\n')
+        + '\n' + formatTrackRecordLine('xau')
+        + formatDivergenceLines(goldDivergences).join('\n');
+      items.push({ type: 'report-weekly-gold', content: weeklyGoldMsg });
+    }
   }
 
   if (dashboardData) {

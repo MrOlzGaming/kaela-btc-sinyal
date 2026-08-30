@@ -27,6 +27,7 @@ const { load: loadSniperOrders } = require('./sniperOrders');
 const { ASSETS } = require('./assetConfig');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { createBinanceClient } = require('./binanceExecutor');
+const { createMexcClient } = require('./mexcExecutor');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
 const { createSniperAccountTrader } = require('./sniperMultiAccount');
@@ -106,9 +107,24 @@ function buildSendWA(account, adminRelay) {
   };
 }
 
-async function processAccount(account, sharedSniperOrders, adminRelay, closeRequests) {
+// ⚠️ BAHAYA yang DICEGAH DI SINI (30 Agu 2026): nyopetAutoTrader.js/sniperMultiAccount.js punya
+// fallback DEFAULT ke mexcExecutor.js singleton (akun REAL Olan sendiri) kalau `mexcClient` gak
+// dikirim SAMA SEKALI (undefined) -- itu bener buat proses Olan sendiri (CLI), tapi FATAL kalau
+// kepake buat MEMBER LAIN yang belum pasang MEXC: member demo/real siapapun bisa diam-diam
+// eksekusi order MEXC pakai duit REAL Olan tanpa sadar. Fix: kalau member ini gak punya `mexcAccount`,
+// JANGAN kirim undefined -- kirim STUB yang setiap methodnya throw error jelas, biar SELALU gagal
+// aman ("belum disetup buat member ini") tanpa PERNAH numpang default Olan.
+function _mexcNotConfiguredStub(name) {
+  const err = () => { throw new Error(`MEXC belum disetup buat member "${name}" -- skip Emas, BTC tetap jalan normal.`); };
+  return { getAccountBalance: err, setLeverage: err, setIsolatedMargin: err, placeMarketEntry: err, placeStopLoss: err, placeTakeProfit: err, getPositionRisk: err, cancelAllOpenOrders: err, getSymbolInfo: err, emergencyCloseMarket: err };
+}
+
+async function processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccount) {
   console.log(`\n[MultiAccountExecutor] === ${account.name} (${account.phone}) -- ${account.mode.toUpperCase()} ===`);
   const client = createBinanceClient({ apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' });
+  const mexcClient = mexcAccount
+    ? createMexcClient({ apiKey: mexcAccount.apiKey, apiSecret: mexcAccount.apiSecret })
+    : _mexcNotConfiguredStub(account.name);
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' };
   const modalOverride = buildModalOverride(account, client);
   const journalHook = buildJournalHook(account);
@@ -117,7 +133,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
 
   try {
     const nyopetTrader = createNyopetTrader({
-      client, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
+      client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
       sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
     });
     // 28 Agu 2026 -- eksekusi antrian tutup posisi manual DULUAN, sebelum siklus normal (biar
@@ -136,7 +152,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
 
   try {
     const sniperTrader = createSniperAccountTrader({
-      client, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
+      client, mexcClient, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
       sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
     });
     // 29 Agu 2026 -- sama pola kayak antrian tutup manual Nyopet di atas, DULUAN sebelum runCycle
@@ -161,15 +177,26 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       client.getAccountBalance('USDT'),
       client.getAccountBalance('USDC'),
     ]);
+    // MEXC (30 Agu 2026) -- fail-safe TERPISAH: kalau mexcClient stub (belum disetup) ATAU
+    // beneran error, JANGAN gugurin laporan Binance -- default 0, log doang.
+    const mexcBalanceUsdt = await mexcClient.getAccountBalance('USDT').catch((e) => {
+      console.log(`[MultiAccountExecutor] Saldo MEXC (${account.phone}/${account.mode}) gak kebaca:`, e.message);
+      return 0;
+    });
+
     // Bug ketemu 29 Agu 2026 (Olan: "jurnal versi real tampilan ngarang") -- loop ini CUMA cek
     // symbol Sniper (assetConfig.js: BTCUSDT+PAXGUSDT), Nyopet BTC pakai symbol BEDA (BTCUSDC,
     // nyopetAssetConfig.js) -- posisi Nyopet BTC real gak PERNAH kecek/muncul di "Posisi Kebuka".
-    // PAXGUSDT overlap (dipakai Sniper DAN Nyopet XAU) -- Set biar gak double-fetch.
-    const allSymbols = [...new Set([...Object.values(ASSETS).map((a) => a.symbol), ...Object.values(NYOPET_ASSETS).map((a) => a.symbol)])];
-    const positionsRaw = await Promise.all(
-      allSymbols.map((symbol) => client.getPositionRisk(symbol).catch(() => null))
-    );
-    const positions = positionsRaw
+    // 30 Agu 2026 -- dipisah per exchange (Binance symbol vs execSymbol MEXC), Set biar gak
+    // double-fetch simbol yang overlap (mis. dulu PAXGUSDT dipakai 2 strategi, sekarang XAUT_USDT
+    // dipakai Sniper MEXC + PAXG_USDT dipakai Nyopet MEXC -- beda simbol, gak overlap lagi).
+    const binanceSymbols = [...new Set([...Object.values(ASSETS), ...Object.values(NYOPET_ASSETS)].filter((a) => (a.exchange || 'binance') === 'binance').map((a) => a.symbol))];
+    const mexcSymbols = [...new Set([...Object.values(ASSETS), ...Object.values(NYOPET_ASSETS)].filter((a) => a.exchange === 'mexc').map((a) => a.execSymbol))];
+    const [binancePositionsRaw, mexcPositionsRaw] = await Promise.all([
+      Promise.all(binanceSymbols.map((symbol) => client.getPositionRisk(symbol).catch(() => null))),
+      Promise.all(mexcSymbols.map((symbol) => mexcClient.getPositionRisk(symbol).catch(() => null))),
+    ]);
+    const positions = [...binancePositionsRaw, ...mexcPositionsRaw]
       .filter((p) => p && Math.abs(parseFloat(p.positionAmt)) > 0)
       .map((p) => ({
         symbol: p.symbol, positionAmt: p.positionAmt, entryPrice: p.entryPrice,
@@ -177,8 +204,8 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
         leverage: p.leverage, liquidationPrice: p.liquidationPrice,
         marginType: p.marginType, notional: p.notional,
       }));
-    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions);
-    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT, $${balanceUsdc.toFixed(2)} USDC, ${positions.length} posisi.`);
+    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt);
+    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), ${positions.length} posisi.`);
 
     // 28 Agu 2026, permintaan Olan: "dompet kosong, japri -- 3 hari beruntun gak diisi, matiin
     // otomatis" -- numpang saldo yang UDAH DIAMBIL di atas, gak fetch Binance lagi.
@@ -302,6 +329,18 @@ async function main() {
     return;
   }
 
+  // MEXC (30 Agu 2026, migrasi eksekusi Emas -- lihat memori project-kaela-multi-exchange) --
+  // FAIL-SAFE: kalau gagal/kosong, JANGAN gugurin seluruh run (BTC di Binance tetap harus jalan).
+  // Map by phone+mode -- member yang belum pasang API MEXC gak ketemu di map ini, wajar (skip Emas
+  // buat mereka, ditangkep nanti di execFor/mexcClient undefined check).
+  let mexcAccountsByKey = {};
+  try {
+    const mexcAccounts = await kaela.getTradingAccounts('mexc');
+    (mexcAccounts || []).forEach((a) => { mexcAccountsByKey[safeKey(a.phone) + '-' + a.mode] = a; });
+  } catch (e) {
+    console.log('[MultiAccountExecutor] Gagal ambil daftar akun MEXC (dilewatin, Emas skip siklus ini buat semua member):', e.message);
+  }
+
   ensureStateDir();
 
   // Nomor Olan sendiri (owner/MASTER_NOMOR Kaela Pro Trader) -- BUKAN secret, cuma penanda buat
@@ -329,7 +368,7 @@ async function main() {
   if (closeRequests.length) console.log(`[MultiAccountExecutor] ${closeRequests.length} permintaan tutup posisi manual di antrian.`);
 
   for (const account of active) {
-    await processAccount(account, sharedSniperOrders, adminRelay, closeRequests);
+    await processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccountsByKey[safeKey(account.phone) + '-' + account.mode]);
   }
   console.log('\n[MultiAccountExecutor] Selesai.');
 }

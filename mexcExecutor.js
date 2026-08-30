@@ -92,6 +92,17 @@ function createMexcClient({ apiKey, apiSecret }) {
     return info; // { symbol, contractSize, priceScale, volScale, ... }
   }
 
+  // Interface DISAMAIN kayak binanceExecutor.js getSymbolInfo -- caller (sniperMultiAccount.js
+  // dkk) pakai `stepSize`+`quantityPrecision` buat `roundToStepSize()` (fungsi murni, sama dipakai
+  // dua-duanya) pas ngitung setengah qty buat partial TP. `stepSize` = contractSize (satuan
+  // terkecil quantity ASET, bukan vol) -- quantityPrecision dihitung dari situ.
+  async function getSymbolInfo(symbol) {
+    const { contractSize, priceScale } = await getContractDetail(symbol);
+    const stepStr = contractSize.toString();
+    const quantityPrecision = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
+    return { stepSize: contractSize, quantityPrecision, pricePrecision: priceScale };
+  }
+
   // asset default 'USDT' -- MEXC gold pair (GOLD_XAUTUSDT/GOLD_PAXGUSDT) dua-duanya margin USDT.
   async function getAccountBalance(asset = 'USDT') {
     const assets = await signedRequest('GET', '/api/v1/private/account/assets', {});
@@ -183,7 +194,7 @@ function createMexcClient({ apiKey, apiSecret }) {
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-    getPositionRisk, cancelAllOpenOrders, getContractDetail, emergencyCloseMarket,
+    getPositionRisk, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
   };
 }
 
@@ -218,9 +229,10 @@ async function placeTakeProfit(args) { return _defaultClient().placeTakeProfit(a
 async function getPositionRisk(symbol) { return _defaultClient().getPositionRisk(symbol); }
 async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOpenOrders(symbol); }
 async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
+async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
 
 module.exports = {
   createMexcClient, isMexcConfigured, EXCHANGE_NAME: 'mexc',
   getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-  getPositionRisk, cancelAllOpenOrders, emergencyCloseMarket,
+  getPositionRisk, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
 };

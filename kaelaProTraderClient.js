@@ -93,10 +93,13 @@ async function claimLeadership(machineId) {
 }
 
 // Status member (25 Agu 2026, "mau lihat saldo sendiri + posisi kebuka langsung di web") --
-// dititip tiap siklus 15 menit, GAS gak bisa manggil Binance langsung (lihat catatan geo-block).
+// dititip tiap siklus 15 menit, GAS gak bisa manggil Binance/MEXC langsung (lihat catatan geo-block).
 // `positions` array biasa, di-JSON.stringify di sini (GAS Main.gs yang parse balik).
-async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positions) {
-  return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []) });
+// `mexcBalanceUsdt` (30 Agu 2026, migrasi Emas -- lihat memori project-kaela-multi-exchange) --
+// OPSIONAL, default 0 (dipetakan otomatis di GAS kalau gak dikirim), buat member yang belum
+// pasang API MEXC.
+async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt) {
+  return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []), mexcBalanceUsdt: mexcBalanceUsdt || 0 });
 }
 
 // 28 Agu 2026 -- matiin toggle trading member SECARA OTOMATIS (dompet kosong 3 hari beruntun,

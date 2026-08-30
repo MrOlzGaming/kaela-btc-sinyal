@@ -326,6 +326,25 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
       const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
 
+      // ⚠️ BUG KRITIS ketemu 31 Agu 2026 (posisi REAL Olan BTCUSDC sell, dibuka 28 Agu SEBELUM
+      // rewrite v2 -- skema LAMA liqPrice/tp/zonePrice, GAK PUNYA field sl/partialTp sama sekali).
+      // hitSl/hitPartial di bawah baca floating.sl/floating.partialTp -- `livePrice >= undefined`
+      // SELALU false di JS, jadi posisi lama ini JADI ORPHAN, gak pernah bisa ke-exit otomatis lagi
+      // walau harga udah lewat jauh dari liqPrice aslinya. Fix: kalau floating.sl gak ada, posisi
+      // ini LEGACY -- tutup PENUH (bukan partial, itu bukan desain skema lama) begitu kena liqPrice
+      // ATAU tp, PERSIS logika single-TP/SL yang berlaku pas posisi ini dibuka.
+      if (floating.sl == null) {
+        const legacyHitSl = floating.direction === 'buy' ? livePrice <= floating.liqPrice : livePrice >= floating.liqPrice;
+        const legacyHitTp = floating.direction === 'buy' ? livePrice >= floating.tp : livePrice <= floating.tp;
+        if (legacyHitSl || legacyHitTp) {
+          console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi LEGACY (pre-v2) kena ${legacyHitSl ? 'liq/SL' : 'TP'} (${livePrice}) -- tutup penuh.`);
+          await closePosition(assetCfg, floating, { alreadyClosed: false, reason: legacyHitSl ? 'SL' : 'MANUAL', manualNote: 'Posisi legacy pre-v2, exit tunggal liq/tp (skema lama, gak ikut partial/trail v2).' });
+          return;
+        }
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi LEGACY (pre-v2) masih floating (${floating.direction} @ ${floating.entryPrice}, sekarang ${livePrice}, liq ${floating.liqPrice}, TP ${floating.tp}) -- lanjut pantau (skema lama).`);
+        return;
+      }
+
       if (!floating.partialDone) {
         const hitSl = floating.direction === 'buy' ? livePrice <= floating.sl : livePrice >= floating.sl;
         const hitPartial = floating.direction === 'buy' ? livePrice >= floating.partialTp : livePrice <= floating.partialTp;

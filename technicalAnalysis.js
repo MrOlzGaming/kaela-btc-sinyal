@@ -56,6 +56,23 @@ function rsi(values, period = 14) {
   return 100 - 100 / (1 + rs);
 }
 
+// ATR (Average True Range, 30 Agu 2026, riset upgrade Nyopet -- lihat memori
+// project-olz-exposure-calculator: "nyawa% Nyopet FLAT 2% terus, idealnya ikut volatilitas").
+// True Range = jarak TERBESAR dari 3 kemungkinan (high-low hari ini, |high-close kemarin|,
+// |low-close kemarin|) -- standar Wilder, nangkep gap yang gak keliatan dari high-low doang.
+// `candles`: array {high,low,close} urut kronologis, TERAKHIR = titik yang mau dihitung ATR-nya.
+// Return null kalau data kurang (butuh minimal period+1 candle buat 1 True Range pertama).
+function atr(candles, period = 14) {
+  if (candles.length < period + 1) return null;
+  const trueRanges = [];
+  for (let i = candles.length - period; i < candles.length; i++) {
+    const c = candles[i], prev = candles[i - 1];
+    const tr = Math.max(c.high - c.low, Math.abs(c.high - prev.close), Math.abs(c.low - prev.close));
+    trueRanges.push(tr);
+  }
+  return trueRanges.reduce((a, b) => a + b, 0) / period;
+}
+
 // ============ Swing point + support/resistance ============
 // Swing high/low = titik yang lebih ekstrem dari `lookback` candle di kiri DAN kanannya --
 // definisi standar dipakai analis manual, di sini dihitung otomatis, bukan ditebak dari mata.
@@ -183,7 +200,7 @@ async function analyze(symbol = 'BTCUSDT') {
   };
 }
 
-module.exports = { fetchCandles, sma, ema, rsi, findSwingPoints, clusterLevels, fitTrendline, analyze };
+module.exports = { fetchCandles, sma, ema, rsi, atr, findSwingPoints, clusterLevels, fitTrendline, analyze };
 
 if (require.main === module) {
   analyze('BTCUSDT').then((result) => {

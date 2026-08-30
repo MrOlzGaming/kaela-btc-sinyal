@@ -33,6 +33,9 @@
   code { background: var(--clr-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
   .lang-toggle-row { display: flex; justify-content: flex-end; margin: 10px 0 -6px; }
   .lang-toggle-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); border: 1px solid var(--clr-border); background: var(--clr-bg-elevated); color: var(--clr-text-muted); cursor: pointer; }
+  .pattern-card { background: var(--clr-bg-elevated); border: 1px solid var(--clr-border); border-radius: var(--radius-md); padding: 14px; margin: 14px 0; }
+  .pattern-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 10px; color: var(--clr-text); }
+  .pattern-svg { width: 100%; height: auto; display: block; }
 </style>
 </head>
 <body>
@@ -77,6 +80,122 @@
     <li data-i18n="li_cara_7"><strong>Exit 2 TAHAP</strong> (sama buat kedua mode) — target pertama di 2× risiko (jual separuh, SL sisa digeser breakeven), sisanya di-trail pakai SMA10 harian (ditutup kalau momentum patah).</li>
     <li data-i18n="li_cara_8"><strong>Sizing pakai OLZ Exposure System asli</strong> dari saldo available — mode agresif bankroll Kaela (22 Agustus 2026) gak lagi ngelewatin sinyal cuma karena marginnya gede buat ukuran modal kecil Kaela. Leverage tetap dibatasi maksimal 50× sebagai jaring pengaman terakhir.</li>
   </ul>
+
+  <h2 data-i18n="h_gambar">📐 Pola dalam Gambar</h2>
+  <p data-i18n="p_gambar_intro">Diagram di bawah nunjukin BENTUK pola yang dicari mesin deteksi -- bukan chart historis beneran, cuma ilustrasi biar kebayang. Warna hijau = candle naik, merah = candle turun, sama kayak konvensi chart di mana-mana.</p>
+
+  <div class="pattern-card">
+    <div class="pattern-title" data-i18n="h_flag">1) Bull Flag / Pennant (Mode 1 — lanjutan tren)</div>
+    <svg viewBox="0 0 640 260" class="pattern-svg" role="img" aria-label="Diagram Bull Flag">
+      <rect x="0" y="0" width="640" height="260" fill="var(--clr-bg)" rx="8"/>
+      <!-- Tiang bendera (flagpole) -->
+      <g stroke="none">
+        <line x1="37" y1="230" x2="37" y2="195" stroke="#22c55e" stroke-width="2"/><rect x="30" y="205" width="14" height="20" fill="#22c55e"/>
+        <line x1="61" y1="205" x2="61" y2="172" stroke="#22c55e" stroke-width="2"/><rect x="54" y="180" width="14" height="20" fill="#22c55e"/>
+        <line x1="85" y1="183" x2="85" y2="147" stroke="#22c55e" stroke-width="2"/><rect x="78" y="155" width="14" height="23" fill="#22c55e"/>
+        <line x1="109" y1="158" x2="109" y2="122" stroke="#22c55e" stroke-width="2"/><rect x="102" y="130" width="14" height="23" fill="#22c55e"/>
+        <line x1="133" y1="133" x2="133" y2="100" stroke="#22c55e" stroke-width="2"/><rect x="126" y="108" width="14" height="20" fill="#22c55e"/>
+        <!-- Bendera (flag, konsolidasi turun tipis) -->
+        <line x1="157" y1="131" x2="157" y2="106" stroke="#f85149" stroke-width="2"/><rect x="150" y="112" width="14" height="14" fill="#f85149"/>
+        <line x1="182" y1="135" x2="182" y2="112" stroke="#22c55e" stroke-width="2"/><rect x="175" y="118" width="14" height="12" fill="#22c55e"/>
+        <line x1="207" y1="143" x2="207" y2="118" stroke="#f85149" stroke-width="2"/><rect x="200" y="124" width="14" height="14" fill="#f85149"/>
+        <line x1="232" y1="147" x2="232" y2="124" stroke="#22c55e" stroke-width="2"/><rect x="225" y="130" width="14" height="12" fill="#22c55e"/>
+        <line x1="257" y1="155" x2="257" y2="130" stroke="#f85149" stroke-width="2"/><rect x="250" y="136" width="14" height="14" fill="#f85149"/>
+        <line x1="282" y1="159" x2="282" y2="136" stroke="#22c55e" stroke-width="2"/><rect x="275" y="142" width="14" height="12" fill="#22c55e"/>
+        <line x1="307" y1="167" x2="307" y2="142" stroke="#f85149" stroke-width="2"/><rect x="300" y="148" width="14" height="14" fill="#f85149"/>
+        <!-- Breakout -->
+        <line x1="339" y1="150" x2="339" y2="112" stroke="#22c55e" stroke-width="2"/><rect x="332" y="120" width="14" height="25" fill="#22c55e"/>
+        <line x1="363" y1="123" x2="363" y2="82" stroke="#22c55e" stroke-width="2"/><rect x="356" y="90" width="14" height="28" fill="#22c55e"/>
+        <line x1="387" y1="93" x2="387" y2="50" stroke="#22c55e" stroke-width="2"/><rect x="380" y="58" width="14" height="30" fill="#22c55e"/>
+        <line x1="411" y1="60" x2="411" y2="24" stroke="#22c55e" stroke-width="2"/><rect x="404" y="30" width="14" height="26" fill="#22c55e"/>
+      </g>
+      <!-- Trendline bendera -->
+      <line x1="145" y1="100" x2="330" y2="145" stroke="var(--clr-text-muted)" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <line x1="145" y1="135" x2="330" y2="170" stroke="var(--clr-text-muted)" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <!-- SL -->
+      <line x1="20" y1="170" x2="620" y2="170" stroke="#f85149" stroke-width="1.3" stroke-dasharray="3,4"/>
+      <text x="24" y="182" fill="#f85149" font-size="12" font-weight="700">SL</text>
+      <!-- Entry -->
+      <circle cx="339" cy="130" r="5" fill="var(--clr-primary)"/>
+      <text x="440" y="115" fill="var(--clr-primary)" font-size="13" font-weight="700" data-i18n="lbl_entry_flag">Entry -- tembus bendera</text>
+      <line x1="435" y1="112" x2="349" y2="128" stroke="var(--clr-primary)" stroke-width="1.3"/>
+      <!-- Target arrow -->
+      <path d="M 460 90 L 460 40 M 452 50 L 460 38 L 468 50" fill="none" stroke="#22c55e" stroke-width="1.6"/>
+      <text x="470" y="55" fill="#22c55e" font-size="12" font-weight="700" data-i18n="lbl_target">Target 2× risiko</text>
+      <!-- Labels -->
+      <text x="45" y="248" fill="var(--clr-text-muted)" font-size="12" data-i18n="lbl_flagpole">Tiang bendera</text>
+      <text x="195" y="248" fill="var(--clr-text-muted)" font-size="12" data-i18n="lbl_flagbody">Bendera (konsolidasi)</text>
+    </svg>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title" data-i18n="h_wedge">2) Falling Wedge (Mode 1 — pembalikan)</div>
+    <svg viewBox="0 0 640 260" class="pattern-svg" role="img" aria-label="Diagram Falling Wedge">
+      <rect x="0" y="0" width="640" height="260" fill="var(--clr-bg)" rx="8"/>
+      <g stroke="none">
+        <line x1="47" y1="80" x2="47" y2="42" stroke="#f85149" stroke-width="2"/><rect x="40" y="48" width="14" height="26" fill="#f85149"/>
+        <line x1="80" y1="127" x2="80" y2="93" stroke="#22c55e" stroke-width="2"/><rect x="73" y="100" width="14" height="18" fill="#22c55e"/>
+        <line x1="113" y1="160" x2="113" y2="123" stroke="#f85149" stroke-width="2"/><rect x="106" y="130" width="14" height="20" fill="#f85149"/>
+        <line x1="146" y1="124" x2="146" y2="86" stroke="#22c55e" stroke-width="2"/><rect x="139" y="93" width="14" height="22" fill="#22c55e"/>
+        <line x1="179" y1="165" x2="179" y2="133" stroke="#f85149" stroke-width="2"/><rect x="172" y="140" width="14" height="18" fill="#f85149"/>
+        <line x1="212" y1="144" x2="212" y2="110" stroke="#22c55e" stroke-width="2"/><rect x="205" y="117" width="14" height="18" fill="#22c55e"/>
+        <line x1="245" y1="170" x2="245" y2="141" stroke="#f85149" stroke-width="2"/><rect x="238" y="147" width="14" height="16" fill="#f85149"/>
+        <line x1="278" y1="152" x2="278" y2="120" stroke="#22c55e" stroke-width="2"/><rect x="271" y="126" width="14" height="17" fill="#22c55e"/>
+        <line x1="311" y1="169" x2="311" y2="144" stroke="#f85149" stroke-width="2"/><rect x="304" y="150" width="14" height="14" fill="#f85149"/>
+        <!-- Breakout naik -->
+        <line x1="344" y1="148" x2="344" y2="100" stroke="#22c55e" stroke-width="2"/><rect x="337" y="108" width="14" height="30" fill="#22c55e"/>
+        <line x1="377" y1="116" x2="377" y2="66" stroke="#22c55e" stroke-width="2"/><rect x="370" y="74" width="14" height="32" fill="#22c55e"/>
+        <line x1="410" y1="82" x2="410" y2="32" stroke="#22c55e" stroke-width="2"/><rect x="403" y="40" width="14" height="32" fill="#22c55e"/>
+      </g>
+      <!-- 2 trendline konvergen -->
+      <line x1="32" y1="40" x2="335" y2="118" stroke="var(--clr-text-muted)" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <line x1="98" y1="150" x2="325" y2="163" stroke="var(--clr-text-muted)" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <!-- SL -->
+      <line x1="20" y1="172" x2="620" y2="172" stroke="#f85149" stroke-width="1.3" stroke-dasharray="3,4"/>
+      <text x="24" y="184" fill="#f85149" font-size="12" font-weight="700">SL</text>
+      <!-- Entry -->
+      <circle cx="344" cy="122" r="5" fill="var(--clr-primary)"/>
+      <text x="440" y="140" fill="var(--clr-primary)" font-size="13" font-weight="700" data-i18n="lbl_entry_wedge">Entry -- tembus trendline</text>
+      <line x1="435" y1="137" x2="354" y2="122" stroke="var(--clr-primary)" stroke-width="1.3"/>
+      <path d="M 470 90 L 470 40 M 462 50 L 470 38 L 478 50" fill="none" stroke="#22c55e" stroke-width="1.6"/>
+      <text x="480" y="55" fill="#22c55e" font-size="12" font-weight="700" data-i18n="lbl_target">Target 2× risiko</text>
+      <text x="120" y="248" fill="var(--clr-text-muted)" font-size="12" data-i18n="lbl_wedge_note">2 trendline turun, menyempit (konvergen) ke kanan</text>
+    </svg>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title" data-i18n="h_fvg">3) Fair Value Gap / FVG (Mode 2 — zona gap 3-candle)</div>
+    <svg viewBox="0 0 640 260" class="pattern-svg" role="img" aria-label="Diagram Fair Value Gap">
+      <rect x="0" y="0" width="640" height="260" fill="var(--clr-bg)" rx="8"/>
+      <!-- Zona FVG (shaded) -->
+      <rect x="145" y="98" width="420" height="24" fill="var(--clr-primary)" opacity="0.15"/>
+      <line x1="145" y1="98" x2="565" y2="98" stroke="var(--clr-primary)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
+      <line x1="145" y1="122" x2="565" y2="122" stroke="var(--clr-primary)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
+      <text x="440" y="115" fill="var(--clr-primary)" font-size="12" font-weight="700" data-i18n="lbl_fvg_zone">Zona FVG (harga dilompatin)</text>
+      <g stroke="none">
+        <line x1="47" y1="178" x2="47" y2="145" stroke="#22c55e" stroke-width="2"/><rect x="40" y="150" width="14" height="20" fill="#22c55e"/>
+        <line x1="87" y1="160" x2="87" y2="125" stroke="#22c55e" stroke-width="2"/><rect x="80" y="130" width="14" height="25" fill="#22c55e"/>
+        <line x1="127" y1="160" x2="127" y2="122" stroke="#22c55e" stroke-width="2" data-label="A"/><rect x="120" y="130" width="14" height="25" fill="#22c55e"/>
+        <text x="122" y="200" fill="var(--clr-text-muted)" font-size="11">A</text>
+        <line x1="167" y1="130" x2="167" y2="50" stroke="#22c55e" stroke-width="2"/><rect x="160" y="60" width="14" height="65" fill="#22c55e"/>
+        <text x="162" y="200" fill="var(--clr-text-muted)" font-size="11">B</text>
+        <line x1="207" y1="98" x2="207" y2="55" stroke="#22c55e" stroke-width="2"/><rect x="200" y="65" width="14" height="28" fill="#22c55e"/>
+        <text x="202" y="200" fill="var(--clr-text-muted)" font-size="11">C</text>
+        <line x1="247" y1="82" x2="247" y2="48" stroke="#22c55e" stroke-width="2"/><rect x="240" y="55" width="14" height="22" fill="#22c55e"/>
+        <line x1="287" y1="102" x2="287" y2="65" stroke="#f85149" stroke-width="2"/><rect x="280" y="70" width="14" height="25" fill="#f85149"/>
+        <line x1="327" y1="122" x2="327" y2="90" stroke="#f85149" stroke-width="2"/><rect x="320" y="95" width="14" height="20" fill="#f85149"/>
+        <line x1="367" y1="115" x2="367" y2="82" stroke="#22c55e" stroke-width="2"/><rect x="360" y="88" width="14" height="20" fill="#22c55e"/>
+        <line x1="407" y1="88" x2="407" y2="48" stroke="#22c55e" stroke-width="2"/><rect x="400" y="55" width="14" height="25" fill="#22c55e"/>
+      </g>
+      <!-- SL -->
+      <line x1="20" y1="128" x2="620" y2="128" stroke="#f85149" stroke-width="1.3" stroke-dasharray="3,4"/>
+      <text x="24" y="140" fill="#f85149" font-size="12" font-weight="700" data-i18n="lbl_fvg_sl">SL (di bawah gap)</text>
+      <!-- Entry -->
+      <circle cx="327" cy="108" r="5" fill="var(--clr-primary)"/>
+      <text x="440" y="180" fill="var(--clr-primary)" font-size="13" font-weight="700" data-i18n="lbl_entry_fvg">Entry -- harga mantul</text>
+      <line x1="435" y1="177" x2="335" y2="112" stroke="var(--clr-primary)" stroke-width="1.3"/>
+    </svg>
+  </div>
 
   <p data-i18n="p_hasil">Hasil riset+backtest 22 Agustus 2026 (9 tahun 2017-2026, modal $100+topup): baseline Pola Chart doang <strong>profit factor 2,32</strong>, drawdown 39%, final $17.584. Digabung sama FVG multi-posisi + window istirahat BTC: <strong>profit factor 1,77</strong>, final <strong>$48.363</strong> (naik 24% dari sebelum ada window istirahat). Emas (parameter SAMA PERSIS, gak diubah): profit factor 1,71, final $39.712, drawdown cuma <strong>27,7%</strong> (separuh dari BTC) — bukti diversifikasi aset beneran membantu. Drawdown gabungan BTC+FVG sendiri masih 55,2% (diaudit detail: BUKAN dari sistem sizing yang salah, tapi dari 2 mode sama-sama "beli lalu berharap lanjut" yang sama-sama gagal pas market lagi choppy/gak ada tren — diakui jujur, bukan disembunyikan).</p>
 
@@ -125,6 +244,20 @@
     I18N_META.li_cara_6 = { id: '<strong>Saldo AVAILABLE, bukan modal penuh</strong> — begitu ada beberapa posisi floating bareng, entry baru dihitung dari sisa modal yang BELUM kepake posisi lain (bankroll total dikurangi margin yang udah terpakai) — biar gak overleverage kalau beberapa sinyal nembak bersamaan.', en: '<strong>AVAILABLE balance, not full capital</strong> — once several positions are floating at once, new entries are calculated from the remaining capital NOT yet used by other positions (total bankroll minus margin already in use) — to avoid overleveraging when several signals fire at the same time.' };
     I18N_META.li_cara_7 = { id: '<strong>Exit 2 TAHAP</strong> (sama buat kedua mode) — target pertama di 2× risiko (jual separuh, SL sisa digeser breakeven), sisanya di-trail pakai SMA10 harian (ditutup kalau momentum patah).', en: '<strong>2-STAGE exit</strong> (same for both modes) — first target at 2× risk (sell half, remaining SL moved to breakeven), the rest trailed using the daily SMA10 (closed if momentum breaks).' };
     I18N_META.li_cara_8 = { id: '<strong>Sizing pakai OLZ Exposure System asli</strong> dari saldo available — mode agresif bankroll Kaela (22 Agustus 2026) gak lagi ngelewatin sinyal cuma karena marginnya gede buat ukuran modal kecil Kaela. Leverage tetap dibatasi maksimal 50× sebagai jaring pengaman terakhir.', en: '<strong>Sizing uses the original OLZ Exposure System</strong> from available balance — Kaela\'s aggressive bankroll mode (August 22, 2026) no longer skips signals just because the margin is large relative to Kaela\'s small capital. Leverage is still capped at a maximum of 50× as a final safety net.' };
+    I18N_META.h_gambar = { id: '📐 Pola dalam Gambar', en: '📐 Patterns Illustrated' };
+    I18N_META.p_gambar_intro = { id: 'Diagram di bawah nunjukin BENTUK pola yang dicari mesin deteksi -- bukan chart historis beneran, cuma ilustrasi biar kebayang. Warna hijau = candle naik, merah = candle turun, sama kayak konvensi chart di mana-mana.', en: 'The diagrams below show the SHAPE of the pattern the detection engine looks for -- not a real historical chart, just an illustration to help visualize it. Green = up candle, red = down candle, same convention as any chart.' };
+    I18N_META.h_flag = { id: '1) Bull Flag / Pennant (Mode 1 — lanjutan tren)', en: '1) Bull Flag / Pennant (Mode 1 — trend continuation)' };
+    I18N_META.lbl_flagpole = { id: 'Tiang bendera', en: 'Flagpole' };
+    I18N_META.lbl_flagbody = { id: 'Bendera (konsolidasi)', en: 'Flag (consolidation)' };
+    I18N_META.lbl_entry_flag = { id: 'Entry -- tembus bendera', en: 'Entry -- breaks the flag' };
+    I18N_META.lbl_target = { id: 'Target 2× risiko', en: 'Target 2× risk' };
+    I18N_META.h_wedge = { id: '2) Falling Wedge (Mode 1 — pembalikan)', en: '2) Falling Wedge (Mode 1 — reversal)' };
+    I18N_META.lbl_entry_wedge = { id: 'Entry -- tembus trendline', en: 'Entry -- breaks the trendline' };
+    I18N_META.lbl_wedge_note = { id: '2 trendline turun, menyempit (konvergen) ke kanan', en: '2 downward trendlines, narrowing (converging) to the right' };
+    I18N_META.h_fvg = { id: '3) Fair Value Gap / FVG (Mode 2 — zona gap 3-candle)', en: '3) Fair Value Gap / FVG (Mode 2 — 3-candle gap zone)' };
+    I18N_META.lbl_fvg_zone = { id: 'Zona FVG (harga dilompatin)', en: 'FVG zone (price skipped over)' };
+    I18N_META.lbl_fvg_sl = { id: 'SL (di bawah gap)', en: 'SL (below the gap)' };
+    I18N_META.lbl_entry_fvg = { id: 'Entry -- harga mantul', en: 'Entry -- price bounces' };
     I18N_META.p_hasil = { id: 'Hasil riset+backtest 22 Agustus 2026 (9 tahun 2017-2026, modal $100+topup): baseline Pola Chart doang <strong>profit factor 2,32</strong>, drawdown 39%, final $17.584. Digabung sama FVG multi-posisi + window istirahat BTC: <strong>profit factor 1,77</strong>, final <strong>$48.363</strong> (naik 24% dari sebelum ada window istirahat). Emas (parameter SAMA PERSIS, gak diubah): profit factor 1,71, final $39.712, drawdown cuma <strong>27,7%</strong> (separuh dari BTC) — bukti diversifikasi aset beneran membantu. Drawdown gabungan BTC+FVG sendiri masih 55,2% (diaudit detail: BUKAN dari sistem sizing yang salah, tapi dari 2 mode sama-sama "beli lalu berharap lanjut" yang sama-sama gagal pas market lagi choppy/gak ada tren — diakui jujur, bukan disembunyikan).', en: 'Research+backtest results from August 22, 2026 (9 years, 2017-2026, $100 capital+top-ups): Chart Pattern baseline alone: <strong>profit factor 2.32</strong>, drawdown 39%, final $17,584. Combined with multi-position FVG + BTC rest window: <strong>profit factor 1.77</strong>, final <strong>$48,363</strong> (up 24% from before the rest window existed). Gold (EXACT SAME parameters, unchanged): profit factor 1.71, final $39,712, drawdown only <strong>27.7%</strong> (half of BTC\'s) — proof that asset diversification genuinely helps. The combined BTC+FVG drawdown alone is still 55.2% (audited in detail: NOT from a flawed sizing system, but from both modes equally being "buy and hope it continues" and both equally failing during choppy/trendless markets — honestly acknowledged, not hidden).' };
     I18N_META.h_bayangan = { id: '🤖 Eksekusi otomatis — gimana caranya?', en: '🤖 Automatic execution — how does it work?' };
     I18N_META.p_bayangan = { id: 'Begitu VALID, Kaela <strong>langsung buka posisi BENERAN di akun Binance Demo</strong> — TP, SL, exposure, semua dieksekusi otomatis di exchange (bukan lagi cuma dicatat/dihitung). Duit yang dipakai <strong>VIRTUAL (Binance Demo Trading), BUKAN uang asli</strong> — ini fase latihan/uji coba sebelum performanya cukup teruji buat dipertimbangkan pindah ke akun Real. Kalau Olan mau ikut sinyalnya di akun sendiri (Real), eksekusi tetap 100% keputusan &amp; tanggung jawab sendiri, pakai angka yang udah Kaela hitung. Riwayat posisi yang udah SELESAI (kena TP atau SL, profit maupun loss) bisa dilihat lengkap di tab <strong>📓 Jurnal</strong> di Dashboard — statistik, equity curve, kalender P&amp;L, semua dari data ini.', en: 'Once VALID, Kaela <strong>immediately opens a REAL position on the Binance Demo account</strong> — TP, SL, exposure, everything is executed automatically on the exchange (no longer just recorded/calculated). The money used is <strong>VIRTUAL (Binance Demo Trading), NOT real funds</strong> — this is a training/testing phase before its performance is proven enough to consider moving to a Real account. If Olan wants to follow a signal on his own (Real) account, the execution remains 100% his own decision &amp; responsibility, using the numbers Kaela already calculated. The history of COMPLETED positions (hit TP or SL, profit or loss) can be viewed in full under the <strong>📓 Journal</strong> tab in the Dashboard — statistics, equity curve, P&amp;L calendar, all from this data.' };

@@ -160,6 +160,39 @@ function etfFlowInsight(etf) {
   return 'campuran, gak ada tren dominan minggu ini';
 }
 
+// ============ Macro Package Synthesis (DXY + Fed Rate + Yield Curve, opsional Real Yield) ============
+// 30 Agu 2026, permintaan Olan: "info dxy berpaket dengan suku bunga, yield, dsb -- soalnya
+// sering korelasi sama BTC dan XAU". Sebelumnya DXY/Fed Rate/Yield Curve tampil TERPISAH (DXY
+// cuma di laporan Emas harian, Fed Rate/Yield Curve cuma di laporan MINGGUAN) -- padahal
+// ke-4-nya SATU cerita regime makro yang sama (Fed Rate = akar, gerakin DXY+yield bareng, DXY
+// & yield sama-sama nentuin selera risiko BTC + ongkos peluang Emas). Digabung di sini + 1
+// kalimat SINTESIS regime, dipanggil dari laporan HARIAN (BTC & Emas, bukan cuma mingguan lagi).
+function macroPackageSynthesis(dxy, fedRate, yieldCurve) {
+  const dovish = fedRate && fedRate.changeBps != null && fedRate.changeBps <= -25;
+  const hawkish = fedRate && fedRate.changeBps != null && fedRate.changeBps >= 25;
+  const dollarWeak = dxy && dxy.changePct < -0.3;
+  const dollarStrong = dxy && dxy.changePct > 0.3;
+  if (dovish && dollarWeak) return '🧭 Regime: The Fed DOVISH + dolar melemah -- historis tailwind BARENGAN buat BTC (selera risiko naik) DAN Emas (ongkos peluang turun), bukan gerak kebalikan.';
+  if (hawkish && dollarStrong) return '🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.';
+  if (yieldCurve && yieldCurve.inverted) return '🧭 Regime: Yield curve TERBALIK -- pasar obligasi nebak The Fed bakal terpaksa potong bunga (biasanya sinyal resesi mendekat); momen kurva mulai "membetulkan diri" historis sering jadi titik balik The Fed dari hawkish ke dovish.';
+  return '🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.';
+}
+
+// `extra` opsional -- Real Yield (khusus Emas, DXY/FedRate/YieldCurve dipakai bareng BTC).
+function formatMacroPackageLines({ dxy, fedRate, yieldCurve, realYield } = {}) {
+  const lines = [];
+  if (dxy) lines.push(`💵 DXY: ${dxy.latest.value.toFixed(1)} (${dxy.trend.arah})`);
+  if (fedRate) {
+    const arah = fedRate.changeBps >= 25 ? 'DINAIKKAN' : fedRate.changeBps <= -25 ? 'DIPOTONG' : 'DITAHAN';
+    lines.push(`🏦 Fed Funds Rate: ${fedRate.value.toFixed(2)}% -- ${arah} (${(fedRate.changeBps || 0).toFixed(0)} bps / 90 hari)`);
+  }
+  if (realYield) lines.push(`📉 Real Yield 10Y: ${realYield.latest.value.toFixed(2)}% (${realYield.trend.arah})`);
+  if (yieldCurve) lines.push(`📊 Yield Curve 10Y-2Y: ${yieldCurve.value.toFixed(2)} (${yieldCurve.inverted ? 'TERBALIK' : 'normal'})`);
+  if (lines.length === 0) return [];
+  lines.push(macroPackageSynthesis(dxy, fedRate, yieldCurve));
+  return lines;
+}
+
 async function safe(fn, label) {
   try {
     return await fn();
@@ -186,6 +219,7 @@ module.exports = {
   fetchBtcDvol, dvolInsight, fetchStablecoinSupplyGrowth, fetchYieldCurve, yieldCurveInsight,
   fetchM2Growth, m2Insight, fetchFedFundsRate, classifyFedRateTrend, fetchCreditSpread,
   classifyCreditSpreadTrend, fetchBtcEtfFlow, etfFlowInsight, fmtFlowUsd, fetchAdvancedMacroContext,
+  formatMacroPackageLines,
 };
 
 if (require.main === module) {

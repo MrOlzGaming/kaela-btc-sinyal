@@ -25,7 +25,7 @@ const { fetchFearGreed } = require('./marketSentiment');
 const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
 const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine, getTrackRecordSummary } = require('./trackRecord');
-const { fetchAdvancedMacroContext, classifyFedRateTrend, classifyCreditSpreadTrend } = require('./advancedMacro');
+const { fetchAdvancedMacroContext, classifyFedRateTrend, classifyCreditSpreadTrend, formatMacroPackageLines } = require('./advancedMacro');
 const { checkGoldCotPriceDivergence, checkCalmBeforeStorm, checkPriceNuplDivergence, formatDivergenceLines } = require('./divergenceDetector');
 const fs = require('fs');
 const path = require('path');
@@ -193,8 +193,13 @@ async function main() {
   // lewat web, gak nunggu WA mingguan.
   let dashboardData = null;
 
+  // 30 Agu 2026, permintaan Olan: "info dxy berpaket dengan suku bunga, yield, dsb" -- goldMacro
+  // (DXY+RealYield) DIMAJUIN ke sini (dulu cuma di-fetch di blok Emas) biar laporan HARIAN BTC
+  // juga bisa nunjukin paket DXY+Fed Rate+Yield Curve yang sama, gak cuma Emas doang. Fetch-nya
+  // gak gantung ke harga Emas apapun, aman dipanggil sebelum blok Emas mulai.
+  let goldMacro = null;
   if (priceYesterday !== null) {
-    items.push({ type: 'report-daily', content: generateGroupDaily(now, priceToday, priceYesterday, { onchain }) });
+    goldMacro = await safeMacro();
   }
   // computeConviction -- SYARAT SAMA kayak laporan harian sendiri (priceYesterday tersedia),
   // BUKAN lagi terkunci ke hari Senin.
@@ -205,6 +210,13 @@ async function main() {
       safe(fetchFearGreed, 'Fear & Greed'),
     ]);
     advancedMacro = await safe(fetchAdvancedMacroContext, 'Advanced Macro (DVOL/Stablecoin/YieldCurve/M2)');
+    items.push({
+      type: 'report-daily',
+      content: generateGroupDaily(now, priceToday, priceYesterday, {
+        onchain,
+        macroPackage: formatMacroPackageLines({ dxy: goldMacro?.dxy || null, fedRate: advancedMacro?.fedRate || null, yieldCurve: advancedMacro?.yieldCurve || null }),
+      }),
+    });
     const btcRsi = rsi(closed.map((c) => c.close), 14);
     const conviction = computeBtcConviction({
       rsi: btcRsi, mvrv: onchain?.mvrv || null, nupl, fearGreed,
@@ -246,11 +258,10 @@ async function main() {
   }
 
   // Laporan Emas -- jadwal SAMA kayak BTC (harian tiap hari, mingguan Senin, dst), key `type`
-  // BEDA (suffix -gold) biar dedup archive.js gak ketuker sama laporan BTC.
-  let goldMacro = null;
+  // BEDA (suffix -gold) biar dedup archive.js gak ketuker sama laporan BTC. goldMacro udah
+  // di-fetch di atas (dipakai bareng laporan BTC juga -- lihat komentar "info dxy berpaket").
   if (goldPriceToday !== null && goldPriceYesterday !== null) {
-    goldMacro = await safeMacro();
-    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro: goldMacro }) });
+    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro: goldMacro, advancedMacro }) });
   }
   // computeGoldConviction -- SYARAT SAMA kayak laporan harian Emas, BUKAN lagi terkunci Senin.
   // COT (CFTC) TETAP di-gate weekly (`willSendWeeklyGold`) -- itu data itu sendiri cuma terbit

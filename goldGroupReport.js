@@ -4,7 +4,7 @@
 
 const { WEB_URL, localDateKey } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
-const { yieldCurveInsight } = require('./advancedMacro');
+const { yieldCurveInsight, formatMacroPackageLines } = require('./advancedMacro');
 
 function pctChange(today, prev) {
   return ((today - prev) / prev) * 100;
@@ -48,12 +48,23 @@ function regimeLines(regime) {
   return [`📊 Regime (90 hari): korelasi ke DXY ${regime.corr90.toFixed(2)} (${regime.label90}) -- ${regime.label90.includes('negatif') ? 'Emas lagi gerak "tekstbuk" (berlawanan dolar)' : 'Emas lagi didorong faktor LAIN (bukan cuma dolar -- misal pembelian bank sentral/safe-haven)'}`];
 }
 
+// 30 Agu 2026, permintaan Olan: "info dxy berpaket dengan suku bunga, yield, dsb" -- laporan
+// harian sekarang pakai `formatMacroPackageLines` (DXY+Fed Rate+Yield Curve+Real Yield SEKALIGUS
+// + 1 kalimat sintesis regime), GANTI `macroLines()` yang cuma DXY+Real Yield doang. `opts.macro`
+// (macroData.js: dxy+realYield) dan `opts.advancedMacro` (advancedMacro.js: fedRate+yieldCurve)
+// digabung di sini jadi 1 paket -- caller (groupMonitor.js) cukup oper 2 sumber data itu.
 function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
   const change = pctChange(priceToday, priceYesterday);
+  const macroPackage = formatMacroPackageLines({
+    dxy: opts.macro?.dxy || null,
+    realYield: opts.macro?.realYield || null,
+    fedRate: opts.advancedMacro?.fedRate || null,
+    yieldCurve: opts.advancedMacro?.yieldCurve || null,
+  });
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 Update XAU/Emas — ${localDateKey(now)}`,
     `Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`,
-    ...macroLines(opts.macro),
+    ...macroPackage,
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

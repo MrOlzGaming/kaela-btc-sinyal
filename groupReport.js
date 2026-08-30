@@ -75,6 +75,13 @@ function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   lines.push(`Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`);
   lines.push(halvingLine(now));
   lines.push(...onchainCycleLines(opts.onchain));
+  // 30 Agu 2026, permintaan Olan: "info dxy berpaket dengan suku bunga, yield, dsb" -- DXY+Fed
+  // Rate+Yield Curve SEKARANG masuk laporan HARIAN BTC juga (dulu cuma Emas yang punya DXY, dan
+  // Fed Rate/Yield Curve cuma di laporan mingguan) -- lihat advancedMacro.js formatMacroPackageLines.
+  if (opts.macroPackage && opts.macroPackage.length) {
+    lines.push('');
+    lines.push(...opts.macroPackage);
+  }
 
   const phase = opts.phase || getWindowPhase(now); // 'TANAM' | 'PANEN' | null
   if (phase === 'TANAM') {

@@ -43,6 +43,28 @@
       "pnlPct": 0,
       "closedAt": "2026-08-30T09:30:00.000Z",
       "reconciliationNote": "Entri pre-migrasi (dibuka pas Emas masih di Binance) -- MEXC gak pernah punya posisi ini, gak bisa direkonsiliasi otomatis. Ditutup manual PnL $0 (30 Agu 2026, migrasi ke MEXC)."
+    },
+    {
+      "id": "nyopet-demo-1788109754490",
+      "asset": "btc",
+      "exchange": "binance",
+      "direction": "buy",
+      "status": "floating",
+      "mode": "fvg_bounce",
+      "patternType": "fvg_bounce",
+      "entryPrice": 79181.6,
+      "sl": 62824.3,
+      "originalSl": 62824.3,
+      "tp": 110822.29000000001,
+      "partialTp": 110822.29000000001,
+      "qty": 0.019,
+      "leverage": 4,
+      "marginUsd": 375,
+      "nilaiPosisi": 1500,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "realizedPnlUsd": 0,
+      "triggeredAt": "2026-08-30T17:09:14.490Z"
     }
   ],
   "demoEraStartedAt": "2026-08-28T20:00:02.119Z",
@@ -61,7 +83,7 @@
       "touches": null
     }
   },
-  "balanceUsdc": 5000,
+  "balanceUsdc": 4623.8779,
   "balanceUsdt": 2.664e-9,
   "mexcBalanceUsdc": 0
 }

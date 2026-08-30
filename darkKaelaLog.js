@@ -83,11 +83,26 @@ ${fmtWita(now)}`;
 // feedback-selalu-ada-alasan) -- keputusan sadar Olan buat KHUSUS pesan ping-pong Nyopet ini,
 // bukan pembatalan aturan itu buat sinyal lain. Tag mode (Fade/Follow) tetap ditinggal 1 kata
 // biar masih ada KONTEKS minimal tanpa balik panjang.
+// PATTERN_TAG_LABEL (30 Agu 2026, Nyopet v2 -- ganti mesin zona-ping-pong ke chart pattern+FVG,
+// lihat memori project-dark-kaela) -- `pos.mode` sekarang `patternType` dari
+// chartPatterns.js/fvgDetector.js (mis. 'flag_bull', 'wedge_falling', 'fvg_bounce_long'), BUKAN
+// lagi 'fade'/'follow'. Label singkat buat pesan WA (tetap ringkas, "nyopet ga usah kepanjangan").
+const PATTERN_TAG_LABEL = {
+  flag_bull: 'Flag', pennant_bull: 'Pennant', wedge_falling: 'Wedge', fvg_bounce: 'FVG',
+};
+function patternTag(mode) { return PATTERN_TAG_LABEL[mode] || mode || '-'; }
+
 function formatAutoOpen(pos, now, dxyLine, isDemo) {
   const dirLabel = pos.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT';
-  const modeTag = pos.mode === 'fade' ? 'Fade' : 'Follow';
   return `🥷 Nyopet ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(pos.id)}
-${dirLabel} @ ${fmtUsd(pos.entryPrice)} → TP ${fmtUsd(pos.tp)} (${modeTag})${dxyLine ? '\n' + dxyLine : ''}`;
+${dirLabel} @ ${fmtUsd(pos.entryPrice)} → TP1 ${fmtUsd(pos.tp)} · SL ${fmtUsd(pos.sl)} (${patternTag(pos.mode)})${dxyLine ? '\n' + dxyLine : ''}`;
+}
+
+// Tahap 1 (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper) -- separuh posisi diamankan,
+// SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
+function formatAutoPartial(pos, now, isDemo) {
+  return `🥷 Nyopet ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(pos.id)}
+🟡 Tahap 1 diamankan: ${pos.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsd(pos.realizedPnlUsd)} -- SL sisa digeser breakeven, separuh posisi di-trail.`;
 }
 
 function formatAutoClosed(trade, now, isDemo) {
@@ -97,4 +112,4 @@ function formatAutoClosed(trade, now, isDemo) {
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)}→${fmtUsd(trade.exitPrice)} | ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsd(trade.pnlUsd)}`;
 }
 
-module.exports = { formatSignal, formatBroken, formatAutoOpen, formatAutoClosed, COINGLASS_LINK, KALKULATOR_LINK };
+module.exports = { formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, COINGLASS_LINK, KALKULATOR_LINK };

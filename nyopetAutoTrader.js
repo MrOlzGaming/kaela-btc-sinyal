@@ -3,35 +3,34 @@
 // Actions, dan sistem ini butuh cek SETIAP SIKLUS (bukan cuma pas ada sinyal baru) buat mantau
 // posisi floating, jadi gak worth dipisah cloud-detect/local-execute kayak Sniper.
 //
-// MULTI-ASET (23 Agu 2026, permintaan Olan: "semua mode sniper dan nyopet berlaku buat semua
-// aset.. baik BTC dan PAXG") -- loop tiap aset di NYOPET_ASSETS, TIAP ASET dapet slot 1 posisi
-// SENDIRI-SENDIRI (BTC dan PAXG bisa floating bebarengan, gak rebutan slot) -- pola sama kayak
-// Sniper multi-aset. State (`orders`/`watchZoneByAsset`) di journal dipisah per-key aset.
+// MULTI-ASET -- loop tiap aset di NYOPET_ASSETS, TIAP ASET dapet slot 1 posisi SENDIRI-SENDIRI.
+// MULTI-AKUN -- factory `createNyopetTrader({...})`, kredensial/journal-path/pengirim-WA di-CLOSURE
+// per instance. Wrapper module-level (main di bawah) = instance DEFAULT (akun Olan sendiri).
 //
-// MULTI-AKUN (23 Agu 2026, permintaan Olan: "Kaela Pro Trader" -- family/member lain bisa jalanin
-// akun Binance sendiri) -- REFACTOR jadi factory `createNyopetTrader({...})`, pola SAMA persis
-// kayak binanceExecutor.js `createBinanceClient()`: kredensial/journal-path/pengirim-WA di-CLOSURE
-// per instance, bukan module-level global lagi. Wrapper module-level (processAsset/main di bawah)
-// TETAP ada dan ZERO PERUBAHAN PERILAKU buat akun Olan sendiri (CLI `node nyopetAutoTrader.js`) --
-// itu cuma factory instance DEFAULT pakai binanceExecutor default client + fonnte.js biasa +
-// nyopet-journal.json (path lama, TIDAK BERUBAH).
-//
-// LOGIKA per-aset (murni trigger zona likuiditas, GAK PAKAI R:R) -- SAMA buat SEMUA akun (data
-// chart/zona itu PUBLIK, sama buat siapapun) -- yang beda per-akun cuma SIZING (dari saldo/modal
-// masing-masing) & journal/notif:
-//   FADE (default, asumsi SELALU mantul): harga nyentuh zona -> counter posisi, nyawa 2% FLAT
-//     (jadi leverage), TP = zona LAWAN. Kena TP -> tutup (WIN), REVERSE (posisi baru arah
-//     kebalikan di zona ini).
-//   FOLLOW (override kalau zona GAGAL nahan/ditembus beneran, bukan cuma wick): ikutin arah
-//     tembusan, target = zona BERIKUTNYA di arah situ. Kena target -> tutup, balik ke FADE lagi.
-//   Kena LIKUIDASI di mode manapun -> tutup (LOSS), buka posisi baru lagi (cek zona ulang).
-//
-// GAK PAKAI ORDER SL TERPISAH (23 Agu 2026, permintaan Olan: "kita ga pake sl tp pastikan buka
-// pake isolated jadi liq adalah sl") -- margin ISOLATED dipastiin eksplisit tiap buka posisi,
-// LIKUIDASI-nya sendiri yang jadi nyawa. Konsekuensi: monitoring TP/loss WAJIB nanya status REAL
-// ke Binance (getPositionRisk) dulu tiap siklus, JANGAN cuma bandingin harga live vs SL yang
-// "seharusnya" -- kalau posisi udah kelikuidasi SELAMA kita offline, rekonsiliasi dari income
-// history Binance (bukan nebak harga).
+// ============ "NYOPET V2" (30 Agu 2026, riset backtest -- lihat memori project-dark-kaela) ============
+// GANTI TOTAL mesin zona-likuiditas-ping-pong (PF~0,96, marginal/negatif di backtest yang bener)
+// ke mesin Sniper yang UDAH TERBUKTI edge: chart pattern (flag/wedge, `chartPatterns.js`) + FVG
+// (`fvgDetector.js`) -- SATU sumber kebenaran SAMA yang dipakai Sniper live, gak ada logic
+// dobel/reimplementasi. Bedanya dari Sniper:
+//   - Timeframe 4H (bukan harian) -- window lookback pola di-RESCALE x6 (6 candle 4H = 1 hari)
+//     biar signifikansi strukturalnya SETARA sama yang tervalidasi di Sniper harian -- WAJIB,
+//     backtest awal (window candle-count APA ADANYA) hasilnya wipeout total, ternyata cuma
+//     artefak window kependekan, BUKAN kesimpulan asli. JANGAN PERNAH balik ke window default
+//     Sniper (candle-count harian) buat data 4H.
+//   - LONG-ONLY (bukan long+short) -- short kebukti ngerusak signifikan di backtest 4H, DUA-DUANYA
+//     aset (BTC & Emas terutama, win rate short cuma 14,3% + 0% di 2020-2021).
+//   - Modal yang dimasukin exposure calculator = saldo/5 ("cheat", nurunin drawdown SIGNIFIKAN
+//     di backtest -- BUKAN cuma "lebih agresif" kayak dulu dikira, size lebih kecil per-trade
+//     bikin kurva modal lebih halus, PF malah sedikit lebih baik).
+//   - Exit 2-TAHAP (partial 2R + trail SMA breakeven, SAMA validasi kayak Sniper) TAPI via
+//     POLLING+MARKET ORDER (`emergencyCloseMarket` quantity sebagian), BUKAN placed conditional
+//     order (`placeStopLoss`/`placeTakeProfit`) -- endpoint conditional order MEXC (`planorder/
+//     place`) masih UNVERIFIED live (lihat memori project-kaela-multi-exchange), polling+market
+//     order cuma pakai primitive yang UDAH TERBUKTI jalan (placeMarketEntry/emergencyCloseMarket/
+//     getPositionRisk, SAMA yang dipakai sistem lama). Ini simplifikasi SADAR dari backtest
+//     (yang modelnya placed-order-agnostic, R-multiple murni) -- TIDAK mengubah profil R yang
+//     divalidasi, cuma cara EKSEKUSI-nya (cek tiap siklus ~15 menit, bukan nunggu exchange
+//     otomatis eksekusi order kondisional).
 //
 // SKEMA JURNAL 100% sama sniper-orders.json ({balance, orders[]} + status
 // floating/closed_tp/closed_sl, tiap order punya field `asset`) -- gak ada batas 100 trade lagi.
@@ -39,24 +38,58 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { fetchCandles } = require('./technicalAnalysis');
-const { detectZones, findTouchCandidate, findNearestPair, isZoneBroken } = require('./darkKaelaZones');
+const { sma } = require('./technicalAnalysis');
+const { detectPatternSignal } = require('./chartPatterns');
+const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed } = require('./darkKaelaLog');
+const { formatAutoOpen, formatAutoClosed, formatAutoPartial } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
 const { formatDxyLine } = require('./dxyContext');
 
-const NYAWA_PCT = 2; // flat (23 Agu 2026, direvisi dari 1% -> 2%), dipakai buat nentuin LEVERAGE (bukan buat SL order -- itu gak ada lagi, likuidasi yang jadi SL)
 const DEFAULT_JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
-// "Modal aktif" = 1/5 saldo (23 Agu 2026, permintaan Olan) -- BUKAN all-in tiap posisi, biar tahan
-// beberapa siklus rugi beruntun tanpa ngabisin saldo sekaligus. Kalkulator exposure TETAP dipakai
-// persis sama (WAJIB, "cheat anti rungkad"), cuma `modal` yang diinput ke situ udah dikecilin duluan.
+// "Modal aktif" = 1/5 saldo -- konvensi LAMA dipertahanin (bukan hal baru dari riset v2, cuma
+// sekarang eksplisit dipanggil "cheat exposure" -- lihat memori project-dark-kaela). Kalkulator
+// exposure TETAP dipakai persis sama, cuma `modal` yang diinput ke situ udah dikecilin duluan.
 const MODAL_ACTIVE_FRACTION = 1 / 5;
+// Window RESCALED x6 buat 4H (6 candle 4H = 1 hari) -- lihat catatan panjang di atas, JANGAN
+// diubah balik ke default candle-count Sniper harian.
+const PATTERN_PARAMS_4H = {
+  poleLookbackRange: [30, 120], flagLookbackRange: [18, 90], poleMinMovePct: 15, flagMaxRangePct: 8,
+  wedgeLookbackRange: [90, 240], wedgeMinTouches: 2, wedgeConvergenceRatio: 0.65,
+  allowShort: false, slBufferPct: 0.5,
+};
+const FVG_TREND_SMA_LEN_4H = 1200;
+const TRAIL_SMA_LEN_4H = 60;
+const PARTIAL_RR = 2; // target tahap 1 = 2x risiko, sama kayak Sniper
+const CANDLES_NEEDED_4H = 1560 + 260; // warmup + buffer buat window terlebar (wedge 240)
+
+// Binance klines API CAP di 1000 candle per request (dicek langsung 30 Agu 2026 -- limit=1820
+// tetap balikin 1000 doang, BUKAN nolak/error, jadi diem-diem kepotong kalau gak di-paginate).
+// FVG_TREND_SMA_LEN_4H=1200 BUTUH lebih dari sekali fetch. Paginate MUNDUR dari sekarang pakai
+// `endTime`, gabung urut kronologis -- beda dari fetchCandles() biasa (technicalAnalysis.js) yang
+// 1x request doang, cukup buat kebutuhan lain tapi TIDAK cukup di sini.
+async function fetchCandles4hPaginated(symbol, count) {
+  const { fetchWithRetry } = require('./httpRetry');
+  const BASE = 'https://data-api.binance.vision/api/v3/klines';
+  let all = [];
+  let endTime = Date.now();
+  while (all.length < count) {
+    const res = await fetchWithRetry(`${BASE}?symbol=${symbol}&interval=4h&endTime=${endTime}&limit=1000`);
+    const raw = await res.json();
+    if (!raw.length) break;
+    const parsed = raw.map((c) => ({ openTime: c[0], open: +c[1], high: +c[2], low: +c[3], close: +c[4], closeTime: c[6] }));
+    all = parsed.concat(all);
+    endTime = parsed[0].openTime - 1;
+    if (raw.length < 1000) break; // udah nyampe histori paling awal
+  }
+  const nowMs = Date.now();
+  return all.filter((c) => c.closeTime <= nowMs).slice(-count);
+}
 
 function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('hex'); }
 
@@ -140,19 +173,24 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   }
 
   // Buka posisi beneran + tulis ke journal (status floating) + kirim notif.
-  async function openPosition(assetCfg, { direction, tp, mode, zoneCtx }) {
+  // `sig`: { direction, sl, patternType } dari detectPatternSignal/detectFvgSignal -- SL di sini
+  // WAJIB dari struktur pola (bukan liquidation-implied lagi), TP tahap 1 dihitung 2R dari situ.
+  async function openPosition(assetCfg, sig, livePriceIn) {
     const { symbol, marginAsset, key: assetKey } = assetCfg;
-    const exec = execFor(assetCfg); // 30 Agu 2026 -- Binance buat BTC, MEXC buat Emas (lihat memori project-kaela-multi-exchange)
-    const [modalFull, livePrice] = await Promise.all([resolveModal(marginAsset, exec), fetchLivePrice(symbol, assetCfg.exchange)]);
+    const exec = execFor(assetCfg); // Binance buat BTC, MEXC buat Emas (lihat memori project-kaela-multi-exchange)
+    const [modalFull, livePrice] = await Promise.all([resolveModal(marginAsset, exec), livePriceIn != null ? Promise.resolve(livePriceIn) : fetchLivePrice(symbol, assetCfg.exchange)]);
     const modal = modalFull * MODAL_ACTIVE_FRACTION;
-    const calc = hitungExposure({ modal, nyawa: NYAWA_PCT, entry: livePrice });
-    console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | leverage ${calc.leverage}x`);
+    const riskDistance = Math.abs(livePrice - sig.sl);
+    if (riskDistance === 0) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: SL sama persis harga entry (riskDistance=0), skip sinyal ini.`); return null; }
+    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl });
+    const partialTp = sig.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
+    console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | nyawa ${(riskDistance / livePrice * 100).toFixed(2)}% -> leverage ${calc.leverage}x | pattern=${sig.patternType}`);
 
     await exec.setIsolatedMargin(symbol);
     await exec.setLeverage(symbol, calc.leverage);
     let entryOrder;
     try {
-      entryOrder = await exec.placeMarketEntry({ symbol, direction, notionalUsd: calc.nilaiPosisi, livePrice });
+      entryOrder = await exec.placeMarketEntry({ symbol, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice });
     } catch (e) {
       // 24 Agu 2026, permintaan Olan: member REAL yang sinyalnya kelewat krn saldo kurang WAJIB
       // dikasih tau (bukan cuma nyampah di log lokal) -- Demo gak usah (solusinya beda, reset
@@ -160,38 +198,65 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(journalPath, '.json')}-nyopet-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
-          await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction, entry: livePrice, tp }));
+          await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }));
         }
       }
       throw e;
     }
     const qty = parseFloat(entryOrder.executedQty);
     const entryPrice = parseFloat(entryOrder.avgPrice);
-    const posRisk = await exec.getPositionRisk(symbol);
 
     const order = {
-      id: 'nyopet-demo-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange, direction, status: 'floating', mode, entryPrice,
-      liqPrice: parseFloat(posRisk.liquidationPrice), tp, qty,
-      leverage: calc.leverage, marginUsd: calc.margin, zonePrice: zoneCtx.price, zoneKind: zoneCtx.kind,
-      zoneTouches: zoneCtx.touches, triggeredAt: new Date().toISOString(),
+      id: 'nyopet-demo-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, status: 'floating',
+      mode: sig.patternType, patternType: sig.patternType, entryPrice,
+      sl: sig.sl, originalSl: sig.sl, tp: partialTp, partialTp, qty,
+      leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
+      partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
+      triggeredAt: new Date().toISOString(),
     };
     const journal = loadJournal();
     journal.orders.push(order);
-    journal.watchZoneByAsset[assetKey] = { price: zoneCtx.price, side: zoneCtx.side, zoneKind: zoneCtx.kind, touches: zoneCtx.touches };
     saveJournal(journal);
 
     const dxyLine = await formatDxyLine().catch(() => '');
-    const msg = formatAutoOpen({ ...order, sl: order.liqPrice, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo);
     console.log(msg + '\n');
     await notify(msg);
-    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction, entryPrice, sl: order.liqPrice, tp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: mode === 'follow' ? 'Follow (zona ditembus)' : 'Fade (zona mantul)' });
+    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, entryPrice, sl: sig.sl, tp: partialTp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: `Chart Pattern/FVG (${sig.patternType})` });
     return order;
   }
 
-  async function closePosition(assetCfg, order, { alreadyClosed, realPnlUsd, won, manualNote }) {
+  // Tahap 1 (30 Agu 2026, Nyopet v2) -- tutup SEPARUH posisi begitu 2R kesentuh, kunci untung
+  // sebagian, geser SL sisanya ke breakeven (entry) -- SAMA persis pola Sniper (sniperOrderMonitor.js),
+  // via market order sebagian (BUKAN placed conditional order -- lihat catatan di kepala file).
+  async function closePartial(assetCfg, order, exitPrice) {
     const { symbol } = assetCfg;
     const exec = execFor(assetCfg);
-    let pnlUsd, exitPrice, pnlPct, reconciliationNote;
+    const partialQty = order.qty * 0.5;
+    const closeOrder = await exec.emergencyCloseMarket({ symbol, direction: order.direction, quantity: partialQty });
+    const filledExit = parseFloat(closeOrder.avgPrice) || exitPrice;
+    const realizedPnlUsd = order.direction === 'buy' ? (filledExit - order.entryPrice) * partialQty : (order.entryPrice - filledExit) * partialQty;
+
+    const journal = loadJournal();
+    const target = journal.orders.find((o) => o.id === order.id);
+    Object.assign(target, { partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd, partialClosedAt: new Date().toISOString() });
+    saveJournal(journal);
+
+    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo);
+    console.log(msg + '\n');
+    await notify(msg);
+    emit({ entryId: order.id, type: 'partial', realizedPnlUsd, sl: order.entryPrice, exchange: assetCfg.exchange });
+    return target;
+  }
+
+  // `reason`: 'SL' (kena SL sebelum partial) | 'SL_BREAKEVEN' (sisa posisi kena SL=entry abis
+  // partial) | 'TRAIL' (momentum patah, trailing SMA) | 'MANUAL'. `alreadyClosed`=true dipanggil
+  // dari rekonsiliasi income-history (posisi kelikuidasi/closed di luar sepengetahuan kita).
+  async function closePosition(assetCfg, order, { alreadyClosed, realPnlUsd, reason, manualNote }) {
+    const { symbol } = assetCfg;
+    const exec = execFor(assetCfg);
+    const remainingQty = order.qty * (order.remainingFraction != null ? order.remainingFraction : 1);
+    let legPnlUsd, exitPrice, reconciliationNote;
     if (alreadyClosed) {
       // 28 Agu 2026, bug nyata: `fetchRealizedPnlSince` jumlahin SEMUA income simbol ini sejak
       // triggeredAt -- kalau eksekutor mati lama (komputer sleep berjam-jam) dan simbol yang sama
@@ -199,41 +264,43 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // margin yang beneran dipasang. Isolated margin GAK MUNGKIN rugi lebih dari margin sendiri --
       // clamp ke -marginUsd persis (pola sama kayak [[project-dark-kaela]] Dark Kaela lama) kalau
       // hasil mentahnya gak masuk akal, JANGAN percaya buta angka fetchRealizedPnlSince.
-      const maxLoss = -order.marginUsd;
+      const maxLoss = -(order.marginUsd * (order.remainingFraction != null ? order.remainingFraction : 1));
       if (realPnlUsd < maxLoss) {
         reconciliationNote = `PnL mentah dari income history ($${realPnlUsd.toFixed(2)}) gak masuk akal (isolated margin max rugi $${maxLoss.toFixed(2)}) -- kemungkinan kecampur aktivitas simbol lain pas eksekutor offline lama. Di-clamp ke -marginUsd.`;
         console.log(`[NyopetAutoTrader] ${assetCfg.label}: ${reconciliationNote}`);
-        pnlUsd = maxLoss;
+        legPnlUsd = maxLoss;
       } else {
-        pnlUsd = realPnlUsd;
+        legPnlUsd = realPnlUsd;
       }
-      exitPrice = order.direction === 'buy' ? order.entryPrice + pnlUsd / order.qty : order.entryPrice - pnlUsd / order.qty;
+      exitPrice = remainingQty > 0 ? (order.direction === 'buy' ? order.entryPrice + legPnlUsd / remainingQty : order.entryPrice - legPnlUsd / remainingQty) : order.entryPrice;
     } else {
-      const closeOrder = await exec.emergencyCloseMarket({ symbol, direction: order.direction, quantity: order.qty });
-      exitPrice = parseFloat(closeOrder.avgPrice) || order.tp;
-      pnlUsd = order.direction === 'buy' ? (exitPrice - order.entryPrice) * order.qty : (order.entryPrice - exitPrice) * order.qty;
+      const closeOrder = await exec.emergencyCloseMarket({ symbol, direction: order.direction, quantity: remainingQty });
+      exitPrice = parseFloat(closeOrder.avgPrice) || order.sl;
+      legPnlUsd = order.direction === 'buy' ? (exitPrice - order.entryPrice) * remainingQty : (order.entryPrice - exitPrice) * remainingQty;
     }
-    pnlPct = (pnlUsd / order.marginUsd) * 100;
+    const totalPnlUsd = (order.realizedPnlUsd || 0) + legPnlUsd;
+    const pnlPct = (totalPnlUsd / order.marginUsd) * 100;
+    const won = totalPnlUsd >= 0;
 
     const journal = loadJournal();
     const target = journal.orders.find((o) => o.id === order.id);
-    Object.assign(target, { status: won ? 'closed_tp' : 'closed_sl', exitPrice, pnlUsd, pnlPct, closedAt: new Date().toISOString() });
+    Object.assign(target, { status: won ? 'closed_tp' : 'closed_sl', exitPrice, pnlUsd: totalPnlUsd, pnlPct, closeReason: reason, closedAt: new Date().toISOString() });
     if (reconciliationNote) target.reconciliationNote = reconciliationNote;
     saveJournal(journal);
 
-    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd, assetLabel: assetCfg.label }, new Date(), isDemo)
+    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, assetLabel: assetCfg.label }, new Date(), isDemo)
       + (alreadyClosed ? '\n\n(⏳ Kelikuidasi PAS lagi offline -- baru kesinkronin sekarang begitu online lagi.)' : '')
       + (manualNote ? `\n\n(${manualNote})` : '');
     console.log(msg + '\n');
     await notify(msg);
-    emit({ entryId: order.id, type: 'close', status: won ? 'closed' : 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });
+    emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });
     return target;
   }
 
   async function processAsset(assetCfg) {
     const { symbol, zoneSymbol, key: assetKey } = assetCfg;
     const exec = execFor(assetCfg);
-    let journal = loadJournal();
+    const journal = loadJournal();
     const floating = getFloatingOrder(journal, assetKey);
 
     if (floating) {
@@ -252,66 +319,61 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
         if (assetCfg.exchange === 'mexc') {
           throw new Error(`Rekonsiliasi posisi ${assetCfg.label} (MEXC) yang kelikuidasi offline BELUM DIDUKUNG -- fetchRealizedPnlSince cuma ada versi Binance. Cek manual dulu di MEXC.`);
         }
-        const realPnlUsd = await fetchRealizedPnlSince(symbol, new Date(floating.triggeredAt).getTime());
-        await closePosition(assetCfg, floating, { alreadyClosed: true, realPnlUsd, won: realPnlUsd >= 0 });
-        journal = loadJournal();
-        if (realPnlUsd >= 0) journal.watchZoneByAsset[assetKey] = { price: floating.tp, side: floating.direction === 'buy' ? 'resistance' : 'support' };
-        saveJournal(journal);
-      } else {
-        const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
-        const hitTp = floating.direction === 'buy' ? livePrice >= floating.tp : livePrice <= floating.tp;
-        if (hitTp) {
-          console.log(`[NyopetAutoTrader] ${assetCfg.label}: target kena (${livePrice} vs TP ${floating.tp}) -- tutup untung, reverse.`);
-          await closePosition(assetCfg, floating, { alreadyClosed: false, won: true });
-          journal = loadJournal();
-          journal.watchZoneByAsset[assetKey] = { price: floating.tp, side: floating.direction === 'buy' ? 'resistance' : 'support' };
-          saveJournal(journal);
-        } else {
-          console.log(`[NyopetAutoTrader] ${assetCfg.label}: masih floating (${floating.direction} @ ${floating.entryPrice}, sekarang ${livePrice}, liq ${floating.liqPrice}) -- lanjut pantau.`);
-          return;
-        }
-      }
-    }
-
-    const candlesStruct = await fetchCandles(zoneSymbol, '1h', 386);
-    const i = candlesStruct.length - 1;
-    const zones = detectZones(candlesStruct, i);
-    const candles5m = await fetchCandles(zoneSymbol, '5m', 4);
-    const latest5m = candles5m[candles5m.length - 1];
-
-    const watchZone = journal.watchZoneByAsset[assetKey];
-    if (watchZone) {
-      const zoneAsActive = { price: watchZone.price, direction: watchZone.side === 'support' ? 'long' : 'short' };
-      if (isZoneBroken(latest5m, zoneAsActive)) {
-        const breakoutDirection = watchZone.side === 'support' ? 'sell' : 'buy';
-        const pair = findNearestPair(latest5m.close, zones);
-        const nextTarget = breakoutDirection === 'sell' ? pair.support : pair.resistance;
-        if (!nextTarget) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: zona ditembus tapi belum ketemu target berikutnya -- tunggu siklus depan.`); return; }
-        await openPosition(assetCfg, { direction: breakoutDirection, tp: nextTarget.price, mode: 'follow', zoneCtx: { price: watchZone.price, kind: watchZone.zoneKind || 'swing', touches: watchZone.touches, side: watchZone.side } });
+        const realPnlUsd = await fetchRealizedPnlSince(symbol, new Date(floating.partialClosedAt || floating.triggeredAt).getTime());
+        await closePosition(assetCfg, floating, { alreadyClosed: true, realPnlUsd, reason: 'OFFLINE' });
         return;
       }
-      const direction = watchZone.side === 'support' ? 'buy' : 'sell';
-      const pair = findNearestPair(latest5m.close, zones);
-      const tp = direction === 'buy' ? pair.resistance : pair.support;
-      if (!tp) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ketemu zona lawan buat TP -- tunggu siklus depan.`); return; }
-      await openPosition(assetCfg, { direction, tp: tp.price, mode: 'fade', zoneCtx: { price: watchZone.price, kind: watchZone.zoneKind || 'swing', touches: watchZone.touches, side: watchZone.side } });
+
+      const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
+
+      if (!floating.partialDone) {
+        const hitSl = floating.direction === 'buy' ? livePrice <= floating.sl : livePrice >= floating.sl;
+        const hitPartial = floating.direction === 'buy' ? livePrice >= floating.partialTp : livePrice <= floating.partialTp;
+        if (hitSl) {
+          console.log(`[NyopetAutoTrader] ${assetCfg.label}: SL kena (${livePrice} vs SL ${floating.sl}) sebelum sempat partial -- tutup rugi penuh.`);
+          await closePosition(assetCfg, floating, { alreadyClosed: false, reason: 'SL' });
+          return;
+        }
+        if (hitPartial) {
+          console.log(`[NyopetAutoTrader] ${assetCfg.label}: tahap 1 (2R) kena (${livePrice} vs ${floating.partialTp}) -- amankan separuh, SL sisa geser breakeven.`);
+          await closePartial(assetCfg, floating, livePrice);
+          return;
+        }
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: masih floating (${floating.direction} @ ${floating.entryPrice}, sekarang ${livePrice}, SL ${floating.sl}, TP1 ${floating.partialTp}) -- lanjut pantau.`);
+        return;
+      }
+
+      // Udah partial -- SL sekarang breakeven (floating.sl == entryPrice), pantau itu + trailing SMA.
+      const hitBreakevenSl = floating.direction === 'buy' ? livePrice <= floating.sl : livePrice >= floating.sl;
+      let trailBroken = false;
+      if (!hitBreakevenSl) {
+        const candles4hForTrail = await fetchCandles4hPaginated(zoneSymbol, TRAIL_SMA_LEN_4H + 5);
+        const closes = candles4hForTrail.map((c) => c.close);
+        const trailSma = sma(closes, TRAIL_SMA_LEN_4H);
+        if (trailSma !== null) trailBroken = floating.direction === 'buy' ? livePrice < trailSma : livePrice > trailSma;
+      }
+      if (!hitBreakevenSl && !trailBroken) {
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: sisa posisi (partial done) masih floating -- lanjut pantau.`);
+        return;
+      }
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: ${hitBreakevenSl ? 'SL breakeven kena' : 'trailing SMA patah'} -- tutup sisa posisi.`);
+      await closePosition(assetCfg, floating, { alreadyClosed: false, reason: hitBreakevenSl ? 'SL_BREAKEVEN' : 'TRAIL' });
       return;
     }
 
-    const pair = findNearestPair(latest5m.close, zones);
-    let touched = findTouchCandidate(latest5m, zones);
-    if (!touched) {
-      // Olan (25 Agu 2026): "nyopet jalan terus, nonstop posisi -- kalo dicek gak ada posisi,
-      // follow the last signal, pingpong dan follow" -- kalau BELUM PERNAH ada watchZone sama
-      // sekali (aset baru/belum pernah sinyal, kayak XAU yang harganya lama di tengah range),
-      // JANGAN nunggu harga presisi nyentuh -- langsung anggap zona TERDEKAT (support/resistance,
-      // mana yang jaraknya lebih deket) sebagai target fade, biar Nyopet selalu ada posisi.
-      const nearest = pair.support && (!pair.resistance || pair.support.distPct <= pair.resistance.distPct) ? pair.support : pair.resistance;
-      if (!nearest) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada zona kedetect sama sekali -- tunggu siklus depan.`); return; }
-      touched = { direction: nearest === pair.support ? 'long' : 'short', price: nearest.price, kind: nearest.kind, touches: nearest.touches };
+    // ============ Gak ada posisi floating -- cari sinyal baru (chart pattern -> FVG, long-only, 4H) ============
+    const candles4h = await fetchCandles4hPaginated(zoneSymbol, CANDLES_NEEDED_4H);
+    if (candles4h.length < 300) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: candle 4H belum cukup (${candles4h.length}), skip siklus ini.`); return; }
+    const i = candles4h.length - 1;
+
+    let sig = detectPatternSignal(candles4h, i, PATTERN_PARAMS_4H);
+    if (!sig) {
+      const fvgSig = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H });
+      if (fvgSig) sig = fvgSig;
     }
-    const tp = touched.direction === 'long' ? pair.resistance : pair.support;
-    await openPosition(assetCfg, { direction: touched.direction === 'long' ? 'buy' : 'sell', tp: tp ? tp.price : touched.price, mode: 'fade', zoneCtx: { price: touched.price, kind: touched.kind, touches: touched.touches, side: touched.direction === 'long' ? 'support' : 'resistance' } });
+    if (!sig) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada sinyal (flag/wedge/FVG) -- tunggu siklus depan.`); return; }
+
+    await openPosition(assetCfg, sig, candles4h[i].close);
   }
 
   async function main() {
@@ -370,10 +432,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const order = getFloatingOrder(journal, assetKey);
     if (!order) return { ok: false, error: `Gak ada posisi floating buat ${assetCfg.label}.` };
 
-    const livePrice = await fetchLivePrice(assetCfg.symbol, assetCfg.exchange);
-    const won = order.direction === 'buy' ? livePrice >= order.entryPrice : livePrice <= order.entryPrice;
     const manualNote = requestedBy ? `🙋 Ditutup MANUAL atas permintaan ${requestedBy}` : '🙋 Ditutup MANUAL';
-    await closePosition(assetCfg, order, { alreadyClosed: false, won, manualNote });
+    await closePosition(assetCfg, order, { alreadyClosed: false, reason: 'MANUAL', manualNote });
     return { ok: true };
   }
 

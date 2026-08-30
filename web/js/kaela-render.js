@@ -942,7 +942,13 @@
   // tracking winrate 100 trade ke depan" -- BEDA dari Spot/Sniper (bankroll bayangan): posisi
   // Nyopet REAL, dibuka manual di exchange asli, saldo/bankroll SENGAJA gak dihitung ("cuma
   // mini game") -- yang ditrack cuma menang/kalah per trade jadi win rate.
-  const NYOPET_MODE_LABEL_WEB = { fade: 'Fade (asumsi mantul)', follow: 'Follow (ikutin tembusan)' };
+  // 30 Agu 2026, Nyopet v2 (chart pattern+FVG ganti zona-ping-pong, lihat memori
+  // project-dark-kaela) -- `o.mode` sekarang patternType dari chartPatterns.js/fvgDetector.js.
+  // 'fade'/'follow' DIPERTAHANKAN buat order LAMA (histori pre-30 Agu) yang masih di jurnal.
+  const NYOPET_MODE_LABEL_WEB = {
+    fade: 'Fade (asumsi mantul)', follow: 'Follow (ikutin tembusan)',
+    flag_bull: 'Bull Flag', pennant_bull: 'Pennant', wedge_falling: 'Falling Wedge', fvg_bounce: 'FVG',
+  };
 
   // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "nyopet ga dibatasi
   // 100 trade.. 100% sama kayak sniper pencatatanya") -- {balance, orders[]}, tiap order punya
@@ -953,23 +959,32 @@
   function renderNyopetOrderCard(o) {
     const dirLabel = o.direction === 'sell' ? rt('short') : rt('long');
     const modeLabel = NYOPET_MODE_LABEL_WEB[o.mode] || o.mode;
-    // BUG KETEMU 25 Agu 2026 (Olan: "Nyawa: $NaN") -- order Nyopet gak punya field `sl` sama
-    // sekali (skema-nya pakai `liqPrice`, beda dari sniper-orders.json yang emang punya `sl`),
-    // jadi `fmtUsdOrder(o.sl)` SELALU NaN buat kartu Nyopet. Fix: baca `liqPrice` (field yang
-    // BENERAN ada), fallback ke `sl` doang buat jaga-jaga skema lama, guard null/undefined kayak
-    // pola aman yang UDAH ADA di renderOrderCard (Sniper) baris ~185.
-    const nyawaVal = o.liqPrice != null ? o.liqPrice : o.sl;
+    // nyawaVal (25 Agu 2026 bug, masih relevan buat order LAMA pre-30 Agu yang cuma punya
+    // `liqPrice`) -- order BARU (Nyopet v2, chart pattern+FVG) selalu punya `sl` asli (dari
+    // struktur pola, bukan cuma likuidasi tersirat), jadi fallback ini jarang kepake lagi tapi
+    // TETAP aman buat histori lama yang masih nangkring di jurnal.
+    const nyawaVal = o.sl != null ? o.sl : o.liqPrice;
     const nyawaText = nyawaVal != null ? fmtUsdOrder(nyawaVal) : '-';
     // Label harga hidup asset-aware (25 Agu 2026) -- sebelumnya hardcode "Harga BTC sekarang"
     // padahal Nyopet udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
     const assetInfo = NYOPET_ASSETS_WEB[o.asset] || NYOPET_ASSETS_WEB.btc;
+    // BUG KETEMU 30 Agu 2026 (Nyopet v2 -- order gak punya `zonePrice` lagi, chart pattern+FVG
+    // gak ada konsep "zona" sama sekali) -- "Zona $NaN" muncul kalau dipaksa tampil terus. Fix:
+    // baris zona CUMA ditampilin kalau `zonePrice` beneran ada (order LAMA pre-30 Agu).
+    const zonaMeta = o.zonePrice != null ? ` · ${rt('zona')} ${fmtUsdOrder(o.zonePrice)}` : '';
     if (o.status === 'floating') {
       // Badge (Demo)/(Real) (29 Agu 2026, bug ketemu: dulu hardcode "(Demo)" -- gak masalah
       // selama Nyopet publik SELALU Demo, tapi kartu ini SEKARANG dipakai bareng Kaela Access
       // buat posisi Real member juga (renderNyopetOrderCard dipanggil langsung dari sana, "kenapa
       // ga copy 100%"), jadi WAJIB dinamis. Default Demo kalau liveExecution gak diisi (publik).
       const floatingModeLabel = o.liveExecution && o.liveExecution.testnet === false ? rt('real') : rt('demo');
-      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}" data-opened-at="${o.triggeredAt || ''}">
+      // Partial-exit progress (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper, kartu
+      // ini SEBELUMNYA gak pernah punya badge ini krn Nyopet lama single-shot doang) -- reuse
+      // teks/style PERSIS sama Sniper punya (renderOrderCard), biar konsisten visual.
+      const partialBadge = o.partialDone
+        ? `<div class="order-partial-note">🟡 ${rt('stage1_secured')} ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)} -- ${rt('sl_rest_be')} ${((o.remainingFraction != null ? o.remainingFraction : 0.5) * 100).toFixed(0)}${rt('of_position_trailed')}</div>`
+        : '';
+      return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}" data-remaining-fraction="${o.remainingFraction != null ? o.remainingFraction : 1}" data-realized-pnl="${o.realizedPnlUsd || 0}" data-opened-at="${o.triggeredAt || ''}">
           <div class="order-header">
             <span class="order-dir">${dirLabel}</span>
             <span class="order-status-badge floating">${rt('floating')} (${floatingModeLabel})</span>
@@ -982,7 +997,8 @@
             <span>${rt('tp')} ${fmtUsdOrder(o.tp)}</span>
             <span>${rt('nyawa')} ${nyawaText}</span>
           </div>
-          <div class="order-meta">${rt('leverage')} ${o.leverage}x · ${rt('margin')} ${fmtUsdOrder(o.marginUsd)} · ${rt('zona')} ${fmtUsdOrder(o.zonePrice)}</div>
+          <div class="order-meta">${rt('leverage')} ${o.leverage}x · ${rt('margin')} ${fmtUsdOrder(o.marginUsd)}${zonaMeta}</div>
+          ${partialBadge}
           <div class="order-pnl-live" data-pnl-target>${rt('loading_pnl')}</div>
         </div>`;
     }

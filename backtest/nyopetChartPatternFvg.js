@@ -138,14 +138,36 @@ function runNyopetV2Backtest(candles, opts = {}) {
     startCapital = 100,
     modalDivisor = 5, // "cheat" -- capital/5 dimasukin ke kalkulator exposure, bukan capital penuh
     maxMarginPct = 20, maxNyawaPct = null,
+    // Top-up bulanan (31 Agu 2026, permintaan Olan: "tiap bulan isi terus 50 dolar... max 1000
+    // stop") -- OFF by default (topUpAmount=0) biar backward-compatible sama caller lama.
+    topUpAmount = 0, topUpStopAt = Infinity, topUpDayOfMonth = 5,
+    // Redirect (31 Agu 2026, Olan: "kalo dah ga top up isinya ke btc spot terus dan emas terus")
+    // -- begitu slot capped, setoran bulanan dilempar ke callback ini, gak hilang.
+    onRedirectedTopUp = null,
   } = opts;
   const trades = [];
   let openPos = null;
   let capital = startCapital;
+  let totalDeposited = startCapital;
+  let lastTopUpMonthKey = null;
   const capitalSeries = [{ time: candles[warmupCandles] ? candles[warmupCandles].closeTime : 0, capital }];
 
   for (let i = warmupCandles; i < candles.length; i++) {
     const today = candles[i];
+
+    if (topUpAmount > 0) {
+      const d = new Date(today.closeTime);
+      const monthKey = d.getUTCFullYear() * 12 + d.getUTCMonth();
+      if (d.getUTCDate() >= topUpDayOfMonth && monthKey !== lastTopUpMonthKey) {
+        lastTopUpMonthKey = monthKey;
+        if (capital < topUpStopAt) {
+          capital += topUpAmount; totalDeposited += topUpAmount;
+          capitalSeries.push({ time: today.closeTime, capital });
+        } else if (onRedirectedTopUp) {
+          onRedirectedTopUp(topUpAmount, today.closeTime);
+        }
+      }
+    }
 
     if (openPos) {
       const closes = candles.slice(0, i + 1).map((c) => c.close);
@@ -222,7 +244,7 @@ function runNyopetV2Backtest(candles, opts = {}) {
 
   let peak = -Infinity, maxDrawdownPct = 0;
   for (const pt of capitalSeries) { peak = Math.max(peak, pt.capital); maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.capital) / peak * 100); }
-  return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries };
+  return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries, totalDeposited };
 }
 
 function summarize(trades) {

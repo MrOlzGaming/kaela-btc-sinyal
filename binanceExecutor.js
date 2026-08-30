@@ -50,7 +50,13 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
   }
 
   async function signedRequestOnce(method, path, params) {
-    const query = new URLSearchParams({ ...params, timestamp: Date.now(), recvWindow: 5000 }).toString();
+    // recvWindow dinaikin dari 5000->15000 (31 Agu 2026, ketemu jam komputer lokal ketinggalan
+    // ~5 detik dari server Binance, PAS di batas 5000ms lama -- retry-sekali di bawah GAK NOLONG
+    // krn selisih jamnya PERSISTEN, bukan gangguan jaringan sesaat kayak dikira sebelumnya).
+    // Binance izinin sampai 60000ms -- 15000 kasih headroom 3x dari drift yang kejadian, masih
+    // jauh di bawah limit, akar masalah (W32Time service mati di komputer) tetap perlu dibenerin
+    // manual sama Olan, ini cuma bikin sistem lebih tahan banting sambil itu belum kesentuh.
+    const query = new URLSearchParams({ ...params, timestamp: Date.now(), recvWindow: 15000 }).toString();
     const signature = sign(query);
     const url = `${baseUrl}${path}?${query}&signature=${signature}`;
     const res = await fetch(url, { method, headers: { 'X-MBX-APIKEY': apiKey } });

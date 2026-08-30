@@ -156,7 +156,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // posisi ternyata udah closed/likuidasi SELAMA kita offline, JANGAN pernah nebak PNL dari harga.
   async function fetchRealizedPnlSince(symbol, startTime) {
     const creds = apiCreds || (function () { const s = require('./secrets'); return { apiKey: s.BINANCE_API_KEY, apiSecret: s.BINANCE_API_SECRET }; })();
-    const params = { symbol, startTime, timestamp: Date.now(), recvWindow: 5000, limit: 1000 };
+    const params = { symbol, startTime, timestamp: Date.now(), recvWindow: 15000, limit: 1000 }; // recvWindow dinaikin, lihat catatan binanceExecutor.js
     const query = new URLSearchParams(params).toString();
     const sig = sign(query, creds.apiSecret);
     const res = await fetch(`${baseUrl}/fapi/v1/income?${query}&signature=${sig}`, { headers: { 'X-MBX-APIKEY': creds.apiKey } });

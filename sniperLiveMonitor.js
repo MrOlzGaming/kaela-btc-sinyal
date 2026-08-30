@@ -42,7 +42,7 @@ async function fetchRealizedPnlSince(symbol, startTime, exchange = 'binance') {
     throw new Error(`Rekonsiliasi income history MEXC (${symbol}) BELUM DIDUKUNG -- fetchRealizedPnlSince cuma ada versi Binance. Cek manual dulu di MEXC.`);
   }
   const secrets = require('./secrets');
-  const params = { symbol, startTime, timestamp: Date.now(), recvWindow: 5000, limit: 1000 };
+  const params = { symbol, startTime, timestamp: Date.now(), recvWindow: 15000, limit: 1000 }; // recvWindow dinaikin, lihat catatan binanceExecutor.js
   const query = new URLSearchParams(params).toString();
   const sig = sign(query, secrets.BINANCE_API_SECRET);
   const res = await fetch(`https://demo-fapi.binance.com/fapi/v1/income?${query}&signature=${sig}`, { headers: { 'X-MBX-APIKEY': secrets.BINANCE_API_KEY } });

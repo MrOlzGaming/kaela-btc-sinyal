@@ -1,5 +1,41 @@
 {
   "balance": 4969.94324265,
   "balanceUpdatedAt": "2026-08-30T05:09:29.070Z",
-  "orders": []
+  "orders": [
+    {
+      "id": "mtfcvykmvo15",
+      "signalId": "2026083001",
+      "status": "floating",
+      "asset": "xau",
+      "mode": "fvg",
+      "gapCreatedTime": 1786233599999,
+      "direction": "buy",
+      "strategyType": "breakout",
+      "triggerPrice": 4462.85,
+      "testLevel": null,
+      "confirmationNote": "Fair Value Gap terbentuk @ $4,296.98-$4,333.27 (candle harian XAUT_USDT tutup balik di atas batas atas gap, tanda pantulan). SL di bawah batas bawah gap (nyawa 3.7%) -- kalau gap keisi penuh, thesis-nya gugur. Deteksi otomatis fvgDetector.js.",
+      "tpReasoning": "Target tahap 1 (jual separuh): 2x risiko @ $4,795. Sisanya di-trail pakai SMA10 harian (SL digeser breakeven abis tahap 1).",
+      "entryPrice": 4462.85,
+      "tp": 4794.590000000002,
+      "sl": 4296.98,
+      "originalSl": 4296.98,
+      "exposure": 1.5,
+      "leverage": 26,
+      "marginUsd": 286.72749476826925,
+      "notes": "Analisa otomatis Kaela (XAUT_USDT, mode Fair Value Gap): eksekusi LIVE otomatis ke Binance Demo di siklus lokal berikutnya (~15 menit).",
+      "patternType": "fvg_bounce",
+      "partialTp": 4794.590000000002,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "trailSmaLen": 10,
+      "realizedPnlUsd": 0,
+      "silentTest": false,
+      "createdAt": "2026-08-30T05:15:37.030Z",
+      "triggeredAt": "2026-08-30T05:15:37.030Z",
+      "closedAt": null,
+      "closeReason": null,
+      "pnlUsd": null,
+      "pnlPct": null
+    }
+  ]
 }

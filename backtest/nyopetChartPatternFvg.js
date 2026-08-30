@@ -24,7 +24,11 @@ const { sma } = require('../technicalAnalysis');
 const { hitung: hitungExposure } = require('../calculator');
 const { detectFlag, detectWedge } = require('../chartPatterns');
 
-const HOURLY = JSON.parse(fs.readFileSync(path.join(__dirname, 'hourly-cache.json'), 'utf8'));
+const HOURLY_BTC = JSON.parse(fs.readFileSync(path.join(__dirname, 'hourly-cache.json'), 'utf8'));
+// Emas (30 Agu 2026, permintaan Olan: "bukan cuma BTC.. tapi BTC dan Emas", sama pola kayak
+// Sniper yang udah 2 aset) -- PAXGUSDT, data Binance mulai ~28 Agu 2020 (lihat refreshGoldCache.js).
+const goldCachePath = path.join(__dirname, 'gold-hourly-cache.json');
+const HOURLY_GOLD = fs.existsSync(goldCachePath) ? JSON.parse(fs.readFileSync(goldCachePath, 'utf8')) : null;
 
 // ============ Resample HOURLY -> 4H (candle mentah gak ada di cache, hemat 1 fetch network) ============
 function resampleTo4h(hourly) {
@@ -49,7 +53,8 @@ function resampleTo4h(hourly) {
   return out;
 }
 
-const CANDLES_4H = resampleTo4h(HOURLY);
+const CANDLES_4H = resampleTo4h(HOURLY_BTC);
+const CANDLES_4H_GOLD = HOURLY_GOLD ? resampleTo4h(HOURLY_GOLD) : null;
 
 // ============ FVG bearish (BARU, gak ada di kode manapun) -- mirror bullish, gap TURUN ============
 // candle1.low > candle3.high = gap turun (harga "dilompatin" ke bawah pas displacement) -- zona
@@ -250,35 +255,53 @@ function byYear(trades) {
   return years;
 }
 
-if (require.main === module) {
-  console.log('=== Nyopet v2: Chart Pattern + FVG, Long+Short, 4H, modal/5 ===');
-  console.log(`4H candles: ${CANDLES_4H.length} | rentang: ${new Date(CANDLES_4H[0].closeTime).toISOString().slice(0, 10)} -> ${new Date(CANDLES_4H[CANDLES_4H.length - 1].closeTime).toISOString().slice(0, 10)}`);
+// Window RESCALED x6 (6 candle 4H = 1 hari) -- BUG metodologi ketemu+fix (30 Agu 2026): pole/
+// flag/wedge lookback di-tuning dalam CANDLE COUNT buat harian, dipakai MENTAH di 4H bikin window
+// 6x lebih PENDEK dari waktu aslinya (noise, bukan struktur beneran). WAJIB dipakai, JANGAN balik
+// ke default candle-count harian buat data 4H manapun.
+const RESCALED_4H = {
+  poleLookbackRange: [30, 120], flagLookbackRange: [18, 90],
+  wedgeLookbackRange: [90, 240], fvgTrendSmaLen: 1200, trailSmaLen: 60,
+  warmupCandles: 1560,
+};
 
-  function report(label, opts) {
-    const r = runNyopetV2Backtest(CANDLES_4H, opts);
-    const s = summarize(r.trades);
-    console.log(`\n[${label}]`);
-    console.log(`  n=${s.n} | winRate=${s.winRate} | PF=${s.profitFactor} | totalR=${s.totalR} | avgR=${s.avgR}`);
-    console.log(`  Long: ${s.longCount} (win ${s.longWinRate}) | Short: ${s.shortCount} (win ${s.shortWinRate})`);
-    console.log(`  finalCapital=$${r.finalCapital.toFixed(2)} (${((r.finalCapital / 100 - 1) * 100).toFixed(0)}%) | maxDD=${r.maxDrawdownPct.toFixed(1)}%`);
-    return { r, s };
-  }
-
-  // A: baseline -- buy-only (kayak Sniper asli), sizing NORMAL (modal penuh), buat pembanding.
-  report('A. Buy-only, sizing NORMAL (modal penuh) -- kontrol', { allowShort: false, modalDivisor: 1 });
-  // B: buy-only, sizing 1/5 (isolasi efek "cheat" doang, tanpa short).
-  report('B. Buy-only, sizing 1/5 (cheat exposure doang)', { allowShort: false, modalDivisor: 5 });
-  // C: long+short, sizing normal (isolasi efek short doang, tanpa cheat).
-  report('C. Long+Short, sizing NORMAL (short doang)', { allowShort: true, modalDivisor: 1 });
-  // D: full request Olan -- long+short + sizing 1/5.
-  const d = report('D. Long+Short + sizing 1/5 (PERMINTAAN OLAN)', { allowShort: true, modalDivisor: 5 });
-
-  console.log('\n--- Breakdown per tahun (D, permintaan Olan) ---');
-  const years = byYear(d.r.trades);
-  Object.keys(years).sort().forEach((y) => {
-    const dt = years[y];
-    console.log(`  ${y}: ${dt.count} trade | win rate ${(dt.wins / dt.count * 100).toFixed(1)}% | Total R: ${dt.totalR >= 0 ? '+' : ''}${dt.totalR.toFixed(1)}R`);
-  });
+function runReport(label, candles, opts) {
+  const r = runNyopetV2Backtest(candles, opts);
+  const s = summarize(r.trades);
+  console.log(`\n[${label}]`);
+  console.log(`  n=${s.n} | winRate=${s.winRate} | PF=${s.profitFactor} | totalR=${s.totalR} | avgR=${s.avgR}`);
+  console.log(`  Long: ${s.longCount} (win ${s.longWinRate}) | Short: ${s.shortCount} (win ${s.shortWinRate})`);
+  console.log(`  finalCapital=$${r.finalCapital.toFixed(2)} (${((r.finalCapital / 100 - 1) * 100).toFixed(0)}%) | maxDD=${r.maxDrawdownPct.toFixed(1)}%`);
+  return { r, s };
 }
 
-module.exports = { runNyopetV2Backtest, detectBearishFVG, detectFvgSignalBoth, resampleTo4h, summarize, CANDLES_4H };
+if (require.main === module) {
+  console.log('=== Nyopet v2: Chart Pattern + FVG, Long+Short, 4H, modal/5 -- BTC + Emas ===');
+  console.log(`BTC 4H candles: ${CANDLES_4H.length} | rentang: ${new Date(CANDLES_4H[0].closeTime).toISOString().slice(0, 10)} -> ${new Date(CANDLES_4H[CANDLES_4H.length - 1].closeTime).toISOString().slice(0, 10)}`);
+  if (CANDLES_4H_GOLD) console.log(`Emas 4H candles: ${CANDLES_4H_GOLD.length} | rentang: ${new Date(CANDLES_4H_GOLD[0].closeTime).toISOString().slice(0, 10)} -> ${new Date(CANDLES_4H_GOLD[CANDLES_4H_GOLD.length - 1].closeTime).toISOString().slice(0, 10)}`);
+  else console.log('Emas: gold-hourly-cache.json gak ketemu, skip (jalanin refreshGoldCache.js dulu)');
+
+  console.log('\n\n########## BTC ##########');
+  runReport('BTC A. Buy-only, sizing NORMAL -- kontrol', CANDLES_4H, { ...RESCALED_4H, allowShort: false, modalDivisor: 1 });
+  runReport('BTC B. Buy-only, sizing 1/5 (cheat)', CANDLES_4H, { ...RESCALED_4H, allowShort: false, modalDivisor: 5 });
+  runReport('BTC C. Long+Short, sizing NORMAL', CANDLES_4H, { ...RESCALED_4H, allowShort: true, modalDivisor: 1 });
+  const dBtc = runReport('BTC D. Long+Short + sizing 1/5 (PERMINTAAN OLAN)', CANDLES_4H, { ...RESCALED_4H, allowShort: true, modalDivisor: 5 });
+  console.log('\n--- BTC D -- breakdown per tahun ---');
+  Object.entries(byYear(dBtc.r.trades)).sort().forEach(([y, dt]) => {
+    console.log(`  ${y}: ${dt.count} trade | win rate ${(dt.wins / dt.count * 100).toFixed(1)}% | Total R: ${dt.totalR >= 0 ? '+' : ''}${dt.totalR.toFixed(1)}R`);
+  });
+
+  if (CANDLES_4H_GOLD) {
+    console.log('\n\n########## EMAS (PAXGUSDT) ##########');
+    runReport('EMAS A. Buy-only, sizing NORMAL -- kontrol', CANDLES_4H_GOLD, { ...RESCALED_4H, allowShort: false, modalDivisor: 1 });
+    runReport('EMAS B. Buy-only, sizing 1/5 (cheat)', CANDLES_4H_GOLD, { ...RESCALED_4H, allowShort: false, modalDivisor: 5 });
+    runReport('EMAS C. Long+Short, sizing NORMAL', CANDLES_4H_GOLD, { ...RESCALED_4H, allowShort: true, modalDivisor: 1 });
+    const dGold = runReport('EMAS D. Long+Short + sizing 1/5 (PERMINTAAN OLAN)', CANDLES_4H_GOLD, { ...RESCALED_4H, allowShort: true, modalDivisor: 5 });
+    console.log('\n--- EMAS D -- breakdown per tahun ---');
+    Object.entries(byYear(dGold.r.trades)).sort().forEach(([y, dt]) => {
+      console.log(`  ${y}: ${dt.count} trade | win rate ${(dt.wins / dt.count * 100).toFixed(1)}% | Total R: ${dt.totalR >= 0 ? '+' : ''}${dt.totalR.toFixed(1)}R`);
+    });
+  }
+}
+
+module.exports = { runNyopetV2Backtest, detectBearishFVG, detectFvgSignalBoth, resampleTo4h, summarize, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H };

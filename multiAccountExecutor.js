@@ -115,7 +115,13 @@ function buildSendWA(account, adminRelay) {
 // JANGAN kirim undefined -- kirim STUB yang setiap methodnya throw error jelas, biar SELALU gagal
 // aman ("belum disetup buat member ini") tanpa PERNAH numpang default Olan.
 function _mexcNotConfiguredStub(name) {
-  const err = () => { throw new Error(`MEXC belum disetup buat member "${name}" -- skip Emas, BTC tetap jalan normal.`); };
+  // ⚠️ BUG ketemu 30 Agu 2026 (dari tes manual -- error Abdu "MEXC belum disetup" nyampe sampe
+  // GUGURIN recordMemberStatus, padahal harusnya cuma skip Emas): `err` WAJIB async. Fungsi
+  // SYNC yang `throw` langsung throw ke caller (bukan reject Promise) -- `.catch()` di caller
+  // (multiAccountExecutor.js dkk) gak nangkep apa-apa, error nembus ke try/catch LUAR yang lebih
+  // gede lingkupnya (nge-gugurin seluruh laporan saldo, bukan cuma Emas doang). `async () => {
+  // throw }` balikin Promise REJECTED, itu yang bisa di-`.catch()` per-panggilan dengan benar.
+  const err = async () => { throw new Error(`MEXC belum disetup buat member "${name}" -- skip Emas, BTC tetap jalan normal.`); };
   return { getAccountBalance: err, setLeverage: err, setIsolatedMargin: err, placeMarketEntry: err, placeStopLoss: err, placeTakeProfit: err, getPositionRisk: err, cancelAllOpenOrders: err, getSymbolInfo: err, emergencyCloseMarket: err };
 }
 

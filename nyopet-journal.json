@@ -21,7 +21,7 @@
       "id": "nyopet-demo-1787947753925",
       "asset": "xau",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_tp",
       "mode": "fade",
       "entryPrice": 4459.34,
       "liqPrice": 4501.54947027,
@@ -32,7 +32,12 @@
       "zonePrice": 4500,
       "zoneKind": "round",
       "zoneTouches": null,
-      "triggeredAt": "2026-08-28T20:09:13.926Z"
+      "triggeredAt": "2026-08-28T20:09:13.926Z",
+      "exitPrice": 4459.34,
+      "pnlUsd": 0,
+      "pnlPct": 0,
+      "closedAt": "2026-08-30T09:30:00.000Z",
+      "reconciliationNote": "Entri pre-migrasi (dibuka pas Emas masih di Binance) -- MEXC gak pernah punya posisi ini, gak bisa direkonsiliasi otomatis. Ditutup manual PnL $0 (30 Agu 2026, migrasi ke MEXC)."
     }
   ],
   "demoEraStartedAt": "2026-08-28T20:00:02.119Z",

@@ -1,7 +1,16 @@
-// Data makro AS -- DXY (indeks dolar) + real yield 10 tahun -- dari FRED (Federal Reserve
+// Data makro AS -- DXY (indeks dolar) + real yield 10 tahun. Real yield dari FRED (Federal Reserve
 // Economic Data), sumber RESMI pemerintah AS, GRATIS, TANPA API key (pakai endpoint publik
 // fredgraph.csv, bukan REST API resmi yang butuh registrasi key -- data SAMA, cuma beda cara akses).
 // 22 Agu 2026 -- awal dari ide "Kaela analis tier Bloomberg" (lihat memori project-kaela-analyst-tier).
+//
+// FIX 30 Agu 2026 (Olan: "setiap pesan yang dikirim kaela dxy 118 stabil, aku fikir itu dxy index
+// dolar yang sekarang 99-100") -- DXY DULU pakai FRED DTWEXBGS ("Nominal Broad U.S. Dollar Index"),
+// index RESMI & VALID tapi BEDA index dari DXY yang dikenal umum di dunia trading (basket mata
+// uang lebih luas + base tahun beda -- nilainya ~118, BUKAN salah/palsu, cuma SALAH LABEL). DXY
+// sekarang pakai sumber yang SAMA PERSIS kayak dxyContext.js/dxyZoneMonitor.js (Yahoo Finance
+// DX-Y.NYB, ICE US Dollar Index -- index asli yang dimaksud "DXY" di pasar) -- SATU sumber
+// kebenaran DXY di SELURUH sistem, gak ada lagi 2 angka beda buat "DXY" yang sama tergantung
+// subsistem mana yang generate pesannya.
 //
 // Kenapa ini penting buat Emas: harga Emas historisnya BERLAWANAN arah sama real yield (yield
 // riil naik = biaya peluang pegang emas -yang gak ada bunganya- naik = Emas cenderung tertekan)
@@ -39,9 +48,18 @@ async function fetchFredSeries(seriesId) {
   return { latest, prev, changePct: prev ? ((latest.value - prev.value) / prev.value) * 100 : null };
 }
 
-// DTWEXBGS = Nominal Broad U.S. Dollar Index (seri resmi The Fed, harian)
+// DX-Y.NYB = ICE US Dollar Index (DXY beneran, dari Yahoo Finance -- GRATIS, gak perlu API key,
+// sumber yang sama dipakai dxyContext.js/dxyZoneMonitor.js). Return shape DISAMAIN kayak
+// fetchFredSeries() ({latest:{date,value}, prev, changePct}) biar semua caller lama (goldGroupReport.js,
+// convictionScore.js via classifyDxyTrend, web analis-render.js) ZERO perlu berubah.
 async function fetchDxy() {
-  return fetchFredSeries('DTWEXBGS');
+  const res = await fetchWithRetry('https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1d&range=5d', { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const data = await res.json();
+  const meta = data.chart.result[0].meta;
+  if (meta.regularMarketPrice == null || meta.chartPreviousClose == null) throw new Error('DXY: data harga gak lengkap dari Yahoo Finance');
+  const latest = { date: new Date(meta.regularMarketTime * 1000).toISOString().slice(0, 10), value: meta.regularMarketPrice };
+  const prev = { date: null, value: meta.chartPreviousClose };
+  return { latest, prev, changePct: ((latest.value - prev.value) / prev.value) * 100 };
 }
 
 // DFII10 = 10-Year Treasury Inflation-Indexed Security, harian -- ini "real yield" (yield

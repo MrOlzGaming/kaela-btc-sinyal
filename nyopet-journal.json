@@ -4,7 +4,7 @@
       "id": "nyopet-demo-1787947752419",
       "asset": "btc",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_tp",
       "mode": "fade",
       "entryPrice": 77459.8263,
       "liqPrice": 78707.21076116,
@@ -15,7 +15,12 @@
       "zonePrice": 77896.66,
       "zoneKind": "swing",
       "zoneTouches": 3,
-      "triggeredAt": "2026-08-28T20:09:12.419Z"
+      "triggeredAt": "2026-08-28T20:09:12.419Z",
+      "exitPrice": 77454.20449526315,
+      "pnlUsd": 0.10681428999999995,
+      "pnlPct": 0.35604763333333317,
+      "closeReason": "OFFLINE",
+      "closedAt": "2026-08-30T16:54:08.913Z"
     },
     {
       "id": "nyopet-demo-1787947753925",
@@ -56,7 +61,7 @@
       "touches": null
     }
   },
-  "balanceUsdc": 4969.65566601,
+  "balanceUsdc": 5000,
   "balanceUsdt": 2.664e-9,
   "mexcBalanceUsdc": 0
 }

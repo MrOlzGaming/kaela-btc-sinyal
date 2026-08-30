@@ -125,6 +125,41 @@ function classifyCreditSpreadTrend(cs) {
   return { arah: 'STABIL', efek: 'netral' };
 }
 
+// ============ US Spot Bitcoin ETF Net Flow (TFTC, agregat SoSoValue+Farside) ============
+// 30 Agu 2026, ide dari riset "cari sesuatu buat memperkuat analis Kaela" -- lapis BARU: duit
+// INSTITUSI RIIL masuk/keluar BTC lewat 12 dana teregulasi (IBIT/FBTC/GBTC/dst), beda dari
+// on-chain (valuasi)/COT (posisi futures)/DVOL (volatilitas) yang udah ada -- ini duit sungguhan
+// yang gerak tiap hari, salah satu indikator paling dipantau analis institusional sejak ETF ini
+// lahir Jan 2024, sering MENDAHULUI harga. GRATIS, TANPA API key, CC BY 4.0, update ~harian.
+async function fetchBtcEtfFlow() {
+  const res = await fetchWithRetry('https://www.tftc.io/bitcoin-etf-flows/data.json');
+  const data = await res.json();
+  const days = data.days || [];
+  if (days.length === 0) throw new Error('ETF Flow: gak ada data');
+  const latest = days[days.length - 1];
+  const last7 = days.slice(-7);
+  const sum7dUsd = last7.reduce((s, d) => s + (d.netFlowUsd || 0), 0);
+  const positiveDays7d = last7.filter((d) => (d.netFlowUsd || 0) > 0).length;
+  return { date: latest.date, latestNetFlowUsd: latest.netFlowUsd, sum7dUsd, positiveDays7d, totalDays7d: last7.length };
+}
+
+// Ambang KASAR (bukan backtest presisi, sama semangat kayak dvolInsight/m2Insight di atas):
+// >$200jt/hari dianggap "kuat" (lumayan di atas rata-rata harian historis $50-150jt-an),
+// mayoritas 7 hari searah dianggap tren mapan (bukan noise 1 hari doang).
+function fmtFlowUsd(usd) {
+  return `${usd < 0 ? '-' : ''}$${(Math.abs(usd) / 1e6).toFixed(0)}jt`;
+}
+
+function etfFlowInsight(etf) {
+  const strongIn = etf.latestNetFlowUsd > 200_000_000;
+  const strongOut = etf.latestNetFlowUsd < -200_000_000;
+  if (strongOut) return `outflow BESAR hari ini (${fmtFlowUsd(etf.latestNetFlowUsd)}) -- institusi lagi jual/redeem lumayan agresif`;
+  if (strongIn) return `inflow BESAR hari ini (${fmtFlowUsd(etf.latestNetFlowUsd)}) -- institusi lagi akumulasi lumayan agresif`;
+  if (etf.positiveDays7d >= etf.totalDays7d - 1) return `7 hari terakhir mostly inflow (${etf.positiveDays7d}/${etf.totalDays7d} hari) -- tren akumulasi institusi konsisten`;
+  if (etf.positiveDays7d <= 1) return `7 hari terakhir mostly outflow (${etf.totalDays7d - etf.positiveDays7d}/${etf.totalDays7d} hari) -- tren distribusi institusi konsisten`;
+  return 'campuran, gak ada tren dominan minggu ini';
+}
+
 async function safe(fn, label) {
   try {
     return await fn();
@@ -135,21 +170,22 @@ async function safe(fn, label) {
 }
 
 async function fetchAdvancedMacroContext() {
-  const [dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread] = await Promise.all([
+  const [dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread, etfFlow] = await Promise.all([
     safe(fetchBtcDvol, 'DVOL'),
     safe(fetchStablecoinSupplyGrowth, 'Stablecoin Supply'),
     safe(fetchYieldCurve, 'Yield Curve'),
     safe(fetchM2Growth, 'M2 Money Supply'),
     safe(fetchFedFundsRate, 'Fed Funds Rate'),
     safe(fetchCreditSpread, 'Credit Spread'),
+    safe(fetchBtcEtfFlow, 'BTC ETF Flow'),
   ]);
-  return { dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread };
+  return { dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread, etfFlow };
 }
 
 module.exports = {
   fetchBtcDvol, dvolInsight, fetchStablecoinSupplyGrowth, fetchYieldCurve, yieldCurveInsight,
   fetchM2Growth, m2Insight, fetchFedFundsRate, classifyFedRateTrend, fetchCreditSpread,
-  classifyCreditSpreadTrend, fetchAdvancedMacroContext,
+  classifyCreditSpreadTrend, fetchBtcEtfFlow, etfFlowInsight, fmtFlowUsd, fetchAdvancedMacroContext,
 };
 
 if (require.main === module) {

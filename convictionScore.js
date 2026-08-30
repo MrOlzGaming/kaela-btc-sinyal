@@ -97,6 +97,20 @@ function computeBtcConviction(data) {
     factors.push({ label: 'Credit Spread (High-Yield)', v, reason: `${data.creditSpreadTrend.arah} -- ${data.creditSpreadTrend.efek}` });
   }
 
+  // ETF Flow (30 Agu 2026, lihat advancedMacro.js fetchBtcEtfFlow) -- duit institusi RIIL lewat
+  // ETF spot BTC. Vote dari TREN 7 hari (bukan 1 hari doang, biar gak kejebak noise harian) --
+  // mayoritas hari inflow = bullish, mayoritas outflow = bearish. BTC-only (belum ada sumber
+  // gratis terverifikasi buat ETF Emas/GLD -- lihat catatan riset, JANGAN dipaksa ke Emas).
+  if (data.etfFlow && data.etfFlow.totalDays7d >= 5) {
+    const { positiveDays7d, totalDays7d, sum7dUsd } = data.etfFlow;
+    const v = positiveDays7d >= totalDays7d - 1 ? 1 : positiveDays7d <= 1 ? -1 : 0;
+    factors.push({
+      label: 'ETF Flow (institusi)',
+      v,
+      reason: `${positiveDays7d}/${totalDays7d} hari inflow, net 7hari $${(sum7dUsd / 1e6).toFixed(0)}jt -- ${v > 0 ? 'akumulasi institusi konsisten' : v < 0 ? 'distribusi institusi konsisten' : 'campuran'}`,
+    });
+  }
+
   const score = factors.reduce((s, f) => s + f.v, 0);
   return { score, verdict: verdictLabel(score, factors.length), factors, totalFactors: factors.length };
 }

@@ -4,7 +4,7 @@
 
 const { WEB_URL, toLocal, localDateKey } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
-const { dvolInsight, yieldCurveInsight } = require('./advancedMacro');
+const { dvolInsight, yieldCurveInsight, etfFlowInsight, fmtFlowUsd } = require('./advancedMacro');
 
 const NEXT_HALVING_EST = new Date('2028-04-13T13:11:00Z'); // sumber: CoinGecko real-time countdown — cek ulang berkala
 const WINDOW_START = new Date('2026-10-19T00:00:00Z');
@@ -107,6 +107,7 @@ function advancedMacroLines(adv) {
   const lines = [];
   if (adv.dvol) lines.push(`🌊 DVOL (volatilitas implisit BTC): ${adv.dvol.value.toFixed(1)} -- ${dvolInsight(adv.dvol)}`);
   if (adv.yieldCurve) lines.push(`📉 Yield Curve 10Y-2Y: ${adv.yieldCurve.value.toFixed(2)} -- ${yieldCurveInsight(adv.yieldCurve)}`);
+  if (adv.etfFlow) lines.push(`🏦 ETF Flow BTC (net hari ini): ${fmtFlowUsd(adv.etfFlow.latestNetFlowUsd)} -- ${etfFlowInsight(adv.etfFlow)}`);
   return lines;
 }
 

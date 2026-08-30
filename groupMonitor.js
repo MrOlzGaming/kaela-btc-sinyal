@@ -214,6 +214,7 @@ async function main() {
       m2Growth: advancedMacro?.m2 || null,
       fedRateTrend: advancedMacro?.fedRate ? classifyFedRateTrend(advancedMacro.fedRate) : null,
       creditSpreadTrend: advancedMacro?.creditSpread ? classifyCreditSpreadTrend(advancedMacro.creditSpread) : null,
+      etfFlow: advancedMacro?.etfFlow || null,
     });
     logVerdict('btc', now, conviction.score, conviction.verdict, priceToday);
     dashboardData = dashboardData || {};

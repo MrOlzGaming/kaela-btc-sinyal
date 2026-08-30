@@ -70,6 +70,11 @@
     if (adv?.yieldCurve) rows.push(macroRow('Yield Curve 10Y-2Y', adv.yieldCurve.value.toFixed(2), adv.yieldCurve.inverted ? 'TERBALIK -- sinyal resesi' : 'Normal'));
     if (adv?.m2) rows.push(macroRow('M2 Money Supply', (adv.m2.changePctYoY || 0).toFixed(1) + '% YoY', 'Likuiditas global'));
     if (adv?.stablecoin) rows.push(macroRow('Stablecoin Supply', (adv.stablecoin.changePct || 0).toFixed(2) + '% / 7 hari', 'USDT+USDC beredar'));
+    if (adv?.etfFlow) {
+      const f = adv.etfFlow.latestNetFlowUsd;
+      const flowStr = (f < 0 ? '-' : '') + '$' + (Math.abs(f) / 1e6).toFixed(0) + 'jt / hari';
+      rows.push(macroRow('ETF Flow BTC (institusi)', flowStr, adv.etfFlow.positiveDays7d + '/' + adv.etfFlow.totalDays7d + ' hari inflow (7h)'));
+    }
     if (goldMacro?.dxy) rows.push(macroRow('DXY (Dolar)', goldMacro.dxy.latest.value.toFixed(1), goldMacro.dxy.trend.arah));
     if (goldMacro?.realYield) rows.push(macroRow('Real Yield 10Y', goldMacro.realYield.latest.value.toFixed(2) + '%', goldMacro.realYield.trend.arah));
     if (cot) rows.push(macroRow('COT Smart Money (Gold)', cot.netPctOi.toFixed(0) + '% net-long', cot.label.split(' -- ')[0]));

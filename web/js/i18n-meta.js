@@ -46,3 +46,16 @@ function toggleMetaLang() {
   try { localStorage.setItem('kaela_meta_lang', currentMetaLang); } catch (e) {}
   applyMetaLang();
 }
+
+// FIX 30 Agu 2026 (Olan: "deep cek" -- bottom-nav SEMUA halaman gak pernah ketranslate) -- tiap
+// halaman manggil applyMetaLang() dari <script> INLINE yang posisinya SEBELUM <nav class=
+// "bottom-nav"> di source HTML. Script jalan SINKRON pas parser masih di titik itu -- elemen di
+// BAWAH script (termasuk nav) BELUM ada di DOM sama sekali pas querySelectorAll('[data-i18n]')
+// jalan, jadi nav-nya kelewat SELAMANYA (bukan race condition ringan, PASTI kelewat tiap load).
+// Elemen DI ATAS script (welcome banner dst) kena translate normal krn udah keparse duluan.
+// Fix TERPUSAT di sini (1 tempat, nolong SEMUA 7 halaman) -- daftarin 1x lagi abis DOMContentLoaded
+// (dijamin nav udah keparse saat itu), applyMetaLang() aman dipanggil ulang (idempotent, cuma
+// nge-set innerHTML/placeholder yang sama kalau udah bener).
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () { applyMetaLang(); });
+}

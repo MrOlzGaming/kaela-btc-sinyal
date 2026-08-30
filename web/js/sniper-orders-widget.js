@@ -82,21 +82,34 @@
   // 29 Agu 2026, permintaan Olan: "count up live.. minggu, hari, jam, menit, detik" -- dipertajam
   // dari cuma hari/jam/menit (update tiap 30dtk) jadi lengkap sampai detik, tick tiap 1 detik biar
   // beneran keliatan "hidup" (bukan diem 30dtk baru gerak).
+  // 30 Agu 2026 (Olan: "deep cek" bahasa) -- unit durasi ('mgg'/'h'/'j'/'m'/'d', prefix 'sudah')
+  // dulu hardcode Indonesia, gak pernah ikut kepindah pas bahasa EN dipilih. Baca bahasa dari
+  // SIAPAPUN host yang lagi pakai (sama pola kayak kaela-render.js) -- i18n-meta.js (web publik)
+  // set `window.currentMetaLang`, dashboard.html Kaela Access set `window.currentLang`.
+  function isEnglish() {
+    try {
+      if (window.currentMetaLang) return window.currentMetaLang === 'en';
+      if (window.currentLang) return window.currentLang === 'en';
+    } catch (e) {}
+    return false;
+  }
   function fmtDuration(ms) {
-    if (!(ms > 0)) return 'baru aja';
+    const en = isEnglish();
+    if (!(ms > 0)) return en ? 'just now' : 'baru aja';
     const totalSec = Math.floor(ms / 1000);
     const weeks = Math.floor(totalSec / (7 * 86400));
     const days = Math.floor((totalSec % (7 * 86400)) / 86400);
     const hours = Math.floor((totalSec % 86400) / 3600);
     const mins = Math.floor((totalSec % 3600) / 60);
     const secs = totalSec % 60;
+    const units = en ? { w: 'w', d: 'd', h: 'h', m: 'm', s: 's' } : { w: 'mgg', d: 'h', h: 'j', m: 'm', s: 'd' };
     const parts = [];
-    if (weeks) parts.push(weeks + 'mgg');
-    if (weeks || days) parts.push(days + 'h');
-    if (weeks || days || hours) parts.push(hours + 'j');
-    if (weeks || days || hours || mins) parts.push(mins + 'm');
-    parts.push(secs + 'd');
-    return 'sudah ' + parts.join(' ');
+    if (weeks) parts.push(weeks + units.w);
+    if (weeks || days) parts.push(days + units.d);
+    if (weeks || days || hours) parts.push(hours + units.h);
+    if (weeks || days || hours || mins) parts.push(mins + units.m);
+    parts.push(secs + units.s);
+    return (en ? '' : 'sudah ') + parts.join(' ');
   }
   function tickDurations() {
     // Selector dilebarin dari '.order-card.floating[data-opened-at]' jadi bare '[data-opened-at]'

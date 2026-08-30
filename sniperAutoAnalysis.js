@@ -44,7 +44,15 @@ const { ASSETS } = require('./assetConfig');
 const { isBtcBearWindow } = require('./halvingBearWindow');
 const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
-const { setLeverage, placeMarketEntry, placeStopLoss, placeTakeProfit, emergencyCloseMarket } = require('./binanceExecutor');
+const binanceEx = require('./binanceExecutor');
+const mexcEx = require('./mexcExecutor');
+// 30 Agu 2026 -- migrasi eksekusi Emas ke MEXC (lihat memori project-kaela-multi-exchange).
+// `execClientFor(assetCfg)` balikin SET FUNGSI yang bener (Binance/MEXC) berdasarkan
+// `assetCfg.exchange` -- interface DUA-DUANYA disamain persis (lihat mexcExecutor.js), jadi kode
+// eksekusi di bawah gak perlu tau/peduli lagi lagi exchange yang mana, tinggal panggil biasa.
+function execClientFor(assetCfg) {
+  return assetCfg.exchange === 'mexc' ? mexcEx : binanceEx;
+}
 
 const MAX_MARGIN_PCT = 20;
 const MAX_NYAWA_PCT = 20;
@@ -277,28 +285,34 @@ async function main() {
       // ditangkep di sini, dilaporin, run tetep lanjut normal.
       let liveExecution = null;
       if (isLiveTradingEnabled()) {
+        // execSymbol+exec (30 Agu 2026) -- BTC tetap Binance/assetCfg.symbol (ZERO perubahan
+        // perilaku), Emas sekarang eksekusi ke MEXC/assetCfg.execSymbol. Kalau MEXC_API_KEY belum
+        // disetup, mexcEx.setLeverage bakal throw -- ketangkep catch di bawah SAMA PERSIS kayak
+        // error live-execution lainnya (shadow tracking tetap jalan, gak crash siklus).
+        const exec = execClientFor(assetCfg);
+        const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
         let entryFilledQty = null; // diisi begitu entry SUKSES -- dipakai jaring pengaman kalau SL gagal
         try {
-          await setLeverage(assetCfg.symbol, calc.leverage);
-          const entryOrder = await placeMarketEntry({ symbol: assetCfg.symbol, direction: cand.direction, notionalUsd: calc.nilaiPosisi, livePrice });
+          await exec.setLeverage(execSymbol, calc.leverage);
+          const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: cand.direction, notionalUsd: calc.nilaiPosisi, livePrice });
           entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
 
           try {
-            await placeStopLoss({ symbol: assetCfg.symbol, direction: cand.direction, stopPrice: cand.sl, quantity: entryFilledQty });
+            await exec.placeStopLoss({ symbol: execSymbol, direction: cand.direction, stopPrice: cand.sl, quantity: entryFilledQty });
           } catch (slError) {
             // JARING PENGAMAN TERAKHIR -- entry udah masuk tapi SL gagal nempel, JANGAN biarin
             // posisi nganggur tanpa proteksi. Tutup paksa, lebih baik rugi kecil/breakeven drpd
             // nyangkut leverage tanpa stop-loss.
             console.log(`[SniperAutoAnalysis] SL GAGAL nempel (${slError.message}) -- posisi udah masuk, tutup PAKSA demi keamanan.`);
-            await emergencyCloseMarket({ symbol: assetCfg.symbol, direction: cand.direction, quantity: entryFilledQty });
+            await exec.emergencyCloseMarket({ symbol: execSymbol, direction: cand.direction, quantity: entryFilledQty });
             throw new Error(`Entry masuk tapi SL gagal nempel (${slError.message}) -- posisi UDAH DITUTUP PAKSA otomatis demi keamanan, gak ada yang nganggur tanpa proteksi.`);
           }
 
-          await placeTakeProfit({ symbol: assetCfg.symbol, direction: cand.direction, tpPrice: partialTp, quantity: entryFilledQty });
-          liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet() };
-          console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE (${isTestnet() ? 'testnet' : 'MAINNET ASLI'}) sukses -- qty ${entryFilledQty}.`);
+          await exec.placeTakeProfit({ symbol: execSymbol, direction: cand.direction, tpPrice: partialTp, quantity: entryFilledQty });
+          liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet(), exchange: assetCfg.exchange };
+          console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE (${assetCfg.exchange}, ${isTestnet() ? 'testnet' : 'MAINNET ASLI'}) sukses -- qty ${entryFilledQty}.`);
         } catch (e) {
-          liveExecution = { ok: false, error: e.message, testnet: isTestnet() };
+          liveExecution = { ok: false, error: e.message, testnet: isTestnet(), exchange: assetCfg.exchange };
           console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE gagal (shadow tracking TETAP jalan normal): ${e.message}`);
         }
       }

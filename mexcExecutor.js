@@ -1,21 +1,22 @@
-// Eksekusi order REAL di MEXC Futures (25 Agu 2026, permintaan Olan: spesialisasi alt-coin, MEXC
-// dipilih krn cakupan pair jauh lebih luas dari Binance). Interface SENGAJA DISAMAIN persis kayak
-// binanceExecutor.js (createXClient({apiKey,apiSecret}) -> {getAccountBalance, setLeverage,
-// placeMarketEntry, ...}) biar bisa jadi drop-in client buat logic Sniper yang udah ada (mirror
-// pattern sniperMultiAccount.js), gak perlu nulis ulang strategi.
+// Eksekusi order REAL di MEXC Futures (30 Agu 2026, migrasi trading Emas Binance->MEXC -- lihat
+// memori project-kaela-multi-exchange). CETAKAN dari binanceExecutor.js (interface function SAMA
+// biar nyopetAutoTrader.js/sniperMultiAccount.js bisa nerima client MEXC tanpa rombak besar),
+// TAPI internal beda total krn API MEXC beda konvensi dari Binance di 3 hal penting:
 //
-// ⚠️ BELUM PERNAH DITES LIVE (25 Agu 2026) -- dibangun dari dokumentasi resmi
-// (mexcdevelop.github.io/apidocs/contract_v1_en/) doang, BELUM divalidasi hit endpoint beneran
-// (butuh API key MEXC Olan yang udah KYC+izin Futures). WAJIB dites step-by-step (saldo -> symbol
-// info -> order kecil) sebelum dipercaya buat modal beneran, SAMA PERSIS kayak binanceExecutor.js
-// dulu pas awal dibangun. Beberapa asumsi yang PERLU diverifikasi pas tes pertama:
-//   - Base URL: https://contract.mexc.com (pola umum MEXC, belum dikonfirmasi hit langsung)
-//   - Bentuk response GET /api/v1/private/account/assets (field currency/availableBalance)
-//   - Format signature buat GET (requestParam = querystring TANPA leading '?', sorted alfabetis)
-//   - MEXC gak punya SL/TP sbg order terpisah (STOP_MARKET) di dokumentasi yang kebaca -- jadi
-//     stopLossPrice/takeProfitPrice WAJIB dikirim BARENGAN pas placeMarketEntry (bukan panggilan
-//     terpisah kayak Binance placeStopLoss/placeTakeProfit) -- 2 fungsi itu sengaja throw error
-//     kalau dipanggil, biar gak ada yang diam-diam nebak endpoint yang belum diverifikasi.
+// 1. AUTH: header ApiKey/Request-Time/Signature (BUKAN query string kayak Binance). Signature =
+//    HMAC-SHA256(secretKey, accessKey + timestamp + parameterString) -- parameterString GET =
+//    query di-sort dictionary order + "&", POST = JSON string body (gak perlu di-sort).
+// 2. VOL = JUMLAH KONTRAK, BUKAN quantity aset langsung -- tiap simbol punya `contractSize`
+//    sendiri (misal BTC_USDT contractSize=0.0001 -> 1 kontrak = 0,0001 BTC). WAJIB fetch
+//    contract/detail dulu buat convert notionalUsd -> vol yang bener. INI TITIK PALING RISKAN --
+//    kalau salah convert, posisi kebuka salah ukuran drastis (bisa berkali-kali lipat).
+// 3. SIDE pakai kode angka (1=open long, 2=close short, 3=open short, 4=close long), openType
+//    (1=isolated, 2=cross) dipilih PER-ORDER (bukan endpoint terpisah kayak Binance marginType).
+//
+// ⚠️ BELUM PERNAH DITES LIVE (30 Agu 2026) -- ditulis dari dokumentasi resmi
+// (mexcdevelop.github.io/apidocs/contract_v1_en/) doang, BELUM ada API key buat verifikasi
+// beneran. SEBELUM dipakai modal real: tes `getContractDetail` + `placeMarketEntry` nominal
+// SEKECIL MUNGKIN dulu, cek posisi yang kebuka beneran sesuai itungan, baru naikin.
 
 const crypto = require('crypto');
 
@@ -30,44 +31,43 @@ function loadSecrets() {
   }
 }
 
-function roundToStepSize(quantity, stepSize, precision) {
-  const rounded = Math.floor(quantity / stepSize) * stepSize;
-  return parseFloat(rounded.toFixed(precision));
-}
+const BASE_URL = 'https://contract.mexc.com';
 
 function createMexcClient({ apiKey, apiSecret }) {
   if (!apiKey || !apiSecret) {
     throw new Error('createMexcClient: apiKey/apiSecret wajib diisi.');
   }
-  const baseUrl = 'https://contract.mexc.com';
-  let symbolInfoCache = null;
+  let contractInfoCache = null;
 
-  // Signature MEXC BEDA dari Binance -- bukan HMAC atas querystring, tapi HMAC atas
-  // "accessKey + timestamp + requestParam" (requestParam: querystring buat GET/DELETE,
-  // JSON.stringify(params) mentah buat POST, gak perlu sort).
-  function sign(timestamp, requestParam) {
-    return crypto.createHmac('sha256', apiSecret).update(apiKey + timestamp + requestParam).digest('hex');
+  // GET: parameterString = query di-sort dictionary order, gabung "&". POST: parameterString =
+  // JSON string body (gak perlu di-sort) -- 2 aturan BEDA, jangan disamain.
+  function buildParamString(method, params) {
+    if (method === 'GET' || method === 'DELETE') {
+      const keys = Object.keys(params).sort();
+      return keys.map((k) => `${k}=${params[k]}`).join('&');
+    }
+    return JSON.stringify(params);
+  }
+
+  function sign(accessKey, timestamp, parameterString) {
+    return crypto.createHmac('sha256', apiSecret).update(accessKey + timestamp + parameterString).digest('hex');
   }
 
   async function signedRequest(method, path, params = {}) {
     const timestamp = Date.now().toString();
-    let url = `${baseUrl}${path}`;
+    const parameterString = buildParamString(method, params);
+    const signature = sign(apiKey, timestamp, parameterString);
+    const headers = {
+      ApiKey: apiKey, 'Request-Time': timestamp, Signature: signature, 'Content-Type': 'application/json',
+    };
+    let url = `${BASE_URL}${path}`;
     let body;
-    let requestParam;
     if (method === 'GET' || method === 'DELETE') {
-      const sorted = Object.keys(params).sort().map((k) => `${k}=${params[k]}`).join('&');
-      requestParam = sorted;
-      if (sorted) url += `?${sorted}`;
+      if (parameterString) url += `?${parameterString}`;
     } else {
-      requestParam = JSON.stringify(params);
-      body = requestParam;
+      body = parameterString;
     }
-    const signature = sign(timestamp, requestParam);
-    const res = await fetch(url, {
-      method,
-      headers: { ApiKey: apiKey, 'Request-Time': timestamp, Signature: signature, 'Content-Type': 'application/json' },
-      body,
-    });
+    const res = await fetch(url, { method, headers, body });
     const data = await res.json();
     if (!res.ok || data.success === false) {
       const err = new Error(`MEXC API error (HTTP ${res.status}): ${JSON.stringify(data)}`);
@@ -77,80 +77,104 @@ function createMexcClient({ apiKey, apiSecret }) {
     return data.data !== undefined ? data.data : data;
   }
 
-  async function getSymbolInfo(symbol) {
-    if (!symbolInfoCache) symbolInfoCache = {};
-    if (!symbolInfoCache[symbol]) {
-      const res = await fetch(`${baseUrl}/api/v1/contract/detail?symbol=${symbol}`);
+  // ⚠️ TITIK PALING RISKAN (lihat catatan atas file) -- `contractSize` per simbol WAJIB dipakai
+  // buat convert notionalUsd -> vol (jumlah kontrak). Cache-nya per-instance, sama pola kayak
+  // symbolInfoCache di binanceExecutor.js.
+  async function getContractDetail(symbol) {
+    if (!contractInfoCache) {
+      const res = await fetch(`${BASE_URL}/api/v1/contract/detail`);
       const json = await res.json();
-      const info = json.data;
-      if (!info) throw new Error(`Simbol ${symbol} gak ketemu di contract/detail MEXC.`);
-      symbolInfoCache[symbol] = {
-        contractSize: parseFloat(info.contractSize), volScale: info.volScale,
-        priceScale: info.priceScale, minVol: parseFloat(info.minVol),
-      };
+      contractInfoCache = {};
+      for (const c of json.data) contractInfoCache[c.symbol] = c;
     }
-    return symbolInfoCache[symbol];
+    const info = contractInfoCache[symbol];
+    if (!info) throw new Error(`Simbol ${symbol} gak ketemu di MEXC contract/detail.`);
+    return info; // { symbol, contractSize, priceScale, volScale, ... }
   }
 
-  // asset default 'USDT' -- konsisten sama binanceExecutor.js.
+  // asset default 'USDT' -- MEXC gold pair (GOLD_XAUTUSDT/GOLD_PAXGUSDT) dua-duanya margin USDT.
   async function getAccountBalance(asset = 'USDT') {
     const assets = await signedRequest('GET', '/api/v1/private/account/assets', {});
     const bal = (Array.isArray(assets) ? assets : []).find((a) => a.currency === asset);
     return bal ? parseFloat(bal.availableBalance) : 0;
   }
 
-  // Dipanggil SEBELUM ada posisi -- MEXC butuh openType+positionType eksplisit di kasus ini
-  // (beda dari Binance yang cukup symbol+leverage). direction: 'buy'=long(1), 'sell'=short(2).
-  async function setLeverage(symbol, leverage, direction = 'buy') {
-    const positionType = direction === 'buy' ? 1 : 2;
+  // MEXC gak punya endpoint "set margin type" terpisah kayak Binance -- isolated/cross dipilih
+  // PER-ORDER lewat openType (1=isolated) di placeMarketEntry. Fungsi ini no-op, DIPERTAHANKAN
+  // biar interface tetap sama kayak binanceExecutor.js (caller gak perlu tau bedanya).
+  async function setIsolatedMargin(_symbol) {
+    return { alreadyIsolated: true, note: 'MEXC: openType diset per-order, bukan endpoint terpisah.' };
+  }
+
+  // positionType 1=long, 2=short -- WAJIB SESUAI ARAH POSISI yang mau diubah leverage-nya (beda
+  // dari Binance yang leverage-nya per-symbol doang, gak peduli arah).
+  async function setLeverage(symbol, leverage, positionType = 1) {
     return signedRequest('POST', '/api/v1/private/position/change_leverage', {
       symbol, leverage, openType: 1, positionType,
     });
   }
 
-  // Isolated margin SELALU dipasang eksplisit tiap order (openType:1 di submit), gak ada langkah
-  // terpisah kayak Binance /fapi/v1/marginType -- fungsi ini no-op, disediakan cuma buat interface
-  // parity (caller lama yang manggil setIsolatedMargin() gak perlu tau bedanya per-exchange).
-  async function setIsolatedMargin(_symbol) {
-    return { alreadyIsolated: true };
-  }
-
-  // notionalUsd -> vol (jumlah kontrak) lewat contractSize (BEDA dari Binance: quantity di sana
-  // langsung base-asset, di sini vol dikali contractSize dulu buat dapet notional).
-  // stopPrice/tpPrice OPSIONAL, dikirim LANGSUNG di order submit (MEXC support stopLossPrice/
-  // takeProfitPrice attached) -- kalau caller mau nempel belakangan, panggil lagi endpoint ini
-  // BUKAN placeStopLoss/placeTakeProfit terpisah (lihat catatan di atas kenapa).
-  async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice, leverage, stopPrice, tpPrice }) {
-    const { contractSize, volScale, minVol } = await getSymbolInfo(symbol);
-    const rawVol = notionalUsd / livePrice / contractSize;
-    const vol = roundToStepSize(rawVol, Math.pow(10, -volScale), volScale);
-    if (vol < minVol) throw new Error(`Vol kehitung ${vol} < minVol ${minVol} buat ${symbol} (notional $${notionalUsd} kekecilan) -- order gak dikirim.`);
-    const side = direction === 'buy' ? 1 : 3; // 1=open long, 3=open short
-    const params = { symbol, vol, side, type: 5, openType: 1, price: livePrice };
-    if (leverage) params.leverage = leverage;
-    if (stopPrice) params.stopLossPrice = stopPrice;
-    if (tpPrice) params.takeProfitPrice = tpPrice;
-    return signedRequest('POST', '/api/v1/private/order/submit', params);
-  }
-
-  // BELUM diimplementasi sbg panggilan terpisah -- lihat catatan ⚠️ di atas file. Kirim SL/TP
-  // lewat placeMarketEntry({stopPrice, tpPrice}) pas entry, JANGAN nebak endpoint trigger-order
-  // yang belum diverifikasi buat modal beneran.
-  async function placeStopLoss() {
-    throw new Error('mexcExecutor.placeStopLoss belum diimplementasi -- kirim stopPrice langsung ke placeMarketEntry() pas entry.');
-  }
-  async function placeTakeProfit() {
-    throw new Error('mexcExecutor.placeTakeProfit belum diimplementasi -- kirim tpPrice langsung ke placeMarketEntry() pas entry.');
-  }
-
   async function getPositionRisk(symbol) {
     const positions = await signedRequest('GET', '/api/v1/private/position/open_positions', { symbol });
-    return (Array.isArray(positions) ? positions[0] : null) || null;
+    return (Array.isArray(positions) ? positions : []).find((p) => p.symbol === symbol) || null;
   }
 
-  async function emergencyCloseMarket({ symbol, direction, vol }) {
-    const side = direction === 'buy' ? 4 : 2; // close long=4, close short=2
-    return signedRequest('POST', '/api/v1/private/order/submit', { symbol, vol, side, type: 5, openType: 1, reduceOnly: true });
+  // Quantity (aset unit, misal BTC/XAUT) -> vol (jumlah kontrak) -- WAJIB pakai contractSize
+  // simbol, INI TITIK PALING RISKAN kalau contractSize-nya salah/berubah (lihat catatan atas file).
+  async function quantityToVol(symbol, quantity) {
+    const { contractSize } = await getContractDetail(symbol);
+    return Math.floor(quantity / contractSize);
+  }
+
+  // Interface DISAMAIN PERSIS kayak binanceExecutor.js (notionalUsd+livePrice masuk, BUKAN vol
+  // langsung) -- caller (sniperAutoAnalysis.js dkk) gak perlu tau soal vol/contractSize sama
+  // sekali, itu detail internal MEXC doang. Balikin `executedQty` (STRING, quantity ASET bukan
+  // vol) biar caller bisa langsung pakai buat placeStopLoss/placeTakeProfit selanjutnya SAMA
+  // PERSIS pola Binance (entryOrder.executedQty).
+  async function placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
+    const { contractSize } = await getContractDetail(symbol);
+    const rawVol = notionalUsd / livePrice / contractSize;
+    const vol = Math.floor(rawVol); // MEXC vol WAJIB integer (jumlah kontrak bulat)
+    if (vol <= 0) throw new Error(`Vol kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat contractSize ${contractSize}) -- order gak dikirim.`);
+    const side = direction === 'buy' ? 1 : 3; // 1=open long, 3=open short
+    const placed = await signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side, type: 5, openType: 1 });
+    // ⚠️ BEDA dari Binance -- belum ketemu endpoint "query order by id" MEXC di riset ini buat
+    // poll status FILLED kayak waitForFill() Binance. Vol yang BENERAN kefill diasumsikan = vol
+    // yang dikirim (market order harusnya fill penuh), tapi INI ASUMSI, BELUM diverifikasi live.
+    // TODO: cari endpoint query-order MEXC, tambahin poll-fill sebelum dipakai modal real beneran.
+    const executedQty = (vol * contractSize).toString();
+    // ⚠️ avgPrice DIISI DARI livePrice yang DIKIRIM (pendekatan), BUKAN harga fill BENERAN dari
+    // MEXC -- respons order/create MEXC cuma balikin {orderId, ts}, gak ada avgPrice kayak
+    // Binance. Buat market order di pair likuid biasanya deket banget, TAPI ini TETAP pendekatan,
+    // bukan angka pasti. TODO: cari endpoint query-order MEXC buat avgPrice akurat.
+    return { ...placed, executedQty, avgPrice: livePrice.toString(), vol, contractSize };
+  }
+
+  // Plan order (trigger/conditional) -- endpoint TERPISAH dari order/create, beda dari Binance yang
+  // nempelin SL/TP lewat algoOrder based on entry order. ⚠️ Riset nemu catatan changelog LAMA
+  // (2022) bilang endpoint ini sempat "under maintenance" -- WAJIB dites ulang manual sebelum
+  // diandelin buat proteksi posisi real, JANGAN asumsikan langsung jalan.
+  // `quantity` (BUKAN vol) -- disamain kayak Binance, dikonversi ke vol internal di sini.
+  async function placeStopLoss({ symbol, direction, stopPrice, quantity }) {
+    const vol = await quantityToVol(symbol, quantity);
+    const closeSide = direction === 'buy' ? 2 : 4; // CATATAN: dokumentasi order/create pakai 2=close short/4=close long buat ORDER BIASA; utk planorder triggerType mungkin beda, TODO verifikasi field persis pas API key ada.
+    return signedRequest('POST', '/api/v1/private/planorder/place', {
+      symbol, vol, side: closeSide, triggerPrice: stopPrice, triggerType: direction === 'buy' ? 2 : 1, trend: 1, executeCycle: 1, orderType: 5,
+    });
+  }
+
+  async function placeTakeProfit({ symbol, direction, tpPrice, quantity }) {
+    const vol = await quantityToVol(symbol, quantity);
+    const closeSide = direction === 'buy' ? 2 : 4;
+    return signedRequest('POST', '/api/v1/private/planorder/place', {
+      symbol, vol, side: closeSide, triggerPrice: tpPrice, triggerType: direction === 'buy' ? 1 : 2, trend: 1, executeCycle: 1, orderType: 5,
+    });
+  }
+
+  async function emergencyCloseMarket({ symbol, direction, quantity }) {
+    const vol = await quantityToVol(symbol, quantity);
+    const closeSide = direction === 'buy' ? 2 : 4;
+    return signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side: closeSide, type: 5, openType: 1, reduceOnly: true });
   }
 
   async function cancelAllOpenOrders(symbol) {
@@ -159,8 +183,44 @@ function createMexcClient({ apiKey, apiSecret }) {
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-    getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
+    getPositionRisk, cancelAllOpenOrders, getContractDetail, emergencyCloseMarket,
   };
 }
 
-module.exports = { createMexcClient, roundToStepSize };
+// Wrapper singleton (pola SAMA PERSIS binanceExecutor.js _defaultClient()) -- akun Olan sendiri
+// dari secrets.js/env var. Kalau MEXC_API_KEY/SECRET belum diisi, LEMPAR error jelas -- caller
+// (sniperAutoAnalysis.js dkk) WAJIB tangkep ini dan skip aset Emas dengan aman, BUKAN crash
+// seluruh siklus (BTC harus tetap jalan normal walau MEXC belum disetup).
+let _defaultClientInstance = null;
+function _defaultClient() {
+  if (_defaultClientInstance) return _defaultClientInstance;
+  const secrets = loadSecrets();
+  if (!secrets.MEXC_API_KEY || !secrets.MEXC_API_SECRET) {
+    throw new Error('MEXC_API_KEY/MEXC_API_SECRET belum di-setup (secrets.js atau env var) -- gak bisa eksekusi order MEXC.');
+  }
+  _defaultClientInstance = createMexcClient({ apiKey: secrets.MEXC_API_KEY, apiSecret: secrets.MEXC_API_SECRET });
+  return _defaultClientInstance;
+}
+
+// isMexcConfigured() -- cek AMAN (gak throw) buat caller yang mau tau duluan sebelum nyoba
+// eksekusi, dipakai buat skip Emas dengan pesan jelas selama MEXC_API_KEY belum diisi.
+function isMexcConfigured() {
+  const secrets = loadSecrets();
+  return !!(secrets.MEXC_API_KEY && secrets.MEXC_API_SECRET);
+}
+
+async function getAccountBalance(asset = 'USDT') { return _defaultClient().getAccountBalance(asset); }
+async function setLeverage(symbol, leverage, positionType) { return _defaultClient().setLeverage(symbol, leverage, positionType); }
+async function setIsolatedMargin(symbol) { return _defaultClient().setIsolatedMargin(symbol); }
+async function placeMarketEntry(args) { return _defaultClient().placeMarketEntry(args); }
+async function placeStopLoss(args) { return _defaultClient().placeStopLoss(args); }
+async function placeTakeProfit(args) { return _defaultClient().placeTakeProfit(args); }
+async function getPositionRisk(symbol) { return _defaultClient().getPositionRisk(symbol); }
+async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOpenOrders(symbol); }
+async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
+
+module.exports = {
+  createMexcClient, isMexcConfigured, EXCHANGE_NAME: 'mexc',
+  getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
+  getPositionRisk, cancelAllOpenOrders, emergencyCloseMarket,
+};

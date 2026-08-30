@@ -2,14 +2,19 @@
 // sumber kebenaran dipakai sniperAutoAnalysis.js, sniperOrderMonitor.js, DAN web (nilainya
 // di-mirror manual ke web/js/*.js karena itu browser-side, gak bisa require() file Node).
 //
-// XAU/Emas pakai PAXGUSDT (token emas asli di Binance, 1 token = 1 troy ounce emas, dijaga
-// Paxos) -- BUKAN data futures GC=F (itu cuma dipakai riset/backtest karena histori panjang,
-// gak ada feed live gratis buat live trading). PAXGUSDT dipilih drpd XAUTUSDT krn history data
-// -api.binance.vision buat PAXG lebih konsisten pas dites 22 Agu 2026.
+// XAU/Emas (30 Agu 2026, migrasi EKSEKUSI ke MEXC -- lihat memori project-kaela-multi-exchange,
+// "4 dompet independen": Sniper BTC & Nyopet BTC tetap Binance, Sniper Emas & Nyopet Emas pindah
+// eksekusi ke MEXC, 2 token beda (XAUT vs PAXG) biar gak kembar). PENTING -- `symbol` TETAP
+// PAXGUSDT/Binance (dipakai buat CHART/pattern analysis, fetchCandles/fetchLivePrice/sentiment/
+// onchain -- publik, gak butuh akun MEXC, data historinya udah lama+konsisten). `execSymbol` +
+// `exchange` field BARU, KHUSUS dipakai di titik EKSEKUSI ORDER doang (setLeverage/
+// placeMarketEntry/placeStopLoss/dkk) -- JANGAN campur adukin dua field ini, beda tujuan total.
 const ASSETS = {
   btc: {
     key: 'btc',
     symbol: 'BTCUSDT',
+    execSymbol: 'BTCUSDT', // sama kayak symbol -- BTC TETAP Binance, gak pindah apa-apa
+    exchange: 'binance',
     // Label = PERSIS simbol Binance (29 Agu 2026, permintaan Olan: "kalo di akun binance pasang
     // paxg ya di web paxg juga bukan malah xau" -- gak ada terjemahan/nama cantik lagi, samain
     // 1:1 sama yang keliatan di app Binance biar gak perlu mikir cocokin).
@@ -20,11 +25,16 @@ const ASSETS = {
   },
   xau: {
     key: 'xau',
-    symbol: 'PAXGUSDT',
-    // Label = PERSIS simbol Binance (29 Agu 2026, Olan: "kalo di akun binance pasang paxg ya di
-    // web paxg juga bukan malah xau, biar ga muter muter kepalaku" -- dulu dicoba "XAU/Emas
-    // (PAXGUSDT)" tapi masih bikin bingung krn ada 2 nama, sekarang SATU nama doang = PAXGUSDT).
-    label: 'PAXGUSDT',
+    symbol: 'PAXGUSDT', // TETAP Binance -- chart/pattern analysis, JANGAN diubah ke MEXC
+    // 30 Agu 2026 -- EKSEKUSI pindah ke XAUT_USDT (MEXC, format simbol underscore beda dari
+    // Binance -- verified via contract/detail MEXC, contractSize 0.001). Nyopet Emas dapat
+    // PAXG_USDT (nyopetAssetConfig.js) -- 2 token beda biar Sniper Emas vs Nyopet Emas gak kembar
+    // simbolnya walau dua-duanya sekarang eksekusi di MEXC.
+    execSymbol: 'XAUT_USDT',
+    exchange: 'mexc',
+    // Label dipisah dari execSymbol (30 Agu 2026) -- tampilan/journal boleh nunjukin simbol
+    // eksekusi asli (XAUT_USDT) biar gak bingung sama Nyopet Emas (PAXG_USDT).
+    label: 'XAUT_USDT',
     emoji: '🟡',
     useHalvingBearWindow: false,
   },

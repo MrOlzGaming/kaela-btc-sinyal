@@ -43,6 +43,7 @@ const { fetchCandles } = require('./technicalAnalysis');
 const { detectZones, findTouchCandidate, findNearestPair, isZoneBroken } = require('./darkKaelaZones');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
+const mexcExecutorDefault = require('./mexcExecutor');
 const { formatAutoOpen, formatAutoClosed } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
@@ -68,8 +69,13 @@ function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('he
 //                default null = pakai `client.getAccountBalance(marginAsset)` apa adanya.
 // `apiCreds`   : { apiKey, apiSecret, testnet } -- WAJIB kalau mau `fetchRealizedPnlSince` jalan
 //                (butuh signed request langsung ke /fapi/v1/income, belum ada di client factory).
-function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCreds, onEvent } = {}) {
+// `mexcClient` (BARU, 30 Agu 2026) -- Emas eksekusi ke MEXC sekarang (lihat memori
+// project-kaela-multi-exchange), default ke mexcExecutor.js singleton (akun Olan sendiri) kayak
+// `client`/binanceExecutorDefault. `execFor(assetCfg)` di bawah milih instance yang bener per aset.
+function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent } = {}) {
   const c = client || binanceExecutorDefault;
+  const mc = mexcClient || mexcExecutorDefault;
+  function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : c; }
   const jPath = journalPath || DEFAULT_JOURNAL_PATH;
   const notify = sendWA || sendWhatsApp;
   const emit = onEvent || (() => {}); // 23 Agu 2026 -- hook OPSIONAL buat jurnal personal (Kaela Pro
@@ -101,7 +107,14 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     return (journal.orders || []).find((o) => o.status === 'floating' && o.asset === assetKey) || null;
   }
 
-  async function fetchLivePrice(symbol) {
+  // exchange param (30 Agu 2026, migrasi Emas ke MEXC) -- default 'binance' biar SEMUA caller lama
+  // (BTC, atau siapapun yang belum sempat update panggilannya) ZERO PERUBAHAN PERILAKU.
+  async function fetchLivePrice(symbol, exchange = 'binance') {
+    if (exchange === 'mexc') {
+      const res = await fetch(`https://contract.mexc.com/api/v1/contract/ticker?symbol=${symbol}`);
+      const json = await res.json();
+      return parseFloat(json.data.lastPrice);
+    }
     const res = await fetch(`${baseUrl}/fapi/v1/ticker/price?symbol=${symbol}`);
     return parseFloat((await res.json()).price);
   }
@@ -118,27 +131,28 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     return income.reduce((s, inc) => s + parseFloat(inc.income), 0);
   }
 
-  async function resolveModal(marginAsset) {
+  async function resolveModal(marginAsset, exec) {
     if (getModalBase) {
       const override = await getModalBase(marginAsset);
       if (override != null) return override;
     }
-    return c.getAccountBalance(marginAsset);
+    return (exec || c).getAccountBalance(marginAsset);
   }
 
   // Buka posisi beneran + tulis ke journal (status floating) + kirim notif.
   async function openPosition(assetCfg, { direction, tp, mode, zoneCtx }) {
     const { symbol, marginAsset, key: assetKey } = assetCfg;
-    const [modalFull, livePrice] = await Promise.all([resolveModal(marginAsset), fetchLivePrice(symbol)]);
+    const exec = execFor(assetCfg); // 30 Agu 2026 -- Binance buat BTC, MEXC buat Emas (lihat memori project-kaela-multi-exchange)
+    const [modalFull, livePrice] = await Promise.all([resolveModal(marginAsset, exec), fetchLivePrice(symbol, assetCfg.exchange)]);
     const modal = modalFull * MODAL_ACTIVE_FRACTION;
     const calc = hitungExposure({ modal, nyawa: NYAWA_PCT, entry: livePrice });
     console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | leverage ${calc.leverage}x`);
 
-    await c.setIsolatedMargin(symbol);
-    await c.setLeverage(symbol, calc.leverage);
+    await exec.setIsolatedMargin(symbol);
+    await exec.setLeverage(symbol, calc.leverage);
     let entryOrder;
     try {
-      entryOrder = await c.placeMarketEntry({ symbol, direction, notionalUsd: calc.nilaiPosisi, livePrice });
+      entryOrder = await exec.placeMarketEntry({ symbol, direction, notionalUsd: calc.nilaiPosisi, livePrice });
     } catch (e) {
       // 24 Agu 2026, permintaan Olan: member REAL yang sinyalnya kelewat krn saldo kurang WAJIB
       // dikasih tau (bukan cuma nyampah di log lokal) -- Demo gak usah (solusinya beda, reset
@@ -153,10 +167,10 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     }
     const qty = parseFloat(entryOrder.executedQty);
     const entryPrice = parseFloat(entryOrder.avgPrice);
-    const posRisk = await c.getPositionRisk(symbol);
+    const posRisk = await exec.getPositionRisk(symbol);
 
     const order = {
-      id: 'nyopet-demo-' + Date.now(), asset: assetKey, direction, status: 'floating', mode, entryPrice,
+      id: 'nyopet-demo-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange, direction, status: 'floating', mode, entryPrice,
       liqPrice: parseFloat(posRisk.liquidationPrice), tp, qty,
       leverage: calc.leverage, marginUsd: calc.margin, zonePrice: zoneCtx.price, zoneKind: zoneCtx.kind,
       zoneTouches: zoneCtx.touches, triggeredAt: new Date().toISOString(),
@@ -170,12 +184,13 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     const msg = formatAutoOpen({ ...order, sl: order.liqPrice, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo);
     console.log(msg + '\n');
     await notify(msg);
-    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, direction, entryPrice, sl: order.liqPrice, tp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: mode === 'follow' ? 'Follow (zona ditembus)' : 'Fade (zona mantul)' });
+    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction, entryPrice, sl: order.liqPrice, tp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: mode === 'follow' ? 'Follow (zona ditembus)' : 'Fade (zona mantul)' });
     return order;
   }
 
   async function closePosition(assetCfg, order, { alreadyClosed, realPnlUsd, won, manualNote }) {
     const { symbol } = assetCfg;
+    const exec = execFor(assetCfg);
     let pnlUsd, exitPrice, pnlPct, reconciliationNote;
     if (alreadyClosed) {
       // 28 Agu 2026, bug nyata: `fetchRealizedPnlSince` jumlahin SEMUA income simbol ini sejak
@@ -194,7 +209,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
       }
       exitPrice = order.direction === 'buy' ? order.entryPrice + pnlUsd / order.qty : order.entryPrice - pnlUsd / order.qty;
     } else {
-      const closeOrder = await c.emergencyCloseMarket({ symbol, direction: order.direction, quantity: order.qty });
+      const closeOrder = await exec.emergencyCloseMarket({ symbol, direction: order.direction, quantity: order.qty });
       exitPrice = parseFloat(closeOrder.avgPrice) || order.tp;
       pnlUsd = order.direction === 'buy' ? (exitPrice - order.entryPrice) * order.qty : (order.entryPrice - exitPrice) * order.qty;
     }
@@ -211,28 +226,35 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
       + (manualNote ? `\n\n(${manualNote})` : '');
     console.log(msg + '\n');
     await notify(msg);
-    emit({ entryId: order.id, type: 'close', status: won ? 'closed' : 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt });
+    emit({ entryId: order.id, type: 'close', status: won ? 'closed' : 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });
     return target;
   }
 
   async function processAsset(assetCfg) {
     const { symbol, zoneSymbol, key: assetKey } = assetCfg;
+    const exec = execFor(assetCfg);
     let journal = loadJournal();
     const floating = getFloatingOrder(journal, assetKey);
 
     if (floating) {
-      const posRisk = await c.getPositionRisk(symbol);
+      const posRisk = await exec.getPositionRisk(symbol);
       const stillOpen = Math.abs(parseFloat(posRisk.positionAmt)) > 0;
 
       if (!stillOpen) {
         console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi UDAH GAK ADA (kelikuidasi/offline) -- rekonsiliasi income history.`);
+        // ⚠️ fetchRealizedPnlSince HARDCODE Binance (signing+endpoint /fapi/v1/income) -- BELUM
+        // ada versi MEXC (riset endpoint income-history MEXC belum dilakuin, 30 Agu 2026). Gagal
+        // JELAS di sini drpd diem-diem manggil endpoint Binance pakai simbol MEXC (bisa salah data).
+        if (assetCfg.exchange === 'mexc') {
+          throw new Error(`Rekonsiliasi posisi ${assetCfg.label} (MEXC) yang kelikuidasi offline BELUM DIDUKUNG -- fetchRealizedPnlSince cuma ada versi Binance. Cek manual dulu di MEXC.`);
+        }
         const realPnlUsd = await fetchRealizedPnlSince(symbol, new Date(floating.triggeredAt).getTime());
         await closePosition(assetCfg, floating, { alreadyClosed: true, realPnlUsd, won: realPnlUsd >= 0 });
         journal = loadJournal();
         if (realPnlUsd >= 0) journal.watchZoneByAsset[assetKey] = { price: floating.tp, side: floating.direction === 'buy' ? 'resistance' : 'support' };
         saveJournal(journal);
       } else {
-        const livePrice = await fetchLivePrice(symbol);
+        const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
         const hitTp = floating.direction === 'buy' ? livePrice >= floating.tp : livePrice <= floating.tp;
         if (hitTp) {
           console.log(`[NyopetAutoTrader] ${assetCfg.label}: target kena (${livePrice} vs TP ${floating.tp}) -- tutup untung, reverse.`);
@@ -301,19 +323,27 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
 
   // Sinkron saldo LIVE tiap siklus (29 Agu 2026, bug ketemu: journal.balance cuma keupdate pas
   // openPosition() -- begitu udah gak ada posisi baru dibuka, angkanya STALE mulu, beda dari
-  // Sniper yang emang disinkron tiap siklus di localLiveExecutor.js). Nyopet pakai 2 wallet beda
-  // (BTC=USDC, XAU=PAXGUSDT=USDT) jadi field-nya WAJIB dipisah, gak boleh digabung 1 angka lagi.
+  // Sniper yang emang disinkron tiap siklus di localLiveExecutor.js).
+  //
+  // 30 Agu 2026, migrasi Emas ke MEXC -- BTC (USDC/Binance) dan Emas (USDT/MEXC) sekarang 2
+  // EXCHANGE BEDA, bukan cuma 2 asset margin beda di Binance yang sama. `journal.balanceUsdc`/
+  // `balanceUsdt` DIPERTAHANKAN (nama lama, backward-compat -- dashboard/notif lama masih baca
+  // field ini) TAPI sekarang diisi PER-ASSET pakai exec yang bener (`execFor`), bukan 1 client
+  // buat dua-duanya lagi. Kalau MEXC belum disetup, balanceUsdt gagal SENDIRI (try/catch per
+  // asset) -- BTC/USDC (Binance) TETAP sinkron normal, gak ikut gagal bareng.
   async function syncBalances() {
-    try {
-      const [balanceUsdc, balanceUsdt] = await Promise.all([c.getAccountBalance('USDC'), c.getAccountBalance('USDT')]);
-      const journal = loadJournal();
-      journal.balanceUsdc = balanceUsdc;
-      journal.balanceUsdt = balanceUsdt;
-      delete journal.balance; // field lama ambigu (USDT/USDC ketuker tergantung aset mana yang terakhir buka posisi) -- dibuang, ganti 2 field eksplisit di atas
-      saveJournal(journal);
-    } catch (e) {
-      console.log('[NyopetAutoTrader] Gagal sinkron saldo:', e.message);
+    const journal = loadJournal();
+    for (const assetCfg of Object.values(NYOPET_ASSETS)) {
+      try {
+        const bal = await execFor(assetCfg).getAccountBalance(assetCfg.marginAsset);
+        const field = 'balance' + assetCfg.marginAsset.charAt(0) + assetCfg.marginAsset.slice(1).toLowerCase(); // USDC -> balanceUsdc, USDT -> balanceUsdt
+        journal[field] = bal;
+      } catch (e) {
+        console.log(`[NyopetAutoTrader] Gagal sinkron saldo ${assetCfg.label} (${assetCfg.exchange}):`, e.message);
+      }
     }
+    delete journal.balance; // field lama ambigu (USDT/USDC ketuker tergantung aset mana yang terakhir buka posisi) -- dibuang, ganti field per-asset eksplisit di atas
+    saveJournal(journal);
   }
 
   // 28 Agu 2026, permintaan Olan: "user pengen fasilitas tutup posisi dari Kaela Access, aku
@@ -327,7 +357,7 @@ function createNyopetTrader({ client, journalPath, sendWA, getModalBase, apiCred
     const order = getFloatingOrder(journal, assetKey);
     if (!order) return { ok: false, error: `Gak ada posisi floating buat ${assetCfg.label}.` };
 
-    const livePrice = await fetchLivePrice(assetCfg.symbol);
+    const livePrice = await fetchLivePrice(assetCfg.symbol, assetCfg.exchange);
     const won = order.direction === 'buy' ? livePrice >= order.entryPrice : livePrice <= order.entryPrice;
     const manualNote = requestedBy ? `🙋 Ditutup MANUAL atas permintaan ${requestedBy}` : '🙋 Ditutup MANUAL';
     await closePosition(assetCfg, order, { alreadyClosed: false, won, manualNote });

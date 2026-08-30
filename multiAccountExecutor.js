@@ -185,10 +185,18 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     ]);
     // MEXC (30 Agu 2026) -- fail-safe TERPISAH: kalau mexcClient stub (belum disetup) ATAU
     // beneran error, JANGAN gugurin laporan Binance -- default 0, log doang.
-    const mexcBalanceUsdt = await mexcClient.getAccountBalance('USDT').catch((e) => {
-      console.log(`[MultiAccountExecutor] Saldo MEXC (${account.phone}/${account.mode}) gak kebaca:`, e.message);
-      return 0;
-    });
+    // 30 Agu 2026 -- 4 dompet independen: MEXC USDT (Sniper Emas) + MEXC USDC (Nyopet Emas),
+    // sama pola kayak Binance USDT/USDC di atas -- BUKAN 1 saldo gabungan lagi.
+    const [mexcBalanceUsdt, mexcBalanceUsdc] = await Promise.all([
+      mexcClient.getAccountBalance('USDT').catch((e) => {
+        console.log(`[MultiAccountExecutor] Saldo MEXC USDT (${account.phone}/${account.mode}) gak kebaca:`, e.message);
+        return 0;
+      }),
+      mexcClient.getAccountBalance('USDC').catch((e) => {
+        console.log(`[MultiAccountExecutor] Saldo MEXC USDC (${account.phone}/${account.mode}) gak kebaca:`, e.message);
+        return 0;
+      }),
+    ]);
 
     // Bug ketemu 29 Agu 2026 (Olan: "jurnal versi real tampilan ngarang") -- loop ini CUMA cek
     // symbol Sniper (assetConfig.js: BTCUSDT+PAXGUSDT), Nyopet BTC pakai symbol BEDA (BTCUSDC,
@@ -210,8 +218,8 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
         leverage: p.leverage, liquidationPrice: p.liquidationPrice,
         marginType: p.marginType, notional: p.notional,
       }));
-    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt);
-    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), ${positions.length} posisi.`);
+    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc);
+    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), $${mexcBalanceUsdc.toFixed(2)} USDC (MEXC), ${positions.length} posisi.`);
 
     // 28 Agu 2026, permintaan Olan: "dompet kosong, japri -- 3 hari beruntun gak diisi, matiin
     // otomatis" -- numpang saldo yang UDAH DIAMBIL di atas, gak fetch Binance lagi.

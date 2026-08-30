@@ -11,8 +11,14 @@ async function main() {
   const machineId = process.argv[2];
   const errorsText = process.argv[3] || '';
   if (!machineId || !errorsText.trim()) return;
+  // BUG BAHAYA ketemu 30 Agu 2026 (Olan lapor "spam" -- pesan WA numpuk makin banyak tiap siklus):
+  // baris log INI SENDIRI (tag "[ReportCycleErrors]" + kata "error") ke-scan balik sama grep
+  // ERROR/GAGAL di CYCLE BERIKUTNYA (run-*-executor.sh/.ps1) -- laporan sukses dibaca ulang
+  // sebagai "error baru", dilaporin lagi, bikin log baris baru, di-scan lagi... feedback loop
+  // (10 -> 13 -> makin banyak tiap siklus, PERSIS pola yang dilaporin Olan). Fix: kata "error"/
+  // "gagal" WAJIB gak pernah muncul di baris log sukses manapun di file ini.
   const r = await kaela.reportCycleErrors(machineId, errorsText);
-  if (r.ok) console.log(`[ReportCycleErrors] ${r.newCount || 0} error baru dilaporin ke Olan.`);
+  if (r.ok) console.log(`[LaporTemuanBerkala] ${r.newCount || 0} temuan baru dikirim ke Olan.`);
 }
 
 main().finally(() => process.exit(0));

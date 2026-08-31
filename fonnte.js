@@ -1,8 +1,14 @@
-// Kirim pesan WA lewat Fonnte -- default ke grup "BTC Sniper Club", tapi bisa override `target`
-// buat DM ke nomor spesifik (dipakai nyopetOtp.js buat kirim kode OTP ke WA pribadi Olan doang,
-// 22 Agu 2026). Searah total: Kaela cuma KIRIM, gak pernah baca command atau balas apapun masuk.
-// Tanpa secrets.js (belum di-setup di mesin ini), fungsi ini otomatis no-op -- aman buat dev/testing lokal.
-
+// Kirim pesan WA lewat Fonnte -- broadcast ke SEMUA grup terdaftar (default), atau bisa override
+// `target` buat DM ke nomor/grup spesifik (dipakai nyopetOtp.js buat kirim kode OTP ke WA pribadi
+// Olan doang, 22 Agu 2026). Searah total: Kaela cuma KIRIM, gak pernah baca command atau balas
+// apapun masuk. Tanpa secrets.js (belum di-setup di mesin ini), fungsi ini otomatis no-op --
+// aman buat dev/testing lokal.
+//
+// MULTI-GRUP (31 Agu 2026, permintaan Olan: "grup keluarga baru, kerjanya sama kek grup sekarang,
+// tanpa bentrok") -- broadcast (target kosong) sekarang kirim ke SEMUA grup di
+// `secrets.FONNTE_BROADCAST_GROUPS` (array), BUKAN cuma 1 grup lagi. `FONNTE_GROUP_ID` lama
+// TETAP dipertahanin sbg fallback tunggal (backward-compat kalau BROADCAST_GROUPS belum diisi
+// di suatu mesin) -- 0 breaking change buat yang belum sempat update secrets.js-nya.
 const { fetchRetryNetworkErrorOnly } = require('./httpRetry');
 
 const FONNTE_URL = 'https://api.fonnte.com/send';
@@ -14,24 +20,31 @@ function loadSecrets() {
     // fallback buat GitHub Actions -- secrets.js ditulis ulang tiap run dari GitHub Secrets,
     // tapi jaga-jaga kalau suatu saat langsung dari env var (CI lain / testing manual)
     if (process.env.FONNTE_TOKEN) {
-      return { FONNTE_TOKEN: process.env.FONNTE_TOKEN, FONNTE_GROUP_ID: process.env.FONNTE_GROUP_ID };
+      return {
+        FONNTE_TOKEN: process.env.FONNTE_TOKEN,
+        FONNTE_GROUP_ID: process.env.FONNTE_GROUP_ID,
+        // CSV di 1 env var (bukan array) -- env var GitHub Actions cuma bisa string polos.
+        FONNTE_BROADCAST_GROUPS: process.env.FONNTE_BROADCAST_GROUPS
+          ? process.env.FONNTE_BROADCAST_GROUPS.split(',').map((s) => s.trim()).filter(Boolean)
+          : null,
+      };
     }
     return null;
   }
 }
 
-async function sendWhatsApp(message, target) {
-  const secrets = loadSecrets();
-  if (!secrets || !secrets.FONNTE_TOKEN) {
-    console.log('[Fonnte] secrets.js belum ada / FONNTE_TOKEN kosong -- skip kirim WA (tetap jalan, cuma console+arsip).');
-    return { skipped: true };
+// Daftar target broadcast -- FONNTE_BROADCAST_GROUPS (array, secrets.js) diutamain, fallback ke
+// FONNTE_GROUP_ID tunggal (mesin/workflow yang belum di-update sama sekali) biar gak ada yang
+// tiba-tiba berhenti kirim WA cuma gara-gara field baru ini belum keisi di suatu tempat.
+function resolveBroadcastTargets(secrets) {
+  if (Array.isArray(secrets.FONNTE_BROADCAST_GROUPS) && secrets.FONNTE_BROADCAST_GROUPS.length > 0) {
+    return secrets.FONNTE_BROADCAST_GROUPS;
   }
+  return secrets.FONNTE_GROUP_ID ? [secrets.FONNTE_GROUP_ID] : [];
+}
 
-  const body = new URLSearchParams({
-    target: target || secrets.FONNTE_GROUP_ID,
-    message,
-  });
-
+async function sendOne(message, target, secrets) {
+  const body = new URLSearchParams({ target, message });
   // Gagal kirim WA gak boleh gugurin seluruh run (arsip web tetap harus jalan) -- retry dulu,
   // kalau tetap gagal, cukup dicatat, jangan throw ke pemanggil. PAKAI fetchRetryNetworkErrorOnly
   // (BUKAN fetchWithRetry biasa) -- kirim WA itu TIDAK IDEMPOTEN, retry pas server sempat merespon
@@ -45,15 +58,42 @@ async function sendWhatsApp(message, target) {
     });
     const data = await res.json().catch(() => ({}));
     if (data.status === false) {
-      console.error('[Fonnte] Fonnte nolak pesan:', JSON.stringify(data));
+      console.error(`[Fonnte] Fonnte nolak pesan ke ${target}:`, JSON.stringify(data));
       return { ok: false, data };
     }
-    console.log(target ? `[Fonnte] Terkirim ke ${target}.` : '[Fonnte] Terkirim ke grup WA.');
+    console.log(`[Fonnte] Terkirim ke ${target}.`);
     return { ok: true, data };
   } catch (e) {
-    console.error('[Fonnte] Gagal kirim WA setelah retry:', e.message);
+    console.error(`[Fonnte] Gagal kirim WA ke ${target} setelah retry:`, e.message);
     return { ok: false, error: e.message };
   }
+}
+
+async function sendWhatsApp(message, target) {
+  const secrets = loadSecrets();
+  if (!secrets || !secrets.FONNTE_TOKEN) {
+    console.log('[Fonnte] secrets.js belum ada / FONNTE_TOKEN kosong -- skip kirim WA (tetap jalan, cuma console+arsip).');
+    return { skipped: true };
+  }
+
+  // `target` eksplisit (DM/nomor spesifik) -- SATU tujuan doang, perilaku LAMA, gak ikut broadcast.
+  if (target) {
+    return sendOne(message, target, secrets);
+  }
+
+  // Broadcast -- ke SEMUA grup terdaftar, satu-satu (bukan Promise.all -- biar gak keburu-buru
+  // kena rate limit Fonnte, dan biar 1 grup gagal gak ganggu urutan kirim ke grup lain).
+  const targets = resolveBroadcastTargets(secrets);
+  if (targets.length === 0) {
+    console.log('[Fonnte] Gak ada grup broadcast terdaftar (FONNTE_BROADCAST_GROUPS/FONNTE_GROUP_ID kosong) -- skip.');
+    return { skipped: true };
+  }
+  const results = [];
+  for (const t of targets) {
+    results.push(await sendOne(message, t, secrets));
+  }
+  const allOk = results.every((r) => r.ok);
+  return { ok: allOk, results };
 }
 
 module.exports = { sendWhatsApp };

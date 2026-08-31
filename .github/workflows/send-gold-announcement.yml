@@ -21,6 +21,7 @@ jobs:
           module.exports = {
             FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
             FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
+            FONNTE_BROADCAST_GROUPS: ['${{ secrets.FONNTE_GROUP_ID }}', '${{ secrets.FONNTE_GROUP_ID_FAM }}'],
           };
           EOF
 

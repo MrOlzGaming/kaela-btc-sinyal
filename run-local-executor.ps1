@@ -170,16 +170,33 @@ try {
   Log "auditGithubActions.js ERROR: $($_.Exception.Message)"
 }
 
-$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json
+# Cadangan Price Alert + DXY Zone Monitor (31 Agu 2026) -- ketauan dari audit di atas, jadwal GH
+# Actions-nya (tiap 5 menit / tiap jam) sering telat berjam-jam gara-gara antrian akun ini padat.
+# Kedua script UDAH punya cooldown/state deteksi-transisi sendiri (price-alert-state.json,
+# dxy-zone-state.json) -- aman dipanggil tiap siklus 15 menit, gak akan spam WA dobel.
+try {
+  $output9 = node priceAlertMonitor.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output9 -Encoding utf8
+} catch {
+  Log "priceAlertMonitor.js ERROR: $($_.Exception.Message)"
+}
+try {
+  $output10 = node dxyZoneMonitor.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output10 -Encoding utf8
+} catch {
+  Log "dxyZoneMonitor.js ERROR: $($_.Exception.Message)"
+}
+
+$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026, nambah kaela-spot-alt.json -- file itu BELUM TENTU ada dulu sampai
   # buy pertama kejadian, 19 Okt 2026+. `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
   # -- pola sama kayak bug git-add-f di workflow GH Actions, dicegah di sini juga).
-  # archive.json ditambahin 31 Agu 2026 (backup kirim berita, runDueNews.js) -- newsMonitor.js
-  # nulis dedup state ke sini, WAJIB ikut ke-commit+push, kalau nggak VPS `git reset --hard` bakal
-  # nelen balik perubahan itu -> berita bisa kekirim dobel siklus berikutnya.
-  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json', 'kaela-spot.json', 'research-log-state.json', 'archive.json')) {
+  # archive.json + price-alert-state.json + dxy-zone-state.json ditambahin 31 Agu 2026 (cadangan
+  # lokal buat berita/price alert/DXY monitor) -- state dedup/cooldown-nya WAJIB ikut ke-commit+
+  # push, kalau nggak VPS `git reset --hard` bakal nelen balik perubahan -> alert bisa kekirim dobel.
+  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json', 'kaela-spot.json', 'research-log-state.json', 'archive.json', 'price-alert-state.json', 'dxy-zone-state.json')) {
     if (Test-Path $f) { git add $f }
   }
   git commit -m "Auto: sync eksekusi live (run-local-executor) $(Get-Date -Format 'yyyy-MM-dd HH:mm')" --quiet

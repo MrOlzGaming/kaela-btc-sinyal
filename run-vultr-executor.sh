@@ -114,14 +114,22 @@ node runDueNews.js >> "$LOG_FILE" 2>&1 || log "runDueNews.js ERROR (exit $?)"
 # laporan error di bawah, relay ke WA Olan lewat jalur yang sama kayak error lain.
 node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERROR (exit $?)"
 
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json)
+# Cadangan Price Alert + DXY Zone Monitor (31 Agu 2026) -- ketauan dari audit di atas, jadwal GH
+# Actions-nya (tiap 5 menit / tiap jam) sering telat berjam-jam gara-gara antrian akun ini padat.
+# Kedua script UDAH punya cooldown/state deteksi-transisi sendiri (price-alert-state.json,
+# dxy-zone-state.json) -- aman dipanggil tiap siklus 15 menit, gak akan spam WA dobel.
+node priceAlertMonitor.js >> "$LOG_FILE" 2>&1 || log "priceAlertMonitor.js ERROR (exit $?)"
+node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit $?)"
+
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
   # (kaela-spot-alt.json/kaela-spot.json belum tentu ada sampai buy pertama, 19 Okt 2026+).
-  # archive.json ditambahin 31 Agu 2026 (backup kirim berita) -- WAJIB ikut ke-commit, kalau nggak
-  # `git reset --hard` box ini bakal nelen balik dedup state -> berita bisa kekirim dobel.
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json; do
+  # archive.json + price-alert-state.json + dxy-zone-state.json ditambahin 31 Agu 2026 (cadangan
+  # lokal berita/price alert/DXY) -- WAJIB ikut ke-commit, kalau nggak `git reset --hard` box ini
+  # bakal nelen balik dedup state -> alert bisa kekirim dobel.
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

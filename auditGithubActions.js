@@ -89,6 +89,10 @@ async function main() {
   for (const wf of scheduled) {
     const apiWf = byPath.get(wf.file);
     if (!apiWf) continue; // belum ke-push/gak ketemu di API, skip aman
+    // 31 Agu 2026: dark-kaela-monitor.yml ketemu KESANDUNG di sini -- ternyata workflow-nya UDAH
+    // sengaja dinonaktifin manual (state disabled_manually, kemungkinan pas Nyopet v2 gantiin
+    // fungsinya), bukan telat/macet. Workflow non-aktif SENGAJA gak jalan -- jangan dianggap error.
+    if (apiWf.state !== 'active') continue;
     // SENGAJA gak filter event=schedule -- ketemu 31 Agu 2026: dark-kaela-monitor.yml (dan pola
     // serupa lain) desainnya self-relaunch lewat workflow_dispatch di akhir loop (`schedule:`
     // di situ CUMA jaring pengaman jarang, bukan cadence asli, lihat komentar di file itu) --

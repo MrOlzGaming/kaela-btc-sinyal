@@ -47,6 +47,48 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-08-31 — Batas umur gap FVG buat Nyopet v2 (ide dari observasi live Olan)
+**Ide:** Nyopet v2 numpang PERSIS mesin deteksi FVG yang sama kayak Sniper (`fvgDetector.js`) --
+nyisir mundur ke gap TERTUA yang belum keisi TANPA batas umur (cuma dibatasin total candle yang
+di-fetch, ~10 bulan buat 4H). Window lookback pola grafik (flag/wedge) UDAH di-rescale ×6 sepadan
+4H, tapi FVG-nya kelewat. Olan nemuin posisi Nyopet BTC live (31 Agu) nyawa-nya 20,66% (di atas
+p99 historis 18,89%) -- diduga gara-gara gap tua yang baru kesentuh sekarang, itu lebih gaya
+SNIPER (sabar, struktur lama valid) drpd gaya Nyopet (cepat, struktur baru). Hipotesis: batasin
+umur gap (candle 4H) bikin Nyopet lebih "konsisten" sama identitasnya DAN mungkin ningkatin PF.
+**Metode:** `backtest/nyopetFvgGapAgeCap.js` (salinan engine Nyopet v2, TIDAK nyentuh live code)
++ param baru `maxGapAgeCandles`. Diuji BASELINE (gak dibatasin) vs cap=360 candle (~60 hari) vs
+cap=180 candle (~30 hari), BTC & Emas, data 3 tahun terakhir (2023-09 s/d 2026-08, dipersingkat
+dari histori penuh 9 tahun murni krn keterbatasan waktu compute -- backtest full-history makan
+~90 detik/config, gak feasible ngejalanin banyak kombinasi sekaligus dalam sesi ini).
+**Hasil breakdown per tahun:** BTC ADA (2023-2026, lihat commit). **Emas TIDAK dibuat** --
+kelemahan proses riset ini sendiri, ketauan pas review sub-agent (lihat bawah).
+**Split-era:** **GAGAL buat BTC** -- baseline (PF 1,96/1,39 di 2 era) KONSISTEN LEBIH BAGUS dari
+cap=360 (1,58/1,36) MAUPUN cap=180 (1,61/1,36) di KEDUA era, bukan cuma salah satu. Buat Emas,
+cap=360 kelihatan oke di 2 era (2,29/2,06 vs baseline 2,39/1,97) TAPI cap=180 gagal jelas di
+2 era (1,88/1,74).
+**Sensitivitas parameter:** **GAGAL total buat Emas** -- cap=360 vs cap=180 (parameter TETANGGA)
+hasilnya beda jauh (PF 2,14 vs 1,80 full-period, dan beda ~0,3-0,5 di tiap era) -- pola klasik
+overfitting/false positive, PERSIS yang harusnya ketangkep sama tes sensitivitas ini. BTC lolos
+sensitivitas (360 & 180 konsisten SATU SAMA LAIN) tapi keduanya KONSISTEN LEBIH JELEK dari
+baseline -- konsistensi gak nolong kalau arahnya sama-sama salah.
+**Review sub-agent (Peninjau Skeptis):** independen dikasih angka mentah TANPA kesimpulan --
+verdict REJECT buat DUA aset, alasan sama kayak di atas + nangkep kelemahan (data per-tahun Emas
+gak ada, otomatis gagal Rule 1 buat Emas). Sepakat sama analisaku sendiri.
+**Kesimpulan:** **TIDAK CUKUP KUAT / overfitting-like.** Observasi Olan soal "ini kok kayak gaya
+Sniper, bukan Nyopet" itu BENAR secara arsitektur (kode-nya emang numpang mesin yang sama, gak
+di-rescale kayak window pola grafik) -- TAPI ngebatesin umur gap SECARA ARTIFISIAL buat "biar
+lebih Nyopet" JUSTRU nurunin PF buat BTC, dan gak robust buat Emas. Kesimpulannya: walau
+kedengeran gak konsisten sama filosofi "Nyopet=cepat", perilaku SEKARANG (gak dibatasin)
+ternyata lebih nguntungin secara angka -- jangan diubah cuma demi konsistensi nama/filosofi.
+**Rekomendasi lanjutan (BUKAN buat sekarang):** kalau mau dicoba lagi lain waktu, coba nilai cap
+lain (270, 450) + WAJIB bikin breakdown per-tahun Emas juga (kelemahan riset ini) sebelum
+disimpulkan ulang.
+**Status implementasi:** TIDAK diterapkan. Live tetap pakai FVG tanpa batas umur gap (perilaku
+sekarang, terbukti lebih baik di backtest ini).
+
+---
+
+
 ### 2026-08-31 — [BLOKIR INFRASTRUKTUR, bukan temuan riset] Sesi cloud gak bisa riset apa-apa — network egress environment ini diblokir total ke semua sumber data harga
 **Apa yang terjadi:** Jalanin rutinitas normal (git pull, baca log ini, mau pilih ide dari daftar "belum
 dicoba"), tapi begitu coba refresh data (`node backtest/refreshCache.js`) langsung gagal:

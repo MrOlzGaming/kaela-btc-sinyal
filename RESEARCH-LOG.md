@@ -41,6 +41,36 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-08-31 — [BLOKIR INFRASTRUKTUR, bukan temuan riset] Sesi cloud gak bisa riset apa-apa — network egress environment ini diblokir total ke semua sumber data harga
+**Apa yang terjadi:** Jalanin rutinitas normal (git pull, baca log ini, mau pilih ide dari daftar "belum
+dicoba"), tapi begitu coba refresh data (`node backtest/refreshCache.js`) langsung gagal:
+`HTTP 403: Host not in allowlist: data-api.binance.vision`. Dicek lebih jauh:
+- Cache lokal (`hourly-cache.json`, `daily-cache.json`, `gold-*-cache.json`, `dxy-cache.json`) MEMANG
+  gak ada di clone environment cloud ini (sengaja di-gitignore, regeneratable) -- normalnya di-generate
+  ulang via `refreshCache.js`/`refreshGoldCache.js`/`refreshDxyCache.js`, tapi ketiganya butuh akses
+  network yang ternyata diblokir semua di environment remote ini.
+- Dicoba manual satu-satu: `data-api.binance.vision`, `api.binance.com`, `query1.finance.yahoo.com`,
+  `api.coingecko.com` -- SEMUA balas "Host not in allowlist" dari network egress proxy environment ini
+  (bukan masalah kode/typo, ini kebijakan jaringan level environment).
+- Satu-satunya data harga yang KE-COMMIT beneran di repo ini cuma `web/data/btc-history.json` (BTC
+  harian 2014 s/d 2026-08-06 doang, cuma OHLC tanpa volume, format field beda dari yang dipakai
+  engine backtest lain, gak ada versi hourly/4H). Itu udah pernah dipakai buat 1 temuan seasonality
+  (lihat `KNOWLEDGE/metodologi-analisa-teknikal.md`), tapi TIDAK cukup lengkap/segar buat riset baru
+  yang jujur dan lolos rigor 3-lapis (gak ada breakdown 4H buat Nyopet, dan datanya udah ~25 hari
+  ketinggalan dari hari ini).
+**Keputusan:** daripada maksain riset pakai data yang gak lengkap/gak reliable terus dibungkus
+kelihatan meyakinkan (itu justru ngelanggar prinsip kejujuran file ini), aku putuskan TIDAK menguji
+ide apapun hari ini. Gak ada entri "Ide-ide belum dicoba" yang dihapus -- semuanya masih nunggu.
+**Kesimpulan:** ini BUKAN temuan riset (positif/negatif) -- ini laporan blocker operasional.
+**Rekomendasi buat Olan:** kalau mau routine cloud jalan tiap hari kayak yang dimaksud, environment
+remote-nya perlu di-allowlist buat minimal `data-api.binance.vision` (BTC) dan `query1.finance.yahoo.com`
+(DXY) di pengaturan network egress environment ini. Alternatif lain: cache hourly/daily/gold/dxy
+di-commit manual berkala dari sesi lokal (walau biasanya sengaja digitignore karena regeneratable &
+lumayan gede) supaya sesi cloud selalu punya data buat dianalisis walau gak bisa fetch sendiri.
+**Status implementasi:** N/A — gak ada perubahan kode/live, gak ada temuan buat diterapkan.
+
+---
+
 ### 2026-08-30 — DXY (Dollar Index) confirmation filter, entry Nyopet & Sniper
 **Ide:** filter tambahan di titik ENTRY (bukan exit/manajemen posisi yang udah jalan) —
 skip entry LONG kalau dolar lagi "kuat" (DXY daily close >= SMA20 dolar sendiri). Hipotesis:

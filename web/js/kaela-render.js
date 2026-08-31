@@ -1118,6 +1118,69 @@
     detail.classList.toggle('open', willOpen);
   }
 
+  // ── Toggle mata uang $ <-> Rp lintas-iframe (31 Agu 2026, permintaan Olan) -- Kaela Access
+  // (script.google.com/kaela-access.netlify.app) NGE-IFRAME halaman ini (index.html/jurnal.html)
+  // buat nampilin kartu posisi Sniper/Nyopet. Halaman induk (dashboard.html) PUNYA tombol toggle
+  // sendiri, tapi karena iframe ini beda origin, JS induk gak bisa nyentuh DOM di dalam sini
+  // langsung (dicoba, kebukti: tombol ganti "Rp" tapi angka di kartu posisi TETAP dolar -- bug
+  // NYATA dilaporin Olan). Fix: halaman ini dengerin `postMessage` dari induk, terus jalanin
+  // overlay konversi SENDIRI di dalam origin-nya sendiri (di situ DOM-nya BUKAN cross-origin lagi
+  // buat kode INI). Algoritma SAMA PERSIS kayak punya dashboard.html (WeakMap _moneyOrig/_moneyMine
+  // buat bedain "update asli baru" vs "gema tulisan sendiri", MutationObserver buat nangkep
+  // render baru/live-tick sniper-orders-widget.js otomatis).
+  let _kcDisplayCurrency = 'usd';
+  let _kcUsdIdrRate = null;
+  const _kcMoneyNodes = new Set();
+  const _kcMoneyOrig = new WeakMap();
+  const _kcMoneyMine = new WeakMap();
+
+  function _kcScanMoneyNodes(root) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while ((node = walker.nextNode())) {
+      const val = node.nodeValue;
+      if (_kcMoneyMine.get(node) === val) continue; // gema tulisanku sendiri
+      if (!/\$\s?[\d,]+(?:\.\d+)?/.test(val)) continue;
+      _kcMoneyOrig.set(node, val);
+      _kcMoneyNodes.add(node);
+    }
+  }
+
+  function _kcApplyCurrencyDisplay() {
+    _kcScanMoneyNodes(document.body);
+    _kcMoneyNodes.forEach((node) => {
+      if (!node.isConnected) { _kcMoneyNodes.delete(node); return; }
+      const orig = _kcMoneyOrig.get(node);
+      if (orig === undefined) return;
+      let target = orig;
+      if (_kcDisplayCurrency === 'idr' && _kcUsdIdrRate) {
+        target = orig.replace(/\$\s?([\d,]+(?:\.\d+)?)/g, (m, numStr) => {
+          const usd = parseFloat(numStr.replace(/,/g, ''));
+          return isNaN(usd) ? m : ('Rp' + Math.round(usd * _kcUsdIdrRate).toLocaleString('id-ID'));
+        });
+      }
+      if (node.nodeValue !== target) { node.nodeValue = target; _kcMoneyMine.set(node, target); }
+    });
+  }
+
+  window.addEventListener('message', (event) => {
+    if (!event.data || event.data.type !== 'kaela-currency') return;
+    _kcDisplayCurrency = event.data.mode === 'idr' ? 'idr' : 'usd';
+    _kcUsdIdrRate = event.data.rate || null;
+    _kcApplyCurrencyDisplay();
+  });
+
+  (function () {
+    let timer = null;
+    const observer = new MutationObserver(() => {
+      clearTimeout(timer);
+      timer = setTimeout(_kcApplyCurrencyDisplay, 150);
+    });
+    const start = () => observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  })();
+
   global.KaelaRender = {
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,

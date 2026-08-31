@@ -419,7 +419,10 @@ async function main() {
   console.log('\n[MultiAccountExecutor] Selesai.');
 }
 
-module.exports = { main };
+// runBalanceReports diekspor TERPISAH (31 Agu 2026) -- dipakai checkForceSyncRequest.js buat
+// tarik saldo doang (BUKAN full cycle termasuk eksekusi trading), jadi aman dijalanin lebih
+// sering (~1 menit) tanpa resiko dobel-eksekusi order.
+module.exports = { main, runBalanceReports };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR multiAccountExecutor.js:', e.message); process.exit(1); });

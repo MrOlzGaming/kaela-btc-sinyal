@@ -130,4 +130,10 @@ async function reportCycleErrors(machineId, errorsText) {
   }
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors };
+// 31 Agu 2026 -- "Minta Sinkron Sekarang" (tombol Developer Kaela Access). Dicek checkForceSyncRequest.js
+// tiap ~1 menit (jadwal khusus, lihat Pool.gs buat penjelasan lengkap kenapa gak bisa instan).
+async function checkAndClearForceSyncRequest() {
+  return callGas('checkAndClearForceSyncRequest', {});
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest };

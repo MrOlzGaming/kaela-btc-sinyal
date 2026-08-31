@@ -67,13 +67,21 @@ function parseRssItems(xml) {
   for (const block of blocks) {
     const titleMatch = block.match(/<title>([\s\S]*?)<\/title>/);
     const linkMatch = block.match(/<link>([\s\S]*?)<\/link>/);
-    const sourceMatch = block.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+    const sourceMatch = block.match(/<source url="([^"]*)"[^>]*>([\s\S]*?)<\/source>/);
     if (!titleMatch) continue;
-    const source = sourceMatch ? decodeEntities(stripTags(sourceMatch[1])).trim() : 'Google News';
+    const source = sourceMatch ? decodeEntities(stripTags(sourceMatch[2])).trim() : 'Google News';
     const rawHeadline = decodeEntities(stripTags(titleMatch[1])).trim();
+    // Fix 31 Agu 2026 (lapor Olan: link berita kadang gak bisa diklik di WA) -- <link> RSS Google
+    // News itu token redirect PANJANG & acak (150-550+ karakter), WhatsApp kadang gagal deteksi
+    // itu sebagai link kalau kepanjangan (kelihatan: sebagian link di 1 pesan yang sama biru
+    // ke-klik, sebagian jadi teks putih biasa -- gak konsisten, kemungkinan besar soal panjang
+    // token). Link homepage sumber (atribut url= di tag <source>, SELALU pendek/bersih, contoh
+    // "https://kompas.com") jauh lebih bisa diandalkan buat WA meski gak deep-link ke artikel
+    // persisnya -- lebih baik link SELALU bisa diklik daripada kadang-kadang.
+    const sourceUrl = sourceMatch ? sourceMatch[1].trim() : '';
     items.push({
       headline: stripSourceSuffix(rawHeadline, source),
-      url: linkMatch ? decodeEntities(stripTags(linkMatch[1])).trim() : '',
+      url: sourceUrl || (linkMatch ? decodeEntities(stripTags(linkMatch[1])).trim() : ''),
       source,
     });
   }

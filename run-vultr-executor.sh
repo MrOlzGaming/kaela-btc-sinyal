@@ -104,12 +104,24 @@ node spotAltLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "spotAltLiveExecutor.js E
 # run-local-executor.ps1, state di research-log-state.json (shared git, gak dobel kirim antar mesin).
 node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFindings.js ERROR (exit $?)"
 
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json)
+# Cadangan kirim berita pagi/siang/sore (31 Agu 2026) -- GitHub Actions kadang telat/skip jadwal
+# berita gara-gara antrian cron akun ini padat (bukan bug kita). runDueNews.js dedup sendiri lewat
+# newsMonitor.js (aman dipanggil berkali-kali, no-op kalau slot itu udah kekirim hari ini).
+node runDueNews.js >> "$LOG_FILE" 2>&1 || log "runDueNews.js ERROR (exit $?)"
+
+# Audit jadwal GitHub Actions (31 Agu 2026, permintaan Olan: "harus ada Kaela yang otomatis audit
+# jalur yang sering ngadat") -- baris "GAGAL: ..." yang dicetaknya ke-scan otomatis di bagian
+# laporan error di bawah, relay ke WA Olan lewat jalur yang sama kayak error lain.
+node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERROR (exit $?)"
+
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
   # (kaela-spot-alt.json/kaela-spot.json belum tentu ada sampai buy pertama, 19 Okt 2026+).
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json; do
+  # archive.json ditambahin 31 Agu 2026 (backup kirim berita) -- WAJIB ikut ke-commit, kalau nggak
+  # `git reset --hard` box ini bakal nelen balik dedup state -> berita bisa kekirim dobel.
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

@@ -150,13 +150,36 @@ try {
   Log "reportResearchFindings.js ERROR: $($_.Exception.Message)"
 }
 
-$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json
+# Cadangan kirim berita pagi/siang/sore (31 Agu 2026) -- GitHub Actions kadang telat/skip jadwal
+# berita gara-gara antrian cron akun ini padat (bukan bug kita). runDueNews.js dedup sendiri lewat
+# newsMonitor.js (aman dipanggil berkali-kali, no-op kalau slot itu udah kekirim hari ini).
+try {
+  $output7 = node runDueNews.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output7 -Encoding utf8
+} catch {
+  Log "runDueNews.js ERROR: $($_.Exception.Message)"
+}
+
+# Audit jadwal GitHub Actions (31 Agu 2026, permintaan Olan: "harus ada Kaela yang otomatis audit
+# jalur yang sering ngadat") -- baris "GAGAL: ..." yang dicetaknya ke-scan otomatis di bagian
+# laporan error di bawah, relay ke WA Olan lewat jalur yang sama kayak error lain.
+try {
+  $output8 = node auditGithubActions.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output8 -Encoding utf8
+} catch {
+  Log "auditGithubActions.js ERROR: $($_.Exception.Message)"
+}
+
+$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026, nambah kaela-spot-alt.json -- file itu BELUM TENTU ada dulu sampai
   # buy pertama kejadian, 19 Okt 2026+. `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
   # -- pola sama kayak bug git-add-f di workflow GH Actions, dicegah di sini juga).
-  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json', 'kaela-spot.json', 'research-log-state.json')) {
+  # archive.json ditambahin 31 Agu 2026 (backup kirim berita, runDueNews.js) -- newsMonitor.js
+  # nulis dedup state ke sini, WAJIB ikut ke-commit+push, kalau nggak VPS `git reset --hard` bakal
+  # nelen balik perubahan itu -> berita bisa kekirim dobel siklus berikutnya.
+  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json', 'kaela-spot.json', 'research-log-state.json', 'archive.json')) {
     if (Test-Path $f) { git add $f }
   }
   git commit -m "Auto: sync eksekusi live (run-local-executor) $(Get-Date -Format 'yyyy-MM-dd HH:mm')" --quiet

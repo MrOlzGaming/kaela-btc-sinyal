@@ -135,13 +135,23 @@ try {
   Log "spotAltLiveExecutor.js ERROR: $($_.Exception.Message)"
 }
 
-$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json
+# Relay temuan Kaela researcher (cloud) ke WA Olan (31 Agu 2026) -- baca entri terbaru
+# RESEARCH-LOG.md (yang udah fresh dari git pull di awal siklus), WA sekali doang per entri baru
+# (state di research-log-state.json, ikut ke-commit+push kayak state file lain di bawah).
+try {
+  $output6 = node reportResearchFindings.js 2>&1 | Out-String
+  Add-Content -Path $logFile -Value $output6 -Encoding utf8
+} catch {
+  Log "reportResearchFindings.js ERROR: $($_.Exception.Message)"
+}
+
+$changed = git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json
 if ($changed) {
   Log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026, nambah kaela-spot-alt.json -- file itu BELUM TENTU ada dulu sampai
   # buy pertama kejadian, 19 Okt 2026+. `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
   # -- pola sama kayak bug git-add-f di workflow GH Actions, dicegah di sini juga).
-  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json', 'kaela-spot.json')) {
+  foreach ($f in @('sniper-orders.json', 'kaela-bankroll.json', 'nyopet-journal.json', 'kaela-spot-alt.json', 'kaela-spot.json', 'research-log-state.json')) {
     if (Test-Path $f) { git add $f }
   }
   git commit -m "Auto: sync eksekusi live (run-local-executor) $(Get-Date -Format 'yyyy-MM-dd HH:mm')" --quiet

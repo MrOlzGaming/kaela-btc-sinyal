@@ -96,12 +96,16 @@ node multiAccountExecutor.js >> "$LOG_FILE" 2>&1 || log "multiAccountExecutor.js
 # diperbaiki -- run-local-executor.ps1 (PC rumah) udah punya ini dari sebelumnya).
 node spotAltLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "spotAltLiveExecutor.js ERROR (exit $?)"
 
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json)
+# Relay temuan Kaela researcher (cloud) ke WA Olan (31 Agu 2026) -- sama pola kayak
+# run-local-executor.ps1, state di research-log-state.json (shared git, gak dobel kirim antar mesin).
+node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFindings.js ERROR (exit $?)"
+
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
   # (kaela-spot-alt.json/kaela-spot.json belum tentu ada sampai buy pertama, 19 Okt 2026+).
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json; do
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

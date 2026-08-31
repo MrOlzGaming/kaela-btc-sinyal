@@ -22,6 +22,12 @@ lengkapnya di satu tempat.
 6. Kalau ternyata sinyalnya melibatkan kirim WA ke Olan atau member — **JANGAN kirim
    langsung dari sesi cloud** (gak ada akses `secrets.js`/Fonnte di sana). Cukup tulis laporan
    di bagian "Temuan Terbaru" di bawah; sesi Kaela lokal yang nanti relay ke WA.
+7. **(31 Agu 2026, ide Olan "boleh clone Kaela, diskusi bareng") Review wajib oleh sub-agent
+   skeptis** — sebelum nulis kesimpulan final, spawn SATU sub-agent (tool Agent,
+   general-purpose) berperan "Kaela — Peninjau Skeptis". Kasih dia angka mentah TANPA kasih
+   tau kesimpulanmu duluan (hindari bias), minta dia periksa ulang dari nol apa 3 syarat rigor
+   di atas BENERAN lolos. Kalau dia nemu kelemahan yang kelewat, WAJIB dicatat + default ke
+   kesimpulan lebih konservatif kalau kalian gak sepakat.
 
 ## Format tiap entri baru (tambahkan di atas, paling baru paling atas)
 

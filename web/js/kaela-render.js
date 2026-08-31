@@ -79,7 +79,7 @@
     sniper_disclaimer: { id: '🤖 Sinyal VALID sekarang dieksekusi OTOMATIS di akun Binance Demo (duit virtual, riset/uji coba) -- bukan cuma monitor bayangan lagi.', en: '🤖 VALID signals are now executed AUTOMATICALLY on a Binance Demo account (virtual money, research/testing) -- no longer just shadow monitoring.' },
     nyopet_positions_open: { id: 'posisi Nyopet lagi terbuka', en: 'Nyopet position(s) currently open' },
     no_nyopet_open: { id: 'Gak ada posisi Nyopet yang lagi terbuka.', en: 'No open Nyopet positions right now.' },
-    nyopet_home_disclaimer: { id: '🥷 Nyopet Market -- ping-pong otomatis zona likuiditas di Binance Demo (USDC).', en: '🥷 Nyopet Market -- automatic ping-pong between liquidity zones on Binance Demo (USDC).' },
+    nyopet_home_disclaimer: { id: '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo (USDC).', en: '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo (USDC).' },
     total_trade: { id: 'Total Trade', en: 'Total Trades' },
     win_rate: { id: 'Win Rate', en: 'Win Rate' },
     profit_factor: { id: 'Profit Factor', en: 'Profit Factor' },
@@ -1056,8 +1056,8 @@
     const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (nyopetState.balanceUsdt || 0);
     const saldoCell = cell(wallet1Label, fmtUsdOrder(wallet1Value)) + cell(wallet2Label, fmtUsdOrder(wallet2Value));
     const disclaimer = (opts && opts.disclaimer) || (en
-      ? '🥷 Nyopet Market -- automatic ping-pong between 2 liquidity zones on Binance Demo. PURE zone trigger (no R:R target), flat 2% stop per position.'
-      : '🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo. Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi.');
+      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
+      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
 
     if (!stats) {
       return `<div class="nyopet-panel">
@@ -1095,8 +1095,8 @@
       ${renderPnlCalendar(closed, now)}`;
 
     const disclaimerFull = (opts && opts.disclaimerFull) || (en
-      ? '🥷 Nyopet Market -- automatic ping-pong between 2 liquidity zones on Binance Demo (BTC in USDC, PAXG on USDT). PURE zone trigger (no R:R target), flat 2% stop per position. Profit and loss shown as-is.'
-      : '🥷 Nyopet Market -- ping-pong otomatis antar 2 zona likuiditas di Binance Demo (BTC di USDC, PAXG numpang USDT). Trigger MURNI zona (gak pakai target R:R), nyawa 2% flat tiap posisi. Profit maupun loss ditampilin apa adanya.');
+      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
+      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
     return `<div class="nyopet-panel">
       <p class="order-disclaimer">${disclaimerFull}</p>
       <div class="journal-stats-grid">${saldoCell}</div>

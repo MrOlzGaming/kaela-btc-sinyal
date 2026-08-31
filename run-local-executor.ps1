@@ -80,6 +80,11 @@ try {
   exit 1
 }
 
+# Cek mandiri kredensial (31 Agu 2026) -- jalan SELALU (bukan cuma pas leader), biar ketauan
+# dari awal kalau mesin ini kekurangan kredensial sebelum sempat jadi leader/gagal order beneran.
+$credCheck = node checkRequiredCredentials.js 2>&1 | Out-String
+Add-Content -Path $logFile -Value $credCheck -Encoding utf8
+
 # Cek giliran (25 Agu 2026, "2 komputer saling backup") -- cuma 1 mesin yang boleh eksekusi order
 # real tiap siklus, biar gak dobel-eksekusi (lihat heartbeatCoordinator.js). Exit 0 = leader
 # (lanjut), exit 1 = standby (skip eksekusi, cuma lapor hidup -- BUKAN error, jangan alarm).

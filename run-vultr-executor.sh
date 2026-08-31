@@ -71,6 +71,10 @@ if ! git reset --hard origin-new/master --quiet >> "$LOG_FILE" 2>&1; then
 fi
 log 'git sync sukses (fetch+reset --hard).'
 
+# Cek mandiri kredensial (31 Agu 2026) -- jalan SELALU (bukan cuma pas leader), pola sama kayak
+# run-local-executor.ps1. Ini persis kelas bug yang ketemu hari ini (MEXC kosong di mesin ini).
+node checkRequiredCredentials.js >> "$LOG_FILE" 2>&1
+
 leader_tmp=$(mktemp)
 node checkLeader.js > "$leader_tmp" 2>&1
 leader_exit=$?

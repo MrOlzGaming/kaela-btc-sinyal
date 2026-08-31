@@ -99,7 +99,13 @@ async function processOrder(order) {
   const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
   const le = order.liveExecution;
   const posRisk = await exec.getPositionRisk(execSymbol);
-  const posQty = Math.abs(parseFloat(posRisk.positionAmt));
+  // ⚠️ BUG KETEMU 31 Agu 2026 (Watchdog: "Cannot read properties of null (reading 'positionAmt')")
+  // -- sama persis pola yang UDAH difix di nyopetAutoTrader.js 30 Agu (Binance getPositionRisk
+  // SELALU balikin object walau flat, positionAmt="0" -- tapi MEXC open_positions cuma balikin
+  // posisi yang BENERAN aktif, gak ada = null literal). Titik INI kelewat pas audit kemarin
+  // (fix MEXC routing) krn errornya baru KETAHUAN sekarang, posisi MEXC pertama yang beneran
+  // dicek di sini abis routing dibenerin. Guard PERSIS pola sniperMultiAccount.js yang udah bener.
+  const posQty = posRisk ? Math.abs(parseFloat(posRisk.positionAmt)) : 0;
 
   if (!le.leg2) {
     if (posQty <= 0) {

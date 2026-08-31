@@ -329,7 +329,27 @@ async function runBalanceReports() {
         if (inc.incomeType === 'TRANSFER') transferTotal += amt;
         else tradingTotal += amt; // REALIZED_PNL + FUNDING_FEE + COMMISSION + dst
       });
-      await kaela.recordBalanceReport(acc.phone, acc.name, { balanceUsdt, balanceUsdc, transferTotal, tradingTotal, days });
+
+      // MEXC (31 Agu 2026) -- OPSIONAL, beda dari Binance. mexcConfigured=false kalau member
+      // belum pasang MEXC (bukan error, cukup umum -- lihat memori project-kaela-multi-exchange).
+      // Belum ada endpoint income-history MEXC (riset belum dilakuin) -- jadi CUMA saldo
+      // dilaporin, gak ada breakdown transfer/trading kayak Binance.
+      let mexcConfigured = false, mexcBalanceUsdt = 0, mexcBalanceUsdc = 0;
+      if (acc.mexcApiKey && acc.mexcApiSecret) {
+        mexcConfigured = true;
+        try {
+          const mexcClient = createMexcClient({ apiKey: acc.mexcApiKey, apiSecret: acc.mexcApiSecret });
+          [mexcBalanceUsdt, mexcBalanceUsdc] = await Promise.all([
+            mexcClient.getAccountBalance('USDT'),
+            mexcClient.getAccountBalance('USDC'),
+          ]);
+        } catch (e) {
+          console.log(`[MultiAccountExecutor] Gagal ambil saldo MEXC ${acc.name} (skip bagian MEXC laporan ini):`, e.message);
+          mexcConfigured = false; // gagal fetch -- lebih aman anggap "belum setup" drpd nulis saldo 0 palsu
+        }
+      }
+
+      await kaela.recordBalanceReport(acc.phone, acc.name, { balanceUsdt, balanceUsdc, transferTotal, tradingTotal, days, mexcConfigured, mexcBalanceUsdt, mexcBalanceUsdc });
       console.log(`[MultiAccountExecutor] Laporan saldo ${acc.name} tersimpan.`);
     } catch (e) {
       await kaela.recordBalanceReport(acc.phone, acc.name, { error: e.message }).catch(() => {});

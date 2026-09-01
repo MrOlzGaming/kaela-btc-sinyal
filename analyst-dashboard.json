@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 77827.98,
+    "price": 78496,
     "conviction": {
       "score": 1,
       "verdict": "⚪ NETRAL / Campuran",
@@ -8,7 +8,7 @@
         {
           "label": "RSI Teknikal",
           "v": -1,
-          "reason": "RSI 81 overbought -- rawan technical pullback"
+          "reason": "RSI 80 overbought -- rawan technical pullback"
         },
         {
           "label": "MVRV (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "62/100 -- Greed (kontrarian)"
+          "reason": "69/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "+0.22% (7 hari) -- stabil"
+          "reason": "+0.00% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -56,25 +56,25 @@
     "trackRecord": null,
     "regime": {
       "corr30": 0.14293406716849005,
-      "corr90": 0.35031844025290576,
+      "corr90": 0.347044877014275,
       "label30": "lemah/gak konsisten",
       "label90": "moderat positif",
-      "sampleDays": 81,
+      "sampleDays": 80,
       "latestDate": "2026-08-28"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 36.69,
-        "changePct": -15.790681661693831
+        "value": 37.53,
+        "changePct": -16.227678571428562
       },
       "stablecoin": {
-        "current": 257381729502.10364,
-        "weekAgo": 256811589215.63937,
-        "changePct": 0.22200722646731058
+        "current": 256835738443.3446,
+        "weekAgo": 256832452787.51764,
+        "changePct": 0.0012792993219138148
       },
       "yieldCurve": {
-        "value": 0.39,
-        "date": "2026-08-28",
+        "value": 0.41,
+        "date": "2026-08-31",
         "inverted": false
       },
       "m2": {
@@ -84,13 +84,13 @@
       },
       "fedRate": {
         "value": 3.63,
-        "date": "2026-08-27",
+        "date": "2026-08-28",
         "changeBps": 0.9999999999999787
       },
       "creditSpread": {
-        "value": 2.63,
-        "date": "2026-08-27",
-        "changeBps": -20.999999999999996
+        "value": 2.6,
+        "date": "2026-08-28",
+        "changeBps": -27
       },
       "etfFlow": {
         "date": "2026-08-28",
@@ -102,92 +102,81 @@
     }
   },
   "xau": {
-    "price": 4443.42,
+    "price": 4445.68,
     "conviction": {
       "score": -1,
-      "verdict": "⚪ NETRAL / Campuran",
+      "verdict": "🔴 Condong Bearish",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 56 netral"
+          "reason": "RSI 52 netral"
         },
         {
           "label": "DXY (Dolar)",
-          "v": -1,
-          "reason": "MENGUAT -- Emas cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
         },
         {
           "label": "Real Yield 10Y",
-          "v": 0,
-          "reason": "STABIL -- Emas netral"
+          "v": -1,
+          "reason": "NAIK -- Emas cenderung TERTEKAN (biaya peluang pegang Emas naik)"
         },
         {
           "label": "Fed Funds Rate",
           "v": 0,
           "reason": "DITAHAN -- netral, The Fed lagi wait-and-see"
-        },
-        {
-          "label": "COT Smart Money",
-          "v": 0,
-          "reason": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade) -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote"
         }
       ],
-      "totalFactors": 5
+      "totalFactors": 4
     },
     "trackRecord": null,
     "regime": {
-      "corr30": -0.4793275135815107,
-      "corr90": -0.5389826855259207,
+      "corr30": -0.4656209765768793,
+      "corr90": -0.5282467175150595,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 76,
-      "latestDate": "2026-08-21"
+      "sampleDays": 80,
+      "latestDate": "2026-08-28"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-08-31",
-          "value": 99.637
+          "date": "2026-09-01",
+          "value": 99.459
         },
         "prev": {
           "date": null,
-          "value": 98.92
+          "value": 99.17
         },
-        "changePct": 0.7248281439547096,
-        "trend": {
-          "arah": "MENGUAT",
-          "efekEmas": "cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
-        }
-      },
-      "realYield": {
-        "latest": {
-          "date": "2026-08-27",
-          "value": 2.34
-        },
-        "prev": {
-          "date": "2026-08-26",
-          "value": 2.34
-        },
-        "changePct": 0,
+        "changePct": 0.29141877583946907,
         "trend": {
           "arah": "STABIL",
           "efekEmas": "netral"
         }
+      },
+      "realYield": {
+        "latest": {
+          "date": "2026-08-28",
+          "value": 2.42
+        },
+        "prev": {
+          "date": "2026-08-27",
+          "value": 2.34
+        },
+        "changePct": 3.4188034188034218,
+        "trend": {
+          "arah": "NAIK",
+          "efekEmas": "cenderung TERTEKAN (biaya peluang pegang Emas naik)"
+        }
       }
     },
-    "cot": {
-      "date": "2026-08-25",
-      "net": 243334,
-      "netPctOi": 56.85945083267712,
-      "label": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade)",
-      "weekChangeContracts": 21145
-    },
+    "cot": null,
     "yieldCurve": {
-      "value": 0.39,
-      "date": "2026-08-28",
+      "value": 0.41,
+      "date": "2026-08-31",
       "inverted": false
     }
   },
-  "updatedAt": "2026-08-31T01:20:40.079Z"
+  "updatedAt": "2026-09-01T01:46:28.649Z"
 }

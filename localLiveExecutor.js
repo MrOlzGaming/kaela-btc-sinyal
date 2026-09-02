@@ -22,6 +22,14 @@ const { load: loadBankroll, save: saveBankroll } = require('./kaelaBankroll');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const { ASSETS } = require('./assetConfig');
 const { fetchWithRetry } = require('./httpRetry');
+const kaela = require('./kaelaProTraderClient');
+
+// 3 Sep 2026, permintaan Olan -- BUG ketemu: file ini (Sniper punya Olan sendiri, demo MAUPUN
+// real tergantung isTestnet()) gak PERNAH nulis ke Sheet Journal GAS sama sekali, beda dari
+// Nyopet yang UDAH dibenerin (lihat nyopetAutoTrader.js _journalHookOlanDemo). Akibatnya tab
+// "Jurnal Demo"/"Jurnal Real Olan" (Kaela Access) bagian Sniper selalu kosong walau posisi
+// beneran jalan. MASTER_NOMOR sama persis multiAccountExecutor.js -- bukan secret, ID member.
+const MASTER_NOMOR = '6281299303888';
 
 // ⚠️ BUG KRITIS ditemukan+fix 31 Agu 2026 (Olan: "ada posisi jalan padahal di demo ga ada", XAU
 // order gagal "-4161 Leverage reduction is not supported... with open positions"): file ini
@@ -91,14 +99,23 @@ async function executeOne(order) {
       await exec.placeTakeProfit({ symbol: execSymbol, direction: order.direction, tpPrice, quantity: entryFilledQty });
     }
 
+    const entryPriceReal = parseFloat(entryOrder.avgPrice);
     updateOrder(order.id, {
       liveExecutedAt: new Date().toISOString(),
       liveExecution: {
         ok: true, filledQty: entryFilledQty, halfQty: halfQty > 0 ? halfQty : entryFilledQty, testnet: isTestnet(),
         modal, livePrice, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
-        entryPriceReal: parseFloat(entryOrder.avgPrice), leg2: null, fullyClosedAt: null,
+        entryPriceReal, leg2: null, fullyClosedAt: null,
       },
     });
+    // Jurnal (3 Sep 2026, fix "Jurnal Demo/Real Olan bagian Sniper selalu kosong") -- entryId =
+    // order.id SNIPER ASLI (sniper-orders.json), dipakai lagi di sniperOrderMonitor.js pas nutup
+    // biar updateJournalEntry nyambung ke baris yang SAMA (bukan bikin baris baru tiap close).
+    kaela.recordJournalEntry(MASTER_NOMOR, isTestnet() ? 'demo' : 'real', {
+      entryId: order.id, strategy: 'sniper', asset: order.asset, direction: order.direction,
+      entryPrice: entryPriceReal, sl: order.sl, tp: tpPrice, leverage: calc.leverage, marginUsd: calc.margin,
+      status: 'open', openedAt: new Date().toISOString(), note: `Chart Pattern/FVG (${order.mode || 'sniper'})`,
+    }).catch((e) => console.log('[LocalLiveExecutor] recordJournalEntry gagal:', e.message));
     console.log(`[LocalLiveExecutor] ✅ SUKSES -- qty ${entryFilledQty} (${isTestnet() ? 'Demo Trading' : 'MAINNET ASLI'}).`);
   } catch (e) {
     updateOrder(order.id, {

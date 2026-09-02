@@ -1164,14 +1164,22 @@
     });
   }
 
-  window.addEventListener('message', (event) => {
-    if (!event.data || event.data.type !== 'kaela-currency') return;
-    _kcDisplayCurrency = event.data.mode === 'idr' ? 'idr' : 'usd';
-    _kcUsdIdrRate = event.data.rate || null;
-    _kcApplyCurrencyDisplay();
-  });
-
-  (function () {
+  // BUG ketemu 2 Sep 2026 (Olan: "ganti kurs rupiah, SEMUA halaman kedip-kedip rupiah dolar
+  // terus-terusan") -- root cause: kaela-render.js ini di-load LANGSUNG (via CDN <script>) di
+  // dashboard.html SENDIRI (bukan cuma di dalam #webFrame), buat manggil KaelaRender.render*
+  // functions. Observer di bawah dulu nyala OTOMATIS begitu halaman kebuka, APAPUN konteksnya --
+  // di dashboard.html, dia gak PERNAH dapet postMessage (dashboard.html cuma ngirim ke
+  // frame.contentWindow milik #webFrame, BUKAN ke dirinya sendiri), jadi _kcDisplayCurrency
+  // NYANGKUT selamanya di 'usd', dan observer-nya diam-diam aktif ngebalikin SETIAP tulisan Rp
+  // (hasil kerja sistem currency dashboard.html sendiri) balik jadi $ -- yang ketangkep lagi sama
+  // observer dashboard.html, dikonversi lagi ke Rp, ketangkep kaela-render lagi, dst -- ping-pong
+  // TANPA HENTI. Fix: observer JANGAN nyala sampe beneran dapet postMessage pertama (artinya kode
+  // ini LAGI jadi iframe yang dikontrol induk) -- kalau gak pernah dapet pesan (kasus dashboard.html
+  // muat langsung), observer gak pernah nyala, gak ada yang berantem.
+  let _kcObserverStarted = false;
+  function _kcStartObserverOnce() {
+    if (_kcObserverStarted) return;
+    _kcObserverStarted = true;
     let timer = null;
     const observer = new MutationObserver(() => {
       clearTimeout(timer);
@@ -1179,7 +1187,15 @@
     });
     const start = () => observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
-  })();
+  }
+
+  window.addEventListener('message', (event) => {
+    if (!event.data || event.data.type !== 'kaela-currency') return;
+    _kcDisplayCurrency = event.data.mode === 'idr' ? 'idr' : 'usd';
+    _kcUsdIdrRate = event.data.rate || null;
+    _kcApplyCurrencyDisplay();
+    _kcStartObserverOnce();
+  });
 
   global.KaelaRender = {
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,

@@ -68,8 +68,13 @@ function buildModalOverride(account, client) {
 // Journal personal (23 Agu 2026) -- CUMA ditulis buat mode 'real' (permintaan Olan: "bagi member
 // jurnal demo tak usah diadakan, real aja"). Demo tetap DIEKSEKUSI (WA notif tetap jalan lewat
 // `sendWA`), cuma gak nyampah ke Sheet Journal.
+// PENGECUALIAN (2 Sep 2026, permintaan Olan: "Jurnal Demo" tab publik di Kaela Access) -- demo
+// Olan SENDIRI (MASTER_NOMOR) TETAP dijurnal, biar tab "Jurnal Demo" (keliatan buat SEMUA anggota,
+// lihat gas/Journal.gs getOlanDemoJournal) punya riwayat beneran, bukan cuma posisi floating live.
+// Demo member LAIN (Nirwan dkk) TETAP gak dijurnal -- gak ada yang minta itu, hindari nyampah.
 function buildJournalHook(account) {
-  if (account.mode !== 'real') return () => {};
+  const journalDemoOlan = account.mode === 'demo' && safeKey(account.phone) === safeKey(MASTER_NOMOR);
+  if (account.mode !== 'real' && !journalDemoOlan) return () => {};
   return function onEvent(evt) {
     if (evt.type === 'open') {
       kaela.recordJournalEntry(account.phone, account.mode, {

@@ -472,7 +472,27 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
 // ============ Wrapper backward-compatible (akun Olan sendiri) -- ZERO perubahan perilaku, path
 // journal SAMA (nyopet-journal.json), kredensial/WA SAMA (binanceExecutor default + fonnte.js). ============
-const _defaultTrader = createNyopetTrader({});
+// BUG ketemu 3 Sep 2026: createNyopetTrader({}) TANPA onEvent -- Demo Olan lewat jalur INI (bukan
+// multiAccountExecutor.js, yang SENGAJA skip Demo Olan, lihat catatan di file itu) gak PERNAH
+// nulis ke Sheet Journal GAS, padahal tab "Jurnal Demo" (Kaela Access, keliatan buat semua
+// anggota) baca dari situ -- selamanya kosong walau posisi Demo beneran jalan. Fix: kasih onEvent
+// yang nulis Journal khusus buat Olan (MASTER_NOMOR, mode 'demo') -- SAMA pola kayak
+// buildJournalHook di multiAccountExecutor.js, direplikasi di sini krn jalur ini independen.
+const MASTER_NOMOR = '6281299303888'; // sama persis multiAccountExecutor.js -- bukan secret, ID member.
+function _journalHookOlanDemo(evt) {
+  const kaela = require('./kaelaProTraderClient');
+  if (evt.type === 'open') {
+    kaela.recordJournalEntry(MASTER_NOMOR, 'demo', {
+      entryId: evt.entryId, strategy: evt.strategy, asset: evt.asset, direction: evt.direction,
+      entryPrice: evt.entryPrice, sl: evt.sl, tp: evt.tp, leverage: evt.leverage, marginUsd: evt.marginUsd,
+      status: 'open', openedAt: evt.openedAt, note: evt.note || '',
+    }).catch((e) => console.log('[NyopetAutoTrader] recordJournalEntry (demo Olan) gagal:', e.message));
+  } else if (evt.type === 'close') {
+    kaela.updateJournalEntry(evt.entryId, { status: 'closed', closedAt: evt.closedAt, pnlUsd: evt.pnlUsd })
+      .catch((e) => console.log('[NyopetAutoTrader] updateJournalEntry (demo Olan) gagal:', e.message));
+  }
+}
+const _defaultTrader = createNyopetTrader({ onEvent: _journalHookOlanDemo });
 
 async function main() {
   if (!isLiveTradingEnabled()) {

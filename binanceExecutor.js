@@ -178,6 +178,16 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return positions[0] || null;
   }
 
+  // 2-3 Sep 2026, permintaan Olan (positionReconciler.js: "pengawas posisi" Wibowo Hedgefund) --
+  // "ketika Olan trading aset lain (ZIL dll) di luar mode Kaela (cuma BTC+Emas), tetep dapet
+  // pesan+jurnal". Endpoint /fapi/v2/positionRisk TANPA `symbol` balikin SEMUA symbol di akun
+  // (bukan cuma yang bot kenal) -- filter positionAmt!=0 di sini (endpoint balikin SEMUA symbol
+  // termasuk yang kosong, kalau gak difilter responsnya bisa ratusan baris gak berguna).
+  async function getAllPositions() {
+    const positions = await signedRequest('GET', '/fapi/v2/positionRisk', {});
+    return (positions || []).filter((p) => Math.abs(parseFloat(p.positionAmt)) > 0);
+  }
+
   // Jaring pengaman TERAKHIR -- kalau SL/TP gagal nempel SETELAH entry berhasil, posisi TIDAK
   // BOLEH dibiarin nganggur tanpa proteksi. Market close LANGSUNG (arah kebalikan entry).
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
@@ -191,7 +201,7 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-    getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
+    getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
   };
 }
 

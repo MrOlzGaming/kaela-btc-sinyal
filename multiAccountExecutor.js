@@ -36,6 +36,8 @@ const { createSpotDcaAccountTrader } = require('./spotDcaAccount');
 const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { checkEmptyWallet } = require('./emptyWalletWatchdog');
+const { sendWhatsApp } = require('./fonnte');
+const { reconcileWibowoPositions } = require('./positionReconciler');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
 
@@ -45,6 +47,13 @@ const STATE_DIR = path.join(__dirname, 'multi-account-state');
 // sendiri.. kan dia masternya.. semuanya on, spot sniper nyopet demo"). Kalau nomor Olan pernah
 // ganti, update di SATU tempat ini.
 const MASTER_NOMOR = '6281299303888';
+
+// Grup WA "Wibowo Hedgefund" -- SAMA PERSIS ID yang dipakai APPS/kaela-multi-akun/gas/Pool.gs
+// WIBOWO_GROUP_ID (dan secrets.js FONNTE_BROADCAST_GROUPS[1] di sini, "Sniper Fam"). Konstanta
+// langsung (bukan secret) -- cuma ID grup WA, sama alasan kayak Pool.gs. Dipakai buildSendWA di
+// bawah biar notif buka/tutup posisi REAL Olan (dasar saham Wibowo Hedgefund) juga nyampe ke
+// grup, gak cukup DM pribadi doang (2-3 Sep 2026, permintaan Olan).
+const WIBOWO_GROUP_ID = '120363430640997174@g.us';
 
 function ensureStateDir() {
   if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
@@ -65,6 +74,16 @@ function buildModalOverride(account, client) {
   };
 }
 
+// Resolusi assetKey+strategy+exchange (dari onEvent) -> symbol trading ASLI -- dipakai buat isi
+// `touchedSymbols` (lihat buildJournalHook) biar positionReconciler.js bisa bedain "ini bot yang
+// buka/tutup" (skip, udah dihandle notify() sendiri) vs "ini muncul/ilang tanpa event bot = manual
+// Olan". Pola SAMA kayak binanceSymbols/mexcSymbols di processAccount di bawah.
+function _symbolForEvent(evt) {
+  const cfg = evt.strategy === 'sniper' ? ASSETS[evt.asset] : NYOPET_ASSETS[evt.asset];
+  if (!cfg) return null;
+  return cfg.exchange === 'mexc' ? (cfg.execSymbol || cfg.symbol) : cfg.symbol;
+}
+
 // Journal personal (23 Agu 2026) -- CUMA ditulis buat mode 'real' (permintaan Olan: "bagi member
 // jurnal demo tak usah diadakan, real aja"). Demo tetap DIEKSEKUSI (WA notif tetap jalan lewat
 // `sendWA`), cuma gak nyampah ke Sheet Journal.
@@ -72,10 +91,17 @@ function buildModalOverride(account, client) {
 // Olan SENDIRI (MASTER_NOMOR) TETAP dijurnal, biar tab "Jurnal Demo" (keliatan buat SEMUA anggota,
 // lihat gas/Journal.gs getOlanDemoJournal) punya riwayat beneran, bukan cuma posisi floating live.
 // Demo member LAIN (Nirwan dkk) TETAP gak dijurnal -- gak ada yang minta itu, hindari nyampah.
-function buildJournalHook(account) {
+// `touchedSymbols` (2-3 Sep 2026, permintaan Olan: bedain trading Kaela vs manual Olan di jurnal
+// Wibowo Hedgefund) -- Set OPSIONAL, kalau dikasih bakal keisi symbol yang BENERAN disentuh bot
+// siklus ini, dibaca positionReconciler.js abis processAccount kelar.
+function buildJournalHook(account, touchedSymbols) {
   const journalDemoOlan = account.mode === 'demo' && safeKey(account.phone) === safeKey(MASTER_NOMOR);
   if (account.mode !== 'real' && !journalDemoOlan) return () => {};
   return function onEvent(evt) {
+    if (touchedSymbols && (evt.type === 'open' || evt.type === 'close' || evt.type === 'partial')) {
+      const sym = _symbolForEvent(evt);
+      if (sym) touchedSymbols.add(sym);
+    }
     if (evt.type === 'open') {
       kaela.recordJournalEntry(account.phone, account.mode, {
         entryId: evt.entryId, strategy: evt.strategy, asset: evt.asset, direction: evt.direction,
@@ -116,6 +142,15 @@ function buildSendWA(account, adminRelay) {
       await kaela.notifyMember(adminRelay.masterNomor, adminCopy).catch((e) =>
         console.log(`[MultiAccountExecutor] Relay notif admin gagal (${account.phone}):`, e.message));
     }
+
+    // 2-3 Sep 2026, permintaan Olan: buka/tutup posisi REAL Olan sendiri (dasar saham Wibowo
+    // Hedgefund) WAJIB nyampe ke grup Wibowo Hedgefund juga -- pemegang saham transparan liat
+    // aktivitas trading yang jadi dasar nilai saham mereka, gak cukup DM pribadi Olan doang.
+    // Demo TIDAK ikut (bukan uang beneran, gak relevan buat pemegang saham).
+    if (isSelf && account.mode === 'real') {
+      await sendWhatsApp(message, WIBOWO_GROUP_ID).catch((e) =>
+        console.log(`[MultiAccountExecutor] Broadcast Wibowo Hedgefund gagal:`, e.message));
+    }
   };
 }
 
@@ -145,7 +180,10 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     : _mexcNotConfiguredStub(account.name);
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' };
   const modalOverride = buildModalOverride(account, client);
-  const journalHook = buildJournalHook(account);
+  // touchedSymbols (2-3 Sep 2026) -- keisi symbol yang BENERAN disentuh bot siklus ini, dibaca
+  // positionReconciler.js di ujung fungsi ini (cuma dipakai buat akun Real Olan, lihat bawah).
+  const touchedSymbols = new Set();
+  const journalHook = buildJournalHook(account, touchedSymbols);
   const sendWA = buildSendWA(account, adminRelay);
   const key = safeKey(account.phone) + '-' + account.mode;
 
@@ -232,6 +270,21 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       }));
     await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc);
     console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), $${mexcBalanceUsdc.toFixed(2)} USDC (MEXC), ${positions.length} posisi.`);
+
+    // Pengawas posisi manual (2-3 Sep 2026, permintaan Olan) -- KHUSUS akun Real Olan sendiri
+    // (dasar saham Wibowo Hedgefund). `positions` di atas UDAH difetch (gak fetch dobel).
+    if (safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real') {
+      try {
+        const idrRate = await kaela.getUsdIdrRate();
+        await reconcileWibowoPositions({
+          phone: account.phone, client, touchedSymbols,
+          statePath: path.join(STATE_DIR, 'wibowo-reconciler-state.json'),
+          idrRate,
+        });
+      } catch (e) {
+        console.log('[MultiAccountExecutor] positionReconciler ERROR:', e.message);
+      }
+    }
 
     // 28 Agu 2026, permintaan Olan: "dompet kosong, japri -- 3 hari beruntun gak diisi, matiin
     // otomatis" -- numpang saldo yang UDAH DIAMBIL di atas, gak fetch Binance lagi.

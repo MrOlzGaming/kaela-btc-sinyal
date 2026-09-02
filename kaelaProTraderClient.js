@@ -136,4 +136,17 @@ async function checkAndClearForceSyncRequest() {
   return callGas('checkAndClearForceSyncRequest', {});
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest };
+// 2-3 Sep 2026 -- dipakai positionReconciler.js buat nampilin PnL manual Olan sekalian dalam Rp
+// (permintaan Olan: "pnl yang betul dalam dolar dan dalam kurung rupiah"). Fail-safe: gagal ambil
+// kurs -> null (caller fallback USD doang), JANGAN gagalin laporan cuma gara-gara kurs gak kebaca.
+async function getUsdIdrRate() {
+  try {
+    const data = await callGas('getUsdIdrRate', {});
+    return data.rate || null;
+  } catch (e) {
+    console.log('[KaelaProTraderClient] getUsdIdrRate gagal (fallback USD doang):', e.message);
+    return null;
+  }
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate };

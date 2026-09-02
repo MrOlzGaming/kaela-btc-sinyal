@@ -467,7 +467,18 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     return { ok: true };
   }
 
-  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition, syncBalances };
+  // 3 Sep 2026, permintaan Olan: "aku senior tradernya.. mau bisa backup Kaela Nyopet, buka posisi
+  // manual dari web" -- openPosition DIEXPOSE (dulu cuma dipakai internal processAsset abis
+  // detectPatternSignal/detectFvgSignal) biar bisa dipanggil LANGSUNG dari checkManualOpenRequest.js
+  // dengan `sig` buatan tangan (direction+sl dari Olan, patternType='manual') -- exposure/leverage/
+  // size TETAP lewat hitungExposure yang SAMA (permintaan Olan: "wajib lewat kalkulator exposure",
+  // BUKAN size bebas), cuma arah+SL yang Olan tentuin sendiri (buy & sell dua-duanya diizinkan buat
+  // manual -- KEPUTUSAN SADAR beda dari bot yang buy-only, dikonfirmasi Olan 3 Sep 2026 lewat
+  // AskUserQuestion, BUKAN diam-diam nyalain short).
+  // fetchLivePrice diexpose juga (3 Sep 2026) -- checkManualOpenRequest.js butuh harga live buat
+  // konversi "Nyawa %" -> harga SL ASLI SEBELUM manggil openPosition (biar SL dihitung dari harga
+  // yang SAMA kayak yang dipakai buat entry, bukan 2 fetch beda waktu yang bisa geser dikit).
+  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition, syncBalances, openPosition, fetchLivePrice };
 }
 
 // ============ Wrapper backward-compatible (akun Olan sendiri) -- ZERO perubahan perilaku, path

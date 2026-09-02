@@ -480,7 +480,11 @@ async function main() {
 // runBalanceReports diekspor TERPISAH (31 Agu 2026) -- dipakai checkForceSyncRequest.js buat
 // tarik saldo doang (BUKAN full cycle termasuk eksekusi trading), jadi aman dijalanin lebih
 // sering (~1 menit) tanpa resiko dobel-eksekusi order.
-module.exports = { main, runBalanceReports };
+// buildJournalHook/buildSendWA/safeKey/MASTER_NOMOR diekspor (3 Sep 2026) -- dipakai
+// checkManualOpenRequest.js biar posisi manual dari web (Jurnal Saya) DAPET notif+jurnal PERSIS
+// sama kayak posisi yang dibuka bot (DM member + broadcast Wibowo buat Olan + relay admin) --
+// SATU sumber kebenaran, bukan reimplementasi/logic dobel yang bisa ketinggalan sinkron.
+module.exports = { main, runBalanceReports, buildJournalHook, buildSendWA, safeKey, MASTER_NOMOR };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR multiAccountExecutor.js:', e.message); process.exit(1); });

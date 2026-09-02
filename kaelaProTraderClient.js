@@ -149,4 +149,19 @@ async function getUsdIdrRate() {
   }
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate };
+// 3 Sep 2026 -- buka posisi manual Nyopet dari web (Jurnal Saya). Fail-safe: gagal ambil daftar
+// -> array kosong (coba lagi siklus berikutnya), BUKAN fatal (sama pola getPendingCloseRequests).
+async function getPendingManualOpenRequests() {
+  try {
+    const data = await callGas('getPendingManualOpenRequests');
+    return data.requests || [];
+  } catch (e) {
+    console.log('[KaelaProTraderClient] getPendingManualOpenRequests gagal (dilewatin):', e.message);
+    return [];
+  }
+}
+async function resolveManualOpenRequest(requestId, status, resultMessage) {
+  return callGas('resolveManualOpenRequest', { requestId, status, resultMessage: resultMessage || '' });
+}
+
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };

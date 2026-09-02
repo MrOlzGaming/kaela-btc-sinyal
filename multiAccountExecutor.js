@@ -206,21 +206,38 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     console.log(`[MultiAccountExecutor] Nyopet ERROR (${account.phone}/${account.mode}):`, e.message);
   }
 
-  try {
-    const sniperTrader = createSniperAccountTrader({
-      client, mexcClient, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
-      sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
-    });
-    // 29 Agu 2026 -- sama pola kayak antrian tutup manual Nyopet di atas, DULUAN sebelum runCycle
-    // normal (permintaan Olan: "tombol close manual baik sniper dan nyopet").
-    const mySniperCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode && r.strategy === 'sniper');
-    for (const req of mySniperCloseRequests) {
-      const result = await sniperTrader.forceClosePosition(req.asset, req.requestedBy);
-      console.log(`[MultiAccountExecutor] Tutup manual Sniper ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
+  // BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan nanya "menurut Kaela gimana?" soal temuan ini) --
+  // Sniper akun OLAN SENDIRI (demo MAUPUN real) itu SISTEM LAMA yang UDAH jalan penuh
+  // (localLiveExecutor.js buka posisi + sniperOrderMonitor.js pantau tutup, lihat memori
+  // project-kaela-btc-sinyal) -- modul mirror multi-akun ini TUJUANNYA buat member LAIN (Nirwan
+  // dkk) numpang sinyal chart pattern yang SAMA, BUKAN buat Olan sendiri. Demo Olan UDAH di-skip
+  // total dari `active` (lihat filter di main()) dengan alasan PERSIS ini ("gak dobel-eksekusi 1
+  // akun dari 2 sumber beda") -- tapi Real Olan KELEWAT gak ikut, karena pas ditulis (23 Agu
+  // 2026) Real Sniper Olan belum jadi concern aktif. Nyopet AMAN dari celah ini (nyopetAutoTrader.js
+  // versi standalone Olan SELALU demo, gak pernah nyentuh real) -- CUMA Sniper yang beresiko,
+  // karena localLiveExecutor.js bisa demo ATAU real tergantung kill-switch. Fix: skip blok
+  // Sniper ini TOTAL buat Olan (demo+real, walau demo praktiknya udah gak pernah nyampe sini),
+  // biar akun dia CUMA punya SATU jalur eksekusi Sniper, gak pernah 2 sumber bisa buka posisi
+  // yang sama bareng tanpa saling tau.
+  if (safeKey(account.phone) === MASTER_NOMOR) {
+    console.log(`[MultiAccountExecutor] Skip Sniper mirror buat Olan (master) -- Sniper punya dia ditangani localLiveExecutor.js/sniperOrderMonitor.js, JANGAN dobel.`);
+  } else {
+    try {
+      const sniperTrader = createSniperAccountTrader({
+        client, mexcClient, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
+        sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
+      });
+      // 29 Agu 2026 -- sama pola kayak antrian tutup manual Nyopet di atas, DULUAN sebelum runCycle
+      // normal (permintaan Olan: "tombol close manual baik sniper dan nyopet").
+      const mySniperCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode && r.strategy === 'sniper');
+      for (const req of mySniperCloseRequests) {
+        const result = await sniperTrader.forceClosePosition(req.asset, req.requestedBy);
+        console.log(`[MultiAccountExecutor] Tutup manual Sniper ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
+      }
+      await sniperTrader.runCycle(sharedSniperOrders);
+    } catch (e) {
+      console.log(`[MultiAccountExecutor] Sniper ERROR (${account.phone}/${account.mode}):`, e.message);
     }
-    await sniperTrader.runCycle(sharedSniperOrders);
-  } catch (e) {
-    console.log(`[MultiAccountExecutor] Sniper ERROR (${account.phone}/${account.mode}):`, e.message);
   }
 
   // Saldo + posisi kebuka (25 Agu 2026, "member minta liat saldo sendiri di web") -- dititip ke

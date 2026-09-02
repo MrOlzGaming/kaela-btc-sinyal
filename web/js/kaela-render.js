@@ -958,6 +958,9 @@
   const NYOPET_MODE_LABEL_WEB = {
     fade: 'Fade (asumsi mantul)', follow: 'Follow (ikutin tembusan)',
     flag_bull: 'Bull Flag', pennant_bull: 'Pennant', wedge_falling: 'Falling Wedge', fvg_bounce: 'FVG',
+    // 2-3 Sep 2026, permintaan Olan: posisi yang gak ketemu match Journal (dibuka LANGSUNG di
+    // exchange, bukan lewat bot) WAJIB jujur dilabelin manual, BUKAN ditebak "Fade (asumsi mantul)".
+    manual: 'Manual (dibuka langsung di exchange)',
   };
 
   // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "nyopet ga dibatasi

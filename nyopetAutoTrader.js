@@ -97,7 +97,11 @@ function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('he
 // `client`     : hasil binanceExecutor.createBinanceClient({apiKey, apiSecret, testnet}) -- atau
 //                default module (akun Olan sendiri, wrapper lama).
 // `journalPath`: file JSON journal KHUSUS instance ini (per akun -- beda phone/mode = beda file).
-// `sendWA(msg)`: fungsi kirim notifikasi -- default `sendWhatsApp` (fonnte.js, ke Olan sendiri).
+// `sendWA(msg)`: fungsi kirim notifikasi -- default `sendWhatsApp` (fonnte.js, broadcast SEMUA
+// grup termasuk Wibowo Hedgefund) -- SENGAJA, jalur default ini kepake buat akun Olan SENDIRI
+// (legacy/standalone), dan Olan eksplisit oke posisi dia sendiri (walau demo, jujur dilabelin
+// "(Demo)") keliatan di situ -- BEDA kasus dari sniperAutoAnalysis.js (itu teaser publik yang
+// BUKAN aktivitas akun beneran siapapun, gak relevan buat shareholder, 3 Sep 2026).
 // `getModalBase(marginAsset)`: override sumber modal (saldo Binance live vs live+eksternal) --
 //                default null = pakai `client.getAccountBalance(marginAsset)` apa adanya.
 // `apiCreds`   : { apiKey, apiSecret, testnet } -- WAJIB kalau mau `fetchRealizedPnlSince` jalan

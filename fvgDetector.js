@@ -25,7 +25,7 @@ function detectBullishFVG(daily, i) {
 // ini bisa re-fire zona yang barusan MENANG). Pakai closeTime (bukan index array) biar tetap
 // valid lintas-run walau jumlah candle histori yang di-fetch beda tiap kali.
 function detectFvgSignal(daily, i, opts = {}) {
-  const { slBufferPct = 0, trendSmaLen = 200, usedGapTimes = new Set() } = opts;
+  const { slBufferPct = 0, trendSmaLen = 200, usedGapTimes = new Set(), maxDistanceFromGapPct = 3 } = opts;
   const lastPrice = daily[i].close;
 
   if (trendSmaLen !== null && i >= trendSmaLen) {
@@ -54,6 +54,22 @@ function detectFvgSignal(daily, i, opts = {}) {
     if (!touchedBefore && daily[i].low > fvg.gapTop) continue; // belum pernah disentuh & hari ini juga gak nyentuh
     // Konfirmasi: hari ini tutup di atas gapTop (baik nyentuh hari ini atau nyentuh sebelumnya)
     if (lastPrice > fvg.gapTop) {
+      // ⚠️ BUG KETEMU+FIX 3 Sep 2026 (Olan: "bukannya tunggu dulu kena area gap yang kosong itu
+      // baru buka posisi.. sedang fvg sekarang asal buka posisi walau di pucuk") -- SEBELUM ini,
+      // syarat "lastPrice > gapTop" doang TANPA batas jarak -- begitu gap PERNAH kesentuh+konfirmasi
+      // SEKALI, dia dianggap valid SELAMANYA sampai gap-nya keisi penuh, gak peduli udah berapa
+      // lama/berapa jauh harga lari abis itu. Di backtest gak pernah ketauan krn tiap hari SELALU
+      // dicek ulang pas posisi kosong -- entry otomatis kejadian PAS hari konfirmasi, gak pernah
+      // telat. Di live (Nyopet 1 slot per aset), kalau bot lagi SIBUK posisi lain, dia baru cek lagi
+      // abis bebas -- gap lama yang udah "sah" dari jauh-jauh hari langsung disamber di harga
+      // SEKARANG, bisa jauh banget dari zona gap aslinya (kejadian nyata: entry 25% di atas
+      // gapBottom). Fix: WAJIB harga sekarang MASIH DEKET gapTop (default maks 3% di atasnya) --
+      // konsep FVG yang bener itu "entry abis/pas kena area gap", bukan "entry di harga berapa aja
+      // asal pernah kesentuh". Lewat batas ini -> signal dianggap KADALUARSA, skip (terus cek gap
+      // LAIN yang lebih tua -- biasanya makin gagal juga krn makin jauh, jadi wajar balikin null =
+      // nunggu setup fresh berikutnya).
+      const distanceFromGapPct = (lastPrice - fvg.gapTop) / fvg.gapTop * 100;
+      if (distanceFromGapPct > maxDistanceFromGapPct) continue;
       return { direction: 'buy', sl: fvg.gapBottom * (1 - slBufferPct / 100), patternType: 'fvg_bounce', gapTop: fvg.gapTop, gapBottom: fvg.gapBottom, gapCreatedTime: daily[k].closeTime };
     }
   }

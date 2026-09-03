@@ -95,12 +95,28 @@ function runFVGBacktest(daily, opts = {}) {
       if (trendSma !== null && today.close < trendSma) continue;
     }
 
-    // Cari FVG aktif yang harga BARU AJA pantul keluar (tutup > gapTop, abis sempat masuk zona)
-    const zone = activeFvgs.find((z) => {
-      if (i <= z.createdIdx) return false;
+    // Cari FVG aktif yang harga BARU AJA pantul keluar (tutup > gapTop, abis sempat masuk zona).
+    // 3 Sep 2026 -- tambah batas jarak (maxDistanceFromGapPct), SAMAIN sama fix live di
+    // fvgDetector.js (bug ketemu Olan: entry bisa jauh dari gap kalau dibiarin lama). Di backtest
+    // ini efeknya minimal (tiap hari SELALU dicek ulang, jadi jarang sempat "stale") -- ditambahin
+    // murni biar 1 sumber kebenaran sama persis kayak yang live, gak diam-diam beda lagi ke depan.
+    const { maxDistanceFromGapPct = 3 } = opts;
+    // ⚠️ Ketemu 3 Sep 2026 (cross-check angka sama Olan) -- `activeFvgs` ke-push urut KRONOLOGIS
+    // (tua->baru), TAPI `.find()` balikin match PERTAMA = gap PALING TUA. Live (fvgDetector.js)
+    // sebaliknya: loop `for k=i-1; k>=2` = cek gap PALING BARU duluan. Backtest+live jadi milih
+    // GAP BEDA kalau ada >1 aktif bareng -- bukan cuma soal jarak doang. Fix: scan MUNDUR (dari
+    // yang paling baru ke-push) biar bener-bener 1 sumber kebenaran sama live, bukan cuma rumus
+    // deteksinya doang yang sama.
+    let zone = null;
+    for (let zi = activeFvgs.length - 1; zi >= 0; zi--) {
+      const z = activeFvgs[zi];
+      if (i <= z.createdIdx) continue;
       if (!z._touched && today.low <= z.gapTop) z._touched = true;
-      return z._touched && today.close > z.gapTop;
-    });
+      if (!z._touched || today.close <= z.gapTop) continue;
+      const distancePct = (today.close - z.gapTop) / z.gapTop * 100;
+      if (distancePct > maxDistanceFromGapPct) continue;
+      zone = z; break;
+    }
     if (!zone) continue;
 
     const lastPrice = today.close;

@@ -229,13 +229,27 @@ function createMexcClient({ apiKey, apiSecret }) {
     return signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side: closeSide, type: 5, openType: 1, reduceOnly: true });
   }
 
+  // ⚠️ BARU 4 Sep 2026, BELUM PERNAH DITES LIVE (sama peringatan kayak seluruh file ini -- IP
+  // lokal gak di-whitelist MEXC, gak bisa verifikasi respons beneran) -- ditulis dari riset
+  // dokumentasi resmi (mexcdevelop.github.io/apidocs/contract_v1_en/, endpoint "Get All Transaction
+  // Details of User's Orders"). Balikin histori FILL per-order (BUKAN per-posisi) -- tiap fill ada
+  // `profit` (realized PnL fill itu) + `fee`. Range max 90 hari per panggilan (beda dari Binance
+  // yang gak ada batasan eksplisit) -- caller WAJIB chunking kalau butuh lebih jauh dari itu.
+  // ⚠️ TANDA field `fee` BELUM DIVERIFIKASI (positif=dipotong ATAU udah negatif?) -- JANGAN
+  // dipercaya buat laporan PnL resmi sebelum dicocokin manual sama 1 transaksi MEXC beneran.
+  async function getOrderDeals(startTime, endTime, pageNum = 1, pageSize = 100) {
+    return signedRequest('GET', '/api/v1/private/order/list/order_deals', {
+      start_time: startTime, end_time: endTime, page_num: pageNum, page_size: pageSize,
+    });
+  }
+
   async function cancelAllOpenOrders(symbol) {
     return signedRequest('POST', '/api/v1/private/order/cancel_all', { symbol });
   }
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-    getPositionRisk, getAllPositions, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
+    getPositionRisk, getAllPositions, getOrderDeals, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
   };
 }
 
@@ -269,6 +283,7 @@ async function placeStopLoss(args) { return _defaultClient().placeStopLoss(args)
 async function placeTakeProfit(args) { return _defaultClient().placeTakeProfit(args); }
 async function getPositionRisk(symbol) { return _defaultClient().getPositionRisk(symbol); }
 async function getAllPositions() { return _defaultClient().getAllPositions(); }
+async function getOrderDeals(startTime, endTime, pageNum, pageSize) { return _defaultClient().getOrderDeals(startTime, endTime, pageNum, pageSize); }
 async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOpenOrders(symbol); }
 async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
 async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
@@ -276,5 +291,5 @@ async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(sym
 module.exports = {
   createMexcClient, isMexcConfigured, EXCHANGE_NAME: 'mexc',
   getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-  getPositionRisk, getAllPositions, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
+  getPositionRisk, getAllPositions, getOrderDeals, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
 };

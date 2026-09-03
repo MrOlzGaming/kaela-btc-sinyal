@@ -28,6 +28,7 @@ const { ASSETS } = require('./assetConfig');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
+const tradeHistoryStore = require('./tradeHistoryStore');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
 const { createSniperAccountTrader } = require('./sniperMultiAccount');
@@ -411,6 +412,69 @@ async function getFullIncomeHistorySince(client, sinceMs) {
   return all;
 }
 
+// syncAndGetIncomeHistorySince (4 Sep 2026, permintaan Olan: "tiap tarikan data binance...
+// simpan di data kita sendiri. jadi kita ga kehilangan data kan?") -- BUNGKUS getFullIncomeHistorySince
+// pakai tradeHistoryStore.js. Siklus PERTAMA (file belum ada) backfill PENUH dari sinceMs (bisa
+// lama kalau member udah gabung berbulan-bulan, WAJAR sekali doang). Siklus BERIKUTNYA cuma nanya
+// exchange "ada yang baru sejak lastSyncedMs?" -- jauh lebih hemat, DAN histori lama tetap utuh di
+// file kita sendiri walau exchange suatu saat batesin range query / data lama gak bisa ditarik lagi.
+async function syncAndGetIncomeHistorySince(client, phone, mode, sinceMs) {
+  const filePath = tradeHistoryStore.storePath('binance', phone, mode);
+  const store = tradeHistoryStore.loadStore(filePath);
+  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
+  const rawNew = await getFullIncomeHistorySince(client, fetchFromMs);
+  const normalized = rawNew.map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+  const added = tradeHistoryStore.mergeEntries(store, normalized);
+  tradeHistoryStore.saveStore(filePath, store);
+  if (added > 0) console.log(`[MultiAccountExecutor] TradeHistoryStore Binance ${phone}/${mode}: +${added} baris baru (total tersimpan: ${store.entries.length}).`);
+  return store.entries.filter((e) => e.time >= sinceMs);
+}
+
+// syncMexcOrderDeals (4 Sep 2026, permintaan Olan: "sama mexc jugak") -- SATU ARAH beda dari
+// versi Binance: fungsi ini CUMA nyimpen data ke tradeHistoryStore.js, BELUM dipakai buat hitung
+// tradingTotal/outsidePnl MEXC (yang tampil di laporan TETAP Binance-doang, gak berubah). Alasan:
+// getOrderDeals() (mexcExecutor.js) BARU ditulis dari riset dokumentasi, BELUM PERNAH dites
+// respons beneran (IP lokal gak di-whitelist MEXC) -- terutama TANDA field `fee` (positif=dipotong
+// ATAU udah negatif?) BELUM diverifikasi. Simpen dulu MENTAH apa adanya (data aman, gak ilang),
+// TUNDA pemakaiannya buat laporan resmi sampai ada 1 transaksi MEXC beneran yang bisa dicocokin
+// manual sama P&L yang keliatan di app MEXC Olan sendiri -- baru abis itu boleh dipakai ngitung.
+// endTime WAJIB (endpoint MEXC max 90 hari per panggilan, beda dari Binance yang gak ada batasan
+// itu) -- chunking mundur dari `now` per 89 hari (bukan 90 pas, jaga-jaga off-by-one) sampai nembus
+// sinceMs ATAU sampai hasil kosong (data abis).
+async function syncMexcOrderDeals(mexcClient, phone, mode, sinceMs) {
+  const filePath = tradeHistoryStore.storePath('mexc', phone, mode);
+  const store = tradeHistoryStore.loadStore(filePath);
+  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
+  const NINETY_DAYS_MS = 89 * 24 * 60 * 60 * 1000;
+  let windowStart = fetchFromMs;
+  let totalAdded = 0;
+  while (windowStart < Date.now()) {
+    const windowEnd = Math.min(windowStart + NINETY_DAYS_MS, Date.now());
+    let pageNum = 1;
+    for (let i = 0; i < 20; i++) { // cap 20 halaman (2000 baris) per window -- jaga-jaga infinite loop
+      const page = await mexcClient.getOrderDeals(windowStart, windowEnd, pageNum, 100).catch((e) => {
+        console.log(`[MultiAccountExecutor] Gagal getOrderDeals MEXC ${phone}/${mode} (window ${new Date(windowStart).toISOString()}-${new Date(windowEnd).toISOString()}, page ${pageNum}):`, e.message);
+        return null;
+      });
+      if (!page || !Array.isArray(page) || page.length === 0) break;
+      // Tiap deal -> 2 entry (profit + fee terpisah, biar gampang diaudit satu-satu pas verifikasi
+      // manual nanti) -- id dikasih suffix biar gak collision sama entry Binance/entry lain.
+      const normalized = [];
+      page.forEach((d) => {
+        const dealId = d.id != null ? String(d.id) : `${d.orderId}-${d.timestamp}`;
+        normalized.push({ id: `profit-${dealId}`, time: Number(d.timestamp), symbol: d.symbol, type: 'trade_profit', amount: Number(d.profit) || 0 });
+        normalized.push({ id: `fee-${dealId}`, time: Number(d.timestamp), symbol: d.symbol, type: 'trade_fee', amount: Number(d.fee) || 0 });
+      });
+      totalAdded += tradeHistoryStore.mergeEntries(store, normalized);
+      if (page.length < 100) break; // kurang dari page_size -- halaman terakhir
+      pageNum++;
+    }
+    windowStart = windowEnd + 1;
+  }
+  tradeHistoryStore.saveStore(filePath, store);
+  if (totalAdded > 0) console.log(`[MultiAccountExecutor] TradeHistoryStore MEXC ${phone}/${mode}: +${totalAdded} baris baru (total tersimpan: ${store.entries.length}) -- BELUM dipakai hitung laporan, cuma disimpen.`);
+}
+
 async function runBalanceReports() {
   console.log('\n[MultiAccountExecutor] === Laporan Saldo Member (owner) ===');
   let accountsWithKeys;
@@ -437,12 +501,12 @@ async function runBalanceReports() {
       const [balanceUsdt, balanceUsdc, income] = await Promise.all([
         client.getAccountBalance('USDT'),
         client.getAccountBalance('USDC'),
-        getFullIncomeHistorySince(client, sinceMs),
+        syncAndGetIncomeHistorySince(client, acc.phone, 'real', sinceMs),
       ]);
       let transferTotal = 0, depositTotal = 0, tradingTotal = 0;
       income.forEach((inc) => {
-        const amt = Number(inc.income) || 0;
-        if (inc.incomeType === 'TRANSFER') {
+        const amt = Number(inc.amount) || 0;
+        if (inc.type === 'TRANSFER') {
           transferTotal += amt;
           // depositTotal (3-4 Sep 2026) -- SETORAN doang (amt>0), basis buat hitung persen return
           // "sejak gabung" (lihat catatan BinanceAdmin.gs) -- member mulai dari $0, jadi basis yang
@@ -456,8 +520,8 @@ async function runBalanceReports() {
 
       // MEXC (31 Agu 2026) -- OPSIONAL, beda dari Binance. mexcConfigured=false kalau member
       // belum pasang MEXC (bukan error, cukup umum -- lihat memori project-kaela-multi-exchange).
-      // Belum ada endpoint income-history MEXC (riset belum dilakuin) -- jadi CUMA saldo
-      // dilaporin, gak ada breakdown transfer/trading kayak Binance.
+      // Breakdown transfer/trading MEXC BELUM ikut ngitung laporan (lihat catatan syncMexcOrderDeals
+      // di atas -- field fee belum diverifikasi) -- CUMA saldo yang dilaporin kayak sebelumnya.
       let mexcConfigured = false, mexcBalanceUsdt = 0, mexcBalanceUsdc = 0;
       if (acc.mexcApiKey && acc.mexcApiSecret) {
         mexcConfigured = true;
@@ -467,6 +531,12 @@ async function runBalanceReports() {
             mexcClient.getAccountBalance('USDT'),
             mexcClient.getAccountBalance('USDC'),
           ]);
+          // 4 Sep 2026, permintaan Olan ("sama mexc jugak") -- simpen riwayat transaksi MEXC ke
+          // tradeHistoryStore.js JUGA, TERPISAH try/catch (gagal sync riwayat JANGAN gugurin
+          // laporan saldo, itu udah kepenuhan di atas). Fire-and-forget sengaja -- kegagalan cuma
+          // di-log, gak dilempar ke luar (belum critical, cuma "nyimpen data ekstra").
+          await syncMexcOrderDeals(mexcClient, acc.phone, 'real', sinceMs).catch((e) =>
+            console.log(`[MultiAccountExecutor] syncMexcOrderDeals gagal (${acc.name}):`, e.message));
         } catch (e) {
           console.log(`[MultiAccountExecutor] Gagal ambil saldo MEXC ${acc.name} (skip bagian MEXC laporan ini):`, e.message);
           mexcConfigured = false; // gagal fetch -- lebih aman anggap "belum setup" drpd nulis saldo 0 palsu

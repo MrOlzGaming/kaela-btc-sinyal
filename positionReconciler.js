@@ -39,6 +39,7 @@ const kaela = require('./kaelaProTraderClient');
 // sini (beda opsi format dikit -- minimumFractionDigits:2 selalu, punya darkKaelaLog.js enggak --
 // gak worth diseragamin, resiko ubah tampilan angka lain yang udah kepake lama di file ini).
 const { fmtUsdWithIdr } = require('./darkKaelaLog');
+const tradeHistoryStore = require('./tradeHistoryStore');
 
 const WIBOWO_GROUP_ID = '120363430640997174@g.us';
 const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
@@ -88,17 +89,23 @@ function saveState(statePath, state) {
 // SUMBER KEBENARAN PnL asli (fee kepotong), BUKAN dihitung sendiri dari entry/exit/leverage.
 // MEXC BELUM punya endpoint setara yang dipetakan (lihat catatan atas file) -- exchange 'mexc'
 // SELALU balikin null (jujur "belum kebaca", bukan 0 yang kesannya beneran impas).
-async function realizedPnlSince(exchange, client, symbol, sinceMs) {
+// 4 Sep 2026 (permintaan Olan: "tiap tarikan data binance... simpan di data kita sendiri") --
+// SEKARANG lewat tradeHistoryStore.js (SATU cache lokal dipakai bareng runBalanceReports) --
+// window reconciler pendek (~15 menit sejak lastCheckedAtMs) jadi 1 panggilan tanpa paginasi udah
+// cukup, TAPI tetap disimpen ke store yang sama biar makin lengkap + konsisten sumbernya.
+async function realizedPnlSince(exchange, client, phone, symbol, sinceMs) {
   if (exchange !== 'binance') return null;
   try {
-    const income = await client.getIncomeHistory(sinceMs, 1000);
-    let total = 0;
-    (income || []).forEach((row) => {
-      if (row.symbol !== symbol) return;
-      if (row.incomeType === 'TRANSFER') return; // setor/tarik dana, bukan hasil trading
-      total += parseFloat(row.income) || 0;
-    });
-    return total;
+    const filePath = tradeHistoryStore.storePath('binance', phone, 'real');
+    const store = tradeHistoryStore.loadStore(filePath);
+    const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
+    const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
+    const normalized = (rawNew || []).map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+    tradeHistoryStore.mergeEntries(store, normalized);
+    tradeHistoryStore.saveStore(filePath, store);
+    return store.entries
+      .filter((e) => e.time >= sinceMs && e.symbol === symbol && e.type !== 'TRANSFER')
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   } catch (e) {
     console.log(`[PositionReconciler] Gagal ambil income history ${symbol}:`, e.message);
     return null; // null = jujur "gak kebaca", BUKAN 0 (0 kesannya beneran impas)
@@ -168,7 +175,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
     } else if (prevAmt !== 0 && liveAmt === 0) {
       // MANUAL CLOSE (full) -- posisi yang tadinya kecatat sekarang ilang total.
-      const pnl = await realizedPnlSince(exchange, client, symbol, state.lastCheckedAtMs);
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry gagal:', e.message));
@@ -191,7 +198,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) < Math.abs(prevAmt)) {
       // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol.
-      const pnl = await realizedPnlSince(exchange, client, symbol, state.lastCheckedAtMs);
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
       const pnlLine = pnl === null ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.' : `PnL bagian yang ditutup: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
       const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Kurangin Posisi\n\n${symbol} sebagian ditutup\n${pnlLine}\nSisa posisi: ${dirLabel(liveAmt)} @ ${fmtUsd(live.entryPrice)}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL REDUCE ${badge} ${symbol}, PnL sebagian=${pnl}`);
@@ -200,7 +207,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) !== Math.sign(liveAmt)) {
       // FLIP arah (short jadi long / sebaliknya) -- exchange eksekusi ini 1 order gede (bukan 2
       // order kepisah) -- hitung PnL close arah lama, catat posisi baru sebagai entry FRESH.
-      const pnl = await realizedPnlSince(exchange, client, symbol, state.lastCheckedAtMs);
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry (flip close) gagal:', e.message));

@@ -109,7 +109,10 @@ function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('he
 // `mexcClient` (BARU, 30 Agu 2026) -- Emas eksekusi ke MEXC sekarang (lihat memori
 // project-kaela-multi-exchange), default ke mexcExecutor.js singleton (akun Olan sendiri) kayak
 // `client`/binanceExecutorDefault. `execFor(assetCfg)` di bawah milih instance yang bener per aset.
-function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent } = {}) {
+// `idrRate` (BARU, 3 Sep 2026, permintaan Olan: "untuk pnl sertakan idr nya bisa?") -- OPSIONAL,
+// dioper caller (multiAccountExecutor.js, fetch SEKALI per siklus lewat kaelaProTraderClient.getUsdIdrRate()).
+// null/gagal -> formatAutoClosed/formatAutoPartial fallback USD doang, TIDAK gugurin pesan.
+function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate } = {}) {
   const c = client || binanceExecutorDefault;
   const mc = mexcClient || mexcExecutorDefault;
   function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : c; }
@@ -251,7 +254,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     Object.assign(target, { partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd, partialClosedAt: new Date().toISOString() });
     saveJournal(journal);
 
-    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo);
+    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'partial', realizedPnlUsd, sl: order.entryPrice, exchange: assetCfg.exchange });
@@ -318,7 +321,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // asli, bukan lagi kalimat generik "Ditutup MANUAL atas permintaan X" -- lihat forceClosePosition),
     // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
     const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
-    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText);
+    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });

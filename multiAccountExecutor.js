@@ -179,7 +179,7 @@ function _mexcNotConfiguredStub(name) {
   return { getAccountBalance: err, setLeverage: err, setIsolatedMargin: err, placeMarketEntry: err, placeStopLoss: err, placeTakeProfit: err, getPositionRisk: err, cancelAllOpenOrders: err, getSymbolInfo: err, emergencyCloseMarket: err };
 }
 
-async function processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccount) {
+async function processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccount, idrRate) {
   console.log(`\n[MultiAccountExecutor] === ${account.name} (${account.phone}) -- ${account.mode.toUpperCase()} ===`);
   const client = createBinanceClient({ apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: account.mode === 'demo' });
   const mexcClient = mexcAccount
@@ -197,7 +197,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
   try {
     const nyopetTrader = createNyopetTrader({
       client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
-      sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
+      sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate,
     });
     // 28 Agu 2026 -- eksekusi antrian tutup posisi manual DULUAN, sebelum siklus normal (biar
     // kalau ada sinyal baru abis ditutup, "nonstop posisi" tetep jalan alami di main() bawahnya).
@@ -232,7 +232,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     try {
       const sniperTrader = createSniperAccountTrader({
         client, mexcClient, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
-        sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook,
+        sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate,
       });
       // 29 Agu 2026 -- sama pola kayak antrian tutup manual Nyopet di atas, DULUAN sebelum runCycle
       // normal (permintaan Olan: "tombol close manual baik sniper dan nyopet").
@@ -299,7 +299,8 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     // (dasar saham Wibowo Hedgefund). `positions` di atas UDAH difetch (gak fetch dobel).
     if (safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real') {
       try {
-        const idrRate = await kaela.getUsdIdrRate();
+        // idrRate (3 Sep 2026) -- PAKAI yang UDAH difetch SEKALI di main() (parameter fungsi ini),
+        // JANGAN fetch ulang GAS di sini (dulu fetch sendiri, sekarang numpang biar gak dobel call).
         await reconcileWibowoPositions({
           phone: account.phone, client, touchedSymbols,
           statePath: path.join(STATE_DIR, 'wibowo-reconciler-state.json'),
@@ -494,9 +495,13 @@ async function main() {
   const adminRelay = { masterNomor: MASTER_NOMOR, notifyReal: adminNotify.notifyReal, notifyDemo: adminNotify.notifyDemo };
   const closeRequests = await kaela.getPendingCloseRequests();
   if (closeRequests.length) console.log(`[MultiAccountExecutor] ${closeRequests.length} permintaan tutup posisi manual di antrian.`);
+  // 3 Sep 2026, permintaan Olan: "untuk pnl sertakan idr nya bisa?" -- fetch SEKALI per siklus
+  // (bukan per-pesan/per-akun, hemat panggilan GAS), dioper ke Sniper/Nyopet tiap akun. Gagal/null
+  // -> semua pesan fallback USD doang (fmtUsdWithIdr null-safe), TIDAK gugurin siklus.
+  const idrRate = await kaela.getUsdIdrRate();
 
   for (const account of active) {
-    await processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccountsByKey[safeKey(account.phone) + '-' + account.mode]);
+    await processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccountsByKey[safeKey(account.phone) + '-' + account.mode], idrRate);
   }
   console.log('\n[MultiAccountExecutor] Selesai.');
 }

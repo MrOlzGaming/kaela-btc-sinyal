@@ -24,6 +24,11 @@
 const fs = require('fs');
 const { sendWhatsApp } = require('./fonnte');
 const kaela = require('./kaelaProTraderClient');
+// 3 Sep 2026 -- fmtUsdWithIdr PINDAH ke darkKaelaLog.js (SATU sumber, dipakai Sniper/Nyopet juga
+// sekarang, permintaan Olan "untuk pnl sertakan idr nya"). fmtUsd LOKAL TETAP DIPERTAHANKAN di
+// sini (beda opsi format dikit -- minimumFractionDigits:2 selalu, punya darkKaelaLog.js enggak --
+// gak worth diseragamin, resiko ubah tampilan angka lain yang udah kepake lama di file ini).
+const { fmtUsdWithIdr } = require('./darkKaelaLog');
 
 const WIBOWO_GROUP_ID = '120363430640997174@g.us';
 const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
@@ -31,15 +36,6 @@ const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
 function fmtUsd(n) {
   const v = Number(n) || 0;
   return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-// Rp disertain (permintaan Olan: "pnl yang betul dalam dolar dan dalam kurung rupiah") -- rate
-// dioper dari caller (kaelaProTraderClient.getUsdIdrRate) -- gagal/null -> fallback USD doang.
-function fmtUsdWithIdr(n, idrRate) {
-  const usdText = fmtUsd(n);
-  if (!idrRate) return usdText;
-  const idr = Math.round((Number(n) || 0) * idrRate);
-  return `${usdText} (${idr < 0 ? '-Rp' : 'Rp'}${Math.abs(idr).toLocaleString('id-ID')})`;
 }
 
 function pnlSign(n) { return Number(n) >= 0 ? '+' : ''; }

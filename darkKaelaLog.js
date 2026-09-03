@@ -19,6 +19,18 @@ function fmtUsd(n) {
   return (v < 0 ? '-$' : '$') + abs.toLocaleString('en-US', { maximumFractionDigits: abs < 1000 ? 2 : 0 });
 }
 
+// 3 Sep 2026, permintaan Olan: "untuk pnl sertakan idr nya bisa?" -- SUMBER SATU-SATUNYA dipindah
+// ke sini dari positionReconciler.js (yang duluan punya ini) biar Sniper/Nyopet PnL juga kebagian,
+// bukan cuma Reconciler. `idrRate` dioper dari caller (kaelaProTraderClient.getUsdIdrRate(),
+// dipanggil SEKALI per siklus di multiAccountExecutor.js, BUKAN per-pesan) -- gagal/null -> fallback
+// USD doang, JANGAN gugurin pesan cuma gara-gara kurs gagal kebaca.
+function fmtUsdWithIdr(n, idrRate) {
+  const usdText = fmtUsd(n);
+  if (!idrRate) return usdText;
+  const idr = Math.round((Number(n) || 0) * idrRate);
+  return `${usdText} (${idr < 0 ? '-Rp' : 'Rp'}${Math.abs(idr).toLocaleString('id-ID')})`;
+}
+
 function fmtWita(date) {
   return new Date(date.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' WITA';
 }
@@ -139,19 +151,22 @@ Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}
 
 // Tahap 1 (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper) -- separuh posisi diamankan,
 // SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
-function formatAutoPartial(pos, now, isDemo) {
+// `idrRate` (BARU, 3 Sep 2026, permintaan Olan: "untuk pnl sertakan idr nya bisa?") -- OPSIONAL,
+// null/gagal -> fallback USD doang (fmtUsdWithIdr sendiri yang handle).
+function formatAutoPartial(pos, now, isDemo, idrRate) {
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — Partial TP Diamankan
 
-🟡 Tahap 1: ${pos.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsd(pos.realizedPnlUsd)}
+🟡 Tahap 1: ${pos.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}
 SL sisa digeser breakeven, separuh posisi di-trail.
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
-// `alasanText` (BARU, 3 Sep 2026) -- WAJIB dioper caller (nyopetAutoTrader.js), sumbernya beda
+// `alasanText` (3 Sep 2026) -- WAJIB dioper caller (nyopetAutoTrader.js), sumbernya beda
 // tergantung KENAPA ditutup: kode close-reason (SL/TRAIL/dst, lewat CLOSE_REASON_LABEL) buat
 // otomatis, teks yang Olan TULIS SENDIRI buat manual -- fungsi ini gak nebak-nebak sendiri.
-function formatAutoClosed(trade, now, isDemo, alasanText) {
+// `idrRate` (BARU, 3 Sep 2026) -- lihat catatan formatAutoPartial di atas.
+function formatAutoClosed(trade, now, isDemo, alasanText, idrRate) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
   const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null
@@ -159,7 +174,7 @@ function formatAutoClosed(trade, now, isDemo, alasanText) {
   return `${_nyopetBadge(trade, isDemo)} ${shortId(trade.id)} — Tutup Posisi
 
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)}→${fmtUsd(trade.exitPrice)}
-PnL: ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsd(trade.pnlUsd)}${pctLine}
+PnL: ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}
 Alasan: ${alasanText || '-'}
 
 🔗 ${KAELA_ACCESS_URL}`;
@@ -170,5 +185,5 @@ module.exports = {
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
-  fmtUsd, shortId,
+  fmtUsd, shortId, fmtUsdWithIdr,
 };

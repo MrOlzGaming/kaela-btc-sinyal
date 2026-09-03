@@ -66,6 +66,17 @@ async function processRequest(req, adminRelay) {
     await kaela.resolveManualOpenRequest(req.requestId, 'failed', `Udah ada posisi floating buat ${assetCfg.label} -- tutup dulu sebelum buka baru.`);
     return;
   }
+  // ⚠️ BUG BAHAYA ketemu 3 Sep 2026 (Olan nyoba fitur ini, GAGAL "Leverage reduction is not
+  // supported... with open positions") -- journal LOKAL (di atas) bisa GAK TAU posisi yang
+  // BENERAN ada di exchange (kemungkinan abis leader pindah mesin, multi-account-state/ sengaja
+  // gak disinkron git). Cek LANGSUNG ke exchange sebelum lanjut -- lebih bisa dipercaya drpd file
+  // lokal yang bisa basi.
+  const execForCheck = assetCfg.exchange === 'mexc' ? mexcClient : client;
+  const liveCheckPos = execForCheck ? await execForCheck.getPositionRisk(assetCfg.symbol).catch(() => null) : null;
+  if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
+    await kaela.resolveManualOpenRequest(req.requestId, 'failed', `Udah ada posisi LIVE di exchange buat ${assetCfg.label} (entry ${liveCheckPos.entryPrice}) yang gak kecatat di jurnal -- tutup dulu posisi itu (bisa lewat Binance/MEXC langsung) sebelum buka baru.`);
+    return;
+  }
 
   try {
     // Dua mode input (Olan: "nyawa dalam persen ATAU harga sl") -- kalau nyawaPct yang diisi,

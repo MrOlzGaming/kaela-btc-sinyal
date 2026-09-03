@@ -380,6 +380,23 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       return;
     }
 
+    // ⚠️ BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan nyoba buka posisi manual, GAGAL "Leverage
+    // reduction is not supported... with open positions") -- journal LOKAL bilang gak ada floating
+    // (getFloatingOrder null), TAPI Binance BENERAN punya posisi kebuka (leverage beda dari yang
+    // mau dipasang). Root cause: multi-account-state/ SENGAJA gak disinkron git (data PERSONAL,
+    // lihat .gitignore) -- begitu leader pindah mesin (komputer-utama -> vultr-sg, 2 Sep 2026),
+    // journal lokal mesin BARU "lupa total" posisi yang tercatat cuma di mesin LAMA, padahal
+    // posisi ASLINYA di Binance tetap ada. Tanpa cek ini, siklus normal BISA nyoba buka sinyal
+    // baru di atas posisi yang udah ada -- bentrok leverage (gagal, untung SAFE) ATAU labih parah
+    // nambah size gak sengaja kalau kebetulan leverage-nya sama. Fix: SELALU cek live position
+    // Binance/MEXC dulu SEBELUM nyimpulkan "gak ada posisi" -- kalau ternyata ADA (journal lokal
+    // yang salah), SKIP total siklus ini (jangan coba apa-apa) daripada eksekusi ngawur.
+    const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
+    if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- SKIP cari sinyal baru siklus ini, journal PERLU direkonsiliasi.`);
+      return;
+    }
+
     // ============ Gak ada posisi floating -- cari sinyal baru (chart pattern -> FVG, long-only, 4H) ============
     const candles4h = await fetchCandles4hPaginated(zoneSymbol, CANDLES_NEEDED_4H);
     if (candles4h.length < 300) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: candle 4H belum cukup (${candles4h.length}), skip siklus ini.`); return; }

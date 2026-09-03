@@ -1,8 +1,12 @@
 // Jalankan 1x sehari, abis candle HARIAN closing (00:00 UTC = 08:00 WITA -- pas jadwal
 // sniper-daily-trigger.yml, 00:05 UTC): analisa gabungan OTOMATIS (teknikal + sentimen +
-// on-chain) -> kesimpulan VALID/INVALID -> kalau VALID langsung catat "posisi bayangan" (shadow
-// -- TIDAK ADA uang beneran) dan kirim WA. Kaela BUKAN eksekutor finansial -- keputusan Olan
-// 9 Agu 2026, murni "kalkulator logika".
+// on-chain) -> kesimpulan VALID/INVALID -> kalau VALID catat order (sniperOrders.js) dan kirim
+// WA. ⚠️ Desain ASLI 9 Agu 2026 ("murni kalkulator logika", TIDAK ADA uang beneran) SUDAH GAK
+// BERLAKU sejak 29 Agu 2026 (standing rule [[feedback-no-shadow-position]]) -- order yang
+// ditulis di sini DIEKSEKUSI LIVE beneran ke Binance Demo tiap siklus oleh localLiveExecutor.js
+// (jalan terpisah, lihat run-vultr-executor.sh), lalu di-mirror proporsional ke akun member lain
+// yang ikut jasa Kaela lewat multiAccountExecutor.js. Baris komentar lama di bawah (referensi
+// "posisi bayangan") DIBIARIN sebagai jejak sejarah keputusan, BUKAN deskripsi perilaku sekarang.
 //
 // UPGRADE BESAR (22 Agu 2026, riset+validasi backtestCombinedMultiPos.js/backtestFVG.js/
 // halvingBearWindow.js): dari 1-posisi-BTC-doang jadi MULTI-ASET (BTC + XAU/Emas) x MULTI-MODE

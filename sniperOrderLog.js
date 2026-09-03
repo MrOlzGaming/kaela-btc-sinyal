@@ -163,9 +163,15 @@ function formatPositionMonitor(order, livePrice, assetCfgParam) {
     statusLine,
   ];
   if (totalPnlUsd !== null) lines.push(`P&L saat ini: ${totalPnlUsd >= 0 ? '+' : ''}${fmt(Math.abs(totalPnlUsd))}`);
+  // 3 Sep 2026, bug ketemu Olan (screenshot WA) -- baris "🎭 Posisi bayangan, murni perhitungan..."
+  // KELEWAT pas migrasi 29 Agu 2026 (standing rule [[feedback-no-shadow-position]]: SEMUA sinyal
+  // Sniper udah live-executed di Binance Demo lewat localLiveExecutor.js, BUKAN kalkulasi doang
+  // lagi). formatAutoValid() di bawah UDAH dibetulin waktu itu ("Posisi RIIL di Binance Demo,
+  // bukan bayangan lagi") -- cuma pesan PEMANTAUAN HARIAN ini yang gak ikut ke-update, jadi masih
+  // nunjukkin kalimat lama tiap hari selama posisi floating. Disamain sekarang.
   lines.push(
     '',
-    '🎭 Posisi bayangan, murni perhitungan -- eksekusi asli (kalau ikut) tetap manual sendiri di Binance.',
+    '🤖 Posisi RIIL di Binance Demo (duit virtual, bukan bayangan) -- kalau kamu ikut jasa Kaela, ini otomatis ke-mirror ke akunmu sendiri juga.',
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,
@@ -201,9 +207,11 @@ function formatCancelled(order) {
 
 // Analisa gabungan OTOMATIS harian (9 Agu 2026, sniperAutoAnalysis.js) -- Analisa Teknikal +
 // Sentimen + On-chain + Kesimpulan VALID/INVALID (Liquidation Heatmap dicabut 12 Agu 2026, lihat
-// liqLine() di bawah). VALID = posisi BAYANGAN langsung dibuka (murni perhitungan, TIDAK ADA
-// uang bergerak -- Kaela bukan eksekutor finansial, cuma "kalkulator logika"). Eksekusi ASLI
-// (kalau Olan mau ikut) tetap manual di Binance.
+// liqLine() di bawah). VALID = posisi LANGSUNG DIEKSEKUSI LIVE ke Binance Demo (duit virtual)
+// oleh localLiveExecutor.js -- keterangan "posisi bayangan/murni perhitungan/eksekusi manual"
+// di komentar ini SENGAJA DIBIARIN sebagai jejak sejarah (desain ASLI 9 Agu 2026), TAPI SUDAH
+// GAK BERLAKU sejak standing rule 29 Agu 2026 [[feedback-no-shadow-position]]. Kalau nemu kode
+// baru yang masih pakai frasa itu, itu BUG -- perbaiki, jangan anggap desain yang disengaja.
 
 // Liquidation heatmap OTOMATIS DICABUT (12 Agu 2026) -- Kaela gak mampu akses data ini gratis
 // & akurat dari infrastruktur yang ada (Binance kemungkinan blokir WebSocket streaming dari IP

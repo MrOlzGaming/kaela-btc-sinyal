@@ -441,22 +441,42 @@ async function syncAndGetIncomeHistorySince(client, phone, mode, sinceMs) {
 // endTime WAJIB (endpoint MEXC max 90 hari per panggilan, beda dari Binance yang gak ada batasan
 // itu) -- chunking mundur dari `now` per 89 hari (bukan 90 pas, jaga-jaga off-by-one) sampai nembus
 // sinceMs ATAU sampai hasil kosong (data abis).
+function _sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+// 4 Sep 2026, tambahan abis KEJADIAN NYATA rate-limit -- getAccountBalance MEXC (USDT+USDC,
+// paralel) dipanggil TEPAT SEBELUM fungsi ini (lihat call site) -- request bertubi-tubi ke MEXC
+// dalam hitungan milidetik kemungkinan yang micu "Requests are too frequent". Jeda kecil di sini
+// (SEBELUM mulai + ANTAR HALAMAN) -- murah, defensif, ngurangin kemungkinan kena limit lagi.
 async function syncMexcOrderDeals(mexcClient, phone, mode, sinceMs) {
+  await _sleep(500);
   const filePath = tradeHistoryStore.storePath('mexc', phone, mode);
   const store = tradeHistoryStore.loadStore(filePath);
   const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
   const NINETY_DAYS_MS = 89 * 24 * 60 * 60 * 1000;
+  const nowMs = Date.now(); // ⚠️ BUG KETEMU+FIX 4 Sep 2026 (KEJADIAN NYATA pas live, MEXC ngebales
+  // "Requests are too frequent") -- versi PERTAMA manggil `Date.now()` ULANG tiap iterasi while
+  // (`windowStart < Date.now()`, `windowEnd = min(..., Date.now())`). Begitu 1 request gagal
+  // (window di-skip TANPA update lastSyncedMs), `windowStart = windowEnd + 1` maju ke NILAI Date.now()
+  // LAMA + 1ms -- tapi Date.now() BARU (beberapa ms kemudian, krn waktu jalan) udah LEBIH BESAR dari
+  // itu, jadi loop while ANGGEP masih ada window tersisa -- window BARU jadi SANGAT SEMPIT (cuma
+  // beberapa ms), tembak API LAGI, gagal LAGI, window makin sempit LAGI -- hampir infinite loop
+  // yang MAKIN SERING nembak API pas API-nya lagi rate-limit (memperparah diri sendiri). Fix: `now`
+  // di-freeze SEKALI di awal fungsi (bukan re-evaluated tiap iterasi) DAN begitu 1 request gagal,
+  // STOP TOTAL (jangan lanjut ke window berikutnya) -- siklus BERIKUTNYA (15 menit) coba lagi dari
+  // fetchFromMs yang SAMA (state belum keupdate kalau gagal), bukan window baru yang salah.
   let windowStart = fetchFromMs;
   let totalAdded = 0;
-  while (windowStart < Date.now()) {
-    const windowEnd = Math.min(windowStart + NINETY_DAYS_MS, Date.now());
+  let failed = false;
+  while (windowStart < nowMs && !failed) {
+    const windowEnd = Math.min(windowStart + NINETY_DAYS_MS, nowMs);
     let pageNum = 1;
     for (let i = 0; i < 20; i++) { // cap 20 halaman (2000 baris) per window -- jaga-jaga infinite loop
       const page = await mexcClient.getOrderDeals(windowStart, windowEnd, pageNum, 100).catch((e) => {
-        console.log(`[MultiAccountExecutor] Gagal getOrderDeals MEXC ${phone}/${mode} (window ${new Date(windowStart).toISOString()}-${new Date(windowEnd).toISOString()}, page ${pageNum}):`, e.message);
+        console.log(`[MultiAccountExecutor] Gagal getOrderDeals MEXC ${phone}/${mode} (window ${new Date(windowStart).toISOString()}-${new Date(windowEnd).toISOString()}, page ${pageNum}) -- STOP, coba lagi siklus berikutnya:`, e.message);
         return null;
       });
-      if (!page || !Array.isArray(page) || page.length === 0) break;
+      if (page === null) { failed = true; break; } // gagal (network/rate-limit) -- STOP TOTAL, JANGAN lanjut ke window lain
+      if (!Array.isArray(page) || page.length === 0) break; // sukses TAPI kosong -- halaman/window ini emang abis, lanjut wajar
       // Tiap deal -> 2 entry (profit + fee terpisah, biar gampang diaudit satu-satu pas verifikasi
       // manual nanti) -- id dikasih suffix biar gak collision sama entry Binance/entry lain.
       const normalized = [];
@@ -468,10 +488,11 @@ async function syncMexcOrderDeals(mexcClient, phone, mode, sinceMs) {
       totalAdded += tradeHistoryStore.mergeEntries(store, normalized);
       if (page.length < 100) break; // kurang dari page_size -- halaman terakhir
       pageNum++;
+      await _sleep(300); // jeda antar halaman -- sama alasan jeda di awal fungsi
     }
-    windowStart = windowEnd + 1;
+    if (!failed) windowStart = windowEnd + 1;
   }
-  tradeHistoryStore.saveStore(filePath, store);
+  tradeHistoryStore.saveStore(filePath, store); // simpen apapun yang UDAH kesuksesan didapat, walau berhenti di tengah
   if (totalAdded > 0) console.log(`[MultiAccountExecutor] TradeHistoryStore MEXC ${phone}/${mode}: +${totalAdded} baris baru (total tersimpan: ${store.entries.length}) -- BELUM dipakai hitung laporan, cuma disimpen.`);
 }
 

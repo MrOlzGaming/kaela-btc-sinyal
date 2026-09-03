@@ -70,6 +70,29 @@
       "pnlPct": -2.7793326346666665,
       "closeReason": "OFFLINE",
       "closedAt": "2026-09-03T14:15:18.211Z"
+    },
+    {
+      "id": "nyopet-demo-1788451209142",
+      "asset": "btc",
+      "exchange": "binance",
+      "direction": "buy",
+      "status": "floating",
+      "mode": "flag_bull",
+      "patternType": "flag_bull",
+      "entryPrice": 81276.4,
+      "sl": 75882.68,
+      "originalSl": 75882.68,
+      "tp": 92278.64000000001,
+      "partialTp": 92278.64000000001,
+      "qty": 0.036,
+      "leverage": 14,
+      "marginUsd": 213.83903582657143,
+      "nilaiPosisi": 2993.746501572,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "realizedPnlUsd": 0,
+      "triggeredAt": "2026-09-03T16:00:09.143Z",
+      "manualReason": null
     }
   ],
   "demoEraStartedAt": "2026-08-28T20:00:02.119Z",
@@ -88,7 +111,7 @@
       "touches": null
     }
   },
-  "balanceUsdc": 4989.57750262,
+  "balanceUsdc": 4779.1158204,
   "balanceUsdt": 2.664e-9,
-  "mexcBalanceUsdc": 0.01601172096
+  "mexcBalanceUsdc": 0.07596016148
 }

@@ -76,4 +76,14 @@ function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry
     + `Kalau gak sempat, gapapa -- sinyal berikutnya otomatis jalan begitu saldo cukup 🙏`;
 }
 
-module.exports = { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance };
+// Cocokin error "MEXC belum disetup buat member X" (_mexcNotConfiguredStub, multiAccountExecutor.js)
+// -- ini KONDISI NORMAL (member emang belum pasang API MEXC-nya sendiri), BUKAN bug yang perlu
+// diperbaiki di kode. Dipakai di catch-site generik biar log-nya GAK kepake kata "error"/"gagal"
+// (kalau kepake, ke-grep reportCycleErrors.js/Watchdog.gs jadi "temuan" tiap siklus 15 menit
+// SELAMANYA sampai member itu setup MEXC -- Olan komplain 4 Sep 2026: "yang memang ga error jgn
+// di report terus").
+function isMexcNotConfiguredError(message) {
+  return /MEXC belum disetup buat member/i.test(String(message || ''));
+}
+
+module.exports = { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError };

@@ -48,7 +48,7 @@ const { formatAutoOpen, formatAutoClosed, formatAutoPartial, CLOSE_REASON_LABEL 
 const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
-const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 
 const DEFAULT_JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
@@ -467,7 +467,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       try {
         await processAsset(assetCfg);
       } catch (e) {
-        console.log(`[NyopetAutoTrader] ERROR ${assetCfg.label}:`, e.message);
+        if (!isMexcNotConfiguredError(e.message)) console.log(`[NyopetAutoTrader] ERROR ${assetCfg.label}:`, e.message);
       }
     }
     await syncBalances();
@@ -500,7 +500,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
         const field = (assetCfg.exchange === 'mexc' ? 'mexcBalance' : 'balance') + capMargin;
         journal[field] = bal;
       } catch (e) {
-        console.log(`[NyopetAutoTrader] Gagal sinkron saldo ${assetCfg.label} (${assetCfg.exchange}):`, e.message);
+        if (!isMexcNotConfiguredError(e.message)) console.log(`[NyopetAutoTrader] Gagal sinkron saldo ${assetCfg.label} (${assetCfg.exchange}):`, e.message);
       }
     }
     delete journal.balance; // field lama ambigu (USDT/USDC ketuker tergantung aset mana yang terakhir buka posisi) -- dibuang, ganti field per-asset eksplisit di atas

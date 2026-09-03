@@ -28,6 +28,7 @@ const { ASSETS } = require('./assetConfig');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
+const { isMexcNotConfiguredError } = require('./balanceAlert');
 const tradeHistoryStore = require('./tradeHistoryStore');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
@@ -264,11 +265,11 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     // sama pola kayak Binance USDT/USDC di atas -- BUKAN 1 saldo gabungan lagi.
     const [mexcBalanceUsdt, mexcBalanceUsdc] = await Promise.all([
       mexcClient.getAccountBalance('USDT').catch((e) => {
-        console.log(`[MultiAccountExecutor] Saldo MEXC USDT (${account.phone}/${account.mode}) gak kebaca:`, e.message);
+        if (!isMexcNotConfiguredError(e.message)) console.log(`[MultiAccountExecutor] Saldo MEXC USDT (${account.phone}/${account.mode}) gak kebaca:`, e.message);
         return 0;
       }),
       mexcClient.getAccountBalance('USDC').catch((e) => {
-        console.log(`[MultiAccountExecutor] Saldo MEXC USDC (${account.phone}/${account.mode}) gak kebaca:`, e.message);
+        if (!isMexcNotConfiguredError(e.message)) console.log(`[MultiAccountExecutor] Saldo MEXC USDC (${account.phone}/${account.mode}) gak kebaca:`, e.message);
         return 0;
       }),
     ]);
@@ -286,7 +287,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     // akurat, gak peduli dibuka bot atau manual langsung di exchange.
     const [binancePositionsRaw, mexcPositionsRaw] = await Promise.all([
       client.getAllPositions().catch((e) => { console.log(`[MultiAccountExecutor] Gagal getAllPositions Binance (${account.phone}/${account.mode}):`, e.message); return []; }),
-      mexcClient.getAllPositions().catch((e) => { console.log(`[MultiAccountExecutor] Gagal getAllPositions MEXC (${account.phone}/${account.mode}):`, e.message); return []; }),
+      mexcClient.getAllPositions().catch((e) => { if (!isMexcNotConfiguredError(e.message)) console.log(`[MultiAccountExecutor] Gagal getAllPositions MEXC (${account.phone}/${account.mode}):`, e.message); return []; }),
     ]);
     const positions = [...binancePositionsRaw, ...mexcPositionsRaw]
       .filter((p) => p && Math.abs(parseFloat(p.positionAmt)) > 0)

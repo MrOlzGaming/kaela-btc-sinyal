@@ -176,7 +176,7 @@ function _mexcNotConfiguredStub(name) {
   // gede lingkupnya (nge-gugurin seluruh laporan saldo, bukan cuma Emas doang). `async () => {
   // throw }` balikin Promise REJECTED, itu yang bisa di-`.catch()` per-panggilan dengan benar.
   const err = async () => { throw new Error(`MEXC belum disetup buat member "${name}" -- skip Emas, BTC tetap jalan normal.`); };
-  return { getAccountBalance: err, setLeverage: err, setIsolatedMargin: err, placeMarketEntry: err, placeStopLoss: err, placeTakeProfit: err, getPositionRisk: err, cancelAllOpenOrders: err, getSymbolInfo: err, emergencyCloseMarket: err };
+  return { getAccountBalance: err, setLeverage: err, setIsolatedMargin: err, placeMarketEntry: err, placeStopLoss: err, placeTakeProfit: err, getPositionRisk: err, getAllPositions: err, cancelAllOpenOrders: err, getSymbolInfo: err, emergencyCloseMarket: err };
 }
 
 async function processAccount(account, sharedSniperOrders, adminRelay, closeRequests, mexcAccount, idrRate) {
@@ -301,8 +301,13 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       try {
         // idrRate (3 Sep 2026) -- PAKAI yang UDAH difetch SEKALI di main() (parameter fungsi ini),
         // JANGAN fetch ulang GAS di sini (dulu fetch sendiri, sekarang numpang biar gak dobel call).
+        // mexcClient (BARU, 3 Sep 2026, Olan tes buka manual di MEXC -- "kok ga ada informasi?")
+        // -- reconciler SEKARANG mantau MEXC juga, gak cuma Binance. Kalau mexcAccount member ini
+        // gak disetup, `mexcClient` di sini otomatis stub (lihat _mexcNotConfiguredStub di atas) --
+        // getAllPositions()-nya reject rapi, ketangkep try/catch INTERNAL positionReconciler.js
+        // sendiri (per-exchange), Binance tetap jalan normal.
         await reconcileWibowoPositions({
-          phone: account.phone, client, touchedSymbols,
+          phone: account.phone, client, mexcClient, touchedSymbols,
           statePath: path.join(STATE_DIR, 'wibowo-reconciler-state.json'),
           idrRate,
         });

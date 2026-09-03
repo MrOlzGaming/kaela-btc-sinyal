@@ -125,9 +125,50 @@ function createMexcClient({ apiKey, apiSecret }) {
     });
   }
 
+  // ⚠️ BUG KETEMU+FIX 3 Sep 2026 (Olan buka posisi manual di MEXC buat tes, "kok ga ada
+  // informasi?") -- fungsi ini SEBELUMNYA balikin object MENTAH dari MEXC apa adanya, TAPI field
+  // NAME-nya BEDA TOTAL dari Binance (dicek langsung ke dokumentasi resmi MEXC contract API):
+  //   holdVol (bukan positionAmt, SELALU POSITIF -- arah dari positionType terpisah)
+  //   holdAvgPrice (bukan entryPrice), positionType 1=long/2=short (bukan tanda +/- di qty),
+  //   liquidatePrice (bukan liquidationPrice), gak ada notional/unRealizedProfit sama sekali.
+  // SEMUA caller (sniperMultiAccount.js `posRisk.positionAmt`, positionReconciler.js) nulis kode
+  // ASUMSI shape Binance -- `posRisk.positionAmt` MEXC SELALU `undefined` -> parseFloat(undefined)
+  // = NaN -> Math.abs(NaN) = NaN -> qty keitung 0 PADAHAL POSISI BENERAN ADA. Ini BUKAN cuma soal
+  // notifikasi -- Sniper MEXC (Emas) yang UDAH LIVE bisa salah kira posisi "gak ada"/"udah
+  // ketutup" padahal masih floating. Fix: normalize ke shape SAMA PERSIS Binance di SINI (satu
+  // tempat), semua caller lama otomatis kebenerin tanpa disentuh.
+  async function _normalizePosition(raw) {
+    const { contractSize } = await getContractDetail(raw.symbol);
+    const qtyAsset = Number(raw.holdVol) * contractSize;
+    const sign = Number(raw.positionType) === 2 ? -1 : 1; // 1=long, 2=short
+    const entryPrice = Number(raw.holdAvgPrice) || 0;
+    return {
+      symbol: raw.symbol,
+      positionAmt: (sign * qtyAsset).toString(),
+      entryPrice: entryPrice.toString(),
+      markPrice: null, // MEXC open_positions gak balikin mark price -- gak dipakai reconciler/Sniper close-check
+      unRealizedProfit: null, // sama, gak dibalikin endpoint ini -- caller yang butuh WAJIB fetch terpisah
+      leverage: (Number(raw.leverage) || 0).toString(),
+      liquidationPrice: (Number(raw.liquidatePrice) || 0).toString(),
+      marginType: Number(raw.openType) === 1 ? 'isolated' : 'cross',
+      notional: (qtyAsset * entryPrice).toString(),
+    };
+  }
+
   async function getPositionRisk(symbol) {
     const positions = await signedRequest('GET', '/api/v1/private/position/open_positions', { symbol });
-    return (Array.isArray(positions) ? positions : []).find((p) => p.symbol === symbol) || null;
+    const raw = (Array.isArray(positions) ? positions : []).find((p) => p.symbol === symbol) || null;
+    return raw ? _normalizePosition(raw) : null;
+  }
+
+  // BARU (3 Sep 2026) -- endpoint TANPA symbol filter balikin SEMUA posisi terbuka akun ini
+  // (dikonfirmasi dokumentasi resmi: "symbol parameter optional, omitted returns all open
+  // positions"). Interface DISAMAIN persis binanceExecutor.js punya (dipakai positionReconciler.js
+  // buat pantau posisi manual APAPUN, gak cuma symbol yang bot kenal).
+  async function getAllPositions() {
+    const positions = await signedRequest('GET', '/api/v1/private/position/open_positions', {});
+    const raws = Array.isArray(positions) ? positions : [];
+    return Promise.all(raws.map((p) => _normalizePosition(p)));
   }
 
   // Quantity (aset unit, misal BTC/XAUT) -> vol (jumlah kontrak) -- WAJIB pakai contractSize
@@ -194,7 +235,7 @@ function createMexcClient({ apiKey, apiSecret }) {
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-    getPositionRisk, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
+    getPositionRisk, getAllPositions, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
   };
 }
 
@@ -227,6 +268,7 @@ async function placeMarketEntry(args) { return _defaultClient().placeMarketEntry
 async function placeStopLoss(args) { return _defaultClient().placeStopLoss(args); }
 async function placeTakeProfit(args) { return _defaultClient().placeTakeProfit(args); }
 async function getPositionRisk(symbol) { return _defaultClient().getPositionRisk(symbol); }
+async function getAllPositions() { return _defaultClient().getAllPositions(); }
 async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOpenOrders(symbol); }
 async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
 async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
@@ -234,5 +276,5 @@ async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(sym
 module.exports = {
   createMexcClient, isMexcConfigured, EXCHANGE_NAME: 'mexc',
   getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-  getPositionRisk, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
+  getPositionRisk, getAllPositions, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
 };

@@ -272,17 +272,20 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       }),
     ]);
 
-    // Bug ketemu 29 Agu 2026 (Olan: "jurnal versi real tampilan ngarang") -- loop ini CUMA cek
-    // symbol Sniper (assetConfig.js: BTCUSDT+PAXGUSDT), Nyopet BTC pakai symbol BEDA (BTCUSDC,
+    // Bug ketemu 29 Agu 2026 (Olan: "jurnal versi real tampilan ngarang") -- loop ini DULU cuma
+    // cek symbol Sniper (assetConfig.js: BTCUSDT+PAXGUSDT), Nyopet BTC pakai symbol BEDA (BTCUSDC,
     // nyopetAssetConfig.js) -- posisi Nyopet BTC real gak PERNAH kecek/muncul di "Posisi Kebuka".
-    // 30 Agu 2026 -- dipisah per exchange (Binance symbol vs execSymbol MEXC), Set biar gak
-    // double-fetch simbol yang overlap (mis. dulu PAXGUSDT dipakai 2 strategi, sekarang XAUT_USDT
-    // dipakai Sniper MEXC + PAXG_USDT dipakai Nyopet MEXC -- beda simbol, gak overlap lagi).
-    const binanceSymbols = [...new Set([...Object.values(ASSETS), ...Object.values(NYOPET_ASSETS)].filter((a) => (a.exchange || 'binance') === 'binance').map((a) => a.symbol))];
-    const mexcSymbols = [...new Set([...Object.values(ASSETS), ...Object.values(NYOPET_ASSETS)].filter((a) => a.exchange === 'mexc').map((a) => a.execSymbol))];
+    // Fix WAKTU ITU: tambahin symbol Nyopet secara eksplisit -- TAPI itu tambal SATU kasus doang.
+    // BUG SERUPA ketemu LAGI 3-4 Sep 2026 (Olan buka posisi manual BTC di MEXC buat tes, "kok ga
+    // ada informasi? jangan-jangan 4 posisi terbuka juga cuma 1 posisi buka di web") -- symbol
+    // APAPUN di luar daftar konfigurasi (ASSETS/NYOPET_ASSETS) MASIH gak pernah kecek, PERSIS pola
+    // bug yang sama, cuma beda exchange. Fix TUNTAS kali ini: getAllPositions() (TANPA filter
+    // symbol, lihat binanceExecutor.js/mexcExecutor.js) -- balikin SEMUA posisi terbuka di akun
+    // ini apapun symbol-nya, bot kenal ATAU enggak. "Posisi Kebuka" card di web sekarang selalu
+    // akurat, gak peduli dibuka bot atau manual langsung di exchange.
     const [binancePositionsRaw, mexcPositionsRaw] = await Promise.all([
-      Promise.all(binanceSymbols.map((symbol) => client.getPositionRisk(symbol).catch(() => null))),
-      Promise.all(mexcSymbols.map((symbol) => mexcClient.getPositionRisk(symbol).catch(() => null))),
+      client.getAllPositions().catch((e) => { console.log(`[MultiAccountExecutor] Gagal getAllPositions Binance (${account.phone}/${account.mode}):`, e.message); return []; }),
+      mexcClient.getAllPositions().catch((e) => { console.log(`[MultiAccountExecutor] Gagal getAllPositions MEXC (${account.phone}/${account.mode}):`, e.message); return []; }),
     ]);
     const positions = [...binancePositionsRaw, ...mexcPositionsRaw]
       .filter((p) => p && Math.abs(parseFloat(p.positionAmt)) > 0)

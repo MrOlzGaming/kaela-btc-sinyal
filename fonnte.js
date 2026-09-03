@@ -96,4 +96,32 @@ async function sendWhatsApp(message, target) {
   return { ok: allOk, results };
 }
 
-module.exports = { sendWhatsApp };
+// 3 Sep 2026, bug ketemu Olan (screenshot WA): sniperAutoAnalysis.js ("posisi bayangan, murni
+// perhitungan" -- teaser publik buat grup "BTC Sniper Club", SENGAJA gak pernah pegang uang
+// beneran, lihat header komentarnya) ikut ke-broadcast ke grup Wibowo Hedgefund juga (`target`
+// kosong = SEMUA grup di FONNTE_BROADCAST_GROUPS, gak ada cara exclude 1 grup). Grup Hedgefund
+// isinya keluarga yang beneran nitip modal REAL -- liat "posisi bayangan" di situ bikin bingung/
+// gak percaya (padahal posisi REAL Wibowo Hedgefund aman, gak kesentuh sama sekali). Fix: helper
+// broadcast baru yang bisa EXCLUDE grup tertentu, dipakai sniperAutoAnalysis.js buat nge-skip
+// Wibowo Hedgefund doang -- grup publik/teman lain tetap dapat kayak biasa.
+async function sendWhatsAppExcept(message, excludeIds) {
+  const secrets = loadSecrets();
+  if (!secrets || !secrets.FONNTE_TOKEN) {
+    console.log('[Fonnte] secrets.js belum ada / FONNTE_TOKEN kosong -- skip kirim WA (tetap jalan, cuma console+arsip).');
+    return { skipped: true };
+  }
+  const exclude = new Set(excludeIds || []);
+  const targets = resolveBroadcastTargets(secrets).filter((t) => !exclude.has(t));
+  if (targets.length === 0) {
+    console.log('[Fonnte] Gak ada grup broadcast tersisa setelah exclude -- skip.');
+    return { skipped: true };
+  }
+  const results = [];
+  for (const t of targets) {
+    results.push(await sendOne(message, t, secrets));
+  }
+  const allOk = results.every((r) => r.ok);
+  return { ok: allOk, results };
+}
+
+module.exports = { sendWhatsApp, sendWhatsAppExcept };

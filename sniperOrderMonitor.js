@@ -20,6 +20,9 @@ const { fetchWithRetry } = require('./httpRetry');
 const { sma } = require('./technicalAnalysis');
 const { isWaMuted } = require('./config');
 const { ASSETS } = require('./assetConfig');
+// idrRate (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
+// Sniper lama ini) -- getUsdIdrRate() lewat GAS SAMA yang dipakai multiAccountExecutor.js.
+const kaela = require('./kaelaProTraderClient');
 
 // data-api.binance.vision -- endpoint RESMI Binance khusus market data publik, gak kena
 // blokir geografis kayak api.binance.com (GitHub Actions runner ketauan HTTP 451 pas testing).
@@ -73,7 +76,7 @@ async function sendWhatsAppRespectMute(msg, label, silent = false) {
 
 // Proses semua order 1 ASET (candle H1/daily udah difetch khusus buat aset itu) -- diekstrak
 // dari main() (22 Agu 2026, upgrade multi-aset) biar bisa dipanggil per-grup aset.
-async function processAsset(assetKey, ordersThisAsset, now) {
+async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
   const assetCfg = ASSETS[assetKey] || ASSETS.btc;
   const candles = await fetchHourlyClosed(assetCfg.symbol, 5);
   if (candles.length === 0) {
@@ -120,7 +123,7 @@ async function processAsset(assetKey, ordersThisAsset, now) {
             status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
           });
           applyRealizedPnl(pnlUsd || 0, 'closed_sl', now); // update bankroll bayangan Kaela
-          const msg = formatClosed(updated);
+          const msg = formatClosed(updated, idrRate);
           console.log(msg + '\n');
           addEntry('sniper', msg, now);
           await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
@@ -134,7 +137,7 @@ async function processAsset(assetKey, ordersThisAsset, now) {
               status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
             });
             applyRealizedPnl(pnlUsd || 0, 'closed_sl', now);
-            const msg = formatClosed(updated);
+            const msg = formatClosed(updated, idrRate);
             console.log(msg + '\n');
             addEntry('sniper', msg, now);
             await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
@@ -145,7 +148,7 @@ async function processAsset(assetKey, ordersThisAsset, now) {
             partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd: realizedPnlUsd || 0, partialClosedAt: new Date(last.closeTime).toISOString(),
           });
           applyRealizedPnl(realizedPnlUsd || 0, 'partial_tahap1', now); // update bankroll bayangan Kaela -- cuma separuh
-          const msg = formatPartialClosed(updated);
+          const msg = formatPartialClosed(updated, idrRate);
           console.log(msg + '\n');
           addEntry('sniper', msg, now);
           await sendWhatsAppRespectMute(msg, 'target tahap 1 kena', order.silentTest);
@@ -177,7 +180,7 @@ async function processAsset(assetKey, ordersThisAsset, now) {
       // Bankroll bayangan Kaela: cuma sisa leg ini (restPnlUsd) -- porsi tahap 1 udah
       // diaplikasikan pas partial kena, jangan dobel-hitung.
       applyRealizedPnl(restPnlUsd || 0, hitBreakevenSl ? 'closed_sl_breakeven' : 'closed_trail', now);
-      const msg = formatClosed(updated);
+      const msg = formatClosed(updated, idrRate);
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh', order.silentTest);
@@ -204,7 +207,7 @@ async function processAsset(assetKey, ordersThisAsset, now) {
       closeReason: isTP ? 'TP' : 'SL',
       exitPrice, pnlPct, pnlUsd,
     });
-    const msg = formatClosed(updated);
+    const msg = formatClosed(updated, idrRate);
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'posisi ditutup', order.silentTest);
@@ -221,13 +224,17 @@ async function main() {
     return;
   }
 
+  // idrRate (4 Sep 2026) -- fetch SEKALI per run (bukan per-order), null-safe kalau gagal (fallback
+  // USD doang, formatClosed/formatPartialClosed di sniperOrderLog.js udah handle null).
+  const idrRate = await kaela.getUsdIdrRate().catch(() => null);
+
   const byAsset = {};
   for (const order of active) {
     const key = order.asset || 'btc';
     (byAsset[key] = byAsset[key] || []).push(order);
   }
   for (const assetKey of Object.keys(byAsset)) {
-    await processAsset(assetKey, byAsset[assetKey], now);
+    await processAsset(assetKey, byAsset[assetKey], now, idrRate);
   }
 }
 

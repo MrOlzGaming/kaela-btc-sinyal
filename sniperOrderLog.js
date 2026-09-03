@@ -7,6 +7,10 @@ const { WEB_URL, toLocal } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 const { getExtremeFearGreedNote } = require('./fearGreedInsight');
 const { ASSETS } = require('./assetConfig');
+// fmtUsdWithIdr (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
+// Sniper lama ini juga, biar konsisten) -- REUSE dari darkKaelaLog.js (SATU sumber format IDR,
+// gak duplikat). `idrRate` OPSIONAL, null/gagal -> fallback USD doang, gak gugurin pesan.
+const { fmtUsdWithIdr } = require('./darkKaelaLog');
 
 // assetLabel (22 Agu 2026, upgrade multi-aset) -- semua fungsi format di bawah TERIMA order yang
 // sekarang punya field `order.asset` ('btc'/'xau') -- fallback ke ASSETS.btc kalau order LAMA
@@ -93,7 +97,7 @@ function formatTriggered(order) {
   ].join('\n');
 }
 
-function formatClosed(order) {
+function formatClosed(order, idrRate) {
   const asset = assetOf(order);
   const won = order.status === 'closed_tp';
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
@@ -107,7 +111,7 @@ function formatClosed(order) {
     `Entry: ${fmt(order.entryPrice)}`,
     `Exit (${order.closeReason || (won ? 'TP' : 'SL')}): ${fmt(order.exitPrice ?? (won ? order.tp : order.sl))}`,
     order.partialDone ? `(Ini penutupan sisa posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)` : '',
-    `P&L TOTAL: ${pnlSign}${fmt(Math.abs(order.pnlUsd))} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
+    `P&L TOTAL: ${order.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.pnlUsd, idrRate)} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,
@@ -118,16 +122,15 @@ function formatClosed(order) {
 // pas kena target 2R, SL sisanya digeser ke breakeven (gak bisa rugi lagi dari titik ini), sisa
 // separuh di-trail pakai SMA harian sampai momentum patah. Notifikasi TERPISAH dari formatClosed
 // (posisi BELUM full closed, cuma dikurangin).
-function formatPartialClosed(order) {
+function formatPartialClosed(order, idrRate) {
   const asset = assetOf(order);
-  const pnlSign = order.realizedPnlUsd >= 0 ? '+' : '-';
   return [
     `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
     `Entry: ${fmt(order.entryPrice)}`,
-    `Separuh posisi diamankan @ ${fmt(order.partialTp)} -- P&L separuh: ${pnlSign}${fmt(Math.abs(order.realizedPnlUsd))}`,
+    `Separuh posisi diamankan @ ${fmt(order.partialTp)} -- P&L separuh: ${order.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.realizedPnlUsd, idrRate)}`,
     `SL sisa separuh digeser ke BREAKEVEN (${fmt(order.entryPrice)}) -- gak bisa rugi lagi dari sini.`,
     `Sisa separuh di-trail pakai SMA${order.trailSmaLen} harian -- ditutup kalau momentum patah, biar gak buru-buru lepas semua pas trend masih jalan.`,
     '',

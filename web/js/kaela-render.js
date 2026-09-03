@@ -804,14 +804,14 @@
       : '';
 
     const buyLogHtml = spotState.buyLog.length > 0
-      ? `<div class="spot-buy-log"><table>
+      ? `<div class="spot-buy-log" style="overflow-x:auto;"><table>
           <thead><tr><th>${rt('date')}</th><th>${rt('btc_price')}</th><th>${rt('btc_received')}</th></tr></thead>
           <tbody>${spotState.buyLog.slice().reverse().map((b) => `<tr><td>${fmtDateLong(new Date(b.date))}</td><td>${fmtUsdOrder(b.price)}</td><td>${b.btcBought.toFixed(8)}</td></tr>`).join('')}</tbody>
         </table></div>`
       : `<div class="empty">${rt('no_buys_this_cycle')}</div>`;
 
     const cyclesHtml = spotState.completedCycles.length > 0
-      ? `<table class="spot-cycle-table">
+      ? `<div style="overflow-x:auto;"><table class="spot-cycle-table">
           <thead><tr><th>${rt('buy_start')}</th><th>${rt('sold')}</th><th>${rt('capital')}</th><th>${rt('sale_proceeds')}</th><th>P&amp;L</th></tr></thead>
           <tbody>${spotState.completedCycles.slice().reverse().map((c) => `<tr>
             <td>${c.buyWindowStart ? fmtDateLong(new Date(c.buyWindowStart)) : '-'}</td>
@@ -820,7 +820,7 @@
             <td>${fmtUsdOrder(c.proceedsUsd)}</td>
             <td class="${c.pnlUsd >= 0 ? 'up' : 'down'}">${c.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(c.pnlUsd)} (${c.pnlPct >= 0 ? '+' : ''}${c.pnlPct.toFixed(1)}%)</td>
           </tr>`).join('')}</tbody>
-        </table>`
+        </table></div>`
       : '';
 
     const spotDisclaimer = rt('spot_demo_disclaimer').replace('$AMT', String(SPOT_DAILY_BUY_USD));
@@ -863,13 +863,13 @@
   function renderWalletDetail(symbol, coinState) {
     const label = coinLabelAlt(symbol);
     const buyLogHtml = coinState.buyLog.length > 0
-      ? `<div class="spot-buy-log"><table>
+      ? `<div class="spot-buy-log" style="overflow-x:auto;"><table>
           <thead><tr><th>${rt('date')}</th><th>${rt('amount')}</th><th>${rt('price')}</th><th>${rt('qty')}</th></tr></thead>
           <tbody>${coinState.buyLog.slice().reverse().map((b) => `<tr><td>${fmtDateLong(new Date(b.date))}</td><td>${fmtUsdOrder(b.usdAmount)}</td><td>${fmtUsdOrder(b.price)}</td><td>${b.qty.toFixed(6)}</td></tr>`).join('')}</tbody>
         </table></div>`
       : `<div class="empty">${rt('no_buys_of')} ${label} ${rt('in_this_cycle')}</div>`;
     const cyclesHtml = coinState.completedCycles.length > 0
-      ? `<table class="spot-cycle-table">
+      ? `<div style="overflow-x:auto;"><table class="spot-cycle-table">
           <thead><tr><th>${rt('buy_start')}</th><th>${rt('sold')}</th><th>${rt('capital')}</th><th>${rt('sale_proceeds')}</th><th>P&amp;L</th></tr></thead>
           <tbody>${coinState.completedCycles.slice().reverse().map((c) => `<tr>
             <td>${c.buyWindowStart ? fmtDateLong(new Date(c.buyWindowStart)) : '-'}</td>
@@ -878,7 +878,7 @@
             <td>${fmtUsdOrder(c.proceedsUsd)}</td>
             <td class="${c.pnlUsd >= 0 ? 'up' : 'down'}">${c.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(c.pnlUsd)} (${c.pnlPct >= 0 ? '+' : ''}${c.pnlPct.toFixed(1)}%)</td>
           </tr>`).join('')}</tbody>
-        </table>`
+        </table></div>`
       : '';
     return `<div class="wallet-detail" id="wallet-detail-${symbol}">
       <div class="journal-section-title">${rt('wallet_purchase_journal')} ${label} — ${rt('purchase_journal')}</div>
@@ -1072,7 +1072,7 @@
     }
 
     const historyHtml = closed.length > 0
-      ? `<table class="spot-cycle-table">
+      ? `<div style="overflow-x:auto;"><table class="spot-cycle-table">
           <thead><tr><th>${rt('asset')}</th><th>${rt('direction')}</th><th>${rt('mode')}</th><th>${rt('entry').replace(':', '')}</th><th>${rt('exit').replace(':', '')}</th><th>${rt('result')}</th><th>PNL</th><th>${rt('date')}</th></tr></thead>
           <tbody>${closed.map((o) => `<tr>
             <td>${NYOPET_ASSETS_WEB[o.asset] ? NYOPET_ASSETS_WEB[o.asset].emoji + ' ' + NYOPET_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
@@ -1084,7 +1084,7 @@
             <td class="${(o.pnlUsd || 0) >= 0 ? 'up' : 'down'}">${fmtSignedUsd(o.pnlUsd || 0)}</td>
             <td>${fmtDateLong(new Date(o.closedAt))}</td>
           </tr>`).join('')}</tbody>
-        </table>`
+        </table></div>`
       : `<div class="empty">${rt('no_trade_done_short')}</div>`;
 
     // Sama kayak fix renderJurnalPanel Sniper (29 Agu 2026) -- statistik ringkasan ditahan dulu

@@ -27,6 +27,7 @@ const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = r
 const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine, getTrackRecordSummary } = require('./trackRecord');
 const { fetchAdvancedMacroContext, classifyFedRateTrend, classifyCreditSpreadTrend, formatMacroPackageLines } = require('./advancedMacro');
 const { checkGoldCotPriceDivergence, checkCalmBeforeStorm, checkPriceNuplDivergence, formatDivergenceLines } = require('./divergenceDetector');
+const kaela = require('./kaelaProTraderClient');
 const fs = require('fs');
 const path = require('path');
 
@@ -260,8 +261,11 @@ async function main() {
   // Laporan Emas -- jadwal SAMA kayak BTC (harian tiap hari, mingguan Senin, dst), key `type`
   // BEDA (suffix -gold) biar dedup archive.js gak ketuker sama laporan BTC. goldMacro udah
   // di-fetch di atas (dipakai bareng laporan BTC juga -- lihat komentar "info dxy berpaket").
+  // idrRate (3 Sep 2026, permintaan Olan: "ada rupiahnya") -- 1x fetch dipakai ulang buat semua
+  // laporan Emas (harian/mingguan/bulanan/tahunan), null-safe (lihat getUsdIdrRate).
+  const goldIdrRate = goldPriceToday !== null ? await kaela.getUsdIdrRate() : null;
   if (goldPriceToday !== null && goldPriceYesterday !== null) {
-    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro: goldMacro, advancedMacro }) });
+    items.push({ type: 'report-daily-gold', content: generateGoldDaily(now, goldPriceToday, goldPriceYesterday, { macro: goldMacro, advancedMacro, idrRate: goldIdrRate }) });
   }
   // computeGoldConviction -- SYARAT SAMA kayak laporan harian Emas, BUKAN lagi terkunci Senin.
   // COT (CFTC) TETAP di-gate weekly (`willSendWeeklyGold`) -- itu data itu sendiri cuma terbit
@@ -286,7 +290,7 @@ async function main() {
     if (willSendWeeklyGold) {
       const goldPriceChangePct = ((goldPriceToday - goldPriceLastWeek) / goldPriceLastWeek) * 100;
       const goldDivergences = [checkGoldCotPriceDivergence(cot, goldPriceChangePct)].filter(Boolean);
-      const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro: goldMacro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null })
+      const weeklyGoldMsg = generateGoldWeekly(now, goldPriceToday, goldPriceLastWeek, { macro: goldMacro, cot, regime, yieldCurve: advancedMacro?.yieldCurve || null, idrRate: goldIdrRate })
         + '\n\n' + formatConvictionLines(conviction).join('\n')
         + '\n' + formatTrackRecordLine('xau')
         + formatDivergenceLines(goldDivergences).join('\n');
@@ -299,10 +303,10 @@ async function main() {
     fs.writeFileSync(path.join(__dirname, 'analyst-dashboard.json'), JSON.stringify(dashboardData, null, 2));
   }
   if (local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastMonth !== null) {
-    items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth) });
+    items.push({ type: 'report-monthly-gold', content: generateGoldMonthly(now, goldPriceToday, goldPriceLastMonth, { idrRate: goldIdrRate }) });
   }
   if (local.getUTCMonth() === 0 && local.getUTCDate() === 1 && goldPriceToday !== null && goldPriceLastYear !== null) {
-    items.push({ type: 'report-yearly-gold', content: generateGoldYearly(now, goldPriceToday, goldPriceLastYear) });
+    items.push({ type: 'report-yearly-gold', content: generateGoldYearly(now, goldPriceToday, goldPriceLastYear, { idrRate: goldIdrRate }) });
   }
 
   for (const item of items) {

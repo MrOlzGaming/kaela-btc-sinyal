@@ -20,7 +20,10 @@ const NYOPET_ASSETS = {
   // 30 Agu 2026 -- symbol eksekusi PAXG_USDC (MEXC, margin USDC -- verified LIVE via
   // contract/detail MEXC: contractSize 0.001, quoteCoin USDC, state aktif). zoneSymbol TETAP
   // PAXGUSDT/Binance (chart-nya udah lama+konsisten, gak ada alasan pindah cuma buat baca zona).
-  xau: { key: 'xau', symbol: 'PAXG_USDC', exchange: 'mexc', marginAsset: 'USDC', zoneSymbol: 'PAXGUSDT', label: 'PAXG_USDC', emoji: '🟡' },
+  // 3 Sep 2026 -- label direvisi dari literal token MEXC (PAXG_USDC) ke gaya Binance-style
+  // (base XAU + quote margin USDC, samain pola BTCUSDC di atas) -- Olan bingung nemu "XAUT/PAXG"
+  // di pesan, expect "XAU" (lihat assetConfig.js Sniper buat penjelasan lengkap).
+  xau: { key: 'xau', symbol: 'PAXG_USDC', exchange: 'mexc', marginAsset: 'USDC', zoneSymbol: 'PAXGUSDT', label: 'XAUUSDC', emoji: '🟡' },
 };
 
 module.exports = { NYOPET_ASSETS };

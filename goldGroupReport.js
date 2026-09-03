@@ -13,6 +13,22 @@ function fmtPct(p) {
   return `${p >= 0 ? '📈 +' : '📉 '}${p.toFixed(1)}%`;
 }
 
+// 3 Sep 2026, permintaan Olan: "ada rupiahnya, termasuk rupiah per gram, mengingat Indonesia
+// lebih ke satuan gram, tapi satuan Oz tetep biarkan -- jadi ada kombinasi". priceOz itu harga
+// PAXGUSDT (1 token = 1 troy ounce emas asli), konversi ke gram pakai faktor standar (1 troy oz
+// = 31.1034768 gram). idrRate null/gagal ambil -> tampil USD doang, JANGAN gagalin laporan cuma
+// gara-gara kurs gak kebaca (pola sama kayak positionReconciler.js).
+const GRAMS_PER_TROY_OZ = 31.1034768;
+function fmtGoldPriceLine(priceOz, idrRate) {
+  const priceGram = priceOz / GRAMS_PER_TROY_OZ;
+  const ozUsd = `$${priceOz.toLocaleString('en-US', { maximumFractionDigits: 2 })}/oz`;
+  const gramUsd = `$${priceGram.toLocaleString('en-US', { maximumFractionDigits: 2 })}/gram`;
+  if (!idrRate) return `${ozUsd} atau ${gramUsd}`;
+  const ozIdr = Math.round(priceOz * idrRate).toLocaleString('id-ID');
+  const gramIdr = Math.round(priceGram * idrRate).toLocaleString('id-ID');
+  return `${ozUsd} (≈Rp${ozIdr}) atau ${gramUsd} (≈Rp${gramIdr})`;
+}
+
 // Konteks makro DXY + real yield (22 Agu 2026, lihat macroData.js) -- opsional/best-effort,
 // null-safe kalau FRED gagal diambil. Ini yang beneran gerakin Emas secara fundamental, bukan
 // cuma chart pattern.
@@ -63,7 +79,7 @@ function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
   });
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 Update XAU/Emas — ${localDateKey(now)}`,
-    `Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`,
+    `Harga sekarang: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari kemarin)`,
     ...macroPackage,
     '',
     `🔗 ${WEB_URL}`,
@@ -74,7 +90,7 @@ function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 📆 Laporan Mingguan Emas — minggu ${localDateKey(now)}`,
-    `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
+    `Harga: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari minggu lalu)`,
     ...macroLines(opts.macro),
     ...cotLines(opts.cot),
     ...regimeLines(opts.regime),
@@ -84,21 +100,21 @@ function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
   ].join('\n');
 }
 
-function generateGoldMonthly(now, priceToday, priceLastMonth) {
+function generateGoldMonthly(now, priceToday, priceLastMonth, opts = {}) {
   const change = pctChange(priceToday, priceLastMonth);
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 🗓️ Laporan Bulanan Emas — ${localDateKey(now).slice(0, 7)}`,
-    `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari bulan lalu)`,
+    `Harga: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari bulan lalu)`,
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');
 }
 
-function generateGoldYearly(now, priceToday, priceLastYear) {
+function generateGoldYearly(now, priceToday, priceLastYear, opts = {}) {
   const change = pctChange(priceToday, priceLastYear);
   return [
     `${CATEGORY_COLOR.laporan.emoji} 🟡 📅 Laporan Tahunan Emas — ${now.getUTCFullYear()}`,
-    `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari tahun lalu)`,
+    `Harga: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari tahun lalu)`,
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

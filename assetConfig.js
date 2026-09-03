@@ -32,9 +32,11 @@ const ASSETS = {
     // simbolnya walau dua-duanya sekarang eksekusi di MEXC.
     execSymbol: 'XAUT_USDT',
     exchange: 'mexc',
-    // Label dipisah dari execSymbol (30 Agu 2026) -- tampilan/journal boleh nunjukin simbol
-    // eksekusi asli (XAUT_USDT) biar gak bingung sama Nyopet Emas (PAXG_USDT).
-    label: 'XAUT_USDT',
+    // Label dipisah dari execSymbol (30 Agu -> revisi 3 Sep 2026). Sempat dicoba label = execSymbol
+    // asli (XAUT_USDT) biar 1:1 sama app MEXC, TAPI Olan malah bingung/kaget nemu "XAUT USDT" --
+    // dia expect "XAU" (ticker Emas yang dia kenal, gaya Binance BTCUSDT/PAXGUSDT), bukan nama token
+    // MEXC. Balik ke gaya Binance-style: base XAU + quote margin asset (USDT), BUKAN literal MEXC.
+    label: 'XAUUSDT',
     emoji: '🟡',
     useHalvingBearWindow: false,
   },

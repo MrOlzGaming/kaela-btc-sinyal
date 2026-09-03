@@ -275,7 +275,23 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       exitPrice = remainingQty > 0 ? (order.direction === 'buy' ? order.entryPrice + legPnlUsd / remainingQty : order.entryPrice - legPnlUsd / remainingQty) : order.entryPrice;
     } else {
       const closeOrder = await exec.emergencyCloseMarket({ symbol, direction: order.direction, quantity: remainingQty });
-      exitPrice = parseFloat(closeOrder.avgPrice) || order.sl;
+      // ⚠️ BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan: "dipertanyakan apa itu -300 dolar!" -- posisi
+      // REAL untung +$3.84 asli di Binance, tapi WA ngirim "-$306.94" -- kesalahan MURNI di sini,
+      // BUKAN kerugian beneran). Root cause: `closeOrder.avgPrice` kadang balik "0"/kosong sesaat
+      // (order market BARU submit, belum sempat fill KETIKA respons balik -- sama kelas bug yang
+      // udah difix buat ENTRY via waitForFill di binanceExecutor.js, tapi emergencyCloseMarket
+      // TERNYATA gak punya penjamin yang sama). Fallback LAMA `|| order.sl` FATAL kalau order.sl
+      // null (posisi "legacy"/direkonstruksi manual, gak ada SL asli tercatat) -- exitPrice jadi
+      // null, null-0 di aritmatika JS jadi 0, PnL keitung dari "exit $0" (rugi 100% harga entry).
+      // Fix: kalau avgPrice gak kebaca, JANGAN nebak dari field lain -- tanya harga LIVE SEKARANG
+      // (real, bukan fallback ngarang), dan PnL dari situ MASUK AKAL (mendekati unrealized profit
+      // yang keliatan sebelum ditutup), BUKAN entry-ke-nol yang mustahil buat market order normal.
+      let avgPrice = parseFloat(closeOrder.avgPrice);
+      if (!avgPrice) {
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: closeOrder.avgPrice gak kebaca ("${closeOrder.avgPrice}") -- ambil harga live SEKARANG buat exitPrice, JANGAN fallback ke order.sl (bisa null/nyesatin).`);
+        avgPrice = await fetchLivePrice(symbol, assetCfg.exchange);
+      }
+      exitPrice = avgPrice;
       legPnlUsd = order.direction === 'buy' ? (exitPrice - order.entryPrice) * remainingQty : (order.entryPrice - exitPrice) * remainingQty;
     }
     const totalPnlUsd = (order.realizedPnlUsd || 0) + legPnlUsd;
@@ -334,8 +350,16 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // ini LEGACY -- tutup PENUH (bukan partial, itu bukan desain skema lama) begitu kena liqPrice
       // ATAU tp, PERSIS logika single-TP/SL yang berlaku pas posisi ini dibuka.
       if (floating.sl == null) {
-        const legacyHitSl = floating.direction === 'buy' ? livePrice <= floating.liqPrice : livePrice >= floating.liqPrice;
-        const legacyHitTp = floating.direction === 'buy' ? livePrice >= floating.tp : livePrice <= floating.tp;
+        // ⚠️ BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan: "dipertanyakan apa itu -300 dolar!") -- komentar
+        // di atas ("livePrice >= undefined SELALU false") CUMA bener kalau field-nya kebener KOSONG
+        // (undefined, property gak pernah ke-set). Tapi kalau field-nya di-set EXPLICIT `null` (kejadian
+        // nyata: posisi direkonstruksi manual dari live position, `tp` sengaja null krn gak tau TP
+        // aslinya) -- `livePrice >= null` di JS itu `livePrice >= 0`, SELALU TRUE buat harga real
+        // manapun! Posisi ke-anggap "TP kena" instan di cek PERTAMA, ditutup market order asal-asalan.
+        // Fix: guard EKSPLISIT `!= null` (nangkep null MAUPUN undefined) sebelum bandingin harga --
+        // liqPrice/tp yang gak ada/null artinya "gak tau, JANGAN pernah anggap kena".
+        const legacyHitSl = floating.liqPrice != null && (floating.direction === 'buy' ? livePrice <= floating.liqPrice : livePrice >= floating.liqPrice);
+        const legacyHitTp = floating.tp != null && (floating.direction === 'buy' ? livePrice >= floating.tp : livePrice <= floating.tp);
         if (legacyHitSl || legacyHitTp) {
           console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi LEGACY (pre-v2) kena ${legacyHitSl ? 'liq/SL' : 'TP'} (${livePrice}) -- tutup penuh.`);
           await closePosition(assetCfg, floating, { alreadyClosed: false, reason: legacyHitSl ? 'SL' : 'MANUAL', manualNote: 'Posisi legacy pre-v2, exit tunggal liq/tp (skema lama, gak ikut partial/trail v2).' });

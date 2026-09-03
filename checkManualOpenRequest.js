@@ -90,7 +90,7 @@ async function processRequest(req, adminRelay) {
       const nyawaPct = Number(req.nyawaPct);
       sl = req.direction === 'buy' ? livePrice * (1 - nyawaPct / 100) : livePrice * (1 + nyawaPct / 100);
     }
-    const order = await trader.openPosition(assetCfg, { direction: req.direction, sl, patternType: 'manual' }, livePrice);
+    const order = await trader.openPosition(assetCfg, { direction: req.direction, sl, patternType: 'manual', manualReason: req.reason }, livePrice);
     if (!order) {
       await kaela.resolveManualOpenRequest(req.requestId, 'failed', 'Gagal buka posisi -- SL sama persis harga entry (jarak nyawa nol), coba ulang dengan SL beda.');
       return;

@@ -44,7 +44,7 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed, formatAutoPartial } = require('./darkKaelaLog');
+const { formatAutoOpen, formatAutoClosed, formatAutoPartial, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
@@ -217,6 +217,11 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
       partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
       triggeredAt: new Date().toISOString(),
+      // 3 Sep 2026, permintaan Olan ("kasih alasan buka posisi bagi Olan, kolom text di web") --
+      // CUMA keisi kalau sig.patternType==='manual' (dari checkManualOpenRequest.js, teks yang
+      // Olan ketik di popup alasan web). null buat sinyal OTOMATIS -- formatAutoOpen ambil alasan
+      // dari pattern (patternReason) di kasus itu, bukan dari field ini.
+      manualReason: sig.manualReason || null,
     };
     const journal = loadJournal();
     journal.orders.push(order);
@@ -308,9 +313,12 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     if (reconciliationNote) target.reconciliationNote = reconciliationNote;
     saveJournal(journal);
 
-    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, assetLabel: assetCfg.label }, new Date(), isDemo)
-      + (alreadyClosed ? '\n\n(⏳ Kelikuidasi PAS lagi offline -- baru kesinkronin sekarang begitu online lagi.)' : '')
-      + (manualNote ? `\n\n(${manualNote})` : '');
+    // 3 Sep 2026, permintaan Olan ("alasan boleh saat pencet.. tutup posisi") -- alasan TUTUP:
+    // manual (Olan) pakai teks yang DIA TULIS di popup web (`manualNote`, sekarang isinya teks
+    // asli, bukan lagi kalimat generik "Ditutup MANUAL atas permintaan X" -- lihat forceClosePosition),
+    // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
+    const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
+    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });
@@ -499,15 +507,19 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // 28 Agu 2026, permintaan Olan: "user pengen fasilitas tutup posisi dari Kaela Access, aku
   // sebagai master juga diizinkan bantu buka/tutup posisi member" -- dipanggil dari
   // multiAccountExecutor.js kalau ada antrian di Sheet CloseRequests (lihat Sheet.gs) yang cocok
-  // sama akun ini. `requestedBy` cuma buat catatan di pesan WA (siapa yang minta tutup).
-  async function forceClosePosition(assetKey, requestedBy) {
+  // sama akun ini. `requestedBy` cuma buat catatan/fallback (siapa yang minta tutup). `reason`
+  // (BARU, 3 Sep 2026) -- teks alasan yang Olan TULIS SENDIRI di popup web (self-close, lihat
+  // dashboard.html) -- kalau diisi, ini yang jadi "Alasan:" di pesan WA (bukan kalimat generik).
+  // "Tutup Posisi Client" (admin nutupin MEMBER LAIN) TETAP gak ngirim `reason` -- fallback
+  // generik di bawah TETAP jalan buat jalur itu, SENGAJA gak diubah (dikonfirmasi scope Olan).
+  async function forceClosePosition(assetKey, requestedBy, reason) {
     const assetCfg = Object.values(NYOPET_ASSETS).find((a) => a.key === assetKey);
     if (!assetCfg) return { ok: false, error: `Asset "${assetKey}" gak dikenal.` };
     const journal = loadJournal();
     const order = getFloatingOrder(journal, assetKey);
     if (!order) return { ok: false, error: `Gak ada posisi floating buat ${assetCfg.label}.` };
 
-    const manualNote = requestedBy ? `🙋 Ditutup MANUAL atas permintaan ${requestedBy}` : '🙋 Ditutup MANUAL';
+    const manualNote = reason || (requestedBy ? `Ditutup manual atas permintaan ${requestedBy}` : 'Ditutup manual');
     await closePosition(assetCfg, order, { alreadyClosed: false, reason: 'MANUAL', manualNote });
     return { ok: true };
   }

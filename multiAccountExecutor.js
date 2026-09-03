@@ -127,7 +127,14 @@ const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
 // diambil SEKALI per siklus (bukan per-akun) di main(), biar gak spam GAS call berkali-kali.
 function buildSendWA(account, adminRelay) {
   return async (message) => {
-    const full = `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}\n\nCek jurnal/status posisi kamu: ${KAELA_ACCESS_URL}`;
+    // 3 Sep 2026: pesan Sniper/Nyopet/Reconciler SEKARANG udah selalu nyelipin link sendiri di
+    // body (desain terpadu, lihat darkKaelaLog.js) -- kalau udah ada, JANGAN tambahin trailer lagi
+    // (dobel link). Pesan LAIN (saldo kosong/DCA/dst) yang belum bawa link sendiri tetep dapet
+    // trailer ini seperti biasa.
+    const hasOwnLink = message.includes('kaela-access.netlify.app');
+    const full = hasOwnLink
+      ? `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}`
+      : `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}\n\nCek jurnal/status posisi kamu: ${KAELA_ACCESS_URL}`;
     // 29 Agu 2026, permintaan Olan: "ga semua minta notif demo" -- opt-out PRIBADI per member
     // (account.notifyDemo, default true, lihat Sheet.gs getActiveTradingUsers). Real TIDAK di-gate --
     // itu duit sungguhan, semua member wajib tau tanpa kecuali.
@@ -198,7 +205,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     // Strategy baru ditambahin biar Sniper juga bisa ditutup manual, lihat blok Sniper di bawah).
     const myNyopetCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode && r.strategy === 'nyopet');
     for (const req of myNyopetCloseRequests) {
-      const result = await nyopetTrader.forceClosePosition(req.asset, req.requestedBy);
+      const result = await nyopetTrader.forceClosePosition(req.asset, req.requestedBy, req.reason);
       console.log(`[MultiAccountExecutor] Tutup manual Nyopet ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
     }
     await nyopetTrader.main();

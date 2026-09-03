@@ -19,6 +19,24 @@ const { roundToStepSize } = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
 const path = require('path');
+// 3 Sep 2026, permintaan Olan ("bedakan badge dan emojinya.. desain konsisten") -- REUSE helper
+// desain pesan terpadu dari darkKaelaLog.js (1 sumber format, badge beda per strategi: 🎯 SNIPER
+// di sini vs 🥷 NYOPET di darkKaelaLog.js).
+const { fmtUsd, shortId, KAELA_ACCESS_URL } = require('./darkKaelaLog');
+
+// Pesan "Tutup Posisi" terpadu (3 Sep 2026) -- dipakai SEMUA 4 jalur close (liquidasi/SL sebelum
+// partial, leg2 liquidasi, trend patah trailing, manual) biar formatnya SAMA PERSIS, cuma teks
+// "Alasan" yang beda per jalur.
+function _sniperCloseMsg(assetCfg, mirror, entryRef, exitPrice, pnlUsd, alasan) {
+  const dirLabel = mirror.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT';
+  return `🎯 SNIPER ${assetCfg.label} ${shortId(mirror.originalOrderId)} — Tutup Posisi
+
+${pnlUsd >= 0 ? '✅' : '❌'} ${dirLabel} ${fmtUsd(entryRef)}→${fmtUsd(exitPrice)}
+PnL: ${pnlUsd >= 0 ? '+' : ''}${fmtUsd(pnlUsd)}
+Alasan: ${alasan}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
 
 // `mexcClient` (BARU, 30 Agu 2026, migrasi eksekusi Emas -- lihat memori
 // project-kaela-multi-exchange) -- default ke mexcExecutor.js singleton (akun Olan sendiri) kayak
@@ -95,7 +113,17 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     };
     state.orders.push(mirror);
     saveState(state);
-    await notify(`🎯 [Sniper] Entry ${assetCfg.label} ${mirror.direction.toUpperCase()} @ ${mirror.entryPriceReal} -- leverage ${mirror.leverage}x, margin $${mirror.marginUsd.toFixed(2)}.`);
+    // Alasan (3 Sep 2026, permintaan Olan) -- REUSE confirmationNote yang UDAH tersimpan di
+    // sniper-orders.json (sniperOrderLog.js `formatAutoValid` pakai field yang sama) -- SEBELUM
+    // ini gak kepake sama sekali di pesan mirror akun lain, cuma leverage/margin doang.
+    const alasanOpen = (originalOrder.confirmationNote || '').split('.')[0] || 'Chart Pattern/FVG terkonfirmasi (lihat detail di web)';
+    await notify(`🎯 SNIPER ${assetCfg.label} ${shortId(mirror.originalOrderId)} — Buka Posisi
+
+${mirror.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT'} @ ${fmtUsd(mirror.entryPriceReal)}
+Leverage ${mirror.leverage}x · Margin $${mirror.marginUsd.toFixed(2)}
+Alasan: ${alasanOpen}
+
+🔗 ${KAELA_ACCESS_URL}`);
     emit({ entryId: mirror.originalOrderId, type: 'open', strategy: 'sniper', asset: mirror.asset, direction: mirror.direction, entryPrice: mirror.entryPriceReal, sl: mirror.sl, tp: mirror.tp, leverage: mirror.leverage, marginUsd: mirror.marginUsd, status: 'open', openedAt: mirror.openedAt });
     return mirror;
   }
@@ -118,7 +146,13 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     const target = state.orders.find((o) => o.originalOrderId === mirror.originalOrderId);
     target.leg2 = { qty: leg2Qty, entryPrice: leg2Entry, leverage: calc.leverage, openedAt: new Date().toISOString() };
     saveState(state);
-    await notify(`🎯 [Sniper] ${assetCfg.label}: partial TP kena -- leg2 dibuka @ ${leg2Entry}, target likuidasi ~breakeven ${mirror.entryPriceReal.toFixed(2)}.`);
+    await notify(`🎯 SNIPER ${assetCfg.label} ${shortId(mirror.originalOrderId)} — Partial TP Diamankan
+
+🟡 Leg2 dibuka @ ${fmtUsd(leg2Entry)}
+Target likuidasi ~breakeven ${fmtUsd(mirror.entryPriceReal)}
+Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
+
+🔗 ${KAELA_ACCESS_URL}`);
   }
 
   function finalize(mirror, pnlUsd) {
@@ -150,7 +184,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
         const livePrice = await fetchLivePrice(execSymbol, assetCfg.exchange);
         const pnlUsd = mirror.direction === 'buy' ? (livePrice - mirror.entryPriceReal) * mirror.filledQty : (mirror.entryPriceReal - livePrice) * mirror.filledQty;
         const closed = finalize(mirror, pnlUsd);
-        await notify(`🎯 [Sniper] ${assetCfg.label}: posisi ditutup (kelikuidasi/SL) -- estimasi PNL $${pnlUsd.toFixed(2)}.`);
+        await notify(_sniperCloseMsg(assetCfg, mirror, mirror.entryPriceReal, livePrice, pnlUsd, 'Stop Loss/likuidasi kena sebelum sempat partial TP (estimasi PNL, belum lewat income history)'));
         return closed;
       }
       if (posQty < mirror.filledQty * 0.75) {
@@ -163,7 +197,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
       const livePrice = await fetchLivePrice(execSymbol, assetCfg.exchange);
       const pnlUsd = mirror.direction === 'buy' ? (livePrice - mirror.leg2.entryPrice) * mirror.leg2.qty : (mirror.leg2.entryPrice - livePrice) * mirror.leg2.qty;
       const closed = finalize(mirror, pnlUsd);
-      await notify(`🎯 [Sniper] ${assetCfg.label}: leg2 ditutup (kelikuidasi/breakeven) -- estimasi PNL $${pnlUsd.toFixed(2)}.`);
+      await notify(_sniperCloseMsg(assetCfg, mirror, mirror.leg2.entryPrice, livePrice, pnlUsd, 'Leg2 (breakeven) kena likuidasi/SL'));
       return closed;
     }
 
@@ -178,7 +212,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
       const exitPrice = parseFloat(closeOrder.avgPrice) || lastClose;
       const pnlUsd = mirror.direction === 'buy' ? (exitPrice - mirror.leg2.entryPrice) * mirror.leg2.qty : (mirror.leg2.entryPrice - exitPrice) * mirror.leg2.qty;
       const closed = finalize(mirror, pnlUsd);
-      await notify(`🎯 [Sniper] ${assetCfg.label}: trend patah (trailing SMA10) -- tutup leg2, PNL $${pnlUsd.toFixed(2)}.`);
+      await notify(_sniperCloseMsg(assetCfg, mirror, mirror.leg2.entryPrice, exitPrice, pnlUsd, 'Trend patah (trailing SMA10), leg2 ditutup sebelum kena SL breakeven'));
       return closed;
     }
     return null;
@@ -240,8 +274,8 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     const pnlUsd = mirror.direction === 'buy' ? (exitPrice - refEntry) * refQty : (refEntry - exitPrice) * refQty;
 
     const closed = finalize(mirror, pnlUsd);
-    const manualNote = requestedBy ? `🙋 Ditutup MANUAL atas permintaan ${requestedBy}` : '🙋 Ditutup MANUAL';
-    await notify(`🎯 [Sniper] ${assetCfg.label}: ditutup manual @ ${exitPrice} -- PNL ${pnlUsd >= 0 ? '+' : ''}$${pnlUsd.toFixed(2)}.\n\n(${manualNote})`);
+    const alasanManual = requestedBy ? `Ditutup manual atas permintaan ${requestedBy}` : 'Ditutup manual';
+    await notify(_sniperCloseMsg(assetCfg, mirror, refEntry, exitPrice, pnlUsd, alasanManual));
     return { ok: true, closed };
   }
 

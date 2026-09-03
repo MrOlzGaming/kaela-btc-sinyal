@@ -146,7 +146,7 @@ async function reconcileWibowoPositions({ phone, client, touchedSymbols, statePa
         entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd,
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange: 'binance',
       });
-      const msg = `🙋 Wibowo Hedgefund -- Buka Posisi\n\n${dirLabel(liveAmt)} ${symbol} @ ${fmtUsd(live.entryPrice)}\nLeverage ${live.leverage || '-'}x\nAlasan: Manual Olan\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = `🙋 MANUAL (luar sistem) -- Buka Posisi\n\n${dirLabel(liveAmt)} ${symbol} @ ${fmtUsd(live.entryPrice)}\nLeverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL OPEN ${symbol} @ ${live.entryPrice}`);
       await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
       state.positions[symbol] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
@@ -158,14 +158,14 @@ async function reconcileWibowoPositions({ phone, client, touchedSymbols, statePa
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry gagal:', e.message));
       }
       const pnlLine = pnl === null ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.' : `PnL: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
-      const msg = `🙋 Wibowo Hedgefund -- Tutup Posisi\n\n${symbol} ditutup (entry sebelumnya ${fmtUsd(prev.entryPrice)})\n${pnlLine}\nAlasan: Manual Olan\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = `🙋 MANUAL (luar sistem) -- Tutup Posisi\n\n${symbol} ditutup (entry sebelumnya ${fmtUsd(prev.entryPrice)})\n${pnlLine}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL CLOSE ${symbol}, PnL=${pnl}`);
       await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual close):', e.message));
       delete state.positions[symbol];
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) > Math.abs(prevAmt)) {
       // MANUAL ADD -- arah SAMA, size nambah (skenario Olan: short di 75000, harga naik ke 80000,
       // re-short -- size nambah, entry rata-rata Binance sendiri yang ngitung).
-      const msg = `🙋 Wibowo Hedgefund -- Nambah Posisi\n\n${dirLabel(liveAmt)} ${symbol}\nEntry rata-rata sekarang: ${fmtUsd(live.entryPrice)} (sebelumnya ${fmtUsd(prev.entryPrice)})\nLeverage ${live.leverage || '-'}x\nAlasan: Manual Olan\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = `🙋 MANUAL (luar sistem) -- Nambah Posisi\n\n${dirLabel(liveAmt)} ${symbol}\nEntry rata-rata sekarang: ${fmtUsd(live.entryPrice)} (sebelumnya ${fmtUsd(prev.entryPrice)})\nLeverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL ADD ${symbol}: entry ${prev.entryPrice} -> ${live.entryPrice}`);
       await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual add):', e.message));
       if (prev.entryId) {
@@ -177,7 +177,7 @@ async function reconcileWibowoPositions({ phone, client, touchedSymbols, statePa
       // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol.
       const pnl = await realizedPnlSince(client, symbol, state.lastCheckedAtMs);
       const pnlLine = pnl === null ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.' : `PnL bagian yang ditutup: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
-      const msg = `🙋 Wibowo Hedgefund -- Kurangin Posisi\n\n${symbol} sebagian ditutup\n${pnlLine}\nSisa posisi: ${dirLabel(liveAmt)} @ ${fmtUsd(live.entryPrice)}\nAlasan: Manual Olan\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = `🙋 MANUAL (luar sistem) -- Kurangin Posisi\n\n${symbol} sebagian ditutup\n${pnlLine}\nSisa posisi: ${dirLabel(liveAmt)} @ ${fmtUsd(live.entryPrice)}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL REDUCE ${symbol}, PnL sebagian=${pnl}`);
       await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual reduce):', e.message));
       state.positions[symbol] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
@@ -197,7 +197,7 @@ async function reconcileWibowoPositions({ phone, client, touchedSymbols, statePa
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange: 'binance',
       });
       const pnlLine = pnl === null ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.' : `PnL posisi lama: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
-      const msg = `🙋 Wibowo Hedgefund -- Balik Arah\n\n${symbol}: ${dirLabel(prevAmt)} -> ${dirLabel(liveAmt)}\n${pnlLine}\nPosisi baru: @ ${fmtUsd(live.entryPrice)}, leverage ${live.leverage || '-'}x\nAlasan: Manual Olan\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = `🙋 MANUAL (luar sistem) -- Balik Arah\n\n${symbol}: ${dirLabel(prevAmt)} -> ${dirLabel(liveAmt)}\n${pnlLine}\nPosisi baru: @ ${fmtUsd(live.entryPrice)}, leverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL FLIP ${symbol}, PnL posisi lama=${pnl}`);
       await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
       state.positions[symbol] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: newEntryId, openedAtMs: nowMs };

@@ -1368,5 +1368,15 @@
     "type": "econ-calendar",
     "date": "2026-09-02T16:33:45.496Z",
     "content": "⬜ 📅 JADWAL EKONOMI MENDATANG (peringatan dini)\n(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 BESOK, 20:30 WITA — Pertumbuhan Upah per Jam (Bulanan)\n   Forecast: 0.3% | Sebelumnya: 0.1%\n   (belum ada peta sebab-akibat buat event ini -- gak dipaksa nebak)\n\n🕐 BESOK, 20:30 WITA — Perubahan Lapangan Kerja Non-Pertanian (NFP)\n   Forecast: 55K | Sebelumnya: -23K\n   📐 Data lapangan kerja (keyakinan: sedang):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n🕐 BESOK, 20:30 WITA — Tingkat Pengangguran\n   Forecast: 4.1% | Sebelumnya: 4.1%\n   📐 Tingkat pengangguran (keyakinan: sedang):\n      • Kalau ACTUAL > forecast -> 📈 BTC cenderung MENGUAT\n      • Kalau ACTUAL < forecast -> 📉 BTC cenderung TERTEKAN\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-03T01:04:32.582Z",
+    "content": "🟪 📊 Update BTC — 2026-09-03\nHarga sekarang: $77,108.01 (📉 -0.4% dari kemarin)\n⏳ Halving berikutnya: 589 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.47 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.94 (Normal)\n\n💵 DXY: 99.5 (STABIL)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (1 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.40 (normal)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-03T01:04:32.582Z",
+    "content": "🟪 🟡 Update XAU/Emas — 2026-09-03\nHarga sekarang: $4,403.33 (📈 +1.5% dari kemarin)\n💵 DXY: 99.5 (STABIL)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (1 bps / 90 hari)\n📉 Real Yield 10Y: 2.44% (STABIL)\n📊 Yield Curve 10Y-2Y: 0.40 (normal)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

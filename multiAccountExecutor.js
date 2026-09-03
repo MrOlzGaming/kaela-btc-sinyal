@@ -390,6 +390,27 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
 // kill switch (ini monitoring read-only, bukan eksekusi -- Olan tetap mau bisa pantau walau lagi
 // mode kill-switch off). "Trading Kaela" vs "di luar Kaela" DIPISAHIN DI SISI GAS (baca Sheet
 // Journal langsung) -- di sini cuma kirim angka MENTAH hasil Binance.
+// Binance getIncomeHistory CUMA balikin max 1000 baris per panggilan (lihat binanceExecutor.js) --
+// dulu aman krn window CUMA 7 hari, TAPI sekarang (3-4 Sep 2026) window-nya "sejak gabung" yang
+// bisa berbulan-bulan buat member lama -- 1000 baris bisa KEPOTONG diam-diam, PnL keitung KURANG
+// dari yang sebenarnya (jujur salah, bukan crash -- BAHAYA krn kelihatan "masuk akal" padahal
+// bukan angka lengkap). Fix: paginasi manual pakai cursor waktu -- kalau hasil PERSIS 1000 (limit
+// kena), lanjut fetch lagi dari waktu baris TERAKHIR+1ms sampai hasilnya < 1000 (berarti abis).
+// Cap 50 iterasi (50.000 baris) -- jaga-jaga infinite loop kalau ada bug aneh di respons API,
+// BUKAN batas yang realistis kepake buat member normal manapun.
+async function getFullIncomeHistorySince(client, sinceMs) {
+  let all = [];
+  let cursor = sinceMs;
+  for (let i = 0; i < 50; i++) {
+    const batch = await client.getIncomeHistory(cursor, 1000);
+    if (!batch || batch.length === 0) break;
+    all = all.concat(batch);
+    if (batch.length < 1000) break; // kurang dari limit -- udah abis, gak perlu lanjut
+    cursor = Number(batch[batch.length - 1].time) + 1;
+  }
+  return all;
+}
+
 async function runBalanceReports() {
   console.log('\n[MultiAccountExecutor] === Laporan Saldo Member (owner) ===');
   let accountsWithKeys;
@@ -404,21 +425,33 @@ async function runBalanceReports() {
     return;
   }
 
-  const days = 7;
-  const sinceMs = Date.now() - days * 24 * 60 * 60 * 1000;
   for (const acc of accountsWithKeys) {
     try {
+      // sinceMs (3-4 Sep 2026, permintaan Olan: "pnl dan persen SELAMA GABUNG DISINI") -- GANTI
+      // dari window 7-hari tetap ke tanggal approvedAt member (fallback 7 hari kalau kosong/gak
+      // valid, mis. data lama sebelum field ini ada).
+      const approvedMs = acc.approvedAt ? new Date(acc.approvedAt).getTime() : NaN;
+      const sinceMs = Number.isFinite(approvedMs) ? approvedMs : Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const days = Math.max(1, Math.round((Date.now() - sinceMs) / (24 * 60 * 60 * 1000)));
       const client = createBinanceClient({ apiKey: acc.apiKey, apiSecret: acc.apiSecret, testnet: false }); // REAL doang -- yang beneran perlu diawasi
       const [balanceUsdt, balanceUsdc, income] = await Promise.all([
         client.getAccountBalance('USDT'),
         client.getAccountBalance('USDC'),
-        client.getIncomeHistory(sinceMs),
+        getFullIncomeHistorySince(client, sinceMs),
       ]);
-      let transferTotal = 0, tradingTotal = 0;
+      let transferTotal = 0, depositTotal = 0, tradingTotal = 0;
       income.forEach((inc) => {
         const amt = Number(inc.income) || 0;
-        if (inc.incomeType === 'TRANSFER') transferTotal += amt;
-        else tradingTotal += amt; // REALIZED_PNL + FUNDING_FEE + COMMISSION + dst
+        if (inc.incomeType === 'TRANSFER') {
+          transferTotal += amt;
+          // depositTotal (3-4 Sep 2026) -- SETORAN doang (amt>0), basis buat hitung persen return
+          // "sejak gabung" (lihat catatan BinanceAdmin.gs) -- member mulai dari $0, jadi basis yang
+          // masuk akal itu TOTAL YANG DISETOR, bukan "saldo sebelum window" (yang buat window
+          // "sejak gabung" SELALU ~0, bikin persen nyaris selalu null -- percobaan pertama SALAH).
+          if (amt > 0) depositTotal += amt;
+        } else {
+          tradingTotal += amt; // REALIZED_PNL + FUNDING_FEE + COMMISSION + dst
+        }
       });
 
       // MEXC (31 Agu 2026) -- OPSIONAL, beda dari Binance. mexcConfigured=false kalau member
@@ -440,7 +473,7 @@ async function runBalanceReports() {
         }
       }
 
-      await kaela.recordBalanceReport(acc.phone, acc.name, { balanceUsdt, balanceUsdc, transferTotal, tradingTotal, days, mexcConfigured, mexcBalanceUsdt, mexcBalanceUsdc });
+      await kaela.recordBalanceReport(acc.phone, acc.name, { balanceUsdt, balanceUsdc, transferTotal, depositTotal, tradingTotal, days, mexcConfigured, mexcBalanceUsdt, mexcBalanceUsdc });
       console.log(`[MultiAccountExecutor] Laporan saldo ${acc.name} tersimpan.`);
     } catch (e) {
       await kaela.recordBalanceReport(acc.phone, acc.name, { error: e.message }).catch(() => {});

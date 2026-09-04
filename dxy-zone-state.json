@@ -1,3 +1,8 @@
 {
-  "watchZone": null
+  "watchZone": {
+    "price": 99,
+    "side": "support",
+    "kind": "round",
+    "touches": null
+  }
 }

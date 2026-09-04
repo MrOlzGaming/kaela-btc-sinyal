@@ -118,11 +118,23 @@ async function executeOne(order) {
     }).catch((e) => console.log('[LocalLiveExecutor] recordJournalEntry gagal:', e.message));
     console.log(`[LocalLiveExecutor] ✅ SUKSES -- qty ${entryFilledQty} (${isTestnet() ? 'Demo Trading' : 'MAINNET ASLI'}).`);
   } catch (e) {
+    // 5 Sep 2026, bug ketemu Olan ("posisi bayangan yang notabene udah gak kepake.. kita dah live
+    // demo") -- SEBELUMNYA cuma nyimpen liveExecution:{ok:false}, `status` TETAP 'floating'
+    // SELAMANYA (order ini gak pernah di-retry lagi karena filter pending di main() nyaring pake
+    // `!o.liveExecutedAt`, TAPI juga gak pernah ke-tutup) -- ketauan lewat 1 order nyata (PAXG,
+    // 30 Agu 2026, gagal -4161 leverage-reduction) yang nyangkut "terbuka" di Home/Jurnal
+    // berhari-hari padahal gak pernah beneran ada posisi di Binance. Prinsip proyek ini "Live
+    // Bukan Bayangan" (NOL posisi bayangan) -- begitu eksekusi live GAGAL, order ini emang gak
+    // akan pernah jadi posisi beneran (gak ada retry), jadi TUTUP LANGSUNG (status 'cancelled',
+    // kaela-render.js UDAH kenal status ini, badge "🚫 DIBATALKAN") drpd nyangkut nge-klaim
+    // "floating" selamanya. Riwayat/alasan gagalnya TETAP kesimpen apa adanya (liveExecution.error),
+    // gak ditutup-tutupin.
     updateOrder(order.id, {
       liveExecutedAt: new Date().toISOString(),
       liveExecution: { ok: false, error: e.message, testnet: isTestnet() },
+      status: 'cancelled', closedAt: new Date().toISOString(), closeReason: 'LIVE_EXEC_FAILED',
     });
-    console.log(`[LocalLiveExecutor] ❌ GAGAL: ${e.message}`);
+    console.log(`[LocalLiveExecutor] ❌ GAGAL: ${e.message} -- order ditandai cancelled (gak nyangkut floating).`);
   }
 }
 
@@ -174,11 +186,15 @@ async function main() {
   for (const order of pending) {
     const ageHours = (now - new Date(order.triggeredAt || order.createdAt)) / 3600000;
     if (ageHours > STALE_THRESHOLD_HOURS) {
+      // 5 Sep 2026 -- SAMA bug/fix kayak catch block executeOne() di atas (lihat komentarnya):
+      // sinyal kadaluarsa juga gak pernah dieksekusi live, jadi status HARUS 'cancelled' langsung,
+      // bukan nyangkut 'floating' selamanya.
       updateOrder(order.id, {
         liveExecutedAt: now.toISOString(),
         liveExecution: { ok: false, expired: true, error: `Sinyal udah ${ageHours.toFixed(1)} jam (>${STALE_THRESHOLD_HOURS} jam) -- kadaluarsa, TIDAK dieksekusi (harga sekarang udah gak nyambung sama setup aslinya).` },
+        status: 'cancelled', closedAt: now.toISOString(), closeReason: 'EXPIRED',
       });
-      console.log(`[LocalLiveExecutor] ⏳ ${order.asset || 'btc'} ${order.mode} kadaluarsa (${ageHours.toFixed(1)} jam) -- dilewatin, ditandai gak dieksekusi.`);
+      console.log(`[LocalLiveExecutor] ⏳ ${order.asset || 'btc'} ${order.mode} kadaluarsa (${ageHours.toFixed(1)} jam) -- ditandai cancelled (gak dieksekusi).`);
       continue;
     }
     await executeOne(order);

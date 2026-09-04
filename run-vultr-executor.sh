@@ -131,6 +131,15 @@ node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit
 # flock box ini yang jagain dari overlap, bukan dedup internal script.
 node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERROR (exit $?)"
 
+# Lapor status (saldo+posisi) Demo Olan sendiri ke GAS MemberStatus (5 Sep 2026, bug ketemu Olan:
+# "posisi demo nyopet ga tampil di tab demo yang baru") -- multiAccountExecutor.js SENGAJA skip
+# demo Olan (komentar di file itu: "sistem lama, bukan tanggung jawab modul ini", biar gak
+# dobel-eksekusi), tapi gak ada modul lain yang ngisi kekosongan itu -- baris MemberStatus buat
+# (Olan, demo) gak pernah ada, "Jurnal Demo" Kaela Access selalu nemu kosong. Script ini MURNI
+# baca+lapor (NOL order/trading), aman jalan bareng sistem eksekusi manapun -- gak nulis file
+# state lokal apapun jadi gak perlu masuk daftar CHANGED di bawah.
+node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
+
 CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'

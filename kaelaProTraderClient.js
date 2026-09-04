@@ -59,6 +59,20 @@ async function getAdminNotifySettings() {
   }
 }
 
+// 5 Sep 2026 -- saklar Silent/Broadcast Trade ke grup Wibowo Hedgefund, Olan kontrol dari web
+// (lihat gas/Config.gs getWibowoBroadcastSetting + wibowoNotify.js). Fail-safe SAMA pola kayak
+// getAdminNotifySettings -- GAS error/belum ke-deploy = dianggap OFF/silent (lebih aman drpd
+// nge-spam grup gara-gara gagal baca setting).
+async function getWibowoBroadcastEnabled() {
+  try {
+    const data = await callGas('getWibowoBroadcastSettingForExecutor');
+    return data.setting.enabled;
+  } catch (e) {
+    console.log('[KaelaProTraderClient] getWibowoBroadcastEnabled gagal (dianggap OFF/silent):', e.message);
+    return false;
+  }
+}
+
 // 28 Agu 2026 -- antrian tutup posisi manual (member sendiri ATAU owner bantu member lain, lihat
 // Sheet.gs requestClosePosition). Fail-safe: kalau gagal, anggap KOSONG (bukan fatal, coba lagi
 // siklus berikutnya -- permintaan gak ilang krn GAS baru NGOSONGIN abis berhasil dibaca).
@@ -173,4 +187,4 @@ async function resolveManualOpenRequest(requestId, status, resultMessage) {
   return callGas('resolveManualOpenRequest', { requestId, status, resultMessage: resultMessage || '' });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };

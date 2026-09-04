@@ -1,6 +1,0 @@
-{
-  "paused": false,
-  "reason": "FIXED 4 Sep 2026 -- gambar QRIS deposit pool (penyebab barcode nempel di link preview) dipindah dari raw HTML ke async-load (GAS getQrisImage), diverifikasi live di kaela-access.netlify.app. Notif posisi ke Wibowo Hedgefund nyala lagi.",
-  "pausedAt": null,
-  "resumedAt": "2026-09-04T18:45:00+08:00"
-}

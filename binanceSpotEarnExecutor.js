@@ -78,6 +78,97 @@ function createBinanceSpotEarnClient({ apiKey, apiSecret, testnet }) {
     return signedRequest('POST', '/sapi/v1/simple-earn/flexible/redeem', { productId, amount, destAccount: 'SPOT' });
   }
 
+  // 4 Sep 2026, permintaan Olan ("marketkap saham jadi saldo futures+spot+posisi+pnl+earn+utang")
+  // -- dites LANGSUNG pakai API key Olan (SSH VPS, 4 Sep 2026), /api/v3/account +
+  // /sapi/v1/simple-earn/flexible/position (asset OMITTED = balikin SEMUA produk) KEDUANYA
+  // beneran jalan (200, data nyata: dust BTC/ETH/dll di Spot, USDT+ZIL di Earn Flexible). Beda
+  // dari getSpotBalance(asset) di atas (1 asset doang) -- ini nyapu SEMUA saldo non-nol +
+  // konversi ke USD (harga live ticker), buat diisi ke recordMemberStatus (spotUsd param).
+  function _isStableAsset(asset) {
+    return asset === 'USDT' || asset === 'USDC' || asset === 'BUSD' || asset === 'FDUSD' || asset === 'DAI' || asset === 'TUSD' || asset === 'USDP';
+  }
+
+  // Harga live batch (1 call buat banyak asset sekaligus, `symbols` Binance nerima array JSON).
+  // Stablecoin dianggap $1 tanpa hit API.
+  //
+  // ⚠️ BUG KETEMU + FIX (4 Sep 2026, dites live pas nulis kode ini): endpoint batch INI GAK
+  // TOLERAN -- SATU symbol invalid (mis. "LDUSDTUSDT", gak ada pair-nya beneran) bikin SELURUH
+  // respons balik jadi `{"code":-1121,"msg":"Invalid symbol."}` (BUKAN array), yang tanpa fallback
+  // bikin harga SEMUA asset (termasuk BTC yang valid) ke-anggap $0 diam-diam -- understate nilai
+  // Spot parah. Fix: kalau batch gagal (bukan array), fallback ke request SATU-SATU per symbol
+  // (lebih lambat tapi 1 symbol invalid gak ngerusak yang lain). Asset yang beneran gak punya pair
+  // XXXUSDT (invalid) ttp dianggap $0 di fallback ini -- LEBIH AMAN drpd salah harga/pair kebalik.
+  async function _spotPricesUsd(assets) {
+    const uniq = [...new Set(assets)];
+    const prices = {};
+    const need = [];
+    uniq.forEach((a) => { if (_isStableAsset(a)) prices[a] = 1; else need.push(a); });
+    if (need.length === 0) return prices;
+    const symbols = need.map((a) => `${a}USDT`);
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(JSON.stringify(symbols))}`);
+    const data = await res.json().catch(() => null);
+    if (Array.isArray(data)) {
+      data.forEach((row) => { prices[row.symbol.replace(/USDT$/, '')] = parseFloat(row.price) || 0; });
+      need.forEach((a) => { if (!(a in prices)) prices[a] = 0; });
+      return prices;
+    }
+    // Batch gagal -- fallback per-symbol, paralel (jumlah asset per akun biasanya kecil, aman).
+    await Promise.all(need.map(async (a) => {
+      try {
+        const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${a}USDT`);
+        const d = await r.json().catch(() => null);
+        prices[a] = d && d.price ? parseFloat(d.price) || 0 : 0;
+      } catch {
+        prices[a] = 0;
+      }
+    }));
+    return prices;
+  }
+
+  async function getAllSpotBalancesUsd() {
+    const account = await signedRequest('GET', '/api/v3/account', {});
+    const nonZero = (account.balances || [])
+      .map((b) => ({ asset: b.asset, amount: (parseFloat(b.free) || 0) + (parseFloat(b.locked) || 0) }))
+      // "LD"-prefix (mis. LDUSDT/LDZIL) = token wrapper Binance buat posisi Simple Earn Flexible
+      // yang NUMPANG ketampil di daftar saldo Spot (UI convenience) -- nilainya UDAH kehitung
+      // terpisah lewat getAllEarnFlexibleUsd(), skip di sini biar gak dobel + gak nyoba nyari pair
+      // "LDxxxUSDT" yang emang gak pernah ada (itu penyebab bug batch-price di atas ketemu).
+      .filter((b) => b.amount > 0 && !/^LD/.test(b.asset));
+    if (nonZero.length === 0) return { totalUsd: 0, breakdown: [] };
+    const prices = await _spotPricesUsd(nonZero.map((b) => b.asset));
+    const breakdown = nonZero.map((b) => ({ asset: b.asset, amount: b.amount, priceUsd: prices[b.asset] || 0, valueUsd: b.amount * (prices[b.asset] || 0) }));
+    return { totalUsd: breakdown.reduce((s, b) => s + b.valueUsd, 0), breakdown };
+  }
+
+  // `asset` OMITTED SENGAJA (dites live, balikin SEMUA produk Earn Flexible yang Olan punya).
+  async function getAllEarnFlexibleUsd() {
+    const res = await signedRequest('GET', '/sapi/v1/simple-earn/flexible/position', {});
+    const rows = (res.rows || []).map((r) => ({ asset: r.asset, amount: parseFloat(r.totalAmount) || 0 })).filter((r) => r.amount > 0);
+    if (rows.length === 0) return { totalUsd: 0, breakdown: [] };
+    const prices = await _spotPricesUsd(rows.map((r) => r.asset));
+    const breakdown = rows.map((r) => ({ asset: r.asset, amount: r.amount, priceUsd: prices[r.asset] || 0, valueUsd: r.amount * (prices[r.asset] || 0) }));
+    return { totalUsd: breakdown.reduce((s, b) => s + b.valueUsd, 0), breakdown };
+  }
+
+  // Earn LOCKED (fixed-term) -- BEDA dari Flexible, field respons BELUM diverifikasi (posisi Olan
+  // kosong pas dites 4 Sep 2026, gak ada data nyata buat cek nama field `amount` vs `totalAmount`).
+  // Dibungkus try/catch KETAT -- kalau field-nya ternyata beda/endpoint error, gagal DIAM-DIAM jadi
+  // 0 (log doang) drpd bikin seluruh siklus recordMemberStatus gagal gara-gara 1 komponen kecil
+  // yang belum tervalidasi.
+  async function getAllEarnLockedUsd() {
+    try {
+      const res = await signedRequest('GET', '/sapi/v1/simple-earn/locked/position', {});
+      const rows = (res.rows || []).map((r) => ({ asset: r.asset, amount: parseFloat(r.amount != null ? r.amount : r.totalAmount) || 0 })).filter((r) => r.amount > 0);
+      if (rows.length === 0) return { totalUsd: 0, breakdown: [] };
+      const prices = await _spotPricesUsd(rows.map((r) => r.asset));
+      const breakdown = rows.map((r) => ({ asset: r.asset, amount: r.amount, priceUsd: prices[r.asset] || 0, valueUsd: r.amount * (prices[r.asset] || 0) }));
+      return { totalUsd: breakdown.reduce((s, b) => s + b.valueUsd, 0), breakdown };
+    } catch (e) {
+      console.log('[BinanceSpotEarn] getAllEarnLockedUsd gagal (belum tervalidasi/gak ada posisi), dianggap $0:', e.message);
+      return { totalUsd: 0, breakdown: [] };
+    }
+  }
+
   // Pastiin saldo Spot cukup: cek Spot dulu, kalau kurang redeem dari Earn Flexible secukupnya
   // (bisa dari >1 posisi kalau 1 posisi gak cukup), tunggu sampai saldo Spot ke-update (polling,
   // redeem Flexible BIASANYA cepat tapi gak instan-instan-banget di sisi ledger).
@@ -148,7 +239,7 @@ function createBinanceSpotEarnClient({ apiKey, apiSecret, testnet }) {
     return { orderId: order.orderId, executedQty, cumulativeQuote, avgPrice };
   }
 
-  return { getSpotBalance, getEarnFlexiblePositions, redeemEarnFlexible, ensureSpotBalance, getSymbolInfo, placeSpotMarketBuy, placeSpotMarketSell };
+  return { getSpotBalance, getEarnFlexiblePositions, redeemEarnFlexible, ensureSpotBalance, getSymbolInfo, placeSpotMarketBuy, placeSpotMarketSell, getAllSpotBalancesUsd, getAllEarnFlexibleUsd, getAllEarnLockedUsd };
 }
 
 module.exports = { createBinanceSpotEarnClient, roundToStepSize };

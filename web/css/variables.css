@@ -68,15 +68,34 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
   body { max-width: 820px; padding: 28px; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* Desktop: melebar lebih jauh biar gak keliatan sempit "kekecilan" di layar besar --
-   960px ternyata masih nyisain ruang kosong gede di monitor 1440px+ (keluhan Olan "compact"),
-   grid kayak .order-grid/.journal-stats-grid otomatis nambah kolom begitu container ini melebar. */
+/* 5 Sep 2026, permintaan Olan ("halaman kita pintar, tau dibuka di HP dan desktop.. di desktop
+   jadi kayak lebar banget") -- RIWAYAT: breakpoint 1024px/1440px di bawah ini SEBELUMNYA dilebarin
+   sampai 1120px/1360px gara-gara keluhan KEBALIKANNYA ("kekecilan/compact" di monitor lebar, lihat
+   git blame). Ternyata dua-duanya salah arah -- masalah aslinya BUKAN angka max-width doang, tapi
+   .bottom-nav yang di desktop TETAP nempel di bawah kayak app HP (gak "smart" ngenalin desktop),
+   maksa body selebar itu biar nav-nya gak keliatan kosong/aneh. Fix TUNTAS: body BALIK jadi lebar
+   baca yang nyaman (~800px, gak nambah lebar lagi kalau monitor makin gede), .bottom-nav yang SAMA
+   PERSIS (nol HTML diubah, CUMA CSS) DIUBAH JADI SIDEBAR KIRI PERMANEN mulai 1024px -- kerasa kayak
+   web app desktop beneran, bukan app HP yang di-stretch paksa. */
 @media (min-width: 1024px) {
-  body { max-width: 1120px; padding: 36px 44px; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
+  body { max-width: 800px; margin-left: 264px; margin-right: auto; padding: 36px 44px; padding-bottom: 36px; }
   h1 { font-size: 1.7rem; }
-}
-@media (min-width: 1440px) {
-  body { max-width: 1360px; padding: 40px 64px; }
+
+  .bottom-nav {
+    top: 0; left: 0; right: auto; bottom: 0; width: 200px;
+    flex-direction: column; justify-content: flex-start; align-items: stretch;
+    padding: 24px 0 0; gap: 2px;
+    border-top: none; border-right: 1px solid var(--clr-border-soft);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: var(--clr-bg-elevated);
+  }
+  .bottom-nav a {
+    flex: none; flex-direction: row; justify-content: flex-start; align-items: center;
+    gap: 12px; padding: 12px 22px; font-size: 0.85rem;
+    border-radius: 0 999px 999px 0; margin-right: 12px;
+  }
+  .bottom-nav a.active { background: var(--clr-primary-glow); }
+  .bottom-nav a.active .icon { transform: none; }
 }
 
 /* Header brand: logo mark + judul */
@@ -92,6 +111,12 @@ h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
    halaman (deteksi window.self !== window.top), CSS-nya SATU tempat di sini biar konsisten. */
 html.embedded .bottom-nav { display: none !important; }
 html.embedded body { padding-bottom: 20px !important; }
+/* 5 Sep 2026 -- sidebar desktop (lihat breakpoint 1024px di bawah) reserve ruang kiri via
+   body.margin-left, TAPI nav-nya sendiri disembunyiin kalau di-iframe (baris di atas) -- tanpa
+   reset ini bakal nyisain jarak kosong gede di kiri Kaela Access kalau iframe-nya kebetulan
+   pernah dirender >=1024px (Kaela Access sendiri capped ~480px, jadi jarang kejadian, ini
+   jaring pengaman doang, sama pola kayak padding-bottom di atas). */
+html.embedded body { margin-left: auto !important; }
 
 /* 25 Agu 2026 -- nav internal ".meta-toggle" (Musiman/Sniper/Dark Kaela di halaman metodologi)
    NUMPUK sama subnav "Belajar" yang udah dibangun di Kaela Access (APPS/kaela-multi-akun) --
@@ -129,12 +154,6 @@ html.embedded .meta-toggle { display: none !important; }
 .bottom-nav a .icon svg { display: block; stroke: currentColor; }
 .bottom-nav a.active { color: var(--clr-primary); }
 .bottom-nav a.active .icon { transform: translateY(-1px); }
-
-/* Desktop: item nav gak ikutan melebar sampe ujung layar -- dikumpulin di tengah biar rapi */
-@media (min-width: 1024px) {
-  .bottom-nav { justify-content: center; }
-  .bottom-nav a { flex: 0 0 160px; }
-}
 
 /* Tabel responsif — gak overflow di layar kecil */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

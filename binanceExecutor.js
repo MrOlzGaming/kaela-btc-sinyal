@@ -219,7 +219,7 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
   }
 
   return {
-    getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
+    getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
   };
 }

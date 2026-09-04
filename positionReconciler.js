@@ -32,7 +32,7 @@
 // field sekarang DINAMIS ('binance'/'mexc'), dulu di-hardcode 'binance'.
 
 const fs = require('fs');
-const { sendWhatsApp } = require('./fonnte');
+const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const kaela = require('./kaelaProTraderClient');
 // 3 Sep 2026 -- fmtUsdWithIdr PINDAH ke darkKaelaLog.js (SATU sumber, dipakai Sniper/Nyopet juga
 // sekarang, permintaan Olan "untuk pnl sertakan idr nya"). fmtUsd LOKAL TETAP DIPERTAHANKAN di
@@ -41,7 +41,8 @@ const kaela = require('./kaelaProTraderClient');
 const { fmtUsdWithIdr } = require('./darkKaelaLog');
 const tradeHistoryStore = require('./tradeHistoryStore');
 
-const WIBOWO_GROUP_ID = '120363430640997174@g.us';
+// WIBOWO_GROUP_ID + saklar pause SEKARANG di wibowoNotify.js (4 Sep 2026, sebelumnya duplikat
+// konstanta di sini & multiAccountExecutor.js).
 const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
 
 function fmtUsd(n) {
@@ -171,7 +172,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       });
       const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Buka Posisi\n\n${dirLabel(liveAmt)} ${symbol} @ ${fmtUsd(live.entryPrice)}\nLeverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL OPEN ${badge} ${symbol} @ ${live.entryPrice}`);
-      await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
+      await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
     } else if (prevAmt !== 0 && liveAmt === 0) {
       // MANUAL CLOSE (full) -- posisi yang tadinya kecatat sekarang ilang total.
@@ -183,14 +184,14 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       const pnlLine = pnl === null ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.' : `PnL: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
       const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Tutup Posisi\n\n${symbol} ditutup (entry sebelumnya ${fmtUsd(prev.entryPrice)})\n${pnlLine}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL CLOSE ${badge} ${symbol}, PnL=${pnl}`);
-      await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual close):', e.message));
+      await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual close):', e.message));
       delete state.positions[stateKey];
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) > Math.abs(prevAmt)) {
       // MANUAL ADD -- arah SAMA, size nambah (skenario Olan: short di 75000, harga naik ke 80000,
       // re-short -- size nambah, entry rata-rata exchange sendiri yang ngitung).
       const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Nambah Posisi\n\n${dirLabel(liveAmt)} ${symbol}\nEntry rata-rata sekarang: ${fmtUsd(live.entryPrice)} (sebelumnya ${fmtUsd(prev.entryPrice)})\nLeverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL ADD ${badge} ${symbol}: entry ${prev.entryPrice} -> ${live.entryPrice}`);
-      await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual add):', e.message));
+      await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual add):', e.message));
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry (add) gagal:', e.message));
@@ -202,7 +203,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       const pnlLine = pnl === null ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.' : `PnL bagian yang ditutup: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
       const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Kurangin Posisi\n\n${symbol} sebagian ditutup\n${pnlLine}\nSisa posisi: ${dirLabel(liveAmt)} @ ${fmtUsd(live.entryPrice)}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL REDUCE ${badge} ${symbol}, PnL sebagian=${pnl}`);
-      await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual reduce):', e.message));
+      await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual reduce):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) !== Math.sign(liveAmt)) {
       // FLIP arah (short jadi long / sebaliknya) -- exchange eksekusi ini 1 order gede (bukan 2
@@ -222,7 +223,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       const pnlLine = pnl === null ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.' : `PnL posisi lama: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
       const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Balik Arah\n\n${symbol}: ${dirLabel(prevAmt)} -> ${dirLabel(liveAmt)}\n${pnlLine}\nPosisi baru: @ ${fmtUsd(live.entryPrice)}, leverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
       console.log(`[PositionReconciler] MANUAL FLIP ${badge} ${symbol}, PnL posisi lama=${pnl}`);
-      await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
+      await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: newEntryId, openedAtMs: nowMs };
     }
     // else: gak ada perubahan (prevAmt===0 && liveAmt===0, atau persis sama) -- gak ada yang perlu dilaporin.

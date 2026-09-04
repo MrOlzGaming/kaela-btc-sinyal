@@ -38,7 +38,7 @@ const { createSpotDcaAccountTrader } = require('./spotDcaAccount');
 const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { checkEmptyWallet } = require('./emptyWalletWatchdog');
-const { sendWhatsApp } = require('./fonnte');
+const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { reconcileWibowoPositions } = require('./positionReconciler');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
@@ -50,12 +50,10 @@ const STATE_DIR = path.join(__dirname, 'multi-account-state');
 // ganti, update di SATU tempat ini.
 const MASTER_NOMOR = '6281299303888';
 
-// Grup WA "Wibowo Hedgefund" -- SAMA PERSIS ID yang dipakai APPS/kaela-multi-akun/gas/Pool.gs
-// WIBOWO_GROUP_ID (dan secrets.js FONNTE_BROADCAST_GROUPS[1] di sini, "Sniper Fam"). Konstanta
-// langsung (bukan secret) -- cuma ID grup WA, sama alasan kayak Pool.gs. Dipakai buildSendWA di
-// bawah biar notif buka/tutup posisi REAL Olan (dasar saham Wibowo Hedgefund) juga nyampe ke
-// grup, gak cukup DM pribadi doang (2-3 Sep 2026, permintaan Olan).
-const WIBOWO_GROUP_ID = '120363430640997174@g.us';
+// Grup WA "Wibowo Hedgefund" -- ID + saklar pause SEKARANG di wibowoNotify.js (4 Sep 2026,
+// sebelumnya duplikat konstanta di sini & positionReconciler.js). Dipakai buildSendWA di bawah
+// biar notif buka/tutup posisi REAL Olan (dasar saham Wibowo Hedgefund) juga nyampe ke grup, gak
+// cukup DM pribadi doang (2-3 Sep 2026, permintaan Olan).
 
 function ensureStateDir() {
   if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
@@ -157,7 +155,7 @@ function buildSendWA(account, adminRelay) {
     // aktivitas trading yang jadi dasar nilai saham mereka, gak cukup DM pribadi Olan doang.
     // Demo TIDAK ikut (bukan uang beneran, gak relevan buat pemegang saham).
     if (isSelf && account.mode === 'real') {
-      await sendWhatsApp(message, WIBOWO_GROUP_ID).catch((e) =>
+      await sendWhatsAppToWibowo(message).catch((e) =>
         console.log(`[MultiAccountExecutor] Broadcast Wibowo Hedgefund gagal:`, e.message));
     }
   };

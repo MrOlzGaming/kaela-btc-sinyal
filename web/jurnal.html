@@ -56,7 +56,13 @@
   .order-balance { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 10px; font-size: 0.95rem; }
   .order-balance-date { color: var(--clr-text-muted); font-size: 0.78rem; }
   .order-disclaimer { color: var(--clr-text-muted); font-size: 0.78rem; background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-warning); padding: 8px 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 12px; }
-  .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 10px; }
+  /* 4 Sep 2026, bug ketemu Olan ("riwayat tradingnya kayak keluar arena" di HP) -- CSS Grid
+     minmax(Xpx, 1fr) TERNYATA gak otomatis nyusut kalau kontainernya (mis. HP sempit + iframe
+     Kaela Access) lebih kecil dari Xpx -- kartu grid tetap maksa selebar Xpx, dorong seluruh
+     halaman overflow horizontal. Fix: bungkus jadi minmax(min(Xpx, 100%), 1fr) di SEMUA grid
+     auto-fill (order/spot-summary/journal-stats/wallet) -- min() bikin batas bawahnya gak
+     pernah lebih lebar dari kontainer, otomatis jadi 1 kolom di layar sempit tanpa media query. */
+  .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 10px; margin-bottom: 10px; }
   .order-card { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); box-shadow: var(--shadow-card); border-radius: var(--radius-md); padding: 14px; }
   .order-card.floating { border-color: var(--clr-primary); }
   .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
@@ -97,7 +103,7 @@
   .dash-panel { display: none; animation: fade-in 0.25s ease; }
   .dash-panel.active { display: block; }
   @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .spot-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .spot-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 8px; margin-bottom: 6px; }
   .spot-cycle-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
   .spot-cycle-table th, .spot-cycle-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--clr-border-soft); }
   .spot-cycle-table th { color: var(--clr-text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -116,7 +122,7 @@
   .pinned-badge { color: var(--clr-warning); font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; }
   .latest.pinned, .entry.pinned { border-color: var(--clr-warning); box-shadow: var(--shadow-card), 0 0 0 1px rgba(240,136,62,0.12); }
 
-  .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .journal-stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr)); gap: 8px; margin-bottom: 6px; }
   .journal-stat { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
   .journal-stat-label { color: var(--clr-text-muted); font-size: 0.72rem; margin-bottom: 4px; }
   .journal-stat-value { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
@@ -126,7 +132,7 @@
 
   /* Compound Alt DCA -- grid 10 "dompet" koin, tiap kartu bisa diklik buka/tutup riwayat DCA-nya
      sendiri (25 Agu 2026, permintaan Olan: "tiap dompet bisa di klik history DCA"). */
-  .wallet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 10px 0 14px; }
+  .wallet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 10px; margin: 10px 0 14px; }
   .wallet-card { background: var(--gradient-surface), var(--clr-bg-elevated); border: 1px solid var(--clr-border-soft); border-radius: var(--radius-md); padding: 12px; cursor: pointer; transition: border-color 0.15s ease; }
   .wallet-card:hover { border-color: var(--clr-primary); }
   .wallet-card.open { border-color: var(--clr-primary); box-shadow: 0 0 0 1px var(--clr-primary); }

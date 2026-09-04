@@ -1,8 +1,13 @@
 name: Monitor Order Sniper (tiap jam)
 
+# 4 Sep 2026 -- jadwal `schedule:` DIMATIIN (dibuktikan audit: GitHub Actions kebukti jalan tiap
+# 2-4 jam nyata, bukan tiap jam kayak cron-nya, gara-gara antrian akun ini padat -- notif TP/SL
+# kena bisa telat berjam-jam). Eksekusi PENUH dipindah ke run-vultr-executor.sh (VPS, cron beneran
+# reliable tiap 15 menit) -- lihat catatan di sana. workflow_dispatch DIBIARIN buat trigger manual
+# darurat doang (mis. VPS lagi down), JANGAN diaktifin lagi jadi jadwal otomatis tanpa
+# koordinasi -- resiko 2 sumber eksekusi bareng trigger/close + kirim WA dobel (lihat comment
+# concurrency di bawah, sniperOrderMonitor.js gak punya dedup se-robust price-alert/dxy-zone).
 on:
-  schedule:
-    - cron: '5 * * * *' # menit ke-5 tiap jam -- buffer biar candle hourly Binance udah pasti closed
   workflow_dispatch: {}
 
 # Cegah 2 run tumpang tindih -- kalau bareng, dua-duanya bisa liat order PENDING/FLOATING yang

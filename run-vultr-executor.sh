@@ -121,6 +121,16 @@ node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERR
 node priceAlertMonitor.js >> "$LOG_FILE" 2>&1 || log "priceAlertMonitor.js ERROR (exit $?)"
 node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit $?)"
 
+# Monitor Order Sniper -- channel Sniper LAMA (posisi real Olan sendiri), pantau TP/SL/partial
+# exit (4 Sep 2026, sama akar masalah kayak Price Alert/DXY di atas -- audit nunjukin jadwal GH
+# Actions "tiap jam"-nya kebukti jalan tiap 2-4 jam, notif TP/SL kena bisa telat berjam-jam).
+# BEDA dari Price Alert/DXY: script ini DIPINDAH SEPENUHNYA ke sini (BUKAN cadangan dual-run) --
+# sniper-hourly.yml sendiri punya comment eksplisit soal resiko 2 run bareng bisa trigger/close +
+# kirim WA dobel (gak punya cooldown state se-robust price-alert/dxy-zone), jadi jadwal GH
+# Actions-nya DIMATIIN (tinggal workflow_dispatch manual) biar cuma SATU sumber eksekusi -- lock
+# flock box ini yang jagain dari overlap, bukan dedup internal script.
+node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERROR (exit $?)"
+
 CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'

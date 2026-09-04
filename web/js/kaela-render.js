@@ -482,7 +482,17 @@
       : (latestStatusEntry
         ? `${rt('no_open_position_last_analysis')} <a href="jurnal.html"><strong>${rt('journal')}</strong></a>.`
         : rt('no_sniper_analysis'));
+    // 5 Sep 2026, permintaan Olan ("home itu aku mau ada juga penjelasan singkat dari sniper dan
+    // nyopet", sama kayak Musiman yang udah punya paragraf fase di renderSiklusHalvingPanel di
+    // atas) -- panel ini SEBELUMNYA cuma disclaimer operasional ("sinyal dieksekusi otomatis"),
+    // gak pernah jelasin APA itu Sniper. Teks diambil FAITHFUL dari metodologi-sniper.html (2
+    // aset x 2 mode deteksi, buy-only, exit 2 tahap) -- bukan karangan baru.
+    const en = lang() === 'en';
+    const introHtml = en
+      ? `<p class="strategy-intro">🎯 Sniper is a <strong>supplementary signal</strong> (not Kaela's main strategy) that detects <strong>Chart Patterns</strong> (Bull Flag/Falling Wedge) and <strong>Fair Value Gaps</strong> on BTC + Gold (PAXG), checked on every daily candle close. Buy-only, 2-stage exit (partial take-profit at 2x risk, the rest trailed with a daily SMA10). <a href="metodologi-sniper.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🎯 Sniper adalah <strong>sinyal pelengkap</strong> (bukan strategi utama Kaela) yang mendeteksi <strong>Pola Chart</strong> (Bull Flag/Falling Wedge) dan <strong>Fair Value Gap</strong> di BTC + Emas (PAXG), dicek tiap candle harian closing. Buy-only, exit 2 tahap (partial TP di 2x risiko, sisanya di-trail SMA10 harian). <a href="metodologi-sniper.html">Baca metodologi lengkap →</a></p>`;
     return `<div class="sniper-orders-panel">
+      ${introHtml}
       <p class="order-disclaimer">${rt('sniper_disclaimer')}</p>
       <div class="empty">${summaryLine}</div>
     </div>`;
@@ -494,7 +504,15 @@
     const summaryLine = floating.length > 0
       ? `📡 <strong>${floating.length} ${rt('nyopet_positions_open')}</strong> -- ${rt('detail_full_at')} <a href="jurnal.html"><strong>${rt('journal')}</strong></a>.`
       : rt('no_nyopet_open');
+    // 5 Sep 2026, permintaan Olan -- sama alasan kayak introHtml Sniper di atas. Teks diambil
+    // FAITHFUL dari metodologi-dark-kaela.html (mesin SAMA kayak Sniper, timeframe 4 jam,
+    // bankroll+jurnal terpisah).
+    const en = lang() === 'en';
+    const introHtml = en
+      ? `<p class="strategy-intro">🥷 Nyopet uses the <strong>same detection engine as Sniper</strong> (Chart Pattern + FVG), but on a <strong>4-hour timeframe</strong> instead of daily -- moves more actively/frequently. Auto-executes on Binance Demo, with its own bankroll & journal separate from Sniper. <a href="metodologi-dark-kaela.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🥷 Nyopet pakai <strong>mesin deteksi yang sama kayak Sniper</strong> (Pola Chart + FVG), tapi timeframe <strong>4 jam</strong> (bukan harian) -- gerak lebih gesit/sering. Auto-eksekusi di Binance Demo, bankroll &amp; jurnal terpisah dari Sniper. <a href="metodologi-dark-kaela.html">Baca metodologi lengkap →</a></p>`;
     return `<div class="sniper-orders-panel">
+      ${introHtml}
       <p class="order-disclaimer">${rt('nyopet_home_disclaimer')}</p>
       <div class="empty">${summaryLine}</div>
     </div>`;

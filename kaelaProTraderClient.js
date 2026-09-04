@@ -99,8 +99,15 @@ async function claimLeadership(machineId) {
 // project-kaela-multi-exchange, "4 dompet independen": Sniper Emas=USDT, Nyopet Emas=USDC) --
 // OPSIONAL, default 0 (dipetakan otomatis di GAS kalau gak dikirim), buat member yang belum
 // pasang API MEXC.
-async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc) {
-  return callGas('recordMemberStatus', { phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []), mexcBalanceUsdt: mexcBalanceUsdt || 0, mexcBalanceUsdc: mexcBalanceUsdc || 0 });
+async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc, walletUsdt, walletUsdc) {
+  return callGas('recordMemberStatus', {
+    phone, mode, balanceUsdt, balanceUsdc, positions: JSON.stringify(positions || []),
+    mexcBalanceUsdt: mexcBalanceUsdt || 0, mexcBalanceUsdc: mexcBalanceUsdc || 0,
+    // walletUsdt/walletUsdc (4 Sep 2026) -- OPSIONAL, default ke balanceUsdt/Usdc kalau caller
+    // lama belum kirim (backward-compat, gak numpang breaking existing callers).
+    walletUsdt: walletUsdt !== undefined ? walletUsdt : balanceUsdt,
+    walletUsdc: walletUsdc !== undefined ? walletUsdc : balanceUsdc,
+  });
 }
 
 // 28 Agu 2026 -- matiin toggle trading member SECARA OTOMATIS (dompet kosong 3 hari beruntun,

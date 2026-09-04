@@ -107,6 +107,25 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return bal ? parseFloat(bal.availableBalance) : 0;
   }
 
+  // 4 Sep 2026 -- BEDA dari getAccountBalance() di atas (`availableBalance`, buat SIZING trade
+  // baru): ini balikin `balance` (wallet TOTAL, gak peduli lagi kepakai margin ISOLATED apa
+  // enggak). BUG NYATA ketemu (Olan buktiin pake screenshot app Binance): posisi Nyopet DIBUKA
+  // ISOLATED margin (lihat setIsolatedMargin di bawah) -- dana yang kekunci di posisi isolated
+  // ITU GAK PERNAH numpang balik ke `crossWalletBalance`/`availableBalance` SAMA SEKALI (beda
+  // "kantong" total dari cross), jadi NAV pool yang cuma modelin `availableBalance + margin
+  // teoretis (notional/leverage)` SELALU ketinggalan jauh dari saldo isolated ASLI yang Olan
+  // beneran alokasiin (bisa lebih gede dari margin minimum, buffer anti-liquidasi). Rumus yang
+  // TERBUKTI cocok 100% ke app Binance asli (2 titik data beda waktu, dicocokin manual):
+  // EQUITY = `balance` (field ini) + `unRealizedProfit` posisi yang make aset itu -- `balance`
+  // SENDIRI belum kena pengaruh PnL floating (baru keurang begitu kena likuidasi/ditutup), jadi
+  // WAJIB ditambah unrealizedProfit buat dapet "Saldo Margin" asli. Dipakai KHUSUS buat NAV pool
+  // (Pool.gs) -- JANGAN dipakai gantiin getAccountBalance() buat sizing, beda tujuan.
+  async function getWalletBalance(asset = 'USDT') {
+    const balances = await signedRequest('GET', '/fapi/v2/balance', {});
+    const bal = balances.find((b) => b.asset === asset);
+    return bal ? parseFloat(bal.balance) : 0;
+  }
+
   async function setLeverage(symbol, leverage) {
     return signedRequest('POST', '/fapi/v1/leverage', { symbol, leverage });
   }
@@ -224,6 +243,7 @@ function _defaultClient() {
 }
 
 async function getAccountBalance(asset = 'USDT') { return _defaultClient().getAccountBalance(asset); }
+async function getWalletBalance(asset = 'USDT') { return _defaultClient().getWalletBalance(asset); }
 async function setLeverage(symbol, leverage) { return _defaultClient().setLeverage(symbol, leverage); }
 async function setIsolatedMargin(symbol) { return _defaultClient().setIsolatedMargin(symbol); }
 async function placeMarketEntry(args) { return _defaultClient().placeMarketEntry(args); }
@@ -236,6 +256,6 @@ async function emergencyCloseMarket(args) { return _defaultClient().emergencyClo
 
 module.exports = {
   createBinanceClient,
-  getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
+  getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
   getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
 };

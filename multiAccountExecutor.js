@@ -259,6 +259,14 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       client.getAccountBalance('USDT'),
       client.getAccountBalance('USDC'),
     ]);
+    // walletUsdt/walletUsdc (4 Sep 2026) -- KHUSUS buat NAV pool (Pool.gs _poolTotalValueUsd),
+    // BEDA dari balanceUsdt/balanceUsdc di atas (availableBalance, buat sizing+tampilan saldo
+    // member) -- lihat catatan lengkap di getWalletBalance() binanceExecutor.js kenapa dua-duanya
+    // WAJIB dipisah (posisi isolated margin gak numpang balik ke availableBalance sama sekali).
+    const [walletUsdt, walletUsdc] = await Promise.all([
+      client.getWalletBalance('USDT').catch((e) => { console.log(`[MultiAccountExecutor] getWalletBalance USDT (${account.phone}/${account.mode}) gagal:`, e.message); return balanceUsdt; }),
+      client.getWalletBalance('USDC').catch((e) => { console.log(`[MultiAccountExecutor] getWalletBalance USDC (${account.phone}/${account.mode}) gagal:`, e.message); return balanceUsdc; }),
+    ]);
     // MEXC (30 Agu 2026) -- fail-safe TERPISAH: kalau mexcClient stub (belum disetup) ATAU
     // beneran error, JANGAN gugurin laporan Binance -- default 0, log doang.
     // 30 Agu 2026 -- 4 dompet independen: MEXC USDT (Sniper Emas) + MEXC USDC (Nyopet Emas),
@@ -289,15 +297,22 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       client.getAllPositions().catch((e) => { console.log(`[MultiAccountExecutor] Gagal getAllPositions Binance (${account.phone}/${account.mode}):`, e.message); return []; }),
       mexcClient.getAllPositions().catch((e) => { if (!isMexcNotConfiguredError(e.message)) console.log(`[MultiAccountExecutor] Gagal getAllPositions MEXC (${account.phone}/${account.mode}):`, e.message); return []; }),
     ]);
-    const positions = [...binancePositionsRaw, ...mexcPositionsRaw]
-      .filter((p) => p && Math.abs(parseFloat(p.positionAmt)) > 0)
-      .map((p) => ({
-        symbol: p.symbol, positionAmt: p.positionAmt, entryPrice: p.entryPrice,
-        markPrice: p.markPrice, unRealizedProfit: p.unRealizedProfit,
-        leverage: p.leverage, liquidationPrice: p.liquidationPrice,
-        marginType: p.marginType, notional: p.notional,
-      }));
-    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc);
+    // `exchange` tag (4 Sep 2026) -- WAJIB biar Pool.gs _poolOpenPositionsEquity() bisa milih
+    // formula equity yang BENER per posisi (Binance: balance+unrealizedProfit via walletUsdt/
+    // walletUsdc di atas; MEXC: masih estimasi margin, field wallet-balance-nya BELUM
+    // diverifikasi live -- lihat mexcExecutor.js getWalletBalance).
+    const mapPos = (exch) => (p) => ({
+      exchange: exch, symbol: p.symbol, positionAmt: p.positionAmt, entryPrice: p.entryPrice,
+      markPrice: p.markPrice, unRealizedProfit: p.unRealizedProfit,
+      leverage: p.leverage, liquidationPrice: p.liquidationPrice,
+      marginType: p.marginType, notional: p.notional,
+    });
+    const isOpen = (p) => p && Math.abs(parseFloat(p.positionAmt)) > 0;
+    const positions = [
+      ...binancePositionsRaw.filter(isOpen).map(mapPos('binance')),
+      ...mexcPositionsRaw.filter(isOpen).map(mapPos('mexc')),
+    ];
+    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc, walletUsdt, walletUsdc);
     console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), $${mexcBalanceUsdc.toFixed(2)} USDC (MEXC), ${positions.length} posisi.`);
 
     // Pengawas posisi manual (2-3 Sep 2026, permintaan Olan) -- KHUSUS akun Real Olan sendiri

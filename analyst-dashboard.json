@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 77108.01,
+    "price": 81033.86,
     "conviction": {
       "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
@@ -8,12 +8,12 @@
         {
           "label": "RSI Teknikal",
           "v": -1,
-          "reason": "RSI 70 overbought -- rawan technical pullback"
+          "reason": "RSI 71 overbought -- rawan technical pullback"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.47 -- Fair value / akumulasi"
+          "reason": "1.46 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "65/100 -- Greed (kontrarian)"
+          "reason": "74/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "+0.08% (7 hari) -- stabil"
+          "reason": "+0.10% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -48,33 +48,33 @@
         {
           "label": "ETF Flow (institusi)",
           "v": 0,
-          "reason": "5/7 hari inflow, net 7hari $905jt -- campuran"
+          "reason": "5/7 hari inflow, net 7hari $668jt -- campuran"
         }
       ],
       "totalFactors": 9
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.15210150358698796,
-      "corr90": 0.34987005366110546,
+      "corr30": 0.14053325897105431,
+      "corr90": 0.35161257539081126,
       "label30": "lemah/gak konsisten",
       "label90": "moderat positif",
       "sampleDays": 80,
-      "latestDate": "2026-09-01"
+      "latestDate": "2026-09-02"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 37.15,
-        "changePct": -7.610047251927386
+        "value": 39.42,
+        "changePct": -5.2176003847078665
       },
       "stablecoin": {
-        "current": 257214616400.82617,
-        "weekAgo": 257013540280.07483,
-        "changePct": 0.07823561378603809
+        "current": 257517460551.1037,
+        "weekAgo": 257248793906.33084,
+        "changePct": 0.10443844680208074
       },
       "yieldCurve": {
-        "value": 0.4,
-        "date": "2026-09-02",
+        "value": 0.43,
+        "date": "2026-09-03",
         "inverted": false
       },
       "m2": {
@@ -84,38 +84,38 @@
       },
       "fedRate": {
         "value": 3.63,
-        "date": "2026-09-01",
+        "date": "2026-09-02",
         "changeBps": 0.9999999999999787
       },
       "creditSpread": {
-        "value": 2.65,
-        "date": "2026-09-01",
-        "changeBps": -20.000000000000018
+        "value": 2.66,
+        "date": "2026-09-02",
+        "changeBps": -11.999999999999966
       },
       "etfFlow": {
-        "date": "2026-09-01",
-        "latestNetFlowUsd": -236463473.45,
-        "sum7dUsd": 904714965.815,
+        "date": "2026-09-02",
+        "latestNetFlowUsd": 101146706.42999999,
+        "sum7dUsd": 668304993.5799998,
         "positiveDays7d": 5,
         "totalDays7d": 7
       }
     }
   },
   "xau": {
-    "price": 4403.33,
+    "price": 4482.64,
     "conviction": {
-      "score": 0,
-      "verdict": "⚪ NETRAL / Campuran",
+      "score": 1,
+      "verdict": "🟢 Condong Bullish",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 41 netral"
+          "reason": "RSI 48 netral"
         },
         {
           "label": "DXY (Dolar)",
-          "v": 0,
-          "reason": "STABIL -- Emas netral"
+          "v": 1,
+          "reason": "MELEMAH -- Emas cenderung DIUNTUNGKAN"
         },
         {
           "label": "Real Yield 10Y",
@@ -133,38 +133,38 @@
     "trackRecord": null,
     "regime": {
       "corr30": -0.4656209765768793,
-      "corr90": -0.5130095367335494,
+      "corr90": -0.513248564169291,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 78,
+      "sampleDays": 77,
       "latestDate": "2026-08-28"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-09-03",
-          "value": 99.539
+          "date": "2026-09-04",
+          "value": 98.979
         },
         "prev": {
           "date": null,
-          "value": 99.7
+          "value": 99.43
         },
-        "changePct": -0.1614844533600816,
+        "changePct": -0.4535854369908555,
         "trend": {
-          "arah": "STABIL",
-          "efekEmas": "netral"
+          "arah": "MELEMAH",
+          "efekEmas": "cenderung DIUNTUNGKAN"
         }
       },
       "realYield": {
         "latest": {
+          "date": "2026-09-02",
+          "value": 2.45
+        },
+        "prev": {
           "date": "2026-09-01",
           "value": 2.44
         },
-        "prev": {
-          "date": "2026-08-31",
-          "value": 2.44
-        },
-        "changePct": 0,
+        "changePct": 0.40983606557377994,
         "trend": {
           "arah": "STABIL",
           "efekEmas": "netral"
@@ -173,10 +173,10 @@
     },
     "cot": null,
     "yieldCurve": {
-      "value": 0.4,
-      "date": "2026-09-02",
+      "value": 0.43,
+      "date": "2026-09-03",
       "inverted": false
     }
   },
-  "updatedAt": "2026-09-03T01:04:32.582Z"
+  "updatedAt": "2026-09-04T00:55:00.413Z"
 }

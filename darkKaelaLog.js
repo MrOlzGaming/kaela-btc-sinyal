@@ -142,13 +142,21 @@ function _nyopetBadge(pos, isDemo) {
   return `🥷 NYOPET${_isManual(pos) ? ' · Manual Olan' : ''} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}`;
 }
 
-function formatAutoOpen(pos, now, dxyLine, isDemo) {
-  const dirLabel = pos.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT';
+// (5 Sep 2026, permintaan Olan: "nilai investasi juga ada dalam kurung rupiah.. lalu rapikan
+// lagi semua pesan trading ini karena buat WhatsApp") -- 3 template di bawah (Buka/Partial/Tutup)
+// DIRAPIKAN bareng: *bold* WhatsApp di bagian yang paling penting buat di-skim cepat di grup rame
+// (aksi/label baris pertama, arah LONG/SHORT, angka PnL final) -- field lain TETAP polos biar gak
+// kebanyakan bold (kontras ilang kalau semua ditebelin). `idrRate` null/gagal -> fmtUsdWithIdr
+// sendiri fallback USD doang, gak pernah gugurin pesan gara-gara kurs gagal kebaca.
+function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate) {
+  const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
-  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — Buka Posisi
-
+  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
-TP1 ${fmtUsd(pos.tp)} · SL ${fmtUsd(pos.sl)}
+
+TP1: ${fmtUsd(pos.tp)} · SL: ${fmtUsd(pos.sl)}
+Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
+Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
 Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}
 
 🔗 ${KAELA_ACCESS_URL}`;
@@ -156,12 +164,11 @@ Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}
 
 // Tahap 1 (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper) -- separuh posisi diamankan,
 // SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
-// `idrRate` (BARU, 3 Sep 2026, permintaan Olan: "untuk pnl sertakan idr nya bisa?") -- OPSIONAL,
-// null/gagal -> fallback USD doang (fmtUsdWithIdr sendiri yang handle).
 function formatAutoPartial(pos, now, isDemo, idrRate) {
-  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — Partial TP Diamankan
+  const sign = pos.realizedPnlUsd >= 0 ? '+' : '';
+  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Partial TP Diamankan*
+🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*
 
-🟡 Tahap 1: ${pos.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}
 SL sisa digeser breakeven, separuh posisi di-trail.
 
 🔗 ${KAELA_ACCESS_URL}`;
@@ -170,16 +177,15 @@ SL sisa digeser breakeven, separuh posisi di-trail.
 // `alasanText` (3 Sep 2026) -- WAJIB dioper caller (nyopetAutoTrader.js), sumbernya beda
 // tergantung KENAPA ditutup: kode close-reason (SL/TRAIL/dst, lewat CLOSE_REASON_LABEL) buat
 // otomatis, teks yang Olan TULIS SENDIRI buat manual -- fungsi ini gak nebak-nebak sendiri.
-// `idrRate` (BARU, 3 Sep 2026) -- lihat catatan formatAutoPartial di atas.
 function formatAutoClosed(trade, now, isDemo, alasanText, idrRate) {
   const won = trade.pnlUsd >= 0;
-  const dirLabel = trade.direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
-  const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null
-    ? ` (${trade.pnlUsd >= 0 ? '+' : ''}${trade.pnlPct.toFixed(1)}%)` : '';
-  return `${_nyopetBadge(trade, isDemo)} ${shortId(trade.id)} — Tutup Posisi
+  const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const sign = trade.pnlUsd >= 0 ? '+' : '';
+  const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${sign}${trade.pnlPct.toFixed(1)}%)` : '';
+  return `${_nyopetBadge(trade, isDemo)} ${shortId(trade.id)} — *Tutup Posisi*
+${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
-${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)}→${fmtUsd(trade.exitPrice)}
-PnL: ${trade.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}
+PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*
 Alasan: ${alasanText || '-'}
 
 🔗 ${KAELA_ACCESS_URL}`;

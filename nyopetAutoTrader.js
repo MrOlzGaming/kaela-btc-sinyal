@@ -231,7 +231,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     saveJournal(journal);
 
     const dxyLine = await formatDxyLine().catch(() => '');
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, entryPrice, sl: sig.sl, tp: partialTp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: `Chart Pattern/FVG (${sig.patternType})` });

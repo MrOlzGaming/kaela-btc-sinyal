@@ -19,46 +19,13 @@
 // ada edge, bukan hal pertama yang diuji). Breakdown per tahun + split 2 era WAJIB.
 
 const { fetchKlines } = require('./fetchKlines');
+// (5 Sep 2026) nfpTimestampUTC/generateNfpEvents DIPINDAH ke ../fedEvents.js (dipakai bareng sama
+// fedSignalGridBacktest.js + live trader) -- logic PERSIS SAMA, cuma dipindah lokasinya, gak ada
+// perubahan perilaku. generateNfpEvents di sini TETAP filter events <= Date.now() (default lama).
+const { generateNfpEvents, nfpTimestampUTC } = require('../fedEvents');
 
 const REACTION_THRESHOLD_PCT = 0.10; // BTC gerak >0.10% di jendela reaksi -> dianggap sinyal, bukan noise
 const HORIZONS_MIN = { '30m': 30, '1h': 60, '4h': 240, '24h': 1440 };
-
-// ── Tanggal+jam NFP deterministik (Jumat pertama tiap bulan, 8:30 ET) ──────────────────────────
-// DST AS konsisten sejak 2007: mulai Minggu ke-2 Maret, berakhir Minggu ke-1 November.
-function nthSundayUTC(year, monthIndex, n) {
-  const d = new Date(Date.UTC(year, monthIndex, 1));
-  let count = 0;
-  while (true) {
-    if (d.getUTCDay() === 0) { count += 1; if (count === n) return d.getTime(); }
-    d.setUTCDate(d.getUTCDate() + 1);
-  }
-}
-function isEDT(dateUTCms) {
-  const year = new Date(dateUTCms).getUTCFullYear();
-  return dateUTCms >= nthSundayUTC(year, 2, 2) && dateUTCms < nthSundayUTC(year, 10, 1);
-}
-function firstFridayUTC(year, monthIndex) {
-  const d = new Date(Date.UTC(year, monthIndex, 1));
-  while (d.getUTCDay() !== 5) d.setUTCDate(d.getUTCDate() + 1);
-  return d;
-}
-function nfpTimestampUTC(year, monthIndex) {
-  const friday = firstFridayUTC(year, monthIndex);
-  const noonCheck = Date.UTC(year, monthIndex, friday.getUTCDate(), 12);
-  const utcHour = isEDT(noonCheck) ? 12 : 13; // 8:30 EDT = 12:30 UTC, 8:30 EST = 13:30 UTC
-  return Date.UTC(year, monthIndex, friday.getUTCDate(), utcHour, 30);
-}
-function generateNfpEvents(startYear, endYear) {
-  const events = [];
-  for (let y = startYear; y <= endYear; y += 1) {
-    for (let m = 0; m < 12; m += 1) {
-      const ts = nfpTimestampUTC(y, m);
-      if (ts > Date.now()) continue;
-      events.push({ label: `NFP ${y}-${String(m + 1).padStart(2, '0')}`, timeMs: ts });
-    }
-  }
-  return events;
-}
 
 function findPriceAt(candles, targetMs) {
   for (const c of candles) if (c.openTime >= targetMs) return c.open;

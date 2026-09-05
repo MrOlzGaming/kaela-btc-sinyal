@@ -27,6 +27,10 @@
 
 const { fetchKlines } = require('./fetchKlines');
 const { generateNfpEvents } = require('./econReactionBacktest.js');
+// (5 Sep 2026) generateFomcEvents/fomcTimestampUTC DIPINDAH ke ../fedEvents.js (dipakai bareng
+// live trader) -- logic+tanggal PERSIS SAMA, gak ada perubahan perilaku backtest ini.
+const { generateFomcEvents: generateFomcEventsShared } = require('../fedEvents');
+function generateFomcEvents() { return generateFomcEventsShared(false); } // default lama: cuma yg udah lewat
 
 const REACTION_THRESHOLD_PCT = 0.10;
 const REACTION_WINDOW_MIN = 30; // T-5 s/d T+30 menit (dilebarin dikit dari scalp 15m, ini basis buat HOLD BERHARI-HARI bukan scalp)
@@ -43,41 +47,24 @@ const LAYER_SCHEDULES = {
   agresif_total400pct: [40, 60, 80, 100, 120],
 };
 const LAYER_TRIGGER_PCT_VARIANTS = [1, 2, 3]; // % gerak lawan arah dari layer terakhir buat nambah layer baru
+const TREND_SMA_PERIOD = 480; // 15m candle x480 = ~5 hari -- filter tren jangka pendek
 
-// ── Tanggal FOMC historis (hari KEDUA tiap meeting, 14:00 ET -- sumber: federalreserve.gov) ──
-const FOMC_DECISION_DATES = [
-  [2019, 1, 30], [2019, 3, 20], [2019, 5, 1], [2019, 6, 19], [2019, 7, 31], [2019, 9, 18], [2019, 10, 30], [2019, 12, 11],
-  [2020, 1, 29], [2020, 3, 18], [2020, 4, 29], [2020, 6, 10], [2020, 7, 29], [2020, 9, 16], [2020, 11, 5], [2020, 12, 16],
-  [2021, 1, 27], [2021, 3, 17], [2021, 4, 28], [2021, 6, 16], [2021, 7, 28], [2021, 9, 22], [2021, 11, 3], [2021, 12, 15],
-  [2022, 1, 26], [2022, 3, 16], [2022, 5, 4], [2022, 6, 15], [2022, 7, 27], [2022, 9, 21], [2022, 11, 2], [2022, 12, 14],
-  [2023, 2, 1], [2023, 3, 22], [2023, 5, 3], [2023, 6, 14], [2023, 7, 26], [2023, 9, 20], [2023, 11, 1], [2023, 12, 13],
-  [2024, 1, 31], [2024, 3, 20], [2024, 5, 1], [2024, 6, 12], [2024, 7, 31], [2024, 9, 18], [2024, 11, 7], [2024, 12, 18],
-  [2025, 1, 29], [2025, 3, 19], [2025, 5, 7], [2025, 6, 18], [2025, 7, 30], [2025, 9, 17], [2025, 10, 29], [2025, 12, 10],
-  [2026, 1, 28], [2026, 3, 18], [2026, 4, 29], [2026, 6, 17], [2026, 7, 29], [2026, 9, 16], [2026, 10, 28], [2026, 12, 9],
-];
-
-function nthSundayUTC(year, monthIndex, n) {
-  const d = new Date(Date.UTC(year, monthIndex, 1));
-  let count = 0;
-  while (true) {
-    if (d.getUTCDay() === 0) { count += 1; if (count === n) return d.getTime(); }
-    d.setUTCDate(d.getUTCDate() + 1);
-  }
-}
-function isEDT(dateUTCms) {
-  const year = new Date(dateUTCms).getUTCFullYear();
-  return dateUTCms >= nthSundayUTC(year, 2, 2) && dateUTCms < nthSundayUTC(year, 10, 1);
-}
-function fomcTimestampUTC(year, month, day) {
-  const noonCheck = Date.UTC(year, month - 1, day, 12);
-  const utcHour = isEDT(noonCheck) ? 18 : 19; // 14:00 EDT = 18:00 UTC, 14:00 EST = 19:00 UTC
-  return Date.UTC(year, month - 1, day, utcHour, 0);
-}
-function generateFomcEvents() {
-  return FOMC_DECISION_DATES
-    .map(([y, m, d]) => ({ label: `FOMC ${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`, timeMs: fomcTimestampUTC(y, m, d) }))
-    .filter((e) => e.timeMs <= Date.now());
-}
+// ============ RACIKAN FINAL (5 Sep 2026, keputusan Olan lewat AskUserQuestion) ============
+// LONG-ONLY (dovish) -- SHORT (hawkish) KONSISTEN rugi di SEMUA kombinasi param+hold yang dites,
+// sejalan sama pola lama [[feedback-nyopet-buyonly]]. Skedul Agresif (leverage efektif ~13x,
+// diturunin dari jarak SL-agregat vs liquidation, aman 3x lipat -- lihat chat, BUKAN cuma comot
+// angka) + filter tren SMA480 (~5 hari) + hold maks 7 hari -- robust di 2 era independen (2019-2022
+// vs 2023-2026), net-of-cost PF>1 (lihat main() di bawah). INI yang dipakai fedDovishGridTrader.js
+// LIVE -- kalau parameter di sini diubah, WAJIB re-backtest dulu sebelum ikut diubah di live trader.
+const FINAL_RECIPE = {
+  layerSchedulePct: LAYER_SCHEDULES.agresif_total400pct, // [40,60,80,100,120] -- % modal per layer
+  layerTriggerPct: 2, // nambah layer tiap harga gerak 2% lawan arah dari layer terakhir
+  maxHoldDays: 7,
+  trendSmaPeriod: TREND_SMA_PERIOD,
+  leverage: 13,
+  slPct: SL_PCT, // 10% modal, sama utk LONG&SHORT (SHORT gak dipakai live, tapi angkanya tetap relevan buat basket LONG)
+  longTpPct: LONG_TP_PCT, // 30% modal
+};
 
 function binarySearchIdxAtOrAfter(candles, targetMs) {
   let lo = 0, hi = candles.length - 1, ans = candles.length;
@@ -109,12 +96,20 @@ function computeSignals(candles, events) {
 // `layerScheduleInputPct` = angka PERSEN buat dibaca manusia (10 = "10% modal") -- WAJIB
 // dikonversi ke desimal (0.10) sebelum dipake ngitung, atau TP/SL kesundul 100x lebih gampang
 // dari niatnya (bug nyata yang ketemu 5 Sep 2026: SL "10%" kena cuma dari harga gerak 1%).
-function simulateBaskets(candles, signals, layerScheduleInputPct, layerTriggerPct) {
+//
+// `maxHoldDays` (BARU, ganti MAX_HOLD_DAYS konstan) + `trendSma` (BARU, opsional -- array SMA
+// SEJAJAR index `candles`, null = gak difilter) -- DUA parameter ini yang bikin racikan akhir
+// ("hold 7 hari" + "filter tren SMA480") -- ⚠️ CATATAN PENTING 5 Sep 2026: kombinasi ini
+// SEBELUMNYA cuma pernah dites di script sekali-pakai (node -e interaktif), BELUM PERNAH beneran
+// masuk ke file ini -- ketauan pas verifikasi refactor fedEvents.js (hasil gak cocok sama yang
+// dilaporkan). Sekarang DIPINDAH PERMANEN ke sini biar jadi SATU sumber kebenaran yang bener,
+// dipakai backtest MAUPUN live trader (fedDovishGridTrader.js) -- gak ada lagi versi liar di luar.
+function simulateBaskets(candles, signals, layerScheduleInputPct, layerTriggerPct, maxHoldDays = MAX_HOLD_DAYS, trendSma = null) {
   const layerSchedule = layerScheduleInputPct.map((v) => v / 100);
   const trades = [];
   let basket = null; // { direction, layers:[{price, sizeFrac}], avgEntry, totalSizeFrac, openedAtIdx }
   let sigPtr = 0;
-  const maxHoldCandles = MAX_HOLD_DAYS * 24 * 4; // 15m candle
+  const maxHoldCandles = maxHoldDays * 24 * 4; // 15m candle
 
   function recomputeAvg() {
     let sumPriceSize = 0, sumSize = 0;
@@ -141,12 +136,17 @@ function simulateBaskets(candles, signals, layerScheduleInputPct, layerTriggerPc
     const price = candles[i].close;
     while (sigPtr < signals.length && signals[sigPtr].idxSignal === i) {
       const sig = signals[sigPtr];
-      if (!basket) {
-        openBasket(sig.direction, price, i);
-      } else if (sig.direction !== basket.direction) {
-        closeBasket(price, i, 'REVERSAL');
-        openBasket(sig.direction, price, i);
-      } // arah sama -> diabaikan (nambah layer cuma price-triggered)
+      // Filter tren (opsional): skip sinyal LONG kalau harga MASIH di bawah SMA (downtrend kuat),
+      // skip sinyal SHORT kalau harga MASIH di atas SMA -- "jangan lawan tren jangka pendek".
+      const trendOk = !trendSma || trendSma[i] == null || (sig.direction === 'LONG' ? price > trendSma[i] : price < trendSma[i]);
+      if (trendOk) {
+        if (!basket) {
+          openBasket(sig.direction, price, i);
+        } else if (sig.direction !== basket.direction) {
+          closeBasket(price, i, 'REVERSAL');
+          openBasket(sig.direction, price, i);
+        } // arah sama -> diabaikan (nambah layer cuma price-triggered)
+      }
       sigPtr += 1;
     }
 
@@ -176,7 +176,20 @@ function simulateBaskets(candles, signals, layerScheduleInputPct, layerTriggerPc
   return trades;
 }
 
-function summarizeTrades(trades, label) {
+function computeSMA(closes, period) {
+  const sma = new Array(closes.length).fill(null);
+  let sum = 0;
+  for (let i = 0; i < closes.length; i += 1) {
+    sum += closes[i];
+    if (i >= period) sum -= closes[i - period];
+    if (i >= period - 1) sma[i] = sum / period;
+  }
+  return sma;
+}
+
+const ROUND_TRIP_COST_PCT_OF_NOTIONAL = 0.10; // taker+taker kasar per unit notional (lihat catatan econReactionBacktest.js)
+
+function summarizeTrades(trades, label, { showNetCost } = {}) {
   if (!trades.length) { console.log(`  ${label}: n=0`); return; }
   const wins = trades.filter((t) => t.pnlPct > 0);
   const losses = trades.filter((t) => t.pnlPct <= 0);
@@ -185,12 +198,21 @@ function summarizeTrades(trades, label) {
   const sumLoss = Math.abs(losses.reduce((a, t) => a + t.pnlPct, 0));
   const pf = sumLoss > 0 ? (sumWin / sumLoss).toFixed(2) : (sumWin > 0 ? 'inf' : '-');
   let equity = 100, peak = 100, maxDD = 0;
-  for (const t of trades) { equity *= (1 + t.pnlPct / 100); peak = Math.max(peak, equity); maxDD = Math.max(maxDD, (peak - equity) / peak * 100); }
+  let equityNet = 100, peakNet = 100, maxDDNet = 0;
+  for (const t of trades) {
+    equity *= (1 + t.pnlPct / 100); peak = Math.max(peak, equity); maxDD = Math.max(maxDD, (peak - equity) / peak * 100);
+    // Biaya kasar ~ 0.10%/layer yg dibuka (proxy notional bertambah tiap layer + 1x exit) --
+    // estimasi sama arah kayak yang udah dites interaktif (net-of-cost tetep PF>1).
+    const netPct = t.pnlPct - (t.layers * ROUND_TRIP_COST_PCT_OF_NOTIONAL);
+    equityNet *= (1 + netPct / 100); peakNet = Math.max(peakNet, equityNet); maxDDNet = Math.max(maxDDNet, (peakNet - equityNet) / peakNet * 100);
+  }
   const avgHold = trades.reduce((a, t) => a + t.holdDays, 0) / trades.length;
   const reasons = {};
   for (const t of trades) reasons[t.reason] = (reasons[t.reason] || 0) + 1;
   const reasonStr = Object.entries(reasons).map(([k, v]) => `${k}=${v}`).join(' ');
-  console.log(`  ${label}: n=${trades.length} winRate=${winRate.toFixed(1)}% PF=${pf} return(compound)=${(equity - 100).toFixed(1)}% maxDD=${maxDD.toFixed(1)}% avgHold=${avgHold.toFixed(1)}hari [${reasonStr}]`);
+  let line = `  ${label}: n=${trades.length} winRate=${winRate.toFixed(1)}% PF=${pf} return(compound)=${(equity - 100).toFixed(1)}% maxDD=${maxDD.toFixed(1)}% avgHold=${avgHold.toFixed(1)}hari [${reasonStr}]`;
+  if (showNetCost) line += ` || NET biaya: return=${(equityNet - 100).toFixed(1)}% maxDD=${maxDDNet.toFixed(1)}%`;
+  console.log(line);
 }
 
 async function main() {
@@ -199,6 +221,7 @@ async function main() {
   const endMs = Date.now();
   const candles = await fetchKlines('BTCUSDT', '15m', startMs, endMs);
   console.log(`Total candle: ${candles.length}`);
+  const closes = candles.map((c) => c.close);
 
   const nfpEvents = generateNfpEvents(2019, 2026);
   const fomcEvents = generateFomcEvents();
@@ -208,22 +231,24 @@ async function main() {
   const signals = computeSignals(candles, allEvents);
   console.log(`Event ada sinyal jelas (>${REACTION_THRESHOLD_PCT}%): ${signals.length} dari ${allEvents.length}`);
 
+  // ============ LAPORAN UTAMA: racikan final (LONG-only, lihat FINAL_RECIPE) ============
+  const trendSma = computeSMA(closes, FINAL_RECIPE.trendSmaPeriod);
+  console.log(`\n########## RACIKAN FINAL: ${JSON.stringify(FINAL_RECIPE)} ##########`);
+  const finalTrades = simulateBaskets(candles, signals, FINAL_RECIPE.layerSchedulePct, FINAL_RECIPE.layerTriggerPct, FINAL_RECIPE.maxHoldDays, trendSma)
+    .filter((t) => t.direction === 'LONG'); // SHORT dibuang total dari live -- konsisten rugi, lihat catatan atas
+  summarizeTrades(finalTrades, 'FULL PERIOD (LONG only)', { showNetCost: true });
+  const byYearFinal = {};
+  for (const t of finalTrades) { const y = new Date(t.openTime).getUTCFullYear(); (byYearFinal[y] = byYearFinal[y] || []).push(t); }
+  for (const y of Object.keys(byYearFinal).sort()) summarizeTrades(byYearFinal[y], `  ${y}`);
+  summarizeTrades(finalTrades.filter((t) => t.openTime < Date.UTC(2023, 0, 1)), '  Era1 <2023', { showNetCost: true });
+  summarizeTrades(finalTrades.filter((t) => t.openTime >= Date.UTC(2023, 0, 1)), '  Era2 >=2023', { showNetCost: true });
+
+  // ============ SENSITIVITAS (dokumentasi -- kenapa racikan di atas yang dipilih) ============
+  console.log('\n########## SENSITIVITAS PARAMETER (LONG only, semua tanpa biaya) ##########');
   for (const [schedName, schedule] of Object.entries(LAYER_SCHEDULES)) {
     for (const triggerPct of LAYER_TRIGGER_PCT_VARIANTS) {
-      console.log(`\n=== Skenario: ${schedName} | trigger layer tiap ${triggerPct}% lawan arah ===`);
-      const trades = simulateBaskets(candles, signals, schedule, triggerPct);
-      summarizeTrades(trades, 'FULL PERIOD');
-      summarizeTrades(trades.filter((t) => t.direction === 'LONG'), '  LONG only');
-      summarizeTrades(trades.filter((t) => t.direction === 'SHORT'), '  SHORT only');
-
-      const byYear = {};
-      for (const t of trades) { const y = new Date(t.openTime).getUTCFullYear(); (byYear[y] = byYear[y] || []).push(t); }
-      for (const y of Object.keys(byYear).sort()) summarizeTrades(byYear[y], `  ${y}`);
-
-      const era1 = trades.filter((t) => t.openTime < Date.UTC(2023, 0, 1));
-      const era2 = trades.filter((t) => t.openTime >= Date.UTC(2023, 0, 1));
-      summarizeTrades(era1, '  Era1 <2023');
-      summarizeTrades(era2, '  Era2 >=2023');
+      const trades = simulateBaskets(candles, signals, schedule, triggerPct, 7, trendSma).filter((t) => t.direction === 'LONG');
+      summarizeTrades(trades, `${schedName} trigger${triggerPct}%`);
     }
   }
 }
@@ -232,4 +257,4 @@ if (require.main === module) {
   main().catch((e) => { console.error('ERROR fedSignalGridBacktest.js:', e.message); process.exit(1); });
 }
 
-module.exports = { generateFomcEvents, fomcTimestampUTC, computeSignals, simulateBaskets };
+module.exports = { generateFomcEvents, computeSignals, simulateBaskets, computeSMA, FINAL_RECIPE, REACTION_THRESHOLD_PCT, REACTION_WINDOW_MIN };

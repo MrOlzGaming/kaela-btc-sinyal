@@ -111,7 +111,7 @@ ${fmtWita(now)}`;
 // scalp, exit dipaksa ~30 menit, lihat econCalendarLiveMonitor.js + backtest/econReactionBacktest.js).
 const PATTERN_TAG_LABEL = {
   flag_bull: 'Flag', pennant_bull: 'Pennant', wedge_falling: 'Wedge', fvg_bounce: 'FVG',
-  econ_reaction: 'Econ Reaction',
+  econ_reaction: 'Econ Reaction', fed_dovish_grid: 'Fed Dovish Grid',
 };
 function patternTag(mode) { return PATTERN_TAG_LABEL[mode] || mode || '-'; }
 
@@ -127,6 +127,7 @@ const PATTERN_REASON_LABEL = {
   wedge_falling: 'Chart Pattern (Falling Wedge) -- breakout wedge turun terkonfirmasi',
   fvg_bounce: 'FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)',
   econ_reaction: 'Reaksi Kalender Ekonomi -- BTC bereaksi searah abis rilis data high-impact, ikut kelanjutannya (exit paksa ~30 menit, jendela tervalidasi backtest)',
+  fed_dovish_grid: 'Fed Dovish Grid -- BTC bereaksi NAIK abis rilis FOMC/NFP (sinyal dovish) + tren jangka pendek masih naik, nyicil stacking sampai TP/SL agregat atau 7 hari (tervalidasi backtest, LONG-only)',
 };
 function patternReason(mode) { return PATTERN_REASON_LABEL[mode] || patternTag(mode); }
 
@@ -135,6 +136,10 @@ function patternReason(mode) { return PATTERN_REASON_LABEL[mode] || patternTag(m
 const CLOSE_REASON_LABEL = {
   SL: 'Stop Loss kena', SL_BREAKEVEN: 'SL breakeven kena (abis partial TP tahap 1)',
   TRAIL: 'Trend patah (trailing SMA)', OFFLINE: 'Kelikuidasi/tertutup pas eksekutor offline, baru kesinkron sekarang',
+  // (5 Sep 2026, Fed Dovish Grid) -- TP/SL di sini beda dari chart-pattern (agregat % modal dari
+  // basket, bukan harga tunggal) tapi teksnya sengaja tetap simpel/sama gaya biar konsisten dibaca.
+  TP: 'Take Profit agregat kena', TIMEOUT_GRID: 'Hold maksimal 7 hari kesentuh, tutup basket',
+  REVERSAL: 'Sinyal balik arah (hawkish) muncul, tutup duluan biar aman',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
@@ -158,6 +163,19 @@ TP1: ${fmtUsd(pos.tp)} · SL: ${fmtUsd(pos.sl)}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
 Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
+// (5 Sep 2026, method baru "Fed Dovish Grid") -- notif TIAP KALI nambah layer stacking (basket
+// masih floating, BUKAN posisi baru/tutup posisi). `pos.layers` = jumlah layer SETELAH ditambah.
+function formatAutoAddLayer(pos, now, isDemo, idrRate) {
+  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
+🟢 *LONG* rata-rata baru @ ${fmtUsd(pos.entryPrice)}
+
+Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
+Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
+Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam batas SL agregat)
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
@@ -192,7 +210,7 @@ Alasan: ${alasanText || '-'}
 }
 
 module.exports = {
-  formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed,
+  formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoAddLayer,
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).

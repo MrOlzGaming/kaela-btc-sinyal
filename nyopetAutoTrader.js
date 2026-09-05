@@ -44,8 +44,15 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed, formatAutoPartial, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
+const { formatAutoOpen, formatAutoClosed, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
 const { sendWhatsApp, sendWhatsAppToSniperClub } = require('./fonnte');
+// (5 Sep 2026, metode Nyopet BARU "Fed Dovish Grid" -- lihat backtest/fedSignalGridBacktest.js
+// buat riset lengkapnya) -- fetchKlines/computeSignals/computeSMA/FINAL_RECIPE di-REUSE LANGSUNG
+// dari file backtest (SATU sumber kebenaran, sinyal live WAJIB persis sama logic yang di-backtest,
+// bukan ditulis ulang beda risiko bug/drift -- sama prinsip kayak fedEvents.js).
+const { fetchKlines } = require('./backtest/fetchKlines');
+const { generateNfpEvents, generateFomcEvents } = require('./fedEvents');
+const { computeSignals, computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.js');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
@@ -334,6 +341,18 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const journal = loadJournal();
     const floating = getFloatingOrder(journal, assetKey);
 
+    // (5 Sep 2026, metode Fed Dovish Grid BARU -- lihat processFedDovishGrid di bawah) -- floating
+    // order method ITU py punya bentuk beda (basket multi-layer, TP/SL agregat % modal, gak ada
+    // partialTp) -- logic GENERIK di bawah (chart-pattern/FVG, single-entry + partial 2-tahap)
+    // TIDAK BOLEH ikut nyentuh floating order ini, WAJIB diserahin PENUH ke processFedDovishGrid
+    // (dipanggil terpisah di main()) -- ⚠️ BUG NYATA ketemu pas testing: tanpa guard ini, kode
+    // generik di bawah bisa DOBEL PROSES floating order yang sama di siklus yang sama (processAsset
+    // jalan duluan sebelum processFedDovishGrid di main()), risiko close/skip yang gak konsisten.
+    if (floating && floating.patternType === 'fed_dovish_grid') {
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: slot floating lagi kepake method "Fed Dovish Grid" -- serahin penuh ke processFedDovishGrid, skip logic generik di sini.`);
+      return;
+    }
+
     if (floating) {
       // ⚠️ BUG ketemu 30 Agu 2026 (dari laporan watchdog "Cannot read properties of null") --
       // beda perilaku Binance vs MEXC: Binance getPositionRisk BIASANYA tetap balikin object
@@ -462,6 +481,214 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     await openPosition(assetCfg, sig, candles4h[i].close);
   }
 
+  // ============ Fed Dovish Grid (5 Sep 2026, metode Nyopet BARU) ============
+  // LONG-ONLY -- SHORT (hawkish) KONSISTEN rugi di backtest (lihat FINAL_RECIPE di
+  // backtest/fedSignalGridBacktest.js), sejalan sama [[feedback-nyopet-buyonly]]. Basket floating
+  // multi-layer, TP/SL AGREGAT dari % MODAL (bukan harga tunggal per posisi kayak chart-pattern),
+  // hold maks 7 hari. Pakai SLOT FLOATING YANG SAMA (asset key 'btc') kayak chart-pattern/FVG --
+  // OTOMATIS saling exclude (getFloatingOrder cuma 1 slot per aset): kalau slot lagi kepake method
+  // LAIN, grid ini skip total; sebaliknya method lain juga skip kalau grid lagi jalan (return awal
+  // processAsset gak keubah, cuma processFedDovishGrid yang baru).
+  const FED_GRID_PATTERN_TYPE = 'fed_dovish_grid';
+
+  async function fetchFedGridCandles() {
+    const lookbackMs = (FINAL_RECIPE.trendSmaPeriod + 50) * 15 * 60 * 1000; // SMA period + buffer warmup
+    return fetchKlines('BTCUSDT', '15m', Date.now() - lookbackMs, Date.now());
+  }
+
+  function _fedGridUpcomingEvents() {
+    const y = new Date().getUTCFullYear();
+    return [...generateNfpEvents(y - 1, y + 1, true), ...generateFomcEvents(true)].sort((a, b) => a.timeMs - b.timeMs);
+  }
+
+  // Basket floating multi-layer: SL/TP di sini BUKAN harga tunggal (beda dari chart-pattern),
+  // tapi harga IMPLIED yang berubah tiap kali layer ditambah (dipakai buat isi field order.sl/tp
+  // biar formatAutoOpen/formatAutoAddLayer yang UDAH ADA tetep bisa nampilin angka tanpa perlu
+  // template terpisah). floatingPct = totalSizeFrac x %gerak harga dari avg -- balik rumus itu.
+  function _fedGridImpliedSlTp(avgEntry, totalSizeFrac) {
+    const slMovePct = FINAL_RECIPE.slPct / totalSizeFrac;
+    const tpMovePct = FINAL_RECIPE.longTpPct / totalSizeFrac;
+    return { sl: avgEntry * (1 - slMovePct / 100), tp: avgEntry * (1 + tpMovePct / 100) };
+  }
+
+  // Cari sinyal FOMC/NFP TERBARU yang belum diproses (state disimpen di journal.fedGridLastProcessed,
+  // biar gak diulang2 tiap siklus 15 menit selama masih dalam jendela reaksi yang sama).
+  async function detectFedGridSignal(journal) {
+    const candles = await fetchFedGridCandles();
+    if (candles.length < FINAL_RECIPE.trendSmaPeriod + 10) return null; // data candle blm cukup buat SMA
+    const events = _fedGridUpcomingEvents().filter((e) => e.timeMs - 5 * 60 * 1000 >= candles[0].openTime);
+    const signals = computeSignals(candles, events);
+    if (!signals.length) return null;
+    const latest = signals[signals.length - 1];
+    if (latest.label === journal.fedGridLastProcessed) return null; // udah diproses siklus lalu
+    // Sinyal cuma relevan kalau candle-nya BENERAN baru (dalam ~45 menit terakhir) -- di luar itu
+    // ada gap besar (mesin sempat mati dll), JANGAN trigger sinyal basi begitu nyala lagi.
+    if (Date.now() - candles[latest.idxSignal].openTime > 45 * 60 * 1000) return null;
+    const closes = candles.map((c) => c.close);
+    const trendSma = computeSMA(closes, FINAL_RECIPE.trendSmaPeriod);
+    const price = candles[latest.idxSignal].close;
+    const trendOk = trendSma[latest.idxSignal] != null
+      && (latest.direction === 'LONG' ? price > trendSma[latest.idxSignal] : price < trendSma[latest.idxSignal]);
+    return { ...latest, trendOk, price };
+  }
+
+  async function openFedGridBasket(assetCfg, signal) {
+    const { symbol, marginAsset, key: assetKey } = assetCfg;
+    const exec = execFor(assetCfg);
+    const [modalFull, livePrice] = await Promise.all([resolveModal(marginAsset, exec), fetchLivePrice(symbol, assetCfg.exchange)]);
+    const modal = modalFull * MODAL_ACTIVE_FRACTION;
+    const notionalUsd = modal * (FINAL_RECIPE.layerSchedulePct[0] / 100);
+
+    await exec.setIsolatedMargin(symbol);
+    await exec.setLeverage(symbol, FINAL_RECIPE.leverage);
+    let entryOrder;
+    try {
+      entryOrder = await exec.placeMarketEntry({ symbol, direction: 'buy', notionalUsd, livePrice });
+    } catch (e) {
+      if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
+        const alertKey = `${path.basename(journalPath, '.json')}-nyopet-fedgrid-${assetCfg.label}`;
+        if (shouldAlertInsufficientBalance(alertKey)) {
+          await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet (Fed Dovish Grid)', assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }));
+        }
+      }
+      throw e;
+    }
+    const qty = parseFloat(entryOrder.executedQty);
+    const entryPrice = parseFloat(entryOrder.avgPrice);
+    const totalSizeFrac = FINAL_RECIPE.layerSchedulePct[0] / 100;
+    const { sl, tp } = _fedGridImpliedSlTp(entryPrice, totalSizeFrac);
+
+    const order = {
+      id: 'nyopet-demo-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', status: 'floating',
+      mode: FED_GRID_PATTERN_TYPE, patternType: FED_GRID_PATTERN_TYPE, entryPrice, qty,
+      sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: notionalUsd / FINAL_RECIPE.leverage, nilaiPosisi: notionalUsd,
+      modalAtOpen: modal, layers: 1, layerSizesFrac: [totalSizeFrac],
+      maxHoldUntilMs: Date.now() + FINAL_RECIPE.maxHoldDays * 24 * 3600 * 1000,
+      partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
+      triggeredAt: new Date().toISOString(), manualReason: null,
+    };
+    const journal = loadJournal();
+    journal.orders.push(order);
+    saveJournal(journal);
+
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate);
+    console.log(msg + '\n');
+    await notify(msg);
+    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', entryPrice, sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: order.marginUsd, status: 'open', openedAt: order.triggeredAt, note: `Fed Dovish Grid (${signal.label})` });
+    return order;
+  }
+
+  async function addFedGridLayer(assetCfg, order, livePrice) {
+    const { symbol } = assetCfg;
+    const exec = execFor(assetCfg);
+    const nextIdx = order.layers;
+    if (nextIdx >= FINAL_RECIPE.layerSchedulePct.length) return; // max layer -- harusnya udah TIMEOUT/TP/SL duluan, jaga2 doang
+    const notionalUsd = order.modalAtOpen * (FINAL_RECIPE.layerSchedulePct[nextIdx] / 100);
+
+    await exec.placeMarketEntry({ symbol, direction: 'buy', notionalUsd, livePrice });
+    // Sinkron avg price/qty BENERAN dari exchange (one-way mode auto-average tiap nambah posisi
+    // arah sama) -- JANGAN hitung rata-rata sendiri, PERCAYA data exchange (prinsip sama kayak
+    // rekonsiliasi posisi legacy di atas).
+    const posRisk = await exec.getPositionRisk(symbol);
+    const newEntryPrice = parseFloat(posRisk.entryPrice);
+    const newQty = Math.abs(parseFloat(posRisk.positionAmt));
+
+    const journal = loadJournal();
+    const target = journal.orders.find((o) => o.id === order.id);
+    target.layers += 1;
+    target.layerSizesFrac.push(FINAL_RECIPE.layerSchedulePct[nextIdx] / 100);
+    target.entryPrice = newEntryPrice;
+    target.qty = newQty;
+    const totalSizeFrac = target.layerSizesFrac.reduce((a, b) => a + b, 0);
+    target.nilaiPosisi = target.modalAtOpen * totalSizeFrac;
+    target.marginUsd = target.nilaiPosisi / FINAL_RECIPE.leverage;
+    const { sl, tp } = _fedGridImpliedSlTp(newEntryPrice, totalSizeFrac);
+    target.sl = sl; target.tp = tp;
+    saveJournal(journal);
+
+    const msg = formatAutoAddLayer({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate);
+    console.log(msg + '\n');
+    await notify(msg);
+    emit({ entryId: target.id, type: 'addLayer', layers: target.layers, entryPrice: newEntryPrice, exchange: assetCfg.exchange });
+  }
+
+  async function processFedDovishGrid(assetCfg) {
+    if (assetCfg.key !== 'btc') return; // strategi ini BTC-only (backtest cuma nguji BTC)
+    const { symbol } = assetCfg;
+    const exec = execFor(assetCfg);
+    const journal = loadJournal();
+    const floating = getFloatingOrder(journal, assetCfg.key);
+
+    if (floating && floating.patternType === FED_GRID_PATTERN_TYPE) {
+      const posRisk = await exec.getPositionRisk(symbol);
+      const stillOpen = posRisk ? Math.abs(parseFloat(posRisk.positionAmt)) > 0 : false;
+      if (!stillOpen) {
+        console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: basket UDAH GAK ADA (kelikuidasi/offline) -- rekonsiliasi income history.`);
+        const realPnlUsd = await fetchRealizedPnlSince(symbol, new Date(floating.triggeredAt).getTime());
+        await closePosition(assetCfg, floating, { alreadyClosed: true, realPnlUsd, reason: 'OFFLINE' });
+        return;
+      }
+
+      const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
+      const totalSizeFrac = floating.layerSizesFrac.reduce((a, b) => a + b, 0);
+      const changePct = ((livePrice - floating.entryPrice) / floating.entryPrice) * 100; // LONG doang, gak perlu dirMult
+      const floatingPct = totalSizeFrac * changePct;
+
+      if (floatingPct >= FINAL_RECIPE.longTpPct) {
+        console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: TP agregat kena (floating ${floatingPct.toFixed(1)}% >= ${FINAL_RECIPE.longTpPct}%) -- tutup basket.`);
+        await closePosition(assetCfg, floating, { alreadyClosed: false, reason: 'TP' });
+        return;
+      }
+      if (floatingPct <= -FINAL_RECIPE.slPct) {
+        console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: SL agregat kena (floating ${floatingPct.toFixed(1)}% <= -${FINAL_RECIPE.slPct}%) -- tutup basket.`);
+        await closePosition(assetCfg, floating, { alreadyClosed: false, reason: 'SL' });
+        return;
+      }
+      if (Date.now() >= floating.maxHoldUntilMs) {
+        console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: hold maks ${FINAL_RECIPE.maxHoldDays} hari kesentuh -- tutup basket paksa.`);
+        await closePosition(assetCfg, floating, { alreadyClosed: false, reason: 'TIMEOUT_GRID' });
+        return;
+      }
+
+      // Sinyal balik arah (hawkish + tren turun terkonfirmasi) -- SATU-SATUNYA alasan tutup selain
+      // TP/SL/timeout. TIDAK PERNAH buka short baru (short tetap OFF, konsisten backtest LONG-only).
+      const signal = await detectFedGridSignal(journal).catch((e) => { console.log(`[NyopetAutoTrader][FedGrid] gagal cek sinyal reversal:`, e.message); return null; });
+      if (signal) {
+        const j2 = loadJournal(); j2.fedGridLastProcessed = signal.label; saveJournal(j2);
+        if (signal.direction === 'SHORT' && signal.trendOk) {
+          console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: sinyal balik arah hawkish (${signal.label}) -- tutup basket (BUKAN buka short).`);
+          await closePosition(assetCfg, floating, { alreadyClosed: false, reason: 'REVERSAL' });
+          return;
+        }
+      }
+
+      // Trigger nambah layer -- price-triggered dari avg SEKARANG (avg exchange udah mencerminkan
+      // seluruh layer sebelumnya, dipakai sbg acuan "posisi terakhir" -- approksimasi wajar).
+      if (floating.layers < FINAL_RECIPE.layerSchedulePct.length) {
+        const adversePct = ((floating.entryPrice - livePrice) / floating.entryPrice) * 100;
+        if (adversePct >= FINAL_RECIPE.layerTriggerPct) {
+          console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: harga turun ${adversePct.toFixed(1)}% dari avg -- nambah layer ${floating.layers + 1}/${FINAL_RECIPE.layerSchedulePct.length}.`);
+          await addFedGridLayer(assetCfg, floating, livePrice);
+          return;
+        }
+      }
+      console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: basket floating (${floating.layers} layer, avg ${floating.entryPrice}, sekarang ${livePrice}, floating ${floatingPct.toFixed(1)}% modal) -- lanjut pantau.`);
+      return;
+    }
+
+    if (floating) return; // slot lagi kepake method LAIN (chart-pattern/FVG/econ_reaction) -- skip total
+
+    const signal = await detectFedGridSignal(journal).catch((e) => { console.log(`[NyopetAutoTrader][FedGrid] gagal cek sinyal:`, e.message); return null; });
+    if (!signal) return;
+    const j3 = loadJournal(); j3.fedGridLastProcessed = signal.label; saveJournal(j3); // tandai diproses SEGERA apapun hasilnya -- gak diulang2
+    if (signal.direction !== 'LONG' || !signal.trendOk) {
+      console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: sinyal ${signal.label} (${signal.direction}${signal.trendOk ? '' : ', tren gak konfirmasi'}) -- skip (LONG-only + filter tren).`);
+      return;
+    }
+    console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: sinyal DOVISH terkonfirmasi (${signal.label}) -- buka basket layer 1.`);
+    await openFedGridBasket(assetCfg, signal);
+  }
+
   async function main() {
     for (const assetCfg of Object.values(NYOPET_ASSETS)) {
       try {
@@ -469,6 +696,11 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       } catch (e) {
         if (!isMexcNotConfiguredError(e.message)) console.log(`[NyopetAutoTrader] ERROR ${assetCfg.label}:`, e.message);
       }
+    }
+    try {
+      await processFedDovishGrid(NYOPET_ASSETS.btc);
+    } catch (e) {
+      console.log(`[NyopetAutoTrader][FedGrid] ERROR:`, e.message);
     }
     await syncBalances();
   }
@@ -538,7 +770,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // fetchLivePrice diexpose juga (3 Sep 2026) -- checkManualOpenRequest.js butuh harga live buat
   // konversi "Nyawa %" -> harga SL ASLI SEBELUM manggil openPosition (biar SL dihitung dari harga
   // yang SAMA kayak yang dipakai buat entry, bukan 2 fetch beda waktu yang bisa geser dikit).
-  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition, syncBalances, openPosition, fetchLivePrice };
+  return { processAsset, main, loadJournal, getFloatingOrder, forceClosePosition, syncBalances, openPosition, fetchLivePrice, processFedDovishGrid };
 }
 
 // ============ Wrapper backward-compatible (akun Olan sendiri) -- ZERO perubahan perilaku, path

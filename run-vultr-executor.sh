@@ -121,6 +121,11 @@ node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERR
 node priceAlertMonitor.js >> "$LOG_FILE" 2>&1 || log "priceAlertMonitor.js ERROR (exit $?)"
 node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit $?)"
 
+# Invariant check journal Nyopet/Sniper (5 Sep 2026, permintaan Olan: "cari anomali/bug otomatis")
+# -- READ-ONLY, ngecek hal yang HARUSNYA selalu bener (PnL closed gak boleh null, leverage gak
+# boleh lewat cap, dst) -- nangkep bug SILENT yang gak bikin exception/gak keliatan di log biasa.
+node systemInvariantCheck.js >> "$LOG_FILE" 2>&1 || log "systemInvariantCheck.js ERROR (exit $?)"
+
 # Monitor Order Sniper -- channel Sniper LAMA (posisi real Olan sendiri), pantau TP/SL/partial
 # exit (4 Sep 2026, sama akar masalah kayak Price Alert/DXY di atas -- audit nunjukin jadwal GH
 # Actions "tiap jam"-nya kebukti jalan tiap 2-4 jam, notif TP/SL kena bisa telat berjam-jam).

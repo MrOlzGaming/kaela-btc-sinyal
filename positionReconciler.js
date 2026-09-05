@@ -34,24 +34,16 @@
 const fs = require('fs');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const kaela = require('./kaelaProTraderClient');
-// 3 Sep 2026 -- fmtUsdWithIdr PINDAH ke darkKaelaLog.js (SATU sumber, dipakai Sniper/Nyopet juga
-// sekarang, permintaan Olan "untuk pnl sertakan idr nya"). fmtUsd LOKAL TETAP DIPERTAHANKAN di
-// sini (beda opsi format dikit -- minimumFractionDigits:2 selalu, punya darkKaelaLog.js enggak --
-// gak worth diseragamin, resiko ubah tampilan angka lain yang udah kepake lama di file ini).
-const { fmtUsdWithIdr } = require('./darkKaelaLog');
+// (5 Sep 2026, permintaan Olan: "semua pesan broadcast trading perlu disamakan semua kerangkanya")
+// -- template pesan (dan fmtUsd yang dipakainya) SEKARANG PENUH dari darkKaelaLog.js, gak ada lagi
+// versi lokal terpisah di sini (dulu fmtUsd lokal SENGAJA beda opsi format, sekarang diseragamin
+// -- itu justru inti permintaannya: SATU gaya angka di semua pesan trading, bukan per-file beda).
+const { fmtUsdWithIdr, formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip } = require('./darkKaelaLog');
 const tradeHistoryStore = require('./tradeHistoryStore');
 
 // WIBOWO_GROUP_ID + saklar pause SEKARANG di wibowoNotify.js (4 Sep 2026, sebelumnya duplikat
-// konstanta di sini & multiAccountExecutor.js).
-const KAELA_ACCESS_URL = 'https://kaela-access.netlify.app/';
-
-function fmtUsd(n) {
-  const v = Number(n) || 0;
-  return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function pnlSign(n) { return Number(n) >= 0 ? '+' : ''; }
-function dirLabel(positionAmt) { return Number(positionAmt) > 0 ? '🟢 LONG' : '🔴 SHORT'; }
+// konstanta di sini & multiAccountExecutor.js). KAELA_ACCESS_URL juga gak perlu lokal lagi --
+// formatManual*() (darkKaelaLog.js) udah nyelipin link sendiri di tiap pesan.
 function dirWord(positionAmt) { return Number(positionAmt) > 0 ? 'buy' : 'sell'; }
 
 function loadState(statePath) {
@@ -170,7 +162,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd,
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange,
       });
-      const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Buka Posisi\n\n${dirLabel(liveAmt)} ${symbol} @ ${fmtUsd(live.entryPrice)}\nLeverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = formatManualOpen({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0 }, idrRate);
       console.log(`[PositionReconciler] MANUAL OPEN ${badge} ${symbol} @ ${live.entryPrice}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
@@ -181,15 +173,15 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry gagal:', e.message));
       }
-      const pnlLine = pnl === null ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.' : `PnL: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
-      const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Tutup Posisi\n\n${symbol} ditutup (entry sebelumnya ${fmtUsd(prev.entryPrice)})\n${pnlLine}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = formatManualClose({ exchangeBadge: badge, symbol, direction: dirWord(prevAmt), prevEntryPrice: Number(prev.entryPrice), pnlUsd: pnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL CLOSE ${badge} ${symbol}, PnL=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual close):', e.message));
       delete state.positions[stateKey];
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) > Math.abs(prevAmt)) {
       // MANUAL ADD -- arah SAMA, size nambah (skenario Olan: short di 75000, harga naik ke 80000,
       // re-short -- size nambah, entry rata-rata exchange sendiri yang ngitung).
-      const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Nambah Posisi\n\n${dirLabel(liveAmt)} ${symbol}\nEntry rata-rata sekarang: ${fmtUsd(live.entryPrice)} (sebelumnya ${fmtUsd(prev.entryPrice)})\nLeverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const addMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
+      const msg = formatManualAdd({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), prevEntryPrice: Number(prev.entryPrice), leverage: Number(live.leverage) || 0, marginUsd: addMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0 }, idrRate);
       console.log(`[PositionReconciler] MANUAL ADD ${badge} ${symbol}: entry ${prev.entryPrice} -> ${live.entryPrice}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual add):', e.message));
       if (prev.entryId) {
@@ -200,8 +192,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) < Math.abs(prevAmt)) {
       // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol.
       const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
-      const pnlLine = pnl === null ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.' : `PnL bagian yang ditutup: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
-      const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Kurangin Posisi\n\n${symbol} sebagian ditutup\n${pnlLine}\nSisa posisi: ${dirLabel(liveAmt)} @ ${fmtUsd(live.entryPrice)}\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = formatManualReduce({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), pnlUsd: pnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL REDUCE ${badge} ${symbol}, PnL sebagian=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual reduce):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
@@ -220,8 +211,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd,
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange,
       });
-      const pnlLine = pnl === null ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.' : `PnL posisi lama: ${pnlSign(pnl)}${fmtUsdWithIdr(pnl, idrRate)}`;
-      const msg = `🙋 MANUAL (luar sistem) · ${badge} -- Balik Arah\n\n${symbol}: ${dirLabel(prevAmt)} -> ${dirLabel(liveAmt)}\n${pnlLine}\nPosisi baru: @ ${fmtUsd(live.entryPrice)}, leverage ${live.leverage || '-'}x\nAlasan: Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)\n\n🔗 ${KAELA_ACCESS_URL}`;
+      const msg = formatManualFlip({ exchangeBadge: badge, symbol, prevDirection: dirWord(prevAmt), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, pnlUsd: pnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL FLIP ${badge} ${symbol}, PnL posisi lama=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: newEntryId, openedAtMs: nowMs };

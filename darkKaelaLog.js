@@ -209,8 +209,88 @@ Alasan: ${alasanText || '-'}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
+// ============ Manual di luar sistem (positionReconciler.js) -- (5 Sep 2026, permintaan Olan:
+// "semua pesan broadcast trading perlu disamakan semua kerangkanya") ============
+// SEBELUMNYA punya template SENDIRI (beda struktur, beda fmtUsd lokal) dari formatAutoOpen/dst di
+// atas -- sekarang DISATUKAN ke sini (badge, bold, urutan field, fmtUsd/fmtUsdWithIdr) SAMA PERSIS
+// gayanya, cuma badge sumbernya beda ("🙋 MANUAL (luar sistem)" + badge exchange) biar shareholder
+// tetap bisa bedain "kedetect di exchange" vs "posisi bot/manual lewat web" (KEPUTUSAN SADAR,
+// bukan kebetulan belum diseragamin -- exchange gak ngasih tau ALASAN posisi ini, beda dari semua
+// method lain yang SELALU punya alasan tercatat).
+const MANUAL_BADGE = '🙋 MANUAL (luar sistem)';
+const MANUAL_ALASAN = 'Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)';
+
+function formatManualOpen({ exchangeBadge, symbol, direction, entryPrice, leverage, marginUsd, nilaiPosisi }, idrRate) {
+  const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi*
+${dirLabel} @ ${fmtUsd(entryPrice)}
+
+Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
+Alasan: ${MANUAL_ALASAN}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
+function formatManualClose({ exchangeBadge, symbol, direction, prevEntryPrice, pnlUsd }, idrRate) {
+  const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const pnlLine = pnlUsd === null
+    ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.'
+    : `PnL: *${pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pnlUsd, idrRate)}*`;
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Tutup Posisi*
+${dirLabel} @ ${fmtUsd(prevEntryPrice)} → ditutup
+
+${pnlLine}
+Alasan: ${MANUAL_ALASAN}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
+function formatManualAdd({ exchangeBadge, symbol, direction, entryPrice, prevEntryPrice, leverage, marginUsd, nilaiPosisi }, idrRate) {
+  const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Nambah Posisi*
+${dirLabel} rata-rata baru @ ${fmtUsd(entryPrice)} (sebelumnya ${fmtUsd(prevEntryPrice)})
+
+Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
+Alasan: ${MANUAL_ALASAN}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
+function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, pnlUsd }, idrRate) {
+  const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const pnlLine = pnlUsd === null
+    ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.'
+    : `PnL bagian yang ditutup: *${pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pnlUsd, idrRate)}*`;
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Kurangin Posisi*
+${dirLabel} sisa @ ${fmtUsd(entryPrice)}
+
+${pnlLine}
+Alasan: ${MANUAL_ALASAN}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
+function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, entryPrice, leverage, pnlUsd }, idrRate) {
+  const oldLabel = prevDirection === 'buy' ? '🟢 LONG' : '🔴 SHORT';
+  const newLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const pnlLine = pnlUsd === null
+    ? '⚠️ PnL posisi lama belum kebaca otomatis -- cek manual di exchange.'
+    : `PnL posisi lama: *${pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pnlUsd, idrRate)}*`;
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Balik Arah*
+${oldLabel} → ${newLabel} @ ${fmtUsd(entryPrice)}
+
+${pnlLine}
+Leverage: ${leverage || '-'}x
+Alasan: ${MANUAL_ALASAN}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
 module.exports = {
   formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoAddLayer,
+  formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip,
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).

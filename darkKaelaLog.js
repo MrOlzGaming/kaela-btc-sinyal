@@ -106,8 +106,12 @@ ${fmtWita(now)}`;
 // lihat memori project-dark-kaela) -- `pos.mode` sekarang `patternType` dari
 // chartPatterns.js/fvgDetector.js (mis. 'flag_bull', 'wedge_falling', 'fvg_bounce_long'), BUKAN
 // lagi 'fade'/'follow'. Label singkat buat pesan WA (tetap ringkas, "nyopet ga usah kepanjangan").
+// econ_reaction (5 Sep 2026, permintaan Olan: "izinkan long/short otomatis dari hasil kalender
+// ekonomi") -- METODE BARU Nyopet, beda karakter dari chart-pattern/FVG di atas (news-reaction
+// scalp, exit dipaksa ~30 menit, lihat econCalendarLiveMonitor.js + backtest/econReactionBacktest.js).
 const PATTERN_TAG_LABEL = {
   flag_bull: 'Flag', pennant_bull: 'Pennant', wedge_falling: 'Wedge', fvg_bounce: 'FVG',
+  econ_reaction: 'Econ Reaction',
 };
 function patternTag(mode) { return PATTERN_TAG_LABEL[mode] || mode || '-'; }
 
@@ -122,6 +126,7 @@ const PATTERN_REASON_LABEL = {
   pennant_bull: 'Chart Pattern (Pennant) -- breakout tiang+segitiga terkonfirmasi',
   wedge_falling: 'Chart Pattern (Falling Wedge) -- breakout wedge turun terkonfirmasi',
   fvg_bounce: 'FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)',
+  econ_reaction: 'Reaksi Kalender Ekonomi -- BTC bereaksi searah abis rilis data high-impact, ikut kelanjutannya (exit paksa ~30 menit, jendela tervalidasi backtest)',
 };
 function patternReason(mode) { return PATTERN_REASON_LABEL[mode] || patternTag(mode); }
 

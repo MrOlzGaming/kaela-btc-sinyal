@@ -36,6 +36,14 @@ const { createBinanceClient } = require('./binanceExecutor');
 const { createNyopetTrader } = require('./nyopetAutoTrader');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { buildJournalHook, buildSendWA, MASTER_NOMOR } = require('./multiAccountExecutor');
+// (5 Sep 2026, permintaan Olan: "atasi sinyal yang numpukin sinyal lain") -- journal REAL Olan
+// BISA disentuh proses INI (siklus 5 menit) DAN nyopetAutoTrader.js (siklus 15 menit, chart-
+// pattern/FVG/Fed Dovish Grid) buat event FOMC/NFP yang SAMA -- lock cegah race condition,
+// wouldFedGridClaim cegah econ_reaction ngerebut sinyal yang harusnya milik Fed Dovish Grid
+// (keputusan Olan: Fed Dovish Grid menang krn edge-nya lebih tebal/robust di backtest).
+const { withJournalLock } = require('./nyopetJournalLock');
+const { fetchKlines } = require('./backtest/fetchKlines');
+const { computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.js');
 
 const HEADSUP_BEFORE_MIN = 5;
 const RESULT_AFTER_MIN = [5, 15];
@@ -80,6 +88,15 @@ async function safeFetchBtcPrice() {
 // berarti usdc") -- strategi eksperimental baru, SENGAJA mulai dari akun Olan doang dulu (pola
 // sama kayak fitur baru lain di proyek ini -- Sniper/Nyopet live juga mulai dari Olan duluan
 // sebelum ke member lain).
+// journalPath DIEKSTRAK jadi fungsi sendiri (5 Sep 2026) -- dipakai withJournalLock di bawah,
+// WAJIB persis sama path yang dipakai createNyopetTrader di bawah biar lock-nya nge-kunci FILE
+// yang bener (sama file yang dipegang nyopetAutoTrader.js buat akun real Olan).
+function olanRealNyopetJournalPath() {
+  const STATE_DIR = path.join(__dirname, 'multi-account-state');
+  const key = String(MASTER_NOMOR).replace(/\D/g, '') + '-real';
+  return path.join(STATE_DIR, `${key}-nyopet.json`);
+}
+
 async function getOlanNyopetTrader() {
   const accounts = await kaela.getTradingAccounts('binance');
   const account = accounts.find((a) => String(a.phone).replace(/\D/g, '') === String(MASTER_NOMOR).replace(/\D/g, '') && a.mode === 'real');
@@ -89,44 +106,80 @@ async function getOlanNyopetTrader() {
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: false };
   const journalHook = buildJournalHook(account, null);
   const sendWA = buildSendWA(account, null);
-  const STATE_DIR = path.join(__dirname, 'multi-account-state');
-  const key = String(MASTER_NOMOR).replace(/\D/g, '') + '-real';
-  return createNyopetTrader({ client, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`), apiCreds, onEvent: journalHook, sendWA });
+  return createNyopetTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA });
+}
+
+// Cek apakah event ini JUGA akan diklaim Fed Dovish Grid (FOMC/NFP + reaksi dovish/LONG + tren
+// SMA480 konfirmasi -- PERSIS kriteria di nyopetAutoTrader.js) -- kalau iya, econ_reaction WAJIB
+// NGALAH (keputusan Olan: Fed Dovish Grid menang, edge-nya lebih tebal & lebih robust). Cek judul
+// event pakai pencocokan teks (data live gak selalu dalam format persis sama kayak generator
+// tanggal deterministik di fedEvents.js) -- FOMC/NFP doang, SAMA scope kayak yang di-backtest.
+function _isFedGridEligibleTitle(title) {
+  const t = (title || '').toLowerCase();
+  return t.includes('non-farm') || t.includes('nonfarm') || t.includes('payroll')
+    || t.includes('fomc') || t.includes('fed interest rate') || t.includes('federal funds rate');
+}
+async function wouldFedGridClaim(eventTitle, direction) {
+  if (direction !== 'buy') return false; // Fed Dovish Grid LONG-only (short kebukti rugi, dibuang)
+  if (!_isFedGridEligibleTitle(eventTitle)) return false;
+  try {
+    const lookbackMs = (FINAL_RECIPE.trendSmaPeriod + 20) * 15 * 60 * 1000;
+    const candles = await fetchKlines('BTCUSDT', '15m', Date.now() - lookbackMs, Date.now());
+    if (candles.length < FINAL_RECIPE.trendSmaPeriod + 5) return false;
+    const closes = candles.map((c) => c.close);
+    const sma = computeSMA(closes, FINAL_RECIPE.trendSmaPeriod);
+    const last = candles.length - 1;
+    return sma[last] != null && candles[last].close > sma[last];
+  } catch (e) {
+    console.log('[EconCalendarLive] Gagal cek eligibility Fed Dovish Grid (dianggap TIDAK klaim, econ_reaction lanjut apa adanya):', e.message);
+    return false;
+  }
 }
 
 // Buka scalp -- direction 'buy'/'sell' dari reaksi BTC SENDIRI (bukan DXY, lihat catatan atas
 // file). SL pakai nyawaPct TETAP (bukan struktur pola kayak sinyal FVG/flag biasa) -- ini strategi
 // beda karakter (news-reaction scalp, bukan chart-pattern), wajar rumus size-nya juga beda,
 // TETAP lewat hitungExposure yang sama (dijamin gak akan pernah lewat MAX_LEVERAGE global).
+// Dibungkus withJournalLock (5 Sep 2026) -- lihat catatan di kepala file soal race condition
+// antara proses ini (siklus 5 menit) vs nyopetAutoTrader.js (siklus 15 menit).
 async function tryOpenEconScalp(direction, eventLabel) {
-  try {
-    const trader = await getOlanNyopetTrader();
-    const journal = trader.loadJournal();
-    if (trader.getFloatingOrder(journal, BTC_ASSET.key)) {
-      console.log(`[EconCalendarLive] Skip buka scalp -- udah ada posisi BTC floating (dihindari numpuk).`);
+  return withJournalLock(olanRealNyopetJournalPath(), async () => {
+    try {
+      const claimedByFedGrid = await wouldFedGridClaim(eventLabel, direction);
+      if (claimedByFedGrid) {
+        console.log(`[EconCalendarLive] Event "${eventLabel}" juga memenuhi kriteria Fed Dovish Grid (dovish + tren SMA480 konfirmasi) -- econ_reaction NGALAH, biarin Fed Dovish Grid yang dapet slot BTC (keputusan Olan: edge dia lebih tebal/robust).`);
+        return null;
+      }
+      const trader = await getOlanNyopetTrader();
+      const journal = trader.loadJournal();
+      if (trader.getFloatingOrder(journal, BTC_ASSET.key)) {
+        console.log(`[EconCalendarLive] Skip buka scalp -- udah ada posisi BTC floating (dihindari numpuk).`);
+        return null;
+      }
+      const livePrice = await trader.fetchLivePrice(BTC_ASSET.symbol, BTC_ASSET.exchange);
+      const sl = direction === 'buy' ? livePrice * (1 - SCALP_NYAWA_PCT / 100) : livePrice * (1 + SCALP_NYAWA_PCT / 100);
+      const reasonNote = `Scalp otomatis abis rilis data ekonomi high-impact (${eventLabel}) -- BTC bereaksi ${direction === 'buy' ? 'naik' : 'turun'} duluan, exit paksa ~${SCALP_HOLD_MINUTES} menit (lihat backtest/econReactionBacktest.js).`;
+      const order = await trader.openPosition(BTC_ASSET, { direction, sl, patternType: 'econ_reaction', manualReason: reasonNote }, livePrice);
+      return order;
+    } catch (e) {
+      console.log('[EconCalendarLive] GAGAL buka scalp econ_reaction:', e.message);
       return null;
     }
-    const livePrice = await trader.fetchLivePrice(BTC_ASSET.symbol, BTC_ASSET.exchange);
-    const sl = direction === 'buy' ? livePrice * (1 - SCALP_NYAWA_PCT / 100) : livePrice * (1 + SCALP_NYAWA_PCT / 100);
-    const reasonNote = `Scalp otomatis abis rilis data ekonomi high-impact (${eventLabel}) -- BTC bereaksi ${direction === 'buy' ? 'naik' : 'turun'} duluan, exit paksa ~${SCALP_HOLD_MINUTES} menit (lihat backtest/econReactionBacktest.js).`;
-    const order = await trader.openPosition(BTC_ASSET, { direction, sl, patternType: 'econ_reaction', manualReason: reasonNote }, livePrice);
-    return order;
-  } catch (e) {
-    console.log('[EconCalendarLive] GAGAL buka scalp econ_reaction:', e.message);
-    return null;
-  }
+  });
 }
 
 async function tryForceCloseEconScalp(eventLabel) {
-  try {
-    const trader = await getOlanNyopetTrader();
-    const r = await trader.forceClosePosition(BTC_ASSET.key, 'Kaela (auto econ-reaction scalp)', `Exit paksa ~${SCALP_HOLD_MINUTES} menit abis entry (${eventLabel}) -- jendela profit historisnya cuma sebentar ini, lihat backtest.`);
-    if (!r.ok) console.log('[EconCalendarLive] Tutup scalp:', r.error);
-    return r.ok;
-  } catch (e) {
-    console.log('[EconCalendarLive] GAGAL tutup scalp econ_reaction:', e.message);
-    return false;
-  }
+  return withJournalLock(olanRealNyopetJournalPath(), async () => {
+    try {
+      const trader = await getOlanNyopetTrader();
+      const r = await trader.forceClosePosition(BTC_ASSET.key, 'Kaela (auto econ-reaction scalp)', `Exit paksa ~${SCALP_HOLD_MINUTES} menit abis entry (${eventLabel}) -- jendela profit historisnya cuma sebentar ini, lihat backtest.`);
+      if (!r.ok) console.log('[EconCalendarLive] Tutup scalp:', r.error);
+      return r.ok;
+    } catch (e) {
+      console.log('[EconCalendarLive] GAGAL tutup scalp econ_reaction:', e.message);
+      return false;
+    }
+  });
 }
 
 async function main() {

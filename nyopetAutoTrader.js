@@ -53,6 +53,7 @@ const { sendWhatsApp, sendWhatsAppToSniperClub } = require('./fonnte');
 const { fetchKlines } = require('./backtest/fetchKlines');
 const { generateNfpEvents, generateFomcEvents } = require('./fedEvents');
 const { computeSignals, computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.js');
+const { withJournalLock } = require('./nyopetJournalLock');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
@@ -335,14 +336,21 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     return target;
   }
 
+  // (5 Sep 2026, permintaan Olan: "atasi sinyal yang numpukin sinyal lain") -- dibungkus lock,
+  // SAMA ALASAN kayak processFedDovishGrid di bawah: journal REAL Olan bisa disentuh econ_reaction
+  // (proses TERPISAH, econCalendarLiveMonitor.js, siklus 5 menit) di waktu yang berdekatan.
   async function processAsset(assetCfg) {
+    return withJournalLock(jPath, () => _processAssetLocked(assetCfg));
+  }
+
+  async function _processAssetLocked(assetCfg) {
     const { symbol, zoneSymbol, key: assetKey } = assetCfg;
     const exec = execFor(assetCfg);
     const journal = loadJournal();
     const floating = getFloatingOrder(journal, assetKey);
 
     // (5 Sep 2026, metode Fed Dovish Grid BARU -- lihat processFedDovishGrid di bawah) -- floating
-    // order method ITU py punya bentuk beda (basket multi-layer, TP/SL agregat % modal, gak ada
+    // order method ITU punya bentuk beda (basket multi-layer, TP/SL agregat % modal, gak ada
     // partialTp) -- logic GENERIK di bawah (chart-pattern/FVG, single-entry + partial 2-tahap)
     // TIDAK BOLEH ikut nyentuh floating order ini, WAJIB diserahin PENUH ke processFedDovishGrid
     // (dipanggil terpisah di main()) -- ⚠️ BUG NYATA ketemu pas testing: tanpa guard ini, kode
@@ -612,8 +620,16 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     emit({ entryId: target.id, type: 'addLayer', layers: target.layers, entryPrice: newEntryPrice, exchange: assetCfg.exchange });
   }
 
+  // (5 Sep 2026, permintaan Olan: "atasi sinyal yang numpukin sinyal lain") -- dibungkus lock
+  // (nyopetJournalLock.js) krn journal REAL Olan BISA disentuh 2 PROSES TERPISAH bersamaan
+  // (nyopetAutoTrader.js siklus 15 menit vs econCalendarLiveMonitor.js siklus 5 menit buat
+  // econ_reaction) -- tanpa ini, race condition NYATA (2 proses baca "slot kosong" bareng).
   async function processFedDovishGrid(assetCfg) {
-    if (assetCfg.key !== 'btc') return; // strategi ini BTC-only (backtest cuma nguji BTC)
+    if (assetCfg.key !== 'btc') return; // strategi ini BTC-only (backtest cuma nguji BTC), gak perlu lock kalau langsung return
+    return withJournalLock(jPath, () => _processFedDovishGridLocked(assetCfg));
+  }
+
+  async function _processFedDovishGridLocked(assetCfg) {
     const { symbol } = assetCfg;
     const exec = execFor(assetCfg);
     const journal = loadJournal();

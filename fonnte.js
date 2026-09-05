@@ -124,4 +124,20 @@ async function sendWhatsAppExcept(message, excludeIds) {
   return { ok: allOk, results };
 }
 
-module.exports = { sendWhatsApp, sendWhatsAppExcept };
+// (5 Sep 2026, permintaan Olan: "tradingan Olan hanya broadcast ke Wibowo hedgefund.. bukan japri
+// Olan, bukan ke grup lain juga" -- buat trading REAL. Buat trading DEMO Olan sendiri, jawabannya:
+// "cuma masuk grup btc sniper club") -- FONNTE_GROUP_ID historis ITU grup "BTC Sniper Club" (grup
+// tunggal SEBELUM Wibowo Hedgefund dipisah 31 Agu 2026, lihat komentar konsisten di
+// nyopetMonitor.js/whaleMonitor.js/econCalendarMonitor.js dst yang semua nyebut grup ini). Target
+// TUNGGAL (bukan broadcast-semua lagi), pola SATU-TITIK sama kayak sendWhatsAppToWibowo di
+// wibowoNotify.js.
+async function sendWhatsAppToSniperClub(message) {
+  const secrets = loadSecrets();
+  if (!secrets || !secrets.FONNTE_TOKEN || !secrets.FONNTE_GROUP_ID) {
+    console.log('[Fonnte] secrets.js belum ada / FONNTE_GROUP_ID kosong -- skip kirim WA BTC Sniper Club.');
+    return { skipped: true };
+  }
+  return sendOne(message, secrets.FONNTE_GROUP_ID, secrets);
+}
+
+module.exports = { sendWhatsApp, sendWhatsAppExcept, sendWhatsAppToSniperClub };

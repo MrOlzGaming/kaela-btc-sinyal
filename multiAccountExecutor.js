@@ -39,6 +39,7 @@ const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { checkEmptyWallet } = require('./emptyWalletWatchdog');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
+const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { reconcileWibowoPositions } = require('./positionReconciler');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
@@ -135,6 +136,28 @@ function buildSendWA(account, adminRelay) {
     const full = hasOwnLink
       ? `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}`
       : `[Kaela Access -- ${account.mode.toUpperCase()}]\n\n${message}\n\nCek jurnal/status posisi kamu: ${KAELA_ACCESS_URL}`;
+
+    const isSelf = adminRelay && safeKey(account.phone) === safeKey(adminRelay.masterNomor);
+
+    // (5 Sep 2026, permintaan Olan: "tradingan Olan hanya broadcast ke Wibowo hedgefund.. bukan
+    // japri Olan, bukan ke grup lain juga") -- Olan SENDIRI (isSelf) TIDAK PERNAH di-DM buat
+    // posisi trading-nya sendiri lagi (beda dari member lain, yang TETAP di-DM seperti biasa di
+    // bawah) -- cuma masuk 1 grup spesifik tergantung mode: Real -> Wibowo Hedgefund (dasar
+    // saham, shareholder wajib transparan liat), Demo -> BTC Sniper Club (bukan duit beneran,
+    // gak relevan buat shareholder Wibowo, tapi Olan tetap mau liat aktivitas testing-nya sendiri
+    // di suatu tempat selain japri). Admin-relay-ke-diri-sendiri emang udah gak pernah jalan dari
+    // awal (`!isSelf` di baris relay bawah), jadi return di sini gak ilangin apa-apa yang lain.
+    if (isSelf) {
+      if (account.mode === 'real') {
+        await sendWhatsAppToWibowo(message).catch((e) =>
+          console.log(`[MultiAccountExecutor] Broadcast Wibowo Hedgefund gagal:`, e.message));
+      } else {
+        await sendWhatsAppToSniperClub(message).catch((e) =>
+          console.log(`[MultiAccountExecutor] Broadcast BTC Sniper Club (Demo Olan) gagal:`, e.message));
+      }
+      return;
+    }
+
     // 29 Agu 2026, permintaan Olan: "ga semua minta notif demo" -- opt-out PRIBADI per member
     // (account.notifyDemo, default true, lihat Sheet.gs getActiveTradingUsers). Real TIDAK di-gate --
     // itu duit sungguhan, semua member wajib tau tanpa kecuali.
@@ -142,21 +165,11 @@ function buildSendWA(account, adminRelay) {
       await kaela.notifyMember(account.phone, full);
     }
 
-    const isSelf = adminRelay && safeKey(account.phone) === safeKey(adminRelay.masterNomor);
     const relayOn = adminRelay && (account.mode === 'real' ? adminRelay.notifyReal : adminRelay.notifyDemo);
-    if (adminRelay && relayOn && !isSelf) {
+    if (adminRelay && relayOn) {
       const adminCopy = `[Kaela Access -- INFO ADMIN, ${account.mode.toUpperCase()}]\n\nMember: ${account.name} (${account.phone})\n\n${message}`;
       await kaela.notifyMember(adminRelay.masterNomor, adminCopy).catch((e) =>
         console.log(`[MultiAccountExecutor] Relay notif admin gagal (${account.phone}):`, e.message));
-    }
-
-    // 2-3 Sep 2026, permintaan Olan: buka/tutup posisi REAL Olan sendiri (dasar saham Wibowo
-    // Hedgefund) WAJIB nyampe ke grup Wibowo Hedgefund juga -- pemegang saham transparan liat
-    // aktivitas trading yang jadi dasar nilai saham mereka, gak cukup DM pribadi Olan doang.
-    // Demo TIDAK ikut (bukan uang beneran, gak relevan buat pemegang saham).
-    if (isSelf && account.mode === 'real') {
-      await sendWhatsAppToWibowo(message).catch((e) =>
-        console.log(`[MultiAccountExecutor] Broadcast Wibowo Hedgefund gagal:`, e.message));
     }
   };
 }

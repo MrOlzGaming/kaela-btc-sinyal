@@ -214,9 +214,20 @@ async function main() {
     }
 
     // ── 2) HASIL -- event 5..15 menit LALU -- kesimpulan info (DXY) + EKSEKUSI scalp (reaksi BTC) ──
-    const isQualitative = e.directionalView && e.directionalView.aboveForecast === null;
-    const hasResultData = isQualitative || !!e.actual;
-    if (!st.result && minsAgo >= RESULT_AFTER_MIN[0] && minsAgo <= RESULT_AFTER_MIN[1] && hasResultData) {
+    // ⚠️ BUG BAHAYA ketemu+fix 6 Sep 2026 (riset "logika dapetin hasil ekonomi", permintaan Olan) --
+    // gate LAMA (`hasResultData = isQualitative || !!e.actual`) diem-diem MATIIN trading buat SEMUA
+    // event NUMERIK (NFP/CPI/dst) SEJAK AWAL: feed gratis nfs.faireconomy.media/ff_calendar_thisweek.json
+    // STRUKTURAL gak pernah ngisi field `actual` (dikonfirmasi riset web -- bukan lag/bug jaringan,
+    // itu batasan feed "fast weekly" gratisnya sendiri, actual cuma ada di endpoint custom-range/
+    // scraping berbayar). Akibatnya `hasResultData` SELALU false buat event numerik -> blok
+    // `if` di bawah gak PERNAH jalan -> scalp econ_reaction gak pernah kebuka buat NFP/CPI, cuma
+    // buat event kualitatif (FOMC Statement, aboveForecast===null). Sinyal TRADING (reaksi harga
+    // BTC sendiri) SAMA SEKALI gak butuh `e.actual` -- concludeHawkishDovish() (econCalendarLog.js)
+    // JUGA udah didesain degradasi jujur kalau actual kosong (fallback ke reaksi DXY doang, atau
+    // "gak bisa disimpulkan" -- BUKAN error/skip). Fix: gate `hasResultData` DIBUANG, jalan murni
+    // dari JENDELA WAKTU -- pesan "hasil" + sinyal trading SELALU dicek begitu masuk jendela 5-15
+    // menit, apapun status field actual-nya.
+    if (!st.result && minsAgo >= RESULT_AFTER_MIN[0] && minsAgo <= RESULT_AFTER_MIN[1]) {
       const [dxyAfter, btcAfter] = await Promise.all([safeFetchDxyPrice(), safeFetchBtcPrice()]);
       const dxyChangePct = (st.dxyBefore != null && dxyAfter != null) ? ((dxyAfter - st.dxyBefore) / st.dxyBefore) * 100 : null;
       const msg = formatResult(e, dxyChangePct);

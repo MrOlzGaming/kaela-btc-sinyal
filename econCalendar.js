@@ -32,27 +32,49 @@ async function fetchWeekCalendar() {
 // inti (BUKAN pidato member regional biasa -- itu masih legit di-skip, terlalu sering/low-signal).
 const ALWAYS_RELEVANT_TITLE = /fed chair|fomc statement|fomc press conference|federal funds rate|fomc economic projections/i;
 
+function isHighImpactUsd(e) {
+  return e.country === 'USD' && (e.impact === 'High' || ALWAYS_RELEVANT_TITLE.test(e.title));
+}
+
+// `timeMs`+`actual` ditambahin (5 Sep 2026, buat econCalendarLiveMonitor.js) -- gak dipake fungsi
+// LAMA di bawah (getUpcomingHighImpactUsdEvents cuma butuh forecast/previous), tapi berguna
+// buat live-monitor: timeMs buat itung "berapa menit lagi/lalu", actual buat baca hasil rilis.
+function mapEventBase(e) {
+  const d = new Date(e.date);
+  return {
+    key: `${e.date}__${e.title}`, // stabil per (waktu, judul asli) -- dipakai dedup state file
+    rawTitle: e.title, // judul ASLI (Inggris) -- getDirectionalView cocokin ke ini, bukan hasil terjemahan
+    title: translateEventTitle(e.title),
+    dateKey: localDateKey(d), // buat label "hari ini"/"besok"/tanggal lain di formatter
+    time: toLocal(d).toISOString().slice(11, 16), // HH:MM WITA
+    timeMs: d.getTime(),
+    forecast: e.forecast || '-',
+    previous: e.previous || '-',
+    actual: e.actual || '',
+    directionalView: getDirectionalView(e.title),
+  };
+}
+
 function getUpcomingHighImpactUsdEvents(allEvents, now = new Date(), lookaheadHours = 48) {
   const windowEndMs = now.getTime() + lookaheadHours * 60 * 60 * 1000;
   return allEvents
-    .filter((e) => e.country === 'USD' && (e.impact === 'High' || ALWAYS_RELEVANT_TITLE.test(e.title)))
+    .filter(isHighImpactUsd)
     .filter((e) => {
       const t = new Date(e.date).getTime();
       return t > now.getTime() && t <= windowEndMs; // cuma yang BELUM terjadi
     })
-    .map((e) => {
-      const d = new Date(e.date);
-      return {
-        key: `${e.date}__${e.title}`, // stabil per (waktu, judul asli) -- dipakai dedup state file
-        title: translateEventTitle(e.title),
-        dateKey: localDateKey(d), // buat label "hari ini"/"besok"/tanggal lain di formatter
-        time: toLocal(d).toISOString().slice(11, 16), // HH:MM WITA
-        forecast: e.forecast || '-',
-        previous: e.previous || '-',
-        directionalView: getDirectionalView(e.title),
-      };
-    })
+    .map(mapEventBase)
     .sort((a, b) => (a.dateKey + a.time).localeCompare(b.dateKey + b.time));
 }
 
-module.exports = { fetchWeekCalendar, getUpcomingHighImpactUsdEvents };
+// 5 Sep 2026, permintaan Olan ("detektor tiap 5 menit.. 5 menit sebelum kasih info siap-siap, 5
+// menit sesudah simpulkan hawkish/dovish") -- dipake econCalendarLiveMonitor.js. Balikin SEMUA
+// event high-impact USD minggu ini APA ADANYA, GAK difilter jendela waktu di sini -- beda arah
+// dari getUpcomingHighImpactUsdEvents di atas (yang cuma "belum terjadi, dalam N jam ke depan").
+// Live-monitor butuh DUA jendela beda arah (SEBELUM buat heads-up, SESUDAH buat hasil) dari data
+// yang SAMA, jadi filtering waktunya dikerjain DI SANA, bukan di sini.
+function getAllHighImpactUsdEvents(allEvents) {
+  return allEvents.filter(isHighImpactUsd).map(mapEventBase);
+}
+
+module.exports = { fetchWeekCalendar, getUpcomingHighImpactUsdEvents, getAllHighImpactUsdEvents };

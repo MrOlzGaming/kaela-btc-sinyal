@@ -1,6 +1,14 @@
 node_modules/
 .netlify/
 
+# Hash PIN konfirmasi "beneran Olan" (tools/confirm-olan.ps1, 6 Sep 2026) -- repo ini PUBLIC,
+# commit hash PIN pendek/numerik ke sini = bisa di-brute-force offline siapapun yang clone. Yang
+# dicommit CUMA skrip-nya (logic), hash-nya WAJIB lokal doang. Token approval juga lokal/transient
+# (1 baris timestamp, sekali pakai, dihapus abis dibaca) -- gak ada gunanya buat siapapun tapi
+# tetap gak perlu numpuk di git history.
+tools/.kaela-confirm-secret.hash
+.kaela-confirm/
+
 # cache candle mentah dari Binance -- regeneratable via backtest/fetchKlines.js, terlalu besar buat di-commit
 backtest/*-cache.json
 backtest/yahoo-btc-*.json

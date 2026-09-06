@@ -176,6 +176,16 @@ function expectedMaxSharpe(numTrials, varianceOfTrialSharpes = 1) {
   return sigma * ((1 - EULER_MASCHERONI) * normalInvCdf(1 - 1 / numTrials) + EULER_MASCHERONI * normalInvCdf(1 - 1 / (numTrials * Math.E)));
 }
 
+// ⚠️ KALIBRASI (ketauan 6 Sep 2026 pas dites ke 3 strategi live -- Chart Pattern+FVG BTC/Emas +
+// Fed Dovish Grid): `varianceOfTrialSharpes=1` itu KONVENSI YANG BIASA DIPAKAI BUAT SHARPE
+// ANNUALIZED (skala umum ~0,5-3). Kalau `returns` yang dikasih itu Sharpe PER-TRADE MENTAH (bukan
+// diannualisasi -- skalanya jauh lebih kecil, ~0,1-0,4), DSR bisa JATUH KE ~0% WALAU strategi-nya
+// beneran bagus (PSR/return riil kuat) -- itu ARTEFAK MISMATCH SKALA, bukan bukti strategi lemah.
+// SEBELUM percaya angka DSR rendah sebagai bukti kuat, bandingin dulu sama PSR(0) (independen dari
+// asumsi ini) dan return riil/UPI -- kalau ITU JUGA lemah (kayak kasus NFP: PSR cuma 80,6%, avg
+// return tipis 0,049%/trade), DSR rendah nge-KUATIN kesimpulan. Kalau PSR(0) TINGGI (>90%) dan
+// return riil substansial tapi DSR tetap ~0%, itu tanda MISMATCH KALIBRASI ini yang muncul, bukan
+// strategi yang lemah -- JANGAN ambil tindakan cuma dari DSR rendah SENDIRIAN.
 function deflatedSharpeRatio(returns, numTrials, varianceOfTrialSharpes = 1) {
   const benchmarkSR = expectedMaxSharpe(numTrials, varianceOfTrialSharpes);
   const result = probabilisticSharpeRatio(returns, benchmarkSR);

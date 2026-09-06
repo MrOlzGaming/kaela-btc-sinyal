@@ -39,6 +39,7 @@ const { hitung: hitungExposure } = require('./calculator');
 const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBankroll');
 const { formatAutoValid, formatAutoInvalid, formatPositionMonitor } = require('./sniperOrderLog');
 const { sendWhatsAppExcept } = require('./fonnte');
+const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey, isWaMuted } = require('./config');
@@ -162,6 +163,15 @@ async function main() {
 
   let anyNewSignal = false;
   const invalidNotes = [];
+  // 6 Sep 2026, permintaan Olan (liat langsung pesan ANCANG-ANCANG di grup BTC Sniper Club, minta
+  // ini JUGA nyampe ke Wibowo Hedgefund): pesan status INVALID/ANCANG-ANCANG itu analisa pola
+  // chart PUBLIK (data candle bersama), BUKAN klaim soal posisi/saldo akun manapun -- aman dikirim
+  // ke Wibowo juga. TAPI 2 baris tertentu (hasSniperOpen+hasFvgOpen bareng / saldo available abis)
+  // itu SPESIFIK soal akun bayangan Kaela sendiri (bankroll kecil $100-1000-an) -- persis jenis
+  // baris yang bikin bug 3 Sep 2026 (grup Wibowo bingung liat "posisi bayangan"/saldo Kaela,
+  // dikira itu duit real mereka). `wibowoNotes` isinya SUBSET invalidNotes yang aman ditelan
+  // siapapun (universal, gak bergantung akun) -- 2 baris account-specific itu SENGAJA gak ikut.
+  const wibowoNotes = [];
 
   for (const assetKey of Object.keys(ASSETS)) {
     const assetCfg = ASSETS[assetKey];
@@ -176,6 +186,7 @@ async function main() {
     if (assetCfg.useHalvingBearWindow && isBtcBearWindow(now)) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: lagi window istirahat siklus halving (fase pasca-puncak, historis rawan bear) -- sinyal baru DIMATIKAN sementara.`);
       invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
+      wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
       continue;
     }
 
@@ -198,6 +209,7 @@ async function main() {
     } catch (e) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal ambil data (${e.message}), skip aset ini giliran ini.`);
       invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: gagal ambil data harga hari ini (${e.message}), dicoba lagi besok.`);
+      wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: gagal ambil data harga hari ini (${e.message}), dicoba lagi besok.`);
       continue;
     }
     const dailyClose = daily[daily.length - 1].close;
@@ -231,8 +243,10 @@ async function main() {
       }
       if (watchNotes.length > 0) {
         invalidNotes.push(...watchNotes);
+        wibowoNotes.push(...watchNotes);
       } else {
         invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: belum ada pola Sniper/FVG yang breakout hari ini.`);
+        wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: belum ada pola Sniper/FVG yang breakout hari ini.`);
       }
       continue;
     }
@@ -252,6 +266,7 @@ async function main() {
       if (nyawaPct > MAX_NYAWA_PCT) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label} ${cand.mode}: nyawa ${nyawaPct.toFixed(1)}% ngelewatin batas ${MAX_NYAWA_PCT}% -- invalidasi diterima.`);
         invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi nyawa ${nyawaPct.toFixed(1)}% kelewat lebar (batas ${MAX_NYAWA_PCT}%) -- invalidasi diterima.`);
+        wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi nyawa ${nyawaPct.toFixed(1)}% kelewat lebar (batas ${MAX_NYAWA_PCT}%) -- invalidasi diterima.`);
         continue;
       }
       const partialTp = cand.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
@@ -341,6 +356,17 @@ async function main() {
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'status INVALID (semua aset)');
+  }
+
+  // 6 Sep 2026, permintaan Olan: pesan ANCANG-ANCANG/status-invalid (versi wibowoNotes yang udah
+  // disaring dari baris spesifik akun bayangan Kaela) JUGA dikirim ke Wibowo Hedgefund -- lewat
+  // wibowoNotify.js (SATU titik yang sama dipakai posisi real, otomatis hormat saklar Silent
+  // Trade). Pesan TERPISAH dari yang di atas (bukan cuma nambah Wibowo ke daftar target) karena
+  // isinya beda (subset notes yang wibowo-safe).
+  if (!anyNewSignal && wibowoNotes.length > 0) {
+    const wibowoMsg = formatAutoInvalid({ notes: wibowoNotes });
+    await sendWhatsAppToWibowo(wibowoMsg).catch((e) =>
+      console.log(`[SniperAutoAnalysis] Broadcast ANCANG-ANCANG ke Wibowo Hedgefund gagal:`, e.message));
   }
 
   saveTriggerState({ lastSentDate: todayKey });

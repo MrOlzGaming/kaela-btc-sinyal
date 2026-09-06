@@ -116,11 +116,18 @@ async function getOlanNyopetTrader() {
 // kalender bulan ini" nemuin econ_reaction LIVE jalan di SEMUA event high-impact -- PPI/CPI/Retail
 // Sales/JOLTS/GDP/PCE -- padahal CUMA NFP yang divalidasi backtest. Keputusan Olan: batasi eksekusi
 // TRADING ke NFP+FOMC doang, event lain TETAP dapet pesan info/kesimpulan, cuma gak dieksekusi).
-function _isNfpOrFomcTitle(title) {
+function _isNfpTitle(title) {
   const t = (title || '').toLowerCase();
-  return t.includes('non-farm') || t.includes('nonfarm') || t.includes('payroll')
-    || t.includes('fomc') || t.includes('fed interest rate') || t.includes('federal funds rate');
+  return t.includes('non-farm') || t.includes('nonfarm') || t.includes('payroll');
 }
+function _isFomcTitle(title) {
+  const t = (title || '').toLowerCase();
+  return t.includes('fomc') || t.includes('fed interest rate') || t.includes('federal funds rate');
+}
+// TETAP diekspor/dipakai apa adanya di wouldFedGridClaim (strategi BEDA, backtest TERPISAH
+// fedSignalGridBacktest.js -- gak kesentuh temuan di bawah, NFP+FOMC dua-duanya TETAP eligible
+// buat Fed Dovish Grid).
+function _isNfpOrFomcTitle(title) { return _isNfpTitle(title) || _isFomcTitle(title); }
 async function wouldFedGridClaim(eventTitle, direction) {
   if (direction !== 'buy') return false; // Fed Dovish Grid LONG-only (short kebukti rugi, dibuang)
   if (!_isNfpOrFomcTitle(eventTitle)) return false;
@@ -150,7 +157,25 @@ async function tryOpenEconScalp(direction, eventLabel) {
   // gak konsisten per tahun (2019 PF=0,21, 2022 PF=17,75 -- lonjakan ekstrem = noise sample
   // kecil, bukan edge asli), PPI malah PF kotor gabungan 0,96 (udah rugi SEBELUM biaya). Event
   // LAIN (Retail Sales/GDP/PCE/JOLTS) tetap dapet pesan info di main(), CUMA gak sampe sini.
-  if (!_isNfpOrFomcTitle(eventLabel)) {
+  //
+  // ⚠️ UPDATE SORE HARI YANG SAMA -- NFP DICABUT lagi dari eksekusi (FOMC TETAP jalan). Lapisan
+  // validasi baru (backtest/backtestValidation.js: Monte Carlo Permutation Test + Deflated Sharpe,
+  // diadopsi dari riset repo GitHub) diterapkan ke NFP (backtest/nfpAdvancedValidation.js, n=72
+  // event 2019-2026, horizon 30m -- satu-satunya yang dipakai live): permutation test p-value~0,20
+  // (BELUM signifikan beda dari nebak arah acak), Deflated Sharpe ~0% kalau diasumsikan ~40 variasi
+  // parameter pernah dicoba (PSR tanpa penalti 80,6% -- jadi edge-nya TIPIS, bukan pasti nol, tapi
+  // gak cukup kuat buat tahan uji ketat ini). Breakdown per-tahun+split-era yang dulu dipakai nerima
+  // NFP TIDAK menguji "ini kebetulan dari nyoba banyak parameter atau enggak" -- 2 alat baru ini
+  // nutup celah itu. Keputusan Olan (6 Sep 2026 sore, chat sesi ini): "aku ikut Kaela aja terapkan
+  // yang terbaik" -- PAUSE eksekusi NFP (bukan dihapus, tinggal balikin includes('non-farm') dst ke
+  // _isNfpTitle kalau nanti mau reaktifin) sampai ada bukti lebih kuat (data live lebih banyak/
+  // kriteria diperketat). FOMC BELUM diuji lapisan baru ini -- TETAP jalan apa adanya, JANGAN
+  // dimatiin bareng tanpa bukti terpisah buat FOMC sendiri.
+  if (_isNfpTitle(eventLabel)) {
+    console.log(`[EconCalendarLive] "${eventLabel}" NFP -- eksekusi scalp DIPAUSE 6 Sep 2026 (Permutation Test p~0,20 + Deflated Sharpe~0%, lihat backtest/nfpAdvancedValidation.js) -- info doang, gak dieksekusi sampai ada bukti lebih kuat.`);
+    return null;
+  }
+  if (!_isFomcTitle(eventLabel)) {
     console.log(`[EconCalendarLive] "${eventLabel}" BUKAN NFP/FOMC -- skip eksekusi scalp (dibatasi 6 Sep 2026, CPI/PPI ke-backtest & DITOLAK, event lain belum pernah dites sama sekali).`);
     return null;
   }

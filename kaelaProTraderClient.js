@@ -162,12 +162,30 @@ async function checkAndClearForceSyncRequest() {
 // 2-3 Sep 2026 -- dipakai positionReconciler.js buat nampilin PnL manual Olan sekalian dalam Rp
 // (permintaan Olan: "pnl yang betul dalam dolar dan dalam kurung rupiah"). Fail-safe: gagal ambil
 // kurs -> null (caller fallback USD doang), JANGAN gagalin laporan cuma gara-gara kurs gak kebaca.
+// (6 Sep 2026, permintaan Olan: laporan XAU/Emas sempat kekurangan Rupiah/gram krn callGas ke GAS
+// gagal sesaat, walau GAS SENDIRI udah punya cache fallback (Main.gs `getUsdIdrRate`, 3 Sep) --
+// itu gak nolong kalau panggilan HTTP ke GAS-nya sendiri yang gagal (bukan sumber kurs live-nya).
+// Cache LOKAL kedua di sini (beda lapisan, JANGAN dikira duplikat sia-sia) -- kalau callGas gagal
+// TOTAL, masih ada angka Rupiah cadangan drpd laporan jatuh balik ke USD doang.
+const USD_IDR_LOCAL_CACHE_PATH = require('path').join(__dirname, 'usd-idr-rate-cache.json');
+function _readLocalIdrCache() {
+  try { return JSON.parse(require('fs').readFileSync(USD_IDR_LOCAL_CACHE_PATH, 'utf8')); } catch (e) { return null; }
+}
+function _writeLocalIdrCache(rate) {
+  try { require('fs').writeFileSync(USD_IDR_LOCAL_CACHE_PATH, JSON.stringify({ rate, cachedAt: new Date().toISOString() })); } catch (e) { /* gagal nulis cache BUKAN fatal -- laporan tetap jalan pakai rate live yang baru didapat */ }
+}
 async function getUsdIdrRate() {
   try {
     const data = await callGas('getUsdIdrRate', {});
+    if (data.rate) _writeLocalIdrCache(data.rate);
     return data.rate || null;
   } catch (e) {
-    console.log('[KaelaProTraderClient] getUsdIdrRate gagal (fallback USD doang):', e.message);
+    const cached = _readLocalIdrCache();
+    if (cached && cached.rate) {
+      console.log(`[KaelaProTraderClient] getUsdIdrRate gagal (${e.message}) -- pakai cache lokal (${cached.cachedAt}): ${cached.rate}`);
+      return cached.rate;
+    }
+    console.log('[KaelaProTraderClient] getUsdIdrRate gagal, cache lokal juga kosong (fallback USD doang):', e.message);
     return null;
   }
 }

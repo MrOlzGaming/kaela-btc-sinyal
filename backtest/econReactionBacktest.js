@@ -131,4 +131,4 @@ if (require.main === module) {
   main().catch((e) => { console.error('ERROR econReactionBacktest.js:', e.message); process.exit(1); });
 }
 
-module.exports = { generateNfpEvents, nfpTimestampUTC };
+module.exports = { generateNfpEvents, nfpTimestampUTC, analyzeEvent, summarize, REACTION_THRESHOLD_PCT, HORIZONS_MIN };

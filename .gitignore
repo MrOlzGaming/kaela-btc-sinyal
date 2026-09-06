@@ -22,6 +22,7 @@ conviction-track-record.json
 analyst-dashboard.json
 anomaly-history.json
 nyopet-otp-state.json
+usd-idr-rate-cache.json
 
 # hasil riset/sweep sesi lokal (bukan "-cache"/"-result" tapi tetep regeneratable dari script
 # backtest/*.js, terlalu besar buat di-commit) -- 22 Agu 2026

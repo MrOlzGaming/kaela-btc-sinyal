@@ -109,19 +109,21 @@ async function getOlanNyopetTrader() {
   return createNyopetTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA });
 }
 
-// Cek apakah event ini JUGA akan diklaim Fed Dovish Grid (FOMC/NFP + reaksi dovish/LONG + tren
-// SMA480 konfirmasi -- PERSIS kriteria di nyopetAutoTrader.js) -- kalau iya, econ_reaction WAJIB
-// NGALAH (keputusan Olan: Fed Dovish Grid menang, edge-nya lebih tebal & lebih robust). Cek judul
-// event pakai pencocokan teks (data live gak selalu dalam format persis sama kayak generator
-// tanggal deterministik di fedEvents.js) -- FOMC/NFP doang, SAMA scope kayak yang di-backtest.
-function _isFedGridEligibleTitle(title) {
+// Cek judul event pakai pencocokan teks (data live gak selalu dalam format persis sama kayak
+// generator tanggal deterministik di fedEvents.js) -- NFP/FOMC doang, SAMA scope kayak yang
+// DI-BACKTEST (backtest/econReactionBacktest.js, 93 event NFP 2019-2026). Dipakai 2 tempat:
+// (1) wouldFedGridClaim di bawah, (2) gate scope econ_reaction (6 Sep 2026, riset "persiapan
+// kalender bulan ini" nemuin econ_reaction LIVE jalan di SEMUA event high-impact -- PPI/CPI/Retail
+// Sales/JOLTS/GDP/PCE -- padahal CUMA NFP yang divalidasi backtest. Keputusan Olan: batasi eksekusi
+// TRADING ke NFP+FOMC doang, event lain TETAP dapet pesan info/kesimpulan, cuma gak dieksekusi).
+function _isNfpOrFomcTitle(title) {
   const t = (title || '').toLowerCase();
   return t.includes('non-farm') || t.includes('nonfarm') || t.includes('payroll')
     || t.includes('fomc') || t.includes('fed interest rate') || t.includes('federal funds rate');
 }
 async function wouldFedGridClaim(eventTitle, direction) {
   if (direction !== 'buy') return false; // Fed Dovish Grid LONG-only (short kebukti rugi, dibuang)
-  if (!_isFedGridEligibleTitle(eventTitle)) return false;
+  if (!_isNfpOrFomcTitle(eventTitle)) return false;
   try {
     const lookbackMs = (FINAL_RECIPE.trendSmaPeriod + 20) * 15 * 60 * 1000;
     const candles = await fetchKlines('BTCUSDT', '15m', Date.now() - lookbackMs, Date.now());
@@ -143,6 +145,15 @@ async function wouldFedGridClaim(eventTitle, direction) {
 // Dibungkus withJournalLock (5 Sep 2026) -- lihat catatan di kepala file soal race condition
 // antara proses ini (siklus 5 menit) vs nyopetAutoTrader.js (siklus 15 menit).
 async function tryOpenEconScalp(direction, eventLabel) {
+  // (6 Sep 2026, keputusan Olan) -- econ_reaction DIBATASI ke NFP+FOMC doang. Backtest ulang
+  // CPI+PPI (backtest/econReactionBacktestCpiPpi.js) DITOLAK: CPI net-of-cost PF cuma 1,17 +
+  // gak konsisten per tahun (2019 PF=0,21, 2022 PF=17,75 -- lonjakan ekstrem = noise sample
+  // kecil, bukan edge asli), PPI malah PF kotor gabungan 0,96 (udah rugi SEBELUM biaya). Event
+  // LAIN (Retail Sales/GDP/PCE/JOLTS) tetap dapet pesan info di main(), CUMA gak sampe sini.
+  if (!_isNfpOrFomcTitle(eventLabel)) {
+    console.log(`[EconCalendarLive] "${eventLabel}" BUKAN NFP/FOMC -- skip eksekusi scalp (dibatasi 6 Sep 2026, CPI/PPI ke-backtest & DITOLAK, event lain belum pernah dites sama sekali).`);
+    return null;
+  }
   return withJournalLock(olanRealNyopetJournalPath(), async () => {
     try {
       const claimedByFedGrid = await wouldFedGridClaim(eventLabel, direction);

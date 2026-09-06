@@ -230,8 +230,79 @@ function ulcerPerformanceIndex(returnsPct) {
   return { totalReturnPct, ulcerIndex: ui, maxDrawdownPct: maxDrawdownPct(curve), upi: ui === 0 ? (totalReturnPct > 0 ? Infinity : 0) : totalReturnPct / ui };
 }
 
+// ============ 4. Bar-permutation (buat strategi LONG-only berbasis deteksi pola, BUKAN label
+// arah per-event -- Chart Pattern+FVG/Fed Dovish Grid) ============
+//
+// `permutationTest` di atas (acak label arah) gak masuk akal buat strategi ini -- gak ada "arah"
+// buat diacak (LONG-only), dan entry-nya dari DETEKSI POLA di candle, bukan event diskrit.
+// Null hypothesis yang lebih pas: "apa DETEKSI POLA beneran nemuin momen entry yang lebih bagus
+// dari 'kebetulan urutan candle-nya begitu' -- kalau URUTAN candle diacak (bentuk tiap bar
+// dipertahankan, CUMA urutannya diacak), apa pattern-detector yang SAMA masih nemuin hasil
+// SEBAGUS itu?" Ini pola "bar permutation" dari neurotrader888/mcpt.
+//
+// Caranya: ambil rasio open/high/low tiap bar RELATIF ke close bar sebelumnya + log-return
+// close-to-close, ACAK urutan tuple itu, susun ulang jadi candle series SINTETIS (bentuk tiap bar
+// dipertahankan persis, urutan waktu antar-bar yang berubah) -- lalu jalanin STRATEGI YANG SAMA
+// PERSIS (pattern detector + simulasi) di candle sintetis itu, bandingin hasilnya ke candle ASLI.
+function permuteBarSeries(candles) {
+  const n = candles.length;
+  if (n < 3) throw new Error('permuteBarSeries: candle terlalu sedikit.');
+  const shapes = [];
+  for (let i = 1; i < n; i++) {
+    const prevClose = candles[i - 1].close;
+    const c = candles[i];
+    shapes.push({
+      logReturn: Math.log(c.close / prevClose),
+      openRatio: c.open / prevClose, highRatio: c.high / prevClose, lowRatio: c.low / prevClose,
+    });
+  }
+  const shuffled = shuffle(shapes);
+  const result = [{ ...candles[0] }]; // bar pertama TETAP (anchor harga awal)
+  let close = candles[0].close;
+  for (let i = 0; i < shuffled.length; i++) {
+    const s = shuffled[i];
+    const newClose = close * Math.exp(s.logReturn);
+    // openTime/closeTime dari POSISI ASLI (bukan ikut si shape yang diacak) -- cuma buat
+    // kompatibilitas kode strategi yang butuh timestamp berurutan, GAK mempengaruhi hasil uji
+    // (strategi cuma peduli urutan+bentuk harga, bukan tanggal kalender asli).
+    result.push({
+      openTime: candles[i + 1].openTime, closeTime: candles[i + 1].closeTime,
+      open: close * s.openRatio, high: close * s.highRatio, low: close * s.lowRatio, close: newClose,
+    });
+    close = newClose;
+  }
+  return result;
+}
+
+// `strategyFn(candles) -> array return per-trade (angka, boleh rMultiple/pnlPct apa aja asal
+// KONSISTEN)` -- caller yang nentuin (reuse fungsi backtest yang UDAH ADA, biar gak duplikasi
+// logika strategi di modul ini). `metricFn(returnsArr)` sama kayak permutationTest di atas.
+function barPermutationTest(candles, strategyFn, metricFn, { iterations = 200 } = {}) {
+  const observedReturns = strategyFn(candles);
+  if (observedReturns.length < 5) return { ok: false, error: `Trade asli terlalu sedikit (n=${observedReturns.length}).` };
+  const observedMetric = metricFn(observedReturns);
+  const observedCount = observedReturns.length;
+
+  const nullMetrics = [];
+  const nullCounts = [];
+  for (let i = 0; i < iterations; i++) {
+    const synthetic = permuteBarSeries(candles);
+    const returns = strategyFn(synthetic);
+    nullCounts.push(returns.length);
+    nullMetrics.push(returns.length > 0 ? metricFn(returns) : 0);
+  }
+  nullMetrics.sort((a, b) => a - b);
+  const countGte = nullMetrics.filter((m) => m >= observedMetric).length;
+  return {
+    ok: true, observedMetric, observedTradeCount: observedCount, iterations,
+    nullMean: mean(nullMetrics), nullStdDev: stdDev(nullMetrics), nullMeanTradeCount: mean(nullCounts),
+    pValue: countGte / iterations,
+  };
+}
+
 module.exports = {
   permutationTest, metricAvgReturn, metricProfitFactor,
+  permuteBarSeries, barPermutationTest,
   sharpeRatio, probabilisticSharpeRatio, deflatedSharpeRatio, expectedMaxSharpe,
   buildEquityCurve, drawdownSeriesPct, maxDrawdownPct, ulcerIndex, ulcerPerformanceIndex,
   // internal, diexport CUMA buat kebutuhan self-test (backtestValidation.selftest.js)

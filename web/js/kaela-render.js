@@ -401,7 +401,12 @@
     const slText = (o.sl !== null && o.sl !== undefined) ? fmtUsdOrder(o.sl) : '-';
     const idLine = o.signalId ? `<div class="order-id">🆔 ${o.signalId}</div>` : '';
     const asset = ASSETS_WEB[o.asset] || ASSETS_WEB.btc;
-    const assetBadge = `<span class="order-asset-badge">${asset.emoji} ${asset.label} · ${MODE_LABEL_WEB[o.mode] || 'Pola Chart'}</span>`;
+    // (6 Sep 2026, permintaan Olan: "riwayat jurnal boleh jadi 1 [Sniper+Nyopet], asal ada
+    // keterangan mode+alasan" -- kartu Sniper SEBELUMNYA gak pernah nyebut "Sniper" eksplisit
+    // (identitasnya cuma keliatan dari HEADER SEKSI di luar kartu ini) -- begitu digabung sama
+    // kartu Nyopet di 1 daftar, itu ambigu. "🎯 Sniper" ditaruh di badge yang SAMA dipakai
+    // pending/floating/closed (1 variabel, 3 state) biar konsisten tanpa nulis ulang di tiap state.
+    const assetBadge = `<span class="order-asset-badge">🎯 Sniper · ${asset.emoji} ${asset.label} · ${MODE_LABEL_WEB[o.mode] || 'Pola Chart'}</span>`;
     if (o.status === 'pending') {
       return `<div class="order-card pending">
         ${idLine}
@@ -991,7 +996,15 @@
   // otomatis nyalain live price+PNL di kartu ini juga tanpa widget baru.
   function renderNyopetOrderCard(o) {
     const dirLabel = o.direction === 'sell' ? rt('short') : rt('long');
-    const modeLabel = NYOPET_MODE_LABEL_WEB[o.mode] || o.mode;
+    // (6 Sep 2026, permintaan Olan: "trader boleh Kaela kalo Manual Olan" -- kartu ini WAJIB
+    // bedain 2 jenis 'manual': dibuka lewat popup alasan web (o.manualReason keisi, TULISAN
+    // OLAN SENDIRI, sama sumber yang udah dipakai pesan WA -- lihat darkKaelaLog.js formatAutoOpen)
+    // vs kedetect reconciler di exchange TANPA alasan (fallback generik NYOPET_MODE_LABEL_WEB.manual
+    // yang UDAH ADA sejak 2-3 Sep). Selain manual, modeLabel = nama pola (Kaela otomatis, gak perlu
+    // label "Kaela" eksplisit -- default-nya emang otomatis).
+    const modeLabel = o.mode === 'manual'
+      ? (o.manualReason ? `Manual Olan -- ${o.manualReason}` : NYOPET_MODE_LABEL_WEB.manual)
+      : (NYOPET_MODE_LABEL_WEB[o.mode] || o.mode);
     // nyawaVal (25 Agu 2026 bug, masih relevan buat order LAMA pre-30 Agu yang cuma punya
     // `liqPrice`) -- order BARU (Nyopet v2, chart pattern+FVG) selalu punya `sl` asli (dari
     // struktur pola, bukan cuma likuidasi tersirat), jadi fallback ini jarang kepake lagi tapi

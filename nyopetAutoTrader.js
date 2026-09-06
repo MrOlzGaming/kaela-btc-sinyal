@@ -242,7 +242,14 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate);
     console.log(msg + '\n');
     await notify(msg);
-    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, entryPrice, sl: sig.sl, tp: partialTp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: `Chart Pattern/FVG (${sig.patternType})` });
+    // 6 Sep 2026, permintaan Olan (jurnal member: "beda dia trade sendiri atau karena kaela") --
+    // BUG ketemu: `note` SEBELUMNYA selalu nulis "Chart Pattern/FVG (${sig.patternType})" apa
+    // adanya, walau `sig.patternType==='manual'` -- Note Journal Sheet member jadi salah bunyi
+    // "Chart Pattern/FVG (manual)" buat posisi yang DIA BUKA SENDIRI lewat popup alasan web.
+    const journalNote = sig.patternType === 'manual'
+      ? `Manual (${sig.manualReason || 'gak diisi alasan'})`
+      : `Chart Pattern/FVG (${sig.patternType})`;
+    emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, entryPrice, sl: sig.sl, tp: partialTp, leverage: calc.leverage, marginUsd: calc.margin, status: 'open', openedAt: order.triggeredAt, note: journalNote });
     return order;
   }
 

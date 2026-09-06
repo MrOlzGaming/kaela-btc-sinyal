@@ -407,6 +407,13 @@
     // kartu Nyopet di 1 daftar, itu ambigu. "🎯 Sniper" ditaruh di badge yang SAMA dipakai
     // pending/floating/closed (1 variabel, 3 state) biar konsisten tanpa nulis ulang di tiap state.
     const assetBadge = `<span class="order-asset-badge">🎯 Sniper · ${asset.emoji} ${asset.label} · ${MODE_LABEL_WEB[o.mode] || 'Pola Chart'}</span>`;
+    // `reasonLine` (6 Sep 2026) -- jurnal member (Sheet-sourced, o.reasonNote) butuh alasan
+    // eksplisit di kartu karena `assetBadge` di atas cuma nunjukin mode GENERIK ("Pola Chart")
+    // kalau `o.mode` gak cocok short-code. "Manual Olan" (SATU-SATUNYA kasus manual di jalur ini
+    // -- member lain SELALU Kaela yang trigger) beda dari sinyal Kaela otomatis biasa.
+    const reasonLine = o.mode === 'manual'
+      ? `<div class="order-note">🙋 Manual Olan${o.manualReason ? ' -- ' + o.manualReason : ''}</div>`
+      : (o.reasonNote ? `<div class="order-note">📋 ${o.reasonNote}</div>` : '');
     if (o.status === 'pending') {
       return `<div class="order-card pending">
         ${idLine}
@@ -448,6 +455,7 @@
         ${assetBadge}
         <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge floating">${rt('floating')}</span>${modeBadge}</div>
         <div class="order-strategy">${strategy}</div>
+        ${reasonLine}
         ${o.triggeredAt ? `<div class="order-opened-since">${rt('opened')} ${fmtOpenedDate(o.triggeredAt)} · <span data-duration-target>${rt('calculating')}</span></div>` : ''}
         <div class="order-live-price">${rt('price_now')} ${asset.label} ${rt('now_suffix')} <strong data-price-target>${rt('loading')}</strong></div>
         <div class="order-levels"><span>${rt('entry')} <strong>${fmtUsdOrder(o.entryPrice)}</strong></span><span>${rt('tp')} ${fmtUsdOrder(o.tp)}</span><span>${rt('sl')} ${slText}</span></div>
@@ -470,6 +478,7 @@
       ${idLine}
       ${assetBadge}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
+      ${reasonLine}
       <div class="order-levels"><span>${rt('entry')} ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>${rt('exit')} ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
       ${partialTimeline}
       ${pnlLine}
@@ -1004,7 +1013,10 @@
     // label "Kaela" eksplisit -- default-nya emang otomatis).
     const modeLabel = o.mode === 'manual'
       ? (o.manualReason ? `Manual Olan -- ${o.manualReason}` : NYOPET_MODE_LABEL_WEB.manual)
-      : (NYOPET_MODE_LABEL_WEB[o.mode] || o.mode);
+      // `reasonNote` (6 Sep 2026) -- jurnal member (Sheet, bukan file lokal Olan) sering gak
+      // punya `o.mode` yang cocok ke NYOPET_MODE_LABEL_WEB (kode short kayak flag_bull) --
+      // fallback ke teks alasan APA ADANYA drpd nampilin raw key mentah kayak "nyopet-auto".
+      : (NYOPET_MODE_LABEL_WEB[o.mode] || o.reasonNote || o.mode);
     // nyawaVal (25 Agu 2026 bug, masih relevan buat order LAMA pre-30 Agu yang cuma punya
     // `liqPrice`) -- order BARU (Nyopet v2, chart pattern+FVG) selalu punya `sl` asli (dari
     // struktur pola, bukan cuma likuidasi tersirat), jadi fallback ini jarang kepake lagi tapi

@@ -128,7 +128,12 @@ Nilai Investasi: ${fmtUsdWithIdr(calc.nilaiPosisi, idrRate)}
 Alasan: ${alasanOpen}
 
 🔗 ${KAELA_ACCESS_URL}`);
-    emit({ entryId: mirror.originalOrderId, type: 'open', strategy: 'sniper', asset: mirror.asset, direction: mirror.direction, entryPrice: mirror.entryPriceReal, sl: mirror.sl, tp: mirror.tp, leverage: mirror.leverage, marginUsd: mirror.marginUsd, status: 'open', openedAt: mirror.openedAt });
+    // 6 Sep 2026, permintaan Olan (jurnal member: "kasih keterangan alasan+mode, Kaela yang
+    // trigger buat semua member") -- `note` SEBELUMNYA gak pernah dikirim ke sini sama sekali,
+    // jurnal Sheet member buat Sniper selalu KOSONG alasannya (beda dari Nyopet yang udah ada).
+    // Sniper mirror SELALU otomatis (Kaela yang trigger dari analisa Olan sendiri) -- gak ada
+    // konsep "manual member" di jalur ini, alasan cukup REUSE `alasanOpen` yang udah dihitung di atas.
+    emit({ entryId: mirror.originalOrderId, type: 'open', strategy: 'sniper', asset: mirror.asset, direction: mirror.direction, entryPrice: mirror.entryPriceReal, sl: mirror.sl, tp: mirror.tp, leverage: mirror.leverage, marginUsd: mirror.marginUsd, status: 'open', openedAt: mirror.openedAt, note: alasanOpen });
     return mirror;
   }
 

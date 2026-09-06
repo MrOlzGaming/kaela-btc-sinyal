@@ -711,7 +711,13 @@
     </div>`;
   }
 
-  function renderJurnalPanel(state, now, fundReport) {
+  // `opts.hideHistoryList` (6 Sep 2026, permintaan Olan: "riwayat jurnal boleh jadi 1 [Sniper+
+  // Nyopet]") -- caller (kaela-access-app.js _renderJurnalStatuses) yang mau nampilin RIWAYAT
+  // gabungan (bukan dipisah per-strategi kayak biasa) manggil ini DUA-DUANYA dengan flag ini true,
+  // skip bagian "Riwayat Trade" di sini (floating+stats+equity+kalender TETAP tampil apa adanya,
+  // itu emang wajarnya beda per-strategi karena dompetnya beneran terpisah -- lihat memori
+  // [[project-kaela-btc-sinyal]] soal 4 dompet independen), lalu bikin SATU grid gabungan sendiri.
+  function renderJurnalPanel(state, now, fundReport, opts) {
     // Kartu posisi FLOATING (29 Agu 2026, permintaan Olan: "kartu posisi floating semua pindah
     // ke jurnal aja" -- gak lagi kepisah Home/Jurnal, satu timeline utuh floating->closed di sini).
     const active = (state.orders || []).filter((o) => o.status === 'floating');
@@ -753,13 +759,15 @@
       <div class="journal-section-title">${rt('pnl_calendar_month')}</div>
       ${renderPnlCalendar(trades, now)}`;
 
+    const historyBlock = (opts && opts.hideHistoryList) ? '' : `
+      <div class="journal-section-title">${rt('trade_history')} (${closedAll.length})</div>
+      ${filterHtml}
+      <div class="order-grid" id="jurnal-trade-grid">${closedAll.map(renderOrderCard).join('')}</div>`;
     return `<div class="jurnal-panel">
       ${fundHtml}
       ${floatingHtml}
       ${summaryHtml}
-      <div class="journal-section-title">${rt('trade_history')} (${closedAll.length})</div>
-      ${filterHtml}
-      <div class="order-grid" id="jurnal-trade-grid">${closedAll.map(renderOrderCard).join('')}</div>
+      ${historyBlock}
     </div>`;
   }
 
@@ -1152,13 +1160,17 @@
     const disclaimerFull = (opts && opts.disclaimerFull) || (en
       ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
       : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
+    // `opts.hideHistoryList` -- lihat catatan panjang di renderJurnalPanel (Sniper) di atas, alasan
+    // sama persis, dipakai bareng buat riwayat gabungan Sniper+Nyopet.
+    const historyBlock = (opts && opts.hideHistoryList) ? '' : `
+      <div class="journal-section-title">${rt('trade_history')} (${closed.length})</div>
+      ${historyHtml}`;
     return `<div class="nyopet-panel">
       <p class="order-disclaimer">${disclaimerFull}</p>
       <div class="journal-stats-grid">${saldoCell}</div>
       ${floatingHtml}
       ${nyopetSummaryHtml}
-      <div class="journal-section-title">${rt('trade_history')} (${closed.length})</div>
-      ${historyHtml}
+      ${historyBlock}
     </div>`;
   }
 

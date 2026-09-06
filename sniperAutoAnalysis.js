@@ -253,7 +253,23 @@ async function main() {
 
     for (const cand of candidates) {
       const modeLabelId = cand.mode === 'fvg' ? 'FVG' : 'Pola Chart';
-      const availableBalance = Math.max(0, totalBalance - usedMargin);
+      // 6 Sep 2026, temuan riset "audit exposure gabungan" (permintaan Olan) -- `totalBalance`
+      // (kaelaBankroll.js) itu SENGAJA buku catatan TERPISAH dari saldo real (keputusan 14 Agu
+      // 2026, biar hasil live Sniper bisa dibandingin apel-ke-apel sama backtest $100->$20.523/9
+      // tahun -- JANGAN diubah balik ke saldo real, itu ngerusak tujuan pembanding itu). TAPI akun
+      // Binance Demo ini DIPAKAI BARENG sama Nyopet (API key SAMA PERSIS) -- kalkulator exposure
+      // Sniper gak pernah tau kalau Nyopet lagi megang margin gede, jadi bisa nyoba ukuran posisi
+      // REAL yang lebih besar dari yang BENERAN tersisa di akun bersama itu. Fix: clamp `modal`
+      // yang masuk ke `hitungExposure` (yang menentukan ORDER REAL yang dikirim ke exchange) ke
+      // saldo `availableBalance` REAL exchange juga (Binance `/fapi/v2/balance` field itu SENDIRI
+      // udah netto SEMUA margin terkunci di akun, termasuk punya Nyopet) -- `totalBalance`
+      // (shadow ledger) TETAP DIPAKE APA ADANYA buat laporan/fund report, TIDAK disentuh.
+      const realAvailable = await execClientFor(assetCfg).getAccountBalance('USDT');
+      const shadowAvailable = Math.max(0, totalBalance - usedMargin);
+      const availableBalance = Math.min(shadowAvailable, realAvailable);
+      if (availableBalance < shadowAvailable) {
+        console.log(`[SniperAutoAnalysis] ⚠️ Saldo real akun ($${realAvailable.toFixed(2)}) lebih kecil dari catatan Sniper ($${shadowAvailable.toFixed(2)}) -- kemungkinan Nyopet lagi pegang margin. Sizing dipakein saldo REAL, bukan catatan.`);
+      }
       if (availableBalance <= 1) {
         console.log(`[SniperAutoAnalysis] Saldo available abis, skip sisa sinyal.`);
         invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi saldo available abis, gak sempat entry.`);

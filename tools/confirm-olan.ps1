@@ -72,20 +72,21 @@ function Read-PlainPin {
   }
 }
 
-if ($Setup) {
+# 6 Sep 2026, permintaan Olan ("takut nanti aku lupa, kamu juga lupa, bisa debat lagi") -- SATU
+# shortcut yang SAMA WAJIB kerja baik buat setup pertama kali MAUPUN pemakaian rutin, gak boleh
+# ada 2 command beda yang perlu diinget. Kalau belum pernah -Setup, OTOMATIS masuk alur setup di
+# sini (gak nyuruh jalanin command laen) -- $Setup manual TETAP ada buat re-setup sengaja (ganti
+# PIN), tapi bukan satu-satunya jalan.
+if ($Setup -or -not (Test-Path $secretPath)) {
+  if (-not $Setup) { Write-Host "Belum pernah setup PIN -- kita bikin dulu sekarang." -ForegroundColor Yellow }
   Write-Host "=== Setup PIN konfirmasi Kaela ===" -ForegroundColor Cyan
   $pin1 = Read-PlainPin "Bikin PIN baru (bebas, beda boleh sama PIN Kaela Access)"
   if ([string]::IsNullOrEmpty($pin1)) { Write-Host "Dibatalkan." -ForegroundColor Yellow; exit 1 }
   $pin2 = Read-PlainPin "Ulangi PIN yang sama"
   if ($pin1 -ne $pin2) { Write-Host "PIN gak sama, coba lagi dari awal." -ForegroundColor Red; exit 1 }
   Set-Content -Path $secretPath -Value (Get-PinHash -Pin $pin1) -NoNewline
-  Write-Host "OK -- PIN konfirmasi kesimpen. Kaela SEKARANG bisa minta kamu jalanin skrip ini tiap mau eksekusi aksi sensitif." -ForegroundColor Green
+  Write-Host "OK -- PIN konfirmasi kesimpen. Klik lagi shortcut yang sama tiap Kaela minta konfirmasi." -ForegroundColor Green
   exit 0
-}
-
-if (-not (Test-Path $secretPath)) {
-  Write-Host "Belum pernah setup -- jalanin dulu: .\confirm-olan.ps1 -Setup" -ForegroundColor Yellow
-  exit 2
 }
 
 $expectedHash = Get-Content -Path $secretPath -Raw

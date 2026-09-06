@@ -979,6 +979,8 @@
     // 2-3 Sep 2026, permintaan Olan: posisi yang gak ketemu match Journal (dibuka LANGSUNG di
     // exchange, bukan lewat bot) WAJIB jujur dilabelin manual, BUKAN ditebak "Fade (asumsi mantul)".
     manual: 'Manual (dibuka langsung di exchange)',
+    // 6 Sep 2026, metode Nyopet ke-5 -- tanpa entry ini, kartu nampilin raw string "fed_dovish_grid".
+    fed_dovish_grid: 'Fed Dovish Grid',
   };
 
   // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "nyopet ga dibatasi
@@ -1015,6 +1017,12 @@
       const partialBadge = o.partialDone
         ? `<div class="order-partial-note">🟡 ${rt('stage1_secured')} ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)} -- ${rt('sl_rest_be')} ${((o.remainingFraction != null ? o.remainingFraction : 0.5) * 100).toFixed(0)}${rt('of_position_trailed')}</div>`
         : '';
+      // (6 Sep 2026, metode Fed Dovish Grid -- basket multi-layer, beda dari exit 2-tahap
+      // chart-pattern) -- badge progress layer, gak nge-hardcode angka MAX (bisa geser kalau
+      // FINAL_RECIPE.layerSchedulePct di backend berubah) -- cukup tunjukin posisi SEKARANG.
+      const layerBadge = (o.patternType === 'fed_dovish_grid' && o.layers != null)
+        ? `<div class="order-partial-note">📊 Layer ke-${o.layers} (nyicil stacking, TP/SL agregat dari % modal)</div>`
+        : '';
       return `<div class="order-card floating" data-order-id="${o.id}" data-symbol="${assetInfo.symbol}" data-direction="${o.direction}" data-entry="${o.entryPrice}" data-tp="${o.tp}" data-sl="${nyawaVal != null ? nyawaVal : ''}" data-leverage="${o.leverage}" data-margin="${o.marginUsd}" data-remaining-fraction="${o.remainingFraction != null ? o.remainingFraction : 1}" data-realized-pnl="${o.realizedPnlUsd || 0}" data-opened-at="${o.triggeredAt || ''}">
           <div class="order-header">
             <span class="order-dir">${dirLabel}</span>
@@ -1030,6 +1038,7 @@
           </div>
           <div class="order-meta">${rt('leverage')} ${o.leverage}x · ${rt('margin')} ${fmtUsdOrder(o.marginUsd)}${zonaMeta}</div>
           ${partialBadge}
+          ${layerBadge}
           <div class="order-pnl-live" data-pnl-target>${rt('loading_pnl')}</div>
         </div>`;
     }

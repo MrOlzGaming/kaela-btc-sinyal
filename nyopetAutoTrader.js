@@ -466,7 +466,33 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // yang salah), SKIP total siklus ini (jangan coba apa-apa) daripada eksekusi ngawur.
     const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
     if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
-      console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- SKIP cari sinyal baru siklus ini, journal PERLU direkonsiliasi.`);
+      // ⛔ FIX 8 Sep 2026 (Olan, ketemu pas Nirwan/member: posisi nyangkut PERMANEN gara2 skip
+      // total di sini -- gak ada auto-heal, journal harus dibenerin manual selamanya). Dulu cuma
+      // SKIP + log warning (aman dari dobel-eksekusi, TAPI bot berhenti nyari sinyal baru
+      // SELAMANYA buat aset ini sampai ada yang benerin journal manual). Sekarang AUTO-ADOPT --
+      // tulis entry `mode:'unknown'` (sl/tp/liqPrice SENGAJA null, PERSIS skema "LEGACY pre-v2"
+      // yang UDAH ADA di bawah -- floating.sl==null -> monitor doang, GAK PERNAH force-close
+      // sendiri, aman) ke journal, SKIP siklus INI doang (gak cari sinyal baru sekarang), siklus
+      // BERIKUTNYA otomatis ketemu entry ini via getFloatingOrder dan mantau normal. Pola field
+      // (dirWord dari positionAmt, marginUsd dari notional/leverage) SAMA kayak
+      // positionReconciler.js `_reconcileOneExchange` MANUAL OPEN, cuma DI SINI ditulis ke journal
+      // nyopetAutoTrader SENDIRI (bukan state notifikasi terpisah) biar ke-track/pantau beneran.
+      const adoptedAmt = parseFloat(liveCheckPos.positionAmt);
+      const adoptedLeverage = Number(liveCheckPos.leverage) || 0;
+      const adoptedNotional = Math.abs(Number(liveCheckPos.notional) || 0);
+      const adopted = {
+        id: 'nyopet-adopted-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange,
+        direction: adoptedAmt > 0 ? 'buy' : 'sell', status: 'floating',
+        mode: 'unknown', patternType: 'unknown', entryPrice: parseFloat(liveCheckPos.entryPrice),
+        sl: null, originalSl: null, tp: null, partialTp: null, liqPrice: null,
+        qty: Math.abs(adoptedAmt), leverage: adoptedLeverage,
+        marginUsd: adoptedLeverage > 0 ? adoptedNotional / adoptedLeverage : 0, nilaiPosisi: adoptedNotional,
+        partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
+        triggeredAt: new Date().toISOString(), manualReason: null,
+      };
+      journal.orders.push(adopted);
+      saveJournal(journal);
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- DIADOPSI otomatis ke journal (#${adopted.id}, mode legacy/unknown, sl/tp gak diketahui, monitor doang gak di-force-close) biar gak nyangkut permanen. Skip cari sinyal baru siklus ini.`);
       return;
     }
 

@@ -49,8 +49,17 @@ function checkJournal(f, anomalies) {
 
   // 2) Leverage lewat cap global -- kalkulator SEHARUSNYA gak pernah ngasih ini, tapi order lama/
   // manual/bug baru bisa lolos.
+  //
+  // ⛔ FALSE POSITIVE ketemu 8 Sep 2026 (dikonfirmasi Olan: "aku sudah tak ada posisi kok, boleh
+  // teliti kok"): entry `#nyopet-adopted-1788404534708` (3 Sep 2026, leverage 109x, closed_tp)
+  // itu posisi MANUAL Olan langsung di Binance (bukan keputusan bot) -- Position Reconciler cuma
+  // nyatet apa adanya pas kedeteksi di exchange, `mode`/`patternType` KEDUANYA "unknown" (penanda
+  // order gak lewat jalur normal bot). Cap leverage global itu ATURAN buat KALKULATOR bot sendiri,
+  // BUKAN buat trade manual Olan pake penilaian sendiri di exchange langsung -- exclude entry yang
+  // `mode === 'unknown'` (adopted/manual, gak pernah lewat exposure calculator) dari cek ini, biar
+  // gak alarm palsu SELAMANYA tiap siklus buat posisi lama yang udah closed berhari-hari.
   for (const o of orders) {
-    if (o.leverage != null && o.leverage > MAX_LEVERAGE) {
+    if (o.leverage != null && o.leverage > MAX_LEVERAGE && o.mode !== 'unknown') {
       anomalies.push(`${f} #${o.id}: leverage=${o.leverage}x MELEBIHI cap global ${MAX_LEVERAGE}x`);
     }
   }

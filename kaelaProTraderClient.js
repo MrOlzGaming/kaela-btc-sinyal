@@ -14,13 +14,31 @@ function loadConfig() {
   return { url, serviceKey };
 }
 
-async function callGas(aksi, params = {}) {
+// 7 Sep 2026, permintaan Olan ("cek pesan XAU belum ada rupiahnya cek semua") -- root cause:
+// laporan Emas via GitHub Actions (daily-report.yml) jalan di runner BARU/kosong tiap kali (gak
+// ada cache lokal yang nyambung antar-run kayak di Vultr), jadi kalau callGas gagal SEKALI doang
+// (GAS TERBUKTI kadang balikin wrapper HTML/respons rusak sesaat -- pola SAMA yang udah
+// didokumentasikan di AppJs.gs loader dashboard.html, bukan kejadian baru), getUsdIdrRate()
+// langsung nyerah ke null TANPA fallback apapun di CI (local cache file cuma nolong di mesin yang
+// nyimpen state antar-run, kayak Vultr). Fix DI SINI (bukan di getUsdIdrRate/tiap caller satu-satu)
+// -- callGas() itu FONDASI dipakai SEMUA fungsi (getUsdIdrRate, getTradingAccounts, notifyMember,
+// dst), retry di titik ini otomatis nguatin SEMUA pemanggil sekaligus, bukan cuma laporan Emas.
+async function callGas(aksi, params = {}, retries = 2) {
   const { url, serviceKey } = loadConfig();
   const qs = new URLSearchParams({ aksi, serviceKey, ...params }).toString();
-  const res = await fetch(`${url}?${qs}`);
-  const data = await res.json();
-  if (!data.ok) throw new Error(`GAS ${aksi} gagal: ${data.error || JSON.stringify(data)}`);
-  return data;
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`${url}?${qs}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(`GAS ${aksi} gagal: ${data.error || JSON.stringify(data)}`);
+      return data;
+    } catch (e) {
+      lastErr = e;
+      if (attempt < retries) await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    }
+  }
+  throw lastErr;
 }
 
 async function getTradingAccounts(exchange = 'binance') {

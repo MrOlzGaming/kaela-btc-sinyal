@@ -59,7 +59,10 @@ jobs:
           # deteksi ulang target tahap 1 "kena" lagi, kirim WA "TARGET TAHAP 1 KENA" LAGI -- infinite
           # loop WA duplikat sampai kapanpun tanpa fix ini (ketemu dari laporan Olan: WA "jual
           # separuh" kekirim berkali-kali tapi posisi beneran gak pernah keupdate).
-          for f in archive.json sniper-orders.json kaela-bankroll.json; do [ -f "$f" ] && git add -f "$f"; done
+          # usd-idr-rate-cache.json (7 Sep 2026) -- SAMA alasan kayak daily-report.yml (lihat
+          # komentar di situ): runner CI baru tiap run, gitignored, WAJIB di-commit biar kurs
+          # cadangan Rupiah di pesan PnL Sniper ikut nyambung antar-run.
+          for f in archive.json sniper-orders.json kaela-bankroll.json usd-idr-rate-cache.json; do [ -f "$f" ] && git add -f "$f"; done
           git diff --staged --quiet || git commit -m "Auto: sniper order monitor $(date -u +%Y-%m-%dT%H:%M)"
           # Retry pull+push -- kalau push gagal dan gak diulang, sniper-orders.json GAK MAJU,
           # run berikutnya bisa anggap order yang UDAH ditrigger/ditutup sebagai belum, kirim WA

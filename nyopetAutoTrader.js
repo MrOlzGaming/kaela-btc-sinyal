@@ -167,9 +167,35 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     return parseFloat((await res.json()).price);
   }
 
-  // Income history (realized PNL asli dari Binance) -- WAJIB dipakai buat rekonsiliasi kalau
+  // Income history (realized PNL asli dari exchange) -- WAJIB dipakai buat rekonsiliasi kalau
   // posisi ternyata udah closed/likuidasi SELAMA kita offline, JANGAN pernah nebak PNL dari harga.
-  async function fetchRealizedPnlSince(symbol, startTime) {
+  //
+  // MEXC (8 Sep 2026, permintaan Olan -- error "BELUM DIDUKUNG" muncul berulang tiap siklus buat
+  // posisi Emas yg kelikuidasi offline) -- MEXC GAK PUNYA endpoint income-ledger tunggal kayak
+  // Binance /fapi/v1/income (riset resmi mexcdevelop.github.io/apidocs/contract_v1_en/, dicek
+  // 8 Sep 2026). Dipakai `order_deals` (via mexcExecutor.js getOrderDeals, UDAH LIVE-VERIFIED --
+  // dites langsung via Vultr, dipakai juga di multiAccountExecutor.js buat laporan saldo) --
+  // tiap deal punya `profit` (realized PnL, bisa negatif) + `fee` (SELALU positif, potongan) TERPISAH,
+  // dikonfirmasi live: side=3 (open) profit=0, side=2 (close) profit=-15.58 -- net = profit - fee.
+  // BEDA dari Binance: gak nyakup funding fee (endpoint terpisah `funding_records`, gak dipakai
+  // di sini) -- approksimasi cukup buat rekonsiliasi 1 posisi offline, BUKAN laporan akuntansi presisi.
+  async function fetchMexcRealizedPnlSince(symbol, startTime) {
+    let total = 0;
+    let pageNum = 1;
+    for (let i = 0; i < 20; i++) { // cap 20 halaman (2000 baris), jaga-jaga infinite loop -- pola sama multiAccountExecutor.js
+      const page = await mc.getOrderDeals(startTime, Date.now(), pageNum, 100);
+      if (!Array.isArray(page) || page.length === 0) break;
+      for (const d of page) {
+        if (d.symbol !== symbol) continue;
+        total += (Number(d.profit) || 0) - (Number(d.fee) || 0);
+      }
+      if (page.length < 100) break;
+      pageNum++;
+    }
+    return total;
+  }
+  async function fetchRealizedPnlSince(symbol, startTime, exchange = 'binance') {
+    if (exchange === 'mexc') return fetchMexcRealizedPnlSince(symbol, startTime);
     const creds = apiCreds || (function () { const s = require('./secrets'); return { apiKey: s.BINANCE_API_KEY, apiSecret: s.BINANCE_API_SECRET }; })();
     const params = { symbol, startTime, timestamp: Date.now(), recvWindow: 15000, limit: 1000 }; // recvWindow dinaikin, lihat catatan binanceExecutor.js
     const query = new URLSearchParams(params).toString();
@@ -378,13 +404,10 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
       if (!stillOpen) {
         console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi UDAH GAK ADA (kelikuidasi/offline) -- rekonsiliasi income history.`);
-        // ⚠️ fetchRealizedPnlSince HARDCODE Binance (signing+endpoint /fapi/v1/income) -- BELUM
-        // ada versi MEXC (riset endpoint income-history MEXC belum dilakuin, 30 Agu 2026). Gagal
-        // JELAS di sini drpd diem-diem manggil endpoint Binance pakai simbol MEXC (bisa salah data).
-        if (assetCfg.exchange === 'mexc') {
-          throw new Error(`Rekonsiliasi posisi ${assetCfg.label} (MEXC) yang kelikuidasi offline BELUM DIDUKUNG -- fetchRealizedPnlSince cuma ada versi Binance. Cek manual dulu di MEXC.`);
-        }
-        const realPnlUsd = await fetchRealizedPnlSince(symbol, new Date(floating.partialClosedAt || floating.triggeredAt).getTime());
+        // ⛔ FIX 8 Sep 2026 (error "BELUM DIDUKUNG" berulang tiap siklus buat posisi Emas/MEXC
+        // Olan yang kelikuidasi offline) -- versi MEXC UDAH ADA (fetchMexcRealizedPnlSince di
+        // atas, riset+live-verified via order_deals), dispatch by exchange sekarang.
+        const realPnlUsd = await fetchRealizedPnlSince(symbol, new Date(floating.partialClosedAt || floating.triggeredAt).getTime(), assetCfg.exchange);
         await closePosition(assetCfg, floating, { alreadyClosed: true, realPnlUsd, reason: 'OFFLINE' });
         return;
       }

@@ -121,6 +121,17 @@ node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERR
 node priceAlertMonitor.js >> "$LOG_FILE" 2>&1 || log "priceAlertMonitor.js ERROR (exit $?)"
 node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit $?)"
 
+# Cadangan Squeeze Detector + Econ Calendar (48h heads-up) + Whale Daily Digest (8 Sep 2026,
+# Olan: "github sering macet.. tanam di vultr juga") -- SAMA alasan/pola kayak Price Alert/DXY
+# Zone di atas (jadwal GH Actions-nya, 4 jam/6 jam/harian, kebukti sering telat berjam-jam gara2
+# antrian akun ini padat). Ketiganya UDAH punya state file dedup sendiri (squeeze-alert-state.json/
+# econ-calendar-notified.json/whale-state.json) -- aman dipanggil tiap siklus 15 menit, gak spam
+# WA dobel. GH Actions schedule-nya TETAP dibiarin nyala (bukan dimatiin kayak sniper-hourly) --
+# kalau kebetulan sempat jalan duluan, dedup state yang sama ini juga nyegah dobel kirim.
+node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR (exit $?)"
+node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR (exit $?)"
+node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR (exit $?)"
+
 # Invariant check journal Nyopet/Sniper (5 Sep 2026, permintaan Olan: "cari anomali/bug otomatis")
 # -- READ-ONLY, ngecek hal yang HARUSNYA selalu bener (PnL closed gak boleh null, leverage gak
 # boleh lewat cap, dst) -- nangkep bug SILENT yang gak bikin exception/gak keliatan di log biasa.
@@ -145,7 +156,7 @@ node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERR
 # state lokal apapun jadi gak perlu masuk daftar CHANGED di bawah.
 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
 
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json)
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
@@ -153,7 +164,7 @@ if [ -n "$CHANGED" ]; then
   # archive.json + price-alert-state.json + dxy-zone-state.json ditambahin 31 Agu 2026 (cadangan
   # lokal berita/price alert/DXY) -- WAJIB ikut ke-commit, kalau nggak `git reset --hard` box ini
   # bakal nelen balik dedup state -> alert bisa kekirim dobel.
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json; do
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

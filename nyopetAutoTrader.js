@@ -45,7 +45,7 @@ const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
 const { formatAutoOpen, formatAutoClosed, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
-const { sendWhatsApp, sendWhatsAppToSniperClub } = require('./fonnte');
+const { sendWhatsApp } = require('./fonnte');
 // (5 Sep 2026, metode Nyopet BARU "Fed Dovish Grid" -- lihat backtest/fedSignalGridBacktest.js
 // buat riset lengkapnya) -- fetchKlines/computeSignals/computeSMA/FINAL_RECIPE di-REUSE LANGSUNG
 // dari file backtest (SATU sumber kebenaran, sinyal live WAJIB persis sama logic yang di-backtest,
@@ -106,10 +106,10 @@ function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('he
 //                default module (akun Olan sendiri, wrapper lama).
 // `journalPath`: file JSON journal KHUSUS instance ini (per akun -- beda phone/mode = beda file).
 // `sendWA(msg)`: fungsi kirim notifikasi -- default `sendWhatsApp` (fonnte.js, broadcast SEMUA
-// grup) buat instance GENERIK/testing. Wrapper module-level di bawah (akun Olan sendiri) OVERRIDE
-// ini ke `sendWhatsAppToSniperClub` (5 Sep 2026, permintaan Olan: "Demo Olan cuma masuk grup btc
-// sniper club, bukan broadcast semua grup, bukan Wibowo Hedgefund" -- Demo bukan duit beneran,
-// gak relevan buat shareholder Wibowo, lihat aturan sama di wibowoNotify.js).
+// grup) buat instance GENERIK/testing. Wrapper module-level di bawah (akun Olan sendiri) SEMPAT
+// override ini ke `sendWhatsAppToSniperClub` doang (5 Sep 2026) -- DIBATALKAN 8 Sep 2026 (audit
+// otomatisasi WA: "semua yang ke Sniper WAJIB ke Wibowo juga"), sekarang PAKAI DEFAULT
+// `sendWhatsApp` juga (broadcast Sniper Club + Wibowo Hedgefund dua-duanya).
 // `getModalBase(marginAsset)`: override sumber modal (saldo Binance live vs live+eksternal) --
 //                default null = pakai `client.getAccountBalance(marginAsset)` apa adanya.
 // `apiCreds`   : { apiKey, apiSecret, testnet } -- WAJIB kalau mau `fetchRealizedPnlSince` jalan
@@ -818,11 +818,14 @@ function _journalHookOlanDemo(evt) {
       .catch((e) => console.log('[NyopetAutoTrader] updateJournalEntry (demo Olan) gagal:', e.message));
   }
 }
-// `sendWA: sendWhatsAppToSniperClub` (5 Sep 2026, permintaan Olan: "tradingan Demo Olan cuma
-// masuk grup btc sniper club, bukan broadcast semua grup") -- SEBELUM ini jalur default gak dikasih
-// `sendWA` sama sekali, jatuh ke `sendWhatsApp` polos (broadcast SEMUA grup termasuk Wibowo
-// Hedgefund, gak cocok buat Demo yang bukan duit beneran -- lihat aturan lama di wibowoNotify.js).
-const _defaultTrader = createNyopetTrader({ onEvent: _journalHookOlanDemo, sendWA: sendWhatsAppToSniperClub });
+// ⛔ KOREKSI 8 Sep 2026 (Olan, audit otomatisasi WA -- "harusnya semua yang dikirim ke sniper
+// dikirim ke hedgefund wibowo juga.. Ya, kirim juga ke Wibowo"): SEMPAT `sendWA:
+// sendWhatsAppToSniperClub` (5 Sep 2026, "tradingan Demo Olan cuma masuk grup btc sniper club,
+// bukan broadcast semua grup") -- keputusan itu DIBATALKAN, balik ke `sendWhatsApp` polos
+// (broadcast SEMUA grup di FONNTE_BROADCAST_GROUPS, otomatis kena Sniper Club + Wibowo Hedgefund
+// dua-duanya) biar konsisten sama aturan baru: apapun yang nyampe Sniper Club WAJIB nyampe Wibowo
+// Hedgefund juga.
+const _defaultTrader = createNyopetTrader({ onEvent: _journalHookOlanDemo, sendWA: sendWhatsApp });
 
 async function main() {
   if (!isLiveTradingEnabled()) {

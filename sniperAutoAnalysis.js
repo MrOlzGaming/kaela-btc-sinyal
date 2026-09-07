@@ -38,7 +38,7 @@ const { getActiveOrders, getClosedOrders, createOrder, updateOrder } = require('
 const { hitung: hitungExposure } = require('./calculator');
 const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBankroll');
 const { formatAutoValid, formatAutoInvalid, formatPositionMonitor } = require('./sniperOrderLog');
-const { sendWhatsAppExcept } = require('./fonnte');
+const { sendWhatsApp, sendWhatsAppExcept } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { addEntry } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
@@ -84,13 +84,20 @@ async function safeOnchain() {
 }
 
 // 3 Sep 2026, permintaan Olan (bug ketemu -- pesan "posisi bayangan" nyasar ke grup Wibowo
-// Hedgefund): sistem SELURUHNYA sekarang cuma 3 kategori posisi -- demo realistis (akun demo
-// Olan, live-executed via multiAccountExecutor.js), real Hedgefund, dan real member lain yang
-// ikut jasa Kaela -- SEMUA beneran, bukan hitungan doang. Broadcast "posisi bayangan" file ini
-// (teaser publik, gak pernah pegang uang beneran -- lihat header komentar) TETAP jalan buat grup
-// publik/teman, TAPI WAJIB skip grup Wibowo Hedgefund biar gak ketuker sama posisi REAL mereka.
+// Hedgefund): SEMPAT dikecualikan total dari Wibowo Hedgefund biar gak ketuker sama posisi REAL
+// mereka, karena pesannya waktu itu masih nyebut bahasa "posisi bayangan/saldo bayangan Kaela".
+//
+// ⛔ KOREKSI 8 Sep 2026 (Olan, audit otomatisasi WA -- "harusnya semua yang dikirim ke sniper
+// dikirim ke hedgefund wibowo juga"): istilah "posisi bayangan" ITU SENDIRI udah gak dipakai lagi
+// di pesan (formatPositionMonitor/formatAutoValid UDAH bilang "bukan bayangan lagi" sejak fix
+// 3 Sep yang SAMA -- lihat sniperOrderLog.js), jadi alasan awal exclude-nya udah gak relevan.
+// Pemantauan posisi (line ~150) & sinyal VALID (line ~357) SEKARANG JUGA dikirim ke Wibowo
+// (`alsoWibowo=true`) -- BEDA dari status INVALID/ANCANG-ANCANG (line ~366) yang TETAP pakai
+// exclude+pesan terpisah (`wibowoNotes`, lihat bawah) karena Olan eksplisit minta pola itu
+// dipertahankan ("sinyal ancang ancang tetep ada di wibowo hedgefund" -- pola DUA-PESAN yang
+// SUDAH ADA, bukan exclude-total, jangan disamain sama 2 kasus di atas).
 const WIBOWO_HEDGEFUND_GROUP_ID = '120363430640997174@g.us';
-async function sendWhatsAppRespectMute(msg, label, silent = false) {
+async function sendWhatsAppRespectMute(msg, label, silent = false, alsoWibowo = false) {
   if (silent) {
     console.log(`[SniperAutoAnalysis] Order SILENT (trial/simulasi) -- ${label} TETAP tercatat di web, gak pernah dikirim ke grup.`);
     return;
@@ -99,7 +106,11 @@ async function sendWhatsAppRespectMute(msg, label, silent = false) {
     console.log(`[SniperAutoAnalysis] WA DIMUTE sampai Jumat -- ${label} TETAP tercatat di web, gak dikirim ke grup dulu.`);
     return;
   }
-  await sendWhatsAppExcept(msg, [WIBOWO_HEDGEFUND_GROUP_ID]);
+  if (alsoWibowo) {
+    await sendWhatsApp(msg); // broadcast biasa -- SEMUA grup termasuk Wibowo Hedgefund
+  } else {
+    await sendWhatsAppExcept(msg, [WIBOWO_HEDGEFUND_GROUP_ID]);
+  }
 }
 
 const TRIGGER_STATE_PATH = path.join(__dirname, 'sniper-trigger-state.json');
@@ -149,7 +160,7 @@ async function main() {
     const msg = formatPositionMonitor(order, livePrice, assetCfg);
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
-    await sendWhatsAppRespectMute(msg, `pemantauan posisi terbuka (${assetCfg.label} ${order.mode})`, order.silentTest);
+    await sendWhatsAppRespectMute(msg, `pemantauan posisi terbuka (${assetCfg.label} ${order.mode})`, order.silentTest, true);
   }
 
   // Saldo AVAILABLE (22 Agu 2026) -- bankroll TOTAL dikurangi margin yang udah kepake di SEMUA
@@ -354,7 +365,7 @@ async function main() {
       const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg, liveExecution });
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
-      await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`);
+      await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, true);
       console.log('[SniperAutoAnalysis] VALID --', assetCfg.label, cand.mode, patternLabel, 'posisi bayangan dibuka @', livePrice);
     }
   }

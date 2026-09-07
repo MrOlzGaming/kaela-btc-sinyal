@@ -39,7 +39,7 @@ const kaela = require('./kaelaProTraderClient');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { checkEmptyWallet } = require('./emptyWalletWatchdog');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
-const { sendWhatsAppToSniperClub } = require('./fonnte');
+const { sendWhatsApp } = require('./fonnte');
 const { reconcileWibowoPositions } = require('./positionReconciler');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
@@ -142,18 +142,19 @@ function buildSendWA(account, adminRelay) {
     // (5 Sep 2026, permintaan Olan: "tradingan Olan hanya broadcast ke Wibowo hedgefund.. bukan
     // japri Olan, bukan ke grup lain juga") -- Olan SENDIRI (isSelf) TIDAK PERNAH di-DM buat
     // posisi trading-nya sendiri lagi (beda dari member lain, yang TETAP di-DM seperti biasa di
-    // bawah) -- cuma masuk 1 grup spesifik tergantung mode: Real -> Wibowo Hedgefund (dasar
-    // saham, shareholder wajib transparan liat), Demo -> BTC Sniper Club (bukan duit beneran,
-    // gak relevan buat shareholder Wibowo, tapi Olan tetap mau liat aktivitas testing-nya sendiri
-    // di suatu tempat selain japri). Admin-relay-ke-diri-sendiri emang udah gak pernah jalan dari
-    // awal (`!isSelf` di baris relay bawah), jadi return di sini gak ilangin apa-apa yang lain.
+    // bawah). Real -> Wibowo Hedgefund (dasar saham, shareholder wajib transparan liat). Demo
+    // SEMPAT cuma masuk BTC Sniper Club doang -- ⛔ DIBATALKAN 8 Sep 2026 (audit otomatisasi WA,
+    // Olan: "semua yang ke Sniper WAJIB ke Wibowo juga.. Ya, kirim juga ke Wibowo") -- sekarang
+    // broadcast biasa (`sendWhatsApp`, otomatis kena Sniper Club + Wibowo Hedgefund dua-duanya).
+    // Admin-relay-ke-diri-sendiri emang udah gak pernah jalan dari awal (`!isSelf` di baris relay
+    // bawah), jadi return di sini gak ilangin apa-apa yang lain.
     if (isSelf) {
       if (account.mode === 'real') {
         await sendWhatsAppToWibowo(message).catch((e) =>
           console.log(`[MultiAccountExecutor] Broadcast Wibowo Hedgefund gagal:`, e.message));
       } else {
-        await sendWhatsAppToSniperClub(message).catch((e) =>
-          console.log(`[MultiAccountExecutor] Broadcast BTC Sniper Club (Demo Olan) gagal:`, e.message));
+        await sendWhatsApp(message).catch((e) =>
+          console.log(`[MultiAccountExecutor] Broadcast Demo Olan (Sniper Club+Wibowo) gagal:`, e.message));
       }
       return;
     }

@@ -128,9 +128,16 @@ node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit
 # econ-calendar-notified.json/whale-state.json) -- aman dipanggil tiap siklus 15 menit, gak spam
 # WA dobel. GH Actions schedule-nya TETAP dibiarin nyala (bukan dimatiin kayak sniper-hourly) --
 # kalau kebetulan sempat jalan duluan, dedup state yang sama ini juga nyegah dobel kirim.
-node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR (exit $?)"
-node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR (exit $?)"
-node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR (exit $?)"
+# ⛔ INSIDEN 8 Sep 2026: whaleDailyDigest.js sempat nge-block SELURUH pipeline ini ~13 menit
+# (catch-up 300 blok pas pertama kali ditambahin ke sini, ketauan pas tes manual -- lock flock
+# yang sama dipegang, sniperLiveMonitor/nyopetAutoTrader/multiAccountExecutor ANTRE di
+# belakangnya). Cap batch-nya UDAH diturunin (lihat MAX_BLOCKS_PER_RUN di whaleDailyDigest.js),
+# TAPI `timeout 120` ditambah juga di 3 script BARU ini (API eksternal, paling rawan lelet/hang)
+# sebagai jaring pengaman KEDUA -- kalau suatu saat lambat lagi, gak akan nyandera fungsi trading
+# lain selamanya, cuma skip siklus itu (state per-item, aman diulang siklus berikutnya).
+timeout 120 node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR/TIMEOUT (exit $?)"
+timeout 120 node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR/TIMEOUT (exit $?)"
+timeout 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR/TIMEOUT (exit $?)"
 
 # Invariant check journal Nyopet/Sniper (5 Sep 2026, permintaan Olan: "cari anomali/bug otomatis")
 # -- READ-ONLY, ngecek hal yang HARUSNYA selalu bener (PnL closed gak boleh null, leverage gak

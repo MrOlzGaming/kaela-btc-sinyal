@@ -20,10 +20,14 @@ const { localDateKey } = require('./config');
 
 const STATE_PATH = path.join(__dirname, 'whale-state.json');
 const WHALE_THRESHOLD_BTC = 1000;
-// ~144 blok/hari (rata-rata block time 10 menit) -- cap digedein dari versi real-time lama (6
-// blok/run) karena sekarang cuma jalan 1x/hari, wajar butuh proses lebih banyak blok sekaligus.
-// Buffer sampai 300 (~2 hari) jaga-jaga run sempat kelewat sehari.
-const MAX_BLOCKS_PER_RUN = 300;
+// ⛔ INSIDEN 8 Sep 2026: cap 300 (didesain buat run 1x/hari doang) TERNYATA nge-BLOCK seluruh
+// pipeline trading Vultr ~13+ menit pas script ini ditambahin ke run-vultr-executor.sh (siklus
+// 15 menit, backup GH Actions yang sering telat) -- lock flock bareng dipegang script INI sampai
+// beres, sniperLiveMonitor/nyopetAutoTrader/multiAccountExecutor ANTRE di belakangnya. Diturunin
+// balik ke 20 (dekat versi real-time lama, 6 blok/run) -- catch-up backlog gede TETAP kelar,
+// cuma NYICIL beberapa siklus 15 menit berturut-turut (aman, state per-blok, gak ngulang dari
+// awal), bukan sekali gasak 300 blok yang bisa makan belasan menit dan nyandera fungsi lain.
+const MAX_BLOCKS_PER_RUN = 20;
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return { lastProcessedHeight: null };

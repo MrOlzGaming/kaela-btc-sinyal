@@ -35,6 +35,8 @@ jobs:
             FONNTE_TOKEN: '${{ secrets.FONNTE_TOKEN }}',
             FONNTE_GROUP_ID: '${{ secrets.FONNTE_GROUP_ID }}',
             FONNTE_BROADCAST_GROUPS: ['${{ secrets.FONNTE_GROUP_ID }}', '${{ secrets.FONNTE_GROUP_ID_FAM }}'],
+            KAELA_MULTI_AKUN_URL: '${{ secrets.KAELA_MULTI_AKUN_URL }}',
+            KAELA_MULTI_AKUN_SERVICE_KEY: '${{ secrets.KAELA_MULTI_AKUN_SERVICE_KEY }}',
           };
           EOF
 

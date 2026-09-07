@@ -24,6 +24,14 @@ jobs:
           # berturut-turut ("WebSocket is not defined") gara-gara masih di Node 20.
           node-version: '22'
 
+      # 7 Sep 2026 -- KAELA_MULTI_AKUN_URL/SERVICE_KEY DITAMBAH (ketemu bug: pesan ANCANG-ANCANG/
+      # status-invalid gak pernah nyampe Wibowo Hedgefund walau toggle "Broadcast Trade" UDAH
+      # nyala di Kaela Access). Root cause: kaelaProTraderClient.js WAJIB 2 field ini buat cek
+      # getWibowoBroadcastEnabled() -- kalau kosong, loadConfig() throw, ke-catch, DIANGGAP
+      # OFF/silent (fail-safe pola sniperAutoAnalysis.js:sendWhatsAppToWibowo) -- run ini SELALU
+      # silent gara-gara secrets.js-nya emang gak pernah diisi 2 field ini dari awal, BUKAN soal
+      # toggle Olan. Fix SAMA di sniper-hourly.yml + daily-report.yml (dua-duanya juga pakai
+      # kaelaProTraderClient, kena bug yang sama).
       - name: Tulis secrets.js dari GitHub Secrets
         run: |
           cat > secrets.js << EOF
@@ -33,6 +41,8 @@ jobs:
             FONNTE_BROADCAST_GROUPS: ['${{ secrets.FONNTE_GROUP_ID }}', '${{ secrets.FONNTE_GROUP_ID_FAM }}'],
             BINANCE_API_KEY: '${{ secrets.BINANCE_API_KEY }}',
             BINANCE_API_SECRET: '${{ secrets.BINANCE_API_SECRET }}',
+            KAELA_MULTI_AKUN_URL: '${{ secrets.KAELA_MULTI_AKUN_URL }}',
+            KAELA_MULTI_AKUN_SERVICE_KEY: '${{ secrets.KAELA_MULTI_AKUN_SERVICE_KEY }}',
           };
           EOF
 

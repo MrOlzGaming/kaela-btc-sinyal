@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 79887.99,
+    "price": 80152.11,
     "conviction": {
       "score": 1,
       "verdict": "⚪ NETRAL / Campuran",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "73/100 -- Greed (kontrarian)"
+          "reason": "71/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "+0.20% (7 hari) -- stabil"
+          "reason": "+0.21% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -64,13 +64,13 @@
     },
     "advancedMacro": {
       "dvol": {
-        "value": 38.66,
-        "changePct": 3.396630115004001
+        "value": 39.18,
+        "changePct": 6.525285481239799
       },
       "stablecoin": {
-        "current": 258137546957.35327,
-        "weekAgo": 257626348703.58096,
-        "changePct": 0.19842623099102394
+        "current": 258090165801.81287,
+        "weekAgo": 257553320133.2827,
+        "changePct": 0.20844059329242431
       },
       "yieldCurve": {
         "value": 0.41,
@@ -102,20 +102,20 @@
     }
   },
   "xau": {
-    "price": 4432.36,
+    "price": 4421.46,
     "conviction": {
-      "score": 1,
+      "score": 2,
       "verdict": "🟢 Condong Bullish",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 37 netral"
+          "reason": "RSI 34 netral"
         },
         {
           "label": "DXY (Dolar)",
-          "v": 0,
-          "reason": "STABIL -- Emas netral"
+          "v": 1,
+          "reason": "MELEMAH -- Emas cenderung DIUNTUNGKAN"
         },
         {
           "label": "Real Yield 10Y",
@@ -126,9 +126,14 @@
           "label": "Fed Funds Rate",
           "v": 0,
           "reason": "DITAHAN -- netral, The Fed lagi wait-and-see"
+        },
+        {
+          "label": "COT Smart Money",
+          "v": 0,
+          "reason": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade) -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote"
         }
       ],
-      "totalFactors": 4
+      "totalFactors": 5
     },
     "trackRecord": null,
     "regime": {
@@ -142,17 +147,17 @@
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-09-04",
-          "value": 99.157
+          "date": "2026-09-07",
+          "value": 99.089
         },
         "prev": {
           "date": null,
-          "value": 99.43
+          "value": 99.67
         },
-        "changePct": -0.27456502061753024,
+        "changePct": -0.5829236480385303,
         "trend": {
-          "arah": "STABIL",
-          "efekEmas": "netral"
+          "arah": "MELEMAH",
+          "efekEmas": "cenderung DIUNTUNGKAN"
         }
       },
       "realYield": {
@@ -171,12 +176,18 @@
         }
       }
     },
-    "cot": null,
+    "cot": {
+      "date": "2026-09-01",
+      "net": 228124,
+      "netPctOi": 54.94368924556113,
+      "label": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade)",
+      "weekChangeContracts": -15210
+    },
     "yieldCurve": {
       "value": 0.41,
       "date": "2026-09-04",
       "inverted": false
     }
   },
-  "updatedAt": "2026-09-06T00:49:09.111Z"
+  "updatedAt": "2026-09-07T00:52:06.237Z"
 }

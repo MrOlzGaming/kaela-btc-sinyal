@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 80152.11,
+    "price": 79279.99,
     "conviction": {
       "score": 1,
       "verdict": "⚪ NETRAL / Campuran",
@@ -8,12 +8,12 @@
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 59 netral"
+          "reason": "RSI 50 netral"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.51 -- Fair value / akumulasi"
+          "reason": "1.52 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "71/100 -- Greed (kontrarian)"
+          "reason": "69/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "+0.21% (7 hari) -- stabil"
+          "reason": "+0.14% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -56,21 +56,21 @@
     "trackRecord": null,
     "regime": {
       "corr30": 0.14140702613708356,
-      "corr90": 0.3692936647729537,
+      "corr90": 0.36646559729505274,
       "label30": "lemah/gak konsisten",
       "label90": "moderat positif",
-      "sampleDays": 81,
+      "sampleDays": 80,
       "latestDate": "2026-09-04"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 39.18,
-        "changePct": 6.525285481239799
+        "value": 38.71,
+        "changePct": 3.089214380825576
       },
       "stablecoin": {
-        "current": 258090165801.81287,
-        "weekAgo": 257553320133.2827,
-        "changePct": 0.20844059329242431
+        "current": 257763973933.83234,
+        "weekAgo": 257404697176.076,
+        "changePct": 0.13957661289707807
       },
       "yieldCurve": {
         "value": 0.41,
@@ -102,15 +102,15 @@
     }
   },
   "xau": {
-    "price": 4421.46,
+    "price": 4419.8,
     "conviction": {
-      "score": 2,
-      "verdict": "🟢 Condong Bullish",
+      "score": 3,
+      "verdict": "🟢 BULLISH KUAT",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 0,
-          "reason": "RSI 34 netral"
+          "v": 1,
+          "reason": "RSI 27 oversold -- rawan technical bounce"
         },
         {
           "label": "DXY (Dolar)",
@@ -126,35 +126,30 @@
           "label": "Fed Funds Rate",
           "v": 0,
           "reason": "DITAHAN -- netral, The Fed lagi wait-and-see"
-        },
-        {
-          "label": "COT Smart Money",
-          "v": 0,
-          "reason": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade) -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote"
         }
       ],
-      "totalFactors": 5
+      "totalFactors": 4
     },
     "trackRecord": null,
     "regime": {
       "corr30": -0.4656209765768793,
-      "corr90": -0.5152281586767571,
+      "corr90": -0.5130039429084529,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 76,
+      "sampleDays": 75,
       "latestDate": "2026-08-28"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-09-07",
-          "value": 99.089
+          "date": "2026-09-08",
+          "value": 99.176
         },
         "prev": {
           "date": null,
           "value": 99.67
         },
-        "changePct": -0.5829236480385303,
+        "changePct": -0.49563559747165625,
         "trend": {
           "arah": "MELEMAH",
           "efekEmas": "cenderung DIUNTUNGKAN"
@@ -176,18 +171,12 @@
         }
       }
     },
-    "cot": {
-      "date": "2026-09-01",
-      "net": 228124,
-      "netPctOi": 54.94368924556113,
-      "label": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade)",
-      "weekChangeContracts": -15210
-    },
+    "cot": null,
     "yieldCurve": {
       "value": 0.41,
       "date": "2026-09-04",
       "inverted": false
     }
   },
-  "updatedAt": "2026-09-07T00:52:06.237Z"
+  "updatedAt": "2026-09-08T01:06:44.796Z"
 }

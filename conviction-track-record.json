@@ -54,9 +54,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 77827.98,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "naik",
+    "correct": null,
+    "actualChangePct": 1.8656657926879376
   },
   {
     "asset": "xau",
@@ -65,9 +66,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 4443.42,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "datar",
+    "correct": null,
+    "actualChangePct": -0.5315725274675789
   },
   {
     "asset": "btc",
@@ -219,6 +221,28 @@
     "verdict": "🟢 Condong Bullish",
     "direction": "bullish",
     "priceAtVerdict": 4421.46,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "btc",
+    "date": "2026-09-08T01:06:44.796Z",
+    "score": 1,
+    "verdict": "⚪ NETRAL / Campuran",
+    "direction": "netral",
+    "priceAtVerdict": 79279.99,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "xau",
+    "date": "2026-09-08T01:06:44.796Z",
+    "score": 3,
+    "verdict": "🟢 BULLISH KUAT",
+    "direction": "bullish",
+    "priceAtVerdict": 4419.8,
     "graded": false,
     "actualDirection": null,
     "correct": null

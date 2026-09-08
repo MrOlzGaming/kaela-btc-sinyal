@@ -1,8 +1,12 @@
 name: Sniper - Trigger Analisa Harian
 
 on:
-  schedule:
-    - cron: '5 0 * * *' # 00:05 UTC = 08:05 WITA, abis candle Daily closed (08:00 WITA)
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- BUKTI NYATA hari ini: tugas ini gak jalan sampai jam 09:5x
+  # WITA (target 08:05), GH Actions kelihatan telat/skip TOTAL, nol cadangan sebelumnya. Sekarang
+  # sniperAutoAnalysis.js/spotDca.js/spotDcaAlt.js dijalanin Vultr (dailyAutomationChecklist.js +
+  # panggilan unconditional tiap 15 menit, lihat run-vultr-executor.sh) -- kalau schedule GH Actions
+  # dibiarin nyala bareng, resiko race commit state persis kayak insiden berita dobel-kirim
+  # (lihat news-pagi.yml). workflow_dispatch dibiarin buat manual/tes.
   workflow_dispatch: {}
 
 concurrency:

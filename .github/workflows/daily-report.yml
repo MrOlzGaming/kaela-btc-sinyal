@@ -1,9 +1,10 @@
 name: Laporan Harian (Siklus Halving + Grup WA)
 
 on:
-  schedule:
-    # 23:03 (bukan 23:00 persis) -- mitigasi delay jadwal jam bulat, lihat news-daily.yml.
-    - cron: '3 23 * * *' # 23:03 UTC = 07:03 WITA (hari berikutnya)
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- pola race SAMA kayak news-pagi.yml. monitor.js+groupMonitor.js
+  # (Bloomberg Mini) SEKARANG dijalanin+dipaksa Vultr (dailyAutomationChecklist.js, lihat
+  # run-vultr-executor.sh) kalau belum kekirim jam 07:03 WITA. workflow_dispatch dibiarin buat
+  # manual/tes.
   workflow_dispatch: {}
 
 concurrency:

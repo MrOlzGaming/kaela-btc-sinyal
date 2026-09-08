@@ -1,8 +1,9 @@
 name: Anomaly Scanner (harian)
 
 on:
-  schedule:
-    - cron: '31 22 * * *' # 22:31 UTC = 06:31 WITA (sebelum laporan harian 07:03, biar data hari itu udah kerekam)
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- pola race SAMA kayak news-pagi.yml. anomalyScanner.js
+  # SEKARANG dijalanin+dipaksa Vultr (dailyAutomationChecklist.js, lihat run-vultr-executor.sh)
+  # kalau belum kekirim jam 06:31 WITA. workflow_dispatch dibiarin buat manual/tes.
   workflow_dispatch: {}
 
 concurrency:

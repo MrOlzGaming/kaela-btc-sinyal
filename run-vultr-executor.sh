@@ -104,10 +104,23 @@ node spotAltLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "spotAltLiveExecutor.js E
 # run-local-executor.ps1, state di research-log-state.json (shared git, gak dobel kirim antar mesin).
 node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFindings.js ERROR (exit $?)"
 
-# Cadangan kirim berita pagi/siang/sore (31 Agu 2026) -- GitHub Actions kadang telat/skip jadwal
-# berita gara-gara antrian cron akun ini padat (bukan bug kita). runDueNews.js dedup sendiri lewat
-# newsMonitor.js (aman dipanggil berkali-kali, no-op kalau slot itu udah kekirim hari ini).
-node runDueNews.js >> "$LOG_FILE" 2>&1 || log "runDueNews.js ERROR (exit $?)"
+# Checklist+paksa tugas 1x/hari (8 Sep 2026, permintaan Olan: "kasih checker nya apa sudah
+# dikirim otomatisasinya... kayak ada AI yang ngechecklist kerjaan otomatisasi hari ini"). Ganti
+# runDueNews.js (PENSIUN, digantiin -- cakupannya cuma berita) -- versi ini generalisasi ke SEMUA
+# tugas 1x/hari yang jadwalnya rawan ke-skip GH Actions (berita pagi/siang/sore, Anomaly Scanner,
+# Bloomberg Mini, Sniper Analisa Harian): kalau jam WITA sekarang udah lewat target dan BELUM
+# kekirim hari ini, dipaksa jalan sekarang. Semua script tujuan UDAH dedup internal sendiri
+# (lastSentDate/hasEntryToday/riwayat per-tanggal) -- aman dipanggil berkali-kali. Sekalian kirim
+# 1x laporan checklist ke WA tiap sore (jam 20:00 WITA) biar Olan bisa lihat langsung status semua.
+node dailyAutomationChecklist.js >> "$LOG_FILE" 2>&1 || log "dailyAutomationChecklist.js ERROR (exit $?)"
+
+# Compound Alt DCA (spotDca.js) + Compound Alt Publik (spotDcaAlt.js) -- BAGIAN dari sniper-daily-
+# trigger.yml yang GH Actions-nya SEKARANG dimatiin (race sama alasan di atas). Keduanya UDAH
+# idempotent sendiri (lastBuyDateKey/lastBuyMonthKey/halvingStopNotified, lihat komentar di file
+# masing-masing) -- aman dipanggil tiap siklus 15 menit kayak priceAlertMonitor.js dkk, gak perlu
+# masuk daftar checklist di atas (dia gak "kirim 1x sehari doang", tapi ngecek kondisi tiap kali).
+node spotDca.js >> "$LOG_FILE" 2>&1 || log "spotDca.js ERROR (exit $?)"
+node spotDcaAlt.js >> "$LOG_FILE" 2>&1 || log "spotDcaAlt.js ERROR (exit $?)"
 
 # Audit jadwal GitHub Actions (31 Agu 2026, permintaan Olan: "harus ada Kaela yang otomatis audit
 # jalur yang sering ngadat") -- baris "GAGAL: ..." yang dicetaknya ke-scan otomatis di bagian
@@ -163,7 +176,7 @@ node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERR
 # state lokal apapun jadi gak perlu masuk daftar CHANGED di bawah.
 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
 
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json)
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
@@ -171,7 +184,16 @@ if [ -n "$CHANGED" ]; then
   # archive.json + price-alert-state.json + dxy-zone-state.json ditambahin 31 Agu 2026 (cadangan
   # lokal berita/price alert/DXY) -- WAJIB ikut ke-commit, kalau nggak `git reset --hard` box ini
   # bakal nelen balik dedup state -> alert bisa kekirim dobel.
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json; do
+  # state.json/anomaly-history.json/sniper-trigger-state.json/conviction-track-record.json/
+  # analyst-dashboard.json/usd-idr-rate-cache.json DITAMBAHIN 8 Sep 2026 (dailyAutomationChecklist.js
+  # sekarang jalanin monitor.js/groupMonitor.js/anomalyScanner.js/sniperAutoAnalysis.js di Vultr) --
+  # BAHAYA kalau kelewat: file2 ini emang gitignored (WAJIB udah pernah ke-track sebelumnya via
+  # `git add -f` GH Actions dulu, `add` polos di sini cukup buat file yang UDAH tracked), tapi
+  # kalau gak ikut di-commit di sini, `git fetch+reset --hard` siklus BERIKUTNYA nelen balik
+  # perubahan lokalnya -- dedup "udah kekirim hari ini" ilang, tugas yang BARU DIPAKSA jalan bakal
+  # KEBACA "belum" lagi cycle depan dan DIPAKSA ULANG TERUS-MENERUS tiap 15 menit (dobel WA/sinyal
+  # tanpa henti), persis kelas bug yang lagi dibenerin hari ini.
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

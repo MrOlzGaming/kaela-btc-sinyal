@@ -1618,5 +1618,10 @@
     "type": "daily-checklist-report",
     "date": "2026-09-08T12:01:23.002Z",
     "content": "📋 Kaela Checklist Otomatisasi — 2026-09-08\n\n✅ Berita Pagi\n✅ Berita Siang\n✅ Berita Sore\n✅ Anomaly Scanner\n✅ Bloomberg Mini (laporan pribadi Olan)\n✅ Bloomberg Mini (laporan grup WA)\n✅ Sniper Analisa Harian\n✅ Ucapan Ulang Tahun\n✅ Whale Daily Digest\n\nSemua tugas harian beres. 🎉"
+  },
+  {
+    "type": "econ-calendar",
+    "date": "2026-09-08T12:31:04.581Z",
+    "content": "⬜ 📅 JADWAL EKONOMI MENDATANG (peringatan dini)\n(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 2026-09-10, 20:30 WITA — Inflasi Produsen Inti Bulanan\n   Forecast: 0.3% | Sebelumnya: 0.2%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n🕐 2026-09-10, 20:30 WITA — Inflasi Produsen (PPI) Bulanan\n   Forecast: 0.4% | Sebelumnya: 0.0%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

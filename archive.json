@@ -1623,5 +1623,15 @@
     "type": "econ-calendar",
     "date": "2026-09-08T12:31:04.581Z",
     "content": "⬜ 📅 JADWAL EKONOMI MENDATANG (peringatan dini)\n(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 2026-09-10, 20:30 WITA — Inflasi Produsen Inti Bulanan\n   Forecast: 0.3% | Sebelumnya: 0.2%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n🕐 2026-09-10, 20:30 WITA — Inflasi Produsen (PPI) Bulanan\n   Forecast: 0.4% | Sebelumnya: 0.0%\n   📐 Inflasi (keyakinan: kuat):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-08T23:15:52.282Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-09-09\nHarga sekarang: $78,484.01 (📉 -2.3% dari kemarin)\n⏳ Halving berikutnya: 583 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.50 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.94 (Normal)\n\n💵 DXY: 98.9 (MELEMAH)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (1 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.41 (normal)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-08T23:15:52.282Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-09-09\nHarga sekarang: $4,356.17/oz (≈Rp76.905.590) atau $140.05/gram (≈Rp2.472.572) (📉 -1.5% dari kemarin)\n💵 DXY: 98.9 (MELEMAH)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (1 bps / 90 hari)\n📉 Real Yield 10Y: 2.43% (STABIL)\n📊 Yield Curve 10Y-2Y: 0.41 (normal)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

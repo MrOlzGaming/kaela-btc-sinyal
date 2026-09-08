@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 79279.99,
+    "price": 78484.01,
     "conviction": {
       "score": 1,
       "verdict": "⚪ NETRAL / Campuran",
@@ -13,12 +13,12 @@
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.52 -- Fair value / akumulasi"
+          "reason": "1.50 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.34 -- Optimism / Anxiety"
+          "reason": "0.33 -- Optimism / Anxiety"
         },
         {
           "label": "Fear & Greed",
@@ -28,7 +28,7 @@
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "+0.14% (7 hari) -- stabil"
+          "reason": "+0.41% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -64,17 +64,17 @@
     },
     "advancedMacro": {
       "dvol": {
-        "value": 38.71,
-        "changePct": 3.089214380825576
+        "value": 40.01,
+        "changePct": 5.483785921434216
       },
       "stablecoin": {
-        "current": 257763973933.83234,
-        "weekAgo": 257404697176.076,
-        "changePct": 0.13957661289707807
+        "current": 257933237767.5905,
+        "weekAgo": 256877460824.61725,
+        "changePct": 0.4110041182998523
       },
       "yieldCurve": {
         "value": 0.41,
-        "date": "2026-09-04",
+        "date": "2026-09-08",
         "inverted": false
       },
       "m2": {
@@ -84,13 +84,13 @@
       },
       "fedRate": {
         "value": 3.63,
-        "date": "2026-09-03",
+        "date": "2026-09-07",
         "changeBps": 0.9999999999999787
       },
       "creditSpread": {
-        "value": 2.65,
-        "date": "2026-09-03",
-        "changeBps": -8.000000000000007
+        "value": 2.68,
+        "date": "2026-09-07",
+        "changeBps": -2.0000000000000018
       },
       "etfFlow": {
         "date": "2026-09-04",
@@ -102,10 +102,10 @@
     }
   },
   "xau": {
-    "price": 4419.8,
+    "price": 4356.17,
     "conviction": {
-      "score": 3,
-      "verdict": "🟢 BULLISH KUAT",
+      "score": 2,
+      "verdict": "🟢 Condong Bullish",
       "factors": [
         {
           "label": "RSI Teknikal",
@@ -119,8 +119,8 @@
         },
         {
           "label": "Real Yield 10Y",
-          "v": 1,
-          "reason": "TURUN -- Emas cenderung DIUNTUNGKAN"
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
         },
         {
           "label": "Fed Funds Rate",
@@ -130,26 +130,30 @@
       ],
       "totalFactors": 4
     },
-    "trackRecord": null,
+    "trackRecord": {
+      "total": 1,
+      "correct": 1,
+      "winRatePct": 100
+    },
     "regime": {
-      "corr30": -0.4656209765768793,
-      "corr90": -0.5130039429084529,
+      "corr30": -0.4733173050613159,
+      "corr90": -0.5179323697055325,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 75,
-      "latestDate": "2026-08-28"
+      "sampleDays": 80,
+      "latestDate": "2026-09-04"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-09-08",
-          "value": 99.176
+          "date": "2026-09-07",
+          "value": 98.92
         },
         "prev": {
           "date": null,
-          "value": 99.67
+          "value": 99.56
         },
-        "changePct": -0.49563559747165625,
+        "changePct": -0.6428284451586989,
         "trend": {
           "arah": "MELEMAH",
           "efekEmas": "cenderung DIUNTUNGKAN"
@@ -157,26 +161,26 @@
       },
       "realYield": {
         "latest": {
+          "date": "2026-09-04",
+          "value": 2.43
+        },
+        "prev": {
           "date": "2026-09-03",
           "value": 2.42
         },
-        "prev": {
-          "date": "2026-09-02",
-          "value": 2.45
-        },
-        "changePct": -1.2244897959183774,
+        "changePct": 0.41322314049587733,
         "trend": {
-          "arah": "TURUN",
-          "efekEmas": "cenderung DIUNTUNGKAN"
+          "arah": "STABIL",
+          "efekEmas": "netral"
         }
       }
     },
     "cot": null,
     "yieldCurve": {
       "value": 0.41,
-      "date": "2026-09-04",
+      "date": "2026-09-08",
       "inverted": false
     }
   },
-  "updatedAt": "2026-09-08T01:06:44.796Z"
+  "updatedAt": "2026-09-08T23:15:52.282Z"
 }

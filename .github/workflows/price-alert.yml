@@ -1,8 +1,12 @@
 name: Price Alert BTC (tiap 5 menit)
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- pola race SAMA kayak news-pagi.yml (INSIDEN NYATA hari ini:
+  # berita dobel kirim gara-gara push state-file GH Actions kalah race sama commit Vultr).
+  # priceAlertMonitor.js JUGA dijalanin Vultr tiap 15 menit (run-vultr-executor.sh) DAN JUGA
+  # commit+push price-alert-state.json sendiri -- resiko dedup race identik, malah lebih rawan
+  # (cron 5 menit = commit jauh lebih sering ketimbang yang lain). Vultr udah cover ini secara
+  # handal. workflow_dispatch dibiarin buat manual/tes.
   workflow_dispatch: {}
 
 concurrency:

@@ -1,8 +1,9 @@
 name: Kaela News (Siang)
 
 on:
-  schedule:
-    - cron: '13 5 * * *' # 05:13 UTC = 13:13 WITA
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- pola sama kayak news-pagi.yml (lihat catatan di sana):
+  # dobel-kirim ketauan hari ini gara-gara push archive.json race sama commit Vultr. Vultr
+  # (runDueNews.js, tiap 15 menit) udah cover slot ini. workflow_dispatch dibiarin buat manual/tes.
   workflow_dispatch: {}
 
 concurrency:

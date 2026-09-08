@@ -1,11 +1,10 @@
 name: Whale Alert (rekap harian)
 
 on:
-  schedule:
-    # 23:20 UTC = 07:20 WITA (hari berikutnya) -- ganti dari tiap 10 menit ke 1x/hari (10 Agu 2026,
-    # permintaan Olan: konfirmasi blockchain gak instan, "real-time" tiap 10 menit jadi ilusi kalau
-    # network lagi padat -- rekap harian lebih jujur, gak janjiin real-time).
-    - cron: '20 23 * * *'
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- pola race SAMA kayak news-pagi.yml (INSIDEN NYATA hari ini).
+  # whaleDailyDigest.js JUGA dijalanin Vultr tiap 15 menit (run-vultr-executor.sh) DAN JUGA
+  # commit+push whale-state.json sendiri -- resiko dedup race identik. Vultr udah cover ini
+  # secara handal (nyicil batch 20 blok/siklus). workflow_dispatch dibiarin buat manual/tes.
   workflow_dispatch: {}
 
 # Cegah 2 run tumpang tindih (kalau 1 run kelamaan, run cron berikutnya nunggu dulu, BUKAN

@@ -1,11 +1,12 @@
 name: Kaela News (Pagi)
 
 on:
-  schedule:
-    # 01:07 (bukan 01:00 persis) -- GitHub sendiri warning jadwal PERSIS di jam bulat rawan
-    # delay/skip karena rame (banyak workflow lain juga jadwalnya bulat jam). Geser dikit dari
-    # jam bulat itu mitigasi resmi yang direkomendasikan.
-    - cron: '7 1 * * *' # 01:07 UTC = 09:07 WITA
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 (insiden nyata: berita pagi kekirim 2x hari ini, 09:16 & 09:31
+  # WITA) -- root cause: job ini kirim WA duluan, BARU commit+push archive.json belakangan; kalau
+  # push itu race/gagal (ketabrak commit Vultr di detik yang nyaris sama, KETERBUKTI kejadian),
+  # catatan "udah kekirim" ilang tanpa jejak di git. Vultr (runDueNews.js, tiap 15 menit, lihat
+  # run-vultr-executor.sh) UDAH nge-cover slot ini secara handal -- gak perlu 2 mesin sama-sama
+  # nulis archive.json lagi. workflow_dispatch dibiarin buat trigger manual/tes kalau perlu.
   workflow_dispatch: {}
 
 concurrency:

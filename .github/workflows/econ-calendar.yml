@@ -1,8 +1,10 @@
 name: Jadwal Ekonomi (peringatan dini, tiap 6 jam)
 
 on:
-  schedule:
-    - cron: '11 */6 * * *' # geser dikit dari jam bulat, lihat catatan di news-daily.yml
+  # ⛔ Schedule DIMATIIN 8 Sep 2026 -- pola race SAMA kayak news-pagi.yml (INSIDEN NYATA hari ini).
+  # econCalendarMonitor.js JUGA dijalanin Vultr tiap 15 menit (run-vultr-executor.sh) DAN JUGA
+  # commit+push state sendiri -- resiko dedup race identik. Vultr udah cover ini secara handal.
+  # workflow_dispatch dibiarin buat manual/tes.
   workflow_dispatch: {}
 
 concurrency:

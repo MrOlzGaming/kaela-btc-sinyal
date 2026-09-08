@@ -28,6 +28,13 @@ const { hasEntryToday, addOrReplaceDaily } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { birthdayRanToday } = require('./birthdayGreeting');
 
+// Laporan checklist ini status OPERASIONAL internal (buat Olan mantau sistem), BUKAN konten buat
+// member -- WAJIB DM ke Olan pribadi, JANGAN sendWhatsApp(msg) polos (itu broadcast ke SEMUA grup
+// termasuk Sniper Club/Wibowo Hedgefund, ketauan salah 8 Sep 2026: "kenapa ceklist otomatisasi
+// dikirim ke grup juga"). Nomor SAMA PERSIS kayak MASTER_NOMOR/OLAN_NUMBER di file lain
+// (nyopetOtp.js dkk) -- bukan secret, cuma ID member Olan sendiri.
+const OLAN_NUMBER = '6281299303888';
+
 function runNode(args) {
   execFileSync('node', args, { cwd: __dirname, stdio: 'inherit' });
 }
@@ -150,7 +157,7 @@ async function sendChecklistReport(now) {
   ].join('\n');
   console.log(msg);
   addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);
-  await sendWhatsApp(msg);
+  await sendWhatsApp(msg, OLAN_NUMBER); // DM ke Olan pribadi, BUKAN broadcast grup
 }
 
 async function main() {

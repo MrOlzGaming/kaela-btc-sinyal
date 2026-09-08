@@ -78,7 +78,7 @@ function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
     yieldCurve: opts.advancedMacro?.yieldCurve || null,
   });
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 🟡 Update XAU/Emas — ${localDateKey(now)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 🟡 Update XAU/Emas — ${localDateKey(now)}`,
     `Harga sekarang: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari kemarin)`,
     ...macroPackage,
     '',
@@ -89,7 +89,7 @@ function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
 function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 🟡 📆 Laporan Mingguan Emas — minggu ${localDateKey(now)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 🟡 📆 Laporan Mingguan Emas — minggu ${localDateKey(now)}`,
     `Harga: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari minggu lalu)`,
     ...macroLines(opts.macro),
     ...cotLines(opts.cot),
@@ -103,7 +103,7 @@ function generateGoldWeekly(now, priceToday, priceLastWeek, opts = {}) {
 function generateGoldMonthly(now, priceToday, priceLastMonth, opts = {}) {
   const change = pctChange(priceToday, priceLastMonth);
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 🟡 🗓️ Laporan Bulanan Emas — ${localDateKey(now).slice(0, 7)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 🟡 🗓️ Laporan Bulanan Emas — ${localDateKey(now).slice(0, 7)}`,
     `Harga: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari bulan lalu)`,
     '',
     `🔗 ${WEB_URL}`,
@@ -113,7 +113,7 @@ function generateGoldMonthly(now, priceToday, priceLastMonth, opts = {}) {
 function generateGoldYearly(now, priceToday, priceLastYear, opts = {}) {
   const change = pctChange(priceToday, priceLastYear);
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 🟡 📅 Laporan Tahunan Emas — ${now.getUTCFullYear()}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 🟡 📅 Laporan Tahunan Emas — ${now.getUTCFullYear()}`,
     `Harga: ${fmtGoldPriceLine(priceToday, opts.idrRate)} (${fmtPct(change)} dari tahun lalu)`,
     '',
     `🔗 ${WEB_URL}`,

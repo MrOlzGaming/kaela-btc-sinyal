@@ -71,7 +71,7 @@ function onchainCycleLines(onchain) {
 function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   const lines = [];
   const change = pctChange(priceToday, priceYesterday);
-  lines.push(`${CATEGORY_COLOR.laporan.emoji} 📊 Update BTC — ${localDateKey(now)}`);
+  lines.push(`${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — Update BTC — ${localDateKey(now)}`);
   lines.push(`Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`);
   lines.push(halvingLine(now));
   lines.push(...onchainCycleLines(opts.onchain));
@@ -121,7 +121,7 @@ function advancedMacroLines(adv) {
 function generateGroupWeekly(now, priceToday, priceLastWeek, opts = {}) {
   const change = pctChange(priceToday, priceLastWeek);
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 📆 Laporan Mingguan BTC — minggu ${localDateKey(now)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 📆 Laporan Mingguan BTC — minggu ${localDateKey(now)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari minggu lalu)`,
     halvingLine(now),
     ...regimeLines(opts.regime),
@@ -134,7 +134,7 @@ function generateGroupWeekly(now, priceToday, priceLastWeek, opts = {}) {
 function generateGroupMonthly(now, priceToday, priceLastMonth) {
   const change = pctChange(priceToday, priceLastMonth);
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 🗓️ Laporan Bulanan BTC — ${localDateKey(now).slice(0, 7)}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 🗓️ Laporan Bulanan BTC — ${localDateKey(now).slice(0, 7)}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari bulan lalu)`,
     halvingLine(now),
     '',
@@ -145,7 +145,7 @@ function generateGroupMonthly(now, priceToday, priceLastMonth) {
 function generateGroupYearly(now, priceToday, priceLastYear) {
   const change = pctChange(priceToday, priceLastYear);
   return [
-    `${CATEGORY_COLOR.laporan.emoji} 📅 Laporan Tahunan BTC — ${toLocal(now).getUTCFullYear()}`,
+    `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 📅 Laporan Tahunan BTC — ${toLocal(now).getUTCFullYear()}`,
     `Harga: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari tahun lalu)`,
     halvingLine(now),
     '',

@@ -26,6 +26,7 @@ const { execFileSync } = require('child_process');
 const { toLocal, localDateKey } = require('./config');
 const { hasEntryToday, addOrReplaceDaily } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
+const { birthdayRanToday } = require('./birthdayGreeting');
 
 function runNode(args) {
   execFileSync('node', args, { cwd: __dirname, stdio: 'inherit' });
@@ -110,6 +111,14 @@ const TASKS = [
     run: () => runNode(['sniperAutoAnalysis.js']),
   },
   {
+    // Ucapan Ulang Tahun (8 Sep 2026, permintaan Olan) -- target jam 08:00 WITA, ke Wibowo
+    // Hedgefund. birthdayRanToday balikin TRUE tiap hari yang emang gak ada yang ulang tahun,
+    // jadi task ini "beres" hampir tiap hari kecuali tanggal-tanggal tertentu.
+    key: 'birthday-greeting', label: 'Ucapan Ulang Tahun', targetHour: 8, targetMinute: 0,
+    isDoneToday: birthdayRanToday,
+    run: () => runNode(['birthdayGreeting.js']),
+  },
+  {
     // Whale Digest UDAH dipanggil UNCONDITIONAL tiap siklus di run-vultr-executor.sh sendiri
     // (dedup hasEntryToday internal DIA SENDIRI) -- di sini CUMA numpang buat ikut LAPORAN
     // checklist, gak perlu "run" karena udah pasti ke-trigger di tempat lain di siklus yang sama.
@@ -182,4 +191,10 @@ async function main() {
   }
 }
 
-main().catch((e) => console.log(`[DailyAutomationChecklist] GAGAL jalan siklus ini: ${e.message}`));
+// require.main guard (8 Sep 2026, ditambahin abis KEJADIAN NYATA -- lihat feedback-no-local-live-
+// script-test.md) -- `require('./dailyAutomationChecklist')` polos (misal buat re-use isDoneToday
+// dari script lain) TANPA guard ini bakal ikut ngirim WA/eksekusi trading beneran sebagai efek
+// samping. Cuma jalan otomatis kalau file ini DIPANGGIL LANGSUNG (`node dailyAutomationChecklist.js`).
+if (require.main === module) {
+  main().catch((e) => console.log(`[DailyAutomationChecklist] GAGAL jalan siklus ini: ${e.message}`));
+}

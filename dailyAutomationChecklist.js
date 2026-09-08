@@ -49,11 +49,22 @@ function anomalyScannerRanToday(now) {
 }
 
 // monitor.js nulis lastChecked TIAP kali jalan (gak peduli hasil) -- penanda paling murah buat
-// "laporan harian udah dihitung ulang hari ini" (groupMonitor.js numpang di run yang sama).
-function dailyReportRanToday(now) {
+// "laporan pribadi udah dihitung ulang hari ini".
+function dailyReportPersonalRanToday(now) {
   const state = readJsonSafe('state.json');
   if (!state || !state.lastChecked) return false;
   return localDateKey(new Date(state.lastChecked)) === localDateKey(now);
+}
+
+// groupMonitor.js nulis analyst-dashboard.json.updatedAt TIAP kali jalan (independen dari WA
+// terkirim apa nggak -- WA-nya sendiri kondisional per-jenis/mingguan). SENGAJA dicek TERPISAH
+// dari monitor.js di atas (bukan digabung 1 task) -- kalau monitor.js sukses tapi groupMonitor.js
+// throw di tengah, gabungan 1-task bakal salah nganggep "kelar" (monitor.js udah nyimpen tandanya)
+// padahal groupMonitor.js belum, dan gak akan PERNAH dipaksa ulang lagi hari itu.
+function dailyReportGrupRanToday(now) {
+  const dashboard = readJsonSafe('analyst-dashboard.json');
+  if (!dashboard || !dashboard.updatedAt) return false;
+  return localDateKey(new Date(dashboard.updatedAt)) === localDateKey(now);
 }
 
 function sniperDailyRanToday(now) {
@@ -84,9 +95,14 @@ const TASKS = [
     run: () => runNode(['anomalyScanner.js']),
   },
   {
-    key: 'daily-report', label: 'Bloomberg Mini (laporan harian)', targetHour: 7, targetMinute: 3,
-    isDoneToday: dailyReportRanToday,
-    run: () => { runNode(['monitor.js']); runNode(['groupMonitor.js']); },
+    key: 'daily-report-personal', label: 'Bloomberg Mini (laporan pribadi Olan)', targetHour: 7, targetMinute: 3,
+    isDoneToday: dailyReportPersonalRanToday,
+    run: () => runNode(['monitor.js']),
+  },
+  {
+    key: 'daily-report-grup', label: 'Bloomberg Mini (laporan grup WA)', targetHour: 7, targetMinute: 3,
+    isDoneToday: dailyReportGrupRanToday,
+    run: () => runNode(['groupMonitor.js']),
   },
   {
     key: 'sniper-daily', label: 'Sniper Analisa Harian', targetHour: 8, targetMinute: 5,
@@ -132,23 +148,32 @@ async function main() {
   const now = new Date();
   const nowMinutes = minutesSinceMidnight(now);
 
-  for (const task of TASKS) {
-    if (!task.run) continue; // laporan doang, gak ada aksi buat maksa
-    const targetMinutes = task.targetHour * 60 + task.targetMinute;
-    if (nowMinutes < targetMinutes) continue;
-    if (task.isDoneToday(now)) continue;
-    console.log(`[DailyAutomationChecklist] "${task.label}" belum kekirim padahal udah lewat jam target -- MAKSA jalan sekarang.`);
-    try {
-      task.run();
-      if (task.isDoneToday(now)) {
-        console.log(`[DailyAutomationChecklist] "${task.label}" berhasil dipaksa jalan.`);
-      } else {
-        // Bukan otomatis berarti error -- bisa jadi SENGAJA skip (mis. gak ada berita unik hari
-        // ini, dst). Kata "GAGAL"/"ERROR" SENGAJA gak dipake di baris ini biar gak false-alarm.
-        console.log(`[DailyAutomationChecklist] "${task.label}" udah dipaksa jalan, tapi belum tercatat "selesai" -- cek log di atas, mungkin emang skip wajar.`);
+  // "Istirahat" (8 Sep 2026, permintaan Olan: "ceker istirahat cek jika hari ini = otomatisasi
+  // sudah dikirim semua") -- kalau SEMUA tugas udah beres hari ini, gak perlu masuk loop paksa
+  // sama sekali lagi cycle ini. Cuma pengecekan status doang (baca file, murah/aman), TIDAK
+  // ngurangin cadangan keamanan apapun -- besok (localDateKey ganti) otomatis aktif lagi sendiri.
+  const allDoneToday = TASKS.every((t) => t.isDoneToday(now));
+  if (allDoneToday) {
+    console.log(`[DailyAutomationChecklist] Semua ${TASKS.length} tugas harian udah kekirim hari ini -- istirahat, gak ada yang perlu dipaksa.`);
+  } else {
+    for (const task of TASKS) {
+      if (!task.run) continue; // laporan doang, gak ada aksi buat maksa
+      const targetMinutes = task.targetHour * 60 + task.targetMinute;
+      if (nowMinutes < targetMinutes) continue;
+      if (task.isDoneToday(now)) continue; // udah kekirim -- CUEK, gak disentuh (anti-double: dedup FINAL tetap di script tujuan sendiri, ini cuma gerbang pertama)
+      console.log(`[DailyAutomationChecklist] "${task.label}" belum kekirim padahal udah lewat jam target -- MAKSA jalan sekarang.`);
+      try {
+        task.run();
+        if (task.isDoneToday(now)) {
+          console.log(`[DailyAutomationChecklist] "${task.label}" berhasil dipaksa jalan.`);
+        } else {
+          // Bukan otomatis berarti error -- bisa jadi SENGAJA skip (mis. gak ada berita unik hari
+          // ini, dst). Kata "GAGAL"/"ERROR" SENGAJA gak dipake di baris ini biar gak false-alarm.
+          console.log(`[DailyAutomationChecklist] "${task.label}" udah dipaksa jalan, tapi belum tercatat "selesai" -- cek log di atas, mungkin emang skip wajar.`);
+        }
+      } catch (e) {
+        console.log(`[DailyAutomationChecklist] GAGAL maksa jalanin "${task.label}": ${e.message}`);
       }
-    } catch (e) {
-      console.log(`[DailyAutomationChecklist] GAGAL maksa jalanin "${task.label}": ${e.message}`);
     }
   }
 

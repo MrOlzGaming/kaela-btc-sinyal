@@ -294,24 +294,26 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       }),
     ]);
 
-    // spotUsd/earnUsd (4 Sep 2026, permintaan Olan "marketkap saham jadi saldo futures+spot+posisi+
-    // pnl+earn+utang") -- KHUSUS Olan/master real (sama scope kayak walletUsdt di atas, pool value
-    // cuma dari akun dia), dites LANGSUNG live via SSH pakai API key beneran sebelum ditulis di sini
-    // (lihat binanceSpotEarnExecutor.js getAllSpotBalancesUsd/getAllEarnFlexibleUsd). Default 0 buat
-    // SEMUA akun lain (member biasa gak relevan buat NAV pool).
-    let spotUsd = 0, earnUsd = 0;
+    // spotUsd (4 Sep 2026, permintaan Olan "marketkap saham jadi saldo futures+spot+posisi+pnl+
+    // earn+utang") -- KHUSUS Olan/master real (sama scope kayak walletUsdt di atas, pool value
+    // cuma dari akun dia). Earn DICABUT 10 Sep 2026 (Olan: "mungkin earn emang ga dikasih akses..
+    // harusnya spot aja") -- API key sengaja gak dikasih izin baca Simple Earn (dites live, selalu
+    // -2008 "Invalid Api-Key ID"), jadi jangan dipaksa lagi. `earnUsd` param recordMemberStatus/
+    // Pool.gs/Finance.gs TETAP ada (opsional, default 0 sendiri) -- gak perlu diubah, cukup gak
+    // pernah dikirim nilai dari sini lagi.
+    //
+    // ⛔ BUG KETEMU bareng ini: getAllSpotBalancesUsd/getAllEarnFlexibleUsd/getAllEarnLockedUsd
+    // DULU digabung 1 Promise.all -- Earn gagal (throw) ikut nggugurin Spot juga (satu reject =
+    // seluruh batch reject), padahal Spot-nya sendiri independen. Sekarang Spot fetch SENDIRIAN,
+    // gak lagi ke-drag turun kalau ada komponen lain gagal.
+    let spotUsd = 0;
     if (safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real') {
       try {
         const spotEarnClient = createBinanceSpotEarnClient(apiCreds);
-        const [spotRes, earnFlexRes, earnLockedRes] = await Promise.all([
-          spotEarnClient.getAllSpotBalancesUsd(),
-          spotEarnClient.getAllEarnFlexibleUsd(),
-          spotEarnClient.getAllEarnLockedUsd(),
-        ]);
+        const spotRes = await spotEarnClient.getAllSpotBalancesUsd();
         spotUsd = spotRes.totalUsd;
-        earnUsd = earnFlexRes.totalUsd + earnLockedRes.totalUsd;
       } catch (e) {
-        console.log(`[MultiAccountExecutor] Gagal ambil saldo Spot/Earn (${account.phone}/${account.mode}), dianggap $0:`, e.message);
+        console.log(`[MultiAccountExecutor] Gagal ambil saldo Spot (${account.phone}/${account.mode}), dianggap $0:`, e.message);
       }
     }
 
@@ -345,8 +347,8 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       ...binancePositionsRaw.filter(isOpen).map(mapPos('binance')),
       ...mexcPositionsRaw.filter(isOpen).map(mapPos('mexc')),
     ];
-    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc, walletUsdt, walletUsdc, spotUsd, earnUsd);
-    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), $${mexcBalanceUsdc.toFixed(2)} USDC (MEXC), $${spotUsd.toFixed(2)} Spot, $${earnUsd.toFixed(2)} Earn, ${positions.length} posisi.`);
+    await kaela.recordMemberStatus(account.phone, account.mode, balanceUsdt, balanceUsdc, positions, mexcBalanceUsdt, mexcBalanceUsdc, walletUsdt, walletUsdc, spotUsd, 0);
+    console.log(`[MultiAccountExecutor] recordMemberStatus OK (${account.phone}/${account.mode}) -- $${balanceUsdt.toFixed(2)} USDT (Binance), $${balanceUsdc.toFixed(2)} USDC (Binance), $${mexcBalanceUsdt.toFixed(2)} USDT (MEXC), $${mexcBalanceUsdc.toFixed(2)} USDC (MEXC), $${spotUsd.toFixed(2)} Spot, ${positions.length} posisi.`);
 
     // Pengawas posisi manual (2-3 Sep 2026, permintaan Olan) -- KHUSUS akun Real Olan sendiri
     // (dasar saham Wibowo Hedgefund). `positions` di atas UDAH difetch (gak fetch dobel).

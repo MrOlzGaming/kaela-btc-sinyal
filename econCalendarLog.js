@@ -108,6 +108,19 @@ function dxyReactionNote(changePct) {
 // `dxyChangePct` (opsional, null kalau gagal ambil/gak ada snapshot "sebelum") -- BUAT EVENT
 // KUALITATIF (FOMC dst, v.aboveForecast === null) ini SATU-SATUNYA sumber kesimpulan, buat event
 // NUMERIK ditampilin BARENGAN kesimpulan dari angka (2 sinyal, konfirmasi satu sama lain).
+// ⛔ BUG NYATA ketemu+fix 12 Sep 2026 (Olan: "cek riwayat kalo ga hari ini kemarin, hasilnya
+// netral terus.. itu buat salah paham") -- root cause DIBUKTIKAN LANGSUNG (cek isi feed gratis
+// nfs.faireconomy.media SAAT INI, event CPI/PPI yang UDAH RILIS kemarin): field `e.actual` SELALU
+// kosong, feed gratis ini STRUKTURAL gak pernah ngisinya (bukan lag jaringan/bug kita). Akibatnya
+// cabang "bandingin actual vs forecast" (paling akurat) GAK PERNAH jalan -- SELALU jatuh ke
+// cadangan reaksi DXY 10 menit, yang SERING kebaca netral (window sesempit itu emang jarang cukup
+// gerak). Masalahnya: label yang ditampilin ke Olan DULU nyamain "beneran netral" (DXY dianalisa,
+// hasilnya genuinely datar) sama "data actual gak ada, ini cuma tebakan DXY seadanya" -- DUA
+// MAKNA BEDA disamain jadi satu label "NETRAL ↔️" yang sama, bikin salah paham kesannya kesimpulan
+// pasti padahal cuma fallback seadanya. Fix: kalau actual structural gak ada (`a === null`), label
+// EKSPLISIT bilang "data belum ada" (BUKAN pura-pura "NETRAL"), reaksi DXY tetap disebut di note
+// SEBAGAI KONTEKS TAMBAHAN (masih berguna), bukan lagi jadi LABEL UTAMA yang nyamar kayak
+// kesimpulan pasti.
 function concludeHawkishDovish(e, dxyChangePct) {
   const v = e.directionalView;
   const dxyR = classifyDxyReaction(dxyChangePct);
@@ -122,7 +135,15 @@ function concludeHawkishDovish(e, dxyChangePct) {
     };
   }
   const a = parseEconNumber(e.actual), f = parseEconNumber(e.forecast);
-  if (a === null || f === null) return { label: dxyR ? dxyR.label : null, note: [dxyNote, 'Angka actual/forecast gak kebaca -- gak bisa dibandingin otomatis.'].filter(Boolean).join(' ') };
+  if (a === null || f === null) {
+    return {
+      label: '❓ DATA ACTUAL BELUM ADA',
+      note: [
+        'Sumber data gratis kita belum ngasih angka rilis resmi (keterbatasan feed, bukan hasil analisa) -- kesimpulan hawkish/dovish akurat BELUM bisa dibuat.',
+        dxyR ? `Sekadar konteks tambahan (BUKAN kesimpulan): reaksi DXY jendela sempit nunjukin ${dxyR.label} (${dxyR.desc}).` : null,
+      ].filter(Boolean).join(' '),
+    };
+  }
   if (a === f) return { label: 'NETRAL ↔️', note: ['Persis sesuai ekspektasi -- dampak biasanya minim.', dxyNote].filter(Boolean).join(' ') };
   const result = a > f ? v.aboveForecast : v.belowForecast;
   return { label: HAWKISH_DOVISH_LABEL[result] || String(result).toUpperCase(), note: [v.mechanism, dxyNote].filter(Boolean).join(' ') };

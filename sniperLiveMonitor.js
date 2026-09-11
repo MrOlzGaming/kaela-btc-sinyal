@@ -50,7 +50,22 @@ async function fetchRealizedPnlSince(symbol, startTime, exchange = 'binance') {
   return income.reduce((s, inc) => s + parseFloat(inc.income), 0);
 }
 
-function finalize(order, realPnl) {
+function finalize(order, realPnlRaw) {
+  // ⛔ FIX 12 Sep 2026 (dari audit bug "posisi ngarang" nyopetAutoTrader.js -- Olan: "curigain")
+  // -- `fetchRealizedPnlSince` jumlahin SEMUA income symbol ini sejak triggeredAt, SAMA
+  // kerentanannya kayak versi Nyopet yang udah kebukti ngarang kalau simbol yang sama kesentuh
+  // aktivitas LAIN (manual trading, dst) di window itu -- TAPI di sini SEBELUMNYA GAK ADA clamp
+  // sama sekali (Nyopet punya maxLoss, ini nggak) -- angka semenntah apapun langsung dipercaya
+  // buta. Isolated margin gak mungkin rugi lebih dari margin sendiri -- clamp pola sama persis
+  // nyopetAutoTrader.js, jaring pengaman minimal walau BELUM setara fix penuh (Sniper style leg1/
+  // leg2 gak punya konsep "mode unknown"/adopsi kayak Nyopet, jadi order-nya SENDIRI selalu valid
+  // milik bot -- resiko cuma di ANGKA-nya kalau simbol yang sama kesentuh trading laen).
+  const marginUsd = order.liveExecution && order.liveExecution.marginUsd;
+  let realPnl = realPnlRaw;
+  if (marginUsd > 0 && realPnlRaw < -marginUsd) {
+    console.log(`[SniperLiveMonitor] ${order.id}: PnL mentah dari income history ($${realPnlRaw.toFixed(2)}) gak masuk akal (isolated margin max rugi $${marginUsd.toFixed(2)}) -- kemungkinan kecampur aktivitas simbol lain. Di-clamp ke -marginUsd.`);
+    realPnl = -marginUsd;
+  }
   updateOrder(order.id, {
     status: realPnl >= 0 ? 'closed_tp' : 'closed_sl', pnlUsd: realPnl, closedAt: new Date().toISOString(),
     liveExecution: { ...order.liveExecution, fullyClosedAt: new Date().toISOString() },

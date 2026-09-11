@@ -149,6 +149,18 @@ function concludeHawkishDovish(e, dxyChangePct) {
   return { label: HAWKISH_DOVISH_LABEL[result] || String(result).toUpperCase(), note: [v.mechanism, dxyNote].filter(Boolean).join(' ') };
 }
 
+// 12 Sep 2026, permintaan Olan ("sederhana kasih emot naik dollar / atau turun risk on asset") --
+// baris ringkas 1 kalimat di atas penjelasan panjang, biar kebaca sekilas tanpa perlu mikir.
+// Cuma ditampilin kalau kesimpulannya CUKUP YAKIN (HAWKISH/DOVISH/NETRAL beneran dari actual vs
+// forecast) -- kalau masih "❓ DATA ACTUAL BELUM ADA" atau "CAMPURAN", sengaja GAK dipaksa nyimpulin.
+function _simpleDollarRiskLine(label) {
+  if (!label) return null;
+  if (label.includes('HAWKISH')) return '💵📈 Simpel: Dollar cenderung NAIK -> 📉 aset risk-on (BTC dkk) cenderung tertekan';
+  if (label.includes('DOVISH')) return '💵📉 Simpel: Dollar cenderung TURUN -> 📈 aset risk-on (BTC dkk) cenderung diuntungkan';
+  if (label.includes('NETRAL')) return '💵↔️ Simpel: Dollar gak banyak gerak -> efek ke risk-on netral';
+  return null;
+}
+
 function formatResult(e, dxyChangePct) {
   const c = concludeHawkishDovish(e, dxyChangePct);
   const lines = [
@@ -156,13 +168,34 @@ function formatResult(e, dxyChangePct) {
     `Actual: ${e.actual || '-'} | Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`,
   ];
   if (c.label) lines.push(`🧭 Kesimpulan: ${c.label}`);
+  const simple = _simpleDollarRiskLine(c.label);
+  if (simple) lines.push(simple);
   lines.push(`   ${c.note}`);
   lines.push('');
   lines.push('⚠️ Logika makro umum + reaksi DXY jendela sempit, BUKAN backtest data historis -- murni informasi, gak pengaruhi sinyal Sniper/Musiman.');
   return lines.join('\n');
 }
 
-module.exports = { formatEconCalendar, formatHeadsUp, formatResult, concludeHawkishDovish, parseEconNumber, classifyDxyReaction };
+// 12 Sep 2026 -- pesan susulan KALAU actual masih kosong pas jendela hasil utama (5-15 menit)
+// tapi kesedia belakangan (data telat dari provider, jarang tapi bisa kejadian -- lihat gap Okt
+// 2025 di data BLS yang ketemu pas riset). Dipakai econCalendarLiveMonitor.js, jendela ke-2
+// (~60 menit). SATU KALI doang, gak retry selamanya kalau tetep kosong.
+function formatResultFollowup(e) {
+  const c = concludeHawkishDovish(e, null);
+  const lines = [
+    `${CATEGORY_COLOR.econ.emoji} 📊 UPDATE HASIL (data susulan) -- ${e.title}`,
+    `Actual: ${e.actual || '-'} | Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`,
+  ];
+  if (c.label) lines.push(`🧭 Kesimpulan: ${c.label}`);
+  const simple = _simpleDollarRiskLine(c.label);
+  if (simple) lines.push(simple);
+  lines.push(`   ${c.note}`);
+  lines.push('');
+  lines.push('ℹ️ Data resmi kesedia lebih lambat dari biasanya -- pesan hasil awal tadi belum ada angka actual-nya.');
+  return lines.join('\n');
+}
+
+module.exports = { formatEconCalendar, formatHeadsUp, formatResult, formatResultFollowup, concludeHawkishDovish, parseEconNumber, classifyDxyReaction };
 
 if (require.main === module) {
   const example = [

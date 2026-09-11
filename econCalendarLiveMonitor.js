@@ -26,7 +26,8 @@
 const fs = require('fs');
 const path = require('path');
 const { fetchWeekCalendar, getAllHighImpactUsdEvents } = require('./econCalendar');
-const { formatHeadsUp, formatResult } = require('./econCalendarLog');
+const { formatHeadsUp, formatResult, formatResultFollowup } = require('./econCalendarLog');
+const { enrichWithTvActual } = require('./tvEconActual');
 const { fetchDxy } = require('./macroData');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
@@ -47,6 +48,10 @@ const { computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.j
 
 const HEADSUP_BEFORE_MIN = 5;
 const RESULT_AFTER_MIN = [5, 15];
+// 12 Sep 2026, permintaan Olan ("pastikan datanya bakal mantap") -- jendela SUSULAN kalau actual
+// masih kosong pas jendela utama (provider TradingView telat update, jarang tapi mungkin -- lihat
+// catatan tvEconActual.js). SATU KALI doang (state.followupSent), gak nge-loop cek selamanya.
+const RESULT_FOLLOWUP_AFTER_MIN = [60, 75];
 const STATE_PATH = path.join(__dirname, 'econ-calendar-live-notified.json');
 const PRUNE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -229,6 +234,9 @@ async function main() {
 
   const allEvents = await fetchWeekCalendar();
   const events = getAllHighImpactUsdEvents(allEvents);
+  // 12 Sep 2026 -- isi `actual` dari TradingView (ForexFactory struktural gak pernah ngisinya,
+  // lihat tvEconActual.js). Gagal fetch = degradasi aman, actual tetap kosong kayak sebelumnya.
+  await enrichWithTvActual(events, now);
 
   let didSomething = false;
 
@@ -285,7 +293,22 @@ async function main() {
         }
       }
 
-      state[e.key] = { ...st, result: true, scalpOpenedAt: scalpOrder ? Date.now() : null };
+      state[e.key] = { ...st, result: true, actualMissingAtResult: !e.actual, scalpOpenedAt: scalpOrder ? Date.now() : null };
+      didSomething = true;
+    }
+
+    // ── 2b) HASIL SUSULAN -- cuma kalau actual masih kosong pas jendela utama tadi, cek lagi
+    // ~1 jam kemudian (provider telat update). SATU KALI, gak dicek berkali-kali kalau tetep kosong.
+    if (st.result && st.actualMissingAtResult && !st.followupSent && minsAgo >= RESULT_FOLLOWUP_AFTER_MIN[0] && minsAgo <= RESULT_FOLLOWUP_AFTER_MIN[1]) {
+      if (e.actual) {
+        const msg = formatResultFollowup(e);
+        console.log(msg);
+        addEntry('econ-calendar-result-followup', msg, now);
+        await sendWhatsApp(msg);
+      } else {
+        console.log(`[EconCalendarLive] "${e.title}" -- actual masih kosong pas cek susulan juga, udah gak dicoba lagi.`);
+      }
+      state[e.key] = { ...st, followupSent: true };
       didSomething = true;
     }
 

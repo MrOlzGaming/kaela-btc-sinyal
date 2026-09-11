@@ -30,6 +30,7 @@ const { formatHeadsUp, formatResult, formatResultFollowup, concludeHawkishDovish
 const { enrichWithTvActual } = require('./tvEconActual');
 const { recordReaction } = require('./econReactionResearchLog');
 const { fetchDxy } = require('./macroData');
+const { analyzeSentiment } = require('./marketSentiment');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
 
@@ -86,6 +87,19 @@ async function safeFetchBtcPrice() {
     return parseFloat((await res.json()).price);
   } catch (e) {
     console.log('[EconCalendarLive] Gagal ambil harga BTC (dilewatin, gak fatal):', e.message);
+    return null;
+  }
+}
+
+// 12 Sep 2026, permintaan Olan ("riset liq heatmap/long-short ratio", pola mikir "market maker" --
+// lihat feedback-market-maker-mindset) -- snapshot POSISI (funding/OI/long-short) SEBELUM rilis,
+// diarsipin bareng hasil rilis (econReactionResearchLog.js) biar bisa dicek belakangan "posisi lagi
+// numpuk kemana sebelum event ini". `marketSentiment.js` UDAH ADA (dipakai sniperOrderLog.js) --
+// dipakai ULANG di sini, bukan bikin sumber data baru. Gagal fetch = null (degradasi aman, SAMA
+// pola tryInOrder di dalamnya sendiri).
+async function safeFetchPositioning() {
+  try { return await analyzeSentiment(); } catch (e) {
+    console.log('[EconCalendarLive] Gagal ambil snapshot positioning (dilewatin, gak fatal):', e.message);
     return null;
   }
 }
@@ -248,12 +262,12 @@ async function main() {
 
     // ── 1) HEADS-UP -- event 0..5 menit LAGI -- snapshot DXY (info) + BTC (buat sinyal trading) ──
     if (!st.headsup && minsUntil > 0 && minsUntil <= HEADSUP_BEFORE_MIN) {
-      const [dxyBefore, btcBefore] = await Promise.all([safeFetchDxyPrice(), safeFetchBtcPrice()]);
+      const [dxyBefore, btcBefore, positioningBefore] = await Promise.all([safeFetchDxyPrice(), safeFetchBtcPrice(), safeFetchPositioning()]);
       const msg = formatHeadsUp(e);
       console.log(msg);
       addEntry('econ-calendar-headsup', msg, now);
       await sendWhatsApp(msg);
-      state[e.key] = { ...st, headsup: true, dxyBefore, btcBefore };
+      state[e.key] = { ...st, headsup: true, dxyBefore, btcBefore, positioningBefore };
       didSomething = true;
       continue;
     }
@@ -298,7 +312,7 @@ async function main() {
       // penelitian", riset pola manipulasi market/short squeeze) -- arsip MURNI RISET, gak
       // pengaruhi eksekusi apapun (lihat econReactionResearchLog.js).
       try {
-        const rec = recordReaction({ event: e, conclusionLabel: concludeHawkishDovish(e, dxyChangePct).label, dxyChangePct, btcBefore: st.btcBefore, btcAfter });
+        const rec = recordReaction({ event: e, conclusionLabel: concludeHawkishDovish(e, dxyChangePct).label, dxyChangePct, btcBefore: st.btcBefore, btcAfter, positioningBefore: st.positioningBefore });
         if (rec.divergence) console.log(`[EconCalendarLive] 🔀 DIVERGENSI dicatat -- "${e.title}" kesimpulan ${rec.conclusionLabel} tapi BTC reaksi ${rec.btcReactionPct}% (kebalikan ekspektasi) -- kandidat riset manipulasi/squeeze.`);
       } catch (err) {
         console.log('[EconCalendarLive] Gagal catat riset reaksi (dilewatin, gak fatal):', err.message);

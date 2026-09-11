@@ -46,7 +46,11 @@ function _computeDivergence(expectedDirection, btcReactionPct) {
 }
 
 // Dipanggil econCalendarLiveMonitor.js pas jendela HASIL (append-only, 1 entry per event).
-function recordReaction({ event, conclusionLabel, dxyChangePct, btcBefore, btcAfter }) {
+// `positioningBefore` (opsional) -- snapshot funding/OI/long-short (marketSentiment.js) diambil
+// pas jendela heads-up (5 menit SEBELUM rilis), diarsipin APA ADANYA (null field kalau salah satu
+// sumbernya gagal) buat riset "posisi lagi numpuk kemana sebelum event ini" (permintaan Olan,
+// lihat feedback-market-maker-mindset).
+function recordReaction({ event, conclusionLabel, dxyChangePct, btcBefore, btcAfter, positioningBefore }) {
   const btcReactionPct = (btcBefore != null && btcAfter != null) ? ((btcAfter - btcBefore) / btcBefore) * 100 : null;
   const v = event.directionalView;
   const c = parseFloat(event.actual), f = parseFloat(event.forecast);
@@ -69,6 +73,13 @@ function recordReaction({ event, conclusionLabel, dxyChangePct, btcBefore, btcAf
     btcAfter: btcAfter != null ? Number(btcAfter) : null,
     btcReactionPct: btcReactionPct != null ? Number(btcReactionPct.toFixed(4)) : null,
     divergence: _computeDivergence(expectedDirection, btcReactionPct),
+    positioningBefore: positioningBefore ? {
+      fundingRate: positioningBefore.funding ? positioningBefore.funding.rate : null,
+      openInterest: positioningBefore.openInterest ? positioningBefore.openInterest.openInterest : null,
+      longAccountPct: positioningBefore.longShort ? Number((positioningBefore.longShort.longAccount * 100).toFixed(2)) : null,
+      shortAccountPct: positioningBefore.longShort ? Number((positioningBefore.longShort.shortAccount * 100).toFixed(2)) : null,
+      fearGreed: positioningBefore.fearGreed ? positioningBefore.fearGreed.value : null,
+    } : null,
   };
   const arr = _load();
   arr.push(entry);

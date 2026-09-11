@@ -114,6 +114,12 @@ node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFinding
 # 1x laporan checklist ke WA tiap sore (jam 20:00 WITA) biar Olan bisa lihat langsung status semua.
 node dailyAutomationChecklist.js >> "$LOG_FILE" 2>&1 || log "dailyAutomationChecklist.js ERROR (exit $?)"
 
+# "Uang kost Kaela" (12 Sep 2026, permintaan Olan) -- cek saldo Vultr, nagih ke Wibowo Hedgefund
+# 1x/hari kalau sisa kredit di bawah ambang (state dedup LOKAL, lihat vultrBalanceMonitor.js).
+# Ditaruh SETELAH leader-gate (bukan di atas kayak checkRequiredCredentials.js) -- sengaja, biar
+# cuma SATU mesin (leader) yang bisa kirim nagihan, nyegah dobel-kirim kalau ada mesin standby lain.
+node vultrBalanceMonitor.js >> "$LOG_FILE" 2>&1 || log "vultrBalanceMonitor.js ERROR (exit $?)"
+
 # Compound Alt DCA (spotDca.js) + Compound Alt Publik (spotDcaAlt.js) -- BAGIAN dari sniper-daily-
 # trigger.yml yang GH Actions-nya SEKARANG dimatiin (race sama alasan di atas). Keduanya UDAH
 # idempotent sendiri (lastBuyDateKey/lastBuyMonthKey/halvingStopNotified, lihat komentar di file

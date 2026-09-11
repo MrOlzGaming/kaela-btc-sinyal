@@ -1758,5 +1758,15 @@
     "type": "anomaly",
     "date": "2026-09-11T22:31:00.258Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 2 indikator lagi gak biasa dibanding histori kita sendiri:\n\n📉 Yield Curve 10Y-2Y: 0.33 -- JAUH DI BAWAH kebiasaan historis kita (median 0.41, z-score -2.7)\n   Ringkasan: nilai sekarang beda signifikan dari 21 hari terakhir -- layak diperhatiin, bukan berarti otomatis sinyal beli/jual, tapi kondisi lagi gak biasa.\n🏦 COT Smart Money Emas (% net-long): 56.41 -- JAUH DI ATAS kebiasaan historis kita (median 54.94, z-score 3.9)\n   Ringkasan: nilai sekarang beda signifikan dari 21 hari terakhir -- layak diperhatiin, bukan berarti otomatis sinyal beli/jual, tapi kondisi lagi gak biasa.\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-11T23:17:24.189Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-09-12\nHarga sekarang: $77,146.41 (📉 -1.5% dari kemarin)\n⏳ Halving berikutnya: 580 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.51 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.97 (Normal)\n\n💵 DXY: 99.1 (STABIL)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (1 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.33 (normal)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-11T23:17:24.189Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-09-12\nHarga sekarang: $4,354.82/oz (≈Rp76.478.505) atau $140.01/gram (≈Rp2.458.841) (📉 -0.9% dari kemarin)\n💵 DXY: 99.1 (STABIL)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (1 bps / 90 hari)\n📉 Real Yield 10Y: 2.55% (NAIK)\n📊 Yield Curve 10Y-2Y: 0.33 (normal)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

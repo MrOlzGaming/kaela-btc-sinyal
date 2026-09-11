@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const { fetchBinancePositioning } = require('./marketSentiment');
 const { fetchWithRetry } = require('./httpRetry');
+const { recordSnapshot } = require('./smartMoneyResearchLog');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
 const { WEB_URL } = require('./config');
@@ -102,6 +103,15 @@ async function main() {
 
   const { type, gap } = classify(countLongPct, dollarLongPct);
   console.log(`[SmartMoneyDivergence] ${now.toISOString()} -- top by count: ${countLongPct.toFixed(1)}% long, top by $: ${dollarLongPct.toFixed(1)}% long, gap: ${gap.toFixed(1)}, type: ${type}`);
+
+  // 12 Sep 2026 -- arsip TERUS-MENERUS (bukan cuma pas anomali) buat numpuk histori sendiri,
+  // krn Binance cuma nyimpen 30 hari (lihat smartMoneyResearchLog.js). Gak pengaruhi keputusan
+  // WA/cooldown di bawah -- murni riset.
+  try {
+    recordSnapshot({ countLongPct, dollarLongPct, globalLongPct, gap, type, btcPrice: price });
+  } catch (e) {
+    console.log('[SmartMoneyDivergence] Gagal catat arsip riset (dilewatin, gak fatal):', e.message);
+  }
 
   if (type === 'normal') {
     if (state.lastType) console.log('[SmartMoneyDivergence] Kondisi udah normal lagi, reset state.');

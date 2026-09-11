@@ -41,8 +41,14 @@ function checkJournal(f, anomalies) {
   // 1) Order CLOSED tapi PnL null/undefined -- pernah kejadian NYATA (ketemu 5 Sep 2026 lewat
   // audit ini, journal demo lama, kemungkinan sisa bug yang udah kefix -- tapi check ini WAJIB
   // permanen biar kalau kejadian LAGI ketauan, bukan didiemin selamanya).
+  //
+  // ⛔ PENGECUALIAN `status==='closed_untracked'` (12 Sep 2026, fix bug "posisi ngarang") --
+  // status ini KHUSUS posisi adopsi (mode:'unknown') yang closePosition() SENGAJA nutup dengan
+  // pnlUsd/pnlPct null (JUJUR ngaku gak tau, drpd nebak angka yang kebukti ngarang -- lihat
+  // komentar closePosition/nyopetAutoTrader.js). Null di sini BUKAN bug, itu PERILAKU BENAR --
+  // exclude dari anomali, sama filosofinya kayak exclude mode==='unknown' di cek leverage bawah.
   for (const o of orders) {
-    if (o.status && o.status.startsWith('closed') && (o.pnlUsd == null || o.pnlPct == null)) {
+    if (o.status && o.status.startsWith('closed') && o.status !== 'closed_untracked' && (o.pnlUsd == null || o.pnlPct == null)) {
       anomalies.push(`${f} #${o.id}: status=${o.status} tapi pnlUsd=${o.pnlUsd} pnlPct=${o.pnlPct} (closeReason=${o.closeReason || '-'}, triggeredAt=${o.triggeredAt})`);
     }
   }

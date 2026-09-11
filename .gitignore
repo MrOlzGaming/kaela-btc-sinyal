@@ -57,3 +57,16 @@ manual-open-check.log
 # (entry/SL/TP/PNL pribadi) TIDAK BOLEH ke situ walau gak ada secret di dalamnya. Sumber kebenaran
 # aslinya tetap Sheet "Journal" di GAS (APPS/kaela-multi-akun/) -- file lokal ini cuma state kerja.
 multi-account-state/
+
+# liquidationListener.js (12 Sep 2026) -- data runtime proses persisten, beda tiap mesin/waktu,
+# regeneratable dari feed live -- bukan source of truth, gak perlu numpuk di git history.
+liquidation-heatmap.json
+liquidation-events.jsonl
+liquidation-listener.log
+
+# Riset kalender ekonomi (12 Sep 2026) -- arsip MURNI LOKAL (econReactionResearchLog.js), sama
+# alasan kayak state file lain di atas.
+econ-reaction-research-log.json
+econ-calendar-live-notified.json
+vultr-balance-monitor-state.json
+smart-money-divergence-state.json

@@ -1,0 +1,8 @@
+{
+  "name": "kaela-trading-engine",
+  "private": true,
+  "description": "Zero-dependency by design (semua script pakai fetch/fs bawaan Node) -- SATU pengecualian: `ws` buat liquidationListener.js (Node 20 di Vultr belum punya WebSocket native, protokol WS gak layak diimplementasi manual dari raw TCP).",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

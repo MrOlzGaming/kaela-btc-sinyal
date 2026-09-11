@@ -1,0 +1,16 @@
+[Unit]
+Description=Kaela Liquidation Listener (Binance forceOrder WebSocket stream)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/kaela-engine
+ExecStart=/usr/bin/node /root/kaela-engine/liquidationListener.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/root/kaela-engine/liquidation-listener.log
+StandardError=append:/root/kaela-engine/liquidation-listener.log
+
+[Install]
+WantedBy=multi-user.target

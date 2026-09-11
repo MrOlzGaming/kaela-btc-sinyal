@@ -16,9 +16,16 @@ const { formatWhaleDailyDigest } = require('./whaleLog');
 const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey } = require('./config');
+const { recordDailyNetflow } = require('./whaleNetflowResearchLog');
 
 const STATE_PATH = path.join(__dirname, 'whale-state.json');
-const WHALE_THRESHOLD_BTC = 1000;
+// Diturunin 1000->300 (12 Sep 2026, permintaan Olan) -- dites 12 Sep: 60 transaksi >=300 BTC
+// dari 40 blok terakhir, tapi 0 match ke 6 exchange dikenal (didominasi 1 entitas non-exchange).
+// Ambang lebih rendah kasih lebih banyak kesempatan nangkep transaksi exchange ASLI (biasanya
+// lebih kecil drpd transfer institusi/custodian raksasa) -- trade-off: sedikit lebih banyak noise
+// "gak teridentifikasi" juga, tapi itu udah gak masalah krn sekarang whale gak spam WA harian
+// lagi (masuk sistem anomali, lihat anomalyScanner.js).
+const WHALE_THRESHOLD_BTC = 300;
 // ⛔ INSIDEN 8 Sep 2026: cap 300 (didesain buat run 1x/hari doang) TERNYATA nge-BLOCK seluruh
 // pipeline trading Vultr ~13+ menit pas script ini ditambahin ke run-vultr-executor.sh (siklus
 // 15 menit, backup GH Actions yang sering telat) -- lock flock bareng dipegang script INI sampai
@@ -113,6 +120,7 @@ async function main() {
   const fromExchangeBtc = allTx.filter((t) => t.direction === 'FROM_EXCHANGE').reduce((s, t) => s + t.totalBtc, 0);
   state.lastDigest = { dateKey: todayKey, totalBtc, count: allTx.length, toExchangeBtc, fromExchangeBtc };
   saveState(state);
+  recordDailyNetflow({ dateKey: todayKey, totalBtc, count: allTx.length, toExchangeBtc, fromExchangeBtc, btcPriceUsd: btcPrice });
   console.log(`[WhaleDailyDigest] ${now.toISOString()} -- blok ${startHeight}-${endHeight} diproses, ${allTx.length} transaksi >=${WHALE_THRESHOLD_BTC} BTC ditemukan (${totalBtc.toFixed(0)} BTC total) -- ditulis ke state buat anomalyScanner.js, GAK kirim WA sendiri.`);
 }
 

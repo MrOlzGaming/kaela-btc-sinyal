@@ -68,6 +68,35 @@ function onchainCycleLines(onchain) {
   return lines;
 }
 
+// 12 Sep 2026, permintaan Olan ("gabungin ke laporan yang udah ada, jangan bikin sistem baru") --
+// whale netflow kemarin (whaleDailyDigest.js -> whale-state.json lastDigest) DITAMBAHIN ke
+// laporan harian yang UDAH ADA, bukan pesan terpisah baru. `lastDigest` cuma ditampilin kalau
+// tanggalnya HARI INI/KEMARIN (staleness guard -- kalau whale digest sempat gagal beberapa hari,
+// mending diem drpd nampilin data basi seolah baru).
+function whaleNetflowLines(lastDigest, now) {
+  if (!lastDigest) return [];
+  const todayKey = localDateKey(now);
+  const yesterdayKey = localDateKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  if (lastDigest.dateKey !== todayKey && lastDigest.dateKey !== yesterdayKey) return [];
+  const { toExchangeBtc = 0, fromExchangeBtc = 0 } = lastDigest;
+  if (toExchangeBtc === 0 && fromExchangeBtc === 0) return [];
+  const parts = [];
+  if (toExchangeBtc > 0) parts.push(`🔴 ${toExchangeBtc.toFixed(0)} BTC masuk exchange`);
+  if (fromExchangeBtc > 0) parts.push(`🟢 ${fromExchangeBtc.toFixed(0)} BTC keluar exchange`);
+  return [`🐋 Whale netflow (24 jam): ${parts.join(' · ')}`];
+}
+
+// Smart money gap (12 Sep 2026, marketSentiment.js fetchBinancePositioning) -- selisih top
+// trader vs akun global, cuma ditampilin kalau selisihnya CUKUP BERARTI (>=5 poin) biar gak
+// numpuk laporan tiap hari dengan angka yang gak signifikan.
+function smartMoneyLines(binancePositioning) {
+  if (!binancePositioning) return [];
+  const gap = binancePositioning.topLongPct - binancePositioning.globalLongPct;
+  if (Math.abs(gap) < 5) return [];
+  const arah = gap > 0 ? 'lebih LONG drpd akun biasa/retail' : 'lebih SHORT drpd akun biasa/retail';
+  return [`🐋 Smart Money: trader kakap ${arah} (selisih ${Math.abs(gap).toFixed(1)} poin) -- top ${binancePositioning.topLongPct.toFixed(0)}% long vs global ${binancePositioning.globalLongPct.toFixed(0)}% long`];
+}
+
 function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   const lines = [];
   const change = pctChange(priceToday, priceYesterday);
@@ -81,6 +110,13 @@ function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   if (opts.macroPackage && opts.macroPackage.length) {
     lines.push('');
     lines.push(...opts.macroPackage);
+  }
+
+  const whaleLines = whaleNetflowLines(opts.whaleDigest, now);
+  const smLines = smartMoneyLines(opts.binancePositioning);
+  if (whaleLines.length || smLines.length) {
+    lines.push('');
+    lines.push(...whaleLines, ...smLines);
   }
 
   const phase = opts.phase || getWindowPhase(now); // 'TANAM' | 'PANEN' | null

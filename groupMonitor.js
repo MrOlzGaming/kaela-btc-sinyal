@@ -21,7 +21,7 @@ const { fetchCycleMetrics, fetchTradeMetrics } = require('./onchainMetrics');
 const { fetchMacroContext } = require('./macroData');
 const { fetchGoldCotContext } = require('./cotReport');
 const { fetchBtcNasdaqRegime, fetchGoldDxyRegime } = require('./regimeTracker');
-const { fetchFearGreed } = require('./marketSentiment');
+const { fetchFearGreed, fetchBinancePositioning } = require('./marketSentiment');
 const { rsi } = require('./technicalAnalysis');
 const { computeBtcConviction, computeGoldConviction, formatConvictionLines } = require('./convictionScore');
 const { logVerdict, gradeMaturedVerdicts, formatTrackRecordLine, getTrackRecordSummary } = require('./trackRecord');
@@ -38,6 +38,18 @@ function readSqueezeState() {
     const p = path.join(__dirname, 'squeeze-alert-state.json');
     if (!fs.existsSync(p)) return null;
     return JSON.parse(fs.readFileSync(p, 'utf8')).lastType || null;
+  } catch {
+    return null;
+  }
+}
+
+// 12 Sep 2026, permintaan Olan ("gabungin ke laporan yang udah ada") -- whale netflow kemarin,
+// read-only dari whale-state.json (ditulis whaleDailyDigest.js).
+function readWhaleLastDigest() {
+  try {
+    const p = path.join(__dirname, 'whale-state.json');
+    if (!fs.existsSync(p)) return null;
+    return JSON.parse(fs.readFileSync(p, 'utf8')).lastDigest || null;
   } catch {
     return null;
   }
@@ -205,10 +217,11 @@ async function main() {
   // computeConviction -- SYARAT SAMA kayak laporan harian sendiri (priceYesterday tersedia),
   // BUKAN lagi terkunci ke hari Senin.
   if (priceYesterday !== null) {
-    const [regime, nupl, fearGreed] = await Promise.all([
+    const [regime, nupl, fearGreed, binancePositioning] = await Promise.all([
       safeRegime(fetchBtcNasdaqRegime, 'BTC-Nasdaq'),
       safe(async () => (await fetchTradeMetrics()).nupl, 'NUPL'),
       safe(fetchFearGreed, 'Fear & Greed'),
+      safe(fetchBinancePositioning, 'Binance Positioning (Smart Money)'),
     ]);
     advancedMacro = await safe(fetchAdvancedMacroContext, 'Advanced Macro (DVOL/Stablecoin/YieldCurve/M2)');
     items.push({
@@ -216,6 +229,8 @@ async function main() {
       content: generateGroupDaily(now, priceToday, priceYesterday, {
         onchain,
         macroPackage: formatMacroPackageLines({ dxy: goldMacro?.dxy || null, fedRate: advancedMacro?.fedRate || null, yieldCurve: advancedMacro?.yieldCurve || null }),
+        whaleDigest: readWhaleLastDigest(),
+        binancePositioning,
       }),
     });
     const btcRsi = rsi(closed.map((c) => c.close), 14);

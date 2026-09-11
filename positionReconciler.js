@@ -192,7 +192,8 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) < Math.abs(prevAmt)) {
       // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol.
       const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
-      const msg = formatManualReduce({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), pnlUsd: pnl }, idrRate);
+      const remainMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
+      const msg = formatManualReduce({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), marginUsd: remainMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL REDUCE ${badge} ${symbol}, PnL sebagian=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual reduce):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
@@ -211,7 +212,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd,
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange,
       });
-      const msg = formatManualFlip({ exchangeBadge: badge, symbol, prevDirection: dirWord(prevAmt), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, pnlUsd: pnl }, idrRate);
+      const msg = formatManualFlip({ exchangeBadge: badge, symbol, prevDirection: dirWord(prevAmt), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL FLIP ${badge} ${symbol}, PnL posisi lama=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: newEntryId, openedAtMs: nowMs };

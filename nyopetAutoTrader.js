@@ -44,7 +44,7 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
+const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 // (5 Sep 2026, metode Nyopet BARU "Fed Dovish Grid" -- lihat backtest/fedSignalGridBacktest.js
 // buat riset lengkapnya) -- fetchKlines/computeSignals/computeSMA/FINAL_RECIPE di-REUSE LANGSUNG
@@ -120,7 +120,24 @@ function sign(q, s) { return crypto.createHmac('sha256', s).update(q).digest('he
 // `idrRate` (BARU, 3 Sep 2026, permintaan Olan: "untuk pnl sertakan idr nya bisa?") -- OPSIONAL,
 // dioper caller (multiAccountExecutor.js, fetch SEKALI per siklus lewat kaelaProTraderClient.getUsdIdrRate()).
 // null/gagal -> formatAutoClosed/formatAutoPartial fallback USD doang, TIDAK gugurin pesan.
-function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate } = {}) {
+// (12 Sep 2026) -- baca state positionReconciler.js LANGSUNG (`multi-account-state/wibowo-
+// reconciler-state.json`, format `{ positions: { "exchange:symbol": { positionAmt, ... } } }`) --
+// SATU-SATUNYA sumber kebenaran "symbol ini lagi disentuh manual apa nggak" yang udah ada, gak
+// perlu bikin state baru. `reconcilerStatePath` OPSIONAL (undefined buat trader instance yang
+// gak relevan, mis. akun demo member LAIN -- Reconciler CUMA pernah nulis symbol punya Olan REAL,
+// jadi lookup ini otomatis no-op/aman buat instance manapun yang bukan Olan real).
+function _isReconcilerTrackingManually(reconcilerStatePath, exchange, symbol) {
+  if (!reconcilerStatePath || !fs.existsSync(reconcilerStatePath)) return false;
+  try {
+    const state = JSON.parse(fs.readFileSync(reconcilerStatePath, 'utf8'));
+    const entry = state.positions && state.positions[`${exchange}:${symbol}`];
+    return !!(entry && Math.abs(Number(entry.positionAmt)) > 0);
+  } catch {
+    return false;
+  }
+}
+
+function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath } = {}) {
   const c = client || binanceExecutorDefault;
   const mc = mexcClient || mexcExecutorDefault;
   function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : c; }
@@ -310,6 +327,41 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const exec = execFor(assetCfg);
     const remainingQty = order.qty * (order.remainingFraction != null ? order.remainingFraction : 1);
     let legPnlUsd, exitPrice, reconciliationNote;
+
+    // ⛔ BUG NYATA ketemu+fix 12 Sep 2026 (Olan: "posisi ngarang dia buat", DIBUKTIKAN cross-check
+    // langsung ke income history Binance ASLI -- 2 pesan OFFLINE ngaku untung +$3,16/+$4,38 di
+    // jam tertentu, padahal Binance SAMA SEKALI GAK PUNYA REALIZED_PNL yang match jam ATAU nilai
+    // itu). Root cause: posisi `mode==='unknown'` (hasil AUTO-ADOPT -- journal lokal gak pernah
+    // beneran nyatet buka-nya, cuma "diklaim" krn kedetect hidup di exchange, lihat komentar di
+    // titik adopsi di bawah) SANGAT RAWAN kesentuh manual trading Olan LANGSUNG di symbol yang
+    // sama (positionReconciler.js mantau ini independen, TERPISAH total dari journal Nyopet).
+    // `fetchRealizedPnlSince` ngejumlahin SEMUA income symbol itu sejak jam adopsi -- kalau ada
+    // manual trading di antaranya (kejadian NYATA), hasilnya kecampur transaksi yang GAK ADA
+    // HUBUNGANNYA sama posisi adopsi ini, terus `exitPrice` DIHITUNG MUNDUR dari angka ngaco itu
+    // (matematis doang, gak pernah beneran kejadian di exchange) -- clamp `maxLoss` di bawah GAK
+    // NANGKEP kasus ini krn marginUsd si adopsi SENDIRI juga snapshot sesaat, sama gak reliable-nya.
+    // Fix TUNTAS: posisi `mode==='unknown'` yang alreadyClosed SELALU tutup JUJUR (exitPrice/pnlUsd
+    // null, pesan KHUSUS formatAutoClosedUntracked) -- JANGAN PERNAH nebak lagi. PnL akurat buat
+    // manual trading UDAH kepegang positionReconciler.js (pesan 🙋 MANUAL, per-transaksi, sumber
+    // Binance income history yang di-scope BENER per window, bukan sejak-adopsi-selamanya).
+    if (alreadyClosed && order.mode === 'unknown') {
+      const journal = loadJournal();
+      const target = journal.orders.find((o) => o.id === order.id);
+      Object.assign(target, {
+        status: 'closed_untracked', exitPrice: null, pnlUsd: null, pnlPct: null,
+        closeReason: 'OFFLINE_UNKNOWN', closedAt: new Date().toISOString(),
+      });
+      saveJournal(journal);
+      const msg = formatAutoClosedUntracked({
+        id: order.id, direction: order.direction === 'buy' ? 'long' : 'short',
+        assetLabel: assetCfg.label, entryPrice: order.entryPrice,
+      }, isDemo);
+      console.log(msg + '\n');
+      await notify(msg);
+      emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: null, closedAt: target.closedAt, exchange: assetCfg.exchange });
+      return target;
+    }
+
     if (alreadyClosed) {
       // 28 Agu 2026, bug nyata: `fetchRealizedPnlSince` jumlahin SEMUA income simbol ini sejak
       // triggeredAt -- kalau eksekutor mati lama (komputer sleep berjam-jam) dan simbol yang sama
@@ -489,6 +541,18 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // yang salah), SKIP total siklus ini (jangan coba apa-apa) daripada eksekusi ngawur.
     const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
     if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
+      // ⛔ FIX 12 Sep 2026 (root cause dari bug "posisi ngarang" di closePosition, Olan sengaja
+      // stress-test manual trading buat cari bug) -- SEBELUM adopsi, cek dulu apa positionReconciler.js
+      // UDAH mantau symbol ini secara manual (state file-nya sendiri, `${exchange}:${symbol}`,
+      // cuma keisi kalau BENERAN lagi disentuh manual Olan langsung di exchange). Kalau IYA, jangan
+      // ikut adopsi -- biarin SATU sistem doang yang megang symbol ini di satu waktu (Reconciler,
+      // yang emang didesain akurat per-transaksi). Adopsi+Reconciler jalan bareng tanpa saling tau
+      // itu PERSIS akar masalah kenapa closePosition() dulu bisa ngarang harga/PnL (income history
+      // kecampur 2 sumber kebenaran yang gak saling koordinasi).
+      if (_isReconcilerTrackingManually(reconcilerStatePath, assetCfg.exchange, symbol)) {
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi live ADA tapi lagi ditrack manual (positionReconciler.js) -- SKIP adopsi total, biarin Reconciler yang urus sepenuhnya (cegah dobel-catat/PnL ngarang). Skip cari sinyal baru siklus ini.`);
+        return;
+      }
       // ⛔ FIX 8 Sep 2026 (Olan, ketemu pas Nirwan/member: posisi nyangkut PERMANEN gara2 skip
       // total di sini -- gak ada auto-heal, journal harus dibenerin manual selamanya). Dulu cuma
       // SKIP + log warning (aman dari dobel-eksekusi, TAPI bot berhenti nyari sinyal baru

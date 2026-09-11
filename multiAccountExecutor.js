@@ -209,9 +209,17 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
   const key = safeKey(account.phone) + '-' + account.mode;
 
   try {
+    // reconcilerStatePath (12 Sep 2026, fix bug "posisi ngarang") -- CUMA dioper buat akun yang
+    // SAMA PERSIS dipantau positionReconciler.js di bawah (Olan real doang -- lihat kondisi
+    // `safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real'`). SENGAJA gak dioper
+    // ke akun lain -- state file Reconciler cuma pernah keisi symbol punya Olan real, ngoper ke
+    // akun laen (mis. demo member) beresiko salah nyuppress adopsi mereka sendiri kalau kebetulan
+    // symbol-nya sama (BTCUSDC) tapi konteksnya beda total.
+    const isOlanRealAccount = safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real';
     const nyopetTrader = createNyopetTrader({
       client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
       sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate,
+      reconcilerStatePath: isOlanRealAccount ? path.join(STATE_DIR, 'wibowo-reconciler-state.json') : undefined,
     });
     // 28 Agu 2026 -- eksekusi antrian tutup posisi manual DULUAN, sebelum siklus normal (biar
     // kalau ada sinyal baru abis ditutup, "nonstop posisi" tetep jalan alami di main() bawahnya).

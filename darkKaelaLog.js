@@ -209,6 +209,22 @@ Alasan: ${alasanText || '-'}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
+// (12 Sep 2026, BUG NYATA ketemu+fix -- Olan: "posisi ngarang dia buat", dibuktikan cross-check
+// ke income history Binance ASLI) -- KHUSUS posisi `mode==='unknown'` (hasil AUTO-ADOPT) yang
+// closePosition() gak berani hitung mundur exitPrice/PnL-nya lagi (lihat komentar closePosition,
+// nyopetAutoTrader.js -- posisi kayak gini SANGAT RAWAN kecampur manual trading Olan langsung,
+// hasil hitungannya kebukti ngarang). Pesan ini JUJUR ngaku gak tau angkanya drpd nyebar data
+// palsu -- beda TOTAL dari formatAutoClosed (yang SELALU asumsi exitPrice/pnlUsd itu angka nyata).
+function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, isDemo) {
+  const dirLabel = direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
+  return `🥷 NYOPET ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
+⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya (kemungkinan besar disentuh trading manual langsung), sekarang udah gak ada lagi.
+
+Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan, cek langsung riwayat exchange buat angka pastinya.
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
 // ============ Manual di luar sistem (positionReconciler.js) -- (5 Sep 2026, permintaan Olan:
 // "semua pesan broadcast trading perlu disamakan semua kerangkanya") ============
 // SEBELUMNYA punya template SENDIRI (beda struktur, beda fmtUsd lokal) dari formatAutoOpen/dst di
@@ -258,7 +274,10 @@ Alasan: ${MANUAL_ALASAN}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
-function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, pnlUsd }, idrRate) {
+// (12 Sep 2026, permintaan Olan: "pesan long short manual dibuat lebih baik") -- `marginUsd`/
+// `nilaiPosisi` BARU, buat konsistensi sama Open/Add/Flip: "sisa @ harga" doang gak ngasih
+// gambaran BESARNYA posisi yang masih kebuka setelah dikurangin, sekarang eksplisit ditulis.
+function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, marginUsd, nilaiPosisi, pnlUsd }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const pnlLine = pnlUsd === null
     ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.'
@@ -267,12 +286,18 @@ function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, pnlU
 ${dirLabel} sisa @ ${fmtUsd(entryPrice)}
 
 ${pnlLine}
+Sisa Margin: ${fmtUsdWithIdr(marginUsd, idrRate)}
+Sisa Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
 Alasan: ${MANUAL_ALASAN}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
-function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, entryPrice, leverage, pnlUsd }, idrRate) {
+// (12 Sep 2026, permintaan Olan: "nilai posisi ketika balik arah juga tetep di sertakan kayak pas
+// open long/short") -- `marginUsd`/`nilaiPosisi` DULU gak diterima fungsi ini sama sekali (padahal
+// positionReconciler.js SEBENARNYA udah ngitung marginUsd buat posisi baru hasil flip, cuma gak
+// dioper ke pesan) -- sekarang SAMA kelengkapannya kayak formatManualOpen/formatManualAdd.
+function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, entryPrice, leverage, marginUsd, nilaiPosisi, pnlUsd }, idrRate) {
   const oldLabel = prevDirection === 'buy' ? '🟢 LONG' : '🔴 SHORT';
   const newLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const pnlLine = pnlUsd === null
@@ -282,14 +307,15 @@ function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, ent
 ${oldLabel} → ${newLabel} @ ${fmtUsd(entryPrice)}
 
 ${pnlLine}
-Leverage: ${leverage || '-'}x
+Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
 Alasan: ${MANUAL_ALASAN}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
 module.exports = {
-  formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoAddLayer,
+  formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatAutoAddLayer,
   formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip,
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain

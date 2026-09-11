@@ -234,7 +234,11 @@ Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- 
 // bukan kebetulan belum diseragamin -- exchange gak ngasih tau ALASAN posisi ini, beda dari semua
 // method lain yang SELALU punya alasan tercatat).
 const MANUAL_BADGE = '🙋 MANUAL (luar sistem)';
-const MANUAL_ALASAN = 'Manual di luar sistem (kedetect di exchange, bukan lewat web -- exchange gak ngasih tau alasannya)';
+// (12 Sep 2026, permintaan Olan: "alasan yang manual ga usah kepanjangan.. cukup alasan open
+// posisi manual") -- DIPENDEKIN dari versi lama yang jelasin detail kenapa (exchange gak ngasih
+// tau alasannya, dst) -- sekarang cukup label singkat, konsisten sama NYOPET_MODE_LABEL_WEB.manual
+// di kaela-render.js.
+const MANUAL_ALASAN = 'Posisi manual (dibuka langsung di exchange)';
 
 function formatManualOpen({ exchangeBadge, symbol, direction, entryPrice, leverage, marginUsd, nilaiPosisi }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';

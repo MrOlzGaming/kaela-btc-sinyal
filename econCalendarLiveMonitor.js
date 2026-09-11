@@ -26,8 +26,9 @@
 const fs = require('fs');
 const path = require('path');
 const { fetchWeekCalendar, getAllHighImpactUsdEvents } = require('./econCalendar');
-const { formatHeadsUp, formatResult, formatResultFollowup } = require('./econCalendarLog');
+const { formatHeadsUp, formatResult, formatResultFollowup, concludeHawkishDovish } = require('./econCalendarLog');
 const { enrichWithTvActual } = require('./tvEconActual');
+const { recordReaction } = require('./econReactionResearchLog');
 const { fetchDxy } = require('./macroData');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
@@ -291,6 +292,16 @@ async function main() {
         } else {
           console.log(`[EconCalendarLive] BTC reaksi ${btcReactionPct.toFixed(3)}% -- di bawah ambang ${BTC_REACTION_THRESHOLD_PCT}%, skip scalp.`);
         }
+      }
+
+      // 12 Sep 2026, permintaan Olan ("simpan sendiri hasil kalender ekonomi buat kelak
+      // penelitian", riset pola manipulasi market/short squeeze) -- arsip MURNI RISET, gak
+      // pengaruhi eksekusi apapun (lihat econReactionResearchLog.js).
+      try {
+        const rec = recordReaction({ event: e, conclusionLabel: concludeHawkishDovish(e, dxyChangePct).label, dxyChangePct, btcBefore: st.btcBefore, btcAfter });
+        if (rec.divergence) console.log(`[EconCalendarLive] 🔀 DIVERGENSI dicatat -- "${e.title}" kesimpulan ${rec.conclusionLabel} tapi BTC reaksi ${rec.btcReactionPct}% (kebalikan ekspektasi) -- kandidat riset manipulasi/squeeze.`);
+      } catch (err) {
+        console.log('[EconCalendarLive] Gagal catat riset reaksi (dilewatin, gak fatal):', err.message);
       }
 
       state[e.key] = { ...st, result: true, actualMissingAtResult: !e.actual, scalpOpenedAt: scalpOrder ? Date.now() : null };

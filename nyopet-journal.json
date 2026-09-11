@@ -33,7 +33,7 @@
       "asset": "btc",
       "exchange": "binance",
       "direction": "sell",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "unknown",
       "patternType": "unknown",
       "entryPrice": 77066.5,
@@ -50,7 +50,12 @@
       "remainingFraction": 1,
       "realizedPnlUsd": 0,
       "triggeredAt": "2026-09-11T04:45:07.886Z",
-      "manualReason": null
+      "manualReason": null,
+      "exitPrice": 78584.54159745833,
+      "pnlUsd": -4736.28978407,
+      "pnlPct": -98.47386540576433,
+      "closeReason": "OFFLINE",
+      "closedAt": "2026-09-11T14:00:06.850Z"
     }
   ],
   "demoEraStartedAt": "2026-09-04T18:50:27.852Z",

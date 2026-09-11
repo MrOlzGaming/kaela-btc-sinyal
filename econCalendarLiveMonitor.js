@@ -26,7 +26,7 @@
 const fs = require('fs');
 const path = require('path');
 const { fetchWeekCalendar, getAllHighImpactUsdEvents } = require('./econCalendar');
-const { formatHeadsUp, formatResult, formatResultFollowup, concludeHawkishDovish } = require('./econCalendarLog');
+const { formatHeadsUp, formatResult, formatResultFollowup, formatResultExplanation, concludeHawkishDovish } = require('./econCalendarLog');
 const { enrichWithTvActual } = require('./tvEconActual');
 const { recordReaction } = require('./econReactionResearchLog');
 const { fetchDxy } = require('./macroData');
@@ -293,6 +293,15 @@ async function main() {
       console.log(msg);
       addEntry('econ-calendar-result', msg, now);
       await sendWhatsApp(msg);
+
+      // 12 Sep 2026, permintaan Olan -- pesan KEDUA terpisah, penjelasan awam ("ooo gitu paham"),
+      // sama pola kayak anomalyScanner.js. Null kalau event-nya gak punya directionalView.
+      const explainMsg = formatResultExplanation(e);
+      if (explainMsg) {
+        console.log(explainMsg);
+        addEntry('econ-calendar-result-explain', explainMsg, now);
+        await sendWhatsApp(explainMsg);
+      }
 
       // Sinyal trading -- REAKSI BTC SENDIRI, SAMA PERSIS metodologi backtest (bukan dxyChangePct
       // di atas, itu cuma buat pesan info).

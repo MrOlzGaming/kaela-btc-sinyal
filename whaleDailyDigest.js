@@ -13,7 +13,6 @@ const fs = require('fs');
 const path = require('path');
 const { fetchLatestBlockHeight, fetchBlockHashAtHeight, fetchBlock, findLargeTransactions } = require('./whaleFetch');
 const { formatWhaleDailyDigest } = require('./whaleLog');
-const { sendWhatsApp } = require('./fonnte');
 const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey } = require('./config');
@@ -93,16 +92,28 @@ async function main() {
   for (let height = startHeight; height <= endHeight; height++) {
     const hash = await fetchBlockHashAtHeight(height);
     const block = await fetchBlock(hash);
-    allTx.push(...findLargeTransactions(block, WHALE_THRESHOLD_BTC));
+    allTx.push(...(await findLargeTransactions(block, WHALE_THRESHOLD_BTC)));
     state.lastProcessedHeight = height;
     saveState(state); // simpan per-blok, biar kalau run gagal di tengah gak ngulang dari awal
   }
 
   const msg = formatWhaleDailyDigest(allTx, btcPrice, usdToIdr, todayKey);
   console.log(msg + '\n');
-  addOrReplaceDaily('whale-daily', msg, now); // anti-dobel kalau ke-run ulang di hari sama
-  await sendWhatsApp(msg);
-  console.log(`[WhaleDailyDigest] ${now.toISOString()} -- blok ${startHeight}-${endHeight} diproses, ${allTx.length} transaksi >=${WHALE_THRESHOLD_BTC} BTC ditemukan.`);
+  addOrReplaceDaily('whale-daily', msg, now); // anti-dobel kalau ke-run ulang di hari sama, TETAP kesimpen buat riwayat web
+
+  // 12 Sep 2026, permintaan Olan ("whale alert lebih pintar atau hapus aja kek ga guna") --
+  // STOP kirim WA sendiri tiap hari (7 hari sample: SEMUA bilang "0 masuk exchange, 0 keluar
+  // exchange, semua gak teridentifikasi" -- daftar alamat exchange kita cuma 6, nyaris gak
+  // pernah cocok, jadi pesannya emang gak ada isi). Total harian ini SEKARANG cuma ditulis ke
+  // state, dibaca anomalyScanner.js (TRACKED_LABELS whaleVolumeBtc/whaleTxCount) -- WA cuma
+  // kekirim kalau angkanya BENERAN beda jauh dari kebiasaan kita sendiri (z-score), bukan tiap
+  // hari apapun isinya. Data mentah tetap kesimpen di archive (baris di atas) buat yang mau cek manual.
+  const totalBtc = allTx.reduce((s, t) => s + t.totalBtc, 0);
+  const toExchangeBtc = allTx.filter((t) => t.direction === 'TO_EXCHANGE').reduce((s, t) => s + t.totalBtc, 0);
+  const fromExchangeBtc = allTx.filter((t) => t.direction === 'FROM_EXCHANGE').reduce((s, t) => s + t.totalBtc, 0);
+  state.lastDigest = { dateKey: todayKey, totalBtc, count: allTx.length, toExchangeBtc, fromExchangeBtc };
+  saveState(state);
+  console.log(`[WhaleDailyDigest] ${now.toISOString()} -- blok ${startHeight}-${endHeight} diproses, ${allTx.length} transaksi >=${WHALE_THRESHOLD_BTC} BTC ditemukan (${totalBtc.toFixed(0)} BTC total) -- ditulis ke state buat anomalyScanner.js, GAK kirim WA sendiri.`);
 }
 
 main().catch((e) => {

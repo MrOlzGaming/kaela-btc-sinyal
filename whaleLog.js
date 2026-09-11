@@ -71,18 +71,30 @@ function formatWhaleDailyDigest(txList, btcPriceUsd, usdToIdr, dateStr) {
 
   const totalBtc = txList.reduce((s, t) => s + t.totalBtc, 0);
   const biggest = txList.reduce((a, b) => (b.totalBtc > a.totalBtc ? b : a));
-  const toExchange = txList.filter((t) => t.direction === 'TO_EXCHANGE').length;
-  const fromExchange = txList.filter((t) => t.direction === 'FROM_EXCHANGE').length;
-  const unknown = count - toExchange - fromExchange;
+  const toExchangeTx = txList.filter((t) => t.direction === 'TO_EXCHANGE');
+  const fromExchangeTx = txList.filter((t) => t.direction === 'FROM_EXCHANGE');
+  const toExchangeBtc = toExchangeTx.reduce((s, t) => s + t.totalBtc, 0);
+  const fromExchangeBtc = fromExchangeTx.reduce((s, t) => s + t.totalBtc, 0);
+  const unknown = count - toExchangeTx.length - fromExchangeTx.length;
   const usdValue = totalBtc * btcPriceUsd;
   const idrValue = usdValue * usdToIdr;
+
+  // 12 Sep 2026, permintaan Olan ("kalo masuk exchange kan ngerti wah ini bakal sale.. kalo
+  // keluar dari exchange.. siap siap bull") -- SEKARANG tampilin TOTAL BTC per arah (bukan cuma
+  // hitungan transaksi), pakai deteksi WalletExplorer.com (jutaan alamat, lihat
+  // exchangeAddresses.js) yang JAUH lebih lengkap drpd daftar 6 alamat lama.
+  const arahLines = [];
+  if (toExchangeTx.length > 0) arahLines.push(`🔴 MASUK exchange: ${fmtBtc(toExchangeBtc)} BTC (${toExchangeTx.length} transaksi) -- potensi tekanan JUAL (${toExchangeTx.map((t) => t.exchange).filter((v, i, a) => a.indexOf(v) === i).join(', ')}).`);
+  if (fromExchangeTx.length > 0) arahLines.push(`🟢 KELUAR exchange: ${fmtBtc(fromExchangeBtc)} BTC (${fromExchangeTx.length} transaksi) -- potensi akumulasi/BULL (${fromExchangeTx.map((t) => t.exchange).filter((v, i, a) => a.indexOf(v) === i).join(', ')}).`);
+  arahLines.push(`⚪ Gak teridentifikasi: ${unknown} transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).`);
 
   return [
     `${CATEGORY_COLOR.whale.emoji} 🐋 REKAP WHALE HARIAN — ${dateStr}`,
     `${count} transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.`,
     `Total: ${fmtBtc(totalBtc)} BTC berpindah (~${fmtUsd(usdValue)} / ~${fmtIdr(idrValue)})`,
     `Terbesar: ${fmtBtc(biggest.totalBtc)} BTC dalam 1 transaksi.`,
-    `Arah (best-effort): ${toExchange} masuk exchange (potensi tekanan jual) · ${fromExchange} keluar exchange (potensi akumulasi) · ${unknown} gak teridentifikasi.`,
+    '',
+    ...arahLines,
     '',
     '⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.',
     `🔗 ${WEB_URL}`,

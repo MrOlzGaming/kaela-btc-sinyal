@@ -195,7 +195,23 @@ function formatResultFollowup(e) {
   return lines.join('\n');
 }
 
-module.exports = { formatEconCalendar, formatHeadsUp, formatResult, formatResultFollowup, concludeHawkishDovish, parseEconNumber, classifyDxyReaction };
+// 12 Sep 2026, permintaan Olan ("sekalian data hasil kalender ekonomi.. jika ada hasil maka
+// jelasin dikit aja.. anggap pembaca gak tau apa-apa jadi ooo gitu paham") -- pesan KEDUA
+// terpisah, singkat, khusus "apa ini & kenapa peduli" (beginnerWhy, econDirectionalView.js) --
+// BEDA dari `c.note` di formatResult (yang lebih teknis/mekanisme actual-vs-forecast). Kalau
+// event-nya belum ada peta directionalView sama sekali, gak dikirim (biar gak ngarang penjelasan).
+function formatResultExplanation(e) {
+  const v = e.directionalView;
+  if (!v || !v.beginnerWhy) return null;
+  return [
+    `${CATEGORY_COLOR.econ.emoji} 📖 PENJELASAN`,
+    '',
+    e.title,
+    v.beginnerWhy,
+  ].join('\n');
+}
+
+module.exports = { formatEconCalendar, formatHeadsUp, formatResult, formatResultFollowup, formatResultExplanation, concludeHawkishDovish, parseEconNumber, classifyDxyReaction };
 
 if (require.main === module) {
   const example = [

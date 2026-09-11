@@ -1003,6 +1003,9 @@
     manual: 'Manual (dibuka langsung di exchange)',
     // 6 Sep 2026, metode Nyopet ke-5 -- tanpa entry ini, kartu nampilin raw string "fed_dovish_grid".
     fed_dovish_grid: 'Fed Dovish Grid',
+    // 12 Sep 2026 -- posisi "adopsi otomatis" (journal lokal gak pernah beneran nyatet buka-nya,
+    // lihat status closed_untracked/nyopetAutoTrader.js) -- tanpa entry ini raw string "unknown".
+    unknown: 'Diadopsi otomatis (sumber gak diketahui)',
   };
 
   // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "nyopet ga dibatasi
@@ -1106,8 +1109,15 @@
     const floatingHtml = floating.length > 0
       ? `<div class="journal-section-title">${rt('positions_open')} (${floating.length})</div><div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
       : '';
-    const closed = orders.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl').slice().reverse();
-    const stats = computeJournalStats(closed);
+    // 12 Sep 2026 -- `closed_untracked` (posisi "adopsi otomatis" yang closePosition() SENGAJA
+    // gak hitung exitPrice/PnL, lihat komentar nyopetAutoTrader.js) DIIKUTIN di tabel riwayat
+    // (jangan sampai ngilang gitu aja, biar catatannya tetep lengkap -- Olan: "riwayat di web
+    // brantakan"), TAPI DIPISAH dari `statsEligible` -- PnL-nya null/gak diketahui, kalau ikut
+    // kehitung stats (win rate/profit factor/equity curve) bakal keitung "trade $0" yang SALAH
+    // (bukan beneran impas, cuma gak diketahui angkanya).
+    const closed = orders.filter((o) => o.status === 'closed_tp' || o.status === 'closed_sl' || o.status === 'closed_untracked').slice().reverse();
+    const statsEligible = closed.filter((o) => o.status !== 'closed_untracked');
+    const stats = computeJournalStats(statsEligible);
 
     // 2 wallet terpisah (29 Agu 2026, fix bug saldo stale -- lihat nyopetAutoTrader.js
     // syncBalances) -- BTCUSDC buat posisi BTC, PAXGUSDT buat posisi PAXG, JANGAN digabung 1
@@ -1122,7 +1132,10 @@
       ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
       : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
 
-    if (!stats) {
+    // 12 Sep 2026 -- gerbangnya `closed.length` (SEMUA yang pernah ditutup, termasuk
+    // closed_untracked), BUKAN `!stats` lagi -- posisi untracked TETAP harus tampil di tabel
+    // riwayat walau statsEligible-nya kosong (0 trade beneran, cuma ada yang gak ke-track).
+    if (closed.length === 0) {
       return `<div class="nyopet-panel">
         <p class="order-disclaimer">${disclaimer}</p>
         <div class="journal-stats-grid">${saldoCell}</div>
@@ -1134,7 +1147,23 @@
     const historyHtml = closed.length > 0
       ? `<div style="overflow-x:auto;"><table class="spot-cycle-table">
           <thead><tr><th>${rt('asset')}</th><th>${rt('direction')}</th><th>${rt('mode')}</th><th>${rt('entry').replace(':', '')}</th><th>${rt('exit').replace(':', '')}</th><th>${rt('result')}</th><th>PNL</th><th>${rt('date')}</th></tr></thead>
-          <tbody>${closed.map((o) => `<tr>
+          <tbody>${closed.map((o) => {
+            // closed_untracked (12 Sep 2026, fix bug "posisi ngarang") -- exitPrice/pnlUsd SENGAJA
+            // null (lihat nyopetAutoTrader.js), tampilin "?" JUJUR drpd fmtUsdOrder(null) yang
+            // keluar "$0" (kesannya impas beneran, padahal cuma gak diketahui).
+            if (o.status === 'closed_untracked') {
+              return `<tr title="${en ? 'Position adopted automatically, closing price/PnL not tracked -- see accurate PnL in the separate Manual message if this was a manual trade.' : 'Posisi diadopsi otomatis, harga tutup/PnL gak ke-track -- PnL akuratnya ada di pesan Manual terpisah kalau ini trading manual.'}">
+                <td>${NYOPET_ASSETS_WEB[o.asset] ? NYOPET_ASSETS_WEB[o.asset].emoji + ' ' + NYOPET_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
+                <td>${o.direction === 'sell' ? rt('short') : rt('long')}</td>
+                <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
+                <td>${fmtUsdOrder(o.entryPrice)}</td>
+                <td>❓</td>
+                <td>❓ ${en ? 'untracked' : 'gak ke-track'}</td>
+                <td>-</td>
+                <td>${fmtDateLong(new Date(o.closedAt))}</td>
+              </tr>`;
+            }
+            return `<tr>
             <td>${NYOPET_ASSETS_WEB[o.asset] ? NYOPET_ASSETS_WEB[o.asset].emoji + ' ' + NYOPET_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
             <td>${o.direction === 'sell' ? rt('short') : rt('long')}</td>
             <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
@@ -1143,19 +1172,23 @@
             <td class="${o.status === 'closed_tp' ? 'up' : 'down'}">${o.status === 'closed_tp' ? rt('win') : rt('lose')}</td>
             <td class="${(o.pnlUsd || 0) >= 0 ? 'up' : 'down'}">${fmtSignedUsd(o.pnlUsd || 0)}</td>
             <td>${fmtDateLong(new Date(o.closedAt))}</td>
-          </tr>`).join('')}</tbody>
+          </tr>`;
+          }).join('')}</tbody>
         </table></div>`
       : `<div class="empty">${rt('no_trade_done_short')}</div>`;
 
     // Sama kayak fix renderJurnalPanel Sniper (29 Agu 2026) -- statistik ringkasan ditahan dulu
     // di bawah 2 trade, biar Win Rate/Profit Factor gak keliatan definitif dari 1 sampel doang.
-    const nyopetSummaryHtml = closed.length < 2
-      ? `<div class="empty">📓 ${rt('new_trades_done')} ${closed.length} ${rt('trades_done')} ${rt('summary_held_back')}</div>`
+    // 12 Sep 2026 -- gerbang PAKAI statsEligible.length (BUKAN closed.length lagi) -- trade
+    // untracked gak boleh ikut "ngelunasin" syarat minimal 2 trade buat nampilin statistik,
+    // dan `stats` sendiri bisa null kalau statsEligible kosong (SEMUA closed-nya untracked).
+    const nyopetSummaryHtml = (!stats || statsEligible.length < 2)
+      ? `<div class="empty">📓 ${rt('new_trades_done')} ${statsEligible.length} ${rt('trades_done')} ${rt('summary_held_back')}</div>`
       : `${renderJournalStatsGrid(stats)}
       <div class="journal-section-title">${rt('equity_curve_pertrade')}</div>
-      ${renderEquityCurveSvg(closed)}
+      ${renderEquityCurveSvg(statsEligible)}
       <div class="journal-section-title">${rt('pnl_calendar_month')}</div>
-      ${renderPnlCalendar(closed, now)}`;
+      ${renderPnlCalendar(statsEligible, now)}`;
 
     const disclaimerFull = (opts && opts.disclaimerFull) || (en
       ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'

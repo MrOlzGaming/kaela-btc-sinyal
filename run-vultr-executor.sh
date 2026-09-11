@@ -155,6 +155,11 @@ node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit
 # sebagai jaring pengaman KEDUA -- kalau suatu saat lambat lagi, gak akan nyandera fungsi trading
 # lain selamanya, cuma skip siklus itu (state per-item, aman diulang siklus berikutnya).
 timeout 120 node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR/TIMEOUT (exit $?)"
+
+# Divergensi smart money -- top trader jumlah-akun vs nilai-duit (12 Sep 2026, permintaan Olan:
+# "kalo long short secara duit perbandingannya aneh boleh di info?"). Endpoint Binance publik,
+# aman dipanggil tiap siklus 15 menit (state dedup+cooldown sendiri, lihat file-nya).
+timeout 60 node smartMoneyDivergenceMonitor.js >> "$LOG_FILE" 2>&1 || log "smartMoneyDivergenceMonitor.js ERROR/TIMEOUT (exit $?)"
 timeout 120 node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR/TIMEOUT (exit $?)"
 timeout 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR/TIMEOUT (exit $?)"
 

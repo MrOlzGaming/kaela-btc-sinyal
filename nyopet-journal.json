@@ -33,7 +33,7 @@
       "asset": "btc",
       "exchange": "binance",
       "direction": "sell",
-      "status": "closed_sl",
+      "status": "closed_untracked",
       "mode": "unknown",
       "patternType": "unknown",
       "entryPrice": 77066.5,
@@ -51,11 +51,12 @@
       "realizedPnlUsd": 0,
       "triggeredAt": "2026-09-11T04:45:07.886Z",
       "manualReason": null,
-      "exitPrice": 78584.54159745833,
-      "pnlUsd": -4736.28978407,
-      "pnlPct": -98.47386540576433,
-      "closeReason": "OFFLINE",
-      "closedAt": "2026-09-11T14:00:06.850Z"
+      "exitPrice": null,
+      "pnlUsd": null,
+      "pnlPct": null,
+      "closeReason": "OFFLINE_UNKNOWN",
+      "closedAt": "2026-09-11T14:00:06.850Z",
+      "retroactiveFixNote": "Angka lama (exitPrice/pnlUsd) DIBUKTIKAN ngarang (cross-check ke income history Binance asli, gak match sama sekali) -- dibersihin 12 Sep 2026 abis fix bug closePosition(). PnL akurat posisi ini (kalau manual) ada di pesan/journal Manual terpisah."
     }
   ],
   "demoEraStartedAt": "2026-09-04T18:50:27.852Z",

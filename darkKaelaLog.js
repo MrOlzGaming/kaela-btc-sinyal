@@ -252,7 +252,19 @@ Alasan: ${MANUAL_ALASAN}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
-function formatManualClose({ exchangeBadge, symbol, direction, prevEntryPrice, pnlUsd }, idrRate) {
+// (12 Sep 2026, permintaan Olan: "jadi pertanyaan di grup.. kok minus terus.. padahal di riwayat
+// aku surplus.. tapi ga ketauan.. apa di followup total pnl today?") -- pesan PnL per-transaksi
+// (fee tiap flip cepat sering bikin angka KECIL MINUS, lihat komentar formatManualFlip) gak ngasih
+// gambaran besarnya -- baris ini nyelipin TOTAL PnL symbol itu HARI INI biar member langsung liat
+// konteks, bukan nyimpulkan "rugi terus" dari 1 transaksi kecil doang. `null` (gagal sync/gak ada
+// data) -> baris DIILANGIN total, JANGAN nampilin "Rp0"/"$0" yang kesannya beneran nol.
+function _todaysPnlLine(todaysPnl, idrRate) {
+  if (todaysPnl == null) return '';
+  const sign = todaysPnl >= 0 ? '+' : '';
+  return `\n📊 Total PnL hari ini: ${sign}${fmtUsdWithIdr(todaysPnl, idrRate)}`;
+}
+
+function formatManualClose({ exchangeBadge, symbol, direction, prevEntryPrice, pnlUsd, todaysPnl }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const pnlLine = pnlUsd === null
     ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.'
@@ -260,7 +272,7 @@ function formatManualClose({ exchangeBadge, symbol, direction, prevEntryPrice, p
   return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Tutup Posisi*
 ${dirLabel} @ ${fmtUsd(prevEntryPrice)} → ditutup
 
-${pnlLine}
+${pnlLine}${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: ${MANUAL_ALASAN}
 
 🔗 ${KAELA_ACCESS_URL}`;
@@ -281,7 +293,7 @@ Alasan: ${MANUAL_ALASAN}
 // (12 Sep 2026, permintaan Olan: "pesan long short manual dibuat lebih baik") -- `marginUsd`/
 // `nilaiPosisi` BARU, buat konsistensi sama Open/Add/Flip: "sisa @ harga" doang gak ngasih
 // gambaran BESARNYA posisi yang masih kebuka setelah dikurangin, sekarang eksplisit ditulis.
-function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, marginUsd, nilaiPosisi, pnlUsd }, idrRate) {
+function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, marginUsd, nilaiPosisi, pnlUsd, todaysPnl }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const pnlLine = pnlUsd === null
     ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.'
@@ -289,7 +301,7 @@ function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, marg
   return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Kurangin Posisi*
 ${dirLabel} sisa @ ${fmtUsd(entryPrice)}
 
-${pnlLine}
+${pnlLine}${_todaysPnlLine(todaysPnl, idrRate)}
 Sisa Margin: ${fmtUsdWithIdr(marginUsd, idrRate)}
 Sisa Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
 Alasan: ${MANUAL_ALASAN}
@@ -301,7 +313,7 @@ Alasan: ${MANUAL_ALASAN}
 // open long/short") -- `marginUsd`/`nilaiPosisi` DULU gak diterima fungsi ini sama sekali (padahal
 // positionReconciler.js SEBENARNYA udah ngitung marginUsd buat posisi baru hasil flip, cuma gak
 // dioper ke pesan) -- sekarang SAMA kelengkapannya kayak formatManualOpen/formatManualAdd.
-function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, entryPrice, leverage, marginUsd, nilaiPosisi, pnlUsd }, idrRate) {
+function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, entryPrice, leverage, marginUsd, nilaiPosisi, pnlUsd, todaysPnl }, idrRate) {
   const oldLabel = prevDirection === 'buy' ? '🟢 LONG' : '🔴 SHORT';
   const newLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const pnlLine = pnlUsd === null
@@ -310,7 +322,7 @@ function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, ent
   return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Balik Arah*
 ${oldLabel} → ${newLabel} @ ${fmtUsd(entryPrice)}
 
-${pnlLine}
+${pnlLine}${_todaysPnlLine(todaysPnl, idrRate)}
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
 Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
 Alasan: ${MANUAL_ALASAN}
@@ -327,12 +339,12 @@ Alasan: ${MANUAL_ALASAN}
 // itu HILANG TOTAL, gak pernah dilaporin. Pesan ini nutup celah itu -- ketauan dari income
 // history (bukan diff posisi), makanya gak ada 1 "arah"/"harga entry" tunggal buat ditampilin
 // (bisa aja beberapa round-trip beda arah dalam 1 window), cukup laporan TOTAL PnL window ini.
-function formatHiddenActivity({ exchangeBadge, symbol, pnlUsd, stillOpen }, idrRate) {
+function formatHiddenActivity({ exchangeBadge, symbol, pnlUsd, stillOpen, todaysPnl }, idrRate) {
   const sign = pnlUsd >= 0 ? '+' : '';
   return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Aktivitas Tersembunyi*
 ⚠️ Posisi net ${stillOpen ? 'gak berubah' : 'balik ke KOSONG'} dari cek terakhir (~15 menit lalu), TAPI kedetect ada trading beneran di antaranya (kemungkinan buka-tutup/balik arah cepat beberapa kali).
 
-PnL total window ini: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*
+PnL total window ini: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: ${MANUAL_ALASAN}
 
 🔗 ${KAELA_ACCESS_URL}`;

@@ -318,9 +318,29 @@ Alasan: ${MANUAL_ALASAN}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
+// (12 Sep 2026, BUG NYATA ketemu -- Olan nanya: "kalo aku long short long short terus.. dan aku
+// menutup total, berapa lama total akumulasi PnL akan dihitung?") -- positionReconciler.js MURNI
+// diff 2 snapshot posisi (cek terakhir vs sekarang) -- kalau serangkaian trading manual (flip
+// berkali-kali, atau buka-lalu-tutup penuh) semuanya kelar DALAM SATU window ~15 menit dan net
+// posisi-nya balik SAMA kayak snapshot sebelumnya (termasuk 0->0), diff-nya NOL -- gak ada
+// MANUAL OPEN/CLOSE/ADD/REDUCE/FLIP manapun yang ke-trigger, PnL beneran dari SELURUH rangkaian
+// itu HILANG TOTAL, gak pernah dilaporin. Pesan ini nutup celah itu -- ketauan dari income
+// history (bukan diff posisi), makanya gak ada 1 "arah"/"harga entry" tunggal buat ditampilin
+// (bisa aja beberapa round-trip beda arah dalam 1 window), cukup laporan TOTAL PnL window ini.
+function formatHiddenActivity({ exchangeBadge, symbol, pnlUsd, stillOpen }, idrRate) {
+  const sign = pnlUsd >= 0 ? '+' : '';
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Aktivitas Tersembunyi*
+⚠️ Posisi net ${stillOpen ? 'gak berubah' : 'balik ke KOSONG'} dari cek terakhir (~15 menit lalu), TAPI kedetect ada trading beneran di antaranya (kemungkinan buka-tutup/balik arah cepat beberapa kali).
+
+PnL total window ini: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*
+Alasan: ${MANUAL_ALASAN}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
 module.exports = {
   formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatAutoAddLayer,
-  formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip,
+  formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity,
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).

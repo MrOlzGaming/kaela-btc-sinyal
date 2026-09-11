@@ -38,7 +38,7 @@ const kaela = require('./kaelaProTraderClient');
 // -- template pesan (dan fmtUsd yang dipakainya) SEKARANG PENUH dari darkKaelaLog.js, gak ada lagi
 // versi lokal terpisah di sini (dulu fmtUsd lokal SENGAJA beda opsi format, sekarang diseragamin
 // -- itu justru inti permintaannya: SATU gaya angka di semua pesan trading, bukan per-file beda).
-const { fmtUsdWithIdr, formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip } = require('./darkKaelaLog');
+const { fmtUsdWithIdr, formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity } = require('./darkKaelaLog');
 const tradeHistoryStore = require('./tradeHistoryStore');
 
 // WIBOWO_GROUP_ID + saklar pause SEKARANG di wibowoNotify.js (4 Sep 2026, sebelumnya duplikat
@@ -86,16 +86,27 @@ function saveState(statePath, state) {
 // SEKARANG lewat tradeHistoryStore.js (SATU cache lokal dipakai bareng runBalanceReports) --
 // window reconciler pendek (~15 menit sejak lastCheckedAtMs) jadi 1 panggilan tanpa paginasi udah
 // cukup, TAPI tetap disimpen ke store yang sama biar makin lengkap + konsisten sumbernya.
-async function realizedPnlSince(exchange, client, phone, symbol, sinceMs) {
+// Sync SEKALI per siklus (dipisah dari realizedPnlSince, 12 Sep 2026) -- fetch getIncomeHistory
+// itu SENDIRI udah balikin SEMUA symbol (Binance gak punya filter per-symbol di endpoint ini),
+// jadi gak perlu diulang tiap symbol. Dipakai bareng: (1) realizedPnlSince (PnL 1 symbol spesifik),
+// (2) _symbolsWithHiddenActivity (nemuin symbol yang KETOUCH tapi gak masuk radar getAllPositions,
+// lihat komentar _reconcileOneExchange soal "round-trip tersembunyi").
+async function _syncIncomeStore(exchange, client, phone, sinceMs) {
+  if (exchange !== 'binance') return null;
+  const filePath = tradeHistoryStore.storePath('binance', phone, 'real');
+  const store = tradeHistoryStore.loadStore(filePath);
+  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
+  const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
+  const normalized = (rawNew || []).map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+  tradeHistoryStore.mergeEntries(store, normalized);
+  tradeHistoryStore.saveStore(filePath, store);
+  return store;
+}
+
+async function realizedPnlSince(exchange, client, phone, symbol, sinceMs, presyncedStore) {
   if (exchange !== 'binance') return null;
   try {
-    const filePath = tradeHistoryStore.storePath('binance', phone, 'real');
-    const store = tradeHistoryStore.loadStore(filePath);
-    const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
-    const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
-    const normalized = (rawNew || []).map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
-    tradeHistoryStore.mergeEntries(store, normalized);
-    tradeHistoryStore.saveStore(filePath, store);
+    const store = presyncedStore || await _syncIncomeStore(exchange, client, phone, sinceMs);
     return store.entries
       .filter((e) => e.time >= sinceMs && e.symbol === symbol && e.type !== 'TRANSFER')
       .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -103,6 +114,29 @@ async function realizedPnlSince(exchange, client, phone, symbol, sinceMs) {
     console.log(`[PositionReconciler] Gagal ambil income history ${symbol}:`, e.message);
     return null; // null = jujur "gak kebaca", BUKAN 0 (0 kesannya beneran impas)
   }
+}
+
+// ⛔ BUG NYATA ketemu 12 Sep 2026 (Olan nanya: "kalo aku long short long short terus.. dan aku
+// menutup total, berapa lama total akumulasi PnL akan dihitung?") -- jawaban JUJURnya: BISA GAK
+// PERNAH SAMA SEKALI. Reconciler ini murni diff 2 snapshot (posisi pas cek terakhir vs sekarang).
+// Kalau Olan buka+tutup (atau serangkaian flip yang net-nya balik ke ukuran/arah SAMA) SEMUANYA
+// kelar DALAM SATU window ~15 menit, snapshot SEBELUM dan SESUDAH keliatan IDENTIK dari sudut
+// pandang getAllPositions() -- diff-nya NOL, gak ada MANUAL OPEN/CLOSE/ADD/REDUCE/FLIP yang
+// ke-trigger, PnL beneran (fee+untung/rugi harga) dari seluruh rangkaian itu HILANG TOTAL, gak
+// pernah dilaporin ke grup ATAU jurnal. Paling parah buat symbol yang SEBELUMNYA gak pernah
+// ketrack (buka-tutup penuh dalam 1 window) -- symbol itu bahkan gak PERNAH masuk `allSymbols`
+// sama sekali (gak ada di liveBySymbol krn udah balik 0, gak ada di prevSymbols krn emang baru).
+// Fix: pakai income history (getIncomeHistory balikin SEMUA symbol sekaligus, gak butuh posisi
+// masih kebuka) buat NEMUIN symbol yang ada aktivitas trading nyata (COMMISSION/REALIZED_PNL,
+// BUKAN FUNDING_FEE -- itu biaya pasif otomatis tiap 8 jam buat SEMUA posisi kebuka, bukan tanda
+// "Olan ngapa-ngapain") dalam window ini, REGARDLESS posisi net-nya keliatan berubah apa nggak.
+function _extractActiveTradingSymbols(store, sinceMs) {
+  if (!store) return new Set();
+  return new Set(
+    store.entries
+      .filter((e) => e.time >= sinceMs && (e.type === 'COMMISSION' || e.type === 'REALIZED_PNL'))
+      .map((e) => e.symbol)
+  );
 }
 
 async function writeJournal(entryId, fields) {
@@ -129,8 +163,17 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
   const liveBySymbol = {};
   livePositions.forEach((p) => { liveBySymbol[p.symbol] = p; });
 
+  // Sync income SEKALI per exchange per siklus (12 Sep 2026, fix "round-trip tersembunyi" --
+  // lihat komentar panjang di _extractActiveTradingSymbols) -- dipakai NEMUIN symbol yang ada
+  // aktivitas trading nyata WALAU gak lagi kebuka SEKARANG dan gak pernah ketrack SEBELUMNYA.
+  const incomeStore = await _syncIncomeStore(exchange, client, phone, state.lastCheckedAtMs).catch((e) => {
+    console.log(`[PositionReconciler] Gagal sync income history (${exchange}), skip deteksi aktivitas tersembunyi siklus ini:`, e.message);
+    return null;
+  });
+  const activeTradingSymbols = _extractActiveTradingSymbols(incomeStore, state.lastCheckedAtMs);
+
   const prevSymbols = Object.keys(state.positions).filter((k) => k.startsWith(`${exchange}:`)).map((k) => k.slice(exchange.length + 1));
-  const allSymbols = new Set([...Object.keys(liveBySymbol), ...prevSymbols]);
+  const allSymbols = new Set([...Object.keys(liveBySymbol), ...prevSymbols, ...activeTradingSymbols]);
 
   for (const symbol of allSymbols) {
     const stateKey = `${exchange}:${symbol}`;
@@ -168,7 +211,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
     } else if (prevAmt !== 0 && liveAmt === 0) {
       // MANUAL CLOSE (full) -- posisi yang tadinya kecatat sekarang ilang total.
-      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry gagal:', e.message));
@@ -191,7 +234,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) < Math.abs(prevAmt)) {
       // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol.
-      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
       const remainMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
       const msg = formatManualReduce({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), marginUsd: remainMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL REDUCE ${badge} ${symbol}, PnL sebagian=${pnl}`);
@@ -200,7 +243,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) !== Math.sign(liveAmt)) {
       // FLIP arah (short jadi long / sebaliknya) -- exchange eksekusi ini 1 order gede (bukan 2
       // order kepisah) -- hitung PnL close arah lama, catat posisi baru sebagai entry FRESH.
-      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs);
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry (flip close) gagal:', e.message));
@@ -216,8 +259,23 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       console.log(`[PositionReconciler] MANUAL FLIP ${badge} ${symbol}, PnL posisi lama=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: newEntryId, openedAtMs: nowMs };
+    } else if (activeTradingSymbols.has(symbol)) {
+      // ⛔ FIX BUG NYATA 12 Sep 2026 (Olan: "kalo aku long short long short terus.. dan aku
+      // menutup total, berapa lama total akumulasi PnL akan dihitung?") -- posisi NET keliatan
+      // GAK BERUBAH dari snapshot terakhir (termasuk 0->0, buka-tutup PENUH dalam 1 window ~15
+      // menit) TAPI kedetect ADA aktivitas trading nyata (COMMISSION/REALIZED_PNL) dari income
+      // history -- tanpa cabang ini, PnL rangkaian itu HILANG TOTAL, gak pernah kelaporin
+      // kemanapun (lihat komentar panjang _extractActiveTradingSymbols). `pnl === null` (gagal
+      // baca) ATAU nyaris nol (<0.5 sen, funding-fee-doang/noise) -- SENGAJA gak kirim WA, biar
+      // gak spam tiap symbol yang cuma numpang lewat allSymbols krn kena funding.
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
+      if (pnl !== null && Math.abs(pnl) > 0.005) {
+        const msg = formatHiddenActivity({ exchangeBadge: badge, symbol, pnlUsd: pnl, stillOpen: liveAmt !== 0 }, idrRate);
+        console.log(`[PositionReconciler] AKTIVITAS TERSEMBUNYI ${badge} ${symbol} (posisi net gak berubah, round-trip dalam 1 window) -- PnL=${pnl}`);
+        await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (hidden activity):', e.message));
+      }
     }
-    // else: gak ada perubahan (prevAmt===0 && liveAmt===0, atau persis sama) -- gak ada yang perlu dilaporin.
+    // else: gak ada perubahan DAN gak ada aktivitas trading kedetek -- beneran gak ada yang perlu dilaporin.
   }
 }
 

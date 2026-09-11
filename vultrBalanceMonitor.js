@@ -19,6 +19,7 @@ const path = require('path');
 const { localDateKey } = require('./config');
 const { sendWhatsApp } = require('./fonnte');
 const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
+const { fetchWithRetry } = require('./httpRetry');
 
 const VULTR_API_URL = 'https://api.vultr.com/v2/account';
 const STATE_PATH = path.join(__dirname, 'vultr-balance-monitor-state.json');
@@ -46,7 +47,7 @@ function saveState(s) {
 // Credit $7.46, PERSIS -balance - pending_charges). pending_charges = pemakaian bulan berjalan
 // yang BELUM ditagih -- tetap ngurangin sisa kredit walau belum resmi "charge".
 async function fetchVultrAccount(apiKey) {
-  const res = await fetch(VULTR_API_URL, { headers: { Authorization: `Bearer ${apiKey}` } });
+  const res = await fetchWithRetry(VULTR_API_URL, { headers: { Authorization: `Bearer ${apiKey}` } });
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
   const data = await res.json();
   return data.account;

@@ -27,6 +27,30 @@
       "pnlPct": -79.92850714058535,
       "closeReason": "OFFLINE",
       "closedAt": "2026-09-11T03:30:08.548Z"
+    },
+    {
+      "id": "nyopet-adopted-1789101907886",
+      "asset": "btc",
+      "exchange": "binance",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "unknown",
+      "patternType": "unknown",
+      "entryPrice": 77066.5,
+      "sl": null,
+      "originalSl": null,
+      "tp": null,
+      "partialTp": null,
+      "liqPrice": null,
+      "qty": 3.12,
+      "leverage": 50,
+      "marginUsd": 4809.6921600000005,
+      "nilaiPosisi": 240484.608,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "realizedPnlUsd": 0,
+      "triggeredAt": "2026-09-11T04:45:07.886Z",
+      "manualReason": null
     }
   ],
   "demoEraStartedAt": "2026-09-04T18:50:27.852Z",
@@ -45,7 +69,7 @@
       "touches": null
     }
   },
-  "balanceUsdc": 4817.34247592,
+  "balanceUsdc": 0,
   "balanceUsdt": 2.664e-9,
   "mexcBalanceUsdc": 0.00006016148
 }

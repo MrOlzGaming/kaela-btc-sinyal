@@ -79,6 +79,12 @@ function recordReaction({ event, conclusionLabel, dxyChangePct, btcBefore, btcAf
       longAccountPct: positioningBefore.longShort ? Number((positioningBefore.longShort.longAccount * 100).toFixed(2)) : null,
       shortAccountPct: positioningBefore.longShort ? Number((positioningBefore.longShort.shortAccount * 100).toFixed(2)) : null,
       fearGreed: positioningBefore.fearGreed ? positioningBefore.fearGreed.value : null,
+      // Resmi Binance (12 Sep 2026, riset "smart money vs retail") -- top trader = posisi kakap,
+      // global = didominasi retail. `topVsGlobalGap` POSITIF = top trader LEBIH long drpd retail
+      // (retail relatif lebih short -> "makanan" buat squeeze ke ATAS), NEGATIF sebaliknya.
+      binanceTopLongPct: positioningBefore.binancePositioning ? Number(positioningBefore.binancePositioning.topLongPct.toFixed(2)) : null,
+      binanceGlobalLongPct: positioningBefore.binancePositioning ? Number(positioningBefore.binancePositioning.globalLongPct.toFixed(2)) : null,
+      topVsGlobalGap: positioningBefore.binancePositioning ? Number((positioningBefore.binancePositioning.topLongPct - positioningBefore.binancePositioning.globalLongPct).toFixed(2)) : null,
     } : null,
   };
   const arr = _load();

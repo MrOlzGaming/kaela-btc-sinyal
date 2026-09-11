@@ -61,6 +61,31 @@ async function fetchLongShortRatio_Bybit(symbol = 'BTCUSDT') {
   return { longAccount: parseFloat(item.buyRatio), shortAccount: parseFloat(item.sellRatio), ratio: parseFloat(item.buyRatio) / parseFloat(item.sellRatio) };
 }
 
+// 12 Sep 2026, permintaan Olan ("riset liq heatmap/long-short ratio", pola mikir "market maker" --
+// lihat feedback-market-maker-mindset) -- RESMI dari Binance sendiri (fapi.binance.com/futures/data/...,
+// PUBLIK, GAK BUTUH API key/akun sama sekali -- beda dari `longShort` di atas yang endpoint internal
+// OKX gak resmi). `topLongShortPositionRatio` = posisi TRADER BESAR/kakap (top 20% by margin balance),
+// `globalLongShortAccountRatio` = SEMUA akun (didominasi retail, jumlahnya jauh lebih banyak). Selisih
+// dua ini ITU SENDIRI sinyal "smart money vs retail" -- kalau top trader condong LONG sementara
+// akun global malah lebih SHORT (atau sebaliknya), itu persis pola "makanan" buat squeeze yang
+// dimaksud Olan (bandar/whale posisi beda arah dari retail rame-rame).
+async function fetchBinancePositioning(symbol = 'BTCUSDT') {
+  const [globalRes, topRes] = await Promise.all([
+    fetchWithRetry(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=5m&limit=1`),
+    fetchWithRetry(`https://fapi.binance.com/futures/data/topLongShortPositionRatio?symbol=${symbol}&period=5m&limit=1`),
+  ]);
+  const g = (await globalRes.json())[0];
+  const t = (await topRes.json())[0];
+  return {
+    globalLongPct: parseFloat(g.longAccount) * 100,
+    globalShortPct: parseFloat(g.shortAccount) * 100,
+    globalRatio: parseFloat(g.longShortRatio),
+    topLongPct: parseFloat(t.longAccount) * 100,
+    topShortPct: parseFloat(t.shortAccount) * 100,
+    topRatio: parseFloat(t.longShortRatio),
+  };
+}
+
 // Coba tiap sumber berurutan, sumber pertama yang sukses menang -- gak nge-throw kecuali SEMUA gagal.
 async function tryInOrder(fns, label) {
   for (const fn of fns) {
@@ -77,22 +102,24 @@ async function tryInOrder(fns, label) {
 // Partial-OK by design -- tiap kategori independen, sebagian gagal TIDAK gugurin yang lain.
 // Field yang gagal jadi null, caller (sniperOrderLog.js sentimentLines) WAJIB handle null per-field.
 async function analyzeSentiment() {
-  const [fearGreed, fundingAndOI, longShort] = await Promise.all([
+  const [fearGreed, fundingAndOI, longShort, binancePositioning] = await Promise.all([
     tryInOrder([fetchFearGreed], 'Fear & Greed'),
     tryInOrder([fetchFundingAndOI_OKX, fetchFundingAndOI_Bybit], 'Funding/OI'),
     tryInOrder([fetchLongShortRatio_OKX, fetchLongShortRatio_Bybit], 'Long/Short Ratio'),
+    tryInOrder([fetchBinancePositioning], 'Binance Positioning (top vs global, resmi)'),
   ]);
   return {
     fearGreed,
     funding: fundingAndOI ? { rate: fundingAndOI.rate, nextFundingTime: fundingAndOI.nextFundingTime } : null,
     openInterest: fundingAndOI ? { openInterest: fundingAndOI.openInterest } : null,
     longShort,
+    binancePositioning,
   };
 }
 
 module.exports = {
   fetchFearGreed, fetchFundingAndOI_OKX, fetchFundingAndOI_Bybit,
-  fetchLongShortRatio_OKX, fetchLongShortRatio_Bybit, analyzeSentiment,
+  fetchLongShortRatio_OKX, fetchLongShortRatio_Bybit, fetchBinancePositioning, analyzeSentiment,
 };
 
 if (require.main === module) {

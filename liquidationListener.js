@@ -4,6 +4,26 @@
 // feedback-market-maker-mindset) -- phase 2 setelah positioning ratio (marketSentiment.js/
 // smartMoneyDivergenceMonitor.js) kebukti berguna.
 //
+// ⛔⛔⛔ STATUS 12 Sep 2026: BELUM JALAN -- JANGAN dipasang ke systemd sebelum ini kebukti fix.
+// Didiagnosa PANJANG (native WebSocket + package `ws`, dari 2 jaringan beda -- sandbox lokal DAN
+// VPS Vultr Singapore ini sendiri): koneksi genuinely kebuka (readyState OPEN, subscribe-ack
+// pertama DITERIMA), TAPI data streaming lanjutan (yang harusnya ngalir tiap detik) GAK PERNAH
+// nyampe, walau koneksi gak pernah error/close. Dikonfirmasi via kontrol: Binance SPOT WS
+// (stream.binance.com:9443) DAN Bybit Futures WS dua-duanya LANCAR JAYA dari IP Vultr yang SAMA
+// persis di waktu yang sama -- jadi BUKAN masalah kode/jaringan Vultr secara umum, SPESIFIK ke
+// Binance FUTURES WebSocket (fstream.binance.com) doang. REST API Futures (fapi.binance.com,
+// dipakai marketSentiment.js/smartMoneyDivergenceMonitor.js) TETAP lancar dari IP yang sama --
+// cuma jalur STREAMING real-time-nya yang mati.
+// Dugaan kuat (belum dikonfirmasi resmi Binance): mereka sengaja gak ngirim data real-time
+// Futures ke IP jenis VPS/cloud/datacenter (anti-bot/HFT, data paling sensitif mereka) -- REST
+// dan Spot WS dianggap kurang "gurih" buat dibatasin sekeras itu. Kalau teori ini benar, pindah
+// VPS ke region LAIN kemungkinan BESAR tetap kena (sama-sama IP datacenter) -- satu-satunya fix
+// yang mungkin kerja itu IP RESIDENTIAL (proxy berbayar atau jalan dari koneksi rumahan), yang
+// Olan putuskan BELUM worth dikejar (12 Sep 2026: "cukup sampai sini, simpan kodenya").
+// Kode ini DIBIARIN APA ADANYA (bukan dihapus) buat referensi/lanjutan kalau nanti ketemu solusi
+// baru (proxy residential murah, atau Binance ubah kebijakan). JANGAN diulang tes yang SAMA
+// tanpa ide baru -- udah didiagnosa tuntas 12 Sep 2026, lihat project-kaela-btc-sinyal.md.
+//
 // ⚠️ ARSITEKTUR BEDA dari SEMUA script lain di folder ini (yang cron-based, jalan-lalu-KELUAR
 // tiap 5/15 menit) -- ini PROSES NYALA TERUS 24 JAM, dikelola systemd (lihat
 // kaela-liquidation-listener.service), krn WebSocket butuh koneksi tetap kebuka buat nerima

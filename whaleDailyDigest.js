@@ -24,10 +24,17 @@ const WHALE_THRESHOLD_BTC = 1000;
 // pipeline trading Vultr ~13+ menit pas script ini ditambahin ke run-vultr-executor.sh (siklus
 // 15 menit, backup GH Actions yang sering telat) -- lock flock bareng dipegang script INI sampai
 // beres, sniperLiveMonitor/nyopetAutoTrader/multiAccountExecutor ANTRE di belakangnya. Diturunin
-// balik ke 20 (dekat versi real-time lama, 6 blok/run) -- catch-up backlog gede TETAP kelar,
-// cuma NYICIL beberapa siklus 15 menit berturut-turut (aman, state per-blok, gak ngulang dari
-// awal), bukan sekali gasak 300 blok yang bisa makan belasan menit dan nyandera fungsi lain.
-const MAX_BLOCKS_PER_RUN = 20;
+// balik ke 20 (dekat versi real-time lama, 6 blok/run).
+// ⛔ LANJUTAN 12 Sep 2026 (ketauan dari audit log mandiri, BUKAN laporan Olan): cap 20 TERNYATA
+// MASIH kena timeout 120 detik di ~25% siklus (131 dari 527 siklus selama 4 hari, dicek
+// local-executor.log) -- akar masalah: 20 blok = 40 panggilan API blockchain.info SEKUENSIAL
+// (fetchBlockHashAtHeight + fetchBlock per blok, gak paralel), gampang lewat 120 detik kalau
+// providernya lagi agak lambat pas lagi banyak tunggakan blok. Progress per-blok TETAP kesimpen
+// aman (gak ada data hilang/dobel), TAPI tiap kali timeout, seluruh pipeline trading ikut
+// ketunda sampai 2 menit (lock flock yang sama). Diturunin lagi ke 8 -- di steady-state (rata2
+// ~1 blok baru/siklus 15 menit) ini LEBIH dari cukup, backlog gede tetap kelar (nyicil lebih
+// banyak siklus), tapi worst-case sekuensial (16 panggilan API) jauh lebih aman dari batas 120s.
+const MAX_BLOCKS_PER_RUN = 8;
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return { lastProcessedHeight: null };

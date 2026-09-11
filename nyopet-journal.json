@@ -5,7 +5,7 @@
       "asset": "btc",
       "exchange": "binance",
       "direction": "buy",
-      "status": "floating",
+      "status": "closed_sl",
       "mode": "flag_bull",
       "patternType": "flag_bull",
       "entryPrice": 81276.4,
@@ -21,7 +21,12 @@
       "remainingFraction": 1,
       "realizedPnlUsd": 0,
       "triggeredAt": "2026-09-03T16:00:09.143Z",
-      "manualReason": null
+      "manualReason": null,
+      "exitPrice": 76528.66808277777,
+      "pnlUsd": -170.91834902000002,
+      "pnlPct": -79.92850714058535,
+      "closeReason": "OFFLINE",
+      "closedAt": "2026-09-11T03:30:08.548Z"
     }
   ],
   "demoEraStartedAt": "2026-09-04T18:50:27.852Z",
@@ -40,7 +45,7 @@
       "touches": null
     }
   },
-  "balanceUsdc": 4779.1158204,
+  "balanceUsdc": 4817.34247592,
   "balanceUsdt": 2.664e-9,
   "mexcBalanceUsdc": 0.00006016148
 }

@@ -8,8 +8,9 @@
 // lemah. Tau rezim SEKARANG bikin baca sinyal harian (macroData.js/cotReport.js) lebih akurat --
 // makna "DXY naik" beda kalau lagi rezim korelasi kuat vs lemah.
 //
-// Sumber data: Nasdaq Composite (NASDAQCOM) + DXY (DTWEXBGS) dari FRED (gratis, resmi, lihat
-// macroData.js), BTC/Emas dari Binance spot (data-api.binance.vision, gratis, gak kena geo-block).
+// Sumber data: Nasdaq Composite (NASDAQCOM) dari FRED (gratis, resmi, lihat macroData.js),
+// DXY dari Yahoo Finance DX-Y.NYB (13 Sep 2026, GANTI dari FRED DTWEXBGS -- lihat fetchDxyDailyRows
+// di bawah), BTC/Emas dari Binance spot (data-api.binance.vision, gratis, gak kena geo-block).
 
 const { fetchWithRetry } = require('./httpRetry');
 const { fetchFredSeriesRows } = require('./macroData');
@@ -20,6 +21,30 @@ async function fetchDailyCloses(symbol, limit) {
   const res = await fetchWithRetry(`${BINANCE_BASE}?symbol=${symbol}&interval=1d&limit=${limit}`);
   const raw = await res.json();
   return raw.map((c) => ({ date: new Date(c[6]).toISOString().slice(0, 10), value: parseFloat(c[4]) }));
+}
+
+// 13 Sep 2026 -- FIX bug label DXY (SAMA KELAS kayak yang udah dibenerin di macroData.js
+// fetchDxy() 30 Agu 2026): korelasi "Emas-vs-DXY" di sini SEBELUMNYA masih pakai FRED DTWEXBGS
+// (index broad-dollar RESMI tapi BEDA dari DXY yang dikenal umum, nilai absolut ~118 vs ~99-100)
+// -- gak separah kasus lama (di sini cuma jadi angka KORELASI, bukan level harga mentah yang bisa
+// disalahbaca), tapi konsepnya sama, jadi disamain juga ke sumber yang bener. Butuh HISTORI harian
+// (bukan cuma latest+prevClose kayak fetchDxy()) buat hitung korelasi rolling, jadi fetch
+// terpisah -- `range=6mo` (~180 hari kalender, DXY cuma trading weekday) biar cukup buat inner-join
+// 120 hari kalender yang dipake fetchBtcNasdaqRegime juga (buffer lebih gede drpd BTC yang
+// trading 7 hari/minggu).
+async function fetchDxyDailyRows() {
+  const res = await fetchWithRetry('https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1d&range=6mo', { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const data = await res.json();
+  const result = data.chart.result[0];
+  const timestamps = result.timestamp || [];
+  const closes = result.indicators.quote[0].close || [];
+  const rows = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    if (closes[i] == null) continue;
+    rows.push({ date: new Date(timestamps[i] * 1000).toISOString().slice(0, 10), value: closes[i] });
+  }
+  if (rows.length === 0) throw new Error('DXY historis: gak ada data valid dari Yahoo Finance');
+  return rows;
 }
 
 // Pearson correlation coefficient dari 2 array angka SEJAJAR (index sama = pasangan sama).
@@ -88,7 +113,7 @@ async function fetchBtcNasdaqRegime() {
 async function fetchGoldDxyRegime() {
   const [gold, dxyRows] = await Promise.all([
     fetchDailyCloses('PAXGUSDT', 120),
-    fetchFredSeriesRows('DTWEXBGS'),
+    fetchDxyDailyRows(),
   ]);
   const dxy = dxyRows.slice(-120);
   const { returnsA, returnsB, dates } = alignedDailyReturns(gold, dxy);

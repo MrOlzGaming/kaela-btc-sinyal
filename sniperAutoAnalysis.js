@@ -31,7 +31,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { analyze, fetchCandles } = require('./technicalAnalysis');
+const { analyze, fetchCandles, sma } = require('./technicalAnalysis');
 const { detectPatternSignal } = require('./chartPatterns');
 const { detectFvgSignal } = require('./fvgDetector');
 const { getActiveOrders, getClosedOrders, createOrder, updateOrder } = require('./sniperOrders');
@@ -199,10 +199,33 @@ async function main() {
     // perlu dilaporin -- riskDistance=0 / partialTp<=0, itu murni jaring pengaman teknis).
     const assetLabelTag = `Sniper (${assetCfg.label})`;
 
+    // (12 Sep 2026, permintaan Olan: "Sniper/Nyopet berlaku untuk semua BTC dan Emas") -- window
+    // bear BTC pakai siklus halving (isBtcBearWindow, gak butuh fetch data, murni tanggal). Emas
+    // GAK punya siklus halving -- Olan pilih definisi: harga di bawah SMA 200-hari (tren turun
+    // jangka panjang), butuh fetch candle dulu buat ngeceknya (beda dari BTC yang instan).
+    let bearWindowActive = false;
+    let bearWindowNote = null;
     if (assetCfg.useHalvingBearWindow && isBtcBearWindow(now)) {
-      console.log(`[SniperAutoAnalysis] ${assetCfg.label}: lagi window istirahat siklus halving (fase pasca-puncak, historis rawan bear) -- sinyal baru DIMATIKAN sementara.`);
-      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
-      wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
+      bearWindowActive = true;
+      bearWindowNote = 'lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash)';
+    } else if (assetKey === 'xau') {
+      try {
+        const xauCheckCandles = await fetchCandles(assetCfg.symbol, '1d', 220);
+        const xauCloses = xauCheckCandles.map((c) => c.close);
+        const xauSma200 = sma(xauCloses, 200);
+        if (xauSma200 !== null && xauCloses[xauCloses.length - 1] < xauSma200) {
+          bearWindowActive = true;
+          bearWindowNote = 'harga lagi di BAWAH SMA 200-hari (tren turun jangka panjang)';
+        }
+      } catch (e) {
+        console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal cek window bear SMA200 (${e.message}), anggap bukan bear giliran ini.`);
+      }
+    }
+
+    if (bearWindowActive) {
+      console.log(`[SniperAutoAnalysis] ${assetCfg.label}: ${bearWindowNote} -- sinyal baru DIMATIKAN sementara.`);
+      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`);
+      wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`);
       // (12 Sep 2026, kebijakan baru Olan -- lihat project-kaela-btc-sinyal.md "GANTUNGAN STRATEGI")
       // -- window BEAR SEKARANG bukan cuma "senyap total": Kaela tetap SCAN pola short (bear
       // flag/rising wedge, allowShort:true) SEBAGAI SINYAL doang -- gak pernah auto-eksekusi

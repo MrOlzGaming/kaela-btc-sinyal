@@ -66,14 +66,24 @@ const { isBtcBearWindow } = require('./halvingBearWindow');
 // sama" -- lanjutan Fase 1 Sniper) -- KONTEKS doang, BELUM ngaruh eksekusi/gating apapun. Cuma
 // keisi buat BTC (gak ada data positioning Binance buat Emas/MEXC). Balikin { line, gap } --
 // `gap` disimpen ke order buat riset korelasi nanti, `line` yang ditempel ke pesan WA.
-async function fetchSmartMoneyContext(assetKey) {
+// `direction` (13 Sep 2026, BUG NYATA ketemu Olan sendiri -- "cek analisa kritik sendiri", pesan
+// SHORT demo pertama nunjukin "top trader condong LONG (dukung posisi ini)" padahal posisinya
+// SHORT -- kontradiksi telak) -- SEBELUMNYA `gap>5` SELALU diartiin "dukung posisi ini" tanpa
+// peduli arah, karena Nyopet/Sniper dulu LONG-ONLY selamanya (asumsi itu gak pernah ketauan salah
+// sampai short beneran jalan hari ini). Interpretasi SEKARANG dibalik buat SHORT: gap>5 (smart
+// money condong long) itu MELAWAN tesis short (bukan dukung), gap<-5 (smart money condong short)
+// itu YANG mendukung short.
+async function fetchSmartMoneyContext(assetKey, direction = 'buy') {
   if (assetKey !== 'btc') return { line: '', gap: null };
   try {
     const p = await fetchBinancePositioning('BTCUSDT');
     const gap = Number((p.topLongPct - p.globalLongPct).toFixed(2));
-    const arah = gap > 5 ? 'JUGA condong LONG (dukung posisi ini)'
-      : gap < -5 ? 'kurang antusias/malah condong SHORT (sinyal ini kesannya murni gerakan retail, waspada)'
-      : 'netral, gak ada sinyal tambahan jelas';
+    const isLong = direction === 'buy';
+    const arah = gap > 5
+      ? (isLong ? 'JUGA condong LONG (dukung posisi ini)' : 'condong LONG (MELAWAN tesis short ini, waspada)')
+      : gap < -5
+        ? (isLong ? 'kurang antusias/malah condong SHORT (sinyal ini kesannya murni gerakan retail, waspada)' : 'JUGA condong SHORT (dukung posisi ini)')
+        : 'netral, gak ada sinyal tambahan jelas';
     return { line: `🐋 Smart Money (riset, BELUM jadi filter): top trader ${p.topLongPct.toFixed(0)}% long vs akun global ${p.globalLongPct.toFixed(0)}% long -- ${arah}`, gap };
   } catch (e) {
     console.log('[NyopetAutoTrader] Gagal ambil konteks smart-money (dilewatin, gak fatal):', e.message);
@@ -316,7 +326,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // dari pattern (patternReason) di kasus itu, bukan dari field ini.
       manualReason: sig.manualReason || null,
     };
-    const smartMoney = await fetchSmartMoneyContext(assetKey);
+    const smartMoney = await fetchSmartMoneyContext(assetKey, sig.direction);
     order.smartMoneyGapAtEntry = smartMoney.gap;
     const journal = loadJournal();
     journal.orders.push(order);

@@ -267,7 +267,7 @@ function fundingPct(rate) {
 // Partial-OK -- tiap sumber independen (lihat marketSentiment.js), field yang gagal
 // (geo-block derivatif dari runner GH Actions, pernah kejadian 9 Agu 2026) ditandai jelas,
 // BUKAN bikin seluruh lapis sentimen ilang.
-function sentimentLines(sentiment) {
+function sentimentLines(sentiment, direction = 'buy') {
   if (!sentiment) return ['Sentimen & posisi pasar: gagal ambil data kali ini (dilewatin, gak fatal).'];
   const { fearGreed, funding, openInterest, longShort, binancePositioning } = sentiment;
   return [
@@ -275,7 +275,7 @@ function sentimentLines(sentiment) {
     funding ? `Funding Rate: ${fundingPct(funding.rate)} (${funding.rate >= 0 ? 'long bayar short' : 'short bayar long'})` : 'Funding Rate: gagal ambil data.',
     openInterest ? `Open Interest: ${openInterest.openInterest.toLocaleString('en-US', { maximumFractionDigits: 0 })} BTC` : 'Open Interest: gagal ambil data.',
     longShort ? `Long/Short Ratio (akun): ${(longShort.longAccount * 100).toFixed(1)}% long / ${(longShort.shortAccount * 100).toFixed(1)}% short` : 'Long/Short Ratio: gagal ambil data.',
-    ...smartMoneyContextLine(binancePositioning),
+    ...smartMoneyContextLine(binancePositioning, direction),
   ];
 }
 
@@ -287,12 +287,19 @@ function sentimentLines(sentiment) {
 // SENDIRI disimpen ke `sniperOrders.js` (`smartMoneyGapAtEntry`) buat riset korelasi NANTI
 // (menang/kalah vs gap saat entry) -- backtest beneran baru layak setelah histori numpuk cukup
 // (lihat smartMoneyResearchLog.js), Fase 2 (jadi filter aktif) NUNGGU itu, BUKAN sekarang.
-function smartMoneyContextLine(binancePositioning) {
+// `direction` (13 Sep 2026, BUG NYATA ketemu Olan -- "cek analisa kritik sendiri" ke pesan SHORT
+// demo Nyopet pertama, kontradiksi persis sama yang ternyata JUGA ada di sini) -- komentar lama
+// "Sniper BUY-ONLY" udah GAK BENER lagi sejak short demo diaktifin hari ini. Interpretasi DIBALIK
+// buat short: gap>5 (smart money condong long) MELAWAN tesis short, gap<-5 YANG mendukung short.
+function smartMoneyContextLine(binancePositioning, direction = 'buy') {
   if (!binancePositioning) return [];
   const gap = binancePositioning.topLongPct - binancePositioning.globalLongPct;
-  const arah = gap > 5 ? 'JUGA condong LONG (dukung breakout ini)'
-    : gap < -5 ? 'kurang antusias/malah condong SHORT (breakout ini kesannya murni gerakan retail, waspada)'
-    : 'netral, gak ada sinyal tambahan jelas';
+  const isLong = direction === 'buy';
+  const arah = gap > 5
+    ? (isLong ? 'JUGA condong LONG (dukung breakout ini)' : 'condong LONG (MELAWAN tesis short ini, waspada)')
+    : gap < -5
+      ? (isLong ? 'kurang antusias/malah condong SHORT (breakout ini kesannya murni gerakan retail, waspada)' : 'JUGA condong SHORT (dukung breakout ini)')
+      : 'netral, gak ada sinyal tambahan jelas';
   return [`🐋 Smart Money (riset, BELUM jadi filter): top trader ${binancePositioning.topLongPct.toFixed(0)}% long vs akun global ${binancePositioning.globalLongPct.toFixed(0)}% long -- ${arah}`];
 }
 
@@ -413,7 +420,7 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
     ...coreLines,
     ...(ta ? ['', '📊 ANALISA TEKNIKAL', ...taLines(ta)] : []),
     ...(asset.key === 'btc' ? ['', '🔥 LIQUIDATION HEATMAP', liqLine()] : []),
-    ...(sentiment ? ['', '🌊 SENTIMEN & POSISI PASAR', ...sentimentLines(sentiment), ...(extremeNote ? ['', extremeNote] : [])] : []),
+    ...(sentiment ? ['', '🌊 SENTIMEN & POSISI PASAR', ...sentimentLines(sentiment, order.direction), ...(extremeNote ? ['', extremeNote] : [])] : []),
     ...(onchain ? ['', '⛓️ ON-CHAIN METRICS', ...onchainLines(onchain)] : []),
     '',
     winRateLine,

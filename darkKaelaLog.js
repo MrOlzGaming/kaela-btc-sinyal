@@ -155,13 +155,17 @@ function _nyopetBadge(pos, isDemo) {
 // (aksi/label baris pertama, arah LONG/SHORT, angka PnL final) -- field lain TETAP polos biar gak
 // kebanyakan bold (kontras ilang kalau semua ditebelin). `idrRate` null/gagal -> fmtUsdWithIdr
 // sendiri fallback USD doang, gak pernah gugurin pesan gara-gara kurs gagal kebaca.
+// (13 Sep 2026, permintaan Olan: "tiru [app Binance] tapi ga persis, per baris gitu biar gak
+// tumpukan" -- screenshot app Binance-nya 1 metrik = 1 baris jelas, beda dari sini yang tadinya
+// numpuk "TP1: X · SL: Y" di 1 baris) -- TP dan SL SEKARANG baris terpisah, gampang di-skim.
 function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
-TP1: ${fmtUsd(pos.tp)} · SL: ${fmtUsd(pos.sl)}
+TP1: ${fmtUsd(pos.tp)}
+SL: ${fmtUsd(pos.sl)}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
 Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}

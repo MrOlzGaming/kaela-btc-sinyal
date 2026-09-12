@@ -75,6 +75,12 @@ function createOrder(order, date = new Date()) {
     remainingFraction: 1,
     trailSmaLen: order.trailSmaLen ?? null,
     realizedPnlUsd: 0,
+    // smartMoneyGapAtEntry (12 Sep 2026, riset "filter smart-money buat Sniper" -- Fase 1,
+    // KONTEKS doang, BELUM ngaruh eksekusi) -- gap top-trader vs akun-global (marketSentiment.js
+    // fetchBinancePositioning) pas sinyal ini ketemu. Cuma keisi buat BTC (Emas gak ada data
+    // positioning Binance). null = gagal fetch ATAU aset selain BTC -- dua-duanya "gak ada data",
+    // dibedain gak perlu (gak ngaruh eksekusi apapun, murni buat backtest korelasi NANTI).
+    smartMoneyGapAtEntry: order.smartMoneyGapAtEntry ?? null,
     // silentTest (14 Agu 2026, buat order trial/simulasi) -- tetap kecatat NORMAL di web/jurnal/
     // bankroll, tapi sniperOrderMonitor.js WAJIB skip WA SELAMANYA buat order ini (beda dari
     // isWaMuted() yang cuma nunda sementara).

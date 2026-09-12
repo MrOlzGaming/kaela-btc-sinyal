@@ -308,13 +308,20 @@ async function main() {
         : `Breakout pola ${patternLabel} -- candle harian ${assetCfg.label} CLOSE ${cand.direction === 'buy' ? 'di atas' : 'di bawah'} batas pola ($${dailyClose.toLocaleString('en-US')}). SL nempel lebar pola itu sendiri (nyawa ${nyawaPct.toFixed(1)}%), bukan zona jauh. Deteksi otomatis chartPatterns.js.`;
       const tpReasoning = `Target tahap 1 (jual separuh): ${PARTIAL_RR}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}. Sisanya di-trail pakai SMA${TRAIL_SMA_LEN} harian (SL digeser breakeven abis tahap 1).`;
 
+      // 12 Sep 2026, riset "filter smart-money buat Sniper" Fase 1 -- KONTEKS doang buat sekarang
+      // (lihat sentimentLines/smartMoneyContextLine di sniperOrderLog.js), disimpen di sini biar
+      // bisa dikorelasiin ke hasil (menang/kalah) NANTI pas histori numpuk cukup buat backtest.
+      const smartMoneyGapAtEntry = sentiment && sentiment.binancePositioning
+        ? Number((sentiment.binancePositioning.topLongPct - sentiment.binancePositioning.globalLongPct).toFixed(2))
+        : null;
+
       const created = createOrder({
         asset: assetKey, mode: cand.mode,
         direction: cand.direction, strategyType: 'breakout', triggerPrice: livePrice,
         confirmationNote, tpReasoning, tp: partialTp, sl: cand.sl,
         exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
         patternType: cand.patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
-        gapCreatedTime: cand.gapCreatedTime ?? null,
+        gapCreatedTime: cand.gapCreatedTime ?? null, smartMoneyGapAtEntry,
         // 29 Agu 2026: teks lama bilang "posisi BAYANGAN, gak ada uang bergerak" -- itu udah
         // OUTDATED sejak localLiveExecutor.js jalan (22 Agu). Sinyal ini eksekusi LIVE beneran
         // ke Binance Demo di siklus lokal berikutnya, bukan cuma catatan.

@@ -235,13 +235,31 @@ function fundingPct(rate) {
 // BUKAN bikin seluruh lapis sentimen ilang.
 function sentimentLines(sentiment) {
   if (!sentiment) return ['Sentimen & posisi pasar: gagal ambil data kali ini (dilewatin, gak fatal).'];
-  const { fearGreed, funding, openInterest, longShort } = sentiment;
+  const { fearGreed, funding, openInterest, longShort, binancePositioning } = sentiment;
   return [
     fearGreed ? `Fear & Greed Index: ${fearGreed.value}/100 (${fearGreed.classification})` : 'Fear & Greed Index: gagal ambil data.',
     funding ? `Funding Rate: ${fundingPct(funding.rate)} (${funding.rate >= 0 ? 'long bayar short' : 'short bayar long'})` : 'Funding Rate: gagal ambil data.',
     openInterest ? `Open Interest: ${openInterest.openInterest.toLocaleString('en-US', { maximumFractionDigits: 0 })} BTC` : 'Open Interest: gagal ambil data.',
     longShort ? `Long/Short Ratio (akun): ${(longShort.longAccount * 100).toFixed(1)}% long / ${(longShort.shortAccount * 100).toFixed(1)}% short` : 'Long/Short Ratio: gagal ambil data.',
+    ...smartMoneyContextLine(binancePositioning),
   ];
+}
+
+// 12 Sep 2026, permintaan Olan ("mulai rancang filter smart-money buat Sniper") -- Fase 1:
+// KONTEKS doang, BELUM ngaruh eksekusi/gating apapun -- cuma nempelin bacaan smart-money (top
+// trader vs akun global, resmi Binance) ke pesan sinyal. Karena Sniper BUY-ONLY (semua sinyal
+// LONG), pertanyaannya simpel: smart money JUGA condong long (dukung breakout ini) atau malah
+// kurang antusias/condong short (breakout ini kesannya murni gerakan retail)? Angka gap-nya
+// SENDIRI disimpen ke `sniperOrders.js` (`smartMoneyGapAtEntry`) buat riset korelasi NANTI
+// (menang/kalah vs gap saat entry) -- backtest beneran baru layak setelah histori numpuk cukup
+// (lihat smartMoneyResearchLog.js), Fase 2 (jadi filter aktif) NUNGGU itu, BUKAN sekarang.
+function smartMoneyContextLine(binancePositioning) {
+  if (!binancePositioning) return [];
+  const gap = binancePositioning.topLongPct - binancePositioning.globalLongPct;
+  const arah = gap > 5 ? 'JUGA condong LONG (dukung breakout ini)'
+    : gap < -5 ? 'kurang antusias/malah condong SHORT (breakout ini kesannya murni gerakan retail, waspada)'
+    : 'netral, gak ada sinyal tambahan jelas';
+  return [`🐋 Smart Money (riset, BELUM jadi filter): top trader ${binancePositioning.topLongPct.toFixed(0)}% long vs akun global ${binancePositioning.globalLongPct.toFixed(0)}% long -- ${arah}`];
 }
 
 // Lapis ke-5 (9 Agu 2026): On-chain metrics -- SOPR + NUPL (lebih pas jangka pendek-menengah

@@ -229,7 +229,17 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
     } else if (prevAmt !== 0 && liveAmt === 0) {
       // MANUAL CLOSE (full) -- posisi yang tadinya kecatat sekarang ilang total.
-      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
+      // ⛔ FIX BUG NYATA 12 Sep 2026 (Olan: "riwayat jurnal kalah semua, padahal aslinya surplus")
+      // -- SEBELUMNYA pakai state.lastCheckedAtMs (~siklus TERAKHIR doang, ~15 menit), BUKAN
+      // prev.openedAtMs (posisi ini SEBENARNYA dibuka). Kalau posisi kepegang BERJAM-JAM lintas
+      // banyak siklus reconcile tanpa ADD/REDUCE/FLIP (cuma HOLD diam), PnL dari siklus2 awal itu
+      // HILANG TOTAL dari hitungan -- cuma window siklus terakhir sebelum close yang kehitung.
+      // Dibuktikan lewat rekonsiliasi manual ke income history asli Binance (matchJournalToIncomeV2,
+      // 12 Sep 2026): 22 entry BTCUSDC/BTCUSDT selisih drastis dari angka asli (mis. -$0.99 tercatat
+      // vs -$14.82 asli, atau -$0.46 tercatat vs +$15.59 asli) -- 24 entry sudah dikoreksi manual ke
+      // Sheet. `_syncIncomeStore` nyimpen store PERSISTEN (tradeHistoryStore.js), jadi filter mundur
+      // ke prev.openedAtMs AMAN walau lebih jauh dari state.lastCheckedAtMs -- datanya udah ke-cache.
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, prev.openedAtMs || state.lastCheckedAtMs, incomeStore);
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry gagal:', e.message));
@@ -252,7 +262,12 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       }
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) < Math.abs(prevAmt)) {
-      // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol.
+      // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol. SENGAJA TETAP
+      // state.lastCheckedAtMs (BUKAN prev.openedAtMs kayak CLOSE/FLIP di bawah) -- pnl di sini
+      // CUMA buat pesan WA "PnL sebagian" (potongan INI doang), gak pernah ditulis ke Sheet Journal
+      // (PnlUsd final Sheet baru diisi pas posisi BENERAN close/flip, udah nyakup seluruh masa
+      // pegang lewat prev.openedAtMs di situ) -- kalau dipakein prev.openedAtMs di sini juga,
+      // pesan tiap reduce jadi nunjukin PnL KUMULATIF sejak awal buka, bukan potongan ini doang.
       const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
       const remainMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
       const todaysPnl = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
@@ -263,7 +278,10 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) !== Math.sign(liveAmt)) {
       // FLIP arah (short jadi long / sebaliknya) -- exchange eksekusi ini 1 order gede (bukan 2
       // order kepisah) -- hitung PnL close arah lama, catat posisi baru sebagai entry FRESH.
-      const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
+      // Fix sama kayak MANUAL CLOSE di atas (12 Sep 2026) -- posisi ARAH LAMA yang lagi di-close di
+      // sini bisa aja kepegang lintas banyak siklus diam, prev.openedAtMs nyakup SELURUH masa pegang
+      // arah lama itu (BUKAN cuma siklus terakhir kayak state.lastCheckedAtMs).
+      const pnl = await realizedPnlSince(exchange, client, phone, symbol, prev.openedAtMs || state.lastCheckedAtMs, incomeStore);
       if (prev.entryId) {
         await kaela.updateJournalEntry(prev.entryId, { status: 'closed', closedAt: new Date(nowMs).toISOString(), pnlUsd: pnl || 0 })
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry (flip close) gagal:', e.message));

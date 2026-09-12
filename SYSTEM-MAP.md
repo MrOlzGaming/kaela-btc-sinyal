@@ -47,7 +47,7 @@ GAS) -- BEDA folder, BEDA repo, mapping ini GAK nyakup itu.
 | Strategi | Status | File utama | Catatan |
 |---|---|---|---|
 | Sniper (BTC+XAU, chart pattern+FVG, harian) | ✅ LIVE | `sniperAutoAnalysis.js` | ZERO konfirmasi eksternal selain window halving BTC. Short DILARANG PERMANEN (`feedback-nyopet-buyonly`-setara, terbukti di semua backtest). Gap smart-money (BTC doang) SEKARANG ditempel sbg KONTEKS di tiap sinyal (`smartMoneyGapAtEntry`, `sniperOrderLog.js`) -- Fase 1, BELUM jadi filter aktif |
-| Nyopet chart-pattern/FVG (4 jam) | ✅ LIVE | `nyopetAutoTrader.js` (`processAsset`) | Konfirmasi DXY (lolos backtest split-era+sensitivitas parameter) |
+| Nyopet chart-pattern/FVG (4 jam) | ✅ LIVE | `nyopetAutoTrader.js` (`processAsset`) | Konfirmasi DXY (lolos backtest split-era+sensitivitas parameter). Gap smart-money (BTC doang) juga ditempel sbg KONTEKS (`fetchSmartMoneyContext`) -- Fase 1, BELUM jadi filter aktif, sama pola kayak Sniper |
 | Nyopet Fed Dovish Grid | ✅ LIVE | `nyopetAutoTrader.js` (`detectFedGridSignal`) | Trigger jadwal FOMC/NFP + konfirmasi tren SMA480, basket multi-layer |
 | Nyopet Econ-Reaction Scalp | ✅ LIVE, **FOMC DOANG** | `econCalendarLiveMonitor.js` | NFP di-**PAUSE** (gagal Deflated Sharpe+Permutation Test), CPI/PPI **DITOLAK**, versi **long-only DITOLAK JUGA** (12 Sep 2026) -- edge-nya emang gak cukup kuat, bukan soal arah |
 | Musiman DCA (real Olan + shadow Kaela) | ✅ LIVE | `spotDca.js` | SENGAJA tanpa filter apapun -- kesederhanaan = kekuatannya |

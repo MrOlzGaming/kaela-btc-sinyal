@@ -81,8 +81,22 @@ jobs:
           git config user.email "kaela-bot@users.noreply.github.com"
           END=$(( $(date +%s) + 5*3600 + 20*60 ))
           while [ "$(date +%s)" -lt "$END" ]; do
-            node darkKaelaMonitor.js || echo "::warning::darkKaelaMonitor.js error kali ini, lanjut loop"
-            node nyopetPositionMonitor.js || echo "::warning::nyopetPositionMonitor.js error kali ini, lanjut loop"
+            # 13 Sep 2026 ("semua otomatisasi harus di mandorin") -- SEBELUM ini, error di sini
+            # cuma ditelan `::warning::` (gak bikin step failed DI GITHUB SEKALIPUN, apalagi lapor
+            # WA) -- workflow ini SATU-SATUNYA otomatisasi yang jadwalnya beneran aktif sendiri di
+            # luar siklus VPS, jadi gagal di sini = gagal BENERAN diam-diam, gak ada siapapun tau.
+            # Fix: tee output ke log sementara, scan ERROR/GAGAL (kata yang emang UDAH dipakai
+            # `console.error` di kedua script ini), lapor ke Watchdog GAS via reportCycleErrors.js
+            # -- SAMA PERSIS mekanisme yang dipercaya Olan buat run-vultr-executor.sh (dedup+
+            # cooldown di sisi GAS, gak akan spam walau kepanggil tiap iterasi 5 menit).
+            ITER_LOG=$(mktemp)
+            node darkKaelaMonitor.js 2>&1 | tee "$ITER_LOG"
+            node nyopetPositionMonitor.js 2>&1 | tee -a "$ITER_LOG"
+            ITER_ERRORS=$(grep -i "ERROR\|GAGAL" "$ITER_LOG" || true)
+            if [ -n "$ITER_ERRORS" ]; then
+              node reportCycleErrors.js 'github-dark-kaela' "$ITER_ERRORS" || true
+            fi
+            rm -f "$ITER_LOG"
             for f in dark-kaela-state.json nyopet-journal.json; do [ -f "$f" ] && git add -f "$f"; done
             if ! git diff --staged --quiet; then
               git commit -m "Auto: dark kaela monitor $(date -u +%Y-%m-%dT%H:%M)"

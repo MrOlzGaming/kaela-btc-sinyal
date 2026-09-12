@@ -135,7 +135,7 @@ function formatClosed(order, idrRate, todaysPnl) {
   const asset = assetOf(order);
   const won = order.status === 'closed_tp';
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
-  const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)' };
+  const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)', WINDOW_FLIP: '🔄 TUTUP PAKSA -- WINDOW REZIM GANTI' };
   const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
     `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ${exitLabel}`,

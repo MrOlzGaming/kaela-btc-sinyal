@@ -140,6 +140,11 @@ const CLOSE_REASON_LABEL = {
   // basket, bukan harga tunggal) tapi teksnya sengaja tetap simpel/sama gaya biar konsisten dibaca.
   TP: 'Take Profit agregat kena', TIMEOUT_GRID: 'Hold maksimal 7 hari kesentuh, tutup basket',
   REVERSAL: 'Sinyal balik arah (hawkish) muncul, tutup duluan biar aman',
+  // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long lagi, tutup walau rugi..
+  // takut kena bom bear" / "saat window bear habis jangan short, tutup walau rugi.. takut kena
+  // tiang ijo") -- window regime ganti, posisi yang lagi kebuka jadi ARAH SALAH buat rezim baru,
+  // ditutup PAKSA walau rugi drpd nekat nunggu SL asli kena di kondisi yang udah berubah total.
+  WINDOW_FLIP: 'Window rezim ganti (bull<->bear), posisi ini jadi arah salah -- ditutup paksa demi keamanan (walau rugi)',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }

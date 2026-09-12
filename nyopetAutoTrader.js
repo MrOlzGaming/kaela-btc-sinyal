@@ -108,6 +108,17 @@ const TRAIL_SMA_LEN_4H = 60;
 const PARTIAL_RR = 2; // target tahap 1 = 2x risiko, sama kayak Sniper
 const CANDLES_NEEDED_4H = 1560 + 260; // warmup + buffer buat window terlebar (wedge 240)
 
+// (13 Sep 2026, diekstrak biar dipakai bareng 2 tempat: gating sinyal baru DAN cek force-close
+// posisi yang udah kebuka pas window ganti) -- BTC pakai isBtcBearWindow (siklus halving, gak
+// butuh candle). Emas pakai SMA200-di-4H (reuse FVG_TREND_SMA_LEN_4H=1200, `candles4h` WAJIB
+// dioper caller -- gak fetch sendiri di sini biar caller bisa reuse fetch yang udah ada kalau ada).
+function isBearWindowFor(assetKey, candles4h) {
+  if (assetKey === 'btc') return isBtcBearWindow(new Date());
+  if (!candles4h || candles4h.length === 0) return false;
+  const trendSma = sma(candles4h.map((c) => c.close), FVG_TREND_SMA_LEN_4H);
+  return trendSma !== null && candles4h[candles4h.length - 1].close < trendSma;
+}
+
 // Binance klines API CAP di 1000 candle per request (dicek langsung 30 Agu 2026 -- limit=1820
 // tetap balikin 1000 doang, BUKAN nolak/error, jadi diem-diem kepotong kalau gak di-paginate).
 // FVG_TREND_SMA_LEN_4H=1200 BUTUH lebih dari sekali fetch. Paginate MUNDUR dari sekarang pakai
@@ -519,6 +530,24 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
       const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
 
+      // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long auto lagi, tutup walau
+      // rugi.. takut kena bom bear" / sebaliknya buat bear->bull, short) -- KHUSUS demo (real gak
+      // kena aturan ini, "kalo demo full auto aja"): kalau posisi yang lagi kebuka SEKARANG jadi
+      // ARAH SALAH buat window rezim SAAT INI (long pas udah bear, atau short pas udah bull),
+      // tutup PAKSA sekarang juga, walau rugi -- drpd nekat nunggu SL asli kena di kondisi pasar
+      // yang udah beda rezim total. Cek TIAP siklus (bukan cuma pas transisi persis) -- lebih
+      // simpel & robust drpd nyimpen state "window sebelumnya", dan efeknya sama persis.
+      if (isDemo) {
+        const windowCandles = assetKey === 'btc' ? null : await fetchCandles4hPaginated(zoneSymbol, FVG_TREND_SMA_LEN_4H + 10).catch(() => null);
+        const bearNow = isBearWindowFor(assetKey, windowCandles);
+        const wrongSide = (floating.direction === 'buy' && bearNow) || (floating.direction === 'sell' && !bearNow);
+        if (wrongSide) {
+          console.log(`[NyopetAutoTrader] ${assetCfg.label}: window rezim ganti, posisi ${floating.direction} ini jadi ARAH SALAH (bearNow=${bearNow}) -- tutup PAKSA demi keamanan.`);
+          await closePosition(assetCfg, floating, { alreadyClosed: false, reason: 'WINDOW_FLIP' });
+          return;
+        }
+      }
+
       // ⚠️ BUG KRITIS ketemu 31 Agu 2026 (posisi REAL Olan BTCUSDC sell, dibuka 28 Agu SEBELUM
       // rewrite v2 -- skema LAMA liqPrice/tp/zonePrice, GAK PUNYA field sl/partialTp sama sekali).
       // hitSl/hitPartial di bawah baca floating.sl/floating.partialTp -- `livePrice >= undefined`
@@ -647,15 +676,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // FVG_TREND_SMA_LEN_4H=1200 4H-candle yang UDAH DIFETCH di atas, gak perlu fetch tambahan).
     // Akun REAL TETAP allowShort:false SELAMANYA di sini (short real cuma lewat sinyal informasional
     // sniperAutoAnalysis.js, dieksekusi manual member -- lihat project-kaela-btc-sinyal.md).
-    let inBearWindow = false;
-    if (isDemo) {
-      if (assetKey === 'btc') {
-        inBearWindow = isBtcBearWindow(new Date());
-      } else {
-        const trendSma = sma(candles4h.map((c) => c.close), FVG_TREND_SMA_LEN_4H);
-        inBearWindow = trendSma !== null && candles4h[i].close < trendSma;
-      }
-    }
+    const inBearWindow = isDemo && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
 
     let sig = detectPatternSignal(candles4h, i, patternParams);

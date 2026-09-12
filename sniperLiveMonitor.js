@@ -25,6 +25,37 @@ const binanceClient = require('./binanceExecutor');
 const mexcClient = require('./mexcExecutor');
 const { fetchCandles, sma } = require('./technicalAnalysis');
 const { applyRealizedPnl } = require('./kaelaBankroll');
+const { isBtcBearWindow } = require('./halvingBearWindow');
+const { isTestnet } = require('./killSwitch');
+
+// (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long lagi tutup walau rugi..
+// takut kena bom bear" / sebaliknya bear->bull buat short) -- SAMA konsep+definisi window kayak
+// sniperAutoAnalysis.js (BTC=isBtcBearWindow siklus halving, Emas=SMA200 harian) -- KHUSUS demo
+// (isTestnet()===true; real gak auto-short jadi gak relevan buat cabang ini, "kalo demo full
+// auto aja"). Dicek TIAP siklus, bukan cuma pas transisi persis -- lebih simpel & robust.
+async function isBearWindowNow(assetCfg) {
+  if (assetCfg.key === 'btc') return isBtcBearWindow(new Date());
+  try {
+    const daily = await fetchCandles(assetCfg.symbol, '1d', 220);
+    const closes = daily.map((c) => c.close);
+    const trendSma = sma(closes, 200);
+    return trendSma !== null && closes[closes.length - 1] < trendSma;
+  } catch (e) {
+    console.log(`[SniperLiveMonitor] Gagal cek window bear Emas (${e.message}), anggap bukan bear.`);
+    return false;
+  }
+}
+
+// Force-close paksa (bukan lewat SL/TP native -- market order langsung) -- reuse pola
+// emergencyCloseMarket yang UDAH ADA di executor, plus rekonsiliasi income history buat PnL final
+// yang AKURAT (bukan estimasi harga), sama presisi kayak jalur "posisi abis" yang udah ada di sini.
+async function forceCloseWindowFlip(order, assetCfg, exec, execSymbol, posQty) {
+  console.log(`[SniperLiveMonitor] ${assetCfg.label} ${order.id} -- window rezim ganti, posisi ${order.direction} ini jadi ARAH SALAH -- tutup PAKSA demi keamanan (walau rugi).`);
+  await exec.cancelAllOpenOrders(execSymbol).catch(() => {}); // aman no-op kalau emang gak ada order nempel
+  await exec.emergencyCloseMarket({ symbol: execSymbol, direction: order.direction, quantity: posQty });
+  const realPnl = await fetchRealizedPnlSince(execSymbol, new Date(order.triggeredAt).getTime(), assetCfg.exchange);
+  finalize(order, realPnl, 'WINDOW_FLIP');
+}
 
 // ⚠️ Sama pola fix 31 Agu 2026 kayak localLiveExecutor.js (lihat komentar di sana) -- file ini
 // JUGA ketinggalan dari migrasi MEXC. Belum pernah nyata kena karena main() cuma proses order
@@ -50,7 +81,7 @@ async function fetchRealizedPnlSince(symbol, startTime, exchange = 'binance') {
   return income.reduce((s, inc) => s + parseFloat(inc.income), 0);
 }
 
-function finalize(order, realPnlRaw) {
+function finalize(order, realPnlRaw, reason = null) {
   // ⛔ FIX 12 Sep 2026 (dari audit bug "posisi ngarang" nyopetAutoTrader.js -- Olan: "curigain")
   // -- `fetchRealizedPnlSince` jumlahin SEMUA income symbol ini sejak triggeredAt, SAMA
   // kerentanannya kayak versi Nyopet yang udah kebukti ngarang kalau simbol yang sama kesentuh
@@ -68,6 +99,7 @@ function finalize(order, realPnlRaw) {
   }
   updateOrder(order.id, {
     status: realPnl >= 0 ? 'closed_tp' : 'closed_sl', pnlUsd: realPnl, closedAt: new Date().toISOString(),
+    closeReason: reason || undefined,
     liveExecution: { ...order.liveExecution, fullyClosedAt: new Date().toISOString() },
   });
   applyRealizedPnl(realPnl, 'live_closed', new Date());
@@ -121,6 +153,15 @@ async function processOrder(order) {
   // (fix MEXC routing) krn errornya baru KETAHUAN sekarang, posisi MEXC pertama yang beneran
   // dicek di sini abis routing dibenerin. Guard PERSIS pola sniperMultiAccount.js yang udah bener.
   const posQty = posRisk ? Math.abs(parseFloat(posRisk.positionAmt)) : 0;
+
+  if (posQty > 0 && isTestnet()) {
+    const bearNow = await isBearWindowNow(assetCfg);
+    const wrongSide = (order.direction === 'buy' && bearNow) || (order.direction === 'sell' && !bearNow);
+    if (wrongSide) {
+      await forceCloseWindowFlip(order, assetCfg, exec, execSymbol, posQty);
+      return;
+    }
+  }
 
   if (!le.leg2) {
     if (posQty <= 0) {

@@ -124,7 +124,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
       const updated = updateOrder(order.id, {
         status: 'floating', entryPrice: last.close, triggeredAt: new Date(last.closeTime).toISOString(),
       });
-      const msg = formatTriggered(updated);
+      const msg = formatTriggered(updated, idrRate);
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, 'order kena trigger', order.silentTest);

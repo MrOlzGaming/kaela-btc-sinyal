@@ -7,14 +7,20 @@ function fmtUsd(n) {
   return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1000 ? 2 : 0 });
 }
 
-function formatSignalCore({ direction, entryPrice, tp, sl, leverage, marginUsd, reason }) {
+// fmtUsdWithIdr (13 Sep 2026, permintaan Olan "nilai investasi juga di rupiahin dalam kurung..
+// berlaku semua") -- REUSE dari darkKaelaLog.js (SATU sumber format IDR), dipakai KHUSUS buat
+// Margin (nilai yang di-invest) -- entryPrice/TP/SL TETAP USD polos karena itu level HARGA aset,
+// bukan nilai investasi. `idrRate` OPSIONAL (null/gagal -> fallback USD doang, gak gugurin pesan).
+const { fmtUsdWithIdr } = require('./darkKaelaLog');
+
+function formatSignalCore({ direction, entryPrice, tp, sl, leverage, marginUsd, reason, idrRate }) {
   const dirLabel = direction === 'buy' ? '🟢 LONG' : '🔴 SHORT';
   const nyawaPct = Math.abs(entryPrice - sl) / entryPrice * 100;
   return [
     `${dirLabel} @ ${fmtUsd(entryPrice)}`,
     `🎯 TP: ${fmtUsd(tp)}`,
     `❌ Nyawa (SL, ${nyawaPct.toFixed(1)}%): ${fmtUsd(sl)}`,
-    `⚙️ Leverage ${leverage}× · Margin ${fmtUsd(marginUsd)}`,
+    `⚙️ Leverage ${leverage}× · Margin ${fmtUsdWithIdr(marginUsd, idrRate)}`,
     '',
     `💡 Alasan: ${reason}`,
   ];

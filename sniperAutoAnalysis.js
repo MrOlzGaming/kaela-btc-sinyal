@@ -47,6 +47,10 @@ const { analyzeSentiment } = require('./marketSentiment');
 const { fetchTradeMetrics } = require('./onchainMetrics');
 const { ASSETS } = require('./assetConfig');
 const { isBtcBearWindow } = require('./halvingBearWindow');
+// getUsdIdrRate (13 Sep 2026, "nilai investasi juga di rupiahin.. berlaku semua") -- pola SAMA
+// kayak sniperOrderMonitor.js: fetch SEKALI per siklus, dioper ke semua pesan Margin/Volume/PnL
+// di siklus ini, bukan per-pesan.
+const kaela = require('./kaelaProTraderClient');
 const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
 // (12 Sep 2026, permintaan Olan: "Nyopet modenya sama kek Sniper, cuma timeframe lebih rendah" --
 // sinyal short window-bear WAJIB ada di Nyopet juga) -- REUSE fetch 4H+parameter Nyopet APA
@@ -147,6 +151,7 @@ async function main() {
     return;
   }
 
+  const idrRate = await kaela.getUsdIdrRate().catch(() => null);
   const allActive = getActiveOrders().filter((o) => !o.silentTest);
 
   // Order 'pending' (belum floating) -- jarang kejadian dari jalur otomatis ini (order langsung
@@ -162,7 +167,7 @@ async function main() {
   for (const order of allActive) {
     const assetCfg = ASSETS[order.asset] || ASSETS.btc;
     const livePrice = await fetchLivePrice(assetCfg.symbol);
-    const msg = formatPositionMonitor(order, livePrice, assetCfg);
+    const msg = formatPositionMonitor(order, livePrice, assetCfg, idrRate);
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, `pemantauan posisi terbuka (${assetCfg.label} ${order.mode})`, order.silentTest, true);
@@ -284,7 +289,7 @@ async function main() {
                   liveExecution = { ok: false, error: e.message, testnet: true, exchange: assetCfg.exchange };
                   console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT DEMO gagal (shadow tracking tetap jalan): ${e.message}`);
                 }
-                const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution });
+                const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
                 console.log(msg + '\n');
                 await sendWhatsAppRespectMute(msg, `sinyal SHORT DEMO window bear (${assetCfg.label})`, false, true);
               }
@@ -491,7 +496,7 @@ async function main() {
         }
       }
 
-      const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg, liveExecution });
+      const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg, liveExecution, idrRate });
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, true);

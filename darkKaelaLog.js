@@ -1,7 +1,9 @@
-// Format pesan Dark Kaela -- badge "[Dark] Kaela" + 🥷 (nyopet yang jahil/nyolong + dark yang
-// misterius, permintaan Olan 15 Agu 2026: "emoticon yang sesuai... karena nyopet wkwkw dan dark").
-// Cuma INFO, gak pernah eksekusi/rekomendasi keras -- disclaimer WAJIB lebih tegas dari Sniper
-// (leverage jauh lebih agresif, ~100x/nyawa 1%).
+// Format pesan Dark Kaela -- 🥷 (nyopet yang jahil/nyolong + dark yang misterius, permintaan Olan
+// 15 Agu 2026: "emoticon yang sesuai... karena nyopet wkwkw dan dark"). Badge teks awalnya
+// "[Dark] Kaela", DISAMAIN 13 Sep 2026 ke konvensi terkini "🥷 NYOPET · Kaela" (sinyal)/
+// "🥷 NYOPET · Manual Olan" (manual) biar auto/manual/sinyal satu bahasa badge yang sama.
+// formatSignal/formatBroken CUMA INFO, gak pernah eksekusi/rekomendasi keras -- disclaimer WAJIB
+// lebih tegas dari Sniper (leverage jauh lebih agresif, ~100x/nyawa 1%).
 
 // Link Liquidation Heat Map (15 Agu 2026, permintaan Olan -- lebih spesifik dari halaman
 // LiquidationData biasa, langsung nampilin peta panas buat cek kelakuan candle di zona).
@@ -57,7 +59,7 @@ function formatSignal(signal, now) {
   const downLine = signal.nearestSupport
     ? `📉 Likuiditas BAWAH: ${fmtUsd(signal.nearestSupport.price)} (${signal.nearestSupport.distPct.toFixed(2)}% dari sekarang)`
     : '📉 Likuiditas BAWAH: -';
-  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market
+  return `🥷 NYOPET · Kaela — 💸 Sinyal Nyopet Market
 ${dirLabel} (zona likuiditas)
 
 Harga sekarang: ${fmtUsd(signal.price)}
@@ -81,7 +83,7 @@ ${fmtWita(now)}`;
 
 function formatBroken(activeZone, breakPrice, now) {
   const dirLabel = activeZone.direction === 'long' ? 'LONG' : 'SHORT';
-  return `🥷 [Dark] Kaela — 💸 Sinyal Nyopet Market
+  return `🥷 NYOPET · Kaela — 💸 Sinyal Nyopet Market
 ⚠️ ZONA ${fmtUsd(activeZone.price)} DITEMBUS
 
 Sinyal potensi ${dirLabel} sebelumnya gak jalan sesuai rencana -- harga nembus zona, bukan mantul (closing sekarang ${fmtUsd(breakPrice)}).

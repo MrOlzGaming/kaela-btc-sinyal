@@ -15,6 +15,7 @@ const { verifyOtp } = require('./nyopetOtp');
 const { openPosition, closePosition, getSummary, markProfit100Notified, markWarning80Notified } = require('./nyopetJournal');
 const { formatOpened, formatManualClosed, format100TradeEvaluasi } = require('./nyopetJournalLog');
 const { sendWhatsApp } = require('./fonnte');
+const kaela = require('./kaelaProTraderClient');
 
 async function main() {
   const otpCheck = verifyOtp(process.env.NYOPET_OTP);
@@ -35,7 +36,8 @@ async function main() {
       leverage: parseFloat(process.env.NYOPET_LEVERAGE),
       notes: process.env.NYOPET_NOTES || null,
     }, now);
-    const msg = formatOpened(pos, now);
+    const idrRate = await kaela.getUsdIdrRate().catch(() => null);
+    const msg = formatOpened(pos, now, idrRate);
     console.log(msg + '\n');
     await sendWhatsApp(msg);
     console.log('[NyopetWebInput] Posisi dibuka via web:', pos.direction, '@', pos.entryPrice);

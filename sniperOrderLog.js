@@ -48,11 +48,13 @@ function liquidationPrice(order) {
 }
 
 // Baris margin/leverage/volume/likuidasi -- volume (nilai posisi/notional) = margin x leverage,
-// dihitung on-the-fly (bukan field tersendiri di data).
-function tradeMetaLine(order) {
+// dihitung on-the-fly (bukan field tersendiri di data). Margin & Volume = NILAI INVESTASI -> pakai
+// fmtUsdWithIdr (13 Sep 2026, "nilai investasi juga di rupiahin.. berlaku semua"); Liquidated tetap
+// USD polos karena itu level HARGA, bukan nilai investasi.
+function tradeMetaLine(order, idrRate) {
   const volumeUsd = (order.marginUsd && order.leverage) ? order.marginUsd * order.leverage : null;
   const liqPrice = liquidationPrice(order);
-  return `Margin ${fmt(order.marginUsd)} · Leverage ${order.leverage}× · Volume ${volumeUsd !== null ? fmt(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmt(liqPrice)}` : ''}`;
+  return `Margin ${fmtUsdWithIdr(order.marginUsd, idrRate)} · Leverage ${order.leverage}× · Volume ${volumeUsd !== null ? fmtUsdWithIdr(volumeUsd, idrRate) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmt(liqPrice)}` : ''}`;
 }
 
 // (12 Sep 2026, kebijakan baru Olan -- lihat memori project-kaela-btc-sinyal.md "GANTUNGAN
@@ -109,7 +111,7 @@ function formatRencana(order) {
   return lines.join('\n');
 }
 
-function formatTriggered(order) {
+function formatTriggered(order, idrRate) {
   const asset = assetOf(order);
   return [
     `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ✅ KENA TRIGGER, SEKARANG FLOATING`,
@@ -118,7 +120,7 @@ function formatTriggered(order) {
     '',
     `✅ TP: ${fmt(order.tp)}`,
     `❌ SL: ${fmt(order.sl)}`,
-    order.leverage ? tradeMetaLine(order) : '',
+    order.leverage ? tradeMetaLine(order, idrRate) : '',
     '',
     'Live floating P&L bisa dipantau di web.',
     '',
@@ -177,7 +179,7 @@ function formatPartialClosed(order, idrRate, todaysPnl) {
 // laporan sinyalnya dalam bentuk posisi dia sendiri yang dipantau") -- SELAMA ada posisi
 // floating, Kaela gak lagi diam total tiap hari (dulu skip penuh). Bukan sinyal BARU -- status
 // posisi yang UDAH terbuka: floating P&L hari ini, jarak ke SL/TP, udah berapa hari ditahan.
-function formatPositionMonitor(order, livePrice, assetCfgParam) {
+function formatPositionMonitor(order, livePrice, assetCfgParam, idrRate) {
   const asset = assetCfgParam || assetOf(order);
   const sign = order.direction === 'buy' ? 1 : -1;
   const movePct = ((livePrice - order.entryPrice) / order.entryPrice) * 100 * sign;
@@ -199,7 +201,10 @@ function formatPositionMonitor(order, livePrice, assetCfgParam) {
     `Harga sekarang: ${fmt(livePrice)} (${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}% dari entry)`,
     statusLine,
   ];
-  if (totalPnlUsd !== null) lines.push(`P&L saat ini: ${totalPnlUsd >= 0 ? '+' : ''}${fmt(Math.abs(totalPnlUsd))}`);
+  // Pola sign SAMA kayak formatClosed/formatPartialClosed di bawah (fmtUsdWithIdr sendiri yang
+  // nangani tanda "-", di sini cuma nambah "+" pas untung -- sekalian fix bug lama: versi sebelum
+  // ini pakai Math.abs() tanpa tanda "-" pas rugi, floating loss keliatan kayak angka positif).
+  if (totalPnlUsd !== null) lines.push(`P&L saat ini: ${totalPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(totalPnlUsd, idrRate)}`);
   // 3 Sep 2026, bug ketemu Olan (screenshot WA) -- baris "🎭 Posisi bayangan, murni perhitungan..."
   // KELEWAT pas migrasi 29 Agu 2026 (standing rule [[feedback-no-shadow-position]]: SEMUA sinyal
   // Sniper udah live-executed di Binance Demo lewat localLiveExecutor.js, BUKAN kalkulasi doang
@@ -393,7 +398,7 @@ function liveExecutionLines(liveExecution) {
   return ['', `${modeLabel} -- ❌ Eksekusi GAGAL: ${liveExecution.error} -- TIDAK ADA order di Binance, cek manual.`];
 }
 
-function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecution }) {
+function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecution, idrRate }) {
   const asset = assetCfg || assetOf(order);
   const extremeNote = getExtremeFearGreedNote(sentiment && sentiment.fearGreed);
   const { formatWinRateLine } = require('./winRate');
@@ -411,7 +416,7 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
   // sniperLiveMonitor.js), bukan lari sampai R:R jauh kayak dulu.
   const coreLines = formatSignalCore({
     direction: order.direction, entryPrice: order.entryPrice, tp: order.partialTp || order.tp, sl: order.sl,
-    leverage: order.leverage, marginUsd: order.marginUsd,
+    leverage: order.leverage, marginUsd: order.marginUsd, idrRate,
     reason: modeExplain + (order.tpReasoning ? ` ${order.tpReasoning}` : '') + ' Separuh diamanin di TP, sisanya di-reopen breakeven (likuidasi = SL) buat lanjut trail SMA10.',
   });
   return [

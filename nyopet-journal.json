@@ -57,6 +57,30 @@
       "closeReason": "OFFLINE_UNKNOWN",
       "closedAt": "2026-09-11T14:00:06.850Z",
       "retroactiveFixNote": "Angka lama (exitPrice/pnlUsd) DIBUKTIKAN ngarang (cross-check ke income history Binance asli, gak match sama sekali) -- dibersihin 12 Sep 2026 abis fix bug closePosition(). PnL akurat posisi ini (kalau manual) ada di pesan/journal Manual terpisah."
+    },
+    {
+      "id": "nyopet-demo-1789231509173",
+      "asset": "btc",
+      "exchange": "binance",
+      "direction": "sell",
+      "status": "floating",
+      "mode": "wedge_rising",
+      "patternType": "wedge_rising",
+      "entryPrice": 77322,
+      "sl": 82711.49999999999,
+      "originalSl": 82711.49999999999,
+      "tp": 66718.11000000002,
+      "partialTp": 66718.11000000002,
+      "qty": 0.019,
+      "leverage": 14,
+      "marginUsd": 107.14285714285714,
+      "nilaiPosisi": 1500,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "realizedPnlUsd": 0,
+      "triggeredAt": "2026-09-12T16:45:09.173Z",
+      "manualReason": null,
+      "smartMoneyGapAtEntry": 6.76
     }
   ],
   "demoEraStartedAt": "2026-09-04T18:50:27.852Z",
@@ -75,7 +99,7 @@
       "touches": null
     }
   },
-  "balanceUsdc": 5000,
+  "balanceUsdc": 4894.90908481,
   "balanceUsdt": 2.664e-9,
   "mexcBalanceUsdc": 0.00006016148
 }

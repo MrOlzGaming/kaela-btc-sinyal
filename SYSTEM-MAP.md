@@ -48,7 +48,7 @@ GAS) -- BEDA folder, BEDA repo, mapping ini GAK nyakup itu.
 |---|---|---|---|
 | Sniper (BTC+XAU, chart pattern+FVG, harian) | ✅ LIVE | `sniperAutoAnalysis.js` | ZERO konfirmasi eksternal selain window halving BTC. Short DILARANG PERMANEN (`feedback-nyopet-buyonly`-setara, terbukti di semua backtest). Gap smart-money (BTC doang) SEKARANG ditempel sbg KONTEKS di tiap sinyal (`smartMoneyGapAtEntry`, `sniperOrderLog.js`) -- Fase 1, BELUM jadi filter aktif |
 | Nyopet chart-pattern/FVG (4 jam) | ✅ LIVE | `nyopetAutoTrader.js` (`processAsset`) | Konfirmasi DXY (lolos backtest split-era+sensitivitas parameter). Gap smart-money (BTC doang) juga ditempel sbg KONTEKS (`fetchSmartMoneyContext`) -- Fase 1, BELUM jadi filter aktif, sama pola kayak Sniper |
-| Nyopet Fed Dovish Grid | ✅ LIVE | `nyopetAutoTrader.js` (`detectFedGridSignal`) | Trigger jadwal FOMC/NFP + konfirmasi tren SMA480, basket multi-layer |
+| Nyopet Fed Dovish Grid | ✅ LIVE | `nyopetAutoTrader.js` (`detectFedGridSignal`) | Trigger jadwal FOMC/NFP + konfirmasi tren SMA480, basket multi-layer. Konteks smart-money juga (BTC) |
 | Nyopet Econ-Reaction Scalp | ✅ LIVE, **FOMC DOANG** | `econCalendarLiveMonitor.js` | NFP di-**PAUSE** (gagal Deflated Sharpe+Permutation Test), CPI/PPI **DITOLAK**, versi **long-only DITOLAK JUGA** (12 Sep 2026) -- edge-nya emang gak cukup kuat, bukan soal arah |
 | Musiman DCA (real Olan + shadow Kaela) | ✅ LIVE | `spotDca.js` | SENGAJA tanpa filter apapun -- kesederhanaan = kekuatannya |
 | Compound Alt DCA | ✅ LIVE | `spotDcaAlt.js` | - |
@@ -96,7 +96,7 @@ Actions, laporan ke Olan jam 20:00 WITA).
 **Sumber data (semua GRATIS, no-key kecuali disebut lain):**
 `marketSentiment.js` (Fear&Greed, funding, OI, long/short ratio OKX/Bybit/**Binance resmi**),
 `macroData.js`+`advancedMacro.js` (DXY, Fed Rate, Yield Curve, M2, Credit Spread, DVOL,
-Stablecoin, ETF Flow -- FRED `fredgraph.csv` no-key + Yahoo Finance DXY), `onchainMetrics.js`
+Stablecoin, ETF Flow, **Minyak WTI** -- FRED `fredgraph.csv` no-key + Yahoo Finance DXY), `onchainMetrics.js`
 (MVRV/Puell/NUPL/SOPR, `bitcoin-data.com`, limit 10 req/jam), `cotReport.js` (COT Emas, CFTC),
 `regimeTracker.js` (korelasi rolling), `tvEconActual.js` (actual kalender ekonomi, endpoint
 TradingView TIDAK RESMI), `exchangeAddresses.js` (WalletExplorer.com, TIDAK RESMI).
@@ -110,7 +110,9 @@ mirip** -- kemungkinan besar udah pernah dicoba.
 
 **Arsip riset yang lagi NUMPUK data (belum cukup buat backtest):**
 `econReactionResearchLog.js`, `whaleNetflowResearchLog.js`, `smartMoneyResearchLog.js` -- semua
-MURNI lokal (gitignored), append-only, TIDAK pengaruhi sinyal live.
+MURNI lokal (gitignored), append-only, TIDAK pengaruhi sinyal live. `smartMoneyCorrelationReport.js`
+-- baca `smartMoneyGapAtEntry` dari jurnal Sniper/Nyopet, laporan read-only (jalanin manual kapan
+aja), belum ada gunanya sampai trade numpuk cukup (field baru 12 Sep 2026).
 
 **Web/dashboard:**
 `web/` -- shell statis + render client-side (`web/js/kaela-render.js` = engine utama). Data

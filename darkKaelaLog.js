@@ -233,7 +233,10 @@ Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- 
 // tetap bisa bedain "kedetect di exchange" vs "posisi bot/manual lewat web" (KEPUTUSAN SADAR,
 // bukan kebetulan belum diseragamin -- exchange gak ngasih tau ALASAN posisi ini, beda dari semua
 // method lain yang SELALU punya alasan tercatat).
-const MANUAL_BADGE = '🙋 MANUAL (luar sistem)';
+// (12 Sep 2026, permintaan Olan: "Manual (Olan) / Auto (Kaela)... hapus tulisan diluar sistem,
+// biar ringkas") -- versi lama "MANUAL (luar sistem)" DIPENDEKIN, badge sekarang eksplisit nyebut
+// SIAPA yang trading (Olan), sejajar sama badge auto (🎯 SNIPER/🥷 NYOPET yang notabene "Kaela").
+const MANUAL_BADGE = '🙋 Manual (Olan)';
 // (12 Sep 2026, permintaan Olan: "alasan yang manual ga usah kepanjangan.. cukup alasan open
 // posisi manual") -- DIPENDEKIN dari versi lama yang jelasin detail kenapa (exchange gak ngasih
 // tau alasannya, dst) -- sekarang cukup label singkat, konsisten sama NYOPET_MODE_LABEL_WEB.manual

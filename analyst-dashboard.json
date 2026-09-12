@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 77146.41,
+    "price": 77272.62,
     "conviction": {
       "score": 1,
       "verdict": "⚪ NETRAL / Campuran",
@@ -8,7 +8,7 @@
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 38 netral"
+          "reason": "RSI 48 netral"
         },
         {
           "label": "MVRV (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "56/100 -- Greed (kontrarian)"
+          "reason": "63/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "-0.09% (7 hari) -- stabil"
+          "reason": "-0.06% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -48,29 +48,29 @@
         {
           "label": "ETF Flow (institusi)",
           "v": 0,
-          "reason": "3/7 hari inflow, net 7hari $321jt -- campuran"
+          "reason": "3/7 hari inflow, net 7hari $544jt -- campuran"
         }
       ],
       "totalFactors": 9
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.17426010923496407,
-      "corr90": 0.3664178065651553,
+      "corr30": 0.17342619065204784,
+      "corr90": 0.3655499774422601,
       "label30": "lemah/gak konsisten",
       "label90": "moderat positif",
       "sampleDays": 80,
-      "latestDate": "2026-09-10"
+      "latestDate": "2026-09-11"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 36.76,
-        "changePct": -3.161222339304538
+        "value": 36.97,
+        "changePct": -4.371443352302116
       },
       "stablecoin": {
-        "current": 257580041683.9826,
-        "weekAgo": 257799838587.05188,
-        "changePct": -0.08525874347863703
+        "current": 257926147495.43524,
+        "weekAgo": 258070251530.20865,
+        "changePct": -0.05583907246920273
       },
       "yieldCurve": {
         "value": 0.33,
@@ -93,24 +93,33 @@
         "changeBps": -2.0000000000000018
       },
       "etfFlow": {
-        "date": "2026-09-10",
-        "latestNetFlowUsd": -282558473.375,
-        "sum7dUsd": 320707081.5350002,
+        "date": "2026-09-11",
+        "latestNetFlowUsd": -13289298.11,
+        "sum7dUsd": 543881256.875,
         "positiveDays7d": 3,
         "totalDays7d": 7
+      },
+      "oil": {
+        "value": 97.26,
+        "date": "2026-09-09",
+        "changePct": 16.11747851002865,
+        "trend": {
+          "arah": "NAIK TAJAM",
+          "efek": "tekanan inflasi mulai kerasa (biaya produksi ekonomi naik) -- historis bisa bikin The Fed lebih hawkish belakangan, headwind buat BTC"
+        }
       }
     }
   },
   "xau": {
-    "price": 4354.82,
+    "price": 4355.21,
     "conviction": {
-      "score": 0,
-      "verdict": "⚪ NETRAL / Campuran",
+      "score": -1,
+      "verdict": "🔴 Condong Bearish",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 1,
-          "reason": "RSI 29 oversold -- rawan technical bounce"
+          "v": 0,
+          "reason": "RSI 41 netral"
         },
         {
           "label": "DXY (Dolar)",
@@ -131,16 +140,16 @@
       "totalFactors": 4
     },
     "trackRecord": {
-      "total": 3,
+      "total": 4,
       "correct": 1,
-      "winRatePct": 33.33333333333333
+      "winRatePct": 25
     },
     "regime": {
       "corr30": -0.4733173050613159,
-      "corr90": -0.4996772639763266,
+      "corr90": -0.49759115868570514,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 77,
+      "sampleDays": 76,
       "latestDate": "2026-09-04"
     },
     "macro": {
@@ -182,5 +191,5 @@
       "inverted": false
     }
   },
-  "updatedAt": "2026-09-11T23:17:24.189Z"
+  "updatedAt": "2026-09-12T23:15:52.358Z"
 }

@@ -60,6 +60,7 @@ const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const { fetchBinancePositioning } = require('./marketSentiment');
+const { isBtcBearWindow } = require('./halvingBearWindow');
 
 // 12 Sep 2026, permintaan Olan ("Nyopet chart-pattern juga dikasih konteks smart-money yang
 // sama" -- lanjutan Fase 1 Sniper) -- KONTEKS doang, BELUM ngaruh eksekusi/gating apapun. Cuma
@@ -625,12 +626,29 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       return;
     }
 
-    // ============ Gak ada posisi floating -- cari sinyal baru (chart pattern -> FVG, long-only, 4H) ============
+    // ============ Gak ada posisi floating -- cari sinyal baru (chart pattern -> FVG, 4H) ============
     const candles4h = await fetchCandles4hPaginated(zoneSymbol, CANDLES_NEEDED_4H);
     if (candles4h.length < 300) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: candle 4H belum cukup (${candles4h.length}), skip siklus ini.`); return; }
     const i = candles4h.length - 1;
 
-    let sig = detectPatternSignal(candles4h, i, PATTERN_PARAMS_4H);
+    // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah... window
+    // bull fokus long, window bear fokus short") -- KHUSUS akun DEMO, auto-short DIIZINKAN pas
+    // window bear (BTC: isBtcBearWindow siklus halving; Emas: harga di bawah SMA 200-hari, REUSE
+    // FVG_TREND_SMA_LEN_4H=1200 4H-candle yang UDAH DIFETCH di atas, gak perlu fetch tambahan).
+    // Akun REAL TETAP allowShort:false SELAMANYA di sini (short real cuma lewat sinyal informasional
+    // sniperAutoAnalysis.js, dieksekusi manual member -- lihat project-kaela-btc-sinyal.md).
+    let inBearWindow = false;
+    if (isDemo) {
+      if (assetKey === 'btc') {
+        inBearWindow = isBtcBearWindow(new Date());
+      } else {
+        const trendSma = sma(candles4h.map((c) => c.close), FVG_TREND_SMA_LEN_4H);
+        inBearWindow = trendSma !== null && candles4h[i].close < trendSma;
+      }
+    }
+    const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
+
+    let sig = detectPatternSignal(candles4h, i, patternParams);
     if (!sig) {
       const fvgSig = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H });
       if (fvgSig) sig = fvgSig;

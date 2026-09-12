@@ -33,6 +33,7 @@ const TRACKED_LABELS = {
   dvol: '🌊 DVOL (Volatilitas BTC)',
   fedRate: '🏦 Fed Funds Rate',
   creditSpread: '📊 Credit Spread (High-Yield)',
+  oilPrice: '🛢️ Harga Minyak WTI',
   yieldCurve: '📉 Yield Curve 10Y-2Y',
   m2YoY: '💵 M2 Money Supply (YoY)',
   stablecoinGrowth: '💰 Stablecoin Supply (7 hari)',
@@ -62,6 +63,10 @@ const EXPLANATIONS = {
   creditSpread: {
     above: 'Ini ngukur seberapa "takut" investor pegang obligasi perusahaan yang agak berisiko. MELEBAR jauh dari biasanya -- investor lagi was-was banget soal ekonomi. Histori-nya, pas ini kejadian, BTC & saham SERING ikut kejual bareng (dianggap sama-sama "aset berisiko").',
     below: 'Ini ngukur seberapa "takut" investor pegang obligasi perusahaan yang agak berisiko. MENYEMPIT jauh dari biasanya -- investor lagi santai/percaya diri soal ekonomi, kondisi kayak gini biasanya mendukung aset berisiko (termasuk BTC) buat naik.',
+  },
+  oilPrice: {
+    above: 'Ini harga minyak mentah WTI (patokan harga minyak Amerika). NAIK jauh dari biasanya -- biaya produksi di ekonomi ikut naik, ini salah satu pemicu awal INFLASI. Kalau kepanasan, The Fed bisa jadi lebih hawkish belakangan (kurang bagus buat BTC) -- beda dari DXY yang ngukur kekuatan dolar, ini ngukur tekanan dari sisi ENERGI/geopolitik.',
+    below: 'Ini harga minyak mentah WTI (patokan harga minyak Amerika). TURUN jauh dari biasanya -- tekanan inflasi dari sisi energi mereda, biasanya ngasih The Fed ruang lebih dovish (netral/bagus buat BTC).',
   },
   yieldCurve: {
     above: 'Ini ngukur bunga obligasi Amerika jangka PANJANG (10 tahun) dibanding jangka PENDEK (2 tahun). Lebih lebar dari biasanya -- biasanya tanda ekonomi dianggap sehat/normal, gak ada sinyal resesi deket-deket ini.',
@@ -126,6 +131,7 @@ async function collectTodayValues() {
   if (advancedMacro?.dvol) values.dvol = advancedMacro.dvol.value;
   if (advancedMacro?.fedRate) values.fedRate = advancedMacro.fedRate.value;
   if (advancedMacro?.creditSpread) values.creditSpread = advancedMacro.creditSpread.value;
+  if (advancedMacro?.oil) values.oilPrice = advancedMacro.oil.value;
   if (advancedMacro?.yieldCurve) values.yieldCurve = advancedMacro.yieldCurve.value;
   if (advancedMacro?.m2?.changePctYoY != null) values.m2YoY = advancedMacro.m2.changePctYoY;
   if (advancedMacro?.stablecoin?.changePct != null) values.stablecoinGrowth = advancedMacro.stablecoin.changePct;

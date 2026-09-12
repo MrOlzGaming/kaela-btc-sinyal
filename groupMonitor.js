@@ -228,7 +228,7 @@ async function main() {
       type: 'report-daily',
       content: generateGroupDaily(now, priceToday, priceYesterday, {
         onchain,
-        macroPackage: formatMacroPackageLines({ dxy: goldMacro?.dxy || null, fedRate: advancedMacro?.fedRate || null, yieldCurve: advancedMacro?.yieldCurve || null }),
+        macroPackage: formatMacroPackageLines({ dxy: goldMacro?.dxy || null, fedRate: advancedMacro?.fedRate || null, yieldCurve: advancedMacro?.yieldCurve || null, oil: advancedMacro?.oil || null }),
         whaleDigest: readWhaleLastDigest(),
         binancePositioning,
       }),

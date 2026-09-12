@@ -76,6 +76,7 @@ function generateGoldDaily(now, priceToday, priceYesterday, opts = {}) {
     realYield: opts.macro?.realYield || null,
     fedRate: opts.advancedMacro?.fedRate || null,
     yieldCurve: opts.advancedMacro?.yieldCurve || null,
+    oil: opts.advancedMacro?.oil || null,
   });
   return [
     `${CATEGORY_COLOR.laporan.emoji} 📊 Bloomberg Mini — 🟡 Update XAU/Emas — ${localDateKey(now)}`,

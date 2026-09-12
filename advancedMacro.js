@@ -125,6 +125,29 @@ function classifyCreditSpreadTrend(cs) {
   return { arah: 'STABIL', efek: 'netral' };
 }
 
+// ============ Harga Minyak WTI (FRED DCOILWTICO, harian) ============
+// 12 Sep 2026, ide dari Olan ("perlu harga minyak juga.. gak kita tradingkan kok, biar konteks")
+// -- BEDA dari DXY (kekuatan dolar): minyak nangkep tekanan INFLASI (biaya produksi ekonomi) +
+// GEJOLAK GEOPOLITIK. Minyak naik tajam -> historis salah satu pemicu awal inflasi yang bikin The
+// Fed hawkish belakangan -- sinyal makro yang gak sepenuhnya kecover DXY/Fed Rate sendiri.
+async function fetchOilPrice() {
+  const rows = await fetchFredSeriesRows('DCOILWTICO');
+  const latest = rows[rows.length - 1];
+  const targetDate = new Date(latest.date);
+  targetDate.setDate(targetDate.getDate() - 30);
+  const candidates = rows.filter((r) => new Date(r.date) <= targetDate);
+  const ago30d = candidates.length ? candidates[candidates.length - 1] : null;
+  const changePct = ago30d ? ((latest.value - ago30d.value) / ago30d.value) * 100 : null;
+  return { value: latest.value, date: latest.date, changePct };
+}
+
+function classifyOilTrend(oil) {
+  if (oil.changePct == null) return { arah: 'TIDAK DIKETAHUI', efek: 'data histori kurang' };
+  if (oil.changePct >= 10) return { arah: 'NAIK TAJAM', efek: 'tekanan inflasi mulai kerasa (biaya produksi ekonomi naik) -- historis bisa bikin The Fed lebih hawkish belakangan, headwind buat BTC' };
+  if (oil.changePct <= -10) return { arah: 'TURUN TAJAM', efek: 'tekanan inflasi mereda dari sisi energi -- historis ngasih The Fed ruang lebih dovish' };
+  return { arah: 'STABIL', efek: 'gak ada tekanan inflasi tambahan dari sisi energi' };
+}
+
 // ============ US Spot Bitcoin ETF Net Flow (TFTC, agregat SoSoValue+Farside) ============
 // 30 Agu 2026, ide dari riset "cari sesuatu buat memperkuat analis Kaela" -- lapis BARU: duit
 // INSTITUSI RIIL masuk/keluar BTC lewat 12 dana teregulasi (IBIT/FBTC/GBTC/dst), beda dari
@@ -179,7 +202,7 @@ function macroPackageSynthesis(dxy, fedRate, yieldCurve) {
 }
 
 // `extra` opsional -- Real Yield (khusus Emas, DXY/FedRate/YieldCurve dipakai bareng BTC).
-function formatMacroPackageLines({ dxy, fedRate, yieldCurve, realYield } = {}) {
+function formatMacroPackageLines({ dxy, fedRate, yieldCurve, realYield, oil } = {}) {
   const lines = [];
   if (dxy) lines.push(`💵 DXY: ${dxy.latest.value.toFixed(1)} (${dxy.trend.arah})`);
   if (fedRate) {
@@ -188,6 +211,7 @@ function formatMacroPackageLines({ dxy, fedRate, yieldCurve, realYield } = {}) {
   }
   if (realYield) lines.push(`📉 Real Yield 10Y: ${realYield.latest.value.toFixed(2)}% (${realYield.trend.arah})`);
   if (yieldCurve) lines.push(`📊 Yield Curve 10Y-2Y: ${yieldCurve.value.toFixed(2)} (${yieldCurve.inverted ? 'TERBALIK' : 'normal'})`);
+  if (oil) lines.push(`🛢️ Minyak WTI: $${oil.value.toFixed(1)}/barel (${oil.trend.arah})`);
   if (lines.length === 0) return [];
   lines.push(macroPackageSynthesis(dxy, fedRate, yieldCurve));
   return lines;
@@ -203,7 +227,7 @@ async function safe(fn, label) {
 }
 
 async function fetchAdvancedMacroContext() {
-  const [dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread, etfFlow] = await Promise.all([
+  const [dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread, etfFlow, oilRaw] = await Promise.all([
     safe(fetchBtcDvol, 'DVOL'),
     safe(fetchStablecoinSupplyGrowth, 'Stablecoin Supply'),
     safe(fetchYieldCurve, 'Yield Curve'),
@@ -211,15 +235,17 @@ async function fetchAdvancedMacroContext() {
     safe(fetchFedFundsRate, 'Fed Funds Rate'),
     safe(fetchCreditSpread, 'Credit Spread'),
     safe(fetchBtcEtfFlow, 'BTC ETF Flow'),
+    safe(fetchOilPrice, 'Minyak WTI'),
   ]);
-  return { dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread, etfFlow };
+  const oil = oilRaw ? { ...oilRaw, trend: classifyOilTrend(oilRaw) } : null;
+  return { dvol, stablecoin, yieldCurve, m2, fedRate, creditSpread, etfFlow, oil };
 }
 
 module.exports = {
   fetchBtcDvol, dvolInsight, fetchStablecoinSupplyGrowth, fetchYieldCurve, yieldCurveInsight,
   fetchM2Growth, m2Insight, fetchFedFundsRate, classifyFedRateTrend, fetchCreditSpread,
-  classifyCreditSpreadTrend, fetchBtcEtfFlow, etfFlowInsight, fmtFlowUsd, fetchAdvancedMacroContext,
-  formatMacroPackageLines,
+  classifyCreditSpreadTrend, fetchBtcEtfFlow, etfFlowInsight, fmtFlowUsd, fetchOilPrice,
+  classifyOilTrend, fetchAdvancedMacroContext, formatMacroPackageLines,
 };
 
 if (require.main === module) {

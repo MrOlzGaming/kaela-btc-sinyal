@@ -31,7 +31,7 @@ const { fmtUsd, fmtUsdWithIdr, shortId, KAELA_ACCESS_URL } = require('./darkKael
 function _sniperCloseMsg(assetCfg, mirror, entryRef, exitPrice, pnlUsd, alasan, idrRate) {
   const dirLabel = mirror.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const sign = pnlUsd >= 0 ? '+' : '';
-  return `🎯 SNIPER ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Tutup Posisi*
+  return `🎯 SNIPER · Kaela ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Tutup Posisi*
 ${pnlUsd >= 0 ? '✅' : '❌'} ${dirLabel} ${fmtUsd(entryRef)} → ${fmtUsd(exitPrice)}
 
 PnL: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*
@@ -120,7 +120,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     // sniper-orders.json (sniperOrderLog.js `formatAutoValid` pakai field yang sama) -- SEBELUM
     // ini gak kepake sama sekali di pesan mirror akun lain, cuma leverage/margin doang.
     const alasanOpen = (originalOrder.confirmationNote || '').split('.')[0] || 'Chart Pattern/FVG terkonfirmasi (lihat detail di web)';
-    await notify(`🎯 SNIPER ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Buka Posisi*
+    await notify(`🎯 SNIPER · Kaela ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Buka Posisi*
 ${mirror.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*'} @ ${fmtUsd(mirror.entryPriceReal)}
 
 Margin: ${fmtUsdWithIdr(mirror.marginUsd, idrRate)} (${mirror.leverage}x)
@@ -155,7 +155,7 @@ Alasan: ${alasanOpen}
     const target = state.orders.find((o) => o.originalOrderId === mirror.originalOrderId);
     target.leg2 = { qty: leg2Qty, entryPrice: leg2Entry, leverage: calc.leverage, openedAt: new Date().toISOString() };
     saveState(state);
-    await notify(`🎯 SNIPER ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Partial TP Diamankan*
+    await notify(`🎯 SNIPER · Kaela ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Partial TP Diamankan*
 🟡 Leg2 dibuka @ ${fmtUsd(leg2Entry)}
 
 Target likuidasi ~breakeven ${fmtUsd(mirror.entryPriceReal)}

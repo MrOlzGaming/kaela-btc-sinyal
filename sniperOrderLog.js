@@ -10,7 +10,7 @@ const { ASSETS } = require('./assetConfig');
 // fmtUsdWithIdr (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
 // Sniper lama ini juga, biar konsisten) -- REUSE dari darkKaelaLog.js (SATU sumber format IDR,
 // gak duplikat). `idrRate` OPSIONAL, null/gagal -> fallback USD doang, gak gugurin pesan.
-const { fmtUsdWithIdr } = require('./darkKaelaLog');
+const { fmtUsdWithIdr, todaysPnlLine } = require('./darkKaelaLog');
 
 // assetLabel (22 Agu 2026, upgrade multi-aset) -- semua fungsi format di bawah TERIMA order yang
 // sekarang punya field `order.asset` ('btc'/'xau') -- fallback ke ASSETS.btc kalau order LAMA
@@ -57,7 +57,7 @@ function tradeMetaLine(order) {
 
 function formatRencana(order) {
   const lines = [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 📋 RENCANA (analisa Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — 📋 RENCANA`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} · ${STRATEGY_LABEL[order.strategyType] || ''}`,
     '',
@@ -82,7 +82,7 @@ function formatRencana(order) {
 function formatTriggered(order) {
   const asset = assetOf(order);
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ✅ KENA TRIGGER, SEKARANG FLOATING`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ✅ KENA TRIGGER, SEKARANG FLOATING`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
     '',
@@ -97,21 +97,25 @@ function formatTriggered(order) {
   ].join('\n');
 }
 
-function formatClosed(order, idrRate) {
+// `todaysPnl` (12 Sep 2026, permintaan Olan "Auto (Kaela)... sertakan PnL hari ini" -- diperluas
+// ke Sniper Club REAL Olan sendiri, sama pola kayak Nyopet/manual reconciler) -- PnL REAL akun
+// Binance Olan hari ini (symbol yang sama persis lagi ditutup), BUKAN dari bankroll bayangan
+// simulasi order ini. `null`/gagal sync -> baris DIILANGIN (lihat todaysPnlLine, darkKaelaLog.js).
+function formatClosed(order, idrRate, todaysPnl) {
   const asset = assetOf(order);
   const won = order.status === 'closed_tp';
   const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
   const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)' };
   const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ${exitLabel}`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ${exitLabel}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
     `Entry: ${fmt(order.entryPrice)}`,
     `Exit (${order.closeReason || (won ? 'TP' : 'SL')}): ${fmt(order.exitPrice ?? (won ? order.tp : order.sl))}`,
     order.partialDone ? `(Ini penutupan sisa posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)` : '',
-    `P&L TOTAL: ${order.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.pnlUsd, idrRate)} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)`,
+    `P&L TOTAL: ${order.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.pnlUsd, idrRate)} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)${todaysPnlLine(todaysPnl, idrRate)}`,
     '',
     nowStr(),
     `🔗 ${WEB_URL}`,
@@ -122,15 +126,15 @@ function formatClosed(order, idrRate) {
 // pas kena target 2R, SL sisanya digeser ke breakeven (gak bisa rugi lagi dari titik ini), sisa
 // separuh di-trail pakai SMA harian sampai momentum patah. Notifikasi TERPISAH dari formatClosed
 // (posisi BELUM full closed, cuma dikurangin).
-function formatPartialClosed(order, idrRate) {
+function formatPartialClosed(order, idrRate, todaysPnl) {
   const asset = assetOf(order);
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
     `Entry: ${fmt(order.entryPrice)}`,
-    `Separuh posisi diamankan @ ${fmt(order.partialTp)} -- P&L separuh: ${order.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.realizedPnlUsd, idrRate)}`,
+    `Separuh posisi diamankan @ ${fmt(order.partialTp)} -- P&L separuh: ${order.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.realizedPnlUsd, idrRate)}${todaysPnlLine(todaysPnl, idrRate)}`,
     `SL sisa separuh digeser ke BREAKEVEN (${fmt(order.entryPrice)}) -- gak bisa rugi lagi dari sini.`,
     `Sisa separuh di-trail pakai SMA${order.trailSmaLen} harian -- ditutup kalau momentum patah, biar gak buru-buru lepas semua pas trend masih jalan.`,
     '',
@@ -158,7 +162,7 @@ function formatPositionMonitor(order, livePrice, assetCfgParam) {
     : `❌ SL: ${fmt(order.sl)}  🎯 TP tahap 1: ${fmt(order.partialTp)}`;
 
   const lines = [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 📡 PEMANTAUAN POSISI${daysHeld !== null ? ` (hari ke-${daysHeld + 1})` : ''}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)} -- masih FLOATING, bukan sinyal baru.`,
     '',
@@ -188,7 +192,7 @@ function formatPositionMonitor(order, livePrice, assetCfgParam) {
 // sniper-trigger-state.json (lihat sniperDailyTrigger.js).
 function formatDailyTrigger(btcPrice) {
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 🔍 Kaela lagi kerja`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — 🔍 Lagi kerja`,
     '',
     `Lagi ngumpulin data & analisa BTC multi-timeframe (harga sekarang: ${fmt(btcPrice)})...`,
     'Kalau ada setup yang masuk akal, baru diinfoin di sini setelah VALID.',
@@ -200,7 +204,7 @@ function formatDailyTrigger(btcPrice) {
 
 function formatCancelled(order) {
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER — 🚫 RENCANA DIBATALKAN`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — 🚫 RENCANA DIBATALKAN`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ trigger ${fmt(order.triggerPrice)} -- dibatalkan sebelum kena trigger.`,
     '',

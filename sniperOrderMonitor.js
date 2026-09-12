@@ -23,6 +23,9 @@ const { ASSETS } = require('./assetConfig');
 // idrRate (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
 // Sniper lama ini) -- getUsdIdrRate() lewat GAS SAMA yang dipakai multiAccountExecutor.js.
 const kaela = require('./kaelaProTraderClient');
+const { createBinanceClient } = require('./binanceExecutor');
+const tradeHistoryStore = require('./tradeHistoryStore');
+const MASTER_NOMOR = '6281299303888'; // sama persis file lain -- bukan secret, ID member.
 
 // data-api.binance.vision -- endpoint RESMI Binance khusus market data publik, gak kena
 // blokir geografis kayak api.binance.com (GitHub Actions runner ketauan HTTP 451 pas testing).
@@ -51,6 +54,25 @@ async function fetchDailyClosed(symbol, limit = 30) {
   return raw.map(parseCandle).filter((c) => c.closeTime <= nowMs);
 }
 
+// (12 Sep 2026, permintaan Olan "Auto (Kaela)... sertakan PnL hari ini" -- diperluas dari
+// Nyopet/manual reconciler ke Sniper Club REAL Olan sendiri juga) -- sync SEKALI per run (bukan
+// per-order/per-asset), reuse tradeHistoryStore SAMA yang dipakai file lain (cache persisten).
+// Gagal ambil kredensial/API (mis. API key belum dipasang) -> fungsi balikin null SELALU, pesan
+// tetap kekirim TANPA baris PnL hari ini (fail-soft, BUKAN gugurin notifikasi Sniper).
+async function _buildTodaysPnlFn() {
+  try {
+    const accounts = await kaela.getAllAccountsWithKeys();
+    const account = accounts.find((a) => String(a.phone).replace(/\D/g, '') === MASTER_NOMOR);
+    if (!account) return async () => null;
+    const client = createBinanceClient({ apiKey: account.apiKey, apiSecret: account.apiSecret });
+    const store = await tradeHistoryStore.syncIncomeStore('binance', client, account.phone, 'real', Date.now() - 24 * 3600 * 1000);
+    return async (symbol) => tradeHistoryStore.todaysPnlForSymbol(store, symbol, new Date());
+  } catch (e) {
+    console.log('[SniperOrderMonitor] Gagal sync income buat PnL hari ini (pesan tetap jalan tanpa baris itu):', e.message);
+    return async () => null;
+  }
+}
+
 function computePnl(order, exitPrice, fraction = 1) {
   const dir = order.direction === 'buy' ? 1 : -1;
   const priceMovePct = ((exitPrice - order.entryPrice) / order.entryPrice) * 100 * dir;
@@ -76,7 +98,7 @@ async function sendWhatsAppRespectMute(msg, label, silent = false) {
 
 // Proses semua order 1 ASET (candle H1/daily udah difetch khusus buat aset itu) -- diekstrak
 // dari main() (22 Agu 2026, upgrade multi-aset) biar bisa dipanggil per-grup aset.
-async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
+async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPnl) {
   const assetCfg = ASSETS[assetKey] || ASSETS.btc;
   const candles = await fetchHourlyClosed(assetCfg.symbol, 5);
   if (candles.length === 0) {
@@ -123,7 +145,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
             status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
           });
           applyRealizedPnl(pnlUsd || 0, 'closed_sl', now); // update bankroll bayangan Kaela
-          const msg = formatClosed(updated, idrRate);
+          const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
           console.log(msg + '\n');
           addEntry('sniper', msg, now);
           await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
@@ -137,7 +159,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
               status: 'closed_sl', closedAt: new Date(last.closeTime).toISOString(), closeReason: 'SL', exitPrice: order.sl, pnlPct, pnlUsd,
             });
             applyRealizedPnl(pnlUsd || 0, 'closed_sl', now);
-            const msg = formatClosed(updated, idrRate);
+            const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
             console.log(msg + '\n');
             addEntry('sniper', msg, now);
             await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
@@ -148,7 +170,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
             partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd: realizedPnlUsd || 0, partialClosedAt: new Date(last.closeTime).toISOString(),
           });
           applyRealizedPnl(realizedPnlUsd || 0, 'partial_tahap1', now); // update bankroll bayangan Kaela -- cuma separuh
-          const msg = formatPartialClosed(updated, idrRate);
+          const msg = formatPartialClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
           console.log(msg + '\n');
           addEntry('sniper', msg, now);
           await sendWhatsAppRespectMute(msg, 'target tahap 1 kena', order.silentTest);
@@ -180,7 +202,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
       // Bankroll bayangan Kaela: cuma sisa leg ini (restPnlUsd) -- porsi tahap 1 udah
       // diaplikasikan pas partial kena, jangan dobel-hitung.
       applyRealizedPnl(restPnlUsd || 0, hitBreakevenSl ? 'closed_sl_breakeven' : 'closed_trail', now);
-      const msg = formatClosed(updated, idrRate);
+      const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
       await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh', order.silentTest);
@@ -207,7 +229,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate) {
       closeReason: isTP ? 'TP' : 'SL',
       exitPrice, pnlPct, pnlUsd,
     });
-    const msg = formatClosed(updated, idrRate);
+    const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
     await sendWhatsAppRespectMute(msg, 'posisi ditutup', order.silentTest);
@@ -227,6 +249,7 @@ async function main() {
   // idrRate (4 Sep 2026) -- fetch SEKALI per run (bukan per-order), null-safe kalau gagal (fallback
   // USD doang, formatClosed/formatPartialClosed di sniperOrderLog.js udah handle null).
   const idrRate = await kaela.getUsdIdrRate().catch(() => null);
+  const getTodaysPnl = await _buildTodaysPnlFn();
 
   const byAsset = {};
   for (const order of active) {
@@ -234,7 +257,7 @@ async function main() {
     (byAsset[key] = byAsset[key] || []).push(order);
   }
   for (const assetKey of Object.keys(byAsset)) {
-    await processAsset(assetKey, byAsset[assetKey], now, idrRate);
+    await processAsset(assetKey, byAsset[assetKey], now, idrRate, getTodaysPnl);
   }
 }
 

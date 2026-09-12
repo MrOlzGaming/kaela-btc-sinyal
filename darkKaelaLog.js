@@ -143,8 +143,10 @@ const CLOSE_REASON_LABEL = {
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
+// (12 Sep 2026, permintaan Olan: "Manual (Olan) / Auto (Kaela)" -- badge auto sekarang eksplisit
+// nyebut "Kaela" juga, sejajar sama MANUAL_BADGE "Manual (Olan)" di bawah.
 function _nyopetBadge(pos, isDemo) {
-  return `🥷 NYOPET${_isManual(pos) ? ' · Manual Olan' : ''} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}`;
+  return `🥷 NYOPET · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}`;
 }
 
 // (5 Sep 2026, permintaan Olan: "nilai investasi juga ada dalam kurung rupiah.. lalu rapikan
@@ -360,4 +362,7 @@ module.exports = {
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
   fmtUsd, shortId, fmtUsdWithIdr,
+  // 12 Sep 2026 -- diexpose biar sniperOrderLog.js (Sniper Club REAL Olan sendiri) bisa reuse SAMA
+  // baris "PnL hari ini", bukan reimplementasi/format beda sendiri.
+  todaysPnlLine: _todaysPnlLine,
 };

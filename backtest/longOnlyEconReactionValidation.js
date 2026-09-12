@@ -11,6 +11,21 @@
 // jadi SATU dataset (biar sample size lebih besar, sesuai rencana "semua kalender ekonomi").
 // FOMC SENGAJA gak diikutkan di sini -- itu udah live/lolos terpisah, biar gak ketuker sama
 // keputusan strategi yang SUDAH jalan.
+//
+// ⛔ HASIL 12 Sep 2026 (RISET INI DITOLAK, JANGAN diulang tanpa data/metode baru): n=116 sinyal
+// LONG (NFP+CPI+PPI gabungan, 2019-2026). Deflated Sharpe Ratio = 0% di SEMUA kombinasi (gabungan
+// maupun sendiri-sendiri) -- Sharpe observed (~0,19-0,25) jauh di bawah "wajar ketemu kebetulan"
+// dari 50 variasi parameter (~2,28). Breakdown per tahun retak: 2020 negatif, 2025-2026 (paling
+// relevan) win rate cuma 47-50% (nyaris lempar koin), CPI 2026 cuma 20%, PPI 2025 cuma 14%.
+// "Long-only" TIDAK otomatis nyelametin strategi yang gak solid -- beda kasus dari Sniper/Nyopet
+// chart-pattern (short di situ emang kebukti ngerusak edge yang SEBENARNYA ada; di sini edge-nya
+// sendiri emang gak cukup kuat dari awal, arah gak ngaruh).
+//
+// ⛔ CATATAN METODOLOGI: permutation test (Monte Carlo, ngacak LABEL arah) di output run ini
+// gak valid dipakai -- didesain buat dataset CAMPURAN long+short, kalau dataset-nya UDAH
+// difilter 1 arah doang gak ada apa-apa buat diacak (p-value=1 GAK BERARTI APA-APA, bukan bukti
+// kuat menentang/mendukung). Kesimpulan PENOLAKAN di atas murni dari Deflated Sharpe Ratio +
+// breakdown tahunan (dua-duanya TETAP valid buat kasus ini), BUKAN dari permutation test.
 
 const { generateNfpEvents, generateCpiEvents, generatePpiEvents } = require('../fedEvents');
 const { analyzeEvent, REACTION_THRESHOLD_PCT } = require('./econReactionBacktest');

@@ -15,6 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { localDateKey } = require('./config');
 
 const STORE_DIR = path.join(__dirname, 'multi-account-state', 'trade-history');
 
@@ -70,4 +71,34 @@ function sumSince(store, sinceMs, types) {
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 }
 
-module.exports = { storePath, loadStore, saveStore, mergeEntries, sumSince };
+// Diekstrak dari positionReconciler.js `_syncIncomeStore` (12 Sep 2026) -- sync income Binance
+// TERBARU (sejak lastSyncedMs, atau sinceMs kalau store masih kosong) ke store persisten, dipakai
+// bareng positionReconciler.js (manual) DAN nyopetAutoTrader.js (auto, buat "PnL hari ini" di pesan
+// close/partial -- lihat todaysPnlForSymbol di bawah). `mode` ('real'/'demo') pisahin file cache
+// per akun+mode, SAMA pola kayak dipakai multiAccountExecutor.js.
+async function syncIncomeStore(exchange, client, phone, mode, sinceMs) {
+  if (exchange !== 'binance') return null;
+  const filePath = storePath('binance', phone, mode);
+  const store = loadStore(filePath);
+  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
+  const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
+  const normalized = (rawNew || []).map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+  mergeEntries(store, normalized);
+  saveStore(filePath, store);
+  return store;
+}
+
+// 12 Sep 2026, permintaan Olan ("sertakan PnL hari ini" di SEMUA pesan open/close/partial, bukan
+// cuma jalur manual reconciler yang udah punya duluan) -- diekstrak dari `_todaysPnlForSymbol`
+// (positionReconciler.js, dibuat 12 Sep 2026 buat kasus "kok minus terus.. padahal di riwayat
+// surplus") jadi SATU fungsi bersama di sini, biar Sniper/Nyopet/manual reconciler semua reuse
+// SATU logika (bukan re-implement tiap file) -- exclude TRANSFER (setor/tarik dana, bukan trading).
+function todaysPnlForSymbol(store, symbol, now) {
+  if (!store) return null;
+  const todayKey = localDateKey(now);
+  return store.entries
+    .filter((e) => e.symbol === symbol && e.type !== 'TRANSFER' && localDateKey(new Date(e.time)) === todayKey)
+    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+}
+
+module.exports = { storePath, loadStore, saveStore, mergeEntries, sumSince, todaysPnlForSymbol, syncIncomeStore };

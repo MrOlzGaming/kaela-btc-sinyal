@@ -54,6 +54,7 @@ const { fetchKlines } = require('./backtest/fetchKlines');
 const { generateNfpEvents, generateFomcEvents } = require('./fedEvents');
 const { computeSignals, computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.js');
 const { withJournalLock } = require('./nyopetJournalLock');
+const tradeHistoryStore = require('./tradeHistoryStore');
 const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
@@ -157,7 +158,7 @@ function _isReconcilerTrackingManually(reconcilerStatePath, exchange, symbol) {
   }
 }
 
-function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath } = {}) {
+function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath, phone } = {}) {
   const c = client || binanceExecutorDefault;
   const mc = mexcClient || mexcExecutorDefault;
   function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : c; }
@@ -171,6 +172,23 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // beneran ngirim pesan, TAPI bakal MENYESATKAN begitu Real jalan (nunjuk "Demo" padahal duit
   // asli). isDemo dipakai formatAutoOpen/formatAutoClosed biar labelnya selalu bener.
   const isDemo = !(apiCreds && apiCreds.testnet === false);
+
+  // 12 Sep 2026, permintaan Olan ("sertakan PnL hari ini" di redesign pesan) -- SAMA konsep kayak
+  // positionReconciler.js buat trading manual, sekarang Nyopet AUTO (close/partial) juga dikasih
+  // konteks total PnL BTCUSDC hari ini, bukan cuma angka 1 transaksi. Cuma jalan kalau `phone`
+  // dioper (Olan real -- lihat econCalendarLiveMonitor.js) DAN exec-nya Binance (BTC, bukan XAU/
+  // MEXC yang belum punya endpoint income setara) -- selain itu `null` (baris DIILANGIN di pesan,
+  // BUKAN nampilin 0 yang nyesatin).
+  async function _todaysBtcPnl(assetCfg, now) {
+    if (!phone || assetCfg.exchange === 'mexc') return null;
+    try {
+      const store = await tradeHistoryStore.syncIncomeStore('binance', c, phone, isDemo ? 'demo' : 'real', Date.now() - 24 * 3600 * 1000);
+      return tradeHistoryStore.todaysPnlForSymbol(store, assetCfg.symbol, now);
+    } catch (e) {
+      console.log('[NyopetAutoTrader] Gagal sync income buat PnL hari ini:', e.message);
+      return null;
+    }
+  }
 
   function loadJournal() {
     if (!fs.existsSync(jPath)) return { balanceUsdc: 0, balanceUsdt: 0, orders: [], watchZoneByAsset: {} };
@@ -334,7 +352,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     Object.assign(target, { partialDone: true, remainingFraction: 0.5, sl: order.entryPrice, realizedPnlUsd, partialClosedAt: new Date().toISOString() });
     saveJournal(journal);
 
-    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate);
+    const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
+    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnl);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'partial', realizedPnlUsd, sl: order.entryPrice, exchange: assetCfg.exchange });
@@ -436,7 +455,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // asli, bukan lagi kalimat generik "Ditutup MANUAL atas permintaan X" -- lihat forceClosePosition),
     // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
     const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
-    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate);
+    const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
+    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });

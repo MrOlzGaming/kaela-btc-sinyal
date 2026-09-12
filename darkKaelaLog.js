@@ -182,10 +182,10 @@ Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam b
 
 // Tahap 1 (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper) -- separuh posisi diamankan,
 // SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
-function formatAutoPartial(pos, now, isDemo, idrRate) {
+function formatAutoPartial(pos, now, isDemo, idrRate, todaysPnl) {
   const sign = pos.realizedPnlUsd >= 0 ? '+' : '';
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Partial TP Diamankan*
-🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*
+🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}
 
 SL sisa digeser breakeven, separuh posisi di-trail.
 
@@ -195,7 +195,7 @@ SL sisa digeser breakeven, separuh posisi di-trail.
 // `alasanText` (3 Sep 2026) -- WAJIB dioper caller (nyopetAutoTrader.js), sumbernya beda
 // tergantung KENAPA ditutup: kode close-reason (SL/TRAIL/dst, lewat CLOSE_REASON_LABEL) buat
 // otomatis, teks yang Olan TULIS SENDIRI buat manual -- fungsi ini gak nebak-nebak sendiri.
-function formatAutoClosed(trade, now, isDemo, alasanText, idrRate) {
+function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const sign = trade.pnlUsd >= 0 ? '+' : '';
@@ -203,7 +203,7 @@ function formatAutoClosed(trade, now, isDemo, alasanText, idrRate) {
   return `${_nyopetBadge(trade, isDemo)} ${shortId(trade.id)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
-PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*
+PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: ${alasanText || '-'}
 
 🔗 ${KAELA_ACCESS_URL}`;

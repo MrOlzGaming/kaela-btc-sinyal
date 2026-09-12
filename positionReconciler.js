@@ -40,7 +40,6 @@ const kaela = require('./kaelaProTraderClient');
 // -- itu justru inti permintaannya: SATU gaya angka di semua pesan trading, bukan per-file beda).
 const { fmtUsdWithIdr, formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity } = require('./darkKaelaLog');
 const tradeHistoryStore = require('./tradeHistoryStore');
-const { localDateKey } = require('./config');
 
 // WIBOWO_GROUP_ID + saklar pause SEKARANG di wibowoNotify.js (4 Sep 2026, sebelumnya duplikat
 // konstanta di sini & multiAccountExecutor.js). KAELA_ACCESS_URL juga gak perlu lokal lagi --
@@ -93,15 +92,7 @@ function saveState(statePath, state) {
 // (2) _symbolsWithHiddenActivity (nemuin symbol yang KETOUCH tapi gak masuk radar getAllPositions,
 // lihat komentar _reconcileOneExchange soal "round-trip tersembunyi").
 async function _syncIncomeStore(exchange, client, phone, sinceMs) {
-  if (exchange !== 'binance') return null;
-  const filePath = tradeHistoryStore.storePath('binance', phone, 'real');
-  const store = tradeHistoryStore.loadStore(filePath);
-  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
-  const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
-  const normalized = (rawNew || []).map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
-  tradeHistoryStore.mergeEntries(store, normalized);
-  tradeHistoryStore.saveStore(filePath, store);
-  return store;
+  return tradeHistoryStore.syncIncomeStore(exchange, client, phone, 'real', sinceMs);
 }
 
 // (12 Sep 2026, permintaan Olan: "jadi pertanyaan di grup.. kok minus terus.. padahal di riwayat
@@ -113,12 +104,11 @@ async function _syncIncomeStore(exchange, client, phone, sinceMs) {
 // Fix: hitung total PnL symbol ini HARI INI (kalender WITA, exchange !== TRANSFER -- funding fee
 // IKUT kehitung di sini beda dari _extractActiveTradingSymbols, karena tujuannya "gambaran
 // ekonomi total", bukan "ada aktivitas apa nggak"), disisipin ke SEMUA pesan yang nunjukin PnL.
+// Diekstrak jadi tradeHistoryStore.todaysPnlForSymbol (12 Sep 2026) -- SEKARANG Sniper/Nyopet auto
+// juga reuse fungsi yang SAMA (dulu cuma jalur manual reconciler ini yang punya), thin wrapper di
+// sini biar semua call site di file ini gak perlu diganti nama.
 function _todaysPnlForSymbol(store, symbol, now) {
-  if (!store) return null;
-  const todayKey = localDateKey(now);
-  return store.entries
-    .filter((e) => e.symbol === symbol && e.type !== 'TRANSFER' && localDateKey(new Date(e.time)) === todayKey)
-    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  return tradeHistoryStore.todaysPnlForSymbol(store, symbol, now);
 }
 
 async function realizedPnlSince(exchange, client, phone, symbol, sinceMs, presyncedStore) {

@@ -126,7 +126,7 @@ async function getOlanNyopetTrader() {
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: false };
   const journalHook = buildJournalHook(account, null);
   const sendWA = buildSendWA(account, null);
-  return createNyopetTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA });
+  return createNyopetTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA, phone: account.phone });
 }
 
 // Cek judul event pakai pencocokan teks (data live gak selalu dalam format persis sama kayak

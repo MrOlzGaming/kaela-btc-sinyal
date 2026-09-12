@@ -219,7 +219,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     const isOlanRealAccount = safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real';
     const nyopetTrader = createNyopetTrader({
       client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
-      sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate,
+      sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate, phone: account.phone,
       reconcilerStatePath: isOlanRealAccount ? path.join(STATE_DIR, 'wibowo-reconciler-state.json') : undefined,
     });
     // 28 Agu 2026 -- eksekusi antrian tutup posisi manual DULUAN, sebelum siklus normal (biar

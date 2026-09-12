@@ -64,10 +64,12 @@ function tradeMetaLine(order) {
 // (Sempat dicoba `@nomor` polos buat "mention" -- DIHAPUS lagi, itu BUKAN mention WA asli, Fonnte
 // gak expose parameter mentions/tag resmi (dicek ke docs.fonnte.com 12 Sep 2026), cuma jadi link
 // nomor polos tanpa nama -- Olan sendiri yang notice "mentionnya ga ada nama".)
-function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, coinglassLink = COINGLASS_LINK }) {
+// `badge` (12 Sep 2026) -- default Sniper, dioper "🥷 NYOPET · Kaela" dari sniperAutoAnalysis.js
+// buat sinyal timeframe 4H (Nyopet mode, "sama kek Sniper cuma timeframe lebih rendah").
+function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, coinglassLink = COINGLASS_LINK, badge = '🎯 SNIPER · Kaela' }) {
   const rr = (sl !== null && sl !== undefined) ? Math.abs((entryPrice - sl) / entryPrice * 100) : null;
   const lines = [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — 🐻 SINYAL SHORT (window bear, MANUAL)`,
+    `${CATEGORY_COLOR.sniper.emoji} ${badge} — 🐻 SINYAL SHORT (window bear, MANUAL)`,
     `${assetEmoji} ${assetLabel} · Pola: ${patternType || '-'}`,
     '',
     `🔴 Potensi entry short @ ${fmt(entryPrice)}`,

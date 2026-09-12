@@ -48,6 +48,11 @@ const { fetchTradeMetrics } = require('./onchainMetrics');
 const { ASSETS } = require('./assetConfig');
 const { isBtcBearWindow } = require('./halvingBearWindow');
 const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
+// (12 Sep 2026, permintaan Olan: "Nyopet modenya sama kek Sniper, cuma timeframe lebih rendah" --
+// sinyal short window-bear WAJIB ada di Nyopet juga) -- REUSE fetch 4H+parameter Nyopet APA
+// ADANYA (jangan reimplementasi/duplikat), gak nyentuh createNyopetTrader/main (yang beneran
+// eksekusi trading) -- cuma 2 fungsi/konstanta MURNI ini yang dipakai, aman.
+const { fetchCandles4hPaginated, PATTERN_PARAMS_4H } = require('./nyopetAutoTrader');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const binanceEx = require('./binanceExecutor');
 const mexcEx = require('./mexcExecutor');
@@ -219,6 +224,25 @@ async function main() {
         }
       } catch (e) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short window bear (${e.message}), skip sinyal short giliran ini.`);
+      }
+      // Nyopet-mode (timeframe 4H, "sama kek Sniper cuma lebih rendah") -- pola BEDA
+      // (poleLookbackRange/flagLookbackRange versi rescaled 4H, lihat PATTERN_PARAMS_4H di
+      // nyopetAutoTrader.js) jadi HASIL scan-nya BISA beda dari versi daily Sniper di atas --
+      // dites TERPISAH, pesan TERPISAH, badge beda (🥷 NYOPET) biar gampang dibedain di grup.
+      try {
+        const nyopetCandles = await fetchCandles4hPaginated(assetCfg.symbol, 300);
+        const nyopetShortSig = detectPatternSignal(nyopetCandles, nyopetCandles.length - 1, { ...PATTERN_PARAMS_4H, allowShort: true });
+        if (nyopetShortSig && nyopetShortSig.direction === 'sell') {
+          const msg = formatBearShortSignal({
+            assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
+            entryPrice: nyopetCandles[nyopetCandles.length - 1].close, sl: nyopetShortSig.sl, patternType: nyopetShortSig.patternType,
+            badge: '🥷 NYOPET · Kaela',
+          });
+          console.log(msg + '\n');
+          await sendWhatsApp(msg);
+        }
+      } catch (e) {
+        console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short Nyopet 4H window bear (${e.message}), skip.`);
       }
       continue;
     }

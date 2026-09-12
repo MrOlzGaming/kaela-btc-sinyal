@@ -992,7 +992,11 @@ async function main() {
   await _defaultTrader.main();
 }
 
-module.exports = { createNyopetTrader, main };
+// fetchCandles4hPaginated/PATTERN_PARAMS_4H/CANDLES_NEEDED_4H diexpose (12 Sep 2026) biar
+// sniperAutoAnalysis.js bisa REUSE buat sinyal short window-bear timeframe Nyopet (4H) -- fungsi
+// murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createNyopetTrader
+// yang emang eksekusi trading, itu tetap TERGUARD if require.main===module di bawah).
+module.exports = { createNyopetTrader, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR nyopetAutoTrader.js:', e.message); process.exit(1); });

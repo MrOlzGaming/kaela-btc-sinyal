@@ -37,7 +37,7 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { getActiveOrders, getClosedOrders, createOrder, updateOrder } = require('./sniperOrders');
 const { hitung: hitungExposure } = require('./calculator');
 const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBankroll');
-const { formatAutoValid, formatAutoInvalid, formatPositionMonitor } = require('./sniperOrderLog');
+const { formatAutoValid, formatAutoInvalid, formatPositionMonitor, formatBearShortSignal } = require('./sniperOrderLog');
 const { sendWhatsApp, sendWhatsAppExcept } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { addEntry } = require('./archive');
@@ -198,6 +198,28 @@ async function main() {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: lagi window istirahat siklus halving (fase pasca-puncak, historis rawan bear) -- sinyal baru DIMATIKAN sementara.`);
       invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
       wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.`);
+      // (12 Sep 2026, kebijakan baru Olan -- lihat project-kaela-btc-sinyal.md "GANTUNGAN STRATEGI")
+      // -- window BEAR SEKARANG bukan cuma "senyap total": Kaela tetap SCAN pola short (bear
+      // flag/rising wedge, allowShort:true) SEBAGAI SINYAL doang -- gak pernah auto-eksekusi
+      // (candidates.push TETAP gak kesentuh di jalur ini, cuma kirim WA informasional). SIAPAPUN
+      // di grup boleh combine sinyal ini + liq heatmap + faktor lain masing-masing, posisi mini,
+      // MANUAL di exchange -- BUKAN cuma Olan (dikoreksi Olan sendiri: "kan ini grup, masa Olan
+      // doank" -- draft awal kesan personal ke dia doang + coba "mention" nomor polos DIHAPUS,
+      // lihat catatan formatBearShortSignal soal Fonnte gak punya mention WA asli).
+      try {
+        const [bearDaily] = await Promise.all([fetchCandles(assetCfg.symbol, '1d', PATTERN_HISTORY_DAYS)]);
+        const shortSig = detectPatternSignal(bearDaily, bearDaily.length - 1, { allowShort: true });
+        if (shortSig && shortSig.direction === 'sell') {
+          const msg = formatBearShortSignal({
+            assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
+            entryPrice: bearDaily[bearDaily.length - 1].close, sl: shortSig.sl, patternType: shortSig.patternType,
+          });
+          console.log(msg + '\n');
+          await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+        }
+      } catch (e) {
+        console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short window bear (${e.message}), skip sinyal short giliran ini.`);
+      }
       continue;
     }
 

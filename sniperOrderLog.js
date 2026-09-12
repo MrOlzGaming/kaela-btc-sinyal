@@ -10,7 +10,7 @@ const { ASSETS } = require('./assetConfig');
 // fmtUsdWithIdr (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
 // Sniper lama ini juga, biar konsisten) -- REUSE dari darkKaelaLog.js (SATU sumber format IDR,
 // gak duplikat). `idrRate` OPSIONAL, null/gagal -> fallback USD doang, gak gugurin pesan.
-const { fmtUsdWithIdr, todaysPnlLine } = require('./darkKaelaLog');
+const { fmtUsdWithIdr, todaysPnlLine, COINGLASS_LINK } = require('./darkKaelaLog');
 
 // assetLabel (22 Agu 2026, upgrade multi-aset) -- semua fungsi format di bawah TERIMA order yang
 // sekarang punya field `order.asset` ('btc'/'xau') -- fallback ke ASSETS.btc kalau order LAMA
@@ -53,6 +53,34 @@ function tradeMetaLine(order) {
   const volumeUsd = (order.marginUsd && order.leverage) ? order.marginUsd * order.leverage : null;
   const liqPrice = liquidationPrice(order);
   return `Margin ${fmt(order.marginUsd)} · Leverage ${order.leverage}× · Volume ${volumeUsd !== null ? fmt(volumeUsd) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmt(liqPrice)}` : ''}`;
+}
+
+// (12 Sep 2026, kebijakan baru Olan -- lihat memori project-kaela-btc-sinyal.md "GANTUNGAN
+// STRATEGI") -- SINYAL doang, BUKAN auto-trade. Window BEAR (isBtcBearWindow), Kaela DETEKSI pola
+// short (bear flag/rising wedge, allowShort:true) tapi GAK PERNAH buka posisi sendiri -- SIAPAPUN
+// di grup (Sniper Club/Wibowo Hedgefund) yang mau ikut, timing & eksekusi di tangan MASING-MASING
+// (Olan koreksi draft awal yang kesannya cuma ditujukan buat dia doang -- "kan ini grup").
+// Beda TOTAL dari formatRencana (itu buat sinyal yang BENERAN dieksekusi otomatis).
+// (Sempat dicoba `@nomor` polos buat "mention" -- DIHAPUS lagi, itu BUKAN mention WA asli, Fonnte
+// gak expose parameter mentions/tag resmi (dicek ke docs.fonnte.com 12 Sep 2026), cuma jadi link
+// nomor polos tanpa nama -- Olan sendiri yang notice "mentionnya ga ada nama".)
+function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, coinglassLink = COINGLASS_LINK }) {
+  const rr = (sl !== null && sl !== undefined) ? Math.abs((entryPrice - sl) / entryPrice * 100) : null;
+  const lines = [
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — 🐻 SINYAL SHORT (window bear, MANUAL)`,
+    `${assetEmoji} ${assetLabel} · Pola: ${patternType || '-'}`,
+    '',
+    `🔴 Potensi entry short @ ${fmt(entryPrice)}`,
+  ];
+  if (rr !== null) lines.push(`⚠️ Invalidasi/SL referensi @ ${fmt(sl)} (jarak ~${rr.toFixed(1)}%)`);
+  lines.push(
+    '',
+    '⛔ INI SINYAL DOANG -- Kaela GAK auto-eksekusi short. Timing & eksekusi 100% di tangan MASING-MASING (cek liq heatmap + faktor lain dulu, posisi mini disarankan).',
+    '',
+    `🔗 Liq Heatmap: ${coinglassLink}`,
+  );
+  lines.push('', nowStr());
+  return lines.join('\n');
 }
 
 function formatRencana(order) {
@@ -430,4 +458,4 @@ function formatAutoInvalid({ notes }) {
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid, formatSignalInfoOnly };
+module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid, formatSignalInfoOnly, formatBearShortSignal };

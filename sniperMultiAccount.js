@@ -232,6 +232,15 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
   async function runCycle(originalActiveOrders) {
     const closedEntries = [];
     for (const o of originalActiveOrders) {
+      // (13 Sep 2026, permintaan Olan: "demo boleh dua arah, real tetap manual" -- sistem mirror
+      // ini nyalin APAPUN arah yang Olan udah beneran eksekusi manual di real (liveExecution.ok).
+      // Kalau Olan manual short dari sinyal window-bear, JANGAN auto-mirror ke akun REAL member
+      // lain (mereka harusnya mutusin sendiri kayak Olan) -- TAPI akun DEMO boleh ikut auto,
+      // "gak usah takut rungkad, tinggal reset". Long TETAP dimirror ke semua kayak biasa.
+      if (o.direction === 'sell' && apiCreds && apiCreds.testnet === false) {
+        console.log(`[SniperMultiAccount] Skip mirror SHORT ${o.id} ke akun REAL -- short cuma auto buat akun demo, real WAJIB manual sendiri.`);
+        continue;
+      }
       try {
         await mirrorEntry(o);
       } catch (e) {

@@ -236,14 +236,67 @@ async function main() {
       // lihat catatan formatBearShortSignal soal Fonnte gak punya mention WA asli).
       try {
         const [bearDaily] = await Promise.all([fetchCandles(assetCfg.symbol, '1d', PATTERN_HISTORY_DAYS)]);
+        const bearLivePrice = bearDaily[bearDaily.length - 1].close;
         const shortSig = detectPatternSignal(bearDaily, bearDaily.length - 1, { allowShort: true });
         if (shortSig && shortSig.direction === 'sell') {
-          const msg = formatBearShortSignal({
-            assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
-            entryPrice: bearDaily[bearDaily.length - 1].close, sl: shortSig.sl, patternType: shortSig.patternType,
-          });
-          console.log(msg + '\n');
-          await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+          // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah...
+          // window bear fokus short") -- KHUSUS isTestnet() true (demo), Kaela AUTO-EKSEKUSI short
+          // ini (bukan cuma info) -- reuse pola exec+safety-net PERSIS sama kayak candidate long
+          // di bawah (setLeverage->entry->SL dgn jaring pengaman emergency-close kalau SL gagal
+          // nempel->TP), createOrder dicatat SAMA biar kekelola sniperOrderMonitor/sniperLiveMonitor
+          // normal. Real (isTestnet()===false) TETAP informational-only (gak masuk cabang ini).
+          if (isTestnet()) {
+            const availableBalance = Math.max(0, totalBalance - usedMargin);
+            const riskDistance = Math.abs(bearLivePrice - shortSig.sl);
+            const nyawaPct = riskDistance / bearLivePrice * 100;
+            if (availableBalance > 1 && riskDistance > 0 && nyawaPct <= MAX_NYAWA_PCT) {
+              const partialTp = bearLivePrice - riskDistance * PARTIAL_RR;
+              if (partialTp > 0) {
+                const calc = hitungExposure({ modal: availableBalance, entry: bearLivePrice, stopLoss: shortSig.sl });
+                const created = createOrder({
+                  asset: assetKey, mode: 'sniper', direction: 'sell', strategyType: 'breakout', triggerPrice: bearLivePrice,
+                  confirmationNote: `Breakout SHORT window bear -- ${shortSig.patternType} (nyawa ${nyawaPct.toFixed(1)}%). Demo-only (isTestnet), lihat GANTUNGAN STRATEGI 12 Sep 2026.`,
+                  tpReasoning: `Target tahap 1 (beli-balik separuh): ${PARTIAL_RR}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}.`,
+                  tp: partialTp, sl: shortSig.sl, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
+                  patternType: shortSig.patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
+                  notes: `Sinyal SHORT window bear, DEMO ONLY (Real gak auto-eksekusi short -- lihat pesan info terpisah).`,
+                }, now);
+                const opened = updateOrder(created.id, { status: 'floating', entryPrice: bearLivePrice, triggeredAt: now.toISOString() });
+                usedMargin += calc.margin;
+                const exec = execClientFor(assetCfg);
+                const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
+                let liveExecution = null;
+                try {
+                  await exec.setLeverage(execSymbol, calc.leverage);
+                  const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: 'sell', notionalUsd: calc.nilaiPosisi, livePrice: bearLivePrice });
+                  const entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
+                  try {
+                    await exec.placeStopLoss({ symbol: execSymbol, direction: 'sell', stopPrice: shortSig.sl, quantity: entryFilledQty });
+                  } catch (slError) {
+                    console.log(`[SniperAutoAnalysis] SHORT demo SL GAGAL nempel (${slError.message}) -- tutup PAKSA demi keamanan.`);
+                    await exec.emergencyCloseMarket({ symbol: execSymbol, direction: 'sell', quantity: entryFilledQty });
+                    throw new Error(`Entry short masuk tapi SL gagal nempel (${slError.message}) -- UDAH DITUTUP PAKSA otomatis.`);
+                  }
+                  await exec.placeTakeProfit({ symbol: execSymbol, direction: 'sell', tpPrice: partialTp, quantity: entryFilledQty });
+                  liveExecution = { ok: true, filledQty: entryFilledQty, testnet: true, exchange: assetCfg.exchange };
+                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT DEMO sukses (window bear) -- qty ${entryFilledQty}.`);
+                } catch (e) {
+                  liveExecution = { ok: false, error: e.message, testnet: true, exchange: assetCfg.exchange };
+                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT DEMO gagal (shadow tracking tetap jalan): ${e.message}`);
+                }
+                const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution });
+                console.log(msg + '\n');
+                await sendWhatsAppRespectMute(msg, `sinyal SHORT DEMO window bear (${assetCfg.label})`, false, true);
+              }
+            }
+          } else {
+            const msg = formatBearShortSignal({
+              assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
+              entryPrice: bearLivePrice, sl: shortSig.sl, patternType: shortSig.patternType,
+            });
+            console.log(msg + '\n');
+            await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+          }
         }
       } catch (e) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short window bear (${e.message}), skip sinyal short giliran ini.`);

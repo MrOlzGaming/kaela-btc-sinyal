@@ -15,7 +15,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { localDateKey } = require('./config');
 
 const STORE_DIR = path.join(__dirname, 'multi-account-state', 'trade-history');
 
@@ -93,11 +92,20 @@ async function syncIncomeStore(exchange, client, phone, mode, sinceMs) {
 // (positionReconciler.js, dibuat 12 Sep 2026 buat kasus "kok minus terus.. padahal di riwayat
 // surplus") jadi SATU fungsi bersama di sini, biar Sniper/Nyopet/manual reconciler semua reuse
 // SATU logika (bukan re-implement tiap file) -- exclude TRANSFER (setor/tarik dana, bukan trading).
+//
+// ⛔ BUG NYATA ketemu+fix 12 Sep 2026 (Olan cross-check ke app Binance -- "masak kerugianku sebesar
+// itu, tanggal 12 aja di binance tercatat rugi belum ada sedolar"): SEBELUMNYA pakai `localDateKey`
+// (WITA/UTC+8, konvensi standar Kaela di SEMUA fitur lain) -- tapi kalender "PnL hari ini" di app
+// Binance sendiri baku pakai batas hari **UTC**, BUKAN WITA. Selisih 8 jam bikin baris ini nyakup
+// ~8 jam data "kemarin versi Binance" ketambah ke "hari ini versi Kaela" -- angka jadi jauh lebih
+// negatif dari yang Olan liat di HP-nya sendiri. Karena TUJUAN baris ini emang buat "samain
+// gambaran sama yang Olan liat di exchange", di sini SENGAJA pakai batas UTC (bukan WITA) --
+// pengecualian dari konvensi WITA umum Kaela, khusus buat fungsi cross-check exchange ini.
 function todaysPnlForSymbol(store, symbol, now) {
   if (!store) return null;
-  const todayKey = localDateKey(now);
+  const todayKey = now.toISOString().slice(0, 10); // UTC day key, SENGAJA beda dari localDateKey (WITA)
   return store.entries
-    .filter((e) => e.symbol === symbol && e.type !== 'TRANSFER' && localDateKey(new Date(e.time)) === todayKey)
+    .filter((e) => e.symbol === symbol && e.type !== 'TRANSFER' && new Date(e.time).toISOString().slice(0, 10) === todayKey)
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 }
 

@@ -717,11 +717,13 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
       triggeredAt: new Date().toISOString(), manualReason: null,
     };
+    const smartMoney = await fetchSmartMoneyContext(assetKey);
+    order.smartMoneyGapAtEntry = smartMoney.gap;
     const journal = loadJournal();
     journal.orders.push(order);
     saveJournal(journal);
 
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate, smartMoney.line);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', entryPrice, sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: order.marginUsd, status: 'open', openedAt: order.triggeredAt, note: `Fed Dovish Grid (${signal.label})` });

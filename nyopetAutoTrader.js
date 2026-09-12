@@ -58,6 +58,26 @@ const { isLiveTradingEnabled } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
+const { fetchBinancePositioning } = require('./marketSentiment');
+
+// 12 Sep 2026, permintaan Olan ("Nyopet chart-pattern juga dikasih konteks smart-money yang
+// sama" -- lanjutan Fase 1 Sniper) -- KONTEKS doang, BELUM ngaruh eksekusi/gating apapun. Cuma
+// keisi buat BTC (gak ada data positioning Binance buat Emas/MEXC). Balikin { line, gap } --
+// `gap` disimpen ke order buat riset korelasi nanti, `line` yang ditempel ke pesan WA.
+async function fetchSmartMoneyContext(assetKey) {
+  if (assetKey !== 'btc') return { line: '', gap: null };
+  try {
+    const p = await fetchBinancePositioning('BTCUSDT');
+    const gap = Number((p.topLongPct - p.globalLongPct).toFixed(2));
+    const arah = gap > 5 ? 'JUGA condong LONG (dukung posisi ini)'
+      : gap < -5 ? 'kurang antusias/malah condong SHORT (sinyal ini kesannya murni gerakan retail, waspada)'
+      : 'netral, gak ada sinyal tambahan jelas';
+    return { line: `🐋 Smart Money (riset, BELUM jadi filter): top trader ${p.topLongPct.toFixed(0)}% long vs akun global ${p.globalLongPct.toFixed(0)}% long -- ${arah}`, gap };
+  } catch (e) {
+    console.log('[NyopetAutoTrader] Gagal ambil konteks smart-money (dilewatin, gak fatal):', e.message);
+    return { line: '', gap: null };
+  }
+}
 
 const DEFAULT_JOURNAL_PATH = path.join(__dirname, 'nyopet-journal.json');
 // "Modal aktif" = 1/5 saldo -- konvensi LAMA dipertahanin (bukan hal baru dari riset v2, cuma
@@ -277,12 +297,14 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // dari pattern (patternReason) di kasus itu, bukan dari field ini.
       manualReason: sig.manualReason || null,
     };
+    const smartMoney = await fetchSmartMoneyContext(assetKey);
+    order.smartMoneyGapAtEntry = smartMoney.gap;
     const journal = loadJournal();
     journal.orders.push(order);
     saveJournal(journal);
 
     const dxyLine = await formatDxyLine().catch(() => '');
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate, smartMoney.line);
     console.log(msg + '\n');
     await notify(msg);
     // 6 Sep 2026, permintaan Olan (jurnal member: "beda dia trade sendiri atau karena kaela") --

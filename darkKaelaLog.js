@@ -153,7 +153,7 @@ function _nyopetBadge(pos, isDemo) {
 // (aksi/label baris pertama, arah LONG/SHORT, angka PnL final) -- field lain TETAP polos biar gak
 // kebanyakan bold (kontras ilang kalau semua ditebelin). `idrRate` null/gagal -> fmtUsdWithIdr
 // sendiri fallback USD doang, gak pernah gugurin pesan gara-gara kurs gagal kebaca.
-function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate) {
+function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Buka Posisi*
@@ -162,7 +162,7 @@ ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 TP1: ${fmtUsd(pos.tp)} · SL: ${fmtUsd(pos.sl)}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
-Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}
+Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }

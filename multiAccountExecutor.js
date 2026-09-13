@@ -711,7 +711,10 @@ async function main() {
 // checkManualOpenRequest.js biar posisi manual dari web (Jurnal Saya) DAPET notif+jurnal PERSIS
 // sama kayak posisi yang dibuka bot (DM member + broadcast Wibowo buat Olan + relay admin) --
 // SATU sumber kebenaran, bukan reimplementasi/logic dobel yang bisa ketinggalan sinkron.
-module.exports = { main, runBalanceReports, buildJournalHook, buildSendWA, safeKey, MASTER_NOMOR };
+// buildModalOverride diekspor 13 Sep 2026 -- dipakai run-position-check-fast.sh (script BARU,
+// Olan-real-account-only tiap 5 menit) biar getModalBase-nya SAMA PERSIS kayak siklus utama,
+// bukan reimplementasi/di-skip yang bisa bikin sizing beda antara 2 jalur.
+module.exports = { main, runBalanceReports, buildJournalHook, buildSendWA, safeKey, MASTER_NOMOR, buildModalOverride, _mexcNotConfiguredStub };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR multiAccountExecutor.js:', e.message); process.exit(1); });

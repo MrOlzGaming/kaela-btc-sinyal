@@ -233,14 +233,26 @@ Alasan: ${alasanText || '-'}
 // nyopetAutoTrader.js -- posisi kayak gini SANGAT RAWAN kecampur manual trading Olan langsung,
 // hasil hitungannya kebukti ngarang). Pesan ini JUJUR ngaku gak tau angkanya drpd nyebar data
 // palsu -- beda TOTAL dari formatAutoClosed (yang SELALU asumsi exitPrice/pnlUsd itu angka nyata).
+// 13 Sep 2026, kritik Olan ("perbaiki dulu ini") atas pesan #937603 -- kalimat LAMA nuduh
+// "kemungkinan besar disentuh trading manual langsung" sbg SATU-SATUNYA dugaan, padahal per
+// histori bug nyata di titik adopsi (nyopetAutoTrader.js, insiden 3/8/12 Sep 2026), penyebab yang
+// SAMA MUNGKINNYA (bahkan lebih sering kejadian di histori proyek ini) adalah MESIN EKSEKUTOR
+// PINDAH LEADER (`multi-account-state/` SENGAJA gak disinkron git -- data personal, lihat
+// .gitignore -- jadi journal lokal mesin BARU "lupa total" posisi yang aslinya dibuka mesin LAMA,
+// padahal itu 100% posisi Kaela sendiri, BUKAN manual Olan). Nuduh "manual" doang di sini BISA
+// bikin Olan ngerasa disalahin buat kesalahan yang sebenarnya bukan aksinya -- gak jujur/adil
+// kalau sistem sendiri gak tau pasti mana dari 2 kemungkinan ini yang beneran kejadian.
 function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, isDemo) {
   const dirLabel = direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
   return `🥷 NYOPET ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
-⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya (kemungkinan besar disentuh trading manual langsung), sekarang udah gak ada lagi.
+⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya, sekarang udah gak ada lagi. Kaela GAK BISA mastiin kenapa dari sini -- 2 kemungkinan yang SAMA-SAMA masuk akal: (1) disentuh trading manual langsung di exchange, ATAU (2) mesin eksekutor sempat pindah (data posisi ini memang sengaja gak disinkron antar-mesin) sehingga posisi Kaela sendiri "kelupaan" jurnalnya -- BUKAN berarti ini otomatis manual.
 
-Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan, cek langsung riwayat exchange buat angka pastinya.
+Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan (kemungkinan #2), cek langsung riwayat exchange buat angka pastinya.
 
-🔗 ${KAELA_ACCESS_URL}`;
+🔗 ${KAELA_ACCESS_URL}
+
+— Kaela
+   (laporan: 🐉 Drake · Debug Specialist)`;
 }
 
 // ============ Manual di luar sistem (positionReconciler.js) -- (5 Sep 2026, permintaan Olan:

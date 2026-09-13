@@ -13,12 +13,23 @@
 // 3. SIDE pakai kode angka (1=open long, 2=close short, 3=open short, 4=close long), openType
 //    (1=isolated, 2=cross) dipilih PER-ORDER (bukan endpoint terpisah kayak Binance marginType).
 //
-// ⚠️ BELUM PERNAH DITES LIVE (30 Agu 2026) -- ditulis dari dokumentasi resmi
-// (mexcdevelop.github.io/apidocs/contract_v1_en/) doang, BELUM ada API key buat verifikasi
-// beneran. SEBELUM dipakai modal real: tes `getContractDetail` + `placeMarketEntry` nominal
-// SEKECIL MUNGKIN dulu, cek posisi yang kebuka beneran sesuai itungan, baru naikin.
+// ✅ 14 Sep 2026 -- TERVERIFIKASI LIVE penuh (Olan isi $10 USDC, tes buka/tutup LONG+SHORT+SL/TP).
+// 3 bug NYATA ketemu+fix dari tes ini (lihat BUG_REGISTRY.md BUG-KAELATRADE-0006/0007/0008) --
+// peringatan "belum pernah dites" yang dulu ada di sini TERBUKTI beralasan, JANGAN anggap kode
+// baru (misal exchange lain suatu saat) otomatis benar cuma karena "ditulis rapi dari dokumentasi".
 
 const crypto = require('crypto');
+
+// (14 Sep 2026, konsolidasi PASCA-BUG -- lihat BUG-KAELATRADE-0007/0009) -- SEBELUMNYA tiap
+// caller (sniperMultiAccount.js/sniperAutoAnalysis.js/nyopetAutoTrader.js) nulis SENDIRI-SENDIRI
+// ternary `direction==='buy' ? X : Y` buat kode arah MEXC (positionType buat setLeverage, side
+// buat close order) -- itu PERSIS pola yang bikin 2 bug ketuker (closeSide) dan default salah
+// (positionType gak dioper) kejadian malam ini, di tempat BEDA-BEDA. SEKARANG 1 sumber kebenaran
+// di sini, dipakai INTERNAL (placeMarketEntry/emergencyCloseMarket/placeStopLoss/placeTakeProfit)
+// DAN diekspor buat caller yang masih perlu positionType eksplisit (setLeverage).
+function positionTypeFor(direction) { return direction === 'buy' ? 1 : 2; } // 1=long, 2=short
+function openSideFor(direction) { return direction === 'buy' ? 1 : 3; } // 1=open long, 3=open short
+function closeSideFor(direction) { return direction === 'buy' ? 4 : 2; } // 4=close long, 2=close short (posisi yang mau ditutup punya arah `direction` ini)
 
 function loadSecrets() {
   try {
@@ -199,7 +210,7 @@ function createMexcClient({ apiKey, apiSecret }) {
     const rawVol = notionalUsd / livePrice / contractSize;
     const vol = Math.floor(rawVol); // MEXC vol WAJIB integer (jumlah kontrak bulat)
     if (vol <= 0) throw new Error(`Vol kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat contractSize ${contractSize}) -- order gak dikirim.`);
-    const side = direction === 'buy' ? 1 : 3; // 1=open long, 3=open short
+    const side = openSideFor(direction);
     // `leverage` WAJIB (lihat catatan bug di deklarasi lastLeverageBySymbol) -- diambil dari
     // setLeverage TERAKHIR buat symbol ini. Kalau caller lupa/gak pernah manggil setLeverage dulu
     // (harusnya gak pernah kejadian di alur normal Sniper/Nyopet, TAPI jaga2), fallback ke 1x
@@ -232,7 +243,7 @@ function createMexcClient({ apiKey, apiSecret }) {
   // beneran (posisi kecil) SEBELUM dipercaya penuh buat modal lebih gede.
   async function placeStopLoss({ symbol, direction, stopPrice, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
-    const closeSide = direction === 'buy' ? 4 : 2; // buy (posisi LONG) -> close-long(4); sell (posisi SHORT) -> close-short(2)
+    const closeSide = closeSideFor(direction);
     return signedRequest('POST', '/api/v1/private/planorder/place', {
       symbol, vol, side: closeSide, triggerPrice: stopPrice, triggerType: direction === 'buy' ? 2 : 1, trend: 1, executeCycle: 1, orderType: 5,
     });
@@ -240,7 +251,7 @@ function createMexcClient({ apiKey, apiSecret }) {
 
   async function placeTakeProfit({ symbol, direction, tpPrice, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
-    const closeSide = direction === 'buy' ? 4 : 2; // buy (posisi LONG) -> close-long(4); sell (posisi SHORT) -> close-short(2)
+    const closeSide = closeSideFor(direction);
     return signedRequest('POST', '/api/v1/private/planorder/place', {
       symbol, vol, side: closeSide, triggerPrice: tpPrice, triggerType: direction === 'buy' ? 1 : 2, trend: 1, executeCycle: 1, orderType: 5,
     });
@@ -254,7 +265,7 @@ function createMexcClient({ apiKey, apiSecret }) {
   // TERBUKTI salah lewat tes beneran, bukan cuma dugaan.
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
-    const closeSide = direction === 'buy' ? 4 : 2; // buy (posisi LONG) -> close-long(4); sell (posisi SHORT) -> close-short(2)
+    const closeSide = closeSideFor(direction);
     return signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side: closeSide, type: 5, openType: 1, reduceOnly: true });
   }
 
@@ -326,4 +337,7 @@ module.exports = {
   createMexcClient, isMexcConfigured, EXCHANGE_NAME: 'mexc',
   getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
   getPositionRisk, getAllPositions, getOrderDeals, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
+  // Diekspor (14 Sep 2026, konsolidasi) buat caller yang masih perlu positionType eksplisit
+  // (setLeverage) -- SATU sumber kebenaran, lihat catatan di deklarasinya.
+  positionTypeFor, openSideFor, closeSideFor,
 };

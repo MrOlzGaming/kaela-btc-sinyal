@@ -308,7 +308,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // `positionType` (14 Sep 2026, audit "Marcus" -- lihat sniperAutoAnalysis.js buat penjelasan
     // lengkap) -- Nyopet chart-pattern SEKARANG selalu 'buy' (LONG-ONLY, lihat catatan atas file),
     // TAPI eksplisit di sini drpd andelin default -- aman kalau suatu saat short diaktifin.
-    await exec.setLeverage(symbol, calc.leverage, sig.direction === 'buy' ? 1 : 2);
+    await exec.setLeverage(symbol, calc.leverage, mexcExecutorDefault.positionTypeFor(sig.direction));
     let entryOrder;
     try {
       entryOrder = await exec.placeMarketEntry({ symbol, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice });

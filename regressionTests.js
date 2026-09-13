@@ -20,6 +20,8 @@ const assert = require('assert');
 const fs = require('fs');
 const tradeHistoryStore = require('./tradeHistoryStore');
 const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
+const { getExposure } = require('./calculator');
+const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -158,6 +160,31 @@ async function main() {
     const { stuck, windowStart } = detectStuck([Date.now(), Date.now() + 900000], []); // cuma 2, ambang 3
     assert.strictEqual(stuck, false);
     assert.strictEqual(windowStart, null, 'windowStart null nandain "belum cukup data", BEDA dari "sehat"');
+  });
+
+  // getExposure -- ground truth persis dari tabel di header calculator.js (titik peralihan
+  // paling rawan salah ketuker adalah TEPAT di $10.000, sengaja dites presisi di situ).
+  await test('getExposure: titik peralihan bracket (ground truth tabel calculator.js)', () => {
+    assert.strictEqual(getExposure(9999), 1.5, 'Modal $9.999 harus masih di bracket 1,5x');
+    assert.strictEqual(getExposure(10000), 0.75, 'Modal PERSIS $10.000 harus udah pindah ke 0,75x');
+    assert.strictEqual(getExposure(99999), 0.75, 'Modal $99.999 harus masih di bracket 0,75x');
+    assert.strictEqual(getExposure(100000), 0.375, 'Modal PERSIS $100.000 harus udah pindah ke 0,375x');
+  });
+
+  // positionTypeFor/openSideFor/closeSideFor -- konsolidasi (14 Sep 2026) dari ternary yang
+  // sebelumnya tersebar di mexcExecutor.js internal + 5 titik pemanggil (BUG-KAELATRADE-0007
+  // closeSide kebalik, BUG-KAELATRADE-0009 positionType ke-skip buat SHORT). Ground truth
+  // dikonfirmasi LIVE lewat tes MEXC beneran (buka/tutup LONG+SHORT XAUUSDC) malam ini.
+  await test('mexcExecutor direction mapping: buy -> long/open-long/close-long', () => {
+    assert.strictEqual(positionTypeFor('buy'), 1, 'buy harus positionType 1 (long)');
+    assert.strictEqual(openSideFor('buy'), 1, 'buy harus openSide 1 (open long)');
+    assert.strictEqual(closeSideFor('buy'), 4, 'buy harus closeSide 4 (close long) -- ini yang kebalik di BUG-0007');
+  });
+
+  await test('mexcExecutor direction mapping: sell -> short/open-short/close-short', () => {
+    assert.strictEqual(positionTypeFor('sell'), 2, 'sell harus positionType 2 (short)');
+    assert.strictEqual(openSideFor('sell'), 3, 'sell harus openSide 3 (open short)');
+    assert.strictEqual(closeSideFor('sell'), 2, 'sell harus closeSide 2 (close short) -- ini yang kebalik di BUG-0007');
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

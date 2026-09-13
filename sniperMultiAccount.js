@@ -114,7 +114,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     await exec.setIsolatedMargin(execSymbol);
     // `positionType` (14 Sep 2026, audit "Marcus" -- lihat sniperAutoAnalysis.js buat penjelasan
     // lengkap bug-nya) -- MEXC butuh tau sisi (long/short) yang levernya diubah, Binance abaikan param ini.
-    await exec.setLeverage(execSymbol, calc.leverage, originalOrder.direction === 'buy' ? 1 : 2);
+    await exec.setLeverage(execSymbol, calc.leverage, mexcExecutorDefault.positionTypeFor(originalOrder.direction));
     const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: originalOrder.direction, notionalUsd: calc.nilaiPosisi, livePrice });
     const filledQty = parseFloat(entryOrder.executedQty);
 
@@ -169,7 +169,7 @@ Alasan: ${alasanOpen}
     const calc = hitungExposure({ modal: modalFull, entry: livePrice, stopLoss: mirror.entryPriceReal });
     await exec.setIsolatedMargin(execSymbol);
     // `positionType` (14 Sep 2026, audit "Marcus") -- sama gap, lihat catatan di mirrorEntry() atas.
-    await exec.setLeverage(execSymbol, calc.leverage, mirror.direction === 'buy' ? 1 : 2);
+    await exec.setLeverage(execSymbol, calc.leverage, mexcExecutorDefault.positionTypeFor(mirror.direction));
     const reopenOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: mirror.direction, notionalUsd: remainingQty * livePrice, livePrice });
     const leg2Qty = parseFloat(reopenOrder.executedQty);
     const leg2Entry = parseFloat(reopenOrder.avgPrice);

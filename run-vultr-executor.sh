@@ -179,6 +179,11 @@ timeout 60 node pnlCrossCheckMonitor.js >> "$LOG_FILE" 2>&1 || log "pnlCrossChec
 timeout 30 node orderBookSnapshot.js >> "$LOG_FILE" 2>&1 || log "orderBookSnapshot.js ERROR/TIMEOUT (exit $?)"
 timeout 30 node exchangeWalletTracker.js >> "$LOG_FILE" 2>&1 || log "exchangeWalletTracker.js ERROR/TIMEOUT (exit $?)"
 
+# "Tim Kaela" role digest (13 Sep 2026, permintaan Olan setelah kenalin NEXUS-FORGE) -- rangkuman
+# MINGGUAN (Senin WITA, no-op diam2 hari lain -- lihat komentar di file) commit yang ditandai
+# role, kirim ke Wibowo Hedgefund. SENGAJA skip kirim kalau nol commit bertanda minggu itu.
+timeout 30 node teamDigestReport.js >> "$LOG_FILE" 2>&1 || log "teamDigestReport.js ERROR/TIMEOUT (exit $?)"
+
 # Monitor Order Sniper -- channel Sniper LAMA (posisi real Olan sendiri), pantau TP/SL/partial
 # exit (4 Sep 2026, sama akar masalah kayak Price Alert/DXY di atas -- audit nunjukin jadwal GH
 # Actions "tiap jam"-nya kebukti jalan tiap 2-4 jam, notif TP/SL kena bisa telat berjam-jam).

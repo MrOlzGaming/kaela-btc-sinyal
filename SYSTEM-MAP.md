@@ -183,6 +183,33 @@ regression test (kalau ada), diadaptasi dari pola "Bug Registry" `NEXUS-FORGE`
 (`D:\KAELA PROJECT\NEXUS-FORGE\`, kerangka tim-AI Olan). Cek ini kalau mau ubah logic sync
 income/PnL, whale-scan, atau broadcast Wibowo -- kemungkinan ada pelajaran dari insiden sebelumnya.
 
+## 🎭 "Tim Kaela" -- konvensi tag role di commit (13 Sep 2026)
+
+Olan minta konsep `NEXUS-FORGE` diterapin sedikit ke commit: **tiap commit yang cocok sama salah
+satu spesialisasi, WAJIB awali subject-nya dengan `[ROLE]`** (contoh: `[RAVEN] Perbaiki pagination
+sync income Binance`, `[ZANE] Redesign badge status di dashboard.html`, `[DRAKE] Fix bug tranId
+dedup`). Role yang relevan buat kode (liat `NEXUS_FORGE_CORE_v12_4.txt` roster lengkap):
+
+| Tag | Domain | Kapan dipakai |
+|-----|--------|----------------|
+| `[CIPHER]` | Business Analyst | Nulis/ubah requirement, acceptance criteria |
+| `[LYRA]` | UX/Design | Desain wireframe/spec (bukan implementasi) |
+| `[RAVEN]` | Backend/Data Pipeline | Logic sync exchange, API, database/state file |
+| `[ZANE]` | Frontend/Tampilan | `dashboard.html`/`analis.html`/web lain |
+| `[MARCUS]` | Security Review | Audit keamanan/akses |
+| `[DRAKE]` | Debug Specialist | Fix bug (masuk `BUG_REGISTRY.md`) |
+| `[VECTOR]` | QA Tester | Nulis/jalanin test (`regressionTests.js` dst) |
+| `[PRISM]` | Data QA | Verifikasi kalkulasi bisnis/angka |
+| `[NOVA]` | Dokumentasi | README/panduan/SYSTEM-MAP ini sendiri |
+| `[REED]` | Archive | Registry/changelog/arsip histori |
+
+Commit TANPA tag = kerjaan umum Kaela (riset, config kecil, dll) -- gak wajib dipaksa masuk salah
+satu kotak di atas. **`teamDigestReport.js`** ngerangkum tag ini jadi 1 laporan MINGGUAN (Senin
+WITA, skip total kalau nol commit bertanda minggu itu -- anti-spam) ke grup Wibowo Hedgefund,
+SELALU sertain disclaimer jujur: ini bukan tim manusia terpisah, spesialisasi/mode-kerja Kaela
+sendiri. Olan sendiri dapet badge `👑 Olan · Founder & Final Approval` (posisi command tertinggi,
+sesuai roster NEXUS-FORGE asli -- semua role lapor ke Kaela, Kaela lapor ke Olan).
+
 ## 📚 Kalau mau riset ide baru
 
 1. **Grep dulu** comment `⛔`/`✅` di file terkait + folder `backtest/` -- kemungkinan besar udah

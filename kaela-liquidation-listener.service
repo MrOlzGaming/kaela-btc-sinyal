@@ -1,5 +1,5 @@
 [Unit]
-Description=Kaela Liquidation Listener (Binance forceOrder WebSocket stream)
+Description=Kaela Liquidation Listener (Bybit allLiquidation WebSocket stream)
 After=network-online.target
 Wants=network-online.target
 

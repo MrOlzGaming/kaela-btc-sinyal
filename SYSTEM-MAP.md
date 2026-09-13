@@ -52,6 +52,7 @@ GAS) -- BEDA folder, BEDA repo, mapping ini GAK nyakup itu.
 | Nyopet Econ-Reaction Scalp | ✅ LIVE, **FOMC DOANG** | `econCalendarLiveMonitor.js` | NFP di-**PAUSE** (gagal Deflated Sharpe+Permutation Test), CPI/PPI **DITOLAK**, versi **long-only DITOLAK JUGA** (12 Sep 2026) -- edge-nya emang gak cukup kuat, bukan soal arah |
 | Musiman DCA (real Olan + shadow Kaela) | ✅ LIVE | `spotDca.js` | SENGAJA tanpa filter apapun -- kesederhanaan = kekuatannya |
 | Compound Alt DCA | ✅ LIVE | `spotDcaAlt.js` | - |
+| Eksekusi MEXC (Emas, dompet independen) | ✅ LIVE **TERVERIFIKASI 14 Sep 2026** | `mexcExecutor.js` | Sebelum ini CUMA ditulis dari dokumentasi (belum pernah dites API key beneran) -- Olan isi $10 USDC buat tes live pertama, 4 bug KRITIS ketemu+fix (BUG-KAELATRADE-0006/0007/0008/0009, lihat `BUG_REGISTRY.md`), paling bahaya closeSide kebalik (posisi bakal kebuka TANPA SL/TP proteksi). Mapping arah (`positionType`/`openSide`/`closeSide`) sekarang DIKONSOLIDASI jadi 3 fungsi resmi (bukan ternary tersebar) + ditest otomatis (`regressionTests.js`) |
 | Smart-money-divergence (top trader vs retail) | 🟡 INFO-ONLY | `smartMoneyDivergenceMonitor.js` | Binance cuma nyimpen histori 30 hari -- BELUM BISA divalidasi ketat. Numpuk data di `smartMoneyResearchLog.js`, revisit setelah beberapa BULAN |
 | Whale netflow (exchange in/out) | 🟡 INFO-ONLY (via Anomaly Scanner) | `whaleDailyDigest.js`+`exchangeAddresses.js` | Riset lama gagal (data lemah), data BARU (WalletExplorer, jutaan alamat) numpuk di `whaleNetflowResearchLog.js` (harian) + `whaleNetflowResearchLog.js`'s `whale-netflow-4h-research-log.json` (4H, nyamain candle Nyopet, mulai 13 Sep 2026). ⛔ BUG DIPERBAIKI 13 Sep 2026: scan blok dulu KEGATE status kirim-WA-harian (`hasEntryToday`), backlog numpuk TERUS gak pernah kekejar (~211 blok/1,5 hari ketauan pas dicek) -- SEKARANG scan jalan tiap run, cuma kirim-WA yg 1x/hari |
 | Miner pool + outflow tracking | 🟡 NUMPUK DATA, BELUM JADI SINYAL | `minerPools.js`+`minerWalletTracker.js`+`whaleFetch.js` | Tahap 1: tag pool via scriptSig coinbase (GRATIS+PASTI). Tahap 2 (13 Sep 2026): alamat payout coinbase direkam ke peta persisten (`miner-pool-wallets.json`) -- `findLargeTransactions` sekarang tag `minerPool` kalau sumber tx raksasa itu wallet pool dikenal (kombinasi + `direction==='TO_EXCHANGE'` = miner outflow). Peta cuma numpuk MULAI SEKARANG (gak bisa backfill), wajar kosong/dikit di awal |
@@ -71,8 +72,10 @@ GAS) -- BEDA folder, BEDA repo, mapping ini GAK nyakup itu.
 (versi LEGACY khusus akun Olan sendiri -- JANGAN bingung sama `multiAccountExecutor.js`),
 `sniperOrderMonitor.js`, `nyopetAutoTrader.js` (factory `createNyopetTrader`, dipakai per-akun),
 `multiAccountExecutor.js` (mirror Sniper + jalanin Nyopet tiap member), `binanceExecutor.js`/
-`mexcExecutor.js` (raw API client, HMAC signed, zero-dependency), `killSwitch.js` (saklar live
-trading + testnet).
+`mexcExecutor.js` (raw API client, HMAC signed, zero-dependency -- MEXC ✅ LIVE-VERIFIED 14 Sep
+2026, lihat baris "Eksekusi MEXC" di tabel status atas; mapping arah `positionTypeFor`/
+`openSideFor`/`closeSideFor` WAJIB dipakai buat call site baru, JANGAN nulis ternary arah baru),
+`killSwitch.js` (saklar live trading + testnet).
 
 **Jurnal & rekonsiliasi:**
 `sniperOrders.js`, `nyopetJournalLock.js` (cegah race condition), `positionReconciler.js`

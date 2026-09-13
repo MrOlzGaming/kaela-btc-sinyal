@@ -229,8 +229,14 @@ async function main() {
 
     if (bearWindowActive) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: ${bearWindowNote} -- sinyal baru DIMATIKAN sementara.`);
-      invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`);
-      wibowoNotes.push(`${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`);
+      // 🐛 FIX 13 Sep 2026 (Olan self-critique: pesan "BELUM ADA SINYAL/Belum ada posisi baru"
+      // buat BTC nongol DI SIKLUS YANG SAMA persis kayak pesan sinyal short window-bear buat BTC
+      // juga -- kontradiksi keliatan (bilang "gak ada apa-apa" padahal barusan ada). Root cause:
+      // catatan invalidNotes ini DULU ditulis SEBELUM cek short di bawah dijalankan, jadi nempel
+      // terus walau shortnya ketemu+kekirim. Fix: tunda nulis catatan sampai TAU hasil cek short
+      // (flag shortSignalSent), wording-nya disesuaikan -- yang "dimatikan" itu cuma LONG-nya,
+      // bukan "gak ada sinyal apapun".
+      let shortSignalSent = false;
       // (12 Sep 2026, kebijakan baru Olan -- lihat project-kaela-btc-sinyal.md "GANTUNGAN STRATEGI")
       // -- window BEAR SEKARANG bukan cuma "senyap total": Kaela tetap SCAN pola short (bear
       // flag/rising wedge, allowShort:true) SEBAGAI SINYAL doang -- gak pernah auto-eksekusi
@@ -292,6 +298,7 @@ async function main() {
                 const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
                 console.log(msg + '\n');
                 await sendWhatsAppRespectMute(msg, `sinyal SHORT DEMO window bear (${assetCfg.label})`, false, true);
+                shortSignalSent = true;
               }
             }
           } else {
@@ -301,6 +308,7 @@ async function main() {
             });
             console.log(msg + '\n');
             await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+            shortSignalSent = true;
           }
         }
       } catch (e) {
@@ -321,10 +329,16 @@ async function main() {
           });
           console.log(msg + '\n');
           await sendWhatsApp(msg);
+          shortSignalSent = true;
         }
       } catch (e) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short Nyopet 4H window bear (${e.message}), skip.`);
       }
+      const bearStatusNote = shortSignalSent
+        ? `${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- auto-LONG dimatikan sementara, TAPI ada sinyal SHORT window bear (cek pesan terpisah di atas/bawah).`
+        : `${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`;
+      invalidNotes.push(bearStatusNote);
+      wibowoNotes.push(bearStatusNote);
       continue;
     }
 

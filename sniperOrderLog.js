@@ -407,9 +407,22 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
   const winRateLine = formatWinRateLine(getClosedOrders());
   // ta/sentiment/onchain CUMA ada buat BTC (metrik makro kripto, gak relevan/gak ada buat emas,
   // 22 Agu 2026) -- bagian2 ini di-skip otomatis kalau null, bukan error.
+  // 🐛 FIX 13 Sep 2026 (Olan self-critique: pesan short window-bear nampilin "Alasan" generik
+  // yang isinya pola LONG -- "bull flag/pennant... falling wedge" -- padahal posisinya SHORT pola
+  // wedge_rising, kontradiksi sama confirmationNote beberapa baris di bawahnya yang justru udah
+  // BENAR nyebut wedge_rising). Teks lama ini peninggalan jaman sebelum short ada (cuma 2 cabang:
+  // FVG vs "pola chart" generik) -- sekarang per-pola, sesuai pattern yang BENERAN kedeteksi.
+  const PATTERN_EXPLAIN = {
+    flag_bull: 'Bull Flag: lanjutan tren naik, konsolidasi sempit abis gerakan tajam ke atas.',
+    pennant_bull: 'Bullish Pennant: lanjutan tren naik, segitiga kecil abis gerakan tajam ke atas.',
+    flag_bear: 'Bear Flag: lanjutan tren turun, konsolidasi sempit abis gerakan tajam ke bawah.',
+    pennant_bear: 'Bearish Pennant: lanjutan tren turun, segitiga kecil abis gerakan tajam ke bawah.',
+    wedge_falling: 'Falling Wedge: pembalikan ke atas, 2 trendline turun yang konvergen (menyempit).',
+    wedge_rising: 'Rising Wedge: pembalikan ke bawah, 2 trendline naik yang konvergen (menyempit).',
+  };
   const modeExplain = order.mode === 'fvg'
     ? 'Mode FVG (Fair Value Gap): nyari zona harga yang "dilompatin" pas gerakan cepat, dianggap area support -- entry pas harga koreksi balik ke zona itu terus mantul.'
-    : 'Mode Pola Chart: nyari pola breakout klasik (bull flag/pennant lanjutan tren, atau falling wedge pembalikan) di candle harian.';
+    : `Mode Pola Chart: ${PATTERN_EXPLAIN[order.patternType] || 'nyari pola breakout klasik di candle harian.'}`;
   // Blok inti SERAGAM sama Nyopet (23 Agu 2026, permintaan Olan) -- TP dipakai order.partialTp
   // (2R) karena itu PERSIS harga yang beneran dipasang jadi order TP live (lihat
   // localLiveExecutor.js) -- separuh diamanin situ, sisanya di-reopen breakeven abis kena (lihat
@@ -420,7 +433,7 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
     reason: modeExplain + (order.tpReasoning ? ` ${order.tpReasoning}` : '') + ' Separuh diamanin di TP, sisanya di-reopen breakeven (likuidasi = SL) buat lanjut trail SMA10.',
   });
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ${asset.emoji} ${asset.label} — ✅ VALID 🐂🚀 (analisa otomatis Kaela)`,
+    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} — ✅ VALID 🐂🚀`,
     seqLabel(order),
     ...coreLines,
     ...(ta ? ['', '📊 ANALISA TEKNIKAL', ...taLines(ta)] : []),
@@ -459,8 +472,8 @@ function formatAutoInvalid({ notes }) {
   const hasWatch = (notes || []).some((n) => n.includes('ANCANG-ANCANG'));
   return [
     hasWatch
-      ? `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — 👀 ANCANG-ANCANG (analisa otomatis Kaela)`
-      : `${CATEGORY_COLOR.sniper.emoji} 🤖 SNIPER — ❌ BELUM ADA SINYAL (analisa otomatis Kaela)`,
+      ? `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — 👀 ANCANG-ANCANG`
+      : `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ❌ BELUM ADA SINYAL`,
     hasWatch
       ? 'Belum ada posisi baru, TAPI ada pola lagi diawasi -- lihat detail di bawah.'
       : 'Belum ada posisi baru. Masih nunggu syarat terpenuhi.',

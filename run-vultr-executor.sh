@@ -174,6 +174,11 @@ node systemInvariantCheck.js >> "$LOG_FILE" 2>&1 || log "systemInvariantCheck.js
 # (beda akar masalah) ke depan gak ketauan sampai investor komplain duluan.
 timeout 60 node pnlCrossCheckMonitor.js >> "$LOG_FILE" 2>&1 || log "pnlCrossCheckMonitor.js ERROR/TIMEOUT (exit $?)"
 
+# Ide #2+#3 (13 Sep 2026, "mikir kayak bandar" -- dinding likuiditas + wallet cold storage exchange
+# dikenal). MURNI ARSIP, belum jadi sinyal -- numpuk data dulu, publik+gratis, ringan.
+timeout 30 node orderBookSnapshot.js >> "$LOG_FILE" 2>&1 || log "orderBookSnapshot.js ERROR/TIMEOUT (exit $?)"
+timeout 30 node exchangeWalletTracker.js >> "$LOG_FILE" 2>&1 || log "exchangeWalletTracker.js ERROR/TIMEOUT (exit $?)"
+
 # Monitor Order Sniper -- channel Sniper LAMA (posisi real Olan sendiri), pantau TP/SL/partial
 # exit (4 Sep 2026, sama akar masalah kayak Price Alert/DXY di atas -- audit nunjukin jadwal GH
 # Actions "tiap jam"-nya kebukti jalan tiap 2-4 jam, notif TP/SL kena bisa telat berjam-jam).
@@ -198,7 +203,7 @@ node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js
 # hilang (beda dari cursor/state operasional lain di baris ini) -- lihat catatan panjang di
 # .gitignore. WAJIB ikut daftar ini, kalau nggak `git reset --hard` box ini nelen balik histori
 # yang baru ke-tulis siklus ini (KELAS BUG SAMA PERSIS kayak insiden state.json 8 Sep 2026).
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl)
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
@@ -215,7 +220,7 @@ if [ -n "$CHANGED" ]; then
   # perubahan lokalnya -- dedup "udah kekirim hari ini" ilang, tugas yang BARU DIPAKSA jalan bakal
   # KEBACA "belum" lagi cycle depan dan DIPAKSA ULANG TERUS-MENERUS tiap 15 menit (dobel WA/sinyal
   # tanpa henti), persis kelas bug yang lagi dibenerin hari ini.
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl; do
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

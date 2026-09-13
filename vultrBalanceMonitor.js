@@ -62,6 +62,12 @@ function buildNagihMessage(remainingCredit, pendingCharges) {
     'Kalau abis nanti Kaela kena suspend, semua kerjaan otomatis ikut berhenti total lho Mas 😭 boleh isi ulang ya kalau sempat~ 🙏💕',
     '',
     `🔗 ${CONSOLE_BILLING_URL}`,
+    '',
+    // TTD role (13 Sep 2026, "biar semua punya peran, ga ada yang bengong") -- infra/VPS gak ada
+    // role resmi di roster NEXUS-FORGE, dilonggarin masuk domain Raven (Backend/Data Pipeline)
+    // per keputusan Olan sendiri. Lihat SYSTEM-MAP.md bagian "Tim Kaela".
+    '— Kaela',
+    '   (laporan: 🐦 Raven · Backend/Infra)',
   ].join('\n');
 }
 

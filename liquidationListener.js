@@ -1,28 +1,31 @@
-// liquidationListener.js -- listener PERSISTEN (bukan cron) buat feed likuidasi RESMI Binance
-// (wss://fstream.binance.com/ws/!forceOrder@arr), GRATIS, GAK BUTUH API key/akun. 12 Sep 2026,
-// permintaan Olan ("liq heatmap BENERAN", lanjutan riset "mikir kayak bandar" -- lihat
-// feedback-market-maker-mindset) -- phase 2 setelah positioning ratio (marketSentiment.js/
-// smartMoneyDivergenceMonitor.js) kebukti berguna.
+// liquidationListener.js -- listener PERSISTEN (bukan cron) buat feed likuidasi REAL-TIME, GRATIS,
+// GAK BUTUH API key/akun. 12 Sep 2026, permintaan Olan ("liq heatmap BENERAN", lanjutan riset
+// "mikir kayak bandar" -- lihat feedback-market-maker-mindset) -- phase 2 setelah positioning
+// ratio (marketSentiment.js/smartMoneyDivergenceMonitor.js) kebukti berguna.
 //
-// ⛔⛔⛔ STATUS 12 Sep 2026: BELUM JALAN -- JANGAN dipasang ke systemd sebelum ini kebukti fix.
-// Didiagnosa PANJANG (native WebSocket + package `ws`, dari 2 jaringan beda -- sandbox lokal DAN
-// VPS Vultr Singapore ini sendiri): koneksi genuinely kebuka (readyState OPEN, subscribe-ack
-// pertama DITERIMA), TAPI data streaming lanjutan (yang harusnya ngalir tiap detik) GAK PERNAH
-// nyampe, walau koneksi gak pernah error/close. Dikonfirmasi via kontrol: Binance SPOT WS
-// (stream.binance.com:9443) DAN Bybit Futures WS dua-duanya LANCAR JAYA dari IP Vultr yang SAMA
-// persis di waktu yang sama -- jadi BUKAN masalah kode/jaringan Vultr secara umum, SPESIFIK ke
-// Binance FUTURES WebSocket (fstream.binance.com) doang. REST API Futures (fapi.binance.com,
-// dipakai marketSentiment.js/smartMoneyDivergenceMonitor.js) TETAP lancar dari IP yang sama --
-// cuma jalur STREAMING real-time-nya yang mati.
-// Dugaan kuat (belum dikonfirmasi resmi Binance): mereka sengaja gak ngirim data real-time
-// Futures ke IP jenis VPS/cloud/datacenter (anti-bot/HFT, data paling sensitif mereka) -- REST
-// dan Spot WS dianggap kurang "gurih" buat dibatasin sekeras itu. Kalau teori ini benar, pindah
-// VPS ke region LAIN kemungkinan BESAR tetap kena (sama-sama IP datacenter) -- satu-satunya fix
-// yang mungkin kerja itu IP RESIDENTIAL (proxy berbayar atau jalan dari koneksi rumahan), yang
-// Olan putuskan BELUM worth dikejar (12 Sep 2026: "cukup sampai sini, simpan kodenya").
-// Kode ini DIBIARIN APA ADANYA (bukan dihapus) buat referensi/lanjutan kalau nanti ketemu solusi
-// baru (proxy residential murah, atau Binance ubah kebijakan). JANGAN diulang tes yang SAMA
-// tanpa ide baru -- udah didiagnosa tuntas 12 Sep 2026, lihat project-kaela-btc-sinyal.md.
+// ⛔ RIWAYAT 12 Sep 2026 -- Binance (wss://fstream.binance.com/ws/!forceOrder@arr) DIDIAGNOSA
+// PANJANG: koneksi genuinely kebuka, subscribe-ack diterima, TAPI data streaming lanjutan GAK
+// PERNAH nyampe, dari 2 jaringan beda (sandbox lokal + VPS Vultr ini sendiri) -- Binance SPOT WS
+// & Bybit Futures WS dua-duanya LANCAR dari IP yang SAMA persis, jadi BUKAN masalah jaringan Vultr
+// umum, SPESIFIK ke Binance FUTURES WebSocket. Dugaan kuat: Binance sengaja gak ngirim data
+// real-time Futures ke IP datacenter/VPS/cloud (anti-bot/HFT). Olan putuskan "cukup sampai sini,
+// simpan kodenya" -- BELUM worth kejar proxy residential berbayar.
+//
+// ✅ GANTI KE BYBIT 13 Sep 2026 -- riset lanjutan nemuin Bybit punya topik PUBLIK setara
+// (`allLiquidation.{symbol}`, malah LEBIH LENGKAP dari Binance: push SEMUA liquidation event,
+// bukan cuma 1 snapshot terbesar per detik). DIVERIFIKASI LANGSUNG dari VPS ini (SSH, bukan asumsi):
+//   1. `allLiquidation.BTCUSDT` doang: 0 event dalam 5 menit -- awalnya keliatan mirip gejala
+//      Binance (nyambung tapi gak ada data), TAPI...
+//   2. Cross-check `publicTrade.BTCUSDT` bareng: 93 trade masuk normal dalam 5 menit yang SAMA
+//      (match REST API ground-truth ~0,4 trade/detik) -- KONEKSI SEHAT, bukan diblokir.
+//   3. Cross-check CoinGlass (coinglass.com/LiquidationData): BTC GAK MASUK top-liquidated-coins
+//      1 jam terakhir sama sekali (market lagi kalem, ini konsisten sama priceAlertMonitor yang
+//      nunjukin BTC 1h/24h nyaris 0%) -- 0 liquidation BTC emang WAJAR, bukan tanda diblokir.
+//   4. Pembuktian FINAL: subscribe ke simbol yang KETAHUAN lagi aktif liquidasi (LSKUSDT, dari
+//      CoinGlass real-time ticker) -- 6 pesan (multi-event tiap pesan) masuk LANCAR dalam 90 detik.
+// Kesimpulan: kanal `allLiquidation` Bybit TIDAK diblokir dari IP datacenter/VPS -- beda nasib
+// total dari Binance Futures. BTC yang 0 di 2 percobaan awal itu representasi JUJUR pasar lagi
+// kalem, bukan bug/blokir.
 //
 // ⚠️ ARSITEKTUR BEDA dari SEMUA script lain di folder ini (yang cron-based, jalan-lalu-KELUAR
 // tiap 5/15 menit) -- ini PROSES NYALA TERUS 24 JAM, dikelola systemd (lihat
@@ -30,11 +33,8 @@
 // event real-time. JANGAN panggil dari run-vultr-executor.sh -- bakal numpuk proses ganda tiap
 // siklus kalau ke situ.
 //
-// ⚠️ KETERBATASAN JUJUR: Binance CUMA kirim likuidasi TERBESAR per simbol per 1000ms (snapshot,
-// BUKAN akumulasi semua event dalam window itu) -- jadi ini SEDIKIT under-count total volume pas
-// market lagi liar (banyak likuidasi bareng dalam 1 detik yang sama kepotong jadi 1 doang). Tetap
-// representatif buat tujuan heatmap ("di harga berapa likuidasi numpuk") -- dan ini SATU-SATUNYA
-// sumber likuidasi REAL yang kepake proyek ini (bukan estimasi pihak ketiga kayak Coinglass).
+// Bybit WAJIB client ping tiap ~20 detik (server nutup koneksi kalau diem >60 detik tanpa
+// heartbeat) -- BEDA dari Binance yang server-side ping/pong otomatis di level protokol WS.
 //
 // Nyimpen 2 hal:
 // 1. Raw event log (liquidation-events.jsonl, append-only, di-cap ukurannya) -- buat audit/debug.
@@ -53,15 +53,17 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 
-const WS_URL = 'wss://fstream.binance.com/ws/!forceOrder@arr';
+const WS_URL = 'wss://stream.bybit.com/v5/public/linear';
+const SUBSCRIBE_TOPIC = 'allLiquidation.BTCUSDT';
 const HEATMAP_PATH = path.join(__dirname, 'liquidation-heatmap.json');
 const RAW_LOG_PATH = path.join(__dirname, 'liquidation-events.jsonl');
-const MAX_RAW_LOG_LINES = 50000; // cap ukuran file (~beberapa hari data market-wide), dipangkas berkala
+const MAX_RAW_LOG_LINES = 50000; // cap ukuran file (~beberapa hari data), dipangkas berkala
 const TRIM_CHECK_EVERY = 2000;   // cek pangkas tiap N event baru (bukan tiap event, hemat I/O)
-const STALE_MS = 3 * 60 * 1000;  // gak ada pesan sama sekali 3 menit -> anggap koneksi zombie, paksa reconnect
+const STALE_MS = 90 * 1000;      // gak ada pesan sama sekali 90 detik -> anggap koneksi zombie, paksa reconnect
 const RECONNECT_DELAY_MS = 3000;
 const BUCKET_SIZE = { BTCUSDT: 250 }; // simbol lain: raw log tetap kesimpen, cuma gak diagregasi ke heatmap
-const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
+const HEARTBEAT_LOG_INTERVAL_MS = 5 * 60 * 1000; // log status ke console, BEDA dari ping keep-alive di bawah
+const PING_INTERVAL_MS = 20 * 1000; // wajib Bybit -- server nutup kalau diem >60 detik
 const FLUSH_EVERY_N_EVENTS = 5; // heatmap ditulis ulang tiap N event (bukan tiap event, hemat I/O)
 
 function loadHeatmap() {
@@ -99,8 +101,10 @@ function bucketKey(symbol, price) {
   return String(Math.round(price / size) * size);
 }
 
-// side 'SELL' = posisi LONG kena force-close (Binance jual paksa) -> tekanan harga TURUN.
-// side 'BUY' = posisi SHORT kena force-close (Binance beli paksa balik) -> tekanan harga NAIK.
+// side 'SELL' = posisi LONG kena force-close (bursa jual paksa) -> tekanan harga TURUN.
+// side 'BUY' = posisi SHORT kena force-close (bursa beli paksa balik) -> tekanan harga NAIK.
+// (Bybit kirim 'Sell'/'Buy' kapital-awal-doang -- dinormalisasi ke UPPERCASE di pemanggil biar
+// fungsi ini tetap sama persis kayak versi Binance lama, gak perlu diubah.)
 function recordLiquidation(heatmap, { symbol, side, price, qty, timestamp }) {
   const bkt = bucketKey(symbol, price);
   if (!bkt) return;
@@ -124,28 +128,42 @@ function connect() {
 
   const staleCheck = setInterval(() => {
     if (Date.now() - lastMessageAt > STALE_MS) {
-      console.log('[LiquidationListener] Gak ada pesan >3 menit -- dianggap koneksi zombie, paksa reconnect.');
+      console.log('[LiquidationListener] Gak ada pesan >90 detik -- dianggap koneksi zombie, paksa reconnect.');
       ws.terminate();
     }
-  }, 30000);
+  }, 15000);
 
-  const heartbeat = setInterval(() => {
+  // Bybit WAJIB client-initiated ping (beda dari Binance yang server-side otomatis) -- tanpa ini
+  // koneksi ditutup paksa server setelah ~60 detik diam.
+  const pingTimer = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ op: 'ping' }));
+  }, PING_INTERVAL_MS);
+
+  const heartbeatLog = setInterval(() => {
     console.log(`[LiquidationListener] Heartbeat -- masih hidup, terakhir terima pesan ${Math.round((Date.now() - lastMessageAt) / 1000)}s lalu.`);
-  }, HEARTBEAT_INTERVAL_MS);
+  }, HEARTBEAT_LOG_INTERVAL_MS);
 
-  ws.on('open', () => console.log('[LiquidationListener] Koneksi kebuka.'));
+  ws.on('open', () => {
+    console.log('[LiquidationListener] Koneksi kebuka, subscribe ke', SUBSCRIBE_TOPIC);
+    ws.send(JSON.stringify({ op: 'subscribe', args: [SUBSCRIBE_TOPIC] }));
+  });
 
   ws.on('message', (raw) => {
     lastMessageAt = Date.now();
     try {
       const msg = JSON.parse(raw.toString());
-      const o = msg.o;
-      if (!o) return;
-      const entry = { symbol: o.s, side: o.S, price: parseFloat(o.p), qty: parseFloat(o.q), timestamp: o.T };
-      appendRawLog(entry);
-      maybeTrimRawLog();
-      recordLiquidation(heatmap, entry);
-      dirtyCount++;
+      // Balasan subscribe/pong -- bukan data liquidation, cukup dicatat "koneksi hidup" (udah
+      // ditandai lastMessageAt di atas), gak ada yang diproses lebih lanjut.
+      if (msg.op === 'pong' || msg.op === 'subscribe' || msg.success !== undefined) return;
+      if (msg.topic !== SUBSCRIBE_TOPIC || !Array.isArray(msg.data)) return;
+
+      for (const o of msg.data) {
+        const entry = { symbol: o.s, side: String(o.S || '').toUpperCase(), price: parseFloat(o.p), qty: parseFloat(o.v), timestamp: o.T };
+        appendRawLog(entry);
+        maybeTrimRawLog();
+        recordLiquidation(heatmap, entry);
+        dirtyCount++;
+      }
       if (dirtyCount >= FLUSH_EVERY_N_EVENTS) { saveHeatmap(heatmap); dirtyCount = 0; }
     } catch (e) {
       console.log('[LiquidationListener] Gagal proses pesan:', e.message);
@@ -156,7 +174,8 @@ function connect() {
 
   ws.on('close', (code, reason) => {
     clearInterval(staleCheck);
-    clearInterval(heartbeat);
+    clearInterval(pingTimer);
+    clearInterval(heartbeatLog);
     saveHeatmap(heatmap); // flush sisa yang belum ketulis
     console.log(`[LiquidationListener] Koneksi tertutup (code ${code}, ${reason}) -- reconnect dalam ${RECONNECT_DELAY_MS}ms.`);
     setTimeout(connect, RECONNECT_DELAY_MS);

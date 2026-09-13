@@ -996,5 +996,86 @@ if (require.main === module) {
       const vs = summarize(v.trades);
       console.log(`  window shift ${shiftDays}hr: n=${vs.n} (short=${vShorts.length}) | PF=${vs.profitFactor} | totalR=${vs.totalR} | shortTotalR=${vShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | finalCapital=$${v.finalCapital.toFixed(2)}`);
     }
+
+    // 13 Sep 2026, permintaan Olan lanjutan: "coba backtest dulu semua btc dan emas semua asal
+    // tau window buy sell" -- Emas window BEDA dari BTC (gak ada siklus halving) -- pakai definisi
+    // yang Olan pilih sendiri sebelumnya buat live (harga di bawah SMA 200-hari), lihat
+    // sniperAutoAnalysis.js. Data historis Emas jauh lebih panjang dari PAXGUSDT Binance (baru ada
+    // dari Agu 2020) -- pakai backtest/gold-daily-cache.json (harga emas asli, 2001-sekarang,
+    // udah dipakai riset lain juga di backtestCrossAsset.js) biar sample size cukup gede.
+    console.log('\n\n\n########## EMAS (PAXGUSDT/XAU proxy, window = harga vs SMA200) ##########');
+    const goldDaily = JSON.parse(fs.readFileSync(path.join(__dirname, 'backtest', 'gold-daily-cache.json'), 'utf8'));
+    console.log('Gold daily candles:', goldDaily.length, '(', new Date(goldDaily[0].closeTime).toISOString().slice(0, 10), '->', new Date(goldDaily[goldDaily.length - 1].closeTime).toISOString().slice(0, 10), ')');
+
+    // Precompute SEKALI (bukan di dalam hot loop) -- map tanggal -> bear/bukan, SMA dihitung dari
+    // closes Emas-nya SENDIRI (SAMA persis cara sniperAutoAnalysis.js ngecek window Emas live).
+    function makeXauBearWindowFn(candles, smaLen = 200) {
+      const closes = candles.map((c) => c.close);
+      const map = new Map();
+      for (let i = 0; i < candles.length; i++) {
+        const s = i >= smaLen - 1 ? sma(closes.slice(0, i + 1), smaLen) : null;
+        map.set(new Date(candles[i].closeTime).toISOString().slice(0, 10), s !== null && candles[i].close < s);
+      }
+      return (d) => map.get(d.toISOString().slice(0, 10)) || false;
+    }
+
+    const xauBearFn = makeXauBearWindowFn(goldDaily);
+    const xauWg = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn });
+    const xauWgs = summarize(xauWg.trades);
+    console.log(`\n[Emas Window-gated FULL histori] n=${xauWgs.n} | winRate=${xauWgs.winRate} | PF=${xauWgs.profitFactor} | totalR=${xauWgs.totalR} | avgR=${xauWgs.avgR}`);
+    console.log(`  finalCapital=$${xauWg.finalCapital.toFixed(2)} | maxDD=${xauWg.maxDrawdownPct.toFixed(1)}%`);
+    const xauShorts = xauWg.trades.filter((t) => t.direction === 'sell');
+    const xauLongs = xauWg.trades.filter((t) => t.direction === 'buy');
+    console.log(`  -- LONG: n=${xauLongs.length} | totalR=${xauLongs.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | totalPnl=$${xauLongs.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+    console.log(`  -- SHORT: n=${xauShorts.length} | winRate=${xauShorts.length ? (xauShorts.filter((t) => t.rMultiple > 0).length / xauShorts.length * 100).toFixed(1) : 0}% | totalR=${xauShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | totalPnl=$${xauShorts.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+    const xauFlips = xauWg.trades.filter((t) => t.exitReason === 'WINDOW_FLIP');
+    console.log(`  -- WINDOW_FLIP: ${xauFlips.length}x, totalPnl=$${xauFlips.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+
+    // Baseline PEMBANDING -- Emas buy-only TANPA window gate sama sekali (biar ada acuan kayak
+    // BTC), pakai fungsi lama (allowShort:false).
+    const xauBaseline = runFlagBacktest(goldDaily, { allowShort: false });
+    const xauBs = summarize(xauBaseline.trades);
+    console.log(`\n[Emas BASELINE buy-only, TANPA window gate] n=${xauBs.n} | PF=${xauBs.profitFactor} | totalR=${xauBs.totalR} | finalCapital=$${xauBaseline.finalCapital.toFixed(2)} | maxDD=${xauBaseline.maxDrawdownPct.toFixed(1)}%`);
+    const xauShortAll = runFlagBacktest(goldDaily, { allowShort: true, shortModalDivisor: 1 });
+    const xauSas = summarize(xauShortAll.trades);
+    console.log(`[Emas Short SEMUA kondisi, TANPA gate] n=${xauSas.n} | PF=${xauSas.profitFactor} | totalR=${xauSas.totalR} | finalCapital=$${xauShortAll.finalCapital.toFixed(2)} | maxDD=${xauShortAll.maxDrawdownPct.toFixed(1)}%`);
+
+    console.log('\n-- Emas: Breakdown per TAHUN --');
+    const xauByYear = {};
+    for (const t of xauWg.trades) {
+      const y = new Date(t.entryTime).getUTCFullYear();
+      (xauByYear[y] = xauByYear[y] || []).push(t);
+    }
+    for (const y of Object.keys(xauByYear).sort()) {
+      const ts = xauByYear[y];
+      const s2 = summarize(ts);
+      const nShort = ts.filter((t) => t.direction === 'sell').length;
+      console.log(`  ${y}: n=${s2.n} (short=${nShort}) | winRate=${s2.winRate} | totalR=${s2.totalR} | totalPnl=$${ts.reduce((s3, t) => s3 + t.pnlUsd, 0).toFixed(2)}`);
+    }
+
+    console.log('\n-- Emas: Split 2 ERA independen --');
+    const xauMid = goldDaily[260].closeTime + (goldDaily[goldDaily.length - 1].closeTime - goldDaily[260].closeTime) / 2;
+    const xauEraA = xauWg.trades.filter((t) => t.entryTime < xauMid);
+    const xauEraB = xauWg.trades.filter((t) => t.entryTime >= xauMid);
+    const xauSA = summarize(xauEraA), xauSB = summarize(xauEraB);
+    console.log(`  Era A (${new Date(goldDaily[260].closeTime).toISOString().slice(0, 10)} -> ${new Date(xauMid).toISOString().slice(0, 10)}): n=${xauSA.n} | PF=${xauSA.profitFactor} | totalR=${xauSA.totalR}`);
+    console.log(`  Era B (${new Date(xauMid).toISOString().slice(0, 10)} -> ${new Date(goldDaily[goldDaily.length - 1].closeTime).toISOString().slice(0, 10)}): n=${xauSB.n} | PF=${xauSB.profitFactor} | totalR=${xauSB.totalR}`);
+    const xauEraAShorts = xauEraA.filter((t) => t.direction === 'sell'), xauEraBShorts = xauEraB.filter((t) => t.direction === 'sell');
+    console.log(`  Era A SHORT saja: n=${xauEraAShorts.length} | totalR=${xauEraAShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)}`);
+    console.log(`  Era B SHORT saja: n=${xauEraBShorts.length} | totalR=${xauEraBShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)}`);
+
+    console.log('\n-- Emas: Sensitivitas parameter (SMA length -- ganti "shift window" krn ini bukan window tanggal) --');
+    for (const smaLen of [150, 200, 250]) {
+      const fn = makeXauBearWindowFn(goldDaily, smaLen);
+      const v = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: fn });
+      const vShorts = v.trades.filter((t) => t.direction === 'sell');
+      const vs = summarize(v.trades);
+      console.log(`  SMA${smaLen}: n=${vs.n} (short=${vShorts.length}) | PF=${vs.profitFactor} | totalR=${vs.totalR} | shortTotalR=${vShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | finalCapital=$${v.finalCapital.toFixed(2)}`);
+    }
+    for (const forceCloseOnFlip of [true, false]) {
+      const v = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn, forceCloseOnFlip });
+      const vs = summarize(v.trades);
+      console.log(`  forceCloseOnFlip=${forceCloseOnFlip}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)}`);
+    }
   })().catch((e) => { console.error('ERROR:', e.message); process.exit(1); });
 }

@@ -272,7 +272,7 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
   // yang WAJIB dibatalin dulu) atau LEG2 (udah breakeven-trail, gak ada order nempel). Qty yang
   // ditutup diambil dari POSISI ASLI Binance (posRisk), bukan dari catatan lokal -- lebih akurat
   // kalau ada selisih kecil dari fee/partial-fill.
-  async function forceClosePosition(assetKey, requestedBy) {
+  async function forceClosePosition(assetKey, requestedBy, reason) {
     const assetCfg = ASSETS[assetKey] || ASSETS.btc;
     const exec = execFor(assetCfg);
     const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
@@ -292,7 +292,11 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
     const pnlUsd = mirror.direction === 'buy' ? (exitPrice - refEntry) * refQty : (refEntry - exitPrice) * refQty;
 
     const closed = finalize(mirror, pnlUsd);
-    const alasanManual = requestedBy ? `Ditutup manual atas permintaan ${requestedBy}` : 'Ditutup manual';
+    // `reason` (13 Sep 2026, permintaan Olan lewat popup alasan Jurnal Saya) -- BUG ketemu: teks
+    // yang Olan TULIS SENDIRI di popup sebelumnya KEPOTONG di sini, gak pernah dioper dari
+    // multiAccountExecutor.js (beda dari jalur Nyopet yang udah bener), jatuh ke fallback generik
+    // "Ditutup manual atas permintaan X" walau Olan udah capek-capek ngetik alasan aslinya.
+    const alasanManual = reason || (requestedBy ? `Ditutup manual atas permintaan ${requestedBy}` : 'Ditutup manual');
     await notify(_sniperCloseMsg(assetCfg, mirror, refEntry, exitPrice, pnlUsd, alasanManual, idrRate));
     return { ok: true, closed };
   }

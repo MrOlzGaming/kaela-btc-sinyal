@@ -261,7 +261,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       // normal (permintaan Olan: "tombol close manual baik sniper dan nyopet").
       const mySniperCloseRequests = (closeRequests || []).filter((r) => safeKey(r.phone) === safeKey(account.phone) && r.mode === account.mode && r.strategy === 'sniper');
       for (const req of mySniperCloseRequests) {
-        const result = await sniperTrader.forceClosePosition(req.asset, req.requestedBy);
+        const result = await sniperTrader.forceClosePosition(req.asset, req.requestedBy, req.reason);
         console.log(`[MultiAccountExecutor] Tutup manual Sniper ${req.asset} (${account.phone}/${account.mode}):`, result.ok ? 'OK' : result.error);
       }
       await sniperTrader.runCycle(sharedSniperOrders);

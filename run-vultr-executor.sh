@@ -5,6 +5,29 @@
 # yang eksekusi tiap siklus) -> eksekusi -> commit+push state kalau berubah -> purge CDN.
 # flock cegah overlap kalau 1 siklus lebih lama dari interval cron (15 menit).
 #
+# FIX KRITIS #3 14 Sep 2026 (Olan lapor "PnL Harian 0%" di web -- gejala PERMUKAAN dari masalah
+# JAUH lebih gede: box ini macet TOTAL 6+ jam, 19:32-01:41 WITA, SEMUA siklus skip "Lock lagi
+# kepegang"). Root cause BEDA dari 2 insiden macet sebelumnya (yang soal `git` doang, udah
+# difix) -- kali ini SALAH SATU node script (paling mungkin `multiAccountExecutor.js`, panggilan
+# exchange API) HANG TANPA BATAS WAKTU, dan >50% panggilan `node` di script ini (18 dari 26)
+# TERNYATA gak pernah dikasih `timeout` sama sekali -- kalau salah satu hang, flock (fd 200)
+# ketahan SELAMANYA sampai proses itu mati sendiri (bisa berjam-jam, gak ada yang maksa).
+# Fix: SEMUA panggilan `node` di script ini sekarang WAJIB dibungkus `timeout -k 10 <detik>`
+# (pola SAMA yang udah kebukti manjur buat `git fetch`, 30 Agu 2026 -- `-k 10` PENTING, itu yang
+# maksa SIGKILL kalau proses/anak-anaknya gak mati kena SIGTERM biasa) -- SEKARANG durasi 1
+# siklus PUNYA BATAS ATAS PASTI (jumlah semua timeout individual), gak bisa lagi macet
+# "selamanya" walau salah satu script di dalamnya hang total. Angka timeout per-script dipilih
+# longgar (30-180 detik) biar gak nge-kill kerjaan yang WAJAR lama (mis. multiAccountExecutor.js
+# proses banyak akun), tapi TETAP ada batas keras.
+#
+# PLUS: pengawas TERPISAH (`checkExecutorStuck.js`, dipanggil `run-manual-open-check-vultr.sh`
+# yang jadwalnya 1 menit -- BUKAN lock yang sama, jadi tetap bisa lapor walau script INI lagi
+# macet) -- baca `cron-heartbeat.log` (bukti cron nembak, ditulis SEBELUM flock) vs
+# `local-executor.log` (bukti run BENERAN mulai) -- kalau heartbeat jalan tapi >=3 siklus
+# berturut-turut ('Run mulai') gak ada, itu tanda lock nyangkut -- japri Olan LANGSUNG (bukan
+# nunggu laporan checklist 20:00 WITA yang gak nyadar pola "macet berjam-jam", cuma nyadar
+# "belum kekirim 1x/hari").
+#
 # FIX KRITIS 29 Agu 2026 (bug NYATA -- box ini macet 6+ jam, 26+ siklus gagal berturut-turut):
 # `git pull` POLOS bisa gagal total ("Need to specify how to reconcile divergent branches")
 # kalau history lokal SEMPAT diverge dari origin (misal box ini sempat commit sendiri di window
@@ -73,10 +96,10 @@ log 'git sync sukses (fetch+reset --hard).'
 
 # Cek mandiri kredensial (31 Agu 2026) -- jalan SELALU (bukan cuma pas leader), pola sama kayak
 # run-local-executor.ps1. Ini persis kelas bug yang ketemu hari ini (MEXC kosong di mesin ini).
-node checkRequiredCredentials.js >> "$LOG_FILE" 2>&1
+timeout -k 10 30 node checkRequiredCredentials.js >> "$LOG_FILE" 2>&1
 
 leader_tmp=$(mktemp)
-node checkLeader.js > "$leader_tmp" 2>&1
+timeout -k 10 30 node checkLeader.js > "$leader_tmp" 2>&1
 leader_exit=$?
 cat "$leader_tmp" >> "$LOG_FILE"
 rm -f "$leader_tmp"
@@ -85,24 +108,24 @@ if [ $leader_exit -ne 0 ]; then
   exit 0
 fi
 
-node localLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "localLiveExecutor.js ERROR (exit $?)"
+timeout -k 10 90 node localLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "localLiveExecutor.js ERROR (exit $?)"
 
 # Pantau leg2/partial-exit posisi Sniper yang UDAH live -- localLiveExecutor.js cuma nanganin ENTRY.
-node sniperLiveMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperLiveMonitor.js ERROR (exit $?)"
+timeout -k 10 60 node sniperLiveMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperLiveMonitor.js ERROR (exit $?)"
 
 # Nyopet Auto-Trader -- ping-pong zona likuiditas, numpang cadence yang sama.
-node nyopetAutoTrader.js >> "$LOG_FILE" 2>&1 || log "nyopetAutoTrader.js ERROR (exit $?)"
+timeout -k 10 90 node nyopetAutoTrader.js >> "$LOG_FILE" 2>&1 || log "nyopetAutoTrader.js ERROR (exit $?)"
 
 # Kaela Pro Trader -- eksekutor MULTI-AKUN, JALAN TERAKHIR (butuh sniper-orders.json fresh).
-node multiAccountExecutor.js >> "$LOG_FILE" 2>&1 || log "multiAccountExecutor.js ERROR (exit $?)"
+timeout -k 10 180 node multiAccountExecutor.js >> "$LOG_FILE" 2>&1 || log "multiAccountExecutor.js ERROR (exit $?)"
 
 # Compound Alt DCA + Musiman -- eksekusi live (29 Agu 2026, ditambahin sekalian pas box ini
 # diperbaiki -- run-local-executor.ps1 (PC rumah) udah punya ini dari sebelumnya).
-node spotAltLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "spotAltLiveExecutor.js ERROR (exit $?)"
+timeout -k 10 90 node spotAltLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "spotAltLiveExecutor.js ERROR (exit $?)"
 
 # Relay temuan Kaela researcher (cloud) ke WA Olan (31 Agu 2026) -- sama pola kayak
 # run-local-executor.ps1, state di research-log-state.json (shared git, gak dobel kirim antar mesin).
-node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFindings.js ERROR (exit $?)"
+timeout -k 10 30 node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFindings.js ERROR (exit $?)"
 
 # Checklist+paksa tugas 1x/hari (8 Sep 2026, permintaan Olan: "kasih checker nya apa sudah
 # dikirim otomatisasinya... kayak ada AI yang ngechecklist kerjaan otomatisasi hari ini"). Ganti
@@ -112,33 +135,33 @@ node reportResearchFindings.js >> "$LOG_FILE" 2>&1 || log "reportResearchFinding
 # kekirim hari ini, dipaksa jalan sekarang. Semua script tujuan UDAH dedup internal sendiri
 # (lastSentDate/hasEntryToday/riwayat per-tanggal) -- aman dipanggil berkali-kali. Sekalian kirim
 # 1x laporan checklist ke WA tiap sore (jam 20:00 WITA) biar Olan bisa lihat langsung status semua.
-node dailyAutomationChecklist.js >> "$LOG_FILE" 2>&1 || log "dailyAutomationChecklist.js ERROR (exit $?)"
+timeout -k 10 60 node dailyAutomationChecklist.js >> "$LOG_FILE" 2>&1 || log "dailyAutomationChecklist.js ERROR (exit $?)"
 
 # "Uang kost Kaela" (12 Sep 2026, permintaan Olan) -- cek saldo Vultr, nagih ke Wibowo Hedgefund
 # 1x/hari kalau sisa kredit di bawah ambang (state dedup LOKAL, lihat vultrBalanceMonitor.js).
 # Ditaruh SETELAH leader-gate (bukan di atas kayak checkRequiredCredentials.js) -- sengaja, biar
 # cuma SATU mesin (leader) yang bisa kirim nagihan, nyegah dobel-kirim kalau ada mesin standby lain.
-node vultrBalanceMonitor.js >> "$LOG_FILE" 2>&1 || log "vultrBalanceMonitor.js ERROR (exit $?)"
+timeout -k 10 30 node vultrBalanceMonitor.js >> "$LOG_FILE" 2>&1 || log "vultrBalanceMonitor.js ERROR (exit $?)"
 
 # Compound Alt DCA (spotDca.js) + Compound Alt Publik (spotDcaAlt.js) -- BAGIAN dari sniper-daily-
 # trigger.yml yang GH Actions-nya SEKARANG dimatiin (race sama alasan di atas). Keduanya UDAH
 # idempotent sendiri (lastBuyDateKey/lastBuyMonthKey/halvingStopNotified, lihat komentar di file
 # masing-masing) -- aman dipanggil tiap siklus 15 menit kayak priceAlertMonitor.js dkk, gak perlu
 # masuk daftar checklist di atas (dia gak "kirim 1x sehari doang", tapi ngecek kondisi tiap kali).
-node spotDca.js >> "$LOG_FILE" 2>&1 || log "spotDca.js ERROR (exit $?)"
-node spotDcaAlt.js >> "$LOG_FILE" 2>&1 || log "spotDcaAlt.js ERROR (exit $?)"
+timeout -k 10 60 node spotDca.js >> "$LOG_FILE" 2>&1 || log "spotDca.js ERROR (exit $?)"
+timeout -k 10 60 node spotDcaAlt.js >> "$LOG_FILE" 2>&1 || log "spotDcaAlt.js ERROR (exit $?)"
 
 # Audit jadwal GitHub Actions (31 Agu 2026, permintaan Olan: "harus ada Kaela yang otomatis audit
 # jalur yang sering ngadat") -- baris "GAGAL: ..." yang dicetaknya ke-scan otomatis di bagian
 # laporan error di bawah, relay ke WA Olan lewat jalur yang sama kayak error lain.
-node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERROR (exit $?)"
+timeout -k 10 60 node auditGithubActions.js >> "$LOG_FILE" 2>&1 || log "auditGithubActions.js ERROR (exit $?)"
 
 # Cadangan Price Alert + DXY Zone Monitor (31 Agu 2026) -- ketauan dari audit di atas, jadwal GH
 # Actions-nya (tiap 5 menit / tiap jam) sering telat berjam-jam gara-gara antrian akun ini padat.
 # Kedua script UDAH punya cooldown/state deteksi-transisi sendiri (price-alert-state.json,
 # dxy-zone-state.json) -- aman dipanggil tiap siklus 15 menit, gak akan spam WA dobel.
-node priceAlertMonitor.js >> "$LOG_FILE" 2>&1 || log "priceAlertMonitor.js ERROR (exit $?)"
-node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit $?)"
+timeout -k 10 30 node priceAlertMonitor.js >> "$LOG_FILE" 2>&1 || log "priceAlertMonitor.js ERROR (exit $?)"
+timeout -k 10 30 node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit $?)"
 
 # Cadangan Squeeze Detector + Econ Calendar (48h heads-up) + Whale Daily Digest (8 Sep 2026,
 # Olan: "github sering macet.. tanam di vultr juga") -- SAMA alasan/pola kayak Price Alert/DXY
@@ -154,35 +177,35 @@ node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonitor.js ERROR (exit
 # TAPI `timeout 120` ditambah juga di 3 script BARU ini (API eksternal, paling rawan lelet/hang)
 # sebagai jaring pengaman KEDUA -- kalau suatu saat lambat lagi, gak akan nyandera fungsi trading
 # lain selamanya, cuma skip siklus itu (state per-item, aman diulang siklus berikutnya).
-timeout 120 node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 120 node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR/TIMEOUT (exit $?)"
 
 # Divergensi smart money -- top trader jumlah-akun vs nilai-duit (12 Sep 2026, permintaan Olan:
 # "kalo long short secara duit perbandingannya aneh boleh di info?"). Endpoint Binance publik,
 # aman dipanggil tiap siklus 15 menit (state dedup+cooldown sendiri, lihat file-nya).
-timeout 60 node smartMoneyDivergenceMonitor.js >> "$LOG_FILE" 2>&1 || log "smartMoneyDivergenceMonitor.js ERROR/TIMEOUT (exit $?)"
-timeout 120 node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR/TIMEOUT (exit $?)"
-timeout 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 60 node smartMoneyDivergenceMonitor.js >> "$LOG_FILE" 2>&1 || log "smartMoneyDivergenceMonitor.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 120 node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR/TIMEOUT (exit $?)"
 
 # Invariant check journal Nyopet/Sniper (5 Sep 2026, permintaan Olan: "cari anomali/bug otomatis")
 # -- READ-ONLY, ngecek hal yang HARUSNYA selalu bener (PnL closed gak boleh null, leverage gak
 # boleh lewat cap, dst) -- nangkep bug SILENT yang gak bikin exception/gak keliatan di log biasa.
-node systemInvariantCheck.js >> "$LOG_FILE" 2>&1 || log "systemInvariantCheck.js ERROR (exit $?)"
+timeout -k 10 30 node systemInvariantCheck.js >> "$LOG_FILE" 2>&1 || log "systemInvariantCheck.js ERROR (exit $?)"
 
 # Mandor PnL vs Binance (13 Sep 2026, insiden nyata: sistem bilang -$1,89, Binance bilang +$12,96,
 # cuma ketauan karena Olan kebetulan screenshot app-nya) -- hitung PnL hari ini 2 jalur independen
 # (store lokal vs fresh dari Binance), alarm DM Olan kalau beda jauh. Cegah kelas bug SERUPA
 # (beda akar masalah) ke depan gak ketauan sampai investor komplain duluan.
-timeout 60 node pnlCrossCheckMonitor.js >> "$LOG_FILE" 2>&1 || log "pnlCrossCheckMonitor.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 60 node pnlCrossCheckMonitor.js >> "$LOG_FILE" 2>&1 || log "pnlCrossCheckMonitor.js ERROR/TIMEOUT (exit $?)"
 
 # Ide #2+#3 (13 Sep 2026, "mikir kayak bandar" -- dinding likuiditas + wallet cold storage exchange
 # dikenal). MURNI ARSIP, belum jadi sinyal -- numpuk data dulu, publik+gratis, ringan.
-timeout 30 node orderBookSnapshot.js >> "$LOG_FILE" 2>&1 || log "orderBookSnapshot.js ERROR/TIMEOUT (exit $?)"
-timeout 30 node exchangeWalletTracker.js >> "$LOG_FILE" 2>&1 || log "exchangeWalletTracker.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 30 node orderBookSnapshot.js >> "$LOG_FILE" 2>&1 || log "orderBookSnapshot.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 30 node exchangeWalletTracker.js >> "$LOG_FILE" 2>&1 || log "exchangeWalletTracker.js ERROR/TIMEOUT (exit $?)"
 
 # "Tim Kaela" role digest (13 Sep 2026, permintaan Olan setelah kenalin NEXUS-FORGE) -- rangkuman
 # MINGGUAN (Senin WITA, no-op diam2 hari lain -- lihat komentar di file) commit yang ditandai
 # role, kirim ke Wibowo Hedgefund. SENGAJA skip kirim kalau nol commit bertanda minggu itu.
-timeout 30 node teamDigestReport.js >> "$LOG_FILE" 2>&1 || log "teamDigestReport.js ERROR/TIMEOUT (exit $?)"
+timeout -k 10 30 node teamDigestReport.js >> "$LOG_FILE" 2>&1 || log "teamDigestReport.js ERROR/TIMEOUT (exit $?)"
 
 # Monitor Order Sniper -- channel Sniper LAMA (posisi real Olan sendiri), pantau TP/SL/partial
 # exit (4 Sep 2026, sama akar masalah kayak Price Alert/DXY di atas -- audit nunjukin jadwal GH
@@ -192,7 +215,7 @@ timeout 30 node teamDigestReport.js >> "$LOG_FILE" 2>&1 || log "teamDigestReport
 # kirim WA dobel (gak punya cooldown state se-robust price-alert/dxy-zone), jadi jadwal GH
 # Actions-nya DIMATIIN (tinggal workflow_dispatch manual) biar cuma SATU sumber eksekusi -- lock
 # flock box ini yang jagain dari overlap, bukan dedup internal script.
-node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERROR (exit $?)"
+timeout -k 10 60 node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERROR (exit $?)"
 
 # Lapor status (saldo+posisi) Demo Olan sendiri ke GAS MemberStatus (5 Sep 2026, bug ketemu Olan:
 # "posisi demo nyopet ga tampil di tab demo yang baru") -- multiAccountExecutor.js SENGAJA skip
@@ -201,7 +224,7 @@ node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERR
 # (Olan, demo) gak pernah ada, "Jurnal Demo" Kaela Access selalu nemu kosong. Script ini MURNI
 # baca+lapor (NOL order/trading), aman jalan bareng sistem eksekusi manapun -- gak nulis file
 # state lokal apapun jadi gak perlu masuk daftar CHANGED di bawah.
-node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
+timeout -k 10 30 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
 
 # whale-netflow-research-log.json dst (13 Sep 2026, permintaan Olan "data itu kita simpen sendiri
 # ya, penting buat masa depan") -- histori riset TERAKUMULASI yang GAK BISA di-backfill kalau

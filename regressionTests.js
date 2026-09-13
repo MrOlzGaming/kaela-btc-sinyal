@@ -19,6 +19,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const tradeHistoryStore = require('./tradeHistoryStore');
+const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -114,6 +115,49 @@ async function main() {
     const pnl = tradeHistoryStore.todaysPnlForSymbol(store, 'BTCUSDC', now);
     assert.ok(Math.abs(pnl - EXPECTED_PNL) < 1e-8, `syncIncomeStore end-to-end harusnya ${EXPECTED_PNL}, malah ${pnl}`);
     cleanupFixtureFile();
+  });
+
+  // 14 Sep 2026, insiden NYATA -- eksekutor VPS macet 6+ jam (19:32-01:41 WITA), 3+ siklus 15-menit
+  // berturut-turut skip TANPA ada yang lapor sampai Olan sendiri nyadar "PnL Harian 0%" di web.
+  // Test ini pakai POLA WAKTU PERSIS insiden asli sbg ground truth buat checkExecutorStuck.js.
+  await test('parseTimestamp baca format log "[yyyy-MM-dd HH:mm:ss]" dengan benar', () => {
+    const t = parseTimestamp('[2026-09-13 19:32:20] --- Run selesai ---');
+    assert.strictEqual(new Date(t).getFullYear(), 2026);
+    assert.strictEqual(new Date(t).getMonth(), 8); // 0-indexed, September
+    assert.strictEqual(new Date(t).getDate(), 13);
+    assert.strictEqual(parseTimestamp('baris tanpa timestamp'), null, 'Baris tanpa format [...] harus balikin null, bukan NaN/crash');
+  });
+
+  await test('detectStuck: 3 siklus berturut2 skip TANPA "Run mulai" -- TERDETEKSI macet (ground truth insiden 14 Sep)', () => {
+    const base = new Date('2026-09-13T19:45:00').getTime();
+    const heartbeats = [base, base + 15 * 60000, base + 30 * 60000]; // 19:45, 20:00, 20:15 -- persis pola insiden
+    const execLines = [
+      '[2026-09-13 19:32:20] --- Run selesai ---', // run TERAKHIR yang beneran jalan, SEBELUM window ini
+      '[2026-09-13 19:45:01] Lock lagi kepegang (mungkin run sebelumnya masih jalan/macet) -- skip siklus ini.',
+      '[2026-09-13 20:00:01] Lock lagi kepegang (mungkin run sebelumnya masih jalan/macet) -- skip siklus ini.',
+    ];
+    const { stuck, windowStart } = detectStuck(heartbeats, execLines);
+    assert.strictEqual(stuck, true, 'Harusnya TERDETEKSI macet -- persis pola insiden nyata 14 Sep 2026');
+    assert.strictEqual(windowStart, base);
+  });
+
+  await test('detectStuck: ADA "Run mulai" di tengah window -- SEHAT, gak dianggap macet', () => {
+    const base = new Date('2026-09-14T02:00:00').getTime();
+    const heartbeats = [base, base + 15 * 60000, base + 30 * 60000];
+    const execLines = [
+      '[2026-09-14 02:00:01] --- Run mulai ---', // run BENERAN jalan tepat di siklus pertama
+      '[2026-09-14 02:00:15] --- Run selesai ---',
+      '[2026-09-14 02:15:01] --- Run mulai ---',
+      '[2026-09-14 02:15:14] --- Run selesai ---',
+    ];
+    const { stuck } = detectStuck(heartbeats, execLines);
+    assert.strictEqual(stuck, false, 'Ada "Run mulai" dalam window -- HARUSNYA dianggap sehat, bukan macet');
+  });
+
+  await test('detectStuck: histori heartbeat kurang dari ambang -- gak nge-judge apa2 (wajar di awal)', () => {
+    const { stuck, windowStart } = detectStuck([Date.now(), Date.now() + 900000], []); // cuma 2, ambang 3
+    assert.strictEqual(stuck, false);
+    assert.strictEqual(windowStart, null, 'windowStart null nandain "belum cukup data", BEDA dari "sehat"');
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

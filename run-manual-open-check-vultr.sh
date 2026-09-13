@@ -29,3 +29,9 @@ output2=$(node checkForceSyncRequest.js 2>&1)
 if ! echo "$output2" | grep -q 'Gak ada permintaan'; then
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output2" >> "$LOG_FILE"
 fi
+
+# Pengawas macet (14 Sep 2026, Olan: "jangan sampe kejadian macet lagi.. perlu pengawas juga?") --
+# SENGAJA di sini (jadwal 1 menit, TANPA flock) BUKAN di run-vultr-executor.sh -- kalau numpang
+# lock yang sama kayak yang mau diawasin, pas beneran macet si pengawas IKUT KETAHAN gak bisa
+# lapor. Lihat komentar lengkap di checkExecutorStuck.js.
+node checkExecutorStuck.js >> "$LOG_FILE" 2>&1

@@ -111,7 +111,7 @@ async function main() {
   // doang, JANGAN diklaim "pasti bakal jual/beli").
   const urgent = allWalletDeltas.filter((w) => Math.abs(w.deltaBtc) >= URGENT_THRESHOLD_BTC);
   if (urgent.length) {
-    const lines = ['🚨 *Kaela nemu aktivitas aneh di cold wallet exchange*', ''];
+    const lines = ['🔍 *Kaela nemu anomali di cold wallet exchange*', ''];
     for (const w of urgent) {
       lines.push(`${w.label}: ${w.deltaBtc > 0 ? '+' : ''}${w.deltaBtc.toFixed(2)} BTC dalam ~15 menit terakhir (sekarang ${w.balanceBtc.toFixed(2)} BTC total).`);
       lines.push(interpretWalletMove(w.deltaBtc));

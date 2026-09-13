@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const { fetchWithRetry } = require('./httpRetry');
 const { sendWhatsApp } = require('./fonnte');
-const { MASTER_NOMOR } = require('./multiAccountExecutor');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 const LOG_PATH = path.join(__dirname, 'orderbook-wall-research-log.json');
 // "Aneh" (13 Sep 2026, permintaan Olan: "dinding kalo aneh bisa info darurat?") -- dibandingin ke
@@ -133,7 +133,10 @@ async function main() {
       '⚠️ Riset awal, BELUM divalidasi -- murni info, bukan ajakan aksi apapun.',
     ].join('\n');
     console.log(msg);
-    await sendWhatsApp(msg, MASTER_NOMOR).catch((e) => console.log('[OrderBookSnapshot] Gagal kirim info darurat:', e.message));
+    // Ke Wibowo Hedgefund (13 Sep 2026, "jangan DM aku, masuk grup aja") -- LANGSUNG sendWhatsApp
+    // (bukan sendWhatsAppToWibowo) sama pola kayak vultrBalanceMonitor.js/exchangeWalletTracker.js:
+    // info riset, bukan update posisi, WAJIB tetap nyampe walau toggle Silent Trade lagi OFF.
+    await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[OrderBookSnapshot] Gagal kirim info darurat:', e.message));
   }
 }
 

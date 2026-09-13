@@ -19,7 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const { fetchWithRetry } = require('./httpRetry');
 const { sendWhatsApp } = require('./fonnte');
-const { MASTER_NOMOR } = require('./multiAccountExecutor');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 const LOG_PATH = path.join(__dirname, 'exchange-wallet-balances.json');
 const SATOSHI = 100000000;
@@ -118,7 +118,11 @@ async function main() {
       lines.push('');
     }
     lines.push('⚠️ Fakta on-chain + interpretasi umum doang -- BUKAN kepastian, riset belum divalidasi. Cek konteks (berita, harga) sebelum ambil kesimpulan sendiri.');
-    await sendWhatsApp(lines.join('\n'), MASTER_NOMOR).catch((e) => console.log('[ExchangeWalletTracker] Gagal kirim info darurat:', e.message));
+    // Ke Wibowo Hedgefund (13 Sep 2026, permintaan Olan: "jangan DM aku, masuk grup aja.. kalo DM
+    // takut ga kebaca") -- LANGSUNG sendWhatsApp (BUKAN sendWhatsAppToWibowo/wibowoNotify.js) SAMA
+    // pola kayak vultrBalanceMonitor.js: ini info riset/infra, BUKAN update posisi trading, jadi
+    // TETAP harus nyampe walau toggle "Silent Trade" lagi OFF (itu gate KHUSUS visibilitas trade).
+    await sendWhatsApp(lines.join('\n'), WIBOWO_GROUP_ID).catch((e) => console.log('[ExchangeWalletTracker] Gagal kirim info darurat:', e.message));
   }
 }
 

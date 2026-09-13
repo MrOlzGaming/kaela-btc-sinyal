@@ -176,6 +176,13 @@ mesin -- lihat `CLAUDE.md` di folder ini soal akun kanonik `MrOlzGaming`).
   jalan, lihat status di atas) -- kalau nanti ada strategi lain yang butuh koneksi tetap kebuka
   (bukan poll berkala), itu PERLU systemd service terpisah, JANGAN dipanggil dari cron executor.
 
+## 🐛 Bug yang pernah kejadian (baca sebelum sentuh area yang sama)
+
+[`BUG_REGISTRY.md`](BUG_REGISTRY.md) -- catatan formal bug NYATA + root cause + commit fix +
+regression test (kalau ada), diadaptasi dari pola "Bug Registry" `NEXUS-FORGE`
+(`D:\KAELA PROJECT\NEXUS-FORGE\`, kerangka tim-AI Olan). Cek ini kalau mau ubah logic sync
+income/PnL, whale-scan, atau broadcast Wibowo -- kemungkinan ada pelajaran dari insiden sebelumnya.
+
 ## 📚 Kalau mau riset ide baru
 
 1. **Grep dulu** comment `⛔`/`✅` di file terkait + folder `backtest/` -- kemungkinan besar udah

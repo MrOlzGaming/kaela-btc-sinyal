@@ -67,12 +67,15 @@ async function recordBalanceReport(phone, name, report) {
 
 // 28 Agu 2026 -- toggle notif master admin ("info trading real/demo ke Olan"). Fail-safe: kalau
 // GAS error/belum ke-deploy, anggap dua2nya OFF (jangan spam Olan kalau settingnya gak kebaca).
+// Retries dinaikkan 2->4 (13 Sep 2026, insiden nyata getWibowoBroadcastEnabled -- lihat catatan
+// fungsi itu) -- gate notif ini JUGA "kalau gagal cek = pesan hilang PERMANEN", beda dari macro-
+// context biasa (yang gagal cuma ilang 1 baris konteks tambahan, pesan utamanya tetap kekirim).
 async function getAdminNotifySettings() {
   try {
-    const data = await callGas('getAdminNotifySettingsForExecutor');
+    const data = await callGas('getAdminNotifySettingsForExecutor', {}, 4);
     return data.settings;
   } catch (e) {
-    console.log('[KaelaProTraderClient] getAdminNotifySettings gagal (dianggap OFF):', e.message);
+    console.log('[KaelaProTraderClient] getAdminNotifySettings gagal SETELAH 4x retry (dianggap OFF):', e.message);
     return { notifyReal: false, notifyDemo: false };
   }
 }
@@ -81,13 +84,25 @@ async function getAdminNotifySettings() {
 // (lihat gas/Config.gs getWibowoBroadcastSetting + wibowoNotify.js). Fail-safe SAMA pola kayak
 // getAdminNotifySettings -- GAS error/belum ke-deploy = dianggap OFF/silent (lebih aman drpd
 // nge-spam grup gara-gara gagal baca setting).
+//
+// ⛔ INSIDEN NYATA 13 Sep 2026: Olan nambah posisi manual (BTCUSDC), reconciler BENAR mendeteksi
+// "Nambah Posisi", TAPI GAS sempat nge-hiccup (respons HTML bukan JSON) pas cek toggle ini --
+// dianggap OFF, pesan posisi HILANG PERMANEN (state udah kadung update, gak pernah dicoba ulang).
+// Dicek: GAS-nya SENDIRI sehat lagi begitu dites ulang (bukan endpoint mati total, transient doang),
+// tapi kejadian serupa (HTML bukan JSON) muncul ~7x cuma di hari ini (09:45-13:00 WITA) -- lebih
+// sering dari histori 15 hari sebelumnya, kemungkinan Google lagi ngetik kuota/concurrent-execution
+// pas jam sibuk. Retry dinaikkan 2->4 (kurangi peluang KETIGA-tiganya kena hiccup bareng), DAN
+// return-nya SEKARANG bedain "OFF beneran (Olan matiin sengaja)" vs "gagal cek doang" -- biar
+// wibowoNotify.js bisa lapor JELAS pesan APA yang gagal terkirim, bukan cuma baris teknis generik
+// yang gampang kelewat walau UDAH tertangkap mandor (reportCycleErrors.js, dicek: "1 temuan
+// dikirim ke Olan" waktu itu -- mandor GAK diam, cuma wordingnya kurang jelas nunjuk konsekuensinya).
 async function getWibowoBroadcastEnabled() {
   try {
-    const data = await callGas('getWibowoBroadcastSettingForExecutor');
-    return data.setting.enabled;
+    const data = await callGas('getWibowoBroadcastSettingForExecutor', {}, 4);
+    return { enabled: !!data.setting.enabled, checkFailed: false };
   } catch (e) {
-    console.log('[KaelaProTraderClient] getWibowoBroadcastEnabled gagal (dianggap OFF/silent):', e.message);
-    return false;
+    console.log('[KaelaProTraderClient] getWibowoBroadcastEnabled gagal SETELAH 4x retry (dianggap OFF/silent, TAPI ini beda dari off yang disengaja):', e.message);
+    return { enabled: false, checkFailed: true };
   }
 }
 

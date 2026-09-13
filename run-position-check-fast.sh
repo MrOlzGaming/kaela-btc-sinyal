@@ -8,6 +8,17 @@
 # Kalau kebetulan overlap waktu (siklus 15 menit lagi jalan pas 5 menit ini nembak), `flock -n`
 # non-blocking bikin script ini SKIP diam-diam siklus ini (coba lagi 5 menit berikutnya) --
 # BUKAN nunggu/nge-block, dan BUKAN nulis bareng yang bisa korup file JSON.
+#
+# ⛔ CRONTAB WAJIB `1-59/5 * * * *`, JANGAN `*/5 * * * *` (BUG NYATA ketemu 14 Sep 2026) --
+# `*/5` bikin script ini nembak PERSIS di menit :00/:15/:30/:45 -- SAMA PERSIS momen
+# run-vultr-executor.sh nembak. Karena script INI jauh lebih pendek (langsung ke flock, gak ada
+# git-sync/heartbeat/dst kayak yang 15-menitan), dia SELALU menang rebutan lock duluan --
+# run-vultr-executor.sh KALAH TERUS di SETIAP siklus 15-menit, bukan cuma sesekali. Insiden nyata:
+# run-vultr-executor.sh skip 10 siklus BERTURUT-TURUT (6+ jam, 19:32-02:00 WITA), awalnya dikira
+# "hang" (lihat fix timeout di run-vultr-executor.sh -- itu TETAP berguna buat hang beneran, tapi
+# BUKAN akar masalah insiden ini) -- ternyata race scheduling murni, positionCheckFast.js SENDIRI
+# jalan mulus terus tanpa masalah. Fix: geser jadwal 1 menit (`1-59/5` = menit 1,6,11,...,56) biar
+# STRUKTURAL gak pernah ketemu lagi di menit yang sama kayak :00/:15/:30/:45.
 set -uo pipefail
 PROJECT_DIR="/root/kaela-engine"
 LOG_FILE="$PROJECT_DIR/position-check-fast.log"

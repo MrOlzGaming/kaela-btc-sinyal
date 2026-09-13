@@ -32,7 +32,7 @@
 // field sekarang DINAMIS ('binance'/'mexc'), dulu di-hardcode 'binance'.
 
 const fs = require('fs');
-const { sendWhatsAppToWibowo } = require('./wibowoNotify');
+const { sendWhatsAppToWibowo, flushWibowoBroadcastQueue } = require('./wibowoNotify');
 const kaela = require('./kaelaProTraderClient');
 // (5 Sep 2026, permintaan Olan: "semua pesan broadcast trading perlu disamakan semua kerangkanya")
 // -- template pesan (dan fmtUsd yang dipakainya) SEKARANG PENUH dari darkKaelaLog.js, gak ada lagi
@@ -340,6 +340,15 @@ async function reconcileWibowoPositions({ phone, client, mexcClient, touchedSymb
     state.lastCheckedAtMs = nowMs;
     saveState(statePath, state);
     return;
+  }
+
+  // Coba lepasin antrean pesan tertunda TIAP SIKLUS (13 Sep 2026) -- REGARDLESS ada perubahan
+  // posisi baru siklus ini atau nggak. Tanpa ini, antrean cuma keflush KEBETULAN pas ada event
+  // baru yang manggil sendWhatsAppToWibowo lagi -- bisa nyangkut lama kalau Olan kebetulan gak
+  // ngapa-ngapain posisinya buat sementara waktu.
+  const broadcastCheck = await kaela.getWibowoBroadcastEnabled();
+  if (broadcastCheck.enabled) {
+    await flushWibowoBroadcastQueue().catch((e) => console.log('[PositionReconciler] Gagal flush antrean Wibowo:', e.message));
   }
 
   await _reconcileOneExchange({ exchange: 'binance', phone, client, touchedSymbols, state, nowMs, idrRate });

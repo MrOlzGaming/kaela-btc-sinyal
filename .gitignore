@@ -22,6 +22,7 @@ backtest/*-result.json
 state.json
 nyopet-state.json
 whale-state.json
+wibowo-broadcast-queue.json
 sniper-trigger-state.json
 price-alert-state.json
 squeeze-alert-state.json

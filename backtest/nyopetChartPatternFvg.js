@@ -23,6 +23,7 @@ const path = require('path');
 const { sma } = require('../technicalAnalysis');
 const { hitung: hitungExposure } = require('../calculator');
 const { detectFlag, detectWedge } = require('../chartPatterns');
+const { isBtcBearWindow } = require('../halvingBearWindow');
 
 const HOURLY_BTC = JSON.parse(fs.readFileSync(path.join(__dirname, 'hourly-cache.json'), 'utf8'));
 // Emas (30 Agu 2026, permintaan Olan: "bukan cuma BTC.. tapi BTC dan Emas", sama pola kayak
@@ -273,6 +274,143 @@ function runNyopetV2Backtest(candles, opts = {}) {
   return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries, totalDeposited };
 }
 
+// ============ WINDOW-GATED (13 Sep 2026, permintaan Olan: "backtest sniper dan nyopet, BTC dan
+// emas") -- mirror PERSIS pola runFlagBacktestWindowGated (backtestFlagBreakout.js): arah digate
+// per-window DI TITIK DETEKSI (bukan post-hoc filter/allowShort polos kayak fungsi C/D di atas
+// yang nyampur long+short SEMBARANG kondisi), + WINDOW_FLIP force-close posisi yang arahnya udah
+// gak cocok. `bearWindowFn(candles, i) -> bool` beda per aset -- BTC pakai isBtcBearWindow (siklus
+// halving), Emas pakai SMA1200-4H (rescaled, setara SMA200 harian -- lihat RESCALED_4H). ============
+function makeBtcBearWindowFn() {
+  return (candles, i) => isBtcBearWindow(new Date(candles[i].closeTime));
+}
+function makeEmasBearWindowFn(smaLen = 1200) {
+  return (candles, i) => {
+    if (i < smaLen - 1) return false;
+    const s = sma(candles.slice(0, i + 1).map((c) => c.close), smaLen);
+    return s !== null && candles[i].close < s;
+  };
+}
+
+function runNyopetV2BacktestWindowGated(candles, opts = {}) {
+  const {
+    warmupCandles = 260,
+    poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
+    wedgeLookbackRange = [15, 40], wedgeMinTouches = 2, wedgeConvergenceRatio = 0.65,
+    usePatterns = ['flag', 'wedge', 'fvg'],
+    slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10, fvgTrendSmaLen = 200,
+    startCapital = 100, modalDivisor = 5,
+    maxMarginPct = 20, maxNyawaPct = null,
+    topUpAmount = 0, topUpStopAt = Infinity, topUpDayOfMonth = 5, onRedirectedTopUp = null,
+    bearWindowFn, // WAJIB diisi caller (makeBtcBearWindowFn()/makeEmasBearWindowFn())
+    forceCloseOnFlip = true,
+  } = opts;
+  const trades = [];
+  let openPos = null;
+  let capital = startCapital, totalDeposited = startCapital, lastTopUpMonthKey = null;
+  const capitalSeries = [{ time: candles[warmupCandles] ? candles[warmupCandles].closeTime : 0, capital }];
+
+  for (let i = warmupCandles; i < candles.length; i++) {
+    const today = candles[i];
+    const bearNow = bearWindowFn(candles, i);
+
+    if (topUpAmount > 0) {
+      const d = new Date(today.closeTime);
+      const monthKey = d.getUTCFullYear() * 12 + d.getUTCMonth();
+      if (d.getUTCDate() >= topUpDayOfMonth && monthKey !== lastTopUpMonthKey) {
+        lastTopUpMonthKey = monthKey;
+        if (capital < topUpStopAt) { capital += topUpAmount; totalDeposited += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
+        else if (onRedirectedTopUp) onRedirectedTopUp(topUpAmount, today.closeTime);
+      }
+    }
+
+    if (openPos) {
+      const wrongSide = forceCloseOnFlip && ((openPos.direction === 'buy' && bearNow) || (openPos.direction === 'sell' && !bearNow));
+      if (wrongSide) {
+        const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
+        const remainingFrac = openPos.partialDone ? 0.5 : 1;
+        const pnlRest = openPos.nilaiPosisi * remainingFrac * (movePctSigned / 100);
+        const totalPnl = openPos.realizedPnl + pnlRest;
+        capital = Math.max(0, capital + pnlRest);
+        const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
+        trades.push({ ...openPos, exitReason: 'WINDOW_FLIP', rMultiple: riskPct > 0 ? (totalPnl / openPos.nilaiPosisi * 100) / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
+        capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        continue;
+      }
+      const closes = candles.slice(0, i + 1).map((c) => c.close);
+      const trailSma = sma(closes, trailSmaLen);
+      if (!openPos.partialDone) {
+        const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
+        const hitPartial = openPos.direction === 'buy' ? today.high >= openPos.partialTp : today.low <= openPos.partialTp;
+        if (hitSl) {
+          capital = Math.max(0, capital - openPos.lossAtSl);
+          trades.push({ ...openPos, exitReason: 'SL', rMultiple: -1, pnlUsd: -openPos.lossAtSl, exitTime: today.closeTime });
+          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        } else if (hitPartial) {
+          const rewardPct = Math.abs(openPos.partialTp - openPos.entryPrice) / openPos.entryPrice * 100;
+          const profitHalf = openPos.nilaiPosisi * 0.5 * (rewardPct / 100);
+          capital += profitHalf;
+          openPos.realizedPnl = profitHalf; openPos.partialDone = true; openPos.sl = openPos.entryPrice;
+        }
+      } else {
+        const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
+        const trendBroken = trailSma !== null && (openPos.direction === 'buy' ? today.close < trailSma : today.close > trailSma);
+        if (hitSl || trendBroken) {
+          const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
+          const pnlRest = openPos.nilaiPosisi * 0.5 * (movePctSigned / 100);
+          capital = Math.max(0, capital + pnlRest);
+          const totalPnl = openPos.realizedPnl + pnlRest;
+          const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
+          trades.push({ ...openPos, exitReason: hitSl ? 'SL_BREAKEVEN' : 'TRAIL_EXIT', rMultiple: riskPct > 0 ? movePctSigned / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
+          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        }
+      }
+      continue;
+    }
+
+    const lastPrice = today.close;
+    let direction = null, sl = null, patternType = null;
+
+    if (usePatterns.includes('flag')) {
+      const flag = detectFlag(candles, i, { poleLookbackRange, poleMinMovePct, flagLookbackRange, flagMaxRangePct });
+      if (!bearNow && flag && flag.type === 'bull' && lastPrice > flag.flagHigh) { direction = 'buy'; sl = flag.flagLow * (1 - slBufferPct / 100); patternType = 'flag_bull'; }
+      else if (bearNow && flag && flag.type === 'bear' && lastPrice < flag.flagLow) { direction = 'sell'; sl = flag.flagHigh * (1 + slBufferPct / 100); patternType = 'flag_bear'; }
+    }
+    if (!direction && usePatterns.includes('wedge')) {
+      const wedge = detectWedge(candles, i, { wedgeLookbackRange, minTouches: wedgeMinTouches, convergenceRatio: wedgeConvergenceRatio });
+      if (bearNow && wedge && wedge.type === 'rising' && lastPrice < wedge.projectedSupport) { direction = 'sell'; sl = wedge.recentSwingHigh * (1 + slBufferPct / 100); patternType = 'wedge_rising'; }
+      else if (!bearNow && wedge && wedge.type === 'falling' && lastPrice > wedge.projectedResistance) { direction = 'buy'; sl = wedge.recentSwingLow * (1 - slBufferPct / 100); patternType = 'wedge_falling'; }
+    }
+    if (!direction && usePatterns.includes('fvg')) {
+      // detectFvgSignalBoth SELALU cek dua arah regardless allowShort (cuma nggerbang cabang
+      // short) -- filter EKSPLISIT arah vs window di sini, JANGAN andelin opts.allowShort doang
+      // (pelajaran sama persis kayak bug nyopetAutoTrader.js yang dibenerin hari ini).
+      const fvgSig = detectFvgSignalBoth(candles, i, { slBufferPct, trendSmaLen: fvgTrendSmaLen, allowShort: true });
+      if (fvgSig && ((fvgSig.direction === 'buy' && !bearNow) || (fvgSig.direction === 'sell' && bearNow))) {
+        direction = fvgSig.direction; sl = fvgSig.sl; patternType = fvgSig.patternType;
+      }
+    }
+    if (!direction) continue;
+
+    const riskDistance = Math.abs(lastPrice - sl);
+    if (riskDistance === 0) continue;
+    const nyawaPct = riskDistance / lastPrice * 100;
+    if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
+    const sizingModal = capital / modalDivisor;
+    const { nilaiPosisi, margin } = hitungExposure({ modal: sizingModal, entry: lastPrice, stopLoss: sl });
+    if (margin > capital) continue;
+    const marginPct = margin / capital * 100;
+    if (marginPct > maxMarginPct) continue;
+    const lossAtSl = nilaiPosisi * (nyawaPct / 100);
+    const partialTp = direction === 'buy' ? lastPrice + riskDistance * partialRR : lastPrice - riskDistance * partialRR;
+
+    openPos = { direction, entryPrice: lastPrice, sl, originalSl: sl, partialTp, entryTime: today.closeTime, nilaiPosisi, margin, marginPct, lossAtSl, partialDone: false, realizedPnl: 0, patternType };
+  }
+
+  let peak = -Infinity, maxDrawdownPct = 0;
+  for (const pt of capitalSeries) { peak = Math.max(peak, pt.capital); maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.capital) / peak * 100); }
+  return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries, totalDeposited };
+}
+
 function summarize(trades) {
   const n = trades.length;
   if (n === 0) return { n: 0 };
@@ -350,6 +488,27 @@ if (require.main === module) {
       console.log(`  ${y}: ${dt.count} trade | win rate ${(dt.wins / dt.count * 100).toFixed(1)}% | Total R: ${dt.totalR >= 0 ? '+' : ''}${dt.totalR.toFixed(1)}R`);
     });
   }
+
+  // 13 Sep 2026, permintaan Olan: "backtest sniper dan nyopet, btc dan emas" -- versi WINDOW-GATED
+  // (bull=long, bear=short, BUKAN "Long+Short di semua kondisi" kayak varian C/D di atas).
+  console.log('\n\n\n########## NYOPET 4H -- WINDOW-GATED (bull=long, bear=short, force-close on flip) ##########');
+  const wgBtc = runReport('BTC Window-Gated, sizing 1/5', CANDLES_4H, { ...RESCALED_4H, modalDivisor: 5, bearWindowFn: makeBtcBearWindowFn() });
+  console.log('\n--- BTC Window-Gated -- breakdown per tahun ---');
+  Object.entries(byYear(wgBtc.r.trades)).sort().forEach(([y, dt]) => {
+    console.log(`  ${y}: ${dt.count} trade | win rate ${(dt.wins / dt.count * 100).toFixed(1)}% | Total R: ${dt.totalR >= 0 ? '+' : ''}${dt.totalR.toFixed(1)}R`);
+  });
+  const btcWgFlips = wgBtc.r.trades.filter((t) => t.exitReason === 'WINDOW_FLIP');
+  console.log(`  WINDOW_FLIP: ${btcWgFlips.length}x, totalPnl=$${btcWgFlips.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+
+  if (CANDLES_4H_GOLD) {
+    const wgGold = runReport('EMAS Window-Gated, sizing 1/5', CANDLES_4H_GOLD, { ...RESCALED_4H, modalDivisor: 5, bearWindowFn: makeEmasBearWindowFn() });
+    console.log('\n--- EMAS Window-Gated -- breakdown per tahun ---');
+    Object.entries(byYear(wgGold.r.trades)).sort().forEach(([y, dt]) => {
+      console.log(`  ${y}: ${dt.count} trade | win rate ${(dt.wins / dt.count * 100).toFixed(1)}% | Total R: ${dt.totalR >= 0 ? '+' : ''}${dt.totalR.toFixed(1)}R`);
+    });
+    const goldWgFlips = wgGold.r.trades.filter((t) => t.exitReason === 'WINDOW_FLIP');
+    console.log(`  WINDOW_FLIP: ${goldWgFlips.length}x, totalPnl=$${goldWgFlips.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+  }
 }
 
-module.exports = { runNyopetV2Backtest, detectBearishFVG, detectFvgSignalBoth, resampleTo4h, summarize, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H };
+module.exports = { runNyopetV2Backtest, runNyopetV2BacktestWindowGated, makeBtcBearWindowFn, makeEmasBearWindowFn, detectBearishFVG, detectFvgSignalBoth, resampleTo4h, summarize, byYear, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H };

@@ -16,44 +16,44 @@
   "1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 11,
-    "totalReceivedBtc": 0.00006005999999999999,
-    "lastSeenAt": "2026-09-13T09:16:26.905Z"
+    "blockCount": 12,
+    "totalReceivedBtc": 0.00006552,
+    "lastSeenAt": "2026-09-13T09:31:39.671Z"
   },
   "1AfCc4F9c4VTYSE31PUe2kUEKs6ZxiDjxm": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 11,
-    "totalReceivedBtc": 34.56738286,
-    "lastSeenAt": "2026-09-13T09:16:26.905Z"
+    "blockCount": 12,
+    "totalReceivedBtc": 37.71961275,
+    "lastSeenAt": "2026-09-13T09:31:39.671Z"
   },
   "37jKPSmbEGwgfacCr2nayn1wTaqMAbA94Z": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 22,
-    "totalReceivedBtc": 0.00012012000000000005,
-    "lastSeenAt": "2026-09-13T09:17:12.042Z"
+    "blockCount": 26,
+    "totalReceivedBtc": 0.00014196000000000003,
+    "lastSeenAt": "2026-09-13T09:32:01.908Z"
   },
   "39C7fxSzEACPjM78Z7xdPxhf7mKxJwvfMJ": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 22,
-    "totalReceivedBtc": 69.0690764,
-    "lastSeenAt": "2026-09-13T09:17:12.042Z"
+    "blockCount": 26,
+    "totalReceivedBtc": 81.62197421,
+    "lastSeenAt": "2026-09-13T09:32:01.908Z"
   },
   "3K9KZZPB8NRwZVP5wNKX4VYhnswrJxpgZ4": {
     "pool": "Luxor",
     "firstSeenAt": "2026-09-13T06:04:53.097Z",
-    "blockCount": 4,
-    "totalReceivedBtc": 0.00002184,
-    "lastSeenAt": "2026-09-13T06:47:20.388Z"
+    "blockCount": 5,
+    "totalReceivedBtc": 0.0000273,
+    "lastSeenAt": "2026-09-13T09:31:45.262Z"
   },
   "32BfKjhByDSxx3BM5vUkQ3NQq9csZR6nt6": {
     "pool": "Luxor",
     "firstSeenAt": "2026-09-13T06:04:53.097Z",
-    "blockCount": 4,
-    "totalReceivedBtc": 12.53548692,
-    "lastSeenAt": "2026-09-13T06:47:20.388Z"
+    "blockCount": 5,
+    "totalReceivedBtc": 15.67731336,
+    "lastSeenAt": "2026-09-13T09:31:45.262Z"
   },
   "1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4": {
     "pool": "ViaBTC",
@@ -180,5 +180,12 @@
     "blockCount": 1,
     "totalReceivedBtc": 0.79697588,
     "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "3QmwRxUVQSobeKnNWSjtYmRbU2uxYQzRrG": {
+    "pool": "WhitePool",
+    "firstSeenAt": "2026-09-13T09:31:23.604Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 3.15213829,
+    "lastSeenAt": "2026-09-13T09:31:23.605Z"
   }
 }

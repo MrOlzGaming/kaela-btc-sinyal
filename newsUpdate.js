@@ -33,6 +33,12 @@ function formatNewsUpdate(now, items, slot = null) {
   }
   lines.push('');
   lines.push(`🔗 ${WEB_URL}`);
+  // TTD role (13 Sep 2026, contoh PERSIS dari Olan: "kaela news.. kaela sudah ga bikin sendiri..
+  // tapi by Reed misalnya") -- Kaela TETAP pengirim, TTD ini co-signature (domain Reed: Archive/
+  // reporting rutin). Lihat feedback-wa-signature-kaela.md + SYSTEM-MAP.md bagian "Tim Kaela".
+  lines.push('');
+  lines.push('— Kaela');
+  lines.push('   (laporan: 📦 Reed · Archive)');
   return lines.join('\n');
 }
 

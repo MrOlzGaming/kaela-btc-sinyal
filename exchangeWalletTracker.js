@@ -118,6 +118,11 @@ async function main() {
       lines.push('');
     }
     lines.push('⚠️ Fakta on-chain + interpretasi umum doang -- BUKAN kepastian, riset belum divalidasi. Cek konteks (berita, harga) sebelum ambil kesimpulan sendiri.');
+    lines.push('');
+    // TTD role (13 Sep 2026, "semua otomatisnya pesan kita update") -- domain Reed (Archive)
+    // karena ini MURNI ARSIP riset (lihat komentar atas file). Lihat SYSTEM-MAP.md "Tim Kaela".
+    lines.push('— Kaela');
+    lines.push('   (laporan: 📦 Reed · Archive)');
     // Ke Wibowo Hedgefund (13 Sep 2026, permintaan Olan: "jangan DM aku, masuk grup aja.. kalo DM
     // takut ga kebaca") -- LANGSUNG sendWhatsApp (BUKAN sendWhatsAppToWibowo/wibowoNotify.js) SAMA
     // pola kayak vultrBalanceMonitor.js: ini info riset/infra, BUKAN update posisi trading, jadi

@@ -131,6 +131,11 @@ async function main() {
       interpretWall(biggest),
       '',
       '⚠️ Riset awal, BELUM divalidasi -- murni info, bukan ajakan aksi apapun.',
+      '',
+      // TTD role (13 Sep 2026, "semua otomatisnya pesan kita update") -- domain Reed (Archive)
+      // karena ini MURNI ARSIP riset (lihat komentar atas file). Lihat SYSTEM-MAP.md "Tim Kaela".
+      '— Kaela',
+      '   (laporan: 📦 Reed · Archive)',
     ].join('\n');
     console.log(msg);
     // Ke Wibowo Hedgefund (13 Sep 2026, "jangan DM aku, masuk grup aja") -- LANGSUNG sendWhatsApp

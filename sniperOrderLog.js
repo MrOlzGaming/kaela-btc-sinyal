@@ -68,14 +68,26 @@ function tradeMetaLine(order, idrRate) {
 // nomor polos tanpa nama -- Olan sendiri yang notice "mentionnya ga ada nama".)
 // `badge` (12 Sep 2026) -- default Sniper, dioper "🥷 NYOPET · Kaela" dari sniperAutoAnalysis.js
 // buat sinyal timeframe 4H (Nyopet mode, "sama kek Sniper cuma timeframe lebih rendah").
-function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, coinglassLink = COINGLASS_LINK, badge = '🎯 SNIPER · Kaela' }) {
+// gapTop/gapBottom (13 Sep 2026, permintaan Olan: "sinyal shortnya begitu ketemu FVG, sebut
+// price area yang ditunggu buat lakukan short") -- CUMA keisi kalau patternType FVG (fvg_bounce_bear,
+// lihat fvgDetector.js) -- pola chart (flag/wedge) TETAP tampil harga tunggal kayak biasa, karena
+// breakout emang entry-nya PAS di harga sekarang, bukan nunggu zona (beda konsep dari FVG).
+function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, gapTop, gapBottom, coinglassLink = COINGLASS_LINK, badge = '🎯 SNIPER · Kaela' }) {
   const rr = (sl !== null && sl !== undefined) ? Math.abs((entryPrice - sl) / entryPrice * 100) : null;
+  const isFvgZone = gapTop !== undefined && gapBottom !== undefined;
   const lines = [
     `${CATEGORY_COLOR.sniper.emoji} ${badge} — 🐻 SINYAL SHORT (window bear, MANUAL)`,
     `${assetEmoji} ${assetLabel} · Pola: ${patternType || '-'}`,
     '',
-    `🔴 Potensi entry short @ ${fmt(entryPrice)}`,
   ];
+  if (isFvgZone) {
+    lines.push(
+      `🔴 Zona short yang DITUNGGU: ${fmt(gapBottom)} -- ${fmt(gapTop)} (harga sekarang ${fmt(entryPrice)})`,
+      `📌 Bukan entry sekarang -- tunggu harga NAIK balik ke zona ini dulu, BARU short kalau ada tanda ditolak turun lagi (jangan asal short pas nyentuh doang).`,
+    );
+  } else {
+    lines.push(`🔴 Potensi entry short @ ${fmt(entryPrice)}`);
+  }
   if (rr !== null) lines.push(`⚠️ Invalidasi/SL referensi @ ${fmt(sl)} (jarak ~${rr.toFixed(1)}%)`);
   lines.push(
     '',
@@ -412,6 +424,10 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
   // wedge_rising, kontradiksi sama confirmationNote beberapa baris di bawahnya yang justru udah
   // BENAR nyebut wedge_rising). Teks lama ini peninggalan jaman sebelum short ada (cuma 2 cabang:
   // FVG vs "pola chart" generik) -- sekarang per-pola, sesuai pattern yang BENERAN kedeteksi.
+  // fvg_bounce/fvg_bounce_bear (13 Sep 2026) DITAMBAH ke map yang sama -- sebelumnya FVG dicek
+  // TERPISAH via `order.mode==='fvg'` dengan teks HARDCODE cuma versi bull ("area support...
+  // mantul") walau posisinya short (fvg_bounce_bear = area RESISTANCE, ditolak TURUN, bukan
+  // mantul naik) -- disatuin ke 1 map biar arah selalu ikut pattern yang beneran kedeteksi.
   const PATTERN_EXPLAIN = {
     flag_bull: 'Bull Flag: lanjutan tren naik, konsolidasi sempit abis gerakan tajam ke atas.',
     pennant_bull: 'Bullish Pennant: lanjutan tren naik, segitiga kecil abis gerakan tajam ke atas.',
@@ -419,10 +435,11 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
     pennant_bear: 'Bearish Pennant: lanjutan tren turun, segitiga kecil abis gerakan tajam ke bawah.',
     wedge_falling: 'Falling Wedge: pembalikan ke atas, 2 trendline turun yang konvergen (menyempit).',
     wedge_rising: 'Rising Wedge: pembalikan ke bawah, 2 trendline naik yang konvergen (menyempit).',
+    fvg_bounce: 'Fair Value Gap (FVG): zona harga yang "dilompatin" pas gerakan cepat naik, dianggap area SUPPORT -- entry pas harga koreksi balik ke zona itu terus MANTUL naik.',
+    fvg_bounce_bear: 'Fair Value Gap (FVG) bearish: zona harga yang "dilompatin" pas gerakan cepat turun, dianggap area RESISTANCE -- entry pas harga naik balik ke zona itu terus DITOLAK turun lagi.',
   };
-  const modeExplain = order.mode === 'fvg'
-    ? 'Mode FVG (Fair Value Gap): nyari zona harga yang "dilompatin" pas gerakan cepat, dianggap area support -- entry pas harga koreksi balik ke zona itu terus mantul.'
-    : `Mode Pola Chart: ${PATTERN_EXPLAIN[order.patternType] || 'nyari pola breakout klasik di candle harian.'}`;
+  const modeLabelText = (order.mode === 'fvg') ? 'Mode FVG' : 'Mode Pola Chart';
+  const modeExplain = `${modeLabelText}: ${PATTERN_EXPLAIN[order.patternType] || (order.mode === 'fvg' ? 'nyari zona harga yang "dilompatin" pas gerakan cepat.' : 'nyari pola breakout klasik di candle harian.')}`;
   // Blok inti SERAGAM sama Nyopet (23 Agu 2026, permintaan Olan) -- TP dipakai order.partialTp
   // (2R) karena itu PERSIS harga yang beneran dipasang jadi order TP live (lihat
   // localLiveExecutor.js) -- separuh diamanin situ, sisanya di-reopen breakeven abis kena (lihat

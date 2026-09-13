@@ -56,7 +56,7 @@ const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist
 // sinyal short window-bear WAJIB ada di Nyopet juga) -- REUSE fetch 4H+parameter Nyopet APA
 // ADANYA (jangan reimplementasi/duplikat), gak nyentuh createNyopetTrader/main (yang beneran
 // eksekusi trading) -- cuma 2 fungsi/konstanta MURNI ini yang dipakai, aman.
-const { fetchCandles4hPaginated, PATTERN_PARAMS_4H } = require('./nyopetAutoTrader');
+const { fetchCandles4hPaginated, PATTERN_PARAMS_4H, FVG_TREND_SMA_LEN_4H } = require('./nyopetAutoTrader');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const binanceEx = require('./binanceExecutor');
 const mexcEx = require('./mexcExecutor');
@@ -248,7 +248,12 @@ async function main() {
       try {
         const [bearDaily] = await Promise.all([fetchCandles(assetCfg.symbol, '1d', PATTERN_HISTORY_DAYS)]);
         const bearLivePrice = bearDaily[bearDaily.length - 1].close;
-        const shortSig = detectPatternSignal(bearDaily, bearDaily.length - 1, { allowShort: true });
+        // 13 Sep 2026, permintaan Olan ("sinyal shortnya begitu ketemu FVG, sebut price area yang
+        // ditunggu") -- FVG bearish DITAMBAH sebagai sumber sinyal short kedua (chart pattern
+        // dicek DULUAN, FVG cuma dicek kalau chart pattern gak ketemu -- pola sama kayak candidate
+        // long di loop bawah yang cek Pola Chart dulu baru FVG).
+        const shortSig = detectPatternSignal(bearDaily, bearDaily.length - 1, { allowShort: true })
+          || detectFvgSignal(bearDaily, bearDaily.length - 1, { allowShort: true });
         if (shortSig && shortSig.direction === 'sell') {
           // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah...
           // window bear fokus short") -- KHUSUS isTestnet() true (demo) DAN BTC, Kaela AUTO-EKSEKUSI
@@ -269,9 +274,12 @@ async function main() {
               const partialTp = bearLivePrice - riskDistance * PARTIAL_RR;
               if (partialTp > 0) {
                 const calc = hitungExposure({ modal: availableBalance, entry: bearLivePrice, stopLoss: shortSig.sl });
+                // mode: 'fvg' kalau patternType FVG (13 Sep 2026, biar formatAutoValid's modeExplain
+                // milih penjelasan FVG yang bener, bukan ke-anggap "Pola Chart"/breakout).
+                const isFvgShort = shortSig.patternType && shortSig.patternType.startsWith('fvg');
                 const created = createOrder({
-                  asset: assetKey, mode: 'sniper', direction: 'sell', strategyType: 'breakout', triggerPrice: bearLivePrice,
-                  confirmationNote: `Breakout SHORT window bear -- ${shortSig.patternType} (nyawa ${nyawaPct.toFixed(1)}%). Demo-only (isTestnet), lihat GANTUNGAN STRATEGI 12 Sep 2026.`,
+                  asset: assetKey, mode: isFvgShort ? 'fvg' : 'sniper', direction: 'sell', strategyType: 'breakout', triggerPrice: bearLivePrice,
+                  confirmationNote: `SHORT window bear -- ${shortSig.patternType} (nyawa ${nyawaPct.toFixed(1)}%). Demo-only (isTestnet), lihat GANTUNGAN STRATEGI 12 Sep 2026.`,
                   tpReasoning: `Target tahap 1 (beli-balik separuh): ${PARTIAL_RR}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}.`,
                   tp: partialTp, sl: shortSig.sl, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
                   patternType: shortSig.patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
@@ -310,6 +318,7 @@ async function main() {
             const msg = formatBearShortSignal({
               assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
               entryPrice: bearLivePrice, sl: shortSig.sl, patternType: shortSig.patternType,
+              gapTop: shortSig.gapTop, gapBottom: shortSig.gapBottom,
             });
             console.log(msg + '\n');
             await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
@@ -325,11 +334,14 @@ async function main() {
       // dites TERPISAH, pesan TERPISAH, badge beda (🥷 NYOPET) biar gampang dibedain di grup.
       try {
         const nyopetCandles = await fetchCandles4hPaginated(assetCfg.symbol, 300);
-        const nyopetShortSig = detectPatternSignal(nyopetCandles, nyopetCandles.length - 1, { ...PATTERN_PARAMS_4H, allowShort: true });
+        // FVG bearish dicek juga di sini (13 Sep 2026, sama alasan kayak versi daily Sniper di atas).
+        const nyopetShortSig = detectPatternSignal(nyopetCandles, nyopetCandles.length - 1, { ...PATTERN_PARAMS_4H, allowShort: true })
+          || detectFvgSignal(nyopetCandles, nyopetCandles.length - 1, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: true });
         if (nyopetShortSig && nyopetShortSig.direction === 'sell') {
           const msg = formatBearShortSignal({
             assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
             entryPrice: nyopetCandles[nyopetCandles.length - 1].close, sl: nyopetShortSig.sl, patternType: nyopetShortSig.patternType,
+            gapTop: nyopetShortSig.gapTop, gapBottom: nyopetShortSig.gapBottom,
             badge: '🥷 NYOPET · Kaela',
           });
           console.log(msg + '\n');

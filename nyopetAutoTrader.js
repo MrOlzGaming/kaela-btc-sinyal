@@ -687,7 +687,11 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
     let sig = detectPatternSignal(candles4h, i, patternParams);
     if (!sig) {
-      const fvgSig = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H });
+      // allowShort dioper SAMA kayak patternParams di atas (13 Sep 2026, permintaan Olan: "sinyal
+      // shortnya begitu ketemu FVG, sebut price area yang ditunggu") -- FVG bearish sekarang JUGA
+      // dicek buat auto-entry short pas window bear (BTC doang, Emas tetap allowShort:false lewat
+      // inBearWindow yang udah di-gate assetKey==='btc' di atas).
+      const fvgSig = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: inBearWindow });
       if (fvgSig) sig = fvgSig;
     }
     if (!sig) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada sinyal (flag/wedge/FVG) -- tunggu siklus depan.`); return; }
@@ -1051,7 +1055,7 @@ async function main() {
 // sniperAutoAnalysis.js bisa REUSE buat sinyal short window-bear timeframe Nyopet (4H) -- fungsi
 // murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createNyopetTrader
 // yang emang eksekusi trading, itu tetap TERGUARD if require.main===module di bawah).
-module.exports = { createNyopetTrader, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H };
+module.exports = { createNyopetTrader, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR nyopetAutoTrader.js:', e.message); process.exit(1); });

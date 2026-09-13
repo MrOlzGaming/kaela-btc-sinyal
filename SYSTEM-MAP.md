@@ -92,7 +92,12 @@ whale -- **kalau mau nambah indikator baru yang "cuma ngomong kalau aneh", ini t
 arah exchange via WalletExplorer.com), `econCalendarMonitor.js` (heads-up 48 jam) +
 `econCalendarLiveMonitor.js` (jendela sempit 5 menit + eksekusi Econ-Reaction Scalp),
 `dailyAutomationChecklist.js` ("mandor" -- ngecek+maksa tugas 1x/hari yang mungkin ke-skip GH
-Actions, laporan ke Olan jam 20:00 WITA).
+Actions, laporan ke Olan jam 20:00 WITA). 13 Sep 2026: mandor DIPERLUAS -- gak cuma "kekirim apa
+nggak" (exit-0 doang gak cukup, whale-digest tetep exit-0 pas backlog-nya diam2 numpuk 211 blok),
+SEKARANG juga cek "beneran ngejar apa nggak" (freshness whale-state.json vs tip blockchain,
+`checkWhaleScanFreshness`) + "beneran cuma sekali apa nggak" (`checkNoDuplicateSpam`, scan
+archive.json 7 hari terakhir buat 7 tipe yang harusnya 1x/hari) -- masuk laporan 20:00 WITA yang
+sama, bagian "🔍 Kesehatan Mandor".
 
 **Sumber data (semua GRATIS, no-key kecuali disebut lain):**
 `marketSentiment.js` (Fear&Greed, funding, OI, long/short ratio OKX/Bybit/**Binance resmi**),

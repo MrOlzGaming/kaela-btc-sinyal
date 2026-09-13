@@ -24,9 +24,10 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { toLocal, localDateKey } = require('./config');
-const { hasEntryToday, addOrReplaceDaily } = require('./archive');
+const { hasEntryToday, addOrReplaceDaily, getAll } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { birthdayRanToday } = require('./birthdayGreeting');
+const { fetchLatestBlockHeight } = require('./whaleFetch');
 
 // Laporan checklist ini status OPERASIONAL internal (buat Olan mantau sistem), BUKAN konten buat
 // member -- WAJIB DM ke Olan pribadi, JANGAN sendWhatsApp(msg) polos (itu broadcast ke SEMUA grup
@@ -138,6 +139,63 @@ const TASKS = [
 const CHECKLIST_REPORT_HOUR = 20; // 20:00 WITA -- abis SEMUA target di atas kelewat (paling telat 18:19)
 const CHECKLIST_REPORT_TYPE = 'daily-checklist-report';
 
+// 13 Sep 2026, permintaan Olan ("semua otomasi wajib dikasih mandor.. mandor memastikan mereka
+// jalan dan tidak spam") -- checklist di atas CUMA jawab "kekirim apa nggak hari ini", TIDAK
+// nangkep kelas bug yang BARU ketauan hari ini: whaleDailyDigest.js exit 0 TIAP HARI, WA-nya
+// KEKIRIM tiap hari (checklist bakal bilang ✅), TAPI datanya diam-diam makin ketinggalan (211
+// blok/~1,5 hari) krn scan blok kegate status kirim-WA. "Sukses" doang gak cukup -- perlu dicek
+// juga "beneran ngejar apa nggak" (freshness) dan "beneran cuma sekali apa nggak" (anti-spam).
+
+// Ambang 50 blok (~8 jam pd rata2 10 menit/blok) -- longgar dari steady-state normal (harusnya
+// backlog nempel di 0-8 blok abis fix 13 Sep), tapi jauh LEBIH ketat drpd 211 blok yang kejadian
+// nyata kemarin -- ketauan jauh lebih awal kalau regresi lagi.
+const WHALE_BACKLOG_ALERT_BLOCKS = 50;
+
+async function checkWhaleScanFreshness() {
+  const state = readJsonSafe('whale-state.json');
+  if (!state || state.lastProcessedHeight === null || state.lastProcessedHeight === undefined) {
+    return { ok: false, line: '⚠️ Whale scan: state kosong/belum pernah jalan sama sekali.' };
+  }
+  try {
+    const { height: tip } = await fetchLatestBlockHeight();
+    const backlog = tip - state.lastProcessedHeight;
+    const estHours = (backlog * 10) / 60; // rata2 ~10 menit/blok Bitcoin
+    if (backlog > WHALE_BACKLOG_ALERT_BLOCKS) {
+      return { ok: false, line: `⚠️ Whale scan KETINGGALAN ${backlog} blok (~${estHours.toFixed(1)} jam) -- cek run-vultr-executor.sh/log, kemungkinan kegate/macet lagi.` };
+    }
+    return { ok: true, line: `✅ Whale scan up-to-date (ketinggalan ${backlog} blok, wajar).` };
+  } catch (e) {
+    return { ok: false, line: `⚠️ Whale scan: gagal cek tip blockchain buat freshness (${e.message.slice(0, 80)}) -- BUKAN berarti scan-nya sendiri gagal, cuma pengecekannya yang gagal.` };
+  }
+}
+
+// Tipe archive yang DIDESAIN 1x/hari (dedup via addOrReplaceDaily/hasEntryToday di script masing-
+// masing) -- kalau ketemu >1 entry di tanggal WITA yang sama, itu tandanya dedup INTERNAL-nya
+// jebol (bukan otomatis "WA dobel kekirim ke user" krn addOrReplaceDaily nimpa arsip web, TAPI
+// hasEntryToday yang harusnya nyegah panggilan sendWhatsApp() kedua -- kalau ini kejadian
+// beneran, WA-nya SANGAT MUNGKIN ikut dobel juga, worth diinvestigasi).
+const DAILY_DEDUP_TYPES = ['report-daily', 'report-daily-gold', 'whale-daily', 'news-pagi', 'news-sore', 'news-siang', 'daily-checklist-report'];
+const SPAM_CHECK_DAYS_BACK = 7;
+
+function checkNoDuplicateSpam(now) {
+  const entries = getAll(); // semua tipe, terbaru duluan
+  const cutoff = new Date(now.getTime() - SPAM_CHECK_DAYS_BACK * 24 * 60 * 60 * 1000);
+  const counts = {}; // `${type}|${dayKey}` -> jumlah
+  for (const e of entries) {
+    if (!DAILY_DEDUP_TYPES.includes(e.type)) continue;
+    const d = new Date(e.date);
+    if (d < cutoff) continue;
+    const key = `${e.type}|${localDateKey(d)}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  const dupes = Object.entries(counts).filter(([, n]) => n > 1);
+  if (dupes.length === 0) {
+    return { ok: true, line: `✅ Gak ada dobel-kirim ke ${DAILY_DEDUP_TYPES.length} tipe harian (cek ${SPAM_CHECK_DAYS_BACK} hari terakhir).` };
+  }
+  const detail = dupes.map(([key, n]) => `${key.replace('|', ' @ ')} (${n}x)`).join(', ');
+  return { ok: false, line: `⚠️ KETEMU DOBEL-KIRIM: ${detail} -- dedup internal script itu kemungkinan jebol, cek segera.` };
+}
+
 function minutesSinceMidnight(now) {
   const local = toLocal(now);
   return local.getUTCHours() * 60 + local.getUTCMinutes();
@@ -146,6 +204,14 @@ function minutesSinceMidnight(now) {
 async function sendChecklistReport(now) {
   const lines = TASKS.map((t) => `${t.isDoneToday(now) ? '✅' : '❌ BELUM'} ${t.label}`);
   const anyMissing = TASKS.some((t) => !t.isDoneToday(now));
+
+  // Mandor tahap 2 (13 Sep 2026): bukan cuma "kekirim apa nggak", TAPI "beneran ngejar apa nggak"
+  // (freshness) + "beneran cuma sekali apa nggak" (anti-spam) -- lihat komentar definisi fungsi.
+  const freshness = await checkWhaleScanFreshness();
+  const spamCheck = checkNoDuplicateSpam(now);
+  const healthLines = [freshness.line, spamCheck.line];
+  const anyHealthIssue = !freshness.ok || !spamCheck.ok;
+
   const msg = [
     `📋 Kaela Checklist Otomatisasi — ${localDateKey(now)}`,
     '',
@@ -154,10 +220,14 @@ async function sendChecklistReport(now) {
     anyMissing
       ? '⚠️ Ada yang belum kekirim walau udah dipaksa jalan -- cek log Vultr, kemungkinan datanya emang kosong/skip wajar hari ini (bukan otomatis berarti bug).'
       : 'Semua tugas harian beres. 🎉',
+    '',
+    '🔍 Kesehatan Mandor (jalan beneran + gak spam):',
+    ...healthLines,
   ].join('\n');
   console.log(msg);
   addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);
   await sendWhatsApp(msg, OLAN_NUMBER); // DM ke Olan pribadi, BUKAN broadcast grup
+  return { anyMissing, anyHealthIssue };
 }
 
 async function main() {

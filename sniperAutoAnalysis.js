@@ -301,7 +301,11 @@ async function main() {
                 const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
                 let liveExecution = null;
                 try {
-                  await exec.setLeverage(execSymbol, calc.leverage);
+                  // `positionType` (14 Sep 2026, audit "Marcus" -- BUG ketemu: parameter ini
+                  // SEBELUMNYA gak pernah dioper, defaultnya di mexcExecutor.js LONG (1) walau
+                  // yang dibuka di sini SHORT -- leverage kesetel ke sisi yang SALAH di MEXC
+                  // (Binance gak kepengaruh, gak pakai param ini sama sekali, aman diabaikan).
+                  await exec.setLeverage(execSymbol, calc.leverage, 2); // 2 = short (SESUAI arah 'sell' di bawah)
                   const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: 'sell', notionalUsd: calc.nilaiPosisi, livePrice: bearLivePrice });
                   const entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
                   try {
@@ -524,7 +528,9 @@ async function main() {
         const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
         let entryFilledQty = null; // diisi begitu entry SUKSES -- dipakai jaring pengaman kalau SL gagal
         try {
-          await exec.setLeverage(execSymbol, calc.leverage);
+          // `positionType` (14 Sep 2026, audit "Marcus") -- lihat catatan lengkap di titik SHORT
+          // window-bear di atas, gap yang sama: MEXC butuh tau sisi mana yang levernya diubah.
+          await exec.setLeverage(execSymbol, calc.leverage, cand.direction === 'buy' ? 1 : 2);
           const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: cand.direction, notionalUsd: calc.nilaiPosisi, livePrice });
           entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
 

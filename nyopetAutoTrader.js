@@ -305,7 +305,10 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | nyawa ${(riskDistance / livePrice * 100).toFixed(2)}% -> leverage ${calc.leverage}x | pattern=${sig.patternType}`);
 
     await exec.setIsolatedMargin(symbol);
-    await exec.setLeverage(symbol, calc.leverage);
+    // `positionType` (14 Sep 2026, audit "Marcus" -- lihat sniperAutoAnalysis.js buat penjelasan
+    // lengkap) -- Nyopet chart-pattern SEKARANG selalu 'buy' (LONG-ONLY, lihat catatan atas file),
+    // TAPI eksplisit di sini drpd andelin default -- aman kalau suatu saat short diaktifin.
+    await exec.setLeverage(symbol, calc.leverage, sig.direction === 'buy' ? 1 : 2);
     let entryOrder;
     try {
       entryOrder = await exec.placeMarketEntry({ symbol, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice });

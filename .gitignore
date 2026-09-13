@@ -59,22 +59,28 @@ manual-open-check.log
 # aslinya tetap Sheet "Journal" di GAS (APPS/kaela-multi-akun/) -- file lokal ini cuma state kerja.
 multi-account-state/
 
-# liquidationListener.js (12 Sep 2026) -- data runtime proses persisten, beda tiap mesin/waktu,
-# regeneratable dari feed live -- bukan source of truth, gak perlu numpuk di git history.
-liquidation-heatmap.json
-liquidation-events.jsonl
+# liquidationListener.js -- LOG doang (stdout/stderr) genuinely operasional/regeneratable,
+# BEDA dari data hasil listen-nya sendiri (lihat 13 Sep 2026 di bawah, itu DI-TRACK).
 liquidation-listener.log
 
-# Riset kalender ekonomi (12 Sep 2026) -- arsip MURNI LOKAL (econReactionResearchLog.js), sama
-# alasan kayak state file lain di atas.
-econ-reaction-research-log.json
 econ-calendar-live-notified.json
 vultr-balance-monitor-state.json
 smart-money-divergence-state.json
 walletexplorer-cache.json
-whale-netflow-research-log.json
-whale-netflow-4h-research-log.json
-miner-pool-research-log.json
-miner-pool-wallets.json
-miner-outflow-research-log.json
-smart-money-research-log.json
+
+# ⚠️ 13 Sep 2026, permintaan Olan ("data itu kita simpen sendiri ya, penting buat masa depan") --
+# KOREKSI dari alasan lama ("regeneratable dari feed live, gak perlu numpuk git history") yang
+# TERNYATA SALAH buat file-file DI BAWAH INI SAJA: ini bukan cursor/state operasional (yang genuinely
+# regeneratable, tetap gitignored di atas), ini HISTORI RISET TERAKUMULASI yang TIDAK BISA
+# di-backfill kalau hilang (riset 13 Sep 2026 siang: backfill blockchain historis gak praktis,
+# rate limit API butuh berhari-hari; smart-money Binance cuma nyimpen 30 hari; liquidation
+# stream cuma nangkep yang KEJADIAN pas listener nyala). Kalau VPS-nya hilang/rebuild (PERNAH
+# kejadian nyata, lihat reference-vultr-vps), data ini HILANG PERMANEN tanpa git buat backup.
+# SENGAJA di-TRACK sekarang (bukan di-gitignore) -- masuk daftar CHANGED run-vultr-executor.sh
+# biar ke-commit+push otomatis tiap siklus, sama kayak whale-state.json dkk. Ukuran semua masih
+# kecil (puluhan KB, ada cap MAX_ENTRIES di beberapa), aman buat git history.
+# whale-netflow-research-log.json, whale-netflow-4h-research-log.json, miner-pool-research-log.json,
+# miner-pool-wallets.json, miner-outflow-research-log.json, smart-money-research-log.json,
+# econ-reaction-research-log.json, liquidation-heatmap.json, liquidation-events.jsonl
+# -- SENGAJA GAK ditaro di sini (list di atas cuma dokumentasi kenapa gak ada), lihat pathspec
+# CHANGED di run-vultr-executor.sh buat daftar aktualnya.

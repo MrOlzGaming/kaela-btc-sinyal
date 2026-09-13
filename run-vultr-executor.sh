@@ -187,7 +187,12 @@ node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOrderMonitor.js ERR
 # state lokal apapun jadi gak perlu masuk daftar CHANGED di bawah.
 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
 
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json)
+# whale-netflow-research-log.json dst (13 Sep 2026, permintaan Olan "data itu kita simpen sendiri
+# ya, penting buat masa depan") -- histori riset TERAKUMULASI yang GAK BISA di-backfill kalau
+# hilang (beda dari cursor/state operasional lain di baris ini) -- lihat catatan panjang di
+# .gitignore. WAJIB ikut daftar ini, kalau nggak `git reset --hard` box ini nelen balik histori
+# yang baru ke-tulis siklus ini (KELAS BUG SAMA PERSIS kayak insiden state.json 8 Sep 2026).
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
@@ -204,7 +209,7 @@ if [ -n "$CHANGED" ]; then
   # perubahan lokalnya -- dedup "udah kekirim hari ini" ilang, tugas yang BARU DIPAKSA jalan bakal
   # KEBACA "belum" lagi cycle depan dan DIPAKSA ULANG TERUS-MENERUS tiap 15 menit (dobel WA/sinyal
   # tanpa henti), persis kelas bug yang lagi dibenerin hari ini.
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json; do
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

@@ -86,15 +86,28 @@ function sumSince(store, sinceMs, types) {
 // Ini udah mencemari SEMUA store sejak file ini dibuat (4 Sep 2026) -- setiap fill yang generate
 // REALIZED_PNL+COMMISSION bareng kena. Fix: `id` sekarang `tranId + '|' + incomeType` -- 2 entry
 // beda jenis TETAP dianggap 2 entry beda walau tranId sama, gak ada lagi yang ketimpa.
+// Paginasi (13 Sep 2026, konsolidasi audit "logic dobel") -- SEBELUMNYA cuma 1x fetch (max 1000
+// baris), sementara `multiAccountExecutor.js` punya implementasi TERPISAH (`getFullIncomeHistorySince`)
+// yang paginasi (buat kasus member baru gabung berbulan-bulan, backlog >1000 baris) -- itu jadi
+// PENYEBAB LANGSUNG bug dedup 13 Sep 2026 ke-duplikasi di 2 tempat (fix yang sama harus ditempel
+// 2x). Sekarang paginasi DIPINDAH ke sini, SATU-SATUNYA sumber logic sync income Binance -- caller
+// manapun (reconciler/Nyopet yang sync sering-tapi-sedikit, ATAU balance report yang kadang perlu
+// backfill BANYAK) reuse fungsi yang SAMA, gak ada lagi 2 tempat buat diperbaiki kalau ada bug lagi.
 async function syncIncomeStore(exchange, client, phone, mode, sinceMs) {
   if (exchange !== 'binance') return null;
   const filePath = storePath('binance', phone, mode);
   const store = loadStore(filePath);
-  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
-  const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
-  const normalized = (rawNew || []).map((r) => ({ id: `${r.tranId}|${r.incomeType}`, time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
-  mergeEntries(store, normalized);
-  saveStore(filePath, store);
+  let cursor = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
+
+  for (let i = 0; i < 50; i++) { // cap 50x1000 = 50rb baris/panggilan, jaga2 infinite loop
+    const rawNew = await client.getIncomeHistory(cursor, 1000);
+    if (!rawNew || rawNew.length === 0) break;
+    const normalized = rawNew.map((r) => ({ id: `${r.tranId}|${r.incomeType}`, time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+    mergeEntries(store, normalized);
+    saveStore(filePath, store); // simpan tiap batch -- kalau gagal di tengah, progress TETAP kesimpen
+    if (rawNew.length < 1000) break; // kurang dari limit -- udah abis, gak perlu lanjut
+    cursor = Number(rawNew[rawNew.length - 1].time) + 1;
+  }
   return store;
 }
 

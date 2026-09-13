@@ -452,46 +452,15 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
 // kill switch (ini monitoring read-only, bukan eksekusi -- Olan tetap mau bisa pantau walau lagi
 // mode kill-switch off). "Trading Kaela" vs "di luar Kaela" DIPISAHIN DI SISI GAS (baca Sheet
 // Journal langsung) -- di sini cuma kirim angka MENTAH hasil Binance.
-// Binance getIncomeHistory CUMA balikin max 1000 baris per panggilan (lihat binanceExecutor.js) --
-// dulu aman krn window CUMA 7 hari, TAPI sekarang (3-4 Sep 2026) window-nya "sejak gabung" yang
-// bisa berbulan-bulan buat member lama -- 1000 baris bisa KEPOTONG diam-diam, PnL keitung KURANG
-// dari yang sebenarnya (jujur salah, bukan crash -- BAHAYA krn kelihatan "masuk akal" padahal
-// bukan angka lengkap). Fix: paginasi manual pakai cursor waktu -- kalau hasil PERSIS 1000 (limit
-// kena), lanjut fetch lagi dari waktu baris TERAKHIR+1ms sampai hasilnya < 1000 (berarti abis).
-// Cap 50 iterasi (50.000 baris) -- jaga-jaga infinite loop kalau ada bug aneh di respons API,
-// BUKAN batas yang realistis kepake buat member normal manapun.
-async function getFullIncomeHistorySince(client, sinceMs) {
-  let all = [];
-  let cursor = sinceMs;
-  for (let i = 0; i < 50; i++) {
-    const batch = await client.getIncomeHistory(cursor, 1000);
-    if (!batch || batch.length === 0) break;
-    all = all.concat(batch);
-    if (batch.length < 1000) break; // kurang dari limit -- udah abis, gak perlu lanjut
-    cursor = Number(batch[batch.length - 1].time) + 1;
-  }
-  return all;
-}
-
 // syncAndGetIncomeHistorySince (4 Sep 2026, permintaan Olan: "tiap tarikan data binance...
-// simpan di data kita sendiri. jadi kita ga kehilangan data kan?") -- BUNGKUS getFullIncomeHistorySince
-// pakai tradeHistoryStore.js. Siklus PERTAMA (file belum ada) backfill PENUH dari sinceMs (bisa
-// lama kalau member udah gabung berbulan-bulan, WAJAR sekali doang). Siklus BERIKUTNYA cuma nanya
-// exchange "ada yang baru sejak lastSyncedMs?" -- jauh lebih hemat, DAN histori lama tetap utuh di
-// file kita sendiri walau exchange suatu saat batesin range query / data lama gak bisa ditarik lagi.
+// simpan di data kita sendiri. jadi kita ga kehilangan data kan?") -- THIN WRAPPER doang di sekitar
+// `tradeHistoryStore.syncIncomeStore` (13 Sep 2026, konsolidasi audit "logic dobel": paginasi +
+// normalisasi + dedup SEBELUMNYA reimplementasi TERPISAH di sini, penyebab LANGSUNG bug dedup
+// tranId+type harus ditempel 2x di 2 file berbeda hari ini -- sekarang SATU sumber kebenaran).
 async function syncAndGetIncomeHistorySince(client, phone, mode, sinceMs) {
-  const filePath = tradeHistoryStore.storePath('binance', phone, mode);
-  const store = tradeHistoryStore.loadStore(filePath);
-  const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
-  const rawNew = await getFullIncomeHistorySince(client, fetchFromMs);
-  // ⛔ BUG SERIUS ketemu+fix 13 Sep 2026 (lihat catatan panjang di tradeHistoryStore.js
-  // syncIncomeStore) -- `id` cuma tranId doang bikin REALIZED_PNL ketimpa COMMISSION yang tranId-nya
-  // sama. Jalur INI (`syncAndGetIncomeHistorySince`) ternyata implementasi TERPISAH yang nulis ke
-  // FILE STORE YANG SAMA dengan bug identik -- kalau gak dibenerin BARENGAN, siklus berikutnya
-  // NGERUSAK ULANG data yang baru di-rebuild manual hari ini.
-  const normalized = rawNew.map((r) => ({ id: `${r.tranId}|${r.incomeType}`, time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
-  const added = tradeHistoryStore.mergeEntries(store, normalized);
-  tradeHistoryStore.saveStore(filePath, store);
+  const before = tradeHistoryStore.loadStore(tradeHistoryStore.storePath('binance', phone, mode)).entries.length;
+  const store = await tradeHistoryStore.syncIncomeStore('binance', client, phone, mode, sinceMs);
+  const added = store.entries.length - before;
   if (added > 0) console.log(`[MultiAccountExecutor] TradeHistoryStore Binance ${phone}/${mode}: +${added} baris baru (total tersimpan: ${store.entries.length}).`);
   return store.entries.filter((e) => e.time >= sinceMs);
 }

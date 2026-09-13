@@ -484,7 +484,12 @@ async function syncAndGetIncomeHistorySince(client, phone, mode, sinceMs) {
   const store = tradeHistoryStore.loadStore(filePath);
   const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
   const rawNew = await getFullIncomeHistorySince(client, fetchFromMs);
-  const normalized = rawNew.map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+  // ⛔ BUG SERIUS ketemu+fix 13 Sep 2026 (lihat catatan panjang di tradeHistoryStore.js
+  // syncIncomeStore) -- `id` cuma tranId doang bikin REALIZED_PNL ketimpa COMMISSION yang tranId-nya
+  // sama. Jalur INI (`syncAndGetIncomeHistorySince`) ternyata implementasi TERPISAH yang nulis ke
+  // FILE STORE YANG SAMA dengan bug identik -- kalau gak dibenerin BARENGAN, siklus berikutnya
+  // NGERUSAK ULANG data yang baru di-rebuild manual hari ini.
+  const normalized = rawNew.map((r) => ({ id: `${r.tranId}|${r.incomeType}`, time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
   const added = tradeHistoryStore.mergeEntries(store, normalized);
   tradeHistoryStore.saveStore(filePath, store);
   if (added > 0) console.log(`[MultiAccountExecutor] TradeHistoryStore Binance ${phone}/${mode}: +${added} baris baru (total tersimpan: ${store.entries.length}).`);

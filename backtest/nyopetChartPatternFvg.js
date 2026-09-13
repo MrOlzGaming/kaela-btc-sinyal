@@ -148,6 +148,10 @@ function runNyopetV2Backtest(candles, opts = {}) {
     // Konfirmasi DXY (31 Agu 2026, permintaan Olan) -- sama pola backtestCrossAsset.js, cek di
     // titik ENTRY doang, opsional (null = tanpa filter, backward-compatible).
     dxyFilter = null,
+    // Konfirmasi Funding Rate BTC (14 Sep 2026, riset "Ide belum dicoba" RESEARCH-LOG.md) --
+    // SAMA pola dxyFilter di atas (opsional, null = tanpa filter), fungsi terpisah biar bisa
+    // dites independen/dikombinasi. Lihat fundingFilter.js.
+    fundingFilter = null,
     // Titik mulai SERAGAM (31 Agu 2026, Olan: "backtest harus sama startnya.. dari 2020 aja, itu
     // pertama aku kenal kripto") -- candle SEBELUM startMs tetap dilewatin/dipakai buat SMA/pola
     // (loop & pattern-detection function baca array PENUH candles seperti biasa), tapi modal cuma
@@ -245,6 +249,12 @@ function runNyopetV2Backtest(candles, opts = {}) {
     if (dxyFilter && direction === 'buy') {
       const dxyWeak = dxyFilter(today.closeTime);
       if (dxyWeak === false) continue;
+    }
+
+    // Filter Funding Rate -- sama semantik dxyFilter di atas: null (data blm ada) = LOLOS.
+    if (fundingFilter && direction === 'buy') {
+      const fundingOk = fundingFilter(today.closeTime);
+      if (fundingOk === false) continue;
     }
 
     const riskDistance = Math.abs(lastPrice - sl);

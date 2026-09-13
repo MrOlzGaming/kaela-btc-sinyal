@@ -47,6 +47,54 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-14 — Funding Rate BTC sebagai konfirmasi entry, Nyopet BTC (dari daftar "Ide belum dicoba")
+**Ide:** skip entry LONG Nyopet kalau funding rate BTC perpetual lagi DI ATAS rata-rata dirinya
+sendiri (SMA-nya sendiri, filter self-referential -- SAMA pola `dxyFilter.js` yang terbukti
+valid buat DXY, biar gak overfit ke angka ambang absolut). Hipotesis: funding tinggi = posisi
+long lagi crowded/mahal ditahan, sinyal resiko reversal/squeeze lebih tinggi, kurang ideal buat
+nambah long baru.
+
+**Metode:** `backtest/refreshFundingCache.js` (fetch histori funding rate BTCUSDT penuh dari
+Binance Futures, 2019-2026, 7682 entri) + `backtest/fundingFilter.js` (lookup `isFundingFavorable`,
+funding close < SMA-nya sendiri, no look-ahead) + `fundingFilter` param baru di
+`nyopetChartPatternFvg.js` (`runNyopetV2Backtest`, opsional/backward-compatible, pola PERSIS
+`dxyFilter`) + `backtest/fundingNyopetScrutiny.js`. BTC DOANG (funding rate Emas/PAXG MEXC belum
+ada histori/dicoba di project ini). Data 2020-2026 (startMs seragam), SMA20 funding (~6,7 hari)
+sbg default, sensitivitas SMA10/50.
+
+**Hasil breakdown per tahun:** Aggregate kelihatan lebih baik (baseline PF=1.48 n=163 final=$1012
+vs +filter PF=1.56 n=145 final=$1267), TAPI per tahun 4 dari 7 tahun (2020/2021/2023/2024) justru
+totalR-nya LEBIH JELEK pakai filter, cuma 2022 (tahun crash) yang nyumbang perbaikan besar
+(+8.52 totalR). **Temuan paling telak** (ketemu pas review sub-agent): jumlah TOTAL totalR
+aggregate baseline (48.29) vs filtered (48.43) HAMPIR IDENTIK (selisih 0.14, noise) -- padahal
+final capital beda jauh ($1012 vs $1267). Artinya kenaikan capital itu BUKAN dari edge statistik
+R-multiple beneran, tapi efek reshuffle urutan trade (nolak 1 entry di 1 titik menggeser slot
+kapan posisi berikutnya kebuka, backtest engine ini emang begitu sifatnya).
+
+**Split-era:** **GAGAL.** Era1 (2020-2023): PF baseline 1.08 -> +filter 1.07 (TURUN, bukan
+flat/naik). Era2 (2023-2026): PF 1.86 -> 2.13 (naik jelas). Syarat "harus hold di KEDUA era"
+gak lolos -- seluruh efek positif numpuk di Era2 doang.
+
+**Sensitivitas parameter:** **GAGAL.** SMA10: PF=1.45 (DI BAWAH baseline 1.48 -- parameter
+tetangga terdekat malah lebih jelek dari TANPA filter sama sekali). SMA20: PF=1.56, final
+tertinggi $1267. SMA50: PF=1.61 (PF tertinggi) tapi final cuma $1065 (hampir sama baseline). PF
+dan final capital gak bergerak searah antar parameter -- gak ada tren monoton yang masuk akal,
+rapuh/fragile khas overfitting ke 1 titik parameter (SMA20) yang kebetulan paling bagus.
+
+**Review sub-agent (Peninjau Skeptis):** independen dikasih angka mentah TANPA kesimpulan --
+verdict REJECT ("TIDAK CUKUP KUAT — bukan edge asli, jangan diimplementasikan"), ketemu insight
+tambahan (totalR aggregate nyaris identik) yang bahkan lebih telak dari analisaku sendiri.
+Sepakat penuh.
+
+**Kesimpulan:** **TIDAK CUKUP KUAT / overfitting-like.** Ketiga syarat rigor GAGAL (bukan cuma
+salah satu) -- per-tahun gak konsisten, split-era cuma menang di 1 era, sensitivitas parameter
+rapuh (SMA10 kalah dari tanpa-filter). Kenaikan angka aggregate yang kelihatan bagus di
+permukaan ternyata artefak reshuffle urutan trade + overfit ke era 2023-2026 + overfit ke SMA20,
+bukan edge funding rate beneran.
+**Status implementasi:** TIDAK diterapkan. Live tetap tanpa filter funding rate.
+
+---
+
 ### 2026-08-31 — Batas umur gap FVG buat Nyopet v2 (ide dari observasi live Olan)
 **Ide:** Nyopet v2 numpang PERSIS mesin deteksi FVG yang sama kayak Sniper (`fvgDetector.js`) --
 nyisir mundur ke gap TERTUA yang belum keisi TANPA batas umur (cuma dibatasin total candle yang
@@ -144,8 +192,9 @@ buat SEMUA riset selanjutnya di file ini.
 
 ## Ide-ide yang BELUM dicoba (kandidat buat riset besok, hapus dari daftar kalau udah dites)
 
-- Indikator makro lain sebagai konfirmasi entry (COT report positioning, funding rate BTC,
-  Fear&Greed Index level, korelasi DXY-Emas terpisah dari DXY-BTC)
+- Indikator makro lain sebagai konfirmasi entry (COT report positioning, Fear&Greed Index level,
+  korelasi DXY-Emas terpisah dari DXY-BTC) -- funding rate BTC UDAH DITES 14 Sep 2026, REJECTED
+  (lihat "Temuan Terbaru" di atas), jangan diulang persis sama tanpa ide baru
 - Parameter sweep lookback window Nyopet v2 (saat ini di-rescale ×6 dari tuning harian ke 4H
   — belum pernah divalidasi ulang secara independen apakah ×6 itu optimal)
 - Parameter sweep exit rule (partial 50% di 2R + trailing SMA60 — kenapa 2R dan SMA60

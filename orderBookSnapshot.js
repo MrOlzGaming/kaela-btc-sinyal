@@ -15,8 +15,17 @@
 const fs = require('fs');
 const path = require('path');
 const { fetchWithRetry } = require('./httpRetry');
+const { sendWhatsApp } = require('./fonnte');
+const { MASTER_NOMOR } = require('./multiAccountExecutor');
 
 const LOG_PATH = path.join(__dirname, 'orderbook-wall-research-log.json');
+// "Aneh" (13 Sep 2026, permintaan Olan: "dinding kalo aneh bisa info darurat?") -- dibandingin ke
+// HISTORI KITA SENDIRI (sama filosofi anomalyScanner.js), BUKAN angka tetap sembarangan -- begitu
+// data cukup numpuk, dinding dianggap "aneh" kalau >2x dinding TERBESAR yang PERNAH kecatat.
+// Sebelum histori cukup (`MIN_HISTORY_FOR_STATS`), pakai jaring pengaman absolut ($5jt) dulu.
+const MIN_HISTORY_FOR_STATS = 20;
+const HISTORY_MULTIPLIER = 2;
+const ABSOLUTE_FALLBACK_USD = 5000000;
 const DEPTH_URL = 'https://fapi.binance.com/fapi/v1/depth?symbol=BTCUSDT&limit=500';
 const MAX_ENTRIES = 20000; // ~beberapa bulan snapshot 15-menitan (~5-10 dinding/snapshot rata2)
 
@@ -49,6 +58,15 @@ function findWalls(levels, side, midPrice) {
     walls.push({ side, price, qty, notionalUsd, distPct });
   }
   return walls;
+}
+
+// Kesimpulan "jika-maka" (13 Sep 2026, permintaan Olan) -- interpretasi SEDERHANA+KONSERVATIF,
+// SELALU dikasih syarat "kalau X bertahan" (bukan kepastian) -- sama gaya jujur kayak whaleLog.js
+// ("potensi tekanan jual, BUKAN kepastian"). Dinding BISA dicabut/ditembus kapan aja (spoofing).
+function interpretWall(wall) {
+  const arah = wall.side === 'ASK' ? 'JUAL' : 'BELI';
+  const efek = wall.side === 'ASK' ? 'ketahan NAIK (resistance buatan)' : 'ketahan TURUN (support buatan)';
+  return `Jika dinding ${arah} ini BERTAHAN (gak ditembus), MAKA harga BTC kemungkinan ${efek} di sekitar $${wall.price.toFixed(0)} -- BUKAN jaminan, dinding order bisa aja dicabut kapan saja (taktik "spoofing" umum).`;
 }
 
 function loadLog() {
@@ -87,6 +105,35 @@ async function main() {
     console.log(`[OrderBookSnapshot] ${allWalls.length} dinding ketemu (mid $${midPrice.toFixed(0)}) -- top 3: ${summary}`);
   } else {
     console.log(`[OrderBookSnapshot] Gak ada dinding menonjol siklus ini (mid $${midPrice.toFixed(0)}).`);
+  }
+
+  // Info darurat (13 Sep 2026, permintaan Olan) -- "aneh" = dibandingin histori KITA SENDIRI
+  // (log SEBELUM entry siklus ini ditambahin), bukan angka tetap. Histori kurang dari
+  // MIN_HISTORY_FOR_STATS -> pakai jaring pengaman absolut dulu.
+  const priorNotionals = log.slice(0, log.length - allWalls.length).map((e) => e.notionalUsd);
+  const historicalMax = priorNotionals.length ? Math.max(...priorNotionals) : 0;
+  const threshold = priorNotionals.length >= MIN_HISTORY_FOR_STATS
+    ? historicalMax * HISTORY_MULTIPLIER
+    : ABSOLUTE_FALLBACK_USD;
+
+  const urgentWalls = allWalls.filter((w) => w.notionalUsd >= threshold);
+  if (urgentWalls.length) {
+    const biggest = urgentWalls.sort((a, b) => b.notionalUsd - a.notionalUsd)[0];
+    const dasarAmbang = priorNotionals.length >= MIN_HISTORY_FOR_STATS
+      ? `>2x dinding terbesar yang PERNAH kecatat ($${(historicalMax / 1e6).toFixed(2)}jt)`
+      : `>$5jt (histori masih kurang dari ${MIN_HISTORY_FOR_STATS} data, pakai jaring pengaman awal)`;
+    const msg = [
+      '🚨 *Info Darurat: Dinding Likuiditas BTC Gak Wajar*',
+      '',
+      `${biggest.side} $${biggest.price.toFixed(0)} (${biggest.distPct >= 0 ? '+' : ''}${biggest.distPct.toFixed(2)}% dari harga sekarang $${midPrice.toFixed(0)}) -- ukuran $${(biggest.notionalUsd / 1e6).toFixed(2)}jt.`,
+      `Kenapa dianggap aneh: ${dasarAmbang}.`,
+      '',
+      interpretWall(biggest),
+      '',
+      '⚠️ Riset awal, BELUM divalidasi -- murni info, bukan ajakan aksi apapun.',
+    ].join('\n');
+    console.log(msg);
+    await sendWhatsApp(msg, MASTER_NOMOR).catch((e) => console.log('[OrderBookSnapshot] Gagal kirim info darurat:', e.message));
   }
 }
 

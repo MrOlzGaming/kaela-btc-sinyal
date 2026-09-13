@@ -5,6 +5,7 @@
 
 const { fetchWithRetry } = require('./httpRetry');
 const { detectExchangeDirection } = require('./exchangeAddresses');
+const { lookupMinerWallet } = require('./minerWalletTracker');
 
 const SATOSHI = 100000000;
 
@@ -38,10 +39,18 @@ async function findLargeTransactions(block, thresholdBtc) {
     const totalBtc = totalSatoshi / SATOSHI;
     if (totalBtc >= thresholdBtc) {
       const exchangeMatch = await detectExchangeDirection(tx);
+      // Miner-outflow tahap 2 (13 Sep 2026, GRATIS -- numpang tx yang SAMA, minerWalletTracker.js
+      // numpuk peta alamat pool dari coinbase blok2 yang di-scan). `minerPool` keisi kalau SALAH
+      // SATU alamat asal (input) transaksi ini dikenali sbg wallet pool -- kombinasi minerPool +
+      // direction==='TO_EXCHANGE' = sinyal "miner mindahin BTC ke exchange" (potensi jual).
+      const inputAddrs = (tx.inputs || []).map((i) => i.prev_out && i.prev_out.addr).filter(Boolean);
+      let minerPool = null;
+      for (const addr of inputAddrs) { const p = lookupMinerWallet(addr); if (p) { minerPool = p; break; } }
       results.push({
         txid: tx.hash, totalBtc, blockHeight: block.height, blockTime: block.time,
         direction: exchangeMatch ? exchangeMatch.direction : null,
         exchange: exchangeMatch ? exchangeMatch.exchange : null,
+        minerPool,
       });
     }
   }

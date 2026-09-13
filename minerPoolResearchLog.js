@@ -37,4 +37,27 @@ function recordDailyPoolCounts(dateKey, poolCounts) {
   saveAll(arr);
 }
 
-module.exports = { recordDailyPoolCounts, loadAll, LOG_PATH };
+// Miner-outflow tahap 2 (13 Sep 2026) -- rekap harian "berapa BTC dipindah dari wallet POOL DIKENAL
+// ke exchange DIKENAL" (dua-duanya harus cocok, lihat whaleFetch.js). Ini BARU numpuk data --
+// wallet pool cuma ketahuan MULAI SEKARANG (gak bisa backfill masa lalu), jadi di awal-awal
+// wajar kosong/dikit sampai peta minerWalletTracker.js cukup lengkap.
+const OUTFLOW_LOG_PATH = require('path').join(__dirname, 'miner-outflow-research-log.json');
+function _loadOutflow() {
+  const fs2 = require('fs');
+  if (!fs2.existsSync(OUTFLOW_LOG_PATH)) return [];
+  try { return JSON.parse(fs2.readFileSync(OUTFLOW_LOG_PATH, 'utf8')); } catch { return []; }
+}
+function _saveOutflow(arr) {
+  require('fs').writeFileSync(OUTFLOW_LOG_PATH, JSON.stringify(arr, null, 2));
+}
+function recordDailyMinerOutflow(dateKey, btcAmount, count) {
+  if (!btcAmount && !count) return; // gak ada aktivitas hari ini -- gak perlu nulis baris kosong
+  const arr = _loadOutflow();
+  let entry = arr.find((e) => e.dateKey === dateKey);
+  if (!entry) { entry = { dateKey, btcAmount: 0, count: 0 }; arr.push(entry); }
+  entry.btcAmount += btcAmount;
+  entry.count += count;
+  _saveOutflow(arr);
+}
+
+module.exports = { recordDailyPoolCounts, loadAll, LOG_PATH, recordDailyMinerOutflow, OUTFLOW_LOG_PATH };

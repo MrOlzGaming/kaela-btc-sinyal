@@ -29,8 +29,9 @@ const { addOrReplaceDaily, hasEntryToday } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey, local4hBucketKey } = require('./config');
 const { recordDailyNetflow, recordNetflowBucket } = require('./whaleNetflowResearchLog');
-const { detectMinerPool } = require('./minerPools');
-const { recordDailyPoolCounts } = require('./minerPoolResearchLog');
+const { detectMinerPool, extractCoinbaseAddresses } = require('./minerPools');
+const { recordDailyPoolCounts, recordDailyMinerOutflow } = require('./minerPoolResearchLog');
+const { recordMinerPayout } = require('./minerWalletTracker');
 
 const STATE_PATH = path.join(__dirname, 'whale-state.json');
 // Diturunin 1000->300 (12 Sep 2026, permintaan Olan) -- dites 12 Sep: 60 transaksi >=300 BTC
@@ -109,11 +110,21 @@ async function main() {
 
       const pool = detectMinerPool(block); // null = gak teridentifikasi (BUKAN "pool aneh")
       poolCounts[pool === null ? 'unidentified' : pool] = (poolCounts[pool === null ? 'unidentified' : pool] || 0) + 1;
+      // Tahap 2 miner-outflow (13 Sep 2026) -- begitu pool blok ini ketahuan, alamat payout-nya
+      // (coinbase output, PASTI bukan tebakan) direkam ke peta wallet. Numpang blok yang SAMA,
+      // zero API tambahan. Lihat minerWalletTracker.js buat gimana ini dipakai whaleFetch.js.
+      if (pool) recordMinerPayout(pool, extractCoinbaseAddresses(block));
 
       state.lastProcessedHeight = height;
       saveState(state); // simpan per-blok, biar kalau run gagal di tengah gak ngulang dari awal
     }
     recordDailyPoolCounts(todayKey, poolCounts);
+
+    // Rekap harian "miner outflow" (13 Sep 2026) -- BTC yang kedeteksi pindah dari wallet POOL
+    // DIKENAL ke exchange DIKENAL (lihat whaleFetch.js). Murni arsip, wajar kosong dulu di awal
+    // (peta wallet baru mulai numpuk dari hari ini, gak ada histori masa lalu).
+    const minerOutTx = newTx.filter((t) => t.minerPool && t.direction === 'TO_EXCHANGE');
+    recordDailyMinerOutflow(todayKey, minerOutTx.reduce((s, t) => s + t.totalBtc, 0), minerOutTx.length);
 
     // Akumulasi ke state -- BEDA dari versi lama, ini jalan TIAP RUN tanpa syarat status WA hari
     // ini (itu bug-nya, lihat catatan atas). Reset akumulator kalau ganti hari kalender WITA.

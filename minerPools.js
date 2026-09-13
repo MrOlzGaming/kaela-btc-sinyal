@@ -51,4 +51,17 @@ function detectMinerPool(block) {
   return null;
 }
 
-module.exports = { detectMinerPool, KNOWN_POOL_TAGS };
+const SATOSHI = 100000000;
+
+// Alamat PAYOUT (output coinbase) blok ini -- 100% pasti (bukan tebakan), langsung dari data yang
+// SAMA (zero API tambahan). Dipakai minerWalletTracker.js buat numpuk peta "alamat ini punya pool
+// mana" begitu pool-nya ketahuan lewat detectMinerPool() di atas.
+function extractCoinbaseAddresses(block) {
+  const coinbaseTx = block.tx && block.tx[0];
+  if (!coinbaseTx || !coinbaseTx.out) return [];
+  return coinbaseTx.out
+    .filter((o) => o && o.addr && o.value)
+    .map((o) => ({ address: o.addr, valueBtc: o.value / SATOSHI }));
+}
+
+module.exports = { detectMinerPool, extractCoinbaseAddresses, KNOWN_POOL_TAGS };

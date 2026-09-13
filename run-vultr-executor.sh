@@ -168,6 +168,12 @@ timeout 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDiges
 # boleh lewat cap, dst) -- nangkep bug SILENT yang gak bikin exception/gak keliatan di log biasa.
 node systemInvariantCheck.js >> "$LOG_FILE" 2>&1 || log "systemInvariantCheck.js ERROR (exit $?)"
 
+# Mandor PnL vs Binance (13 Sep 2026, insiden nyata: sistem bilang -$1,89, Binance bilang +$12,96,
+# cuma ketauan karena Olan kebetulan screenshot app-nya) -- hitung PnL hari ini 2 jalur independen
+# (store lokal vs fresh dari Binance), alarm DM Olan kalau beda jauh. Cegah kelas bug SERUPA
+# (beda akar masalah) ke depan gak ketauan sampai investor komplain duluan.
+timeout 60 node pnlCrossCheckMonitor.js >> "$LOG_FILE" 2>&1 || log "pnlCrossCheckMonitor.js ERROR/TIMEOUT (exit $?)"
+
 # Monitor Order Sniper -- channel Sniper LAMA (posisi real Olan sendiri), pantau TP/SL/partial
 # exit (4 Sep 2026, sama akar masalah kayak Price Alert/DXY di atas -- audit nunjukin jadwal GH
 # Actions "tiap jam"-nya kebukti jalan tiap 2-4 jam, notif TP/SL kena bisa telat berjam-jam).

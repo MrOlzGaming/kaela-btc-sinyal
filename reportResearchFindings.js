@@ -63,9 +63,13 @@ async function main() {
   const statusImpl = extractField(entry.body, 'Status implementasi') || '';
 
   const title = entry.heading.replace(/^###\s*/, '');
+  // TTD role (13 Sep 2026, "semua otomatisnya pesan kita update") -- domain Prism (Data QA)
+  // PAS banget: isinya verifikasi statistik (breakdown tahun/split-era/sensitivitas). Lihat
+  // SYSTEM-MAP.md "Tim Kaela".
   const msg = `🔬 *Kaela Researcher -- Temuan Baru*\n\n*${title}*\n\n*Kesimpulan:* ${kesimpulan}` +
     (statusImpl ? `\n*Status:* ${statusImpl}` : '') +
-    `\n\nDetail lengkap (breakdown per tahun, split-era, sensitivitas parameter) ada di RESEARCH-LOG.md di repo.`;
+    `\n\nDetail lengkap (breakdown per tahun, split-era, sensitivitas parameter) ada di RESEARCH-LOG.md di repo.` +
+    `\n\n— Kaela\n   (laporan: 🔬 Prism · Data QA)`;
 
   const r = await kaela.notifyMember(MASTER_NOMOR, msg);
   if (r.ok) {

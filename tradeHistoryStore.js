@@ -75,13 +75,24 @@ function sumSince(store, sinceMs, types) {
 // bareng positionReconciler.js (manual) DAN nyopetAutoTrader.js (auto, buat "PnL hari ini" di pesan
 // close/partial -- lihat todaysPnlForSymbol di bawah). `mode` ('real'/'demo') pisahin file cache
 // per akun+mode, SAMA pola kayak dipakai multiAccountExecutor.js.
+// ⛔ BUG SERIUS ketemu+fix 13 Sep 2026 (Olan cross-check ke app Binance -- kalender PnL Binance
+// nunjukin +$12,96 hari ini, sistem kita bilang -$1,89 -- selisih besar, BUKAN cuma soal pesan
+// gak kekirim). Root cause: `id` dedup SEBELUMNYA cuma `String(r.tranId)` -- TERNYATA Binance
+// kasih `tranId` yang SAMA buat REALIZED_PNL dan COMMISSION dari 1 fill yang sama (dikonfirmasi
+// LANGSUNG lewat raw API: 13 entry asli hari itu, cuma 8 tranId unik). `mergeEntries` (byId[e.id]
+// = e) nganggep 2 entry beda JENIS itu "entry yang sama", entry yang ketulis BELAKANGAN (COMMISSION,
+// urutannya emang selalu SETELAH REALIZED_PNL di response Binance) NIMPA yang duluan -- REALIZED_PNL
+// (untung/rugi ASLI) HILANG DIAM-DIAM dari cache lokal, cuma catatan biaya doang yang kesimpen.
+// Ini udah mencemari SEMUA store sejak file ini dibuat (4 Sep 2026) -- setiap fill yang generate
+// REALIZED_PNL+COMMISSION bareng kena. Fix: `id` sekarang `tranId + '|' + incomeType` -- 2 entry
+// beda jenis TETAP dianggap 2 entry beda walau tranId sama, gak ada lagi yang ketimpa.
 async function syncIncomeStore(exchange, client, phone, mode, sinceMs) {
   if (exchange !== 'binance') return null;
   const filePath = storePath('binance', phone, mode);
   const store = loadStore(filePath);
   const fetchFromMs = store.lastSyncedMs > 0 ? store.lastSyncedMs + 1 : sinceMs;
   const rawNew = await client.getIncomeHistory(fetchFromMs, 1000);
-  const normalized = (rawNew || []).map((r) => ({ id: String(r.tranId), time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
+  const normalized = (rawNew || []).map((r) => ({ id: `${r.tranId}|${r.incomeType}`, time: Number(r.time), symbol: r.symbol, type: r.incomeType, amount: Number(r.income) || 0 }));
   mergeEntries(store, normalized);
   saveStore(filePath, store);
   return store;

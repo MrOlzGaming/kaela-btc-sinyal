@@ -251,12 +251,17 @@ async function main() {
         const shortSig = detectPatternSignal(bearDaily, bearDaily.length - 1, { allowShort: true });
         if (shortSig && shortSig.direction === 'sell') {
           // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah...
-          // window bear fokus short") -- KHUSUS isTestnet() true (demo), Kaela AUTO-EKSEKUSI short
-          // ini (bukan cuma info) -- reuse pola exec+safety-net PERSIS sama kayak candidate long
-          // di bawah (setLeverage->entry->SL dgn jaring pengaman emergency-close kalau SL gagal
-          // nempel->TP), createOrder dicatat SAMA biar kekelola sniperOrderMonitor/sniperLiveMonitor
-          // normal. Real (isTestnet()===false) TETAP informational-only (gak masuk cabang ini).
-          if (isTestnet()) {
+          // window bear fokus short") -- KHUSUS isTestnet() true (demo) DAN BTC, Kaela AUTO-EKSEKUSI
+          // short ini (bukan cuma info) -- reuse pola exec+safety-net PERSIS sama kayak candidate
+          // long di bawah (setLeverage->entry->SL dgn jaring pengaman emergency-close kalau SL
+          // gagal nempel->TP), createOrder dicatat SAMA biar kekelola sniperOrderMonitor/
+          // sniperLiveMonitor normal. Real (isTestnet()===false) TETAP informational-only.
+          // UPDATE 13 Sep 2026 -- backtest window-gated: BTC membaik, Emas JUSTRU lebih jelek
+          // (SMA200 whipsaw 75x tutup-paksa vs 3x di BTC, finalCapital $3.139 vs baseline $11.469).
+          // Olan: "emas long only btc boleh long short.. tapi untuk emas, tetep di sinyal" --
+          // demo Emas DICABUT dari auto-exec (assetKey==='btc' ditambah ke syarat), tapi TETAP
+          // masuk cabang `else` di bawah (sinyal informasional), gak diam total.
+          if (isTestnet() && assetKey === 'btc') {
             const availableBalance = Math.max(0, totalBalance - usedMargin);
             const riskDistance = Math.abs(bearLivePrice - shortSig.sl);
             const nyawaPct = riskDistance / bearLivePrice * 100;

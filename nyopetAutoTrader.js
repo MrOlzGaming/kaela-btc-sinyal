@@ -676,7 +676,13 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // FVG_TREND_SMA_LEN_4H=1200 4H-candle yang UDAH DIFETCH di atas, gak perlu fetch tambahan).
     // Akun REAL TETAP allowShort:false SELAMANYA di sini (short real cuma lewat sinyal informasional
     // sniperAutoAnalysis.js, dieksekusi manual member -- lihat project-kaela-btc-sinyal.md).
-    const inBearWindow = isDemo && isBearWindowFor(assetKey, candles4h);
+    // 13 Sep 2026, update Olan abis liat hasil backtest window-gated (BTC membaik, Emas JUSTRU
+    // lebih jelek -- SMA200 kena whipsaw 75x tutup-paksa vs cuma 3x di BTC): "emas long only btc
+    // boleh long short.. tapi untuk emas, tetep di sinyal" -- demo Emas SEKARANG DICABUT dari
+    // auto-short (balik long-only kayak BTC dulu sebelum kebijakan 2-arah), BTC TETAP 2-arah.
+    // Sinyal informasional short Emas TETAP jalan seperti biasa (formatBearShortSignal di
+    // sniperAutoAnalysis.js, gak kesentuh perubahan ini -- itu emang udah cuma info, gak eksekusi).
+    const inBearWindow = isDemo && assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
 
     let sig = detectPatternSignal(candles4h, i, patternParams);

@@ -256,6 +256,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
       const sniperTrader = createSniperAccountTrader({
         client, mexcClient, statePath: path.join(STATE_DIR, `${key}-sniper.json`),
         sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate,
+        phone: account.phone,
       });
       // 29 Agu 2026 -- sama pola kayak antrian tutup manual Nyopet di atas, DULUAN sebelum runCycle
       // normal (permintaan Olan: "tombol close manual baik sniper dan nyopet").

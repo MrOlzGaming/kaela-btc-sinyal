@@ -344,7 +344,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     saveJournal(journal);
 
     const dxyLine = await formatDxyLine().catch(() => '');
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate, smartMoney.line);
+    const todaysPnlOpen = await _todaysBtcPnl(assetCfg, new Date());
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate, smartMoney.line, todaysPnlOpen);
     console.log(msg + '\n');
     await notify(msg);
     // 6 Sep 2026, permintaan Olan (jurnal member: "beda dia trade sendiri atau karena kaela") --
@@ -824,7 +825,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     journal.orders.push(order);
     saveJournal(journal);
 
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate, smartMoney.line);
+    const todaysPnlGridOpen = await _todaysBtcPnl(assetCfg, new Date());
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate, smartMoney.line, todaysPnlGridOpen);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', entryPrice, sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: order.marginUsd, status: 'open', openedAt: order.triggeredAt, note: `Fed Dovish Grid (${signal.label})` });
@@ -859,7 +861,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     target.sl = sl; target.tp = tp;
     saveJournal(journal);
 
-    const msg = formatAutoAddLayer({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate);
+    const todaysPnlLayer = await _todaysBtcPnl(assetCfg, new Date());
+    const msg = formatAutoAddLayer({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnlLayer);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: target.id, type: 'addLayer', layers: target.layers, entryPrice: newEntryPrice, exchange: assetCfg.exchange });

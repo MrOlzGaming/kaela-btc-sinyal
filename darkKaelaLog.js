@@ -165,7 +165,11 @@ function _nyopetBadge(pos, isDemo) {
 // (13 Sep 2026, permintaan Olan: "tiru [app Binance] tapi ga persis, per baris gitu biar gak
 // tumpukan" -- screenshot app Binance-nya 1 metrik = 1 baris jelas, beda dari sini yang tadinya
 // numpuk "TP1: X · SL: Y" di 1 baris) -- TP dan SL SEKARANG baris terpisah, gampang di-skim.
-function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine) {
+// `todaysPnl` (13 Sep 2026, permintaan Olan: "pesan tambah posisi perlu diikuti pnl hari ini..
+// buat semua ya jangan ini aja") -- Buka Posisi SEKARANG ikut kasih gambaran besar hari itu, SAMA
+// kayak Partial/Tutup yang udah duluan punya baris ini. Taro PALING BAWAH (abis smartMoneyLine)
+// biar urutan baca tetap: apa yang kejadian -> alasan/konteks pattern -> baru gambaran hari ini.
+function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Buka Posisi*
@@ -175,19 +179,20 @@ TP1: ${fmtUsd(pos.tp)}
 SL: ${fmtUsd(pos.sl)}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
-Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}
+Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}${_todaysPnlLine(todaysPnl, idrRate)}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
 // (5 Sep 2026, method baru "Fed Dovish Grid") -- notif TIAP KALI nambah layer stacking (basket
 // masih floating, BUKAN posisi baru/tutup posisi). `pos.layers` = jumlah layer SETELAH ditambah.
-function formatAutoAddLayer(pos, now, isDemo, idrRate) {
+// `todaysPnl` -- lihat catatan di formatAutoOpen di atas, alasan sama persis.
+function formatAutoAddLayer(pos, now, isDemo, idrRate, todaysPnl) {
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
 🟢 *LONG* rata-rata baru @ ${fmtUsd(pos.entryPrice)}
 
 Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
-Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
+Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam batas SL agregat)
 
 🔗 ${KAELA_ACCESS_URL}`;
@@ -256,13 +261,18 @@ const MANUAL_BADGE = '🙋 Manual (Olan)';
 // di kaela-render.js.
 const MANUAL_ALASAN = 'Posisi manual (dibuka langsung di exchange)';
 
-function formatManualOpen({ exchangeBadge, symbol, direction, entryPrice, leverage, marginUsd, nilaiPosisi }, idrRate) {
+// `todaysPnl` (13 Sep 2026, permintaan Olan: "pesan tambah posisi perlu diikuti pnl hari ini..
+// buat semua ya jangan ini aja") -- Buka/Nambah Posisi SEKARANG ikut nunjukin gambaran besar hari
+// itu, SAMA kayak Tutup/Kurangin/Balik Arah yang UDAH lebih dulu punya baris ini (lihat komentar
+// panjang `_todaysPnlLine` di bawah -- alasan asalnya sama: 1 angka doang bisa nyesatin tanpa
+// konteks total). `null` -> baris diilangin, JANGAN nampilin $0 yang kesannya beneran impas.
+function formatManualOpen({ exchangeBadge, symbol, direction, entryPrice, leverage, marginUsd, nilaiPosisi, todaysPnl }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(entryPrice)}
 
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
-Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: ${MANUAL_ALASAN}
 
 🔗 ${KAELA_ACCESS_URL}`;
@@ -294,13 +304,14 @@ Alasan: ${MANUAL_ALASAN}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
-function formatManualAdd({ exchangeBadge, symbol, direction, entryPrice, prevEntryPrice, leverage, marginUsd, nilaiPosisi }, idrRate) {
+// `todaysPnl` -- lihat catatan di formatManualOpen di atas, alasan sama persis.
+function formatManualAdd({ exchangeBadge, symbol, direction, entryPrice, prevEntryPrice, leverage, marginUsd, nilaiPosisi, todaysPnl }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Nambah Posisi*
 ${dirLabel} rata-rata baru @ ${fmtUsd(entryPrice)} (sebelumnya ${fmtUsd(prevEntryPrice)})
 
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
-Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: ${MANUAL_ALASAN}
 
 🔗 ${KAELA_ACCESS_URL}`;

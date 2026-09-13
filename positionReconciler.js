@@ -213,7 +213,8 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd,
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange,
       });
-      const msg = formatManualOpen({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0 }, idrRate);
+      const todaysPnlOpen = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
+      const msg = formatManualOpen({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, todaysPnl: todaysPnlOpen }, idrRate);
       console.log(`[PositionReconciler] MANUAL OPEN ${badge} ${symbol} @ ${live.entryPrice}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
@@ -243,7 +244,8 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       // MANUAL ADD -- arah SAMA, size nambah (skenario Olan: short di 75000, harga naik ke 80000,
       // re-short -- size nambah, entry rata-rata exchange sendiri yang ngitung).
       const addMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
-      const msg = formatManualAdd({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), prevEntryPrice: Number(prev.entryPrice), leverage: Number(live.leverage) || 0, marginUsd: addMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0 }, idrRate);
+      const todaysPnlAdd = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
+      const msg = formatManualAdd({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), prevEntryPrice: Number(prev.entryPrice), leverage: Number(live.leverage) || 0, marginUsd: addMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, todaysPnl: todaysPnlAdd }, idrRate);
       console.log(`[PositionReconciler] MANUAL ADD ${badge} ${symbol}: entry ${prev.entryPrice} -> ${live.entryPrice}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual add):', e.message));
       if (prev.entryId) {

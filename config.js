@@ -19,6 +19,14 @@ function localDateKey(date) {
   return toLocal(date).toISOString().slice(0, 10);
 }
 
+// Kunci bucket 4-jam (00/04/08/12/16/20 WITA) -- dipakai riset yang mau nyamain resolusi Nyopet
+// (candle 4H), BUKAN buat tampilan/trigger jadwal. Contoh: "2026-09-13T16" = jendela 16:00-19:59 WITA.
+function local4hBucketKey(date) {
+  const local = toLocal(date);
+  const bucketHour = Math.floor(local.getUTCHours() / 4) * 4;
+  return `${local.toISOString().slice(0, 10)}T${String(bucketHour).padStart(2, '0')}`;
+}
+
 // Mute WA (10 Agu 2026 - 12 Agu 2026): sempat ditahan sampai Jumat nunggu pengumuman resmi.
 // Dicabut 12 Agu 2026 (instruksi Olan langsung: "analisa valid invalid buka posisi aktifkan
 // sekarang aja, kalo pemberitahuan fiturnya jumat gpp") -- broadcast sinyal VALID/INVALID
@@ -27,4 +35,4 @@ function isWaMuted() {
   return false;
 }
 
-module.exports = { WEB_URL, TIMEZONE_OFFSET_HOURS, toLocal, localDateKey, isWaMuted };
+module.exports = { WEB_URL, TIMEZONE_OFFSET_HOURS, toLocal, localDateKey, local4hBucketKey, isWaMuted };

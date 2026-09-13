@@ -20,6 +20,10 @@ const fs = require('fs');
 const path = require('path');
 
 const LOG_PATH = path.join(__dirname, 'whale-netflow-research-log.json');
+// 13 Sep 2026: bucket 4-jam TERPISAH dari log harian di atas -- resolusi nyamain candle Nyopet
+// (4H), biar pas datanya udah cukup numpuk buat backtest, granularitasnya bisa dites di 2 timeframe
+// (harian buat Sniper, 4H buat Nyopet) tanpa API call tambahan (numpang blok yang sama).
+const BUCKET_LOG_PATH = path.join(__dirname, 'whale-netflow-4h-research-log.json');
 
 function loadAll() {
   if (!fs.existsSync(LOG_PATH)) return [];
@@ -46,4 +50,33 @@ function recordDailyNetflow({ dateKey, totalBtc, count, toExchangeBtc, fromExcha
   saveAll(arr);
 }
 
-module.exports = { recordDailyNetflow, loadAll, LOG_PATH };
+function loadBuckets() {
+  if (!fs.existsSync(BUCKET_LOG_PATH)) return [];
+  try { return JSON.parse(fs.readFileSync(BUCKET_LOG_PATH, 'utf8')); } catch { return []; }
+}
+function saveBuckets(arr) {
+  fs.writeFileSync(BUCKET_LOG_PATH, JSON.stringify(arr, null, 2));
+}
+
+// Dipanggil TIAP RUN whaleDailyDigest.js (bukan cuma 1x/hari) dengan data BATCH blok yang baru
+// diproses run ini -- merge/tambah ke bucket 4H yang sama kalau udah ada entry-nya, biar 1 hari
+// = 6 baris (bukan numpuk per-run). `btcPriceUsd` ditimpa ke harga PALING BARU tiap merge (bukan
+// rata-rata) -- cukup buat konteks kasar, presisi penuh nanti join histori harga asli pas backtest.
+function recordNetflowBucket({ bucketKey, totalBtc, count, toExchangeBtc, fromExchangeBtc, btcPriceUsd }) {
+  const arr = loadBuckets();
+  let entry = arr.find((e) => e.bucketKey === bucketKey);
+  if (!entry) {
+    entry = { bucketKey, totalBtc: 0, count: 0, toExchangeBtc: 0, fromExchangeBtc: 0 };
+    arr.push(entry);
+  }
+  entry.totalBtc += totalBtc;
+  entry.count += count;
+  entry.toExchangeBtc += toExchangeBtc;
+  entry.fromExchangeBtc += fromExchangeBtc;
+  entry.netFlowBtc = entry.fromExchangeBtc - entry.toExchangeBtc;
+  entry.btcPriceUsd = btcPriceUsd;
+  entry.updatedAt = new Date().toISOString();
+  saveBuckets(arr);
+}
+
+module.exports = { recordDailyNetflow, loadAll, LOG_PATH, recordNetflowBucket, loadBuckets, BUCKET_LOG_PATH };

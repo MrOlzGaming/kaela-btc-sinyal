@@ -123,7 +123,7 @@ async function main() {
       ? `>2x dinding terbesar yang PERNAH kecatat ($${(historicalMax / 1e6).toFixed(2)}jt)`
       : `>$5jt (histori masih kurang dari ${MIN_HISTORY_FOR_STATS} data, pakai jaring pengaman awal)`;
     const msg = [
-      '🚨 *Info Darurat: Dinding Likuiditas BTC Gak Wajar*',
+      '🚨 *Kaela nemu aktivitas aneh di likuiditas BTC*',
       '',
       `${biggest.side} $${biggest.price.toFixed(0)} (${biggest.distPct >= 0 ? '+' : ''}${biggest.distPct.toFixed(2)}% dari harga sekarang $${midPrice.toFixed(0)}) -- ukuran $${(biggest.notionalUsd / 1e6).toFixed(2)}jt.`,
       `Kenapa dianggap aneh: ${dasarAmbang}.`,

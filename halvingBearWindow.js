@@ -26,4 +26,25 @@ function isBtcBearWindow(date = new Date()) {
   return bearWindows.some((w) => ms >= w.start && ms <= w.end);
 }
 
-module.exports = { isBtcBearWindow, bearWindows, HALVINGS };
+// 13 Sep 2026, permintaan Olan: "kita akan kabur 1 bulan buat tidak trading sebelum saat window
+// mendekati habis" -- BTC (beda dari Emas SMA200 yang reaktif/gak bisa diprediksi) punya tanggal
+// transisi yang UDAH DIKETAHUI dari sekarang (siklus halving, `bearWindows` array), jadi bisa
+// dihitung mundur. Dipakai buat JEDA auto-trading (BUKAN nutup posisi yang lagi jalan -- itu
+// tugas WINDOW_FLIP force-close yang udah ada, ini CUMA nolak entry BARU) di hari-hari terakhir
+// sebelum window (bull ATAU bear) ganti -- alasan: entry baru yang kebuka mepet banget sama
+// transisi kemungkinan besar bakal langsung kena force-close lagi begitu window ganti, buang
+// biaya (spread/fee/slippage) tanpa sempat profit sama sekali.
+function daysUntilBtcWindowFlip(date = new Date()) {
+  const ms = date.getTime();
+  const boundaries = [];
+  for (const w of bearWindows) { boundaries.push(w.start); boundaries.push(w.end); }
+  const future = boundaries.filter((b) => b > ms).sort((a, b) => a - b);
+  if (future.length === 0) return Infinity; // gak ada halving berikutnya terdaftar (HALVINGS perlu di-update)
+  return (future[0] - ms) / 86400000;
+}
+
+function isBtcApproachingWindowFlip(date = new Date(), thresholdDays = 30) {
+  return daysUntilBtcWindowFlip(date) <= thresholdDays;
+}
+
+module.exports = { isBtcBearWindow, bearWindows, HALVINGS, daysUntilBtcWindowFlip, isBtcApproachingWindowFlip };

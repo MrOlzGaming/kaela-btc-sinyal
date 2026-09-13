@@ -60,7 +60,7 @@ const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const { fetchBinancePositioning } = require('./marketSentiment');
-const { isBtcBearWindow } = require('./halvingBearWindow');
+const { isBtcBearWindow, isBtcApproachingWindowFlip, daysUntilBtcWindowFlip } = require('./halvingBearWindow');
 
 // 12 Sep 2026, permintaan Olan ("Nyopet chart-pattern juga dikasih konteks smart-money yang
 // sama" -- lanjutan Fase 1 Sniper) -- KONTEKS doang, BELUM ngaruh eksekusi/gating apapun. Cuma
@@ -682,6 +682,16 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // auto-short (balik long-only kayak BTC dulu sebelum kebijakan 2-arah), BTC TETAP 2-arah.
     // Sinyal informasional short Emas TETAP jalan seperti biasa (formatBearShortSignal di
     // sniperAutoAnalysis.js, gak kesentuh perubahan ini -- itu emang udah cuma info, gak eksekusi).
+    // "Kabur" blackout (13 Sep 2026, permintaan Olan: "kita akan kabur 1 bulan buat tidak trading
+    // sebelum saat window mendekati habis") -- BERLAKU REAL MAUPUN DEMO (beda dari pembatasan
+    // short yang demo-only -- ini soal ENTRY BARU mepet transisi, real JUGA auto-long biasa kena
+    // risiko sama). Posisi yang UDAH floating TETAP dikelola normal (SL/TP/trail/WINDOW_FLIP di
+    // bagian atas function ini gak kesentuh, cuma entry BARU yang dijedain).
+    if (assetKey === 'btc' && isBtcApproachingWindowFlip(new Date())) {
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: window bakal ganti ~${daysUntilBtcWindowFlip(new Date()).toFixed(0)} hari lagi -- entry baru DIJEDAKAN ("kabur" 1 bulan sebelum transisi).`);
+      return;
+    }
+
     const inBearWindow = isDemo && assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
 
@@ -693,6 +703,18 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // inBearWindow yang udah di-gate assetKey==='btc' di atas).
       const fvgSig = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: inBearWindow });
       if (fvgSig) sig = fvgSig;
+    }
+    // ⛔ BUG KETEMU+FIX 13 Sep 2026 (Olan: "pas window bear, pastikan jangan kasih sinyal atau
+    // buka posisi long.. pas window bull, jangan short") -- `detectPatternSignal` SELALU cek pola
+    // BULL juga regardless `allowShort` (cuma cabang SELL yang digerbang flag itu, lihat
+    // chartPatterns.js) -- jadi kalau pas window bear kebetulan ada pola bull flag/falling wedge
+    // kebentuk, `sig.direction` bisa balik 'buy' walau lagi bear, dan SEBELUM fix ini gak ada yang
+    // nyaring itu sebelum `openPosition` dipanggil -- auto-LONG bisa ke-eksekusi PAS window bear.
+    // Filter EKSPLISIT di sini, JANGAN cuma andelin flag `allowShort` (yang emang cuma ADDITIVE,
+    // bukan EXCLUSIVE).
+    if (sig && ((sig.direction === 'buy' && inBearWindow) || (sig.direction === 'sell' && !inBearWindow))) {
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ${sig.patternType} (${sig.direction}) ketemu TAPI arahnya GAK COCOK window sekarang (bearWindow=${inBearWindow}) -- dibuang, JANGAN buka posisi.`);
+      sig = null;
     }
     if (!sig) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada sinyal (flag/wedge/FVG) -- tunggu siklus depan.`); return; }
 

@@ -46,7 +46,7 @@ const { localDateKey, isWaMuted } = require('./config');
 const { analyzeSentiment } = require('./marketSentiment');
 const { fetchTradeMetrics } = require('./onchainMetrics');
 const { ASSETS } = require('./assetConfig');
-const { isBtcBearWindow } = require('./halvingBearWindow');
+const { isBtcBearWindow, isBtcApproachingWindowFlip, daysUntilBtcWindowFlip } = require('./halvingBearWindow');
 // getUsdIdrRate (13 Sep 2026, "nilai investasi juga di rupiahin.. berlaku semua") -- pola SAMA
 // kayak sniperOrderMonitor.js: fetch SEKALI per siklus, dioper ke semua pesan Margin/Volume/PnL
 // di siklus ini, bukan per-pesan.
@@ -227,6 +227,16 @@ async function main() {
       }
     }
 
+    // 13 Sep 2026, permintaan Olan: "kita akan kabur 1 bulan buat tidak trading sebelum saat
+    // window mendekati habis" -- CUMA relevan buat BTC (siklus halving, tanggal transisi UDAH
+    // DIKETAHUI dari sekarang; Emas SMA200 reaktif, gak bisa diprediksi majunya). Ini JEDA ENTRY
+    // BARU doang (auto-exec demo BTC, dua arah) -- posisi yang UDAH kebuka TETAP dikelola normal
+    // (SL/TP/trail/WINDOW_FLIP jalan seperti biasa, gak ikut "kabur").
+    const nearWindowFlip = assetKey === 'btc' && isBtcApproachingWindowFlip(now);
+    if (nearWindowFlip) {
+      console.log(`[SniperAutoAnalysis] ${assetCfg.label}: window bakal ganti ${daysUntilBtcWindowFlip(now).toFixed(0)} hari lagi -- JEDA entry baru (kabur 1 bulan), biar gak kebuka mepet terus langsung kena WINDOW_FLIP.`);
+    }
+
     if (bearWindowActive) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: ${bearWindowNote} -- sinyal baru DIMATIKAN sementara.`);
       // 🐛 FIX 13 Sep 2026 (Olan self-critique: pesan "BELUM ADA SINYAL/Belum ada posisi baru"
@@ -266,7 +276,7 @@ async function main() {
           // Olan: "emas long only btc boleh long short.. tapi untuk emas, tetep di sinyal" --
           // demo Emas DICABUT dari auto-exec (assetKey==='btc' ditambah ke syarat), tapi TETAP
           // masuk cabang `else` di bawah (sinyal informasional), gak diam total.
-          if (isTestnet() && assetKey === 'btc') {
+          if (isTestnet() && assetKey === 'btc' && !nearWindowFlip) {
             const availableBalance = Math.max(0, totalBalance - usedMargin);
             const riskDistance = Math.abs(bearLivePrice - shortSig.sl);
             const nyawaPct = riskDistance / bearLivePrice * 100;
@@ -364,6 +374,17 @@ async function main() {
     if (hasSniperOpen && hasFvgOpen) {
       console.log(`[SniperAutoAnalysis] ${assetCfg.label}: kedua slot (Sniper+FVG) udah floating, skip cek sinyal baru.`);
       invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag}: 2 posisi (Pola Chart+FVG) lagi floating bareng, gak cek sinyal baru dulu.`);
+      continue;
+    }
+
+    // "Kabur" blackout (lihat catatan nearWindowFlip di atas) -- sisi BULL/long juga kena, bukan
+    // cuma sisi short. Posisi yang UDAH floating tetap dikelola normal di bawah (blok ini cuma
+    // nyegah CANDIDATE BARU), jadi TIDAK conflict sama order yang lagi jalan.
+    if (nearWindowFlip) {
+      const note = `${assetCfg.emoji} ${assetLabelTag}: window bakal ganti ~${daysUntilBtcWindowFlip(now).toFixed(0)} hari lagi -- entry baru DIJEDAKAN dulu ("kabur" 1 bulan sebelum transisi), tunggu window baru mulai.`;
+      console.log(`[SniperAutoAnalysis] ${assetCfg.label}: kabur blackout aktif, skip cek sinyal baru.`);
+      invalidNotes.push(note);
+      wibowoNotes.push(note);
       continue;
     }
 

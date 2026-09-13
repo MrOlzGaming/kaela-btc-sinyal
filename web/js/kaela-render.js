@@ -79,7 +79,7 @@
     sniper_disclaimer: { id: '🤖 Sinyal VALID sekarang dieksekusi OTOMATIS di akun Binance Demo (duit virtual, riset/uji coba) -- bukan cuma monitor bayangan lagi.', en: '🤖 VALID signals are now executed AUTOMATICALLY on a Binance Demo account (virtual money, research/testing) -- no longer just shadow monitoring.' },
     nyopet_positions_open: { id: 'posisi Nyopet lagi terbuka', en: 'Nyopet position(s) currently open' },
     no_nyopet_open: { id: 'Gak ada posisi Nyopet yang lagi terbuka.', en: 'No open Nyopet positions right now.' },
-    nyopet_home_disclaimer: { id: '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo (USDC).', en: '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo (USDC).' },
+    nyopet_home_disclaimer: { id: '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (USDC).', en: '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (USDC).' },
     total_trade: { id: 'Total Trade', en: 'Total Trades' },
     win_rate: { id: 'Win Rate', en: 'Win Rate' },
     profit_factor: { id: 'Profit Factor', en: 'Profit Factor' },
@@ -503,8 +503,8 @@
     // aset x 2 mode deteksi, buy-only, exit 2 tahap) -- bukan karangan baru.
     const en = lang() === 'en';
     const introHtml = en
-      ? `<p class="strategy-intro">🎯 Sniper is a <strong>supplementary signal</strong> (not Kaela's main strategy) that detects <strong>Chart Patterns</strong> (Bull Flag/Falling Wedge) and <strong>Fair Value Gaps</strong> on BTC + Gold (PAXG), checked on every daily candle close. Buy-only, 2-stage exit (partial take-profit at 2x risk, the rest trailed with a daily SMA10). <a href="metodologi-sniper.html">Read the full methodology →</a></p>`
-      : `<p class="strategy-intro">🎯 Sniper adalah <strong>sinyal pelengkap</strong> (bukan strategi utama Kaela) yang mendeteksi <strong>Pola Chart</strong> (Bull Flag/Falling Wedge) dan <strong>Fair Value Gap</strong> di BTC + Emas (PAXG), dicek tiap candle harian closing. Buy-only, exit 2 tahap (partial TP di 2x risiko, sisanya di-trail SMA10 harian). <a href="metodologi-sniper.html">Baca metodologi lengkap →</a></p>`;
+      ? `<p class="strategy-intro">🎯 Sniper is a <strong>supplementary signal</strong> (not Kaela's main strategy) that detects <strong>Chart Patterns</strong> (Bull/Bear Flag, Falling/Rising Wedge) and <strong>Fair Value Gaps</strong> on BTC + Gold (PAXG), checked on every daily candle close. BTC trades both directions depending on the market window (long in bull, short in bear), Gold stays long-only. 2-stage exit (partial take-profit at 2x risk, the rest trailed with a daily SMA10). <a href="metodologi-sniper.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🎯 Sniper adalah <strong>sinyal pelengkap</strong> (bukan strategi utama Kaela) yang mendeteksi <strong>Pola Chart</strong> (Bull/Bear Flag, Falling/Rising Wedge) dan <strong>Fair Value Gap</strong> di BTC + Emas (PAXG), dicek tiap candle harian closing. BTC dua arah tergantung window pasar (long pas bull, short pas bear), Emas tetap long-only. Exit 2 tahap (partial TP di 2x risiko, sisanya di-trail SMA10 harian). <a href="metodologi-sniper.html">Baca metodologi lengkap →</a></p>`;
     return `<div class="sniper-orders-panel">
       ${introHtml}
       <p class="order-disclaimer">${rt('sniper_disclaimer')}</p>
@@ -1129,8 +1129,8 @@
     const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (nyopetState.balanceUsdt || 0);
     const saldoCell = cell(wallet1Label, fmtUsdOrder(wallet1Value)) + cell(wallet2Label, fmtUsdOrder(wallet2Value));
     const disclaimer = (opts && opts.disclaimer) || (en
-      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
-      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
+      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
+      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
 
     // 12 Sep 2026 -- gerbangnya `closed.length` (SEMUA yang pernah ditutup, termasuk
     // closed_untracked), BUKAN `!stats` lagi -- posisi untracked TETAP harus tampil di tabel
@@ -1191,8 +1191,8 @@
       ${renderPnlCalendar(statsEligible, now)}`;
 
     const disclaimerFull = (opts && opts.disclaimerFull) || (en
-      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
-      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
+      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
+      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
     // `opts.hideHistoryList` -- lihat catatan panjang di renderJurnalPanel (Sniper) di atas, alasan
     // sama persis, dipakai bareng buat riwayat gabungan Sniper+Nyopet.
     const historyBlock = (opts && opts.hideHistoryList) ? '' : `

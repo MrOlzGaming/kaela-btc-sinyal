@@ -46,6 +46,20 @@ const tradeHistoryStore = require('./tradeHistoryStore');
 // formatManual*() (darkKaelaLog.js) udah nyelipin link sendiri di tiap pesan.
 function dirWord(positionAmt) { return Number(positionAmt) > 0 ? 'buy' : 'sell'; }
 
+// ⛔ BUG NYATA ketemu+fix 14 Sep 2026 (tes live PERTAMA MEXC pakai API key beneran) -- fungsi ini
+// SENGAJA gak "kenal" symbol (lihat komentar atas file, "asset APAPUN") supaya posisi manual di
+// aset MANAPUN tetap kelaporan. TAPI itu bikin symbol MENTAH exchange (PAXG_USDC/XAUT_USDT)
+// nongol apa adanya di pesan -- persis pelanggaran feedback-ticker-nama-literal ("Emas JANGAN
+// literal token MEXC, Olan bingung"). Fix: lookup KECIL cuma buat symbol yang UDAH DIKENAL
+// (dari asset config Sniper+Nyopet) -- symbol LAIN yang beneran gak dikenal (BENERAN "asset
+// apapun" yang jadi alasan desain awal fungsi ini) TETAP tampil apa adanya, gak dipaksa.
+const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
+const { ASSETS: SNIPER_ASSETS } = require('./assetConfig');
+const _displayLabelBySymbol = {};
+Object.values(NYOPET_ASSETS).forEach((a) => { _displayLabelBySymbol[a.symbol] = a.label; });
+Object.values(SNIPER_ASSETS).forEach((a) => { if (a.execSymbol) _displayLabelBySymbol[a.execSymbol] = a.label; });
+function displaySymbol(rawSymbol) { return _displayLabelBySymbol[rawSymbol] || rawSymbol; }
+
 function loadState(statePath) {
   if (!fs.existsSync(statePath)) return { positions: {}, lastCheckedAtMs: Date.now() };
   try {
@@ -214,7 +228,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange,
       });
       const todaysPnlOpen = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
-      const msg = formatManualOpen({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, todaysPnl: todaysPnlOpen }, idrRate);
+      const msg = formatManualOpen({ exchangeBadge: badge, symbol: displaySymbol(symbol), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, todaysPnl: todaysPnlOpen }, idrRate);
       console.log(`[PositionReconciler] MANUAL OPEN ${badge} ${symbol} @ ${live.entryPrice}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
@@ -236,7 +250,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
           .catch((e) => console.log('[PositionReconciler] updateJournalEntry gagal:', e.message));
       }
       const todaysPnl = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
-      const msg = formatManualClose({ exchangeBadge: badge, symbol, direction: dirWord(prevAmt), prevEntryPrice: Number(prev.entryPrice), pnlUsd: pnl, todaysPnl }, idrRate);
+      const msg = formatManualClose({ exchangeBadge: badge, symbol: displaySymbol(symbol), direction: dirWord(prevAmt), prevEntryPrice: Number(prev.entryPrice), pnlUsd: pnl, todaysPnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL CLOSE ${badge} ${symbol}, PnL=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual close):', e.message));
       delete state.positions[stateKey];
@@ -245,7 +259,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       // re-short -- size nambah, entry rata-rata exchange sendiri yang ngitung).
       const addMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
       const todaysPnlAdd = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
-      const msg = formatManualAdd({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), prevEntryPrice: Number(prev.entryPrice), leverage: Number(live.leverage) || 0, marginUsd: addMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, todaysPnl: todaysPnlAdd }, idrRate);
+      const msg = formatManualAdd({ exchangeBadge: badge, symbol: displaySymbol(symbol), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), prevEntryPrice: Number(prev.entryPrice), leverage: Number(live.leverage) || 0, marginUsd: addMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, todaysPnl: todaysPnlAdd }, idrRate);
       console.log(`[PositionReconciler] MANUAL ADD ${badge} ${symbol}: entry ${prev.entryPrice} -> ${live.entryPrice}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual add):', e.message));
       if (prev.entryId) {
@@ -263,7 +277,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
       const remainMarginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
       const todaysPnl = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
-      const msg = formatManualReduce({ exchangeBadge: badge, symbol, direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), marginUsd: remainMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl, todaysPnl }, idrRate);
+      const msg = formatManualReduce({ exchangeBadge: badge, symbol: displaySymbol(symbol), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), marginUsd: remainMarginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl, todaysPnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL REDUCE ${badge} ${symbol}, PnL sebagian=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual reduce):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
@@ -286,7 +300,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
         status: 'open', openedAt: new Date(nowMs).toISOString(), note: 'Manual Olan', exchange,
       });
       const todaysPnl = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
-      const msg = formatManualFlip({ exchangeBadge: badge, symbol, prevDirection: dirWord(prevAmt), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl, todaysPnl }, idrRate);
+      const msg = formatManualFlip({ exchangeBadge: badge, symbol: displaySymbol(symbol), prevDirection: dirWord(prevAmt), direction: dirWord(liveAmt), entryPrice: Number(live.entryPrice), leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, pnlUsd: pnl, todaysPnl }, idrRate);
       console.log(`[PositionReconciler] MANUAL FLIP ${badge} ${symbol}, PnL posisi lama=${pnl}`);
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual flip):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: newEntryId, openedAtMs: nowMs };
@@ -302,7 +316,7 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       const pnl = await realizedPnlSince(exchange, client, phone, symbol, state.lastCheckedAtMs, incomeStore);
       if (pnl !== null && Math.abs(pnl) > 0.005) {
         const todaysPnl = _todaysPnlForSymbol(incomeStore, symbol, new Date(nowMs));
-        const msg = formatHiddenActivity({ exchangeBadge: badge, symbol, pnlUsd: pnl, stillOpen: liveAmt !== 0, todaysPnl }, idrRate);
+        const msg = formatHiddenActivity({ exchangeBadge: badge, symbol: displaySymbol(symbol), pnlUsd: pnl, stillOpen: liveAmt !== 0, todaysPnl }, idrRate);
         console.log(`[PositionReconciler] AKTIVITAS TERSEMBUNYI ${badge} ${symbol} (posisi net gak berubah, round-trip dalam 1 window) -- PnL=${pnl}`);
         await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (hidden activity):', e.message));
       }

@@ -38,6 +38,16 @@ function createMexcClient({ apiKey, apiSecret }) {
     throw new Error('createMexcClient: apiKey/apiSecret wajib diisi.');
   }
   let contractInfoCache = null;
+  // ⛔ BUG NYATA ketemu+fix 14 Sep 2026 (tes live PERTAMA pakai API key beneran, Olan isi $10
+  // USDC buat verifikasi sebelum modal lebih gede) -- `order/create` MEXC TERNYATA WAJIB field
+  // `leverage` eksplisit di body (error "Leverage multiplier must be within the upper limit 100
+  // and lower limit 1" kalau gak ada) -- BEDA dari Binance yang leverage-nya cukup diset SEKALI
+  // via endpoint terpisah dan otomatis kepake buat order berikutnya. Interface `placeMarketEntry`
+  // SENGAJA disamain persis Binance (gak nerima param leverage, caller cuma manggil setLeverage
+  // duluan) -- fix DI SINI (bukan ubah interface caller): cache leverage TERAKHIR yang diset per
+  // symbol, dipakai otomatis pas placeMarketEntry -- caller (sniperMultiAccount.js/
+  // nyopetAutoTrader.js) gak perlu tau/berubah sama sekali.
+  const lastLeverageBySymbol = {};
 
   // GET: parameterString = query di-sort dictionary order, gabung "&". POST: parameterString =
   // JSON string body (gak perlu di-sort) -- 2 aturan BEDA, jangan disamain.
@@ -120,6 +130,7 @@ function createMexcClient({ apiKey, apiSecret }) {
   // positionType 1=long, 2=short -- WAJIB SESUAI ARAH POSISI yang mau diubah leverage-nya (beda
   // dari Binance yang leverage-nya per-symbol doang, gak peduli arah).
   async function setLeverage(symbol, leverage, positionType = 1) {
+    lastLeverageBySymbol[symbol] = leverage; // dipakai placeMarketEntry -- lihat catatan bug di atas
     return signedRequest('POST', '/api/v1/private/position/change_leverage', {
       symbol, leverage, openType: 1, positionType,
     });
@@ -189,7 +200,12 @@ function createMexcClient({ apiKey, apiSecret }) {
     const vol = Math.floor(rawVol); // MEXC vol WAJIB integer (jumlah kontrak bulat)
     if (vol <= 0) throw new Error(`Vol kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat contractSize ${contractSize}) -- order gak dikirim.`);
     const side = direction === 'buy' ? 1 : 3; // 1=open long, 3=open short
-    const placed = await signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side, type: 5, openType: 1 });
+    // `leverage` WAJIB (lihat catatan bug di deklarasi lastLeverageBySymbol) -- diambil dari
+    // setLeverage TERAKHIR buat symbol ini. Kalau caller lupa/gak pernah manggil setLeverage dulu
+    // (harusnya gak pernah kejadian di alur normal Sniper/Nyopet, TAPI jaga2), fallback ke 1x
+    // (paling aman/kecil) drpd throw error yang gugurin seluruh entry.
+    const leverage = lastLeverageBySymbol[symbol] || 1;
+    const placed = await signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side, type: 5, openType: 1, leverage });
     // ⚠️ BEDA dari Binance -- belum ketemu endpoint "query order by id" MEXC di riset ini buat
     // poll status FILLED kayak waitForFill() Binance. Vol yang BENERAN kefill diasumsikan = vol
     // yang dikirim (market order harusnya fill penuh), tapi INI ASUMSI, BELUM diverifikasi live.

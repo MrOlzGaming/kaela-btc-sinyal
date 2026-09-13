@@ -223,6 +223,12 @@ async function sendChecklistReport(now) {
     '',
     '🔍 Kesehatan Mandor (jalan beneran + gak spam):',
     ...healthLines,
+    '',
+    // TTD role (13 Sep 2026, konsep NEXUS-FORGE) -- Kaela TETAP pengirim, TTD ini nunjukin JENIS
+    // laporan (checklist harian/arsip status = domain REED di NEXUS-FORGE). Lihat
+    // feedback-wa-signature-kaela.md.
+    '— Kaela',
+    '   (laporan: 📦 Reed · Archive)',
   ].join('\n');
   console.log(msg);
   addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);

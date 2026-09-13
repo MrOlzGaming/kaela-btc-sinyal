@@ -31,6 +31,10 @@ _(kosong)_
 
 - **Bug baru ketemu**: tambah baris ke tabel "Aktif" -- ID naik urut, isi Root Cause SEJUJUR
   mungkin (termasuk kalau kita sendiri gak yakin 100% akar masalahnya), commit fix begitu ada.
+- **Kalau bug ini juga perlu dilaporkan ke Olan/grup via WA** (kayak koreksi PnL 13 Sep) -- ikutin
+  tetap [[feedback-wa-send-approval]] (draft + approval dulu), TAPI tutup pesannya dengan TTD role
+  (13 Sep 2026, konsep NEXUS-FORGE): `— Kaela` baris baru `(laporan: 🐉 Drake · Debug Specialist)`.
+  Kaela TETAP satu2nya pengirim -- ini co-signature nunjukin jenis laporan, bukan ganti identitas.
 - **Bug tanpa regression test**: kolom "Regression Test" boleh `—` dulu, tapi kalau bug itu
   KRITIS (uang/data salah), prioritaskan tambahin test ke `regressionTests.js` (lihat pola
   BUG-KAELATRADE-0001 sbg contoh: fixture data + assert pakai ANGKA GROUND TRUTH dari insiden

@@ -85,6 +85,11 @@ function formatAlert(findings) {
   for (const f of findings) {
     lines.push(`• ${f.name} (${f.mode}) ${f.symbol}: Kaela bilang $${f.fromStore.toFixed(2)}, Binance bilang $${f.fresh.toFixed(2)} (beda $${f.diff.toFixed(2)})`);
   }
+  // TTD role (13 Sep 2026, permintaan Olan setelah kenalin konsep NEXUS-FORGE -- "kaela tetep
+  // peran utama.. tapi ada TTD bawah laporan [role]") -- Kaela TETAP satu2nya pengirim, ini co-
+  // signature nunjukin JENIS laporan (verifikasi angka/kalkulasi = domain PRISM di NEXUS-FORGE),
+  // BUKAN ganti identitas pengirim. Lihat feedback-wa-signature-kaela.md buat konvensi lengkap.
+  lines.push('', '— Kaela', '   (laporan: 🔬 Prism · Data QA)');
   return lines.join('\n');
 }
 

@@ -205,6 +205,140 @@ function runFlagBacktest(daily, opts = {}) {
   return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries };
 }
 
+// runFlagBacktestWindowGated (13 Sep 2026, permintaan Olan: "strategi kita ini dianggap otomatis,
+// bear fokus short bull fokus long.. pake window bull bear.. lakukan backtest") -- BEDA dari
+// `allowShort` polos di runFlagBacktest() di atas (short nyampur SEMBARANG kondisi pasar, TERBUKTI
+// ngerusak, lihat [[feedback-nyopet-buyonly]]). Di sini short/long DIGATE PER-WINDOW: window BULL
+// cuma boleh entry LONG (bull flag/falling wedge), window BEAR cuma boleh entry SHORT (bear
+// flag/rising wedge) -- SATU SUMBER KEBENARAN window sama persis kayak live (`isBtcBearWindow`,
+// halvingBearWindow.js), BUKAN definisi baru dibikin cuma buat riset ini. Posisi yang lagi
+// floating JUGA ditutup PAKSA (WINDOW_FLIP) kalau window-nya keburu ganti sebelum SL/TP/trail
+// beneran kena -- PERSIS behavior demo auto-trading LIVE sekarang (lihat sniperLiveMonitor.js/
+// nyopetAutoTrader.js `isBearWindowFor`+force-close), bukan cuma dianggurin sampai window balik.
+// FUNGSI TERPISAH (bukan nambah opsi ke runFlagBacktest) -- ikutin konvensi file ini: varian baru
+// = fungsi baru, yang lama dibiarin APA ADANYA (module.exports lama gak berubah).
+function runFlagBacktestWindowGated(daily, opts = {}) {
+  const {
+    warmupDays = 60, poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
+    slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10,
+    startCapital = 100, topUpAmount = 100, topUpStopAt = 1000, topUpDayOfMonth = 5,
+    usePatterns = ['flag', 'wedge'],
+    wedgeLookbackRange = [15, 40], wedgeMinTouches = 2, wedgeConvergenceRatio = 0.65,
+    maxMarginPct = 20, maxNyawaPct = null,
+    // bearWindowFn(dateObj)->bool -- default SAMA PERSIS sumber yang dipakai live, override cuma
+    // buat sensitivity test (mis. geser window, atau matiin force-close WINDOW_FLIP).
+    bearWindowFn = require('./halvingBearWindow').isBtcBearWindow,
+    forceCloseOnFlip = true,
+  } = opts;
+  const trades = [];
+  let openPos = null;
+  let capital = startCapital;
+  let lastTopUpMonthKey = null;
+  const capitalSeries = [{ time: daily[warmupDays] ? daily[warmupDays].closeTime : 0, capital }];
+
+  for (let i = warmupDays; i < daily.length; i++) {
+    const today = daily[i];
+    const todayDate = new Date(today.closeTime);
+    const bearNow = bearWindowFn(todayDate);
+    const curMonthKey = todayDate.getUTCFullYear() * 12 + todayDate.getUTCMonth();
+    if (todayDate.getUTCDate() >= topUpDayOfMonth && curMonthKey !== lastTopUpMonthKey) {
+      lastTopUpMonthKey = curMonthKey;
+      if (capital < topUpStopAt) { capital += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
+    }
+
+    if (openPos) {
+      // WINDOW_FLIP -- tutup paksa kalau arah posisi udah gak cocok sama window SEKARANG, walau
+      // SL/TP/trail belum kena (PERSIS safety rule live: "takut kena bom bear"/"tiang ijo").
+      const wrongSide = forceCloseOnFlip && ((openPos.direction === 'buy' && bearNow) || (openPos.direction === 'sell' && !bearNow));
+      if (wrongSide) {
+        const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
+        const remainingFrac = openPos.partialDone ? 0.5 : 1;
+        const pnlRest = openPos.nilaiPosisi * remainingFrac * (movePctSigned / 100);
+        const totalPnl = openPos.realizedPnl + pnlRest;
+        capital = Math.max(0, capital + pnlRest);
+        const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
+        trades.push({ ...openPos, exitReason: 'WINDOW_FLIP', rMultiple: riskPct > 0 ? (totalPnl / openPos.nilaiPosisi * 100) / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
+        capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        continue;
+      }
+      const closes = daily.slice(0, i + 1).map((c) => c.close);
+      const trailSma = sma(closes, trailSmaLen);
+      if (!openPos.partialDone) {
+        const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
+        const hitPartial = openPos.direction === 'buy' ? today.high >= openPos.partialTp : today.low <= openPos.partialTp;
+        if (hitSl) {
+          capital = Math.max(0, capital - openPos.lossAtSl);
+          trades.push({ ...openPos, exitReason: 'SL', rMultiple: -1, pnlUsd: -openPos.lossAtSl, exitTime: today.closeTime });
+          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        } else if (hitPartial) {
+          const rewardPct = Math.abs(openPos.partialTp - openPos.entryPrice) / openPos.entryPrice * 100;
+          const profitHalf = openPos.nilaiPosisi * 0.5 * (rewardPct / 100);
+          capital += profitHalf;
+          openPos.realizedPnl = profitHalf;
+          openPos.partialDone = true;
+          openPos.sl = openPos.entryPrice;
+        }
+      } else {
+        const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
+        const trendBroken = trailSma !== null && (openPos.direction === 'buy' ? today.close < trailSma : today.close > trailSma);
+        if (hitSl || trendBroken) {
+          const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
+          const pnlRest = openPos.nilaiPosisi * 0.5 * (movePctSigned / 100);
+          capital = Math.max(0, capital + pnlRest);
+          const totalPnl = openPos.realizedPnl + pnlRest;
+          const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
+          trades.push({ ...openPos, exitReason: hitSl ? 'SL_BREAKEVEN' : 'TRAIL_EXIT', rMultiple: riskPct > 0 ? movePctSigned / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
+          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        }
+      }
+      continue;
+    }
+
+    const lastPrice = today.close;
+    let direction = null, sl = null, patternType = null;
+    // Gate ARAH per-window DI TITIK DETEKSI (bukan post-hoc filter) -- window bull cuma pola
+    // long yang dicek, window bear cuma pola short -- PERSIS cara `sniperAutoAnalysis.js` manggil
+    // `detectPatternSignal(..., {allowShort: bearWindowActive})` cuma pas window bear.
+    if (usePatterns.includes('flag')) {
+      const flag = detectFlag(daily, i, { poleLookbackRange, poleMinMovePct, flagLookbackRange, flagMaxRangePct });
+      if (!bearNow && flag && flag.type === 'bull' && lastPrice > flag.flagHigh) {
+        direction = 'buy'; sl = flag.flagLow * (1 - slBufferPct / 100); patternType = 'flag_bull';
+      } else if (bearNow && flag && flag.type === 'bear' && lastPrice < flag.flagLow) {
+        direction = 'sell'; sl = flag.flagHigh * (1 + slBufferPct / 100); patternType = 'flag_bear';
+      }
+    }
+    if (!direction && usePatterns.includes('wedge')) {
+      const wedge = detectWedge(daily, i, { wedgeLookbackRange, minTouches: wedgeMinTouches, convergenceRatio: wedgeConvergenceRatio });
+      if (bearNow && wedge && wedge.type === 'rising' && lastPrice < wedge.projectedSupport) {
+        direction = 'sell'; sl = wedge.recentSwingHigh * (1 + slBufferPct / 100); patternType = 'wedge_rising';
+      } else if (!bearNow && wedge && wedge.type === 'falling' && lastPrice > wedge.projectedResistance) {
+        direction = 'buy'; sl = wedge.recentSwingLow * (1 - slBufferPct / 100); patternType = 'wedge_falling';
+      }
+    }
+    if (!direction) continue;
+
+    const riskDistance = Math.abs(lastPrice - sl);
+    if (riskDistance === 0) continue;
+    const nyawaPct = riskDistance / lastPrice * 100;
+    if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
+    const { nilaiPosisi, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl });
+    if (margin > capital) continue;
+    const marginPct = margin / capital * 100;
+    if (marginPct > maxMarginPct) continue;
+    const lossAtSl = nilaiPosisi * (nyawaPct / 100);
+    const partialTp = direction === 'buy' ? lastPrice + riskDistance * partialRR : lastPrice - riskDistance * partialRR;
+
+    openPos = {
+      direction, entryPrice: lastPrice, sl, originalSl: sl, partialTp, entryTime: today.closeTime,
+      nilaiPosisi, margin, marginPct, lossAtSl, partialDone: false, realizedPnl: 0, patternType,
+    };
+  }
+
+  let peak = -Infinity, maxDrawdownPct = 0;
+  for (const pt of capitalSeries) { peak = Math.max(peak, pt.capital); maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.capital) / peak * 100); }
+  return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries };
+}
+
 // Strategi HEDGE PASIF (21 Agu 2026, usulan Olan): "ketika gak ada sinyal sniper sama sekali,
 // default SELALU flat short 1% modal leverage 3x. Begitu ada sinyal, short ditutup, masuk long
 // sesuai sinyal pakai kalkulator exposure." Beda TOTAL dari runFlagBacktest() -- di situ short
@@ -720,7 +854,7 @@ function summarize(trades) {
   return { n, winRate: (wins.length / n * 100).toFixed(1) + '%', profitFactor: grossLossR > 0 ? (grossWinR / grossLossR).toFixed(2) : 'inf', totalR: totalR.toFixed(2), avgR: (totalR / n).toFixed(2) };
 }
 
-module.exports = { runFlagBacktest, runShortHedgeBacktest, runFlag3TierBacktest, runFlag3TierProfitShortBacktest, runFlagFullTrailBacktest, detectFlag, detectWedge, summarize, fetchAllCandles };
+module.exports = { runFlagBacktest, runFlagBacktestWindowGated, runShortHedgeBacktest, runFlag3TierBacktest, runFlag3TierProfitShortBacktest, runFlagFullTrailBacktest, detectFlag, detectWedge, summarize, fetchAllCandles };
 
 if (require.main === module) {
   (async () => {
@@ -793,5 +927,74 @@ if (require.main === module) {
     console.log(`  total short dibuka: ${ps.shortTrades.length} (dari TP2: ${ps.shortTrades.filter((t) => t.source === 'TP2').length}, dari TP3: ${ps.shortTrades.filter((t) => t.source === 'TP3').length})`);
     console.log(`  menang: ${psShortWins}/${ps.shortTrades.length} | KENA LIKUIDASI: ${psLiq}x | total PNL short: $${psShortPnl.toFixed(2)}`);
     console.log(`\n[Perbandingan finalCapital] Baseline biasa=$17.584,32 (referensi lama) | 3-Tier polos=$${tier3.finalCapital.toFixed(2)} | 3-Tier+ProfitShort=$${ps.finalCapital.toFixed(2)}`);
+
+    // 13 Sep 2026, permintaan Olan: "strategi kita ini dianggap otomatis, bear fokus short bull
+    // fokus long.. pake window bull bear.. lakukan backtest" -- disiplin SAMA kayak riset DXY
+    // (breakdown per-tahun WAJIB + split 2 era independen + sensitivitas parameter, lihat memori
+    // project-kaela-analyst-tier "PELAJARAN METODOLOGI PENTING") -- kalau salah satu gagal, JANGAN
+    // dianggap edge asli.
+    console.log('\n\n=== WINDOW-GATED (bull=long only, bear=short only, force-close on flip) ===');
+    const { isBtcBearWindow } = require('./halvingBearWindow');
+    const wg = runFlagBacktestWindowGated(daily);
+    const wgs = summarize(wg.trades);
+    console.log(`[Window-gated FULL histori] n=${wgs.n} | winRate=${wgs.winRate} | PF=${wgs.profitFactor} | totalR=${wgs.totalR} | avgR=${wgs.avgR}`);
+    console.log(`  finalCapital=$${wg.finalCapital.toFixed(2)} | maxDD=${wg.maxDrawdownPct.toFixed(1)}%`);
+    const wgShorts = wg.trades.filter((t) => t.direction === 'sell');
+    const wgLongs = wg.trades.filter((t) => t.direction === 'buy');
+    console.log(`  -- LONG: n=${wgLongs.length} | totalR=${wgLongs.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | totalPnl=$${wgLongs.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+    console.log(`  -- SHORT: n=${wgShorts.length} | winRate=${wgShorts.length ? (wgShorts.filter((t) => t.rMultiple > 0).length / wgShorts.length * 100).toFixed(1) : 0}% | totalR=${wgShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | totalPnl=$${wgShorts.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+    const wgFlips = wg.trades.filter((t) => t.exitReason === 'WINDOW_FLIP');
+    console.log(`  -- WINDOW_FLIP (tutup paksa window ganti): ${wgFlips.length}x, totalPnl=$${wgFlips.reduce((s, t) => s + t.pnlUsd, 0).toFixed(2)}`);
+
+    console.log('\n-- Breakdown per TAHUN (entry year) --');
+    const byYear = {};
+    for (const t of wg.trades) {
+      const y = new Date(t.entryTime).getUTCFullYear();
+      (byYear[y] = byYear[y] || []).push(t);
+    }
+    for (const y of Object.keys(byYear).sort()) {
+      const ts = byYear[y];
+      const s2 = summarize(ts);
+      const nShort = ts.filter((t) => t.direction === 'sell').length;
+      console.log(`  ${y}: n=${s2.n} (short=${nShort}) | winRate=${s2.winRate} | totalR=${s2.totalR} | totalPnl=$${ts.reduce((s3, t) => s3 + t.pnlUsd, 0).toFixed(2)}`);
+    }
+
+    console.log('\n-- Split 2 ERA independen (edge harus konsisten di DUA-duanya, bukan cuma 1) --');
+    const midTime = daily[warmupIdx()].closeTime + (daily[daily.length - 1].closeTime - daily[warmupIdx()].closeTime) / 2;
+    function warmupIdx() { return 60; }
+    const eraA = wg.trades.filter((t) => t.entryTime < midTime);
+    const eraB = wg.trades.filter((t) => t.entryTime >= midTime);
+    const sA = summarize(eraA), sB = summarize(eraB);
+    console.log(`  Era A (${new Date(daily[60].closeTime).toISOString().slice(0, 10)} -> ${new Date(midTime).toISOString().slice(0, 10)}): n=${sA.n} | winRate=${sA.winRate} | PF=${sA.profitFactor} | totalR=${sA.totalR}`);
+    console.log(`  Era B (${new Date(midTime).toISOString().slice(0, 10)} -> ${new Date(daily[daily.length - 1].closeTime).toISOString().slice(0, 10)}): n=${sB.n} | winRate=${sB.winRate} | PF=${sB.profitFactor} | totalR=${sB.totalR}`);
+    const eraAShorts = eraA.filter((t) => t.direction === 'sell'), eraBShorts = eraB.filter((t) => t.direction === 'sell');
+    console.log(`  Era A SHORT saja: n=${eraAShorts.length} | totalR=${eraAShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)}`);
+    console.log(`  Era B SHORT saja: n=${eraBShorts.length} | totalR=${eraBShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)}`);
+
+    console.log('\n-- Sensitivitas parameter (edge robust harus TAHAN diguncang dikit, bukan fragile) --');
+    for (const forceCloseOnFlip of [true, false]) {
+      const v = runFlagBacktestWindowGated(daily, { forceCloseOnFlip });
+      const vs = summarize(v.trades);
+      console.log(`  forceCloseOnFlip=${forceCloseOnFlip}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)} | maxDD=${v.maxDrawdownPct.toFixed(1)}%`);
+    }
+    for (const partialRRvar of [1.5, 2, 2.5, 3]) {
+      const v = runFlagBacktestWindowGated(daily, { partialRR: partialRRvar });
+      const vs = summarize(v.trades);
+      console.log(`  partialRR=${partialRRvar}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)}`);
+    }
+    for (const wedgeMinTouchesVar of [2, 3]) {
+      const v = runFlagBacktestWindowGated(daily, { wedgeMinTouches: wedgeMinTouchesVar });
+      const vs = summarize(v.trades);
+      console.log(`  wedgeMinTouches=${wedgeMinTouchesVar}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)}`);
+    }
+    // Window digeser +/- 30 hari -- kalau hasil short KOLAPS pas window digeser dikit, itu tanda
+    // overfitting ke definisi window PERSIS itu, bukan edge rezim yang genuine.
+    for (const shiftDays of [-30, 0, 30]) {
+      const shiftedFn = (d) => isBtcBearWindow(new Date(d.getTime() + shiftDays * 86400000));
+      const v = runFlagBacktestWindowGated(daily, { bearWindowFn: shiftedFn });
+      const vShorts = v.trades.filter((t) => t.direction === 'sell');
+      const vs = summarize(v.trades);
+      console.log(`  window shift ${shiftDays}hr: n=${vs.n} (short=${vShorts.length}) | PF=${vs.profitFactor} | totalR=${vs.totalR} | shortTotalR=${vShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | finalCapital=$${v.finalCapital.toFixed(2)}`);
+    }
   })().catch((e) => { console.error('ERROR:', e.message); process.exit(1); });
 }

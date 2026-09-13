@@ -2,16 +2,16 @@
   "1BM1sAcrfV6d4zPKytzziu4McLQDsFC2Qc": {
     "pool": "SpiderPool",
     "firstSeenAt": "2026-09-13T05:49:05.775Z",
-    "blockCount": 8,
-    "totalReceivedBtc": 25.12106688,
-    "lastSeenAt": "2026-09-13T08:33:51.895Z"
+    "blockCount": 9,
+    "totalReceivedBtc": 28.255928150000003,
+    "lastSeenAt": "2026-09-13T09:02:18.793Z"
   },
   "bc1qwzrryqr3ja8w7hnja2spmkgfdcgvqwp5swz4af4ngsjecfz0w0pqud7k38": {
     "pool": "Foundry USA",
     "firstSeenAt": "2026-09-13T05:49:14.818Z",
-    "blockCount": 31,
-    "totalReceivedBtc": 97.36725833999999,
-    "lastSeenAt": "2026-09-13T08:47:24.806Z"
+    "blockCount": 33,
+    "totalReceivedBtc": 103.68075892999998,
+    "lastSeenAt": "2026-09-13T09:03:08.744Z"
   },
   "1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6": {
     "pool": "F2Pool",
@@ -30,16 +30,16 @@
   "37jKPSmbEGwgfacCr2nayn1wTaqMAbA94Z": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 18,
-    "totalReceivedBtc": 0.00009828000000000003,
-    "lastSeenAt": "2026-09-13T08:47:31.078Z"
+    "blockCount": 19,
+    "totalReceivedBtc": 0.00010374000000000003,
+    "lastSeenAt": "2026-09-13T09:02:46.837Z"
   },
   "39C7fxSzEACPjM78Z7xdPxhf7mKxJwvfMJ": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 18,
-    "totalReceivedBtc": 56.48248985,
-    "lastSeenAt": "2026-09-13T08:47:31.078Z"
+    "blockCount": 19,
+    "totalReceivedBtc": 59.62481099,
+    "lastSeenAt": "2026-09-13T09:02:46.837Z"
   },
   "3K9KZZPB8NRwZVP5wNKX4VYhnswrJxpgZ4": {
     "pool": "Luxor",
@@ -58,8 +58,127 @@
   "1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4": {
     "pool": "ViaBTC",
     "firstSeenAt": "2026-09-13T06:05:30.452Z",
-    "blockCount": 10,
-    "totalReceivedBtc": 31.43664806,
-    "lastSeenAt": "2026-09-13T08:48:17.273Z"
+    "blockCount": 11,
+    "totalReceivedBtc": 34.57408659,
+    "lastSeenAt": "2026-09-13T09:02:05.256Z"
+  },
+  "bc1q2824ekxc6ewypfpzv64h69frnx9dx6rsgek6ec": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.72472773,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qztuue9qkmj48zhwxww6rzqm3caz7xtg7kudnv2": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.39046915,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qpqjh2zlwplafa6x5s0fgjr2vcqclhmeslpfcax": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.3015451,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1q7ur9nh720up3syvhnmgtl7s885lnvffn8nkjry": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.15111183,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1q7fkekg66yly2ynaew7t9gdvt8cut0p0drzf2q4": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.12356928,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "1LgGeuNU4ttigpJNdnqNdmiwVMfMUET894": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.11116308,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "1KYRyWnFokPiAoTLRWEMLNRQ2sd3PxS5dd": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.08518155,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1q0a52shtqy27fmk4k6deauhz6qsu6q7x6n72jgp": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.07231118,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1q69w48p75slf0tucyus3kvcxywjv779ley5gj5m": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.06106703,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qp7rr6lwc0lesf7gku7e6tlj987stesavjlpemlrl3zj720zgm9gsxvyerj": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.06011956,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qh9rhekcgdmulrvxvhwfjpr9qejz4nahn8lf49v": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.05967908,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qsqt3nkn463248wrkxk629xj2vlldxd3c53d0jq": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.04261866,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1q6f3ged3f74sga3z2cgeyehv5f9lu9r6p5arqvf44yzsy4gtjxtlsmnhn8j": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.04036185,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qauy6m9mgjtwqjrwllwszgzc4xzp3p9mnd75p5y": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.0371367,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qpfu9c8qtxepx4g3rwcrzd3phexqkvqc2a0kyw3": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.03651903,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "bc1qv8hsc39xry6vuqac2w8uqsujd24y5en4vtayhhe0lwtnxudpx77syezqrl": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.03561725,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
+  },
+  "37dvwZZoT3D7RXpTCpN2yKzMmNs2i2Fd1n": {
+    "pool": "OCEAN",
+    "firstSeenAt": "2026-09-13T09:03:11.492Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 0.79697588,
+    "lastSeenAt": "2026-09-13T09:03:11.492Z"
   }
 }

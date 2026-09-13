@@ -223,9 +223,16 @@ function createMexcClient({ apiKey, apiSecret }) {
   // (2022) bilang endpoint ini sempat "under maintenance" -- WAJIB dites ulang manual sebelum
   // diandelin buat proteksi posisi real, JANGAN asumsikan langsung jalan.
   // `quantity` (BUKAN vol) -- disamain kayak Binance, dikonversi ke vol internal di sini.
+  // ⛔ BUG NYATA ketemu 14 Sep 2026 (SAMA PERSIS pola yang kebukti salah di emergencyCloseMarket,
+  // lihat catatan di sana) -- `closeSide` di sini JUGA ketuker (2/4 kebalik). Dibenerin ke arah
+  // yang SAMA (buy/long->4, sell/short->2), TAPI ⚠️ JUJUR: baris ini sendiri (endpoint
+  // `planorder/place`, BEDA dari `order/create` yang udah kebukti lewat tes emergencyCloseMarket)
+  // BELUM independen diverifikasi live -- cuma diperbaiki berdasar KESIMPULAN LOGIS dari bug yang
+  // udah kebukti di endpoint saudaranya, bukan hasil tes planorder itu sendiri. WAJIB tes 1x SL/TP
+  // beneran (posisi kecil) SEBELUM dipercaya penuh buat modal lebih gede.
   async function placeStopLoss({ symbol, direction, stopPrice, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
-    const closeSide = direction === 'buy' ? 2 : 4; // CATATAN: dokumentasi order/create pakai 2=close short/4=close long buat ORDER BIASA; utk planorder triggerType mungkin beda, TODO verifikasi field persis pas API key ada.
+    const closeSide = direction === 'buy' ? 4 : 2; // buy (posisi LONG) -> close-long(4); sell (posisi SHORT) -> close-short(2)
     return signedRequest('POST', '/api/v1/private/planorder/place', {
       symbol, vol, side: closeSide, triggerPrice: stopPrice, triggerType: direction === 'buy' ? 2 : 1, trend: 1, executeCycle: 1, orderType: 5,
     });
@@ -233,15 +240,21 @@ function createMexcClient({ apiKey, apiSecret }) {
 
   async function placeTakeProfit({ symbol, direction, tpPrice, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
-    const closeSide = direction === 'buy' ? 2 : 4;
+    const closeSide = direction === 'buy' ? 4 : 2; // buy (posisi LONG) -> close-long(4); sell (posisi SHORT) -> close-short(2)
     return signedRequest('POST', '/api/v1/private/planorder/place', {
       symbol, vol, side: closeSide, triggerPrice: tpPrice, triggerType: direction === 'buy' ? 1 : 2, trend: 1, executeCycle: 1, orderType: 5,
     });
   }
 
+  // ⛔ BUG NYATA ketemu+fix 14 Sep 2026 (tes live pertama, tutup posisi LONG gagal "Position is
+  // nonexistent or closed") -- `closeSide` KETUKER: kode side MEXC itu 2=close SHORT, 4=close
+  // LONG (lihat catatan atas file) -- versi lama nulis `direction==='buy' ? 2 : 4`, PERSIS
+  // TERBALIK (nutup posisi LONG malah kirim side=2/close-short, yang gak ada posisinya -> ditolak
+  // MEXC). Ini bug yang SEBELUMNYA cuma "CATATAN belum diverifikasi" di komentar -- sekarang
+  // TERBUKTI salah lewat tes beneran, bukan cuma dugaan.
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
-    const closeSide = direction === 'buy' ? 2 : 4;
+    const closeSide = direction === 'buy' ? 4 : 2; // buy (posisi LONG) -> close-long(4); sell (posisi SHORT) -> close-short(2)
     return signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side: closeSide, type: 5, openType: 1, reduceOnly: true });
   }
 
@@ -262,6 +275,11 @@ function createMexcClient({ apiKey, apiSecret }) {
   async function cancelAllOpenOrders(symbol) {
     return signedRequest('POST', '/api/v1/private/order/cancel_all', { symbol });
   }
+
+  // ⚠️ 14 Sep 2026 -- SEMPAT nyoba `getPlanOrders` (tebak endpoint `/api/v1/private/planorder/list`
+  // buat verifikasi SL/TP beneran terdaftar) -- TERNYATA 404, tebakan salah. DIHAPUS drpd nyimpen
+  // fungsi nebak yang gak jalan (gak ada caller produksi yang butuh ini juga). Verifikasi SL/TP
+  // buat sekarang balik ke cara paling akurat: cek LANGSUNG di app MEXC (tab TP/SL posisi).
 
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,

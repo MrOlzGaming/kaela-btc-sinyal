@@ -170,7 +170,11 @@ async function main() {
     const msg = formatPositionMonitor(order, livePrice, assetCfg, idrRate);
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
-    await sendWhatsAppRespectMute(msg, `pemantauan posisi terbuka (${assetCfg.label} ${order.mode})`, order.silentTest, true);
+    // (14 Sep 2026, permintaan Olan: "informasi buka tutup akun demo tidak perlu ditaruh di Hedge
+    // fund Wibowo, biarkan di sniper aja") -- `alsoWibowo` SEKARANG ikutin `isTestnet()` global
+    // (Sniper 1 akun, bukan per-order) -- begitu modal real Sniper masuk & `testnet` di-flip
+    // false, pemantauan ini OTOMATIS lanjut ke Wibowo lagi tanpa perlu diubah manual lagi.
+    await sendWhatsAppRespectMute(msg, `pemantauan posisi terbuka (${assetCfg.label} ${order.mode})`, order.silentTest, !isTestnet());
   }
 
   // Saldo AVAILABLE (22 Agu 2026) -- bankroll TOTAL dikurangi margin yang udah kepake di SEMUA
@@ -340,7 +344,8 @@ async function main() {
                 }
                 const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
                 console.log(msg + '\n');
-                await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, true);
+                // `alsoWibowo` (14 Sep 2026) -- SAMA aturan kayak di atas, demo gak masuk Wibowo.
+                await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, !isTestnet());
                 shortSignalSent = true;
               }
             }
@@ -597,7 +602,8 @@ async function main() {
       const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg, liveExecution, idrRate });
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
-      await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, true);
+      // `alsoWibowo` (14 Sep 2026, permintaan Olan) -- demo gak masuk Wibowo, cuma Sniper Club.
+      await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, !isTestnet());
       console.log('[SniperAutoAnalysis] VALID --', assetCfg.label, cand.mode, patternLabel, 'posisi bayangan dibuka @', livePrice);
     }
   }

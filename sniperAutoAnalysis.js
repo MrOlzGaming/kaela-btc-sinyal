@@ -367,11 +367,22 @@ async function main() {
       } catch (e) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short Nyopet 4H window bear (${e.message}), skip.`);
       }
-      const bearStatusNote = shortSignalSent
-        ? `${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- auto-LONG dimatikan sementara, TAPI ada sinyal SHORT window bear (cek pesan terpisah di atas/bawah).`
-        : `${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`;
-      invalidNotes.push(bearStatusNote);
-      wibowoNotes.push(bearStatusNote);
+      // 🐛 FIX 14 Sep 2026 (Olan: "boleh perbaiki" -- kritik pagi ini, pesan "❌ BELUM ADA
+      // SINYAL" nampol BARENG pesan SHORT window-bear yang beneran ketemu+kekirim, kebaca
+      // kontradiktif walau wording-nya (fix 13 Sep di atas) udah nyebut "TAPI ada sinyal SHORT").
+      // Root cause SEBENARNYA: `anyNewSignal` (gerbang kirim/enggak pesan invalid gabungan di
+      // bawah) CUMA disetel true oleh candidate LONG normal, jalur short window-bear ini (yang
+      // `continue` duluan) gak pernah nyentuh gerbang itu -- jadi begitu SEMUA aset kebetulan lagi
+      // window-bear (persis pagi ini, BTC+XAU bareng), pesan "BELUM ADA SINYAL" TETAP kekirim
+      // sendirian padahal isinya cuma nyebut ulang hal yang UDAH ada pesan sendiri buat itu. Fix:
+      // begitu short window-bear kekirim buat 1 aset, JANGAN catat statusnya ke invalidNotes sama
+      // sekali (pesan SHORT-nya sendiri udah cukup ngejelasin situasinya) -- biar "BELUM ADA
+      // SINYAL" cuma nongol kalau BENERAN ada aset yang gak ngapa-ngapain sama sekali.
+      if (!shortSignalSent) {
+        const bearStatusNote = `${assetCfg.emoji} ${assetLabelTag}: ${bearWindowNote} -- sinyal baru dimatikan sementara sampai window ini lewat.`;
+        invalidNotes.push(bearStatusNote);
+        wibowoNotes.push(bearStatusNote);
+      }
       continue;
     }
 

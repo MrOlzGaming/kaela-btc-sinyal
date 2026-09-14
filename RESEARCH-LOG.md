@@ -47,6 +47,50 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-15 — Matangkan strategi Emas short: whipsaw window ketemu+fix SEBAGIAN, TAPI belum siap real
+**Ide:** Olan minta "matangkan strategi emas short" (kelanjutan dari izin short 14 Sep, Emas
+sengaja belum diaktifin karena backtest awal lebih jelek dari BTC). Diagnosis dulu SEBELUM nyoba
+fix: hitung persis seberapa parah masalahnya.
+
+**Diagnosis ketemu akar masalah jelas**: window bull/bear Emas (SMA1200-4H, ≈SMA200-harian,
+crossover POLOS) bikin **348 dari 444 trade Nyopet Emas (78%!) kena tutup paksa WINDOW_FLIP**,
+rata2 posisi cuma idup **2,89 hari** sebelum di-chop -- window-nya SENDIRI yang kelewat gugupan
+(whipsaw di sekitar garis rata-rata), BUKAN pola entry-nya yang salah.
+
+**Metode**: `backtest/goldWindowMaturation.js` -- coba 2 pendekatan fix: (A) SMA lebih panjang
+polos (1800/2400 4H) -- INTUISI SALAH, whipsaw TETAP tinggi (66-72%, SMA panjang cuma bikin garis
+lebih lambat, tetap disenggol terus). (B) **Buffer band gaya "Schmitt trigger"** (standar industri
+buat ngilangin whipsaw) -- window CUMA ganti kalau harga nembus JAUH dari SMA (>bufferPct%), TETAP
+di state lama selama harga di "zona netral" -- dites 4 level (2/5/8/12%).
+
+**Hasil Buffer band**: whipsaw TURUN DRASTIS & konsisten di semua level (21/7/3/1 dari ~100 trade,
+vs 348/444 baseline) -- ini fix yang BENERAN JALAN secara mekanis. Win rate JUGA naik konsisten
+16,4%→~42% di SEMUA level buffer. TAPI:
+- **Split-era GAGAL** -- Era1 (2020-2023) PF masih DI BAWAH 1 (rugi bersih) di baseline MAUPUN
+  keempat level buffer (0,91/0,40/0,63/0,75) -- gak pernah tembus untung di era itu. Semua profit
+  numpuk di Era2 (2023-2026, kebetulan bull run Gold besar).
+- **maxDD gak monoton** antar level buffer (19,0%→36,8%→37,6%→22,3%) -- bukan tanda whipsaw-fix-nya
+  palsu, tapi tanda jangan pilih level cuma dari 1 angka maxDD spesifik (path-dependent, sample
+  size ~100/level masih rawan noise di metrik itu).
+
+**Review sub-agent (Peninjau Skeptis)**: dikasih angka mentah TANPA kesimpulan -- verdict
+**"sukses parsial genuine, TAPI belum layak modal real"**: whipsaw fix-nya bersih & mekanis solid,
+TAPI Era1 gagal PF>1 di SEMUA konfigurasi berarti edge short/long Emas ini belum terbukti robust
+lintas rezim pasar -- baru kebukti profitable di 1 era bull yang dominan. Rekomendasi: pakai buffer
+12% (atau 2%, hindari 5%/8% -- kombinasi terburuk maxDD tinggi + Era1 paling negatif) buat
+**lanjut demo/paper trading DOANG**, cari tau kenapa Era1 selalu rugi (COVID crash/rezim beda
+total, atau emang gak ada edge chart-pattern/FVG di luar bull run) SEBELUM buka short real Emas.
+
+**Kesimpulan**: **BELUM SIAP buat uang real.** Whipsaw (masalah EKSEKUSI) berhasil diperbaiki
+signifikan, tapi itu BUKAN bukti edge trading-nya (masalah STRATEGI) udah robust -- 2 hal beda
+yang gampang ketuker. Emas short TETAP di jalur info-only (sesuai keputusan Olan 14 Sep), buffer
+band BELUM diterapkan ke live manapun -- ini murni riset, nunggu investigasi lanjutan soal Era1
+sebelum dipertimbangkan lagi.
+**Status implementasi:** TIDAK diterapkan. `makeBufferedBearWindowFn` (backtest/goldWindowMaturation.js)
+cuma alat riset, belum dipakai kode live manapun.
+
+---
+
 ### 2026-09-14 — Validasi aturan "short exposure = separuh long" (BTC+Emas, Sniper+Nyopet, 2020-2026)
 **Ide:** Olan minta backtest ulang aturan baru live malam ini (short SEKARANG separuh exposure long,
 lihat [[project-kaela-btc-sinyal]]) SEBELUM dipercaya buat uang real -- "kita backtest dari tahun

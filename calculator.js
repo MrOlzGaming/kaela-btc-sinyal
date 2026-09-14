@@ -52,9 +52,17 @@ function assessMarginRisk(marginPct) {
 // -- OPSIONAL, default TETAP MAX_LEVERAGE (50) kalau gak diisi, jadi ZERO perubahan perilaku
 // buat semua caller yang udah ada (BTC live Sniper, backtest lain). Cuma dipakai riset backtest
 // alt yang butuh cap leverage lebih ketat dari default.
-function hitung({ modal, nyawa, entry, stopLoss, maxLeverage }) {
+// `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
+// OPSIONAL juga, default `undefined` = ZERO perubahan perilaku (semua caller LAMA yang gak
+// pernah kirim arah -- kalkulator manual, backtest, dst -- tetap sama persis). CUMA kalau
+// caller EKSPLISIT ngirim `direction: 'sell'` (short window-bear Sniper/Nyopet, satu-satunya
+// jalur short auto-eksekusi di proyek ini) exposure-nya dibagi 2 di sini -- SATU tempat resmi,
+// biar semua titik short (Sniper harian, Sniper 4H, Nyopet BTC) otomatis ikut aturan yang sama,
+// gak perlu diinget manual di tiap call site.
+function hitung({ modal, nyawa, entry, stopLoss, maxLeverage, direction }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
-  const exposure = getExposure(modal);
+  let exposure = getExposure(modal);
+  if (direction === 'sell') exposure /= 2;
   const nilaiPosisi = modal * exposure;
   const cap = maxLeverage !== undefined ? maxLeverage : MAX_LEVERAGE;
   const leverage = Math.max(1, Math.min(cap, Math.floor(100 / nyawaPct)));

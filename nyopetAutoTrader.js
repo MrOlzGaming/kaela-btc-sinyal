@@ -300,7 +300,9 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const modal = modalFull * MODAL_ACTIVE_FRACTION;
     const riskDistance = Math.abs(livePrice - sig.sl);
     if (riskDistance === 0) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: SL sama persis harga entry (riskDistance=0), skip sinyal ini.`); return null; }
-    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl });
+    // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
+    // lihat calculator.js `hitung()`, exposure otomatis dibagi 2 kalau sig.direction==='sell'.
+    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
     const partialTp = sig.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
     console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | nyawa ${(riskDistance / livePrice * 100).toFixed(2)}% -> leverage ${calc.leverage}x | pattern=${sig.patternType}`);
 
@@ -535,13 +537,17 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       const livePrice = await fetchLivePrice(symbol, assetCfg.exchange);
 
       // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long auto lagi, tutup walau
-      // rugi.. takut kena bom bear" / sebaliknya buat bear->bull, short) -- KHUSUS demo (real gak
-      // kena aturan ini, "kalo demo full auto aja"): kalau posisi yang lagi kebuka SEKARANG jadi
-      // ARAH SALAH buat window rezim SAAT INI (long pas udah bear, atau short pas udah bull),
-      // tutup PAKSA sekarang juga, walau rugi -- drpd nekat nunggu SL asli kena di kondisi pasar
-      // yang udah beda rezim total. Cek TIAP siklus (bukan cuma pas transisi persis) -- lebih
-      // simpel & robust drpd nyimpen state "window sebelumnya", dan efeknya sama persis.
-      if (isDemo) {
+      // rugi.. takut kena bom bear" / sebaliknya buat bear->bull, short) -- kalau posisi yang lagi
+      // kebuka SEKARANG jadi ARAH SALAH buat window rezim SAAT INI (long pas udah bear, atau
+      // short pas udah bull), tutup PAKSA sekarang juga, walau rugi -- drpd nekat nunggu SL asli
+      // kena di kondisi pasar yang udah beda rezim total. Cek TIAP siklus (bukan cuma pas
+      // transisi persis) -- lebih simpel & robust drpd nyimpen state "window sebelumnya".
+      // 🆕 FIX 14 Sep 2026 -- SEBELUMNYA `if (isDemo)` doang ("real gak kena aturan ini, demo
+      // full auto aja") krn dulu akun real emang gak pernah auto-short (satu-satunya arah yang
+      // bisa "salah" pas window flip pindah ke bull). SEKARANG akun real BOLEH auto-short BTC
+      // (izin Olan malam ini) -- proteksi ini WAJIB ikut berlaku, kalau enggak posisi short real
+      // bisa nyangkut tanpa pengaman pas window balik ke bull. Gerbang `isDemo` DICABUT.
+      {
         const windowCandles = assetKey === 'btc' ? null : await fetchCandles4hPaginated(zoneSymbol, FVG_TREND_SMA_LEN_4H + 10).catch(() => null);
         const bearNow = isBearWindowFor(assetKey, windowCandles);
         const wrongSide = (floating.direction === 'buy' && bearNow) || (floating.direction === 'sell' && !bearNow);
@@ -675,17 +681,22 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const i = candles4h.length - 1;
 
     // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah... window
-    // bull fokus long, window bear fokus short") -- KHUSUS akun DEMO, auto-short DIIZINKAN pas
-    // window bear (BTC: isBtcBearWindow siklus halving; Emas: harga di bawah SMA 200-hari, REUSE
+    // bull fokus long, window bear fokus short") -- auto-short DIIZINKAN pas window bear (BTC:
+    // isBtcBearWindow siklus halving; Emas: harga di bawah SMA 200-hari, REUSE
     // FVG_TREND_SMA_LEN_4H=1200 4H-candle yang UDAH DIFETCH di atas, gak perlu fetch tambahan).
-    // Akun REAL TETAP allowShort:false SELAMANYA di sini (short real cuma lewat sinyal informasional
-    // sniperAutoAnalysis.js, dieksekusi manual member -- lihat project-kaela-btc-sinyal.md).
     // 13 Sep 2026, update Olan abis liat hasil backtest window-gated (BTC membaik, Emas JUSTRU
     // lebih jelek -- SMA200 kena whipsaw 75x tutup-paksa vs cuma 3x di BTC): "emas long only btc
-    // boleh long short.. tapi untuk emas, tetep di sinyal" -- demo Emas SEKARANG DICABUT dari
-    // auto-short (balik long-only kayak BTC dulu sebelum kebijakan 2-arah), BTC TETAP 2-arah.
-    // Sinyal informasional short Emas TETAP jalan seperti biasa (formatBearShortSignal di
-    // sniperAutoAnalysis.js, gak kesentuh perubahan ini -- itu emang udah cuma info, gak eksekusi).
+    // boleh long short.. tapi untuk emas, tetep di sinyal" -- Emas DICABUT dari auto-short (balik
+    // long-only kayak BTC dulu sebelum kebijakan 2-arah), BTC TETAP 2-arah. Sinyal informasional
+    // short Emas TETAP jalan seperti biasa (formatBearShortSignal di sniperAutoAnalysis.js, gak
+    // kesentuh perubahan ini -- itu emang udah cuma info, gak eksekusi).
+    // 🆕 FIX 14 Sep 2026 (Olan: "sekarang dah aku izinkan buat nyopet dan sniper silahkan... aku
+    // mau kaela bisa auto short juga BTC. emas shortnya aku manual aja") -- gerbang `isDemo`
+    // DICABUT: akun REAL sekarang IKUT auto-short BTC juga, SAMA kayak demo (bukan cuma sinyal
+    // informasional lagi). Emas TETAP permanen info-only (assetKey==='btc' tetap wajib di syarat
+    // bawah) -- konsisten sama keputusan Sniper malam ini. Exposure short (SEMUA akun, real
+    // maupun demo) SEKARANG separuh dari long -- lihat `direction: sig.direction` di
+    // `openPosition()`/calculator.js `hitung()`.
     // "Kabur" blackout (13 Sep 2026, permintaan Olan: "kita akan kabur 1 bulan buat tidak trading
     // sebelum saat window mendekati habis") -- BERLAKU REAL MAUPUN DEMO (beda dari pembatasan
     // short yang demo-only -- ini soal ENTRY BARU mepet transisi, real JUGA auto-long biasa kena
@@ -696,7 +707,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       return;
     }
 
-    const inBearWindow = isDemo && assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
+    const inBearWindow = assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
 
     let sig = detectPatternSignal(candles4h, i, patternParams);

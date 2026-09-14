@@ -298,7 +298,9 @@ async function main() {
             if (availableBalance > 1 && riskDistance > 0 && nyawaPct <= MAX_NYAWA_PCT) {
               const partialTp = bearLivePrice - riskDistance * PARTIAL_RR;
               if (partialTp > 0) {
-                const calc = hitungExposure({ modal: availableBalance, entry: bearLivePrice, stopLoss: shortSig.sl });
+                // `direction: 'sell'` (14 Sep 2026, permintaan Olan: "kalo short exposurenya
+                // separuh dari long") -- lihat calculator.js `hitung()`, exposure otomatis dibagi 2.
+                const calc = hitungExposure({ modal: availableBalance, entry: bearLivePrice, stopLoss: shortSig.sl, direction: 'sell' });
                 // mode: 'fvg' kalau patternType FVG (13 Sep 2026, biar formatAutoValid's modeExplain
                 // milih penjelasan FVG yang bener, bukan ke-anggap "Pola Chart"/breakout).
                 const isFvgShort = shortSig.patternType && shortSig.patternType.startsWith('fvg');
@@ -531,7 +533,10 @@ async function main() {
       const partialTp = cand.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
       if (partialTp <= 0) continue;
 
-      const calc = hitungExposure({ modal: availableBalance, entry: livePrice, stopLoss: cand.sl });
+      // `direction` (14 Sep 2026) -- cuma efektif kalau 'sell' (lihat calculator.js `hitung()`),
+      // jalur ini SEKARANG masih buy-only normal (window-bear-short punya cabang terpisah di
+      // atas), tapi dioper eksplisit biar konsisten/aman kalau suatu saat short diizinkan di sini.
+      const calc = hitungExposure({ modal: availableBalance, entry: livePrice, stopLoss: cand.sl, direction: cand.direction });
       // Batas margin 20% DICABUT (22 Agu 2026, permintaan Olan eksplisit: "gas terus, jangan
       // patokan modal yang tipis kayak tisu.. posisimu juga cuma bayangan.. tetep on") -- mode
       // AGRESIF sengaja buat fase awal/kecil bankroll bayangan Kaela ("masa kanak-kanak"), sadar

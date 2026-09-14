@@ -20,7 +20,7 @@ const assert = require('assert');
 const fs = require('fs');
 const tradeHistoryStore = require('./tradeHistoryStore');
 const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
-const { getExposure } = require('./calculator');
+const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
@@ -169,6 +169,22 @@ async function main() {
     assert.strictEqual(getExposure(10000), 0.75, 'Modal PERSIS $10.000 harus udah pindah ke 0,75x');
     assert.strictEqual(getExposure(99999), 0.75, 'Modal $99.999 harus masih di bracket 0,75x');
     assert.strictEqual(getExposure(100000), 0.375, 'Modal PERSIS $100.000 harus udah pindah ke 0,375x');
+  });
+
+  // `hitung` direction-aware sizing (14 Sep 2026, permintaan Olan: "kalo short exposurenya
+  // separuh dari long") -- exposure/nilaiPosisi/margin short HARUS PERSIS separuh long (modal+SL
+  // jarak sama), leverage TETAP SAMA (rasio nilaiPosisi/margin gak berubah, cuma UKURAN
+  // total-nya yang lebih kecil). Caller LAMA yang gak pernah kirim `direction` (kalkulator
+  // manual, backtest) HARUS zero perubahan perilaku (backward-compat).
+  await test('calculator hitung(): direction sell -> exposure/nilaiPosisi/margin separuh long, leverage sama', () => {
+    const long = hitung({ modal: 1000, entry: 77000, stopLoss: 75000, direction: 'buy' });
+    const short = hitung({ modal: 1000, entry: 77000, stopLoss: 79000, direction: 'sell' });
+    const noDir = hitung({ modal: 1000, entry: 77000, stopLoss: 75000 });
+    assert.strictEqual(short.exposure, long.exposure / 2, 'Exposure short harus PERSIS separuh long');
+    assert.strictEqual(short.nilaiPosisi, long.nilaiPosisi / 2, 'Nilai posisi short harus PERSIS separuh long');
+    assert.strictEqual(short.margin, long.margin / 2, 'Margin short harus PERSIS separuh long');
+    assert.strictEqual(short.leverage, long.leverage, 'Leverage HARUS SAMA (bukan exposure yang diubah rasionya, cuma ukuran total)');
+    assert.deepStrictEqual(noDir, long, '`direction` gak dioper (caller lama) harus ZERO beda dari buy eksplisit');
   });
 
   // positionTypeFor/openSideFor/closeSideFor -- konsolidasi (14 Sep 2026) dari ternary yang

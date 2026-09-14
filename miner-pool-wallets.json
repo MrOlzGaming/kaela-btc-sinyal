@@ -16,16 +16,16 @@
   "1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 53,
-    "totalReceivedBtc": 0.00028937999999999983,
-    "lastSeenAt": "2026-09-14T18:46:32.467Z"
+    "blockCount": 54,
+    "totalReceivedBtc": 0.0002948399999999998,
+    "lastSeenAt": "2026-09-14T20:17:05.093Z"
   },
   "1AfCc4F9c4VTYSE31PUe2kUEKs6ZxiDjxm": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 53,
-    "totalReceivedBtc": 166.34488830000004,
-    "lastSeenAt": "2026-09-14T18:46:32.467Z"
+    "blockCount": 54,
+    "totalReceivedBtc": 169.49732084000004,
+    "lastSeenAt": "2026-09-14T20:17:05.093Z"
   },
   "37jKPSmbEGwgfacCr2nayn1wTaqMAbA94Z": {
     "pool": "AntPool",
@@ -775,5 +775,12 @@
     "blockCount": 1,
     "totalReceivedBtc": 0.01651191,
     "lastSeenAt": "2026-09-14T13:49:18.396Z"
+  },
+  "33TbzA5AMiTKUCmeVEdsnTj3GiVXuavCAH": {
+    "pool": "Poolin",
+    "firstSeenAt": "2026-09-14T20:16:53.003Z",
+    "blockCount": 1,
+    "totalReceivedBtc": 3.17143396,
+    "lastSeenAt": "2026-09-14T20:16:53.003Z"
   }
 }

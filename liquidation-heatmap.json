@@ -34,43 +34,59 @@
     },
     "77000": {
       "longLiquidatedUsd": 95215.46029999999,
-      "shortLiquidatedUsd": 41366.888,
+      "shortLiquidatedUsd": 42908.994,
       "longCount": 15,
-      "shortCount": 6,
+      "shortCount": 7,
       "firstSeen": 1789281669285,
-      "lastSeen": 1789347321343
+      "lastSeen": 1789367540448
     },
     "77250": {
       "longLiquidatedUsd": 317754.21369999996,
-      "shortLiquidatedUsd": 0,
+      "shortLiquidatedUsd": 23781.754699999994,
       "longCount": 39,
-      "shortCount": 0,
+      "shortCount": 7,
       "firstSeen": 1789307589365,
-      "lastSeen": 1789351099621
+      "lastSeen": 1789377951136
     },
     "77500": {
       "longLiquidatedUsd": 773349.367,
-      "shortLiquidatedUsd": 0,
+      "shortLiquidatedUsd": 1238.7269999999999,
       "longCount": 48,
-      "shortCount": 0,
+      "shortCount": 4,
       "firstSeen": 1789305959945,
-      "lastSeen": 1789352590028
+      "lastSeen": 1789375756776
     },
     "77750": {
-      "longLiquidatedUsd": 427740.2479000001,
+      "longLiquidatedUsd": 430698.5544000001,
       "shortLiquidatedUsd": 0,
-      "longCount": 51,
+      "longCount": 53,
       "shortCount": 0,
       "firstSeen": 1789319468019,
-      "lastSeen": 1789352794608
+      "lastSeen": 1789368101920
     },
     "78000": {
-      "longLiquidatedUsd": 3271.5071000000003,
+      "longLiquidatedUsd": 623787.1125,
       "shortLiquidatedUsd": 0,
-      "longCount": 4,
+      "longCount": 64,
       "shortCount": 0,
       "firstSeen": 1789352797279,
-      "lastSeen": 1789353093804
+      "lastSeen": 1789378256346
+    },
+    "78250": {
+      "longLiquidatedUsd": 275923.3283000001,
+      "shortLiquidatedUsd": 0,
+      "longCount": 72,
+      "shortCount": 0,
+      "firstSeen": 1789374302118,
+      "lastSeen": 1789380126466
+    },
+    "78500": {
+      "longLiquidatedUsd": 188549.52270000006,
+      "shortLiquidatedUsd": 0,
+      "longCount": 43,
+      "shortCount": 0,
+      "firstSeen": 1789379514396,
+      "lastSeen": 1789379648749
     }
   }
 }

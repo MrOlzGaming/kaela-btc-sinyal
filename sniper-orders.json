@@ -1,6 +1,6 @@
 {
-  "balance": 4506.47750521,
-  "balanceUpdatedAt": "2026-09-14T00:00:16.276Z",
+  "balance": 4497.97596349,
+  "balanceUpdatedAt": "2026-09-14T00:15:06.713Z",
   "orders": [
     {
       "id": "mtz2dj8c3djm",
@@ -43,6 +43,42 @@
         "error": "Binance API error (HTTP 400): {\"code\":-4067,\"msg\":\"Position side cannot be changed if there exists open orders.\"}",
         "testnet": true
       }
+    },
+    {
+      "id": "mu0hujmh95p6",
+      "signalId": "2026091401",
+      "status": "floating",
+      "asset": "btc",
+      "mode": "sniper",
+      "gapCreatedTime": null,
+      "direction": "sell",
+      "strategyType": "breakout",
+      "triggerPrice": 76842.01,
+      "testLevel": null,
+      "confirmationNote": "SHORT window bear -- wedge_rising (nyawa 7.6%). Demo-only (isTestnet), lihat GANTUNGAN STRATEGI 12 Sep 2026.",
+      "tpReasoning": "Target tahap 1 (beli-balik separuh): 2x risiko @ $65,103.",
+      "entryPrice": 76842.01,
+      "tp": 65103.03000000001,
+      "sl": 82711.49999999999,
+      "originalSl": 82711.49999999999,
+      "exposure": 1.5,
+      "leverage": 13,
+      "marginUsd": 518.9972265565385,
+      "notes": "Sinyal SHORT window bear, DEMO ONLY (Real gak auto-eksekusi short -- lihat pesan info terpisah).",
+      "patternType": "wedge_rising",
+      "partialTp": 65103.03000000001,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "trailSmaLen": 10,
+      "realizedPnlUsd": 0,
+      "smartMoneyGapAtEntry": null,
+      "silentTest": false,
+      "createdAt": "2026-09-14T00:17:38.777Z",
+      "triggeredAt": "2026-09-14T00:17:38.777Z",
+      "closedAt": null,
+      "closeReason": null,
+      "pnlUsd": null,
+      "pnlPct": null
     }
   ]
 }

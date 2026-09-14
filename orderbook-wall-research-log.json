@@ -988,5 +988,23 @@
     "qty": 10.4,
     "notionalUsd": 799188,
     "distPct": 0.048758227544033216
+  },
+  {
+    "timestamp": "2026-09-14T00:18:50.534Z",
+    "midPrice": 76847.95,
+    "side": "BID",
+    "price": 76794,
+    "qty": 10.001,
+    "notionalUsd": 768016.794,
+    "distPct": -0.07020356431108064
+  },
+  {
+    "timestamp": "2026-09-14T00:18:50.534Z",
+    "midPrice": 76847.95,
+    "side": "ASK",
+    "price": 76848,
+    "qty": 10.425,
+    "notionalUsd": 801140.4,
+    "distPct": 0.00006506354431433809
   }
 ]

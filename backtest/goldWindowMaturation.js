@@ -70,8 +70,10 @@ function printByYear(trades) {
   });
 }
 
-function runVariant(label, bearWindowFn) {
-  const r = runNyopetV2BacktestWindowGated(CANDLES_4H_GOLD, { ...RESCALED_4H, modalDivisor: 5, bearWindowFn });
+function runVariant(label, bearWindowFn, extraOpts = {}) {
+  // `extraOpts` (15 Sep 2026) -- biar script LAIN (adxGateGold.js) bisa numpangin param baru
+  // (misal `adxGateFn`) tanpa duplikat seluruh badan fungsi ini.
+  const r = runNyopetV2BacktestWindowGated(CANDLES_4H_GOLD, { ...RESCALED_4H, modalDivisor: 5, bearWindowFn, ...extraOpts });
   const trades = r.trades.filter((t) => t.exitTime >= START_2020);
   const s = summarize(trades);
   const flips = countWindowFlips(trades);
@@ -87,16 +89,24 @@ function runVariant(label, bearWindowFn) {
   return { r, trades, flips };
 }
 
-console.log('========== BASELINE (crossover polos, SMA1200-4H, LIVE SEKARANG) ==========');
-const { makeEmasBearWindowFn } = require('./nyopetChartPatternFvg');
-runVariant('Baseline (buffer 0%)', makeEmasBearWindowFn());
+// Dibungkus `require.main === module` (15 Sep 2026, biar `makeBufferedBearWindowFn` bisa di-
+// require file LAIN -- misal adxGateGold.js -- TANPA ikut nge-print laporan ini tiap kali
+// di-import, pola PERSIS `nyopetChartPatternFvg.js`) -- jalanin `node goldWindowMaturation.js`
+// langsung kalau mau lihat laporan buffer-band ini sendiri.
+if (require.main === module) {
+  console.log('========== BASELINE (crossover polos, SMA1200-4H, LIVE SEKARANG) ==========');
+  const { makeEmasBearWindowFn } = require('./nyopetChartPatternFvg');
+  runVariant('Baseline (buffer 0%)', makeEmasBearWindowFn());
 
-console.log('\n\n========== KANDIDAT: Buffer band (Schmitt trigger), SMA1200 ==========');
-[2, 5, 8, 12].forEach((bufferPct) => {
-  runVariant(`Buffer ${bufferPct}%`, makeBufferedBearWindowFn(CANDLES_4H_GOLD, 1200, bufferPct));
-});
+  console.log('\n\n========== KANDIDAT: Buffer band (Schmitt trigger), SMA1200 ==========');
+  [2, 5, 8, 12].forEach((bufferPct) => {
+    runVariant(`Buffer ${bufferPct}%`, makeBufferedBearWindowFn(CANDLES_4H_GOLD, 1200, bufferPct));
+  });
 
-console.log('\n\n========== KANDIDAT: SMA lebih panjang (polos, gak pakai buffer) ==========');
-[1800, 2400].forEach((smaLen) => {
-  runVariant(`SMA${smaLen} (4H) polos`, makeEmasBearWindowFn(smaLen));
-});
+  console.log('\n\n========== KANDIDAT: SMA lebih panjang (polos, gak pakai buffer) ==========');
+  [1800, 2400].forEach((smaLen) => {
+    runVariant(`SMA${smaLen} (4H) polos`, makeEmasBearWindowFn(smaLen));
+  });
+}
+
+module.exports = { makeBufferedBearWindowFn, runVariant, countWindowFlips, avgHoldDaysForFlips, byYear, printByYear };

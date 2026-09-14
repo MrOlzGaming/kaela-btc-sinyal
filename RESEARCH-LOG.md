@@ -47,6 +47,57 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-15 — ADX sbg gerbang trend-strength window Emas: TIDAK CUKUP KUAT (kelanjutan riset whipsaw+buffer band)
+**Ide:** dari daftar "Ide belum dicoba" [PRIORITAS] -- riset sebelum ini (hari yang sama, buffer
+band Schmitt trigger) berhasil ngilangin whipsaw window bear Emas TAPI Era1 (2020-2023) tetap
+rugi (PF<1) di semua level buffer. Hipotesis: Era1 rugi krn trading di market CHOPPY/RANGING
+(sinyal chart-pattern/FVG lemah tanpa tren buat diikuti) -- ADX (Average Directional Index,
+standar CTA/managed-futures buat bedain trending vs ranging) dipasang sbg GERBANG ENTRY TAMBAHAN
+DI ATAS buffer band yang udah ada (skip entry arah manapun kalau ADX rendah), coba benerin Era1
+dari 2 sisi sekaligus.
+
+**Metode:** `technicalAnalysis.js` nambah `adxSeries`/`adx` (Wilder standar, single-pass, satu
+sumber kebenaran) + `runNyopetV2BacktestWindowGated` (`nyopetChartPatternFvg.js`) nambah param
+opsional `adxGateFn` (null=lolos, backward-compatible, pola PERSIS dxyFilter/fundingFilter tapi
+gerbang REGARDLESS arah). `backtest/adxGateGold.js` -- sweep threshold ADX (15/20/25/30, period 14)
+di atas buffer 12% (rekomendasi utama riset sebelumnya) DAN buffer 2% (alternatif), + sensitivitas
+period ADX (10/14/20).
+
+**Hasil breakdown per tahun & Split-era: GAGAL.** PF Era1 (2020-2023) TIDAK PERNAH tembus 1 di
+kombinasi manapun yang dicoba (buffer 12%: 0,79-0,82 vs baseline-tanpa-ADX 0,75; buffer 2%:
+0,82-0,95 non-monoton vs baseline 0,91). Era2 (2023-2026, yang emang udah untung) juga gak
+nunjukkin manfaat tambahan stabil dari gerbang ADX (PF naik-turun 1,71-1,89 tanpa pola jelas).
+Masalah inti (Era1 rugi bersih) TIDAK terpecahkan.
+
+**Sensitivitas parameter: GAGAL.** Kalau ADX beneran nangkep regime trending vs ranging, filter
+lebih KETAT (threshold naik 15->30) harusnya PF makin baik (dose-response) -- TAPI di buffer 12%
+PF Era1 justru DATAR (0,79/0,81/0,80/0,82) gak peduli threshold, dan di buffer 2% malah
+naik-turun tanpa arah (0,91/0,85/0,95/0,82). Sensitivitas period (10/14/20) juga gak nunjukkin
+pola. Ini ciri khas noise sample-size-kecil (n Era1 cuma 34-43 trade per sel), bukan sinyal
+regime genuine.
+
+**Review sub-agent (Peninjau Skeptis)**: dikasih SEMUA angka mentah (era-level, gak dikasih tau
+kesimpulan) -- verdict tegas: syarat split-era GAGAL (PF Era1 gak pernah >1 di kombinasi
+manapun) DAN syarat sensitivitas parameter GAGAL (gak ada dose-response, malah non-monoton) --
+"kesimpulan akhir: TIDAK CUKUP KUAT / kemungkinan besar noise/artefak sample kecil... JANGAN
+dicatat sebagai perbaikan genuine atau dipakai live."
+
+**Kesimpulan:** **TIDAK CUKUP KUAT** -- ADX gate GAGAL 2 dari 3 syarat rigor wajib proyek ini.
+Hipotesis "Era1 rugi krn choppy, ADX bisa nyaring itu" TIDAK terbukti di data -- kemungkinan besar
+Era1 emang gak punya edge chart-pattern/FVG yang cukup buat Emas terlepas dari filter tren
+tambahan apapun (bukan soal instrumen filter-nya, tapi soal sinyal dasarnya sendiri di era itu).
+Sesuai ekspektasi realistis yang udah dicatat SEBELUM riset ini mulai ("jangan berharap ADX bikin
+Era1 untung besar") -- ternyata malah gak kebukti ngurangin kerugian secara meyakinkan sama sekali
+(pergeserannya dalam rentang noise, bukan tren jelas).
+**Status implementasi:** TIDAK diterapkan kemana pun (gerbang `adxGateFn`/`adxSeries` cuma
+infrastruktur riset, TIDAK dipasang ke kode live manapun). Emas short TETAP di jalur info-only
+(gak berubah dari keputusan Olan 14 Sep). PR lanjutan (kalau mau lanjut riset Era1): coba Donchian
+Channel breakout (masih di daftar "Ide belum dicoba" di bawah -- filosofi beda, ganti CARA DETEKSI
+window itu sendiri drpd nambah gerbang di atas sinyal yang ada) atau terima Era1 emang gak
+punya edge cukup, fokus riset Emas ke arah lain.
+
+---
+
 ### 2026-09-15 — Cek korelasi Emas vs suku bunga riil & minyak (kelanjutan riset whipsaw)
 **Ide:** Olan nanya "mungkin emas ada siklus juga? kan ga mungkin bull terus" -- abis temuan whipsaw
 di atas (Era1 2020-2023 rugi, Era2 2023-2026 untung besar), dicek apa ada penjelasan makro
@@ -324,16 +375,14 @@ buat SEMUA riset selanjutnya di file ini.
 - Filter volatilitas (skip entry kalau ATR/volatility terlalu rendah/tinggi dari rata-rata)
 - Time-of-day / day-of-week filter untuk Nyopet 4H (apa ada sesi tertentu yang secara
   konsisten lebih/kurang reliable)
-- **[PRIORITAS, 15 Sep 2026] ADX (Average Directional Index) sbg gerbang trend-strength buat
-  window Emas** -- lanjutan riset whipsaw+buffer band (lihat "Temuan Terbaru" 15 Sep). Beda dari
-  filter volatilitas di atas (ATR ngukur BESARAN gerakan, ADX ngukur KEKUATAN/ARAH tren -- market
-  bisa volatile TAPI tetap choppy/gak ke mana-mana). Teknik standar trader profesional
-  (managed futures/CTA) buat bedain regime trending vs ranging -- ADX rendah = skip entry SAMA
-  SEKALI (regardless arah), baru trading begitu ADX naik. Hipotesis: gabungin ADX-gate + buffer
-  band (udah tervalidasi turunin whipsaw) bisa benerin Era1 (2020-2023) yang masih rugi di semua
-  konfigurasi buffer-doang. Alternatif juga dicatat: Donchian Channel breakout (sistem "Turtle
-  Traders") -- nunggu breakout N-hari tinggi/rendah drpd crossover SMA, secara alami lebih tahan
-  whipsaw. **Catatan penting (biar ekspektasi realistis)**: dana trend-following profesional
-  BESAR (Man AHL, Winton dkk) TERBUKTI juga ngalamin tahun jelek pas market choppy -- solusi
-  industri BUKAN "menyelesaikan sempurna" di 1 aset, tapi DIVERSIFIKASI banyak pasar sekaligus.
-  Jangan berharap ADX/Donchian bikin Era1 untung BESAR, realistisnya cuma ngurangin kerugian.
+- ~~ADX sbg gerbang trend-strength window Emas~~ -- DITES 15 Sep 2026, TIDAK CUKUP KUAT (gagal
+  split-era + sensitivitas parameter, lihat "Temuan Terbaru"). Era1 (2020-2023) tetap PF<1 di
+  SEMUA kombinasi threshold/period yang dicoba -- kemungkinan besar Era1 emang gak punya edge
+  chart-pattern/FVG yang cukup buat Emas, bukan soal filter tren yang kurang pas.
+- Donchian Channel breakout (sistem "Turtle Traders") sbg pengganti window bull/bear Emas --
+  nunggu breakout N-hari tinggi/rendah drpd crossover SMA + buffer, filosofi BEDA dari ADX di atas
+  (ganti CARA DETEKSI window itu sendiri, bukan nambah gerbang ekstra di atas sinyal yang ada).
+  Belum dicoba. **Catatan penting (ekspektasi realistis, masih relevan)**: dana trend-following
+  profesional BESAR (Man AHL, Winton dkk) TERBUKTI juga ngalamin tahun jelek pas market choppy --
+  solusi industri BUKAN "menyelesaikan sempurna" di 1 aset, tapi DIVERSIFIKASI banyak pasar
+  sekaligus. Jangan berharap Donchian otomatis bikin Era1 untung besar.

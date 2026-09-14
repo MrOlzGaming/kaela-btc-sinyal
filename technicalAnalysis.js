@@ -73,6 +73,66 @@ function atr(candles, period = 14) {
   return trueRanges.reduce((a, b) => a + b, 0) / period;
 }
 
+// ============ ADX (Average Directional Index) -- gerbang KEKUATAN/ARAH tren, standar Wilder ============
+// Ditambah 15 Sep 2026 (RESEARCH-LOG.md, ide "[PRIORITAS] ADX sbg gerbang trend-strength buat
+// window Emas") -- beda dari ATR di atas (ngukur BESARAN gerakan harga): ADX ngukur KEKUATAN/ARAH
+// tren, market bisa VOLATILE tapi tetap CHOPPY/gak kemana-mana (ADX rendah). Teknik standar trader
+// profesional (managed futures/CTA) buat bedain regime trending vs ranging.
+// `adxSeries` ngitung SATU KALI dalam 1 pass (bukan rekursif slice-ulang tiap titik kayak `ema()`)
+// -- WAJIB dipakai di backtest yang butuh nilai ADX di RIBUAN titik historis (perf), array hasil
+// selaras index sama `candles` (null di titik yang datanya belum cukup). `adx()` cuma snapshot
+// nilai TERAKHIR dari array itu -- buat pemakaian live/sekali-panggil (candle daily/harian kecil).
+function adxSeries(candles, period = 14) {
+  const n = candles.length;
+  const series = new Array(n).fill(null);
+  if (n < period * 2 + 1) return series;
+  const plusDM = new Array(n).fill(0);
+  const minusDM = new Array(n).fill(0);
+  const tr = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const c = candles[i], prev = candles[i - 1];
+    const upMove = c.high - prev.high;
+    const downMove = prev.low - c.low;
+    plusDM[i] = upMove > downMove && upMove > 0 ? upMove : 0;
+    minusDM[i] = downMove > upMove && downMove > 0 ? downMove : 0;
+    tr[i] = Math.max(c.high - c.low, Math.abs(c.high - prev.close), Math.abs(c.low - prev.close));
+  }
+  // Wilder smoothing (rolling, satu pass): nilai pertama = SUM `period` elemen pertama, abis itu
+  // smoothed[i] = smoothed[i-1] - smoothed[i-1]/period + nilai_baru[i].
+  let smTR = 0, smPlus = 0, smMinus = 0;
+  const smTRArr = new Array(n).fill(null), smPlusArr = new Array(n).fill(null), smMinusArr = new Array(n).fill(null);
+  for (let i = 1; i <= period; i++) { smTR += tr[i]; smPlus += plusDM[i]; smMinus += minusDM[i]; }
+  smTRArr[period] = smTR; smPlusArr[period] = smPlus; smMinusArr[period] = smMinus;
+  for (let i = period + 1; i < n; i++) {
+    smTR = smTR - smTR / period + tr[i];
+    smPlus = smPlus - smPlus / period + plusDM[i];
+    smMinus = smMinus - smMinus / period + minusDM[i];
+    smTRArr[i] = smTR; smPlusArr[i] = smPlus; smMinusArr[i] = smMinus;
+  }
+  const dx = new Array(n).fill(null);
+  for (let i = period; i < n; i++) {
+    const plusDI = smTRArr[i] > 0 ? (smPlusArr[i] / smTRArr[i]) * 100 : 0;
+    const minusDI = smTRArr[i] > 0 ? (smMinusArr[i] / smTRArr[i]) * 100 : 0;
+    const diSum = plusDI + minusDI;
+    dx[i] = diSum > 0 ? (Math.abs(plusDI - minusDI) / diSum) * 100 : 0;
+  }
+  // ADX = Wilder-smoothed rata-rata DX -- nilai pertama simple average `period` DX pertama
+  // (titik 2*period), abis itu smoothing sama pola di atas.
+  let sumDx = 0;
+  for (let i = period; i < period * 2; i++) sumDx += dx[i];
+  let adxVal = sumDx / period;
+  series[period * 2] = adxVal;
+  for (let i = period * 2 + 1; i < n; i++) {
+    adxVal = (adxVal * (period - 1) + dx[i]) / period;
+    series[i] = adxVal;
+  }
+  return series;
+}
+function adx(candles, period = 14) {
+  const series = adxSeries(candles, period);
+  return series[series.length - 1];
+}
+
 // ============ Swing point + support/resistance ============
 // Swing high/low = titik yang lebih ekstrem dari `lookback` candle di kiri DAN kanannya --
 // definisi standar dipakai analis manual, di sini dihitung otomatis, bukan ditebak dari mata.
@@ -200,7 +260,7 @@ async function analyze(symbol = 'BTCUSDT') {
   };
 }
 
-module.exports = { fetchCandles, sma, ema, rsi, atr, findSwingPoints, clusterLevels, fitTrendline, analyze };
+module.exports = { fetchCandles, sma, ema, rsi, atr, adx, adxSeries, findSwingPoints, clusterLevels, fitTrendline, analyze };
 
 if (require.main === module) {
   analyze('BTCUSDT').then((result) => {

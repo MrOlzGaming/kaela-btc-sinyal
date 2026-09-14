@@ -316,6 +316,12 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
     // `halfShortExposure` (14 Sep 2026, default TRUE -- PERSIS aturan live sekarang) -- lihat
     // catatan sama persis di backtestFlagBreakout.js `runFlagBacktestWindowGated`.
     halfShortExposure = true,
+    // Gerbang ADX (15 Sep 2026, RESEARCH-LOG.md "[PRIORITAS] ADX sbg gerbang trend-strength buat
+    // window Emas") -- BEDA dari dxyFilter/fundingFilter di atas (yang cuma gerbang arah 'buy'):
+    // ADX skip entry REGARDLESS arah kalau tren lemah/choppy (bukan soal arah, soal ADA-gak-ADA
+    // tren buat diikuti). `adxGateFn(candles, i) -> bool`, null (default) = tanpa gerbang,
+    // backward-compatible sama caller lama.
+    adxGateFn = null,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -403,6 +409,10 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
       }
     }
     if (!direction) continue;
+
+    // Gerbang ADX -- skip entry (arah manapun) kalau tren lagi lemah/ranging. null = data ADX
+    // belum cukup di titik ini, treat LOLOS (sama semantik dxyFilter/fundingFilter di atas).
+    if (adxGateFn && adxGateFn(candles, i) === false) continue;
 
     const riskDistance = Math.abs(lastPrice - sl);
     if (riskDistance === 0) continue;

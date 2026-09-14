@@ -12,7 +12,7 @@
 // bukan LLM, deterministik sesuai filosofi Kaela). Runner harian: newsMonitor.js.
 
 const { WEB_URL, localDateKey } = require('./config');
-const { CATEGORY_COLOR } = require('./categoryColors');
+const { roleOpener } = require('./teamRoles');
 
 const MAX_ITEMS = 20;
 
@@ -24,7 +24,7 @@ function formatNewsUpdate(now, items, slot = null) {
   const capped = items.slice(0, MAX_ITEMS);
   const lines = [];
   const slotTag = slot && SLOT_LABEL[slot] ? ` (${SLOT_LABEL[slot]})` : '';
-  lines.push(`${CATEGORY_COLOR.news.emoji} 📰 KAELA NEWS${slotTag} — ${localDateKey(now)}`);
+  lines.push(`${roleOpener('REED', `ada update berita ekonomi/kripto${slotTag} ${localDateKey(now)}`)}`);
   lines.push('');
   for (const item of capped) {
     const tag = item.sentiment === 'positif' ? '🟢' : item.sentiment === 'negatif' ? '🔴' : '⚪';
@@ -33,12 +33,11 @@ function formatNewsUpdate(now, items, slot = null) {
   }
   lines.push('');
   lines.push(`🔗 ${WEB_URL}`);
-  // TTD role (13 Sep 2026, contoh PERSIS dari Olan: "kaela news.. kaela sudah ga bikin sendiri..
-  // tapi by Reed misalnya") -- Kaela TETAP pengirim, TTD ini co-signature (domain Reed: Archive/
-  // reporting rutin). Lihat feedback-wa-signature-kaela.md + SYSTEM-MAP.md bagian "Tim Kaela".
+  // Badge role (15 Sep 2026, dipindah ke OPENER di atas -- lihat teamRoles.js). Contoh PERSIS
+  // dari Olan yang mulai konvensi ini (13 Sep 2026): "kaela news.. kaela sudah ga bikin sendiri..
+  // tapi by Reed misalnya".
   lines.push('');
   lines.push('— Kaela');
-  lines.push('   (laporan: 📦 Reed · Archive)');
   return lines.join('\n');
 }
 

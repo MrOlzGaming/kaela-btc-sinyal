@@ -20,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const { sendWhatsApp } = require('./fonnte');
+const { roleOpener } = require('./teamRoles');
 
 const HEARTBEAT_FILE = path.join(__dirname, 'cron-heartbeat.log');
 const EXEC_LOG_FILE = path.join(__dirname, 'local-executor.log');
@@ -86,11 +87,11 @@ async function main() {
   }
 
   const stuckMinutes = Math.round((now - windowStart) / 60000);
-  const msg = `🚨 Kaela nemu eksekutor VPS macet\n\n`
+  const msg = `${roleOpener('DRAKE', 'eksekutor VPS kedetek macet')}\n\n`
     + `Udah ${STUCK_THRESHOLD_CYCLES} siklus 15-menit berturut-turut (~${stuckMinutes} menit) cron NEMBAK, tapi lock gak pernah kebuka -- kemungkinan besar ada script yang hang di dalamnya.\n\n`
     + `Cek: SSH ke VPS, "tail -30 ~/kaela-engine/local-executor.log" buat lihat baris terakhir yang beneran jalan, dan "ps aux | grep node" buat cari proses yang nyangkut.\n\n`
     + `🔗 Ini laporan otomatis, BUKAN nunggu checklist 20:00 WITA -- lapor cepat begitu ketauan.\n\n`
-    + `— Kaela\n   (laporan: 🐉 Drake · Debug Specialist)`;
+    + `— Kaela`;
   console.log(msg);
   try {
     await sendWhatsApp(msg, MASTER_NOMOR);

@@ -21,6 +21,7 @@ const { createBinanceClient } = require('./binanceExecutor');
 const { sendWhatsApp } = require('./fonnte');
 const tradeHistoryStore = require('./tradeHistoryStore');
 const { MASTER_NOMOR } = require('./multiAccountExecutor');
+const { roleOpener } = require('./teamRoles');
 
 const DIFF_THRESHOLD_USD = 0.5; // toleransi kecil (rounding/timing entry yg baru masuk pas dicek)
 // Simbol per akun -- BTCUSDC (Nyopet) + BTCUSDT (Sniper, kalau ada) buat Olan. Abdu cuma BTCUSDC
@@ -81,15 +82,12 @@ async function checkAccount(name, phone, mode) {
 }
 
 function formatAlert(findings) {
-  const lines = ['🚨 *Mandor: PnL Kaela vs Binance BEDA*', '', 'Ditemukan selisih di luar wajar antara data internal Kaela dan Binance -- cek manual dulu sebelum ada pesan WA yang salah kirim lagi:', ''];
+  const lines = [`${roleOpener('PRISM', 'PnL Kaela vs Binance ketemu beda')}`, '', 'Ditemukan selisih di luar wajar antara data internal Kaela dan Binance -- cek manual dulu sebelum ada pesan WA yang salah kirim lagi:', ''];
   for (const f of findings) {
     lines.push(`• ${f.name} (${f.mode}) ${f.symbol}: Kaela bilang $${f.fromStore.toFixed(2)}, Binance bilang $${f.fresh.toFixed(2)} (beda $${f.diff.toFixed(2)})`);
   }
-  // TTD role (13 Sep 2026, permintaan Olan setelah kenalin konsep NEXUS-FORGE -- "kaela tetep
-  // peran utama.. tapi ada TTD bawah laporan [role]") -- Kaela TETAP satu2nya pengirim, ini co-
-  // signature nunjukin JENIS laporan (verifikasi angka/kalkulasi = domain PRISM di NEXUS-FORGE),
-  // BUKAN ganti identitas pengirim. Lihat feedback-wa-signature-kaela.md buat konvensi lengkap.
-  lines.push('', '— Kaela', '   (laporan: 🔬 Prism · Data QA)');
+  // Badge role (15 Sep 2026, dipindah ke OPENER di atas -- lihat teamRoles.js).
+  lines.push('', '— Kaela');
   return lines.join('\n');
 }
 

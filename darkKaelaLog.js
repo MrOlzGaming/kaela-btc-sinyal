@@ -7,6 +7,8 @@
 
 // Link Liquidation Heat Map (15 Agu 2026, permintaan Olan -- lebih spesifik dari halaman
 // LiquidationData biasa, langsung nampilin peta panas buat cek kelakuan candle di zona).
+const { roleOpener } = require('./teamRoles');
+
 const COINGLASS_LINK = 'https://www.coinglass.com/pro/futures/LiquidationHeatMap';
 const KALKULATOR_LINK = 'https://kaela-btc-sinyal.netlify.app/kalkulator.html';
 
@@ -244,15 +246,16 @@ Alasan: ${alasanText || '-'}
 // kalau sistem sendiri gak tau pasti mana dari 2 kemungkinan ini yang beneran kejadian.
 function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, isDemo) {
   const dirLabel = direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
-  return `🥷 NYOPET ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
+  return `${roleOpener('DRAKE', 'ada posisi Nyopet yang gak ke-track')}
+
+🥷 NYOPET ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
 ⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya, sekarang udah gak ada lagi. Kaela GAK BISA mastiin kenapa dari sini -- 2 kemungkinan yang SAMA-SAMA masuk akal: (1) disentuh trading manual langsung di exchange, ATAU (2) mesin eksekutor sempat pindah (data posisi ini memang sengaja gak disinkron antar-mesin) sehingga posisi Kaela sendiri "kelupaan" jurnalnya -- BUKAN berarti ini otomatis manual.
 
 Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan (kemungkinan #2), cek langsung riwayat exchange buat angka pastinya.
 
 🔗 ${KAELA_ACCESS_URL}
 
-— Kaela
-   (laporan: 🐉 Drake · Debug Specialist)`;
+— Kaela`;
 }
 
 // ============ Manual di luar sistem (positionReconciler.js) -- (5 Sep 2026, permintaan Olan:

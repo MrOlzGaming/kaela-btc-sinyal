@@ -17,6 +17,7 @@ const path = require('path');
 // (wibowoNotify.js -- ikut cek toggle Silent Trade + antrean retry yang udah ada, JANGAN kirim
 // lewat fonnte.js polos di sini biar gak ada 2 jalur beda buat 1 grup).
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
+const { roleOpener } = require('./teamRoles');
 
 const LOG_PATH = path.join(__dirname, 'RESEARCH-LOG.md');
 const STATE_PATH = path.join(__dirname, 'research-log-state.json');
@@ -66,13 +67,12 @@ async function main() {
   const statusImpl = extractField(entry.body, 'Status implementasi') || '';
 
   const title = entry.heading.replace(/^###\s*/, '');
-  // TTD role (13 Sep 2026, "semua otomatisnya pesan kita update") -- domain Prism (Data QA)
-  // PAS banget: isinya verifikasi statistik (breakdown tahun/split-era/sensitivitas). Lihat
-  // SYSTEM-MAP.md "Tim Kaela".
-  const msg = `🔬 *Kaela Researcher -- Temuan Baru*\n\n*${title}*\n\n*Kesimpulan:* ${kesimpulan}` +
+  // Badge role (15 Sep 2026, dipindah ke OPENER -- lihat teamRoles.js) -- domain Prism (Data QA)
+  // PAS banget: isinya verifikasi statistik (breakdown tahun/split-era/sensitivitas).
+  const msg = `${roleOpener('PRISM', 'ada temuan riset baru')}\n\n*${title}*\n\n*Kesimpulan:* ${kesimpulan}` +
     (statusImpl ? `\n*Status:* ${statusImpl}` : '') +
     `\n\nDetail lengkap (breakdown per tahun, split-era, sensitivitas parameter) ada di RESEARCH-LOG.md di repo.` +
-    `\n\n— Kaela\n   (laporan: 🔬 Prism · Data QA)`;
+    `\n\n— Kaela`;
 
   const r = await sendWhatsAppToWibowo(msg);
   if (r && (r.ok || r.skipped)) {

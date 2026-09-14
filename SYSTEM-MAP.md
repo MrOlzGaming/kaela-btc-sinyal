@@ -213,6 +213,27 @@ SELALU sertain disclaimer jujur: ini bukan tim manusia terpisah, spesialisasi/mo
 sendiri. Olan sendiri dapet badge `👑 Olan · Founder & Final Approval` (posisi command tertinggi,
 sesuai roster NEXUS-FORGE asli -- semua role lapor ke Kaela, Kaela lapor ke Olan).
 
+### Badge role di PESAN WA -- opener, bukan TTD penutup (15 Sep 2026)
+
+Konvensi AWAL (13 Sep) nempel role sbg TTD PENUTUP: `— Kaela\n   (laporan: 🔬 Prism · Data QA)`.
+**Olan minta diubah**: role "dianggap ADA" (bukan sekadar label dekoratif nempel ujung) -- badge
+PINDAH ke PALING ATAS pesan, dibingkai sbg role itu SENDIRI yang lapor ke Kaela duluan, baru
+Kaela yang nyampein isinya ke pembaca. Contoh pola yang diminta: *"Drake [Debug Specialist] lapor
+ke Kaela, ada error kedetek: ..."*, *"Prism [Data-QA] lapor ke Kaela, ada temuan baru: ..."*.
+
+Implementasi: `teamRoles.js` (root folder) -- SATU sumber kebenaran emoji+nama+domain (`ROLES`)
++ helper `roleOpener(roleKey, opening)` yang ngasilin baris pembuka siap tempel. SEMUA titik yang
+tadinya pakai TTD penutup lama (`checkExecutorStuck.js`, `dailyAutomationChecklist.js`,
+`darkKaelaLog.js`, `exchangeWalletTracker.js`, `newsUpdate.js`, `orderBookSnapshot.js`,
+`pnlCrossCheckMonitor.js`, `vultrBalanceMonitor.js`, `reportResearchFindings.js`) UDAH dipindah ke
+opener ini, penutup pesan sekarang cukup `'— Kaela'` polos (nama role gak perlu diulang di bawah,
+udah disebut di baris pertama). **Kalau nambah pesan WA BARU yang cocok satu domain role** (tabel
+sama kayak tag commit di atas), WAJIB pakai `roleOpener()` dari `teamRoles.js`, JANGAN hardcode
+ulang string badge sendiri di file baru -- ikutin pola call site manapun di atas sbg contoh.
+Disclaimer kejujuran "bukan tim manusia terpisah" TETAP cukup di `teamDigestReport.js` (laporan
+mingguan investor) SAJA, gak perlu diulang di tiap pesan role individual (sama presisi kayak
+sebelum perubahan ini -- TTD lama juga gak pernah bawa disclaimer per-pesan).
+
 ## 📚 Kalau mau riset ide baru
 
 1. **Grep dulu** comment `⛔`/`✅` di file terkait + folder `backtest/` -- kemungkinan besar udah

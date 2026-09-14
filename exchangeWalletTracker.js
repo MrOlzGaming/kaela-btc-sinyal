@@ -20,6 +20,7 @@ const path = require('path');
 const { fetchWithRetry } = require('./httpRetry');
 const { sendWhatsApp } = require('./fonnte');
 const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
+const { roleOpener } = require('./teamRoles');
 
 const LOG_PATH = path.join(__dirname, 'exchange-wallet-balances.json');
 const SATOSHI = 100000000;
@@ -111,7 +112,7 @@ async function main() {
   // doang, JANGAN diklaim "pasti bakal jual/beli").
   const urgent = allWalletDeltas.filter((w) => Math.abs(w.deltaBtc) >= URGENT_THRESHOLD_BTC);
   if (urgent.length) {
-    const lines = ['🔍 *Kaela nemu anomali di cold wallet exchange*', ''];
+    const lines = [`${roleOpener('REED', 'ada anomali di cold wallet exchange')}`, ''];
     for (const w of urgent) {
       lines.push(`${w.label}: ${w.deltaBtc > 0 ? '+' : ''}${w.deltaBtc.toFixed(2)} BTC dalam ~15 menit terakhir (sekarang ${w.balanceBtc.toFixed(2)} BTC total).`);
       lines.push(interpretWalletMove(w.deltaBtc));
@@ -119,10 +120,8 @@ async function main() {
     }
     lines.push('⚠️ Fakta on-chain + interpretasi umum doang -- BUKAN kepastian, riset belum divalidasi. Cek konteks (berita, harga) sebelum ambil kesimpulan sendiri.');
     lines.push('');
-    // TTD role (13 Sep 2026, "semua otomatisnya pesan kita update") -- domain Reed (Archive)
-    // karena ini MURNI ARSIP riset (lihat komentar atas file). Lihat SYSTEM-MAP.md "Tim Kaela".
+    // Badge role (15 Sep 2026, dipindah ke OPENER di atas -- lihat teamRoles.js).
     lines.push('— Kaela');
-    lines.push('   (laporan: 📦 Reed · Archive)');
     // Ke Wibowo Hedgefund (13 Sep 2026, permintaan Olan: "jangan DM aku, masuk grup aja.. kalo DM
     // takut ga kebaca") -- LANGSUNG sendWhatsApp (BUKAN sendWhatsAppToWibowo/wibowoNotify.js) SAMA
     // pola kayak vultrBalanceMonitor.js: ini info riset/infra, BUKAN update posisi trading, jadi

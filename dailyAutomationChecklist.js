@@ -26,6 +26,7 @@ const { execFileSync } = require('child_process');
 const { toLocal, localDateKey } = require('./config');
 const { hasEntryToday, addOrReplaceDaily, getAll } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
+const { roleOpener } = require('./teamRoles');
 const { birthdayRanToday } = require('./birthdayGreeting');
 const { fetchLatestBlockHeight } = require('./whaleFetch');
 
@@ -213,7 +214,7 @@ async function sendChecklistReport(now) {
   const anyHealthIssue = !freshness.ok || !spamCheck.ok;
 
   const msg = [
-    `📋 Kaela Checklist Otomatisasi — ${localDateKey(now)}`,
+    `${roleOpener('REED', `checklist otomatisasi harian ${localDateKey(now)} udah dicek`)}`,
     '',
     ...lines,
     '',
@@ -224,11 +225,9 @@ async function sendChecklistReport(now) {
     '🔍 Kesehatan Mandor (jalan beneran + gak spam):',
     ...healthLines,
     '',
-    // TTD role (13 Sep 2026, konsep NEXUS-FORGE) -- Kaela TETAP pengirim, TTD ini nunjukin JENIS
-    // laporan (checklist harian/arsip status = domain REED di NEXUS-FORGE). Lihat
-    // feedback-wa-signature-kaela.md.
+    // Badge role (15 Sep 2026, dipindah ke OPENER di atas -- lihat teamRoles.js) -- penutup
+    // cukup polos, nama role udah disebut di baris pertama pesan.
     '— Kaela',
-    '   (laporan: 📦 Reed · Archive)',
   ].join('\n');
   console.log(msg);
   addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);

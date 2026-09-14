@@ -17,6 +17,7 @@ const path = require('path');
 const { fetchWithRetry } = require('./httpRetry');
 const { sendWhatsApp } = require('./fonnte');
 const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
+const { roleOpener } = require('./teamRoles');
 
 const LOG_PATH = path.join(__dirname, 'orderbook-wall-research-log.json');
 // "Aneh" (13 Sep 2026, permintaan Olan: "dinding kalo aneh bisa info darurat?") -- dibandingin ke
@@ -123,7 +124,7 @@ async function main() {
       ? `>2x dinding terbesar yang PERNAH kecatat ($${(historicalMax / 1e6).toFixed(2)}jt)`
       : `>$5jt (histori masih kurang dari ${MIN_HISTORY_FOR_STATS} data, pakai jaring pengaman awal)`;
     const msg = [
-      '🔍 *Kaela nemu anomali di likuiditas BTC*',
+      `${roleOpener('REED', 'ada anomali di likuiditas BTC')}`,
       '',
       `${biggest.side} $${biggest.price.toFixed(0)} (${biggest.distPct >= 0 ? '+' : ''}${biggest.distPct.toFixed(2)}% dari harga sekarang $${midPrice.toFixed(0)}) -- ukuran $${(biggest.notionalUsd / 1e6).toFixed(2)}jt.`,
       `Kenapa dianggap anomali: ${dasarAmbang}.`,
@@ -132,10 +133,8 @@ async function main() {
       '',
       '⚠️ Riset awal, BELUM divalidasi -- murni info, bukan ajakan aksi apapun.',
       '',
-      // TTD role (13 Sep 2026, "semua otomatisnya pesan kita update") -- domain Reed (Archive)
-      // karena ini MURNI ARSIP riset (lihat komentar atas file). Lihat SYSTEM-MAP.md "Tim Kaela".
+      // Badge role (15 Sep 2026, dipindah ke OPENER di atas -- lihat teamRoles.js).
       '— Kaela',
-      '   (laporan: 📦 Reed · Archive)',
     ].join('\n');
     console.log(msg);
     // Ke Wibowo Hedgefund (13 Sep 2026, "jangan DM aku, masuk grup aja") -- LANGSUNG sendWhatsApp

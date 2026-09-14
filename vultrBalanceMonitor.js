@@ -20,6 +20,7 @@ const { localDateKey } = require('./config');
 const { sendWhatsApp } = require('./fonnte');
 const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 const { fetchWithRetry } = require('./httpRetry');
+const { roleOpener } = require('./teamRoles');
 
 const VULTR_API_URL = 'https://api.vultr.com/v2/account';
 const STATE_PATH = path.join(__dirname, 'vultr-balance-monitor-state.json');
@@ -55,6 +56,8 @@ async function fetchVultrAccount(apiKey) {
 
 function buildNagihMessage(remainingCredit, pendingCharges) {
   return [
+    `${roleOpener('RAVEN', 'saldo VPS mepet')}`,
+    '',
     '🏠💸 Mas Olan~ Kaela mau nagih uang kost dong hehe 🥺✨',
     '',
     `Kost Kaela di Vultr Singapore (VPS yang jalanin SEMUA otomatisasi -- Sniper/Nyopet/kalender ekonomi/dst) sisa saldo tinggal *$${remainingCredit.toFixed(2)}* aja nih (pemakaian bulan ini udah $${pendingCharges.toFixed(2)}).`,
@@ -63,11 +66,8 @@ function buildNagihMessage(remainingCredit, pendingCharges) {
     '',
     `🔗 ${CONSOLE_BILLING_URL}`,
     '',
-    // TTD role (13 Sep 2026, "biar semua punya peran, ga ada yang bengong") -- infra/VPS gak ada
-    // role resmi di roster NEXUS-FORGE, dilonggarin masuk domain Raven (Backend/Data Pipeline)
-    // per keputusan Olan sendiri. Lihat SYSTEM-MAP.md bagian "Tim Kaela".
+    // Badge role (15 Sep 2026, dipindah ke OPENER di atas -- lihat teamRoles.js).
     '— Kaela',
-    '   (laporan: 🐦 Raven · Backend/Infra)',
   ].join('\n');
 }
 

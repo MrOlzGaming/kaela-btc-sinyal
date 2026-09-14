@@ -47,6 +47,52 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-14 — Validasi aturan "short exposure = separuh long" (BTC+Emas, Sniper+Nyopet, 2020-2026)
+**Ide:** Olan minta backtest ulang aturan baru live malam ini (short SEKARANG separuh exposure long,
+lihat [[project-kaela-btc-sinyal]]) SEBELUM dipercaya buat uang real -- "kita backtest dari tahun
+dekat aja 2020", semua kombinasi: Sniper BTC, Sniper Emas, Nyopet BTC, Nyopet Emas.
+
+**Metode:** `backtest/shortHalfExposureValidation.js` -- bandingin LAMA (short = exposure SAMA
+kayak long) vs BARU (short = separuh) di window-gated engine yang SAMA PERSIS dipakai live
+(`runFlagBacktestWindowGated`/`runNyopetV2BacktestWindowGated`), per-tahun + split-era, data
+2020-2026.
+
+**Hasil awal bikin kaget**: Sniper BTC BARU JAUH lebih jelek dari LAMA (final $4.697 vs $15.770,
+maxDD 46,3% vs 24,0%) -- padahal short-nya SECARA INDIVIDUAL lebih kecil/aman. Sniper Emas, Nyopet
+BTC, Nyopet Emas SEMUA aman (statistik R-multiple nyaris/persis identik, maxDD malah TURUN di
+beberapa kombinasi).
+
+**Review sub-agent (Peninjau Skeptis)**: dikasih angka mentah TANPA kesimpulan -- nemuin pola
+kunci: statistik R-multiple (winRate/PF/totalR) SECARA MATEMATIS gak sensitif ke perubahan sizing
+murni (rMultiple = rasio harga vs risiko, bukan fungsi dari nilai posisi) -- KECUALI kalau sizing
+lebih kecil bikin trade tambahan LOLOS gerbang `margin > capital` yang sebelumnya kegagalan.
+Verdict: 3 dari 4 kombinasi AMAN (gerbang cuma sempat kena dikit terus balik sinkron), TAPI Sniper
+BTC butuh investigasi lebih dalam -- curiga modal awal backtest ($100, sengaja kecil) bikin gerbang
+margin KELEWAT sensitif, gak representatif buat modal real yang beneran dipakai Olan nanti.
+
+**Investigasi lanjutan (dites LANGSUNG, bukan asumsi)**: jalanin ulang Sniper BTC LAMA vs BARU di
+4 skala modal awal ($100/$1.000/$5.000/$20.000), topUpAmount dimatiin biar bersih (isolasi murni
+efek modal awal). Hasil: di $100 trade count LAMA vs BARU beda jauh (38 vs 46) -- TAPI begitu
+modal awal $5.000+ (realistis buat modal real), trade count JADI IDENTIK (48 vs 48, maxDD 35,2%
+vs 35,2% SAMA PERSIS) -- final capital beda tipis (LAMA $33.217 vs BARU $30.394, ~8,5% lebih
+kecil di BARU) TAPI itu emang ongkos wajar dari "short lebih kecil", BUKAN resiko tersembunyi.
+**Kesimpulan: kekhawatiran awal itu ARTEFAK modal awal $100 yang gak realistis, BUKAN bahaya
+beneran** -- di modal yang beneran relevan, aturan baru ini aman, cuma bikin sedikit lebih
+konservatif (final ~8-17% lebih kecil tergantung skala, maxDD SAMA).
+
+**Kesimpulan final**: **AMAN buat live** -- semua 4 kombinasi (BTC+Emas, Sniper+Nyopet) TIDAK
+nunjukin resiko baru dari aturan "short = separuh exposure" di modal REALISTIS. Aturan ini murni
+bikin lebih konservatif (biaya kecil di potensi profit short, gak ada bahaya tersembunyi).
+**Catatan penting metodologi**: backtest window-gated project ini SELALU pakai modal awal kecil
+($100) buat konsistensi lintas riset -- ketauan malam ini itu BISA menyesatkan buat pertanyaan
+yang sensitif ke skala modal (kayak interaksi gerbang margin). Kalau riset masa depan nanya soal
+efek sizing/margin-gating, WAJIB dites di beberapa skala modal, JANGAN cuma $100.
+**Status implementasi:** SUDAH LIVE (aturan diimplementasi sebelum backtest ini, atas keputusan
+Olan) -- backtest ini KONFIRMASI RETROAKTIF, bukan gerbang sebelum deploy. Gak ada perubahan kode
+lebih lanjut yang diperlukan.
+
+---
+
 ### 2026-09-14 — Funding Rate BTC sebagai konfirmasi entry, Nyopet BTC (dari daftar "Ide belum dicoba")
 **Ide:** skip entry LONG Nyopet kalau funding rate BTC perpetual lagi DI ATAS rata-rata dirinya
 sendiri (SMA-nya sendiri, filter self-referential -- SAMA pola `dxyFilter.js` yang terbukti

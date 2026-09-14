@@ -229,6 +229,11 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
     // buat sensitivity test (mis. geser window, atau matiin force-close WINDOW_FLIP).
     bearWindowFn = require('./halvingBearWindow').isBtcBearWindow,
     forceCloseOnFlip = true,
+    // `halfShortExposure` (14 Sep 2026, default TRUE -- PERSIS aturan live sekarang: "short
+    // exposure separuh long") -- opsional `false` CUMA buat riset perbandingan "gimana kalau
+    // ATURAN INI gak ada" (validasi 14 Sep, backtest/shortHalfExposureValidation.js), BUKAN buat
+    // dipakai live/caller normal manapun.
+    halfShortExposure = true,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -321,7 +326,9 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
     if (riskDistance === 0) continue;
     const nyawaPct = riskDistance / lastPrice * 100;
     if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
-    const { nilaiPosisi, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl });
+    // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
+    // PERSIS aturan live sekarang, WAJIB dites di backtest ini SEBELUM dipercaya buat real trading.
+    const { nilaiPosisi, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined });
     if (margin > capital) continue;
     const marginPct = margin / capital * 100;
     if (marginPct > maxMarginPct) continue;

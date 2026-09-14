@@ -313,6 +313,9 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
     topUpAmount = 0, topUpStopAt = Infinity, topUpDayOfMonth = 5, onRedirectedTopUp = null,
     bearWindowFn, // WAJIB diisi caller (makeBtcBearWindowFn()/makeEmasBearWindowFn())
     forceCloseOnFlip = true,
+    // `halfShortExposure` (14 Sep 2026, default TRUE -- PERSIS aturan live sekarang) -- lihat
+    // catatan sama persis di backtestFlagBreakout.js `runFlagBacktestWindowGated`.
+    halfShortExposure = true,
   } = opts;
   const trades = [];
   let openPos = null;
@@ -406,7 +409,9 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
     const nyawaPct = riskDistance / lastPrice * 100;
     if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
     const sizingModal = capital / modalDivisor;
-    const { nilaiPosisi, margin } = hitungExposure({ modal: sizingModal, entry: lastPrice, stopLoss: sl });
+    // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
+    // PERSIS aturan live sekarang, WAJIB dites di backtest ini SEBELUM dipercaya buat real trading.
+    const { nilaiPosisi, margin } = hitungExposure({ modal: sizingModal, entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined });
     if (margin > capital) continue;
     const marginPct = margin / capital * 100;
     if (marginPct > maxMarginPct) continue;

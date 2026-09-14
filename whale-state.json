@@ -1,5 +1,5 @@
 {
-  "lastProcessedHeight": 966984,
+  "lastProcessedHeight": 966992,
   "lastDigest": {
     "dateKey": "2026-09-15",
     "totalBtc": 8387.24676543,
@@ -34,6 +34,91 @@
         "totalBtc": 2465.80095928,
         "direction": null,
         "exchange": null
+      },
+      {
+        "totalBtc": 1432.05705904,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1489.2343291,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2465.22427722,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 20352.36465435,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1654.14636768,
+        "direction": "TO_EXCHANGE",
+        "exchange": "Kraken"
+      },
+      {
+        "totalBtc": 1431.3795389,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2465.22759519,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1489.22432522,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1431.36953502,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2465.23422762,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 804.48613555,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 637.47733197,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1489.21432134,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1281.56813289,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 363.82888954,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2465.23754556,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 409.15750578,
+        "direction": "FROM_EXCHANGE",
+        "exchange": "Kraken"
       }
     ]
   }

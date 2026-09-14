@@ -342,6 +342,11 @@ async function main() {
                   liveExecution = { ok: false, error: e.message, testnet: isTestnet(), exchange: assetCfg.exchange };
                   console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT gagal (${isTestnet() ? 'demo' : 'REAL'}, shadow tracking tetap jalan): ${e.message}`);
                 }
+                // 🐛 FIX 14 Sep 2026 -- SAMA bug persis kayak candidate LONG di atas (lihat catatan
+                // panjang di situ): tanpa `liveExecutedAt` di sini, `localLiveExecutor.js` nyoba
+                // eksekusi KEDUA KALINYA siklus berikutnya, gagal (SL/TP udah nempel), order
+                // ke-mark 'cancelled' walau posisi ASLI dari eksekusi PERTAMA ini tetap idup.
+                updateOrder(created.id, { liveExecutedAt: now.toISOString(), liveExecution });
                 const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
                 console.log(msg + '\n');
                 // `alsoWibowo` (14 Sep 2026) -- SAMA aturan kayak di atas, demo gak masuk Wibowo.
@@ -597,6 +602,18 @@ async function main() {
           liveExecution = { ok: false, error: e.message, testnet: isTestnet(), exchange: assetCfg.exchange };
           console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE gagal (shadow tracking TETAP jalan normal): ${e.message}`);
         }
+        // 🐛 FIX 14 Sep 2026 (BUG NYATA ketemu -- Olan minta cek "posisi yang seharusnya udah
+        // dibuat tapi belum otomatis": order short BTC pagi ini kebuka BENERAN di Binance
+        // (-0.1848 BTC, entry $77.063) tapi HILANG dari sniper-orders.json, status malah
+        // 'cancelled'). Root cause: eksekusi inline DI SINI gak pernah nyetel `liveExecutedAt` --
+        // `localLiveExecutor.js` (jalan siklus BERIKUTNYA) nyangka order ini "belum dieksekusi"
+        // (filternya persis `!o.liveExecutedAt`), nyoba eksekusi KEDUA KALINYA, Binance nolak
+        // ("Position side cannot be changed if there exists open orders" -- SL/TP order PERTAMA
+        // masih nempel), localLiveExecutor.js nandain 'cancelled' -- padahal posisi ASLI (dari
+        // eksekusi PERTAMA di sini) TETAP idup di exchange, cuma tracking-nya yang ilang. Fix:
+        // begitu eksekusi inline SELESAI (sukses ATAU gagal), langsung `updateOrder` `liveExecutedAt`
+        // SEKARANG JUGA -- localLiveExecutor.js jadi skip order ini, gak ada percobaan kedua lagi.
+        updateOrder(created.id, { liveExecutedAt: now.toISOString(), liveExecution });
       }
 
       const msg = formatAutoValid({ order: opened, ta, sentiment, onchain, assetCfg, liveExecution, idrRate });

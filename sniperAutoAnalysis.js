@@ -371,7 +371,14 @@ async function main() {
       // Nyopet-mode (timeframe 4H, "sama kek Sniper cuma lebih rendah") -- pola BEDA
       // (poleLookbackRange/flagLookbackRange versi rescaled 4H, lihat PATTERN_PARAMS_4H di
       // nyopetAutoTrader.js) jadi HASIL scan-nya BISA beda dari versi daily Sniper di atas --
-      // dites TERPISAH, pesan TERPISAH, badge beda (🥷 NYOPET) biar gampang dibedain di grup.
+      // dites TERPISAH, pesan TERPISAH.
+      // 🐛 FIX 14 Sep 2026 (Olan bingung: "kok tadi malam ngasih sinyal" -- nanya status Nyopet
+      // BTCUSDC REAL, padahal yang dia liat kemarin itu scan INI, yang cuma numpang parameter
+      // Nyopet doang tapi jalan DI DALAM script Sniper, baca data BTCUSDT, GAK ADA hubungannya
+      // sama sekali ke `nyopetAutoTrader.js`/akun real Nyopet beneran) -- badge SEBELUMNYA
+      // "🥷 NYOPET · Kaela" bikin kesan ini bagian dari sistem trading Nyopet asli, padahal murni
+      // scan tambahan Sniper timeframe lebih rendah. Diganti "🎯 SNIPER · Kaela (4H)" biar jujur
+      // ini scan Sniper (akun/script yang sama kayak sinyal harian di atas), cuma timeframe beda.
       try {
         const nyopetCandles = await fetchCandles4hPaginated(assetCfg.symbol, 300);
         // FVG bearish dicek juga di sini (13 Sep 2026, sama alasan kayak versi daily Sniper di atas).
@@ -388,21 +395,21 @@ async function main() {
           if (sniperShortForCompare) {
             const entryDiffPct = Math.abs(nyopetEntry - sniperShortForCompare.entry) / sniperShortForCompare.entry * 100;
             if (entryDiffPct <= 1) {
-              convergenceNote = '✅ Sepakat sama sinyal Sniper (harian) di atas -- 2 timeframe beda (4H vs harian) baca level yang mirip, bobot konfirmasinya lebih kuat drpd biasanya.';
+              convergenceNote = '✅ Sepakat sama sinyal Sniper harian di atas -- 2 timeframe beda (4H vs harian) baca level yang mirip, bobot konfirmasinya lebih kuat drpd biasanya.';
             }
           }
           const msg = formatBearShortSignal({
             assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
             entryPrice: nyopetEntry, sl: nyopetShortSig.sl, patternType: nyopetShortSig.patternType,
             gapTop: nyopetShortSig.gapTop, gapBottom: nyopetShortSig.gapBottom,
-            badge: '🥷 NYOPET · Kaela', convergenceNote,
+            badge: '🎯 SNIPER · Kaela (4H)', convergenceNote,
           });
           console.log(msg + '\n');
           await sendWhatsApp(msg);
           shortSignalSent = true;
         }
       } catch (e) {
-        console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short Nyopet 4H window bear (${e.message}), skip.`);
+        console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short Sniper-4H window bear (${e.message}), skip.`);
       }
       // 🐛 FIX 14 Sep 2026 (Olan: "boleh perbaiki" -- kritik pagi ini, pesan "❌ BELUM ADA
       // SINYAL" nampol BARENG pesan SHORT window-bear yang beneran ketemu+kekirim, kebaca

@@ -47,6 +47,38 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-15 — Cek korelasi Emas vs suku bunga riil & minyak (kelanjutan riset whipsaw)
+**Ide:** Olan nanya "mungkin emas ada siklus juga? kan ga mungkin bull terus" -- abis temuan whipsaw
+di atas (Era1 2020-2023 rugi, Era2 2023-2026 untung besar), dicek apa ada penjelasan makro
+(suku bunga riil, minyak) buat KENAPA 2 era itu beda karakter, bukan cuma soal window teknikal.
+
+**Data ditarik**: `backtest/real-yield-daily-cache.json` (FRED DFII10, 10-Year TIPS real yield,
+2003-sekarang, BARU di-fetch) + `backtest/oil-daily-cache.json` (udah ada, WTI).
+
+**Hasil (informasional, BUKAN backtest strategi -- gak butuh skeptic-review formal, ini cek
+korelasi harga mentah doang)**:
+- **Real yield COCOK buat 2020-2022**: yield anjlok ke -1,06% (stimulus COVID) -> Emas melonjak
+  (2020). Yield naik tajam ke +1,68% (Fed ngerem inflasi 2021-2022) -> Emas seret/choppy -- PERSIS
+  Era1 yang jelek di backtest.
+- **Real yield JUSTRU RUSAK di 2023-2026**: yield TERUS NAIK (1,58%->2,44%), harusnya bearish buat
+  Emas (aset non-yield), TAPI Emas malah +140% di periode yang SAMA. Hubungan klasik "yield naik =
+  Emas turun" DECOUPLE justru di era yang paling penting.
+- **Minyak juga GAK nyambung**: WTI $114 (puncak 2022) -> turun terus ke $57 (2026), Emas malah
+  naik drastis di periode yang sama -- Emas BUKAN ngikut siklus komoditas umum.
+
+**Kesimpulan**: siklus Emas itu NYATA (bukan bull selamanya, Olan benar), TAPI pemicu rally
+2023-2026 kemungkinan besar BUKAN suku bunga/komoditas -- lebih cocok sama narasi borongan bank
+sentral (China/Rusia dkk, dipicu pembekuan aset Rusia 2022) + ketegangan geopolitik +
+de-dolarisasi. Ini FAKTOR STRUKTURAL/GEOPOLITIK, bukan pola siklikal yang bisa dideteksi dari
+data harga/suku-bunga/minyak yang kita punya -- gak ketemu filter makro baru yang bisa langsung
+dipakai buat window Emas dari riset ini.
+**Status implementasi:** Murni informasional, gak ada perubahan kode. PR lanjutan (kalau mau
+digali lagi): cari data demand bank sentral (World Gold Council punya laporan kuartalan publik)
+buat lihat apa ada proxy yang bisa dipakai jadi sinyal, TAPI itu data KUARTALAN (bukan harian),
+kemungkinan gak cukup granular buat filter entry/exit trading jangka pendek.
+
+---
+
 ### 2026-09-15 — Matangkan strategi Emas short: whipsaw window ketemu+fix SEBAGIAN, TAPI belum siap real
 **Ide:** Olan minta "matangkan strategi emas short" (kelanjutan dari izin short 14 Sep, Emas
 sengaja belum diaktifin karena backtest awal lebih jelek dari BTC). Diagnosis dulu SEBELUM nyoba

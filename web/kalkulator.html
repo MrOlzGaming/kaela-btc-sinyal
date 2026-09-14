@@ -52,6 +52,22 @@
       <input type="number" id="modal" placeholder="misal: 500" min="1" step="any" data-i18n-ph="ph_modal">
     </div>
 
+    <div class="field">
+      <label data-i18n="label_strategi">Strategi (cara Kaela hitung modal aktifnya beda)</label>
+      <div class="mode-toggle">
+        <button type="button" id="strategi-sniper" class="active" data-i18n="btn_strategi_sniper">🎯 Sniper</button>
+        <button type="button" id="strategi-nyopet" data-i18n="btn_strategi_nyopet">🥷 Nyopet</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label data-i18n="label_arah">Arah Posisi</label>
+      <div class="mode-toggle">
+        <button type="button" id="arah-long" class="active" data-i18n="btn_arah_long">🟢 Long</button>
+        <button type="button" id="arah-short" data-i18n="btn_arah_short">🔴 Short</button>
+      </div>
+    </div>
+
     <div class="mode-toggle">
       <button type="button" id="mode-nyawa" class="active" data-i18n="btn_mode_nyawa">Pakai Nyawa (%)</button>
       <button type="button" id="mode-entry" data-i18n="btn_mode_entry">Pakai Entry + SL/Liq</button>
@@ -76,6 +92,7 @@
     <button class="btn" id="hitung" data-i18n="btn_hitung">Hitung</button>
 
     <div class="result hidden" id="result">
+      <div class="result-row hidden" id="r-modal-aktif-row"><span class="result-label" data-i18n="r_modal_aktif_label">Modal Aktif (dipakai kalkulator)</span><span class="result-value" id="r-modal-aktif">-</span></div>
       <div class="result-row"><span class="result-label" data-i18n="r_exposure_label">Exposure (dari Modal)</span><span class="result-value" id="r-exposure">-</span></div>
       <div class="result-row"><span class="result-label" data-i18n="r_leverage_label">🔥 Leverage</span><span class="result-value" id="r-leverage">-</span></div>
       <div class="result-row"><span class="result-label" data-i18n="r_nilai_label">🎯 Nilai Posisi</span><span class="result-value" id="r-nilai">-</span></div>
@@ -107,8 +124,13 @@
       if (marginPct > 10) return { level: 'perhatian', message: T_META('warn_perhatian').replace('{pct}', marginPct.toFixed(1)) };
       return null;
     }
-    function hitung(modal, nyawaPct) {
-      const exposure = getExposure(modal);
+    // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
+    // PERSIS sama logic `calculator.js` `hitung()` (yang beneran dipakai Kaela live) -- kalkulator
+    // ini 100% client-side (gak bisa require() modul Node), jadi rumusnya disalin manual di sini,
+    // WAJIB disamain kalau `calculator.js` server-side berubah lagi ke depan.
+    function hitung(modal, nyawaPct, direction) {
+      let exposure = getExposure(modal);
+      if (direction === 'short') exposure /= 2;
       const nilaiPosisi = modal * exposure;
       const leverage = Math.floor(100 / nyawaPct);
       const margin = nilaiPosisi / leverage;
@@ -116,9 +138,43 @@
       const warning = assessMarginRisk(marginPct);
       return { exposure, nilaiPosisi, leverage, margin, marginPct, warning };
     }
+    // `modalDivisor` (14 Sep 2026, permintaan Olan: "cara kaela input mode sniper nyopet size
+    // mereka beda") -- Sniper pakai saldo PENUH langsung (divisor 1), Nyopet cuma pakai 1/5 dari
+    // saldo aktif SEBELUM masuk kalkulator exposure (`MODAL_ACTIVE_FRACTION` di nyopetAutoTrader.js,
+    // "cheat exposure" biar lompat ke bracket lebih agresif tanpa modal beneran digedein). Angka
+    // 5 ini HARUS disamain manual kalau MODAL_ACTIVE_FRACTION di kode server berubah.
+    const NYOPET_MODAL_DIVISOR = 5;
     function fmt(n, digits = 2) {
       return '$' + n.toLocaleString('en-US', { maximumFractionDigits: digits });
     }
+
+    const strategiSniperBtn = document.getElementById('strategi-sniper');
+    const strategiNyopetBtn = document.getElementById('strategi-nyopet');
+    let strategi = 'sniper';
+    strategiSniperBtn.onclick = () => {
+      strategi = 'sniper';
+      strategiSniperBtn.classList.add('active');
+      strategiNyopetBtn.classList.remove('active');
+    };
+    strategiNyopetBtn.onclick = () => {
+      strategi = 'nyopet';
+      strategiNyopetBtn.classList.add('active');
+      strategiSniperBtn.classList.remove('active');
+    };
+
+    const arahLongBtn = document.getElementById('arah-long');
+    const arahShortBtn = document.getElementById('arah-short');
+    let arah = 'long';
+    arahLongBtn.onclick = () => {
+      arah = 'long';
+      arahLongBtn.classList.add('active');
+      arahShortBtn.classList.remove('active');
+    };
+    arahShortBtn.onclick = () => {
+      arah = 'short';
+      arahShortBtn.classList.add('active');
+      arahLongBtn.classList.remove('active');
+    };
 
     const modeNyawaBtn = document.getElementById('mode-nyawa');
     const modeEntryBtn = document.getElementById('mode-entry');
@@ -142,8 +198,12 @@
     };
 
     document.getElementById('hitung').onclick = () => {
-      const modal = parseFloat(document.getElementById('modal').value);
-      if (!modal || modal <= 0) { alert(T_META('alert_modal')); return; }
+      const modalInput = parseFloat(document.getElementById('modal').value);
+      if (!modalInput || modalInput <= 0) { alert(T_META('alert_modal')); return; }
+
+      // `modalAktif` (14 Sep 2026) -- Nyopet cuma pakai 1/5 dari modal yang diisi, Sniper pakai
+      // full. Ini yang MASUK ke kalkulator exposure, BUKAN modalInput mentah.
+      const modalAktif = strategi === 'nyopet' ? modalInput / NYOPET_MODAL_DIVISOR : modalInput;
 
       let nyawaPct;
       if (mode === 'nyawa') {
@@ -156,7 +216,14 @@
         nyawaPct = nyawaFromEntrySL(entry, sl);
       }
 
-      const r = hitung(modal, nyawaPct);
+      const r = hitung(modalAktif, nyawaPct, arah);
+      const modalAktifRow = document.getElementById('r-modal-aktif-row');
+      if (strategi === 'nyopet') {
+        document.getElementById('r-modal-aktif').textContent = fmt(modalAktif);
+        modalAktifRow.classList.remove('hidden');
+      } else {
+        modalAktifRow.classList.add('hidden');
+      }
       document.getElementById('r-exposure').textContent = r.exposure + '×';
       document.getElementById('r-leverage').textContent = r.leverage + '×';
       document.getElementById('r-nilai').textContent = fmt(r.nilaiPosisi);
@@ -184,6 +251,13 @@
     I18N_META.privacy_note = { id: '🔒 100% dihitung di HP/browser kamu sendiri. Tidak ada data (modal, hasil) yang dikirim atau disimpan kemana pun.', en: "🔒 100% calculated on your own phone/browser. No data (capital, results) is ever sent or stored anywhere." };
     I18N_META.label_modal = { id: 'Modal (USD)', en: 'Capital (USD)' };
     I18N_META.ph_modal = { id: 'misal: 500', en: 'e.g. 500' };
+    I18N_META.label_strategi = { id: 'Strategi (cara Kaela hitung modal aktifnya beda)', en: 'Strategy (Kaela calculates active capital differently per strategy)' };
+    I18N_META.btn_strategi_sniper = { id: '🎯 Sniper', en: '🎯 Sniper' };
+    I18N_META.btn_strategi_nyopet = { id: '🥷 Nyopet', en: '🥷 Nyopet' };
+    I18N_META.label_arah = { id: 'Arah Posisi', en: 'Position Direction' };
+    I18N_META.btn_arah_long = { id: '🟢 Long', en: '🟢 Long' };
+    I18N_META.btn_arah_short = { id: '🔴 Short', en: '🔴 Short' };
+    I18N_META.r_modal_aktif_label = { id: 'Modal Aktif (dipakai kalkulator)', en: 'Active Capital (used by calculator)' };
     I18N_META.btn_mode_nyawa = { id: 'Pakai Nyawa (%)', en: 'Use Life Margin (%)' };
     I18N_META.btn_mode_entry = { id: 'Pakai Entry + SL/Liq', en: 'Use Entry + SL/Liq' };
     I18N_META.label_nyawa = { id: 'Nyawa (jarak Entry ke Stop Loss/Area Liquidasi, %)', en: 'Life Margin (distance from Entry to Stop Loss/Liquidation, %)' };

@@ -471,7 +471,11 @@ function formatAutoValid({ order, ta, sentiment, onchain, assetCfg, liveExecutio
     order.confirmationNote,
     '',
 liveExecution
-      ? '🤖 Posisi RIIL di Binance Demo (duit virtual, bukan bayangan lagi) -- lihat status EKSEKUSI di atas.'
+      // (14 Sep 2026, short BTC window-bear sekarang BISA real -- lihat sniperAutoAnalysis.js)
+      // -- baris ini SEBELUMNYA hardcode "di Binance Demo", nyesatin begitu eksekusi beneran REAL.
+      // Mode Demo/Real yang BENERAN kejadian udah jelas disebut di `liveExecutionLines` tepat di
+      // atas baris ini -- gak perlu diulang/ditebak lagi di sini.
+      ? '🤖 Posisi RIIL (bukan bayangan lagi) -- lihat status EKSEKUSI (Demo/Real) di atas.'
       // Fallback kalau kill switch lagi OFF (maintenance) -- BUKAN "ajakan ikut manual" lagi (29
       // Agu 2026, standing rule: buka posisi Kaela sendiri UDAH jadi sinyalnya, gak ada ajakan).
       : '⏸️ Eksekusi live lagi dimatiin sementara (kill switch OFF, maintenance) -- sinyal ini TETAP tercatat lengkap, TIDAK ADA order ke Binance sampai dinyalain lagi.',

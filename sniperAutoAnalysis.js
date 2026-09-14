@@ -271,17 +271,23 @@ async function main() {
         if (shortSig && shortSig.direction === 'sell') {
           sniperShortForCompare = { entry: bearLivePrice, sl: shortSig.sl };
           // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah...
-          // window bear fokus short") -- KHUSUS isTestnet() true (demo) DAN BTC, Kaela AUTO-EKSEKUSI
-          // short ini (bukan cuma info) -- reuse pola exec+safety-net PERSIS sama kayak candidate
-          // long di bawah (setLeverage->entry->SL dgn jaring pengaman emergency-close kalau SL
-          // gagal nempel->TP), createOrder dicatat SAMA biar kekelola sniperOrderMonitor/
-          // sniperLiveMonitor normal. Real (isTestnet()===false) TETAP informational-only.
+          // window bear fokus short") -- KHUSUS BTC, Kaela AUTO-EKSEKUSI short ini (bukan cuma
+          // info) -- reuse pola exec+safety-net PERSIS sama kayak candidate long di bawah
+          // (setLeverage->entry->SL dgn jaring pengaman emergency-close kalau SL gagal nempel->TP),
+          // createOrder dicatat SAMA biar kekelola sniperOrderMonitor/sniperLiveMonitor normal.
           // UPDATE 13 Sep 2026 -- backtest window-gated: BTC membaik, Emas JUSTRU lebih jelek
           // (SMA200 whipsaw 75x tutup-paksa vs 3x di BTC, finalCapital $3.139 vs baseline $11.469).
           // Olan: "emas long only btc boleh long short.. tapi untuk emas, tetep di sinyal" --
-          // demo Emas DICABUT dari auto-exec (assetKey==='btc' ditambah ke syarat), tapi TETAP
-          // masuk cabang `else` di bawah (sinyal informasional), gak diam total.
-          if (isTestnet() && assetKey === 'btc' && !nearWindowFlip) {
+          // Emas DICABUT dari auto-exec (assetKey==='btc' ditambah ke syarat), tapi TETAP masuk
+          // cabang `else` di bawah (sinyal informasional), gak diam total.
+          // 🆕 FIX 14 Sep 2026 (Olan: "aku izinkan Kaela trading short juga asalkan tahu windows-nya
+          // ... itu uang eksperimen kita bersama" -- alasannya sibuk, gak sempat eksekusi manual)
+          // -- gerbang `isTestnet()` DICABUT dari syarat: SEBELUMNYA short BTC ini CUMA auto-exec
+          // pas testnet (demo), begitu `isTestnet()` global dimatiin (real, nunggu modal "bulan
+          // depan" -- lihat live-trading-config.json) short ini bakal TETAP auto-eksekusi, bukan
+          // turun ke info-only lagi. `liveExecution.testnet` di bawah SEKARANG ikutin `isTestnet()`
+          // ASLI (bukan hardcode true) biar pesan WA jujur bilang Demo/Real yang beneran kejadian.
+          if (assetKey === 'btc' && !nearWindowFlip) {
             const availableBalance = Math.max(0, totalBalance - usedMargin);
             const riskDistance = Math.abs(bearLivePrice - shortSig.sl);
             const nyawaPct = riskDistance / bearLivePrice * 100;
@@ -294,11 +300,11 @@ async function main() {
                 const isFvgShort = shortSig.patternType && shortSig.patternType.startsWith('fvg');
                 const created = createOrder({
                   asset: assetKey, mode: isFvgShort ? 'fvg' : 'sniper', direction: 'sell', strategyType: 'breakout', triggerPrice: bearLivePrice,
-                  confirmationNote: `SHORT window bear -- ${shortSig.patternType} (nyawa ${nyawaPct.toFixed(1)}%). Demo-only (isTestnet), lihat GANTUNGAN STRATEGI 12 Sep 2026.`,
+                  confirmationNote: `SHORT window bear -- ${shortSig.patternType} (nyawa ${nyawaPct.toFixed(1)}%). Lihat GANTUNGAN STRATEGI 12 Sep 2026.`,
                   tpReasoning: `Target tahap 1 (beli-balik separuh): ${PARTIAL_RR}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}.`,
                   tp: partialTp, sl: shortSig.sl, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
                   patternType: shortSig.patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
-                  notes: `Sinyal SHORT window bear, DEMO ONLY (Real gak auto-eksekusi short -- lihat pesan info terpisah).`,
+                  notes: `Sinyal SHORT window bear, BTC DOANG (Emas tetap info-only -- lihat pesan info terpisah).`,
                 }, now);
                 const opened = updateOrder(created.id, { status: 'floating', entryPrice: bearLivePrice, triggeredAt: now.toISOString() });
                 usedMargin += calc.margin;
@@ -318,20 +324,23 @@ async function main() {
                   try {
                     await exec.placeStopLoss({ symbol: execSymbol, direction: 'sell', stopPrice: shortSig.sl, quantity: entryFilledQty });
                   } catch (slError) {
-                    console.log(`[SniperAutoAnalysis] SHORT demo SL GAGAL nempel (${slError.message}) -- tutup PAKSA demi keamanan.`);
+                    console.log(`[SniperAutoAnalysis] SHORT SL GAGAL nempel (${slError.message}) -- tutup PAKSA demi keamanan.`);
                     await exec.emergencyCloseMarket({ symbol: execSymbol, direction: 'sell', quantity: entryFilledQty });
                     throw new Error(`Entry short masuk tapi SL gagal nempel (${slError.message}) -- UDAH DITUTUP PAKSA otomatis.`);
                   }
                   await exec.placeTakeProfit({ symbol: execSymbol, direction: 'sell', tpPrice: partialTp, quantity: entryFilledQty });
-                  liveExecution = { ok: true, filledQty: entryFilledQty, testnet: true, exchange: assetCfg.exchange };
-                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT DEMO sukses (window bear) -- qty ${entryFilledQty}.`);
+                  // `testnet` (14 Sep 2026) -- SEBELUMNYA hardcode `true` (waktu itu emang CUMA
+                  // bisa demo). SEKARANG ikutin `isTestnet()` ASLI biar pesan WA jujur nyebut
+                  // Demo/Real yang beneran kejadian (lihat liveExecutionLines, sniperOrderLog.js).
+                  liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet(), exchange: assetCfg.exchange };
+                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT sukses (window bear, ${isTestnet() ? 'demo' : 'REAL'}) -- qty ${entryFilledQty}.`);
                 } catch (e) {
-                  liveExecution = { ok: false, error: e.message, testnet: true, exchange: assetCfg.exchange };
-                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT DEMO gagal (shadow tracking tetap jalan): ${e.message}`);
+                  liveExecution = { ok: false, error: e.message, testnet: isTestnet(), exchange: assetCfg.exchange };
+                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT gagal (${isTestnet() ? 'demo' : 'REAL'}, shadow tracking tetap jalan): ${e.message}`);
                 }
                 const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
                 console.log(msg + '\n');
-                await sendWhatsAppRespectMute(msg, `sinyal SHORT DEMO window bear (${assetCfg.label})`, false, true);
+                await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, true);
                 shortSignalSent = true;
               }
             }

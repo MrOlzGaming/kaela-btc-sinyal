@@ -1,4 +1,4 @@
-// Relay otomatis temuan riset Kaela cloud researcher ke WA Olan (31 Agu 2026, ide Olan
+// Relay otomatis temuan riset Kaela cloud researcher ke grup Wibowo Hedgefund (31 Agu 2026, ide Olan
 // "otomatisasi apa lagi" -- nutup celah manual: sebelumnya Kaela lokal harus DICEK MANUAL tiap
 // kali mau tau progress riset cloud, sekarang siklus lokal/VPS yang ngecek sendiri tiap 15 menit.
 //
@@ -12,11 +12,14 @@
 // cycle utama. Dipanggil run-local-executor.ps1/run-vultr-executor.sh di ujung siklus.
 const fs = require('fs');
 const path = require('path');
-const kaela = require('./kaelaProTraderClient');
+// 15 Sep 2026 (permintaan eksplisit Olan di chat) -- pindah dari DM pribadi (kaela.notifyMember
+// ke MASTER_NOMOR) ke grup "Wibowo Hedgefund" langsung, pakai SATU titik resmi kirim ke grup itu
+// (wibowoNotify.js -- ikut cek toggle Silent Trade + antrean retry yang udah ada, JANGAN kirim
+// lewat fonnte.js polos di sini biar gak ada 2 jalur beda buat 1 grup).
+const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 
 const LOG_PATH = path.join(__dirname, 'RESEARCH-LOG.md');
 const STATE_PATH = path.join(__dirname, 'research-log-state.json');
-const MASTER_NOMOR = '6281299303888';
 
 function loadState() {
   try { return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')); } catch { return { lastReportedHeading: null }; }
@@ -71,11 +74,19 @@ async function main() {
     `\n\nDetail lengkap (breakdown per tahun, split-era, sensitivitas parameter) ada di RESEARCH-LOG.md di repo.` +
     `\n\n— Kaela\n   (laporan: 🔬 Prism · Data QA)`;
 
-  const r = await kaela.notifyMember(MASTER_NOMOR, msg);
-  if (r.ok) {
-    console.log('[ReportResearchFindings] Temuan baru berhasil dikirim ke WA Olan.');
-    state.lastReportedHeading = entry.heading;
-    saveState(state);
+  const r = await sendWhatsAppToWibowo(msg);
+  if (r && (r.ok || r.skipped)) {
+    // `skipped` (Silent Trade lagi OFF disengaja) TETAP dianggap "berhasil diproses" -- BUKAN
+    // gagal kirim, cuma sengaja senyap (sama semantik kayak posisi buka/tutup). Kalau checkFailed
+    // (GAS hiccup), wibowoNotify.js SENDIRI yang udah antre pesan ini -- jangan majuin state di
+    // sini, biar next cycle nyoba ngirim lagi (bukan ke-skip selamanya).
+    if (!r.checkFailed) {
+      console.log(r.skipped ? '[ReportResearchFindings] Temuan baru di-skip (Silent Trade OFF, disengaja).' : '[ReportResearchFindings] Temuan baru berhasil dikirim ke grup Wibowo Hedgefund.');
+      state.lastReportedHeading = entry.heading;
+      saveState(state);
+    } else {
+      console.log('[ReportResearchFindings] GAS gagal cek toggle -- pesan diantre wibowoNotify.js, state belum diupdate.');
+    }
   } else {
     console.log('[ReportResearchFindings] Gagal kirim WA (coba lagi siklus berikutnya, state belum diupdate).');
   }

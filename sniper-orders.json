@@ -1,6 +1,6 @@
 {
-  "balance": 4497.97596349,
-  "balanceUpdatedAt": "2026-09-14T00:15:06.713Z",
+  "balance": 3984.61076398,
+  "balanceUpdatedAt": "2026-09-14T00:30:06.617Z",
   "orders": [
     {
       "id": "mtz2dj8c3djm",
@@ -47,7 +47,7 @@
     {
       "id": "mu0hujmh95p6",
       "signalId": "2026091401",
-      "status": "floating",
+      "status": "cancelled",
       "asset": "btc",
       "mode": "sniper",
       "gapCreatedTime": null,
@@ -75,10 +75,16 @@
       "silentTest": false,
       "createdAt": "2026-09-14T00:17:38.777Z",
       "triggeredAt": "2026-09-14T00:17:38.777Z",
-      "closedAt": null,
-      "closeReason": null,
+      "closedAt": "2026-09-14T00:30:07.003Z",
+      "closeReason": "LIVE_EXEC_FAILED",
       "pnlUsd": null,
-      "pnlPct": null
+      "pnlPct": null,
+      "liveExecutedAt": "2026-09-14T00:30:07.003Z",
+      "liveExecution": {
+        "ok": false,
+        "error": "Binance API error (HTTP 400): {\"code\":-4067,\"msg\":\"Position side cannot be changed if there exists open orders.\"}",
+        "testnet": true
+      }
     }
   ]
 }

@@ -324,3 +324,16 @@ buat SEMUA riset selanjutnya di file ini.
 - Filter volatilitas (skip entry kalau ATR/volatility terlalu rendah/tinggi dari rata-rata)
 - Time-of-day / day-of-week filter untuk Nyopet 4H (apa ada sesi tertentu yang secara
   konsisten lebih/kurang reliable)
+- **[PRIORITAS, 15 Sep 2026] ADX (Average Directional Index) sbg gerbang trend-strength buat
+  window Emas** -- lanjutan riset whipsaw+buffer band (lihat "Temuan Terbaru" 15 Sep). Beda dari
+  filter volatilitas di atas (ATR ngukur BESARAN gerakan, ADX ngukur KEKUATAN/ARAH tren -- market
+  bisa volatile TAPI tetap choppy/gak ke mana-mana). Teknik standar trader profesional
+  (managed futures/CTA) buat bedain regime trending vs ranging -- ADX rendah = skip entry SAMA
+  SEKALI (regardless arah), baru trading begitu ADX naik. Hipotesis: gabungin ADX-gate + buffer
+  band (udah tervalidasi turunin whipsaw) bisa benerin Era1 (2020-2023) yang masih rugi di semua
+  konfigurasi buffer-doang. Alternatif juga dicatat: Donchian Channel breakout (sistem "Turtle
+  Traders") -- nunggu breakout N-hari tinggi/rendah drpd crossover SMA, secara alami lebih tahan
+  whipsaw. **Catatan penting (biar ekspektasi realistis)**: dana trend-following profesional
+  BESAR (Man AHL, Winton dkk) TERBUKTI juga ngalamin tahun jelek pas market choppy -- solusi
+  industri BUKAN "menyelesaikan sempurna" di 1 aset, tapi DIVERSIFIKASI banyak pasar sekaligus.
+  Jangan berharap ADX/Donchian bikin Era1 untung BESAR, realistisnya cuma ngurangin kerugian.

@@ -247,6 +247,10 @@ async function main() {
       // (flag shortSignalSent), wording-nya disesuaikan -- yang "dimatikan" itu cuma LONG-nya,
       // bukan "gak ada sinyal apapun".
       let shortSignalSent = false;
+      // (14 Sep 2026, lihat catatan `convergenceNote` di sniperOrderLog.js) -- nampung entry/SL
+      // hasil scan Sniper HARIAN di sini, biar scan Nyopet 4H di bawah bisa cek "sepakat gak
+      // sama Sniper" SEBELUM ngirim pesannya sendiri. null = Sniper gak nemu apa2 giliran ini.
+      let sniperShortForCompare = null;
       // (12 Sep 2026, kebijakan baru Olan -- lihat project-kaela-btc-sinyal.md "GANTUNGAN STRATEGI")
       // -- window BEAR SEKARANG bukan cuma "senyap total": Kaela tetap SCAN pola short (bear
       // flag/rising wedge, allowShort:true) SEBAGAI SINYAL doang -- gak pernah auto-eksekusi
@@ -265,6 +269,7 @@ async function main() {
         const shortSig = detectPatternSignal(bearDaily, bearDaily.length - 1, { allowShort: true })
           || detectFvgSignal(bearDaily, bearDaily.length - 1, { allowShort: true });
         if (shortSig && shortSig.direction === 'sell') {
+          sniperShortForCompare = { entry: bearLivePrice, sl: shortSig.sl };
           // (13 Sep 2026, permintaan Olan: "untuk demo Kaela diperbolehkan trading dua arah...
           // window bear fokus short") -- KHUSUS isTestnet() true (demo) DAN BTC, Kaela AUTO-EKSEKUSI
           // short ini (bukan cuma info) -- reuse pola exec+safety-net PERSIS sama kayak candidate
@@ -354,11 +359,24 @@ async function main() {
         const nyopetShortSig = detectPatternSignal(nyopetCandles, nyopetCandles.length - 1, { ...PATTERN_PARAMS_4H, allowShort: true })
           || detectFvgSignal(nyopetCandles, nyopetCandles.length - 1, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: true });
         if (nyopetShortSig && nyopetShortSig.direction === 'sell') {
+          const nyopetEntry = nyopetCandles[nyopetCandles.length - 1].close;
+          // (14 Sep 2026, kritik Olan pagi ini) -- cek apa scan Nyopet 4H ini SEPAKAT sama scan
+          // Sniper harian di atas (entry deket, toleransi 1% -- angka bulat, bukan hasil tuning).
+          // Ambang 1% sengaja LONGGAR dikit dari "identik persis" (kejadian pagi ini malah PAS
+          // sama ke sen) -- tujuannya nangkep "2 timeframe baca level yang sama", bukan cuma
+          // kebetulan koinsiden sempurna doang.
+          let convergenceNote = null;
+          if (sniperShortForCompare) {
+            const entryDiffPct = Math.abs(nyopetEntry - sniperShortForCompare.entry) / sniperShortForCompare.entry * 100;
+            if (entryDiffPct <= 1) {
+              convergenceNote = '✅ Sepakat sama sinyal Sniper (harian) di atas -- 2 timeframe beda (4H vs harian) baca level yang mirip, bobot konfirmasinya lebih kuat drpd biasanya.';
+            }
+          }
           const msg = formatBearShortSignal({
             assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
-            entryPrice: nyopetCandles[nyopetCandles.length - 1].close, sl: nyopetShortSig.sl, patternType: nyopetShortSig.patternType,
+            entryPrice: nyopetEntry, sl: nyopetShortSig.sl, patternType: nyopetShortSig.patternType,
             gapTop: nyopetShortSig.gapTop, gapBottom: nyopetShortSig.gapBottom,
-            badge: '🥷 NYOPET · Kaela',
+            badge: '🥷 NYOPET · Kaela', convergenceNote,
           });
           console.log(msg + '\n');
           await sendWhatsApp(msg);

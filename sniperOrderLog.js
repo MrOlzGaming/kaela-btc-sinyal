@@ -72,7 +72,13 @@ function tradeMetaLine(order, idrRate) {
 // price area yang ditunggu buat lakukan short") -- CUMA keisi kalau patternType FVG (fvg_bounce_bear,
 // lihat fvgDetector.js) -- pola chart (flag/wedge) TETAP tampil harga tunggal kayak biasa, karena
 // breakout emang entry-nya PAS di harga sekarang, bukan nunggu zona (beda konsep dari FVG).
-function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, gapTop, gapBottom, coinglassLink = COINGLASS_LINK, badge = '🎯 SNIPER · Kaela' }) {
+// `convergenceNote` (14 Sep 2026, kritik Olan: pagi ini sinyal Sniper-harian & Nyopet-4H
+// BTC keluar angka PERSIS SAMA -- entry+SL identik -- kebaca kayak 2 pesan dobel padahal
+// aslinya 2 scan timeframe independen yang KEBETULAN sepakat. Beda dari kasus normal (XAU
+// pagi ini: 2 zona short BEDA angka, itu emang wajarnya). Daripada bingung dikira spam,
+// tandain eksplisit begitu 2 scan sepakat (lihat cek `entryDiffPct` di sniperAutoAnalysis.js)
+// -- justru bobot konfirmasinya lebih kuat kalau 2 timeframe beda baca level yang sama.
+function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, patternType, gapTop, gapBottom, coinglassLink = COINGLASS_LINK, badge = '🎯 SNIPER · Kaela', convergenceNote = null }) {
   const rr = (sl !== null && sl !== undefined) ? Math.abs((entryPrice - sl) / entryPrice * 100) : null;
   const isFvgZone = gapTop !== undefined && gapBottom !== undefined;
   const lines = [
@@ -89,6 +95,7 @@ function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, pattern
     lines.push(`🔴 Potensi entry short @ ${fmt(entryPrice)}`);
   }
   if (rr !== null) lines.push(`⚠️ Invalidasi/SL referensi @ ${fmt(sl)} (jarak ~${rr.toFixed(1)}%)`);
+  if (convergenceNote) lines.push('', convergenceNote);
   lines.push(
     '',
     '⛔ INI SINYAL DOANG -- Kaela GAK auto-eksekusi short. Timing & eksekusi 100% di tangan MASING-MASING (cek liq heatmap + faktor lain dulu, posisi mini disarankan).',

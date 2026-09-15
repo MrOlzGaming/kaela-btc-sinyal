@@ -1948,5 +1948,15 @@
     "type": "whale-daily",
     "date": "2026-09-15T16:01:12.693Z",
     "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-09-16\n7 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 9.373,59 BTC berpindah (~$717,665,552 / ~Rp12.674.414.957.940)\nTerbesar: 2.465,33 BTC dalam 1 transaksi.\n\n🔴 MASUK exchange: 530,44 BTC (1 transaksi) -- potensi tekanan JUAL (Kraken).\n⚪ Gak teridentifikasi: 6 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-15T23:15:49.540Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-09-16\nHarga sekarang: $75,898.84 (📉 -1.2% dari kemarin)\n⏳ Halving berikutnya: 576 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.49 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.89 (Normal)\n\n💵 DXY: 99.6 (MENGUAT)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (0 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.33 (normal)\n🛢️ Minyak WTI: $97.3/barel (NAIK TAJAM)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🐋 Whale netflow (24 jam): 🔴 530 BTC masuk exchange\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 5.9 poin) -- top 71% long vs global 65% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-15T23:15:49.540Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-09-16\nHarga sekarang: $4,289.36/oz (≈Rp75.752.735) atau $137.91/gram (≈Rp2.435.507) (📉 -1.1% dari kemarin)\n💵 DXY: 99.6 (MENGUAT)\n🏦 Fed Funds Rate: 3.63% -- DITAHAN (0 bps / 90 hari)\n📉 Real Yield 10Y: 2.60% (STABIL)\n📊 Yield Curve 10Y-2Y: 0.33 (normal)\n🛢️ Minyak WTI: $97.3/barel (NAIK TAJAM)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

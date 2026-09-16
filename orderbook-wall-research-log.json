@@ -10042,5 +10042,86 @@
     "qty": 13.297,
     "notionalUsd": 1003641.6036,
     "distPct": 0.08307239231916339
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "BID",
+    "price": 76064.6,
+    "qty": 7.529,
+    "notionalUsd": 572690.3734,
+    "distPct": -0.0000657335568997668
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "BID",
+    "price": 76000.8,
+    "qty": 7.586,
+    "notionalUsd": 576542.0688,
+    "distPct": -0.08394175218053494
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76095.1,
+    "qty": 8.368,
+    "notionalUsd": 636763.7968000001,
+    "distPct": 0.04003173616129391
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76099.2,
+    "qty": 10.48,
+    "notionalUsd": 797519.616,
+    "distPct": 0.0454218878283183
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76100,
+    "qty": 64.166,
+    "notionalUsd": 4883032.6,
+    "distPct": 0.04647362473896327
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76112,
+    "qty": 10.068,
+    "notionalUsd": 766295.6159999999,
+    "distPct": 0.06224967839858045
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76112.1,
+    "qty": 11.197,
+    "notionalUsd": 852227.1837,
+    "distPct": 0.062381145512418246
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76114.8,
+    "qty": 7.876,
+    "notionalUsd": 599480.1648,
+    "distPct": 0.06593075758582828
+  },
+  {
+    "timestamp": "2026-09-16T19:46:17.969Z",
+    "midPrice": 76064.65,
+    "side": "ASK",
+    "price": 76123,
+    "qty": 11.472,
+    "notionalUsd": 873283.056,
+    "distPct": 0.0767110609198962
   }
 ]

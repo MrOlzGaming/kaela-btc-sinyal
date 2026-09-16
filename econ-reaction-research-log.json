@@ -1,0 +1,80 @@
+[
+  {
+    "recordedAt": "2026-09-16T18:05:02.784Z",
+    "key": "2026-09-16T14:00:00-04:00__Federal Funds Rate",
+    "title": "Federal Funds Rate",
+    "timeMs": 1789581600000,
+    "actual": "4",
+    "forecast": "4.00%",
+    "previous": "3.75%",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.005,
+    "btcBefore": 75429.6,
+    "btcAfter": 75817.5,
+    "btcReactionPct": 0.5143,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000637348920101,
+      "openInterest": 28010.04980000015,
+      "longAccountPct": 63.77,
+      "shortAccountPct": 36.23,
+      "fearGreed": 51,
+      "binanceTopLongPct": 70,
+      "binanceGlobalLongPct": 61.82,
+      "topVsGlobalGap": 8.18
+    }
+  },
+  {
+    "recordedAt": "2026-09-16T18:05:15.824Z",
+    "key": "2026-09-16T14:00:00-04:00__FOMC Economic Projections",
+    "title": "FOMC Economic Projections",
+    "timeMs": 1789581600000,
+    "actual": "4",
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.005,
+    "btcBefore": 75422.2,
+    "btcAfter": 75817.5,
+    "btcReactionPct": 0.5241,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000637348920101,
+      "openInterest": 28010.04980000015,
+      "longAccountPct": 63.77,
+      "shortAccountPct": 36.23,
+      "fearGreed": 51,
+      "binanceTopLongPct": 70,
+      "binanceGlobalLongPct": 61.82,
+      "topVsGlobalGap": 8.18
+    }
+  },
+  {
+    "recordedAt": "2026-09-16T18:05:23.737Z",
+    "key": "2026-09-16T14:00:00-04:00__FOMC Statement",
+    "title": "FOMC Statement",
+    "timeMs": 1789581600000,
+    "actual": "4",
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.007,
+    "btcBefore": 75429.6,
+    "btcAfter": 75742.1,
+    "btcReactionPct": 0.4143,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000637348920101,
+      "openInterest": 28010.20840000015,
+      "longAccountPct": 63.77,
+      "shortAccountPct": 36.23,
+      "fearGreed": 51,
+      "binanceTopLongPct": 70,
+      "binanceGlobalLongPct": 61.82,
+      "topVsGlobalGap": 8.18
+    }
+  }
+]

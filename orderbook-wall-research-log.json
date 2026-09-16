@@ -8134,5 +8134,86 @@
     "qty": 9.002,
     "notionalUsd": 681762.8692000001,
     "distPct": 0.06242786938636377
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "BID",
+    "price": 76019.5,
+    "qty": 11.62,
+    "notionalUsd": 883346.59,
+    "distPct": -0.00006577255456380679
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "BID",
+    "price": 75963.6,
+    "qty": 8.164,
+    "notionalUsd": 620166.8304,
+    "distPct": -0.07359948855261192
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "BID",
+    "price": 75955.3,
+    "qty": 10.759,
+    "notionalUsd": 817203.0727,
+    "distPct": -0.08451773260957214
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "ASK",
+    "price": 76041.1,
+    "qty": 7.185,
+    "notionalUsd": 546355.3035,
+    "distPct": 0.028347971015354485
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "ASK",
+    "price": 76043,
+    "qty": 26.341,
+    "notionalUsd": 2003048.6630000002,
+    "distPct": 0.030847328088626003
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "ASK",
+    "price": 76060,
+    "qty": 7.33,
+    "notionalUsd": 557519.8,
+    "distPct": 0.053209996639018625
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "ASK",
+    "price": 76072.6,
+    "qty": 8.817,
+    "notionalUsd": 670732.1142000001,
+    "distPct": 0.06978468038814083
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "ASK",
+    "price": 76073.3,
+    "qty": 19.722,
+    "notionalUsd": 1500317.6226000001,
+    "distPct": 0.07070549615197669
+  },
+  {
+    "timestamp": "2026-09-16T02:31:34.423Z",
+    "midPrice": 76019.55,
+    "side": "ASK",
+    "price": 76074,
+    "qty": 26.293,
+    "notionalUsd": 2000213.682,
+    "distPct": 0.07162631191581256
   }
 ]

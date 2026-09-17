@@ -73,9 +73,10 @@
     "dateKey": "2026-09-18",
     "poolCounts": {
       "OCEAN": 1,
-      "unidentified": 2,
-      "Foundry USA": 2,
-      "F2Pool": 1
+      "unidentified": 4,
+      "Foundry USA": 3,
+      "F2Pool": 1,
+      "SpiderPool": 1
     }
   }
 ]

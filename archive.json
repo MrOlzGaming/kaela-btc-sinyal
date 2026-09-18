@@ -2083,5 +2083,15 @@
     "type": "anomaly",
     "date": "2026-09-18T22:45:52.255Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n📉 Yield Curve 10Y-2Y: 0.25 -- JAUH DI BAWAH kebiasaan historis kita (median 0.41, z-score -2.6)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n📉 Yield Curve 10Y-2Y\nIni ngukur bunga obligasi Amerika jangka PANJANG (10 tahun) dibanding jangka PENDEK (2 tahun). Lebih sempit/negatif dari biasanya -- histori PANJANG nunjukin ini sering jadi \"alarm dini\" resesi 1-2 tahun ke depan. Bukan berarti BTC langsung jatuh SEKARANG, tapi ini radar makro besar yang dipantau serius analis institusional."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-18T23:15:53.440Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-09-19\nHarga sekarang: $81,195.38 (📈 +6.5% dari kemarin)\n⏳ Halving berikutnya: 573 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.46 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.06 (Normal)\n\n💵 DXY: 100.2 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.25 (normal)\n🛢️ Minyak WTI: $107.0/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 18.6 poin) -- top 66% long vs global 48% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-18T23:15:53.440Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-09-19\nHarga sekarang: $4,373.67/oz (≈Rp77.591.404) atau $140.62/gram (≈Rp2.494.622) (📈 +2.3% dari kemarin)\n💵 DXY: 100.2 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.61% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.25 (normal)\n🛢️ Minyak WTI: $107.0/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

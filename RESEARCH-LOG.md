@@ -47,6 +47,47 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-19 — Money Management v2 (compound AKUMULATIF+TAMBAHAN): flaw INTI masih SAMA, cuma gejalanya beda
+**Ide:** revisi Olan atas temuan v1 (di bawah) -- Kalkulator Exposure WAJIB TETAP dipanggil PENUH
+tiap trade (basis dari Trading Capital, gak pernah di-skip/gantiin), Active Compound cuma
+TAMBAHAN (`+`) di atas nilaiPosisi hasilnya -- BUKAN gantiin total kayak v1. Compound juga jadi
+AKUMULATIF (`compound += profit/2` tiap menang beruntun), bukan REPLACE (`compound = profit/2`).
+Klarifikasi dikonfirmasi via AskUserQuestion 2 pertanyaan (ember Secure masih ada terpisah;
+compound numpuk bukan ganti) sebelum ubah kode -- ground-truth test baru di `regressionTests.js`
+match persis contoh angka klarifikasi Olan ("Trade1 profit $10->compound 5, Trade2 profit
+$12->compound 5+6=11").
+
+**Metode:** `secureCompoundLedger.js` `computeBetSizing` diubah dari override jadi ADDITIVE
+(`nilaiPosisi = hitung(TC).nilaiPosisi + activeCompound`), `applyTradeResult` WIN branch dari
+`activeCompound: half` jadi `activeCompound: state.activeCompound + half`. LOSS branch (deduction
+TC pakai bet fresh dari TC) TIDAK diubah -- Olan cuma minta revisi sisi WIN, sisi LOSS emang gak
+disinggung ulang. Backtest yang SAMA (`backtest/secureCompoundBacktest.js`) dijalanin ulang.
+
+**Hasil: flaw inti TIDAK terselesaikan.** Nyopet BTC & Emas TETAP tergerus Trading Capital sampai
+$0.00 (persis kayak v1) -- final wealth Nyopet BTC $144 (v1: $55) vs baseline $7.446, Nyopet Emas
+$7 (v1: $6) vs baseline $257. Sniper membaik SEDIKIT di sisi Secure (BTC: Secure $5.529 vs $3.380
+v1, total $6.522 vs $4.372 v1) krn compound yang numpuk bikin kemenangan beruntun lebih besar --
+TAPI masih JAUH di bawah baseline compounding penuh ($26.504).
+
+**Kenapa gak kefix**: akar masalah SEBENARNYA (dikonfirmasi lewat kode, BUKAN dugaan) bukan soal
+"compound gantiin vs nambahin" -- itu cuma ngaruh ke seberapa BESAR kemenangan beruntun. Akar
+masalahnya di SISI LOSS, yang TIDAK diubah v2: tiap LOSS, Trading Capital SELALU dipotong "bet
+fresh" (dihitung ulang dari TC saat itu), dan TIDAK ADA mekanisme apapun yang NGISI ULANG Trading
+Capital dari kemenangan (semua profit lari ke Secure/Compound, gak pernah balik ke TC). Ini
+peluruhan satu-arah (`TC_baru = TC_lama - bet_fresh` tiap kalah, `TC` diam tiap menang) --
+matematis PASTI tergerus ke 0 given cukup banyak trade dengan loss-rate berapapun, REGARDLESS
+gimana compound-nya dirancang di sisi WIN. Sniper (47-50 trade) belum sempat separah itu karena
+sample kecil; Nyopet (138-444 trade) udah lewat ambang itu.
+**Kesimpulan:** Revisi v2 valid dari sisi implementasi (match spec baru Olan, tes ground-truth
+lolos), TAPI TIDAK memperbaiki masalah yang bikin v1 gagal -- fix yang beneran dibutuhkan ada di
+SISI LOSS/pengisian-ulang TC, bukan sisi WIN/compound. PR paling langsung: sebagian kecil profit
+WIN (bukan cuma yang ke Secure/Compound) ikut nambahin Trading Capital juga, biar TC bisa
+"bernapas" lagi dari kemenangan -- belum dites, nunggu arahan Olan.
+**Status implementasi:** TIDAK diterapkan live. Kode v2 tersimpan, siap diubah lagi kalau Olan
+mau coba mekanisme pengisian-ulang TC.
+
+---
+
 ### 2026-09-18 — Money Management "Secure/Compound + Target 2x": FLAW STRUKTURAL buat strategi frekuensi tinggi (Nyopet), MIXED buat Sniper
 **Ide:** permintaan Olan -- lapisan money-management BARU di atas sistem trading Sniper/Nyopet
 yang ada (sinyal/entry/exit TIDAK disentuh sama sekali): tiap WIN, profit dibagi 50% SECURE

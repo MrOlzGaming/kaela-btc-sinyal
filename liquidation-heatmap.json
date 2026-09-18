@@ -178,51 +178,51 @@
     },
     "80250": {
       "longLiquidatedUsd": 2538939.8631000007,
-      "shortLiquidatedUsd": 75588.26799999998,
+      "shortLiquidatedUsd": 77838.65599999999,
       "longCount": 144,
-      "shortCount": 24,
+      "shortCount": 25,
       "firstSeen": 1789739236355,
-      "lastSeen": 1789746338966
+      "lastSeen": 1789752226392
     },
     "80500": {
       "longLiquidatedUsd": 3581902.9241999993,
-      "shortLiquidatedUsd": 142822.0702,
+      "shortLiquidatedUsd": 170671.77109999998,
       "longCount": 210,
-      "shortCount": 13,
+      "shortCount": 22,
       "firstSeen": 1789739464973,
-      "lastSeen": 1789746258403
+      "lastSeen": 1789752213912
     },
     "80750": {
-      "longLiquidatedUsd": 2186680.6640999992,
-      "shortLiquidatedUsd": 0,
-      "longCount": 169,
-      "shortCount": 0,
+      "longLiquidatedUsd": 2190391.631299999,
+      "shortLiquidatedUsd": 70877.8093,
+      "longCount": 170,
+      "shortCount": 4,
       "firstSeen": 1789739479945,
-      "lastSeen": 1789742413889
+      "lastSeen": 1789750470953
     },
     "81000": {
-      "longLiquidatedUsd": 1275953.4838,
+      "longLiquidatedUsd": 1304862.2242,
       "shortLiquidatedUsd": 0,
-      "longCount": 173,
+      "longCount": 179,
       "shortCount": 0,
       "firstSeen": 1789741153079,
-      "lastSeen": 1789747625611
+      "lastSeen": 1789752620836
     },
     "81250": {
-      "longLiquidatedUsd": 2926067.385500002,
+      "longLiquidatedUsd": 3225210.306000002,
       "shortLiquidatedUsd": 0,
-      "longCount": 222,
+      "longCount": 228,
       "shortCount": 0,
       "firstSeen": 1789741341930,
-      "lastSeen": 1789749106899
+      "lastSeen": 1789749166603
     },
     "81500": {
-      "longLiquidatedUsd": 22542.6715,
+      "longLiquidatedUsd": 1014200.7003999999,
       "shortLiquidatedUsd": 0,
-      "longCount": 6,
+      "longCount": 77,
       "shortCount": 0,
       "firstSeen": 1789745109307,
-      "lastSeen": 1789745116390
+      "lastSeen": 1789749277013
     }
   }
 }

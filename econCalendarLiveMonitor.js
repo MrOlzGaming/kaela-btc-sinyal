@@ -272,39 +272,29 @@ async function main() {
       continue;
     }
 
-    // ── 2) HASIL -- event 5..15 menit LALU -- kesimpulan info (DXY) + EKSEKUSI scalp (reaksi BTC) ──
-    // ⚠️ BUG BAHAYA ketemu+fix 6 Sep 2026 (riset "logika dapetin hasil ekonomi", permintaan Olan) --
-    // gate LAMA (`hasResultData = isQualitative || !!e.actual`) diem-diem MATIIN trading buat SEMUA
-    // event NUMERIK (NFP/CPI/dst) SEJAK AWAL: feed gratis nfs.faireconomy.media/ff_calendar_thisweek.json
-    // STRUKTURAL gak pernah ngisi field `actual` (dikonfirmasi riset web -- bukan lag/bug jaringan,
-    // itu batasan feed "fast weekly" gratisnya sendiri, actual cuma ada di endpoint custom-range/
-    // scraping berbayar). Akibatnya `hasResultData` SELALU false buat event numerik -> blok
-    // `if` di bawah gak PERNAH jalan -> scalp econ_reaction gak pernah kebuka buat NFP/CPI, cuma
-    // buat event kualitatif (FOMC Statement, aboveForecast===null). Sinyal TRADING (reaksi harga
-    // BTC sendiri) SAMA SEKALI gak butuh `e.actual` -- concludeHawkishDovish() (econCalendarLog.js)
-    // JUGA udah didesain degradasi jujur kalau actual kosong (fallback ke reaksi DXY doang, atau
-    // "gak bisa disimpulkan" -- BUKAN error/skip). Fix: gate `hasResultData` DIBUANG, jalan murni
-    // dari JENDELA WAKTU -- pesan "hasil" + sinyal trading SELALU dicek begitu masuk jendela 5-15
-    // menit, apapun status field actual-nya.
+    // ── 2) HASIL -- event 5..15 menit LALU -- EKSEKUSI scalp (reaksi BTC) ──
+    // ⛔ PESAN KESIMPULAN HAWKISH/DOVISH/NETRAL DIHAPUS TOTAL (19 Sep 2026, INSIDEN NYATA) --
+    // Olan ambil keputusan trading MANUAL di platform lain (BC.Game) berdasar pesan "hasil" ini
+    // yang bilang FOMC "NETRAL", padahal The Fed BENERAN naikkan suku bunga 25bps -- duitnya
+    // abis. Root cause: `concludeHawkishDovish()` (econCalendarLog.js) label "NETRAL" artinya
+    // "actual PERSIS SAMA forecast" (gak ada KEJUTAN), BUKAN "gak ada perubahan" -- pembaca
+    // awam (termasuk Olan sendiri) wajar baca "NETRAL" sebagai "gak kejadian apa-apa". Ditambah
+    // lagi data "actual" dari feed gratis (ForexFactory) SERING telat/kosong pas jendela reaksi
+    // sempit ini (lihat histori bug 12 Sep di econCalendarLog.js) -- gabungan "data gak reliable
+    // + label yang gampang disalahartikan" ini TERLALU BERBAHAYA buat terus ditampilin sbg info
+    // yang keliatan otoritatif. Keputusan Olan: "kalo emang ga bisa kasih data live.. delete
+    // aja! cuma kasih info siap siap" -- pesan HEADS-UP (poin 1 di atas, gak ada klaim
+    // arah/kesimpulan apapun) TETAP ada, tapi pesan "HASIL" + "HASIL SUSULAN" (yang bikin klaim
+    // HAWKISH/DOVISH/NETRAL) DIHAPUS TOTAL, gak diganti versi lain.
+    //
+    // Sinyal TRADING OTOMATIS Kaela sendiri (scalp econ_reaction di bawah) TIDAK KEPENGARUH --
+    // itu dari REAKSI HARGA BTC BENERAN (bukan label hawkish/dovish/netral ini sama sekali,
+    // selalu 2 jalur terpisah sejak awal), TETAP jalan apa adanya.
     if (!st.result && minsAgo >= RESULT_AFTER_MIN[0] && minsAgo <= RESULT_AFTER_MIN[1]) {
       const [dxyAfter, btcAfter] = await Promise.all([safeFetchDxyPrice(), safeFetchBtcPrice()]);
       const dxyChangePct = (st.dxyBefore != null && dxyAfter != null) ? ((dxyAfter - st.dxyBefore) / st.dxyBefore) * 100 : null;
-      const msg = formatResult(e, dxyChangePct);
-      console.log(msg);
-      addEntry('econ-calendar-result', msg, now);
-      await sendWhatsApp(msg);
 
-      // 12 Sep 2026, permintaan Olan -- pesan KEDUA terpisah, penjelasan awam ("ooo gitu paham"),
-      // sama pola kayak anomalyScanner.js. Null kalau event-nya gak punya directionalView.
-      const explainMsg = formatResultExplanation(e);
-      if (explainMsg) {
-        console.log(explainMsg);
-        addEntry('econ-calendar-result-explain', explainMsg, now);
-        await sendWhatsApp(explainMsg);
-      }
-
-      // Sinyal trading -- REAKSI BTC SENDIRI, SAMA PERSIS metodologi backtest (bukan dxyChangePct
-      // di atas, itu cuma buat pesan info).
+      // Sinyal trading -- REAKSI BTC SENDIRI, SAMA PERSIS metodologi backtest.
       let scalpOrder = null;
       if (st.btcBefore != null && btcAfter != null) {
         const btcReactionPct = ((btcAfter - st.btcBefore) / st.btcBefore) * 100;
@@ -319,7 +309,9 @@ async function main() {
 
       // 12 Sep 2026, permintaan Olan ("simpan sendiri hasil kalender ekonomi buat kelak
       // penelitian", riset pola manipulasi market/short squeeze) -- arsip MURNI RISET, gak
-      // pengaruhi eksekusi apapun (lihat econReactionResearchLog.js).
+      // pernah dikirim ke WA, gak pengaruhi eksekusi apapun (lihat econReactionResearchLog.js).
+      // `concludeHawkishDovish()` TETAP dipakai DI SINI DOANG (klasifikasi buat catatan riset
+      // internal) -- beda dari pesan WA yang udah dihapus di atas.
       try {
         const rec = recordReaction({ event: e, conclusionLabel: concludeHawkishDovish(e, dxyChangePct).label, dxyChangePct, btcBefore: st.btcBefore, btcAfter, positioningBefore: st.positioningBefore });
         if (rec.divergence) console.log(`[EconCalendarLive] 🔀 DIVERGENSI dicatat -- "${e.title}" kesimpulan ${rec.conclusionLabel} tapi BTC reaksi ${rec.btcReactionPct}% (kebalikan ekspektasi) -- kandidat riset manipulasi/squeeze.`);
@@ -327,22 +319,7 @@ async function main() {
         console.log('[EconCalendarLive] Gagal catat riset reaksi (dilewatin, gak fatal):', err.message);
       }
 
-      state[e.key] = { ...st, result: true, actualMissingAtResult: !e.actual, scalpOpenedAt: scalpOrder ? Date.now() : null };
-      didSomething = true;
-    }
-
-    // ── 2b) HASIL SUSULAN -- cuma kalau actual masih kosong pas jendela utama tadi, cek lagi
-    // ~1 jam kemudian (provider telat update). SATU KALI, gak dicek berkali-kali kalau tetep kosong.
-    if (st.result && st.actualMissingAtResult && !st.followupSent && minsAgo >= RESULT_FOLLOWUP_AFTER_MIN[0] && minsAgo <= RESULT_FOLLOWUP_AFTER_MIN[1]) {
-      if (e.actual) {
-        const msg = formatResultFollowup(e);
-        console.log(msg);
-        addEntry('econ-calendar-result-followup', msg, now);
-        await sendWhatsApp(msg);
-      } else {
-        console.log(`[EconCalendarLive] "${e.title}" -- actual masih kosong pas cek susulan juga, udah gak dicoba lagi.`);
-      }
-      state[e.key] = { ...st, followupSent: true };
+      state[e.key] = { ...st, result: true, scalpOpenedAt: scalpOrder ? Date.now() : null };
       didSomething = true;
     }
 

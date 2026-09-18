@@ -293,6 +293,33 @@ Alasan: ${MANUAL_ALASAN}
 🔗 ${KAELA_ACCESS_URL}`;
 }
 
+// 19 Sep 2026, permintaan Olan setelah insiden FOMC ("trading 100% ku serahkan ke Kaela...
+// posisi non-Kaela boleh auto-close") -- BEDA dari formatManualOpen di atas (yang cuma LAPOR):
+// ini dipakai KHUSUS pas positionReconciler.js BENERAN nutup paksa posisi manual yang kedetek
+// (dikonfirmasi PASTI bukan order Kaela lewat cek clientOrderId/externalOid ke exchange
+// langsung -- lihat wasLastEntryOrderByKaela di binanceExecutor.js/mexcExecutor.js -- BUKAN
+// dari asumsi/jurnal lokal doang). `closePnlUsd` = PnL dari auto-close ITU SENDIRI (biasanya
+// kecil/dekat entry, ditutup SEGERA begitu kedetek, beda dari PnL akhir kalau dibiarin sampai
+// Olan tutup sendiri).
+// `closePnlUsd` NULL (bukan 0) kalau gagal kebaca (mis. MEXC, `realizedPnlSince` cuma dukung
+// Binance) -- jujur bilang "cek riwayat exchange langsung", JANGAN pura-pura $0 (kesannya
+// beneran impas, padahal cuma gak kebaca -- prinsip sama kayak `_todaysPnlLine` di file ini).
+function formatManualOpenAutoClosed({ exchangeBadge, symbol, direction, entryPrice, closePrice, leverage, marginUsd, nilaiPosisi, closePnlUsd }, idrRate) {
+  const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const pnlLine = closePnlUsd == null
+    ? 'PnL auto-close: gak kebaca otomatis -- cek riwayat exchange langsung.'
+    : `PnL auto-close: *${closePnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(closePnlUsd, idrRate)}*`;
+  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi TERDETEKSI, LANGSUNG DITUTUP OTOMATIS*
+${dirLabel} @ ${fmtUsd(entryPrice)} → ditutup @ ${fmtUsd(closePrice)}
+
+Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
+${pnlLine}
+Alasan: Kebijakan Olan (19 Sep 2026) -- SEMUA trading 100% lewat Kaela, posisi non-Kaela otomatis ditutup begitu kedetek. Dipastikan PASTI bukan order Kaela lewat cek langsung ke exchange (bukan tebakan).
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
 // (12 Sep 2026, permintaan Olan: "jadi pertanyaan di grup.. kok minus terus.. padahal di riwayat
 // aku surplus.. tapi ga ketauan.. apa di followup total pnl today?") -- pesan PnL per-transaksi
 // (fee tiap flip cepat sering bikin angka KECIL MINUS, lihat komentar formatManualFlip) gak ngasih
@@ -394,7 +421,7 @@ Alasan: ${MANUAL_ALASAN}
 
 module.exports = {
   formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatAutoAddLayer,
-  formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity,
+  formatManualOpen, formatManualOpenAutoClosed, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity,
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).

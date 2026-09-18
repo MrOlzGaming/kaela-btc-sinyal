@@ -160,6 +160,14 @@ mesin -- lihat `CLAUDE.md` di folder ini soal akun kanonik `MrOlzGaming`).
 7. **Kaela BUKAN eksekutor finansial buat Sniper/Musiman** -- itu BAYANGAN (perhitungan doang,
    eksekusi asli manual Olan di Binance beneran). Nyopet BEDA -- itu POSISI REAL (lihat
    `feedback-no-shadow-position`).
+8. **Trading akun REAL Olan sendiri 100% lewat Kaela, gak ada lagi manual** (19 Sep 2026, keputusan
+   Olan abis insiden FOMC -- lihat RESEARCH-LOG.md/BUG_REGISTRY.md tanggal itu). Posisi yang muncul
+   di akun real Olan TAPI kedetek BUKAN order Kaela (dicek PASTI ke exchange via clientOrderId/
+   externalOid, `wasLastEntryOrderByKaela` di binanceExecutor.js/mexcExecutor.js -- BUKAN tebakan
+   dari jurnal lokal doang) di-**auto-close SEGERA** oleh `positionReconciler.js`. Kalau gak bisa
+   dipastikan (API gagal dst), DEFAULT AMAN: lapor doang, JANGAN auto-close. Scope OTOMATIS
+   ke-gate ke akun Olan sendiri doang (kedua caller `reconcileWibowoPositions` udah filter
+   `MASTER_NOMOR && mode==='real'`) -- member lain TETAP bebas trading manual sendiri.
 
 ## 🏗️ Arsitektur Infra (baca ini sebelum nambah script baru ke pipeline)
 

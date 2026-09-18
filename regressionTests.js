@@ -23,6 +23,7 @@ const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
 const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
+const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -282,6 +283,19 @@ async function main() {
     assert.strictEqual(r2.state.cycleCount, 1);
     assert.strictEqual(r2.state.closedCycles.length, 1);
     assert.strictEqual(r2.cycleSummary.endingWealth, 210);
+  });
+
+  // formatManualOpenAutoClosed (19 Sep 2026, fitur "auto-close posisi non-Kaela" -- permintaan
+  // Olan setelah insiden FOMC) -- pastiin PnL null (mis. MEXC, realizedPnlSince cuma dukung
+  // Binance) TAMPIL JUJUR "gak kebaca", BUKAN dipoles jadi $0 (kesannya beneran impas).
+  await test('darkKaelaLog: formatManualOpenAutoClosed -- PnL numerik vs null (jujur, bukan $0)', () => {
+    const base = { exchangeBadge: '🟨 Binance', symbol: 'BTCUSDT', direction: 'buy', entryPrice: 65000, closePrice: 64800, leverage: 10, marginUsd: 100, nilaiPosisi: 1000 };
+    const withPnl = formatManualOpenAutoClosed({ ...base, closePnlUsd: -20.5 }, null);
+    assert.ok(withPnl.includes('20.5') || withPnl.includes('20,5'), `Harus tampilin PnL numerik -20.5, malah: ${withPnl}`);
+    assert.ok(withPnl.includes('LANGSUNG DITUTUP OTOMATIS'), 'Harus jelas nyebut auto-closed');
+    const nullPnl = formatManualOpenAutoClosed({ ...base, closePnlUsd: null }, null);
+    assert.ok(nullPnl.includes('gak kebaca'), 'PnL null HARUS bilang jujur "gak kebaca", bukan pura-pura $0');
+    assert.ok(!nullPnl.includes('$0.00') && !nullPnl.includes('$0,00'), 'PnL null JANGAN ditampilin sebagai $0 (menyesatkan, kesannya beneran impas)');
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

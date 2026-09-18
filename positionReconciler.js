@@ -38,7 +38,7 @@ const kaela = require('./kaelaProTraderClient');
 // -- template pesan (dan fmtUsd yang dipakainya) SEKARANG PENUH dari darkKaelaLog.js, gak ada lagi
 // versi lokal terpisah di sini (dulu fmtUsd lokal SENGAJA beda opsi format, sekarang diseragamin
 // -- itu justru inti permintaannya: SATU gaya angka di semua pesan trading, bukan per-file beda).
-const { fmtUsdWithIdr, formatManualOpen, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity } = require('./darkKaelaLog');
+const { fmtUsdWithIdr, formatManualOpen, formatManualOpenAutoClosed, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity } = require('./darkKaelaLog');
 const tradeHistoryStore = require('./tradeHistoryStore');
 
 // WIBOWO_GROUP_ID + saklar pause SEKARANG di wibowoNotify.js (4 Sep 2026, sebelumnya duplikat
@@ -218,8 +218,59 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
     const prevAmt = prev ? Number(prev.positionAmt) : 0;
 
     if (prevAmt === 0 && liveAmt !== 0) {
-      // MANUAL OPEN -- gak pernah kecatat sebelumnya, tiba-tiba ada, BUKAN bot yang buka. Bisa
-      // asset APAPUN -- bot gak perlu "kenal" symbol-nya.
+      // MANUAL OPEN (kandidat) -- gak pernah kecatat sebelumnya, tiba-tiba ada. SEBELUM disimpulin
+      // "manual", cek PASTI ke exchange (19 Sep 2026, fix root cause ambiguitas lama "posisi Kaela
+      // sendiri yang kelupaan jurnalnya krn mesin eksekutor pindah leader" vs "beneran manual" --
+      // dulu 2 kemungkinan itu gak bisa dibedain, cuma bisa nebak. Sekarang cek clientOrderId/
+      // externalOid order pembukanya LANGSUNG ke exchange -- lihat wasLastEntryOrderByKaela di
+      // binanceExecutor.js/mexcExecutor.js). `null` (gak bisa disimpulkan, API gagal dst) -> AMAN
+      // default: treat manual (LAPOR doang, JANGAN auto-close kalau ragu).
+      let isKaelaOrder = null;
+      if (typeof client.wasLastEntryOrderByKaela === 'function') {
+        try { isKaelaOrder = await client.wasLastEntryOrderByKaela(symbol); }
+        catch (e) { console.log(`[PositionReconciler] Gagal cek asal order ${symbol} (dianggap gak bisa disimpulkan, treat manual):`, e.message); }
+      }
+
+      if (isKaelaOrder === true) {
+        // BUKAN manual -- posisi Kaela SENDIRI yang "kelupaan" jurnalnya (bug lama dikonfirmasi
+        // di nyopetAutoTrader.js: mesin eksekutor pindah leader, journal lokal baru gak sinkron).
+        // Re-adopt DIAM-DIAM (sinkronin snapshot doang, PERSIS pola `touchedSymbols` di atas) --
+        // JANGAN lapor "MANUAL OPEN" (nyesatin, ini emang punya Kaela), APALAGI auto-close.
+        console.log(`[PositionReconciler] ${badge} ${symbol}: posisi "baru" TAPI order pembukanya kekonfirmasi dari Kaela sendiri (clientOrderId/externalOid cocok) -- re-adopt diam2, BUKAN manual.`);
+        state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: null, openedAtMs: nowMs };
+        continue;
+      }
+
+      if (isKaelaOrder === false) {
+        // PASTI manual (dikonfirmasi ke exchange, BUKAN tebakan) -- kebijakan Olan 19 Sep 2026
+        // (insiden FOMC, "trading 100% ku serahkan ke Kaela... posisi non-Kaela boleh auto-close"):
+        // tutup PAKSA segera, jangan dibiarin nyangkut.
+        const closeDirection = dirWord(liveAmt);
+        let closeOk = false;
+        try {
+          await client.emergencyCloseMarket({ symbol, direction: closeDirection, quantity: Math.abs(liveAmt) });
+          closeOk = true;
+        } catch (e) {
+          console.log(`[PositionReconciler] GAGAL auto-close posisi manual ${badge} ${symbol} (lanjut LAPOR apa adanya di bawah, JANGAN diam2 kalau gagal tutup):`, e.message);
+        }
+        if (closeOk) {
+          const closePnl = await realizedPnlSince(exchange, client, phone, symbol, nowMs, null).catch(() => null);
+          const marginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
+          const msg = formatManualOpenAutoClosed({
+            exchangeBadge: badge, symbol: displaySymbol(symbol), direction: closeDirection,
+            entryPrice: Number(live.entryPrice), closePrice: Number(live.markPrice) || Number(live.entryPrice),
+            leverage: Number(live.leverage) || 0, marginUsd, nilaiPosisi: Math.abs(Number(live.notional)) || 0, closePnlUsd: closePnl,
+          }, idrRate);
+          console.log(`[PositionReconciler] MANUAL OPEN ${badge} ${symbol} @ ${live.entryPrice} -- AUTO-CLOSED (kebijakan Olan).`);
+          await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open auto-closed):', e.message));
+          // JANGAN simpan ke state.positions -- posisi udah ditutup, siklus berikutnya prevAmt=0 lagi.
+          continue;
+        }
+        // closeOk===false: fallthrough ke laporan manual biasa di bawah (posisi TETAP kebuka).
+      }
+
+      // isKaelaOrder===null (gak bisa dipastikan) ATAU auto-close barusan gagal -- laporan manual
+      // BIASA (TANPA nutup paksa, default AMAN kalau ragu).
       const entryId = `manual-${exchange}-${symbol}-${nowMs}`;
       const marginUsd = (Number(live.leverage) > 0 && live.notional) ? Math.abs(Number(live.notional)) / Number(live.leverage) : 0;
       await writeJournal(entryId, {

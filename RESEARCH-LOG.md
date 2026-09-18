@@ -88,6 +88,17 @@ beda per instrumen (misal Nyopet Emas dikasih porsi TC LEBIH BESAR dari 50%, ata
 dikecualikan total buat instrumen win-rate rendah) -- ATAU terima Nyopet Emas emang gak cocok
 dikasih lapisan ini, fokus scope ke Nyopet BTC + Sniper doang.
 
+**⛔ KEPUTUSAN FINAL Olan (19 Sep 2026, sama hari)**: setelah dikasih tau intinya jujur ("lebih
+buruk di 4 instrumen dari segi pertumbuhan total, itu trade-off yang disengaja -- dapet jaminan
+gak pernah hilang, harganya pertumbuhan jauh lebih kecil") -- Olan putuskan **TIDAK PAKAI**,
+"biarin sistem sekarang aja". Riset ini DITUTUP -- semua kode (`secureCompoundLedger.js`, param
+`ledgerStartCapital` di 2 engine backtest, `backtest/secureCompoundBacktest.js`) TETAP disimpan
+APA ADANYA sbg dokumentasi riset (pola yang sama kayak 40+ file `*Backtest*` lain di proyek ini
+yang DITOLAK tapi disimpan) -- JANGAN dihapus, tapi JANGAN dipasang ke live manapun tanpa Olan
+minta ulang secara eksplisit. Kalau ada yang nanya lagi soal money-management/position-sizing
+lapisan tambahan ke depan, baca 3 entri v1/v2/v3 di atas dulu -- 3 pendekatan beda udah dicoba,
+SEMUA lebih buruk dari baseline compounding-penuh yang jalan sekarang.
+
 ---
 
 ### 2026-09-19 — Money Management v2 (compound AKUMULATIF+TAMBAHAN): flaw INTI masih SAMA, cuma gejalanya beda

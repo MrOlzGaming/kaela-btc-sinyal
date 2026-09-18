@@ -204,40 +204,40 @@ async function main() {
     assert.strictEqual(closeSideFor('sell'), 2, 'sell harus closeSide 2 (close short) -- ini yang kebalik di BUG-0007');
   });
 
-  // secureCompoundLedger.js -- money management "Secure/Compound + Target 2x" (18 Sep 2026,
-  // permintaan Olan, REVISI v2 sore itu juga setelah versi pertama kebukti flaw struktural di
-  // backtest -- lihat RESEARCH-LOG.md 2026-09-18 & catatan panjang di secureCompoundLedger.js).
-  // Ground truth v2 = ANGKA PERSIS dari contoh klarifikasi Olan sendiri di chat: "Trade1 bet dari
-  // kalkulator, WIN profit $10 -> separuh $5 disimpan. Trade2 bet = kalkulator + $5, WIN profit
-  // $12 -> separuh $6. Trade3 bet = kalkulator + $11 (5+6, NUMPUK)".
-  await test('secureCompoundLedger v2: compound AKUMULATIF (ground truth klarifikasi Olan)', () => {
+  // secureCompoundLedger.js -- money management "Secure/Compound + Target 2x" (18-19 Sep 2026,
+  // permintaan Olan, REVISI v3 setelah v1/v2 SAMA-SAMA kebukti flaw struktural di backtest --
+  // Trading Capital gak pernah diisi ulang dari menang -- lihat RESEARCH-LOG.md 2026-09-19 &
+  // catatan panjang di secureCompoundLedger.js). v3: tiap WIN split 3 arah -- 50% Trading
+  // Capital (FIX BARU: "isi separuh profit balik ke trading capital"), 25% Secure, 25% Compound
+  // (compound TETAP akumulatif kayak v2).
+  await test('secureCompoundLedger v3: split 3 arah (50% TC / 25% Secure / 25% Compound), TC keisi ulang dari WIN', () => {
     let state = createLedgerState(100);
     assert.strictEqual(totalWealth(state), 100);
 
-    state = applyTradeResult(state, { pnlUsd: 10 }); // Trade1 WIN, profit $10
-    assert.strictEqual(state.secure, 5, 'Trade1 WIN: secure harus 5');
-    assert.strictEqual(state.activeCompound, 5, 'Trade1 WIN: compound harus 5');
-    assert.strictEqual(state.tradingCapital, 100, 'Trading Capital DIAM (WIN gak pernah ngisi ulang)');
+    state = applyTradeResult(state, { pnlUsd: 10 }); // Trade1 WIN, profit $10 -> TC+5, secure+2.5, compound+2.5
+    assert.strictEqual(state.tradingCapital, 105, 'Trade1 WIN: Trading Capital harus NAIK jadi 105 (100+5) -- INI FIX v3, beda dari v1/v2 yang diam');
+    assert.strictEqual(state.secure, 2.5, 'Trade1 WIN: secure harus 2.5 (25% dari profit $10)');
+    assert.strictEqual(state.activeCompound, 2.5, 'Trade1 WIN: compound harus 2.5 (25% dari profit $10)');
 
-    state = applyTradeResult(state, { pnlUsd: 12 }); // Trade2 WIN, profit $12
-    assert.strictEqual(state.secure, 11, 'Trade2 WIN: secure kumulatif harus 11 (5+6)');
-    assert.strictEqual(state.activeCompound, 11, 'Trade2 WIN: compound NUMPUK (5+6=11), BUKAN replace jadi 6 doang');
-    assert.strictEqual(state.tradingCapital, 100);
+    state = applyTradeResult(state, { pnlUsd: 12 }); // Trade2 WIN, profit $12 -> TC+6, secure+3, compound+3
+    assert.strictEqual(state.tradingCapital, 111, 'Trade2 WIN: Trading Capital harus 111 (105+6)');
+    assert.strictEqual(state.secure, 5.5, 'Trade2 WIN: secure kumulatif harus 5.5 (2.5+3)');
+    assert.strictEqual(state.activeCompound, 5.5, 'Trade2 WIN: compound NUMPUK jadi 5.5 (2.5+3), BUKAN replace jadi 3 doang');
 
-    // Trade3 -- cek sizing SEBELUM di-apply: nilaiPosisi harus = kalkulator(TC=100) + compound(11).
+    // Trade3 -- cek sizing SEBELUM di-apply: nilaiPosisi harus = kalkulator(TC=111) + compound(5.5).
     const opts = { entry: 65000, stopLoss: 63700, direction: 'buy' };
-    const base = hitung({ modal: 100, ...opts });
+    const base = hitung({ modal: 111, ...opts });
     const sizing = computeBetSizing(state, opts);
-    assert.ok(Math.abs(sizing.nilaiPosisi - (base.nilaiPosisi + 11)) < 1e-9, `nilaiPosisi Trade3 harusnya kalkulator(${base.nilaiPosisi}) + compound(11) = ${base.nilaiPosisi + 11}, malah ${sizing.nilaiPosisi}`);
+    assert.ok(Math.abs(sizing.nilaiPosisi - (base.nilaiPosisi + 5.5)) < 1e-9, `nilaiPosisi Trade3 harusnya kalkulator(${base.nilaiPosisi}) + compound(5.5) = ${base.nilaiPosisi + 5.5}, malah ${sizing.nilaiPosisi}`);
 
     // Trade3 -- LOSS. Deduction Trading Capital pakai BET FRESH dari hitungExposure() ASLI
-    // (modal=tradingCapital SAAT INI=100, TANPA komponen compound) -- SENGAJA, lihat catatan
-    // panjang di secureCompoundLedger.js.
-    const expectedFreshBet = hitung({ modal: 100, ...opts });
+    // (modal=tradingCapital SAAT INI=111, TANPA komponen compound) -- sisi LOSS TIDAK berubah
+    // dari v2, lihat catatan panjang di secureCompoundLedger.js.
+    const expectedFreshBet = hitung({ modal: 111, ...opts });
     state = applyTradeResult(state, { pnlUsd: -expectedFreshBet.margin, ...opts });
     assert.strictEqual(state.activeCompound, 0, 'Trade3 LOSS: compound harus direset ke 0 (numpukan ilang)');
-    assert.ok(Math.abs(state.tradingCapital - (100 - expectedFreshBet.margin)) < 1e-9, `Trading Capital harusnya ${100 - expectedFreshBet.margin}, malah ${state.tradingCapital}`);
-    assert.strictEqual(state.secure, 11, 'Secure TIDAK BOLEH kesentuh sama sekali pas LOSS');
+    assert.ok(Math.abs(state.tradingCapital - (111 - expectedFreshBet.margin)) < 1e-9, `Trading Capital harusnya ${111 - expectedFreshBet.margin}, malah ${state.tradingCapital}`);
+    assert.strictEqual(state.secure, 5.5, 'Secure TIDAK BOLEH kesentuh sama sekali pas LOSS');
   });
 
   await test('secureCompoundLedger v2: computeBetSizing -- activeCompound=0 PERSIS hitung() apa adanya', () => {

@@ -17,6 +17,15 @@
 // profit/2`) kayak versi pertama. Ini SENGAJA bikin nilaiPosisi trade SELALU ada komponen basis
 // dari Trading Capital -- gak akan pernah "lepas total" dari TC kayak versi pertama.
 //
+// ⛔ REVISI 19 Sep 2026 (v3) -- v2 TERNYATA masih flaw yang SAMA (dites ulang, backtest Nyopet
+// TETAP tergerus $0, lihat RESEARCH-LOG.md 2026-09-19): akar masalah ASLINYA bukan di sisi WIN/
+// compound (udah dicoba 2 variasi, dua-duanya gak nolong), tapi TC gak PERNAH diisi ulang dari
+// kemenangan sama sekali (WIN lama SELALU 100% ke Secure+Compound, LOSS SELALU motong TC) --
+// peluruhan satu-arah yang matematis pasti nggerus TC ke 0. Olan minta fix LANGSUNG ke akar
+// masalah itu: "isi separuh profit balik ke trading capital". Sekarang tiap WIN, split JADI 3:
+// 50% TC (biar TC "bernapas" lagi dari menang, gak monoton turun), 25% Secure, 25% Compound
+// (compound TETAP akumulatif). Sisi LOSS TIDAK berubah dari v2 (TC tetap kepotong bet fresh).
+//
 // PENTING (baca sebelum pakai): `totalWealth()` di sini angka VIRTUAL/bookkeeping buat mandu
 // ukuran bet -- BUKAN cerminan 1:1 saldo real di exchange. Deduction pas LOSS pakai bet FRESH
 // dari Trading Capital saat itu (nilaiPosisi basis Kalkulator Exposure doang, TANPA komponen
@@ -86,11 +95,16 @@ function computeBetSizing(state, { entry, stopLoss, direction, maxLeverage, fres
 // gimana bet fresh beneran dihitung buat caller ini (Nyopet: `tradingCapital/modalDivisor`).
 function applyTradeResult(state, { pnlUsd, entry, stopLoss, direction, maxLeverage, freshModal } = {}) {
   if (pnlUsd > 0) {
-    const half = pnlUsd / 2;
-    // Compound AKUMULATIF (fix v2, 18 Sep 2026 sore) -- NAMBAH ke tumpukan yang udah ada, BUKAN
-    // ganti/replace kayak versi pertama. Terus numpuk selama masih menang beruntun, direset ke 0
-    // begitu LOSS (lihat branch di bawah).
-    return { ...state, secure: state.secure + half, activeCompound: state.activeCompound + half };
+    // v3 (19 Sep 2026, permintaan Olan: "coba isi separuh profit balik ke trading capital") --
+    // akar masalah v1/v2 (Trading Capital cuma bisa turun/diam, gak pernah diisi ulang dari
+    // menang) di sini SENGAJA diperbaiki: SEPARUH profit sekarang balik ngisi Trading Capital
+    // (biar TC "bernapas" lagi dari kemenangan, gak monoton turun), SISANYA (separuh lagi) TETAP
+    // dibagi 50/50 Secure/Compound kayak sebelumnya (compound tetap AKUMULATIF, numpuk tiap
+    // menang beruntun). Jadi per profit: 50% TC, 25% Secure, 25% Compound.
+    const toTradingCapital = pnlUsd / 2;
+    const remainder = pnlUsd - toTradingCapital;
+    const half = remainder / 2;
+    return { ...state, tradingCapital: state.tradingCapital + toTradingCapital, secure: state.secure + half, activeCompound: state.activeCompound + half };
   }
   const modal = freshModal !== undefined ? freshModal : state.tradingCapital;
   const freshBet = hitungExposure({ modal, entry, stopLoss, direction, maxLeverage });

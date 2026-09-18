@@ -47,6 +47,49 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-19 — Money Management v3 (50% profit balik ke Trading Capital): NOLONG, TAPI proporsional sama win rate -- Nyopet Emas MASIH gagal
+**Ide:** fix LANGSUNG ke akar masalah v1/v2 (Olan: "coba isi separuh profit balik ke trading
+capital"). Split WIN sekarang 3 arah: 50% ke Trading Capital (BARU -- biar TC "bernapas" lagi
+dari kemenangan, gak monoton turun kayak v1/v2), 25% Secure, 25% Compound (compound tetap
+akumulatif). Sisi LOSS TIDAK diubah (TC tetap kepotong "bet fresh" tiap kalah, compound reset).
+
+**Metode:** `applyTradeResult` WIN branch diubah split 3 arah, ground-truth test baru
+(`regressionTests.js`) verifikasi TC beneran naik abis WIN (dulu diam). Backtest yang SAMA
+dijalanin ulang (`backtest/secureCompoundBacktest.js`, 4 instrumen, WITH vs WITHOUT ledger).
+
+**Hasil: NOLONG SIGNIFIKAN tapi PROPORSIONAL sama win rate strategi, BUKAN solusi universal.**
+- **Nyopet BTC (win rate 48,6%) -- IMPROVEMENT BESAR**: Trading Capital TIDAK LAGI abis ke $0
+  (sekarang $62,36, sempat naik ke $200+ sebelum kena rentetan loss lagi), total wealth $497
+  (v1:$55 -> v2:$144 -> **v3:$497**, ~9x lebih baik dari v1). Masih di bawah baseline $7.446,
+  tapi jelas ke arah yang bener.
+- **Nyopet Emas (win rate 16,4%) -- TETAP GAGAL TOTAL**: Trading Capital MASIH abis ke $0.00,
+  total wealth malah SEDIKIT LEBIH JELEK dari v1/v2 ($4 vs v1:$6/v2:$7) -- krn sekarang Secure
+  dapet porsi lebih kecil (25% bukan 50%) TANPA replenishment TC yang cukup nolong (win terlalu
+  jarang buat ngimbangin frekuensi loss).
+- Sniper (BTC+Emas, trade jarang, win rate lebih sehat) -- hasil CAMPUR, gak konsisten lebih
+  baik/jelek dari v1/v2 (Sniper BTC total $5.289 vs v2 $6.522 -- SEDIKIT LEBIH JELEK; Sniper
+  Emas $2.617 vs v2 $4.027 -- LEBIH JELEK) -- realokasi 50%→TC/25%→Secure/25%→Compound emang
+  ngurangin porsi Secure dibanding v1/v2 punya 50%, trade-off yang WAJAR, bukan bug.
+
+**Kenapa proporsional sama win rate**: replenishment TC cuma kejadian pas WIN (frekuensinya =
+win rate), sedangkan pemotongan TC kejadian pas LOSS (frekuensinya = 1-win rate). Nyopet Emas
+loss jauh lebih SERING dari win (~84% trade rugi) -- replenishment 50% dari kemenangan yang
+JARANG gak cukup ngimbangin pemotongan dari kekalahan yang SERING. Nyopet BTC (win rate hampir
+50/50) jauh lebih diuntungkan krn frekuensi replenishment vs pemotongan seimbang.
+
+**Kesimpulan:** v3 adalah PERBAIKAN NYATA (bukan basa-basi -- Nyopet BTC 9x lebih baik, TC gak
+lagi mati total), TAPI BUKAN solusi universal -- efektivitasnya bergantung KUAT sama win rate
+strategi yang dipasangin. Buat strategi win-rate rendah (Nyopet Emas, 16,4%), skema Secure/
+Compound APAPUN variasinya (v1/v2/v3, tiga-tiganya udah dicoba) TETAP gagal mempertahankan
+Trading Capital -- kemungkinan besar sinyal Nyopet Emas sendiri emang terlalu lemah (PF cuma
+1,10, marginal) buat nopang money-management tambahan apapun di atasnya.
+**Status implementasi:** TIDAK diterapkan live. PR lanjutan yang BELUM dites: split rasio yang
+beda per instrumen (misal Nyopet Emas dikasih porsi TC LEBIH BESAR dari 50%, atau skema ini
+dikecualikan total buat instrumen win-rate rendah) -- ATAU terima Nyopet Emas emang gak cocok
+dikasih lapisan ini, fokus scope ke Nyopet BTC + Sniper doang.
+
+---
+
 ### 2026-09-19 — Money Management v2 (compound AKUMULATIF+TAMBAHAN): flaw INTI masih SAMA, cuma gejalanya beda
 **Ide:** revisi Olan atas temuan v1 (di bawah) -- Kalkulator Exposure WAJIB TETAP dipanggil PENUH
 tiap trade (basis dari Trading Capital, gak pernah di-skip/gantiin), Active Compound cuma

@@ -47,6 +47,59 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-18 — Money Management "Secure/Compound + Target 2x": FLAW STRUKTURAL buat strategi frekuensi tinggi (Nyopet), MIXED buat Sniper
+**Ide:** permintaan Olan -- lapisan money-management BARU di atas sistem trading Sniper/Nyopet
+yang ada (sinyal/entry/exit TIDAK disentuh sama sekali): tiap WIN, profit dibagi 50% SECURE
+(permanen aman, gak pernah dipakai lagi) + 50% ACTIVE COMPOUND (jadi notional bet trade
+berikutnya, bypass Kalkulator Exposure selama masih streak menang, membesar terus). Tiap LOSS,
+Compound direset 0 + Trading Capital (basis Kalkulator Exposure) dipotong sebesar "bet FRESH"
+yang dihitung ULANG dari Trading Capital saat itu. Target siklus: totalWealth (TC+Secure+Compound)
+capai 2x titik awal siklus -> tutup siklus, mulai baru.
+
+**Metode:** modul baru `secureCompoundLedger.js` (pure functions, reuse `calculator.js` `hitung()`
+APA ADANYA, gak diubah) + param opsional `ledgerStartCapital` ditambah ke 2 engine backtest
+window-gated yang udah ada (`runFlagBacktestWindowGated`/`runNyopetV2BacktestWindowGated`, default
+null = zero perubahan perilaku, sama pola `adxGateFn`/`dxyFilter` sebelumnya). `backtest/
+secureCompoundBacktest.js` -- Sniper BTC+Emas (harian) + Nyopet BTC+Emas (4H), WITH vs WITHOUT
+ledger, modal awal $100, 2020-2026.
+
+**Hasil breakdown per tahun & Split-era:** effect KONSISTEN robust lintas era (PF/totalR per-era
+ledger vs baseline nyaris identik atau sedikit lebih baik di beberapa sel -- edge sinyal dasarnya
+gak berubah, WAJAR krn entry/exit emang gak disentuh). TAPI **kekayaan dolar akhir SELALU jauh
+lebih kecil dari baseline di SEMUA 4 instrumen**: Sniper BTC $4.372 vs $26.504 baseline, Sniper
+Emas $2.995 vs $4.500, **Nyopet BTC $55 vs $7.446 (Trading Capital abis ke $0.00)**, **Nyopet
+Emas $6 vs $257 (Trading Capital abis ke $0.00 juga)**.
+
+**Temuan paling penting (dikonfirmasi review sub-agent skeptis, independen sampe kesimpulan
+SAMA)**: **Trading Capital secara matematis CUMA BISA turun atau diam** -- WIN gak pernah
+nambahin TC (semua profit lari ke Secure/Compound), LOSS SELALU motong TC. Ini peluruhan
+geometris (`TC_baru = TC_lama × (1-f)`) TANPA mekanisme pengisian ulang dari kemenangan apapun.
+Sniper (47-50 trade dalam 6 tahun) kena efeknya ringan (TC masih nyisa $992-1.032). **Nyopet
+(138-444 trade, frekuensi jauh lebih tinggi) TERGERUS SAMPAI $0.00 di KEDUA aset** -- bukan bug,
+konsekuensi tak terhindarkan dari "makin sering trading = makin cepat digerus", REGARDLESS
+strategi profitable (PF>1, totalR positif besar di kedua kasus). Nyopet BTC bahkan sampai
+nge-SKIP 8 entry beneran krn sizing exposure kehabisan basis modal.
+
+**maxDD yang kadang membaik (Sniper Emas: 32,5% vs 50,1% baseline) BUKAN proteksi risiko genuine**
+-- di Nyopet BTC/Emas maxDD malah MEMBURUK drastis (61%/93,9% vs 27,8%/26,8%) krn basis TC yang
+udah nyaris nol bikin % drawdown jadi liar/gak stabil. Efeknya inkonsisten, bukan pola proteksi
+yang bisa diandalkan.
+
+**Kesimpulan:** **FLAW STRUKTURAL DESAIN** (bukan salah implementasi -- kode udah dites cocok
+100% sama spec Olan via ground-truth test di `regressionTests.js`) buat strategi frekuensi
+TINGGI. Aturan "profit menang gak pernah balik ngisi Trading Capital" aman buat strategi jarang
+trading (Sniper) tapi jadi bom waktu matematis buat Nyopet -- Trading Capital PASTI tergerus ke
+nol seiring waktu, gak peduli seberapa profitable strateginya. Buat Sniper efeknya lebih ringan
+tapi TETAP mengorbankan sebagian besar pertumbuhan compounding demi Secure yang gak pernah
+kerja lagi -- trade-off riil, bukan cuma masalah teknis.
+**Status implementasi:** TIDAK diterapkan ke live manapun (sesuai rencana -- backtest dulu,
+nunggu keputusan Olan). Kode (`secureCompoundLedger.js` + param `ledgerStartCapital` di 2 engine
+backtest) TERSEDIA dan TERTES, siap dipakai kalau Olan mau lanjut dengan revisi desain (misal:
+sebagian kecil profit WIN ikut ngisi ulang Trading Capital, bukan 100% ke Secure/Compound) atau
+scope dipersempit ke Sniper doang (frekuensi rendah, dampak lebih terkendali).
+
+---
+
 ### 2026-09-15 — ADX sbg gerbang trend-strength window Emas: TIDAK CUKUP KUAT (kelanjutan riset whipsaw+buffer band)
 **Ide:** dari daftar "Ide belum dicoba" [PRIORITAS] -- riset sebelum ini (hari yang sama, buffer
 band Schmitt trigger) berhasil ngilangin whipsaw window bear Emas TAPI Era1 (2020-2023) tetap

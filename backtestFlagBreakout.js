@@ -33,6 +33,7 @@ const { fetchWithRetry } = require('./httpRetry');
 const { sma } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
 const { detectFlag, detectWedge } = require('./chartPatterns');
+const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
 
 const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 function parseCandle(raw) { return { openTime: raw[0], open: +raw[1], high: +raw[2], low: +raw[3], close: +raw[4], closeTime: raw[6] }; }
@@ -217,6 +218,17 @@ function runFlagBacktest(daily, opts = {}) {
 // nyopetAutoTrader.js `isBearWindowFor`+force-close), bukan cuma dianggurin sampai window balik.
 // FUNGSI TERPISAH (bukan nambah opsi ke runFlagBacktest) -- ikutin konvensi file ini: varian baru
 // = fungsi baru, yang lama dibiarin APA ADANYA (module.exports lama gak berubah).
+// Helper kecil (dipakai 3 titik full-close di bawah: WINDOW_FLIP, SL, SL_BREAKEVEN/TRAIL_EXIT)
+// -- apply hasil trade ke ledger (applyTradeResult) LALU cek rollover siklus 2x sekaligus, biar
+// gak ditulis ulang 3x. `cycleEvents` diisi kalau siklus ke-tutup di titik ini (buat laporan).
+function applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, exitTime) {
+  let next = applyTradeResult(ledgerState, { pnlUsd: totalPnl, entry: openPos.entryPrice, stopLoss: openPos.originalSl, direction: openPos.direction });
+  const rollover = checkAndRolloverCycle(next);
+  next = rollover.state;
+  if (rollover.cycleClosed) cycleEvents.push({ ...rollover.cycleSummary, exitTime });
+  return next;
+}
+
 function runFlagBacktestWindowGated(daily, opts = {}) {
   const {
     warmupDays = 60, poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
@@ -234,12 +246,22 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
     // ATURAN INI gak ada" (validasi 14 Sep, backtest/shortHalfExposureValidation.js), BUKAN buat
     // dipakai live/caller normal manapun.
     halfShortExposure = true,
+    // Money management "Secure/Compound + Target 2x" (18 Sep 2026, riset/plan permintaan Olan)
+    // -- OPSIONAL, default `null` = ZERO perubahan perilaku (semua caller lama sizing langsung
+    // dari `capital` running biasa, PERSIS kayak sebelumnya). Isi angka (misal `100`) buat
+    // AKTIFKAN ledger `secureCompoundLedger.js` -- sizing/capital-tracking pindah total ke situ,
+    // `capital`/`capitalSeries` di bawah jadi cerminan `totalWealth(ledgerState)`. Lihat
+    // `backtest/secureCompoundBacktest.js` buat contoh pemakaian + laporan perbandingan.
+    ledgerStartCapital = null,
   } = opts;
   const trades = [];
   let openPos = null;
   let capital = startCapital;
+  let ledgerState = ledgerStartCapital != null ? createLedgerState(ledgerStartCapital) : null;
+  const useLedger = ledgerState !== null;
+  const cycleEvents = [];
   let lastTopUpMonthKey = null;
-  const capitalSeries = [{ time: daily[warmupDays] ? daily[warmupDays].closeTime : 0, capital }];
+  const capitalSeries = [{ time: daily[warmupDays] ? daily[warmupDays].closeTime : 0, capital: useLedger ? totalWealth(ledgerState) : capital }];
 
   for (let i = warmupDays; i < daily.length; i++) {
     const today = daily[i];
@@ -248,7 +270,12 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
     const curMonthKey = todayDate.getUTCFullYear() * 12 + todayDate.getUTCMonth();
     if (todayDate.getUTCDate() >= topUpDayOfMonth && curMonthKey !== lastTopUpMonthKey) {
       lastTopUpMonthKey = curMonthKey;
-      if (capital < topUpStopAt) { capital += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
+      if (useLedger) {
+        if (ledgerState.tradingCapital < topUpStopAt) {
+          ledgerState = { ...ledgerState, tradingCapital: ledgerState.tradingCapital + topUpAmount };
+          capitalSeries.push({ time: today.closeTime, capital: totalWealth(ledgerState) });
+        }
+      } else if (capital < topUpStopAt) { capital += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
     }
 
     if (openPos) {
@@ -260,10 +287,11 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
         const remainingFrac = openPos.partialDone ? 0.5 : 1;
         const pnlRest = openPos.nilaiPosisi * remainingFrac * (movePctSigned / 100);
         const totalPnl = openPos.realizedPnl + pnlRest;
-        capital = Math.max(0, capital + pnlRest);
+        if (useLedger) { ledgerState = applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, today.closeTime); }
+        else capital = Math.max(0, capital + pnlRest);
         const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
         trades.push({ ...openPos, exitReason: 'WINDOW_FLIP', rMultiple: riskPct > 0 ? (totalPnl / openPos.nilaiPosisi * 100) / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
-        capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         continue;
       }
       const closes = daily.slice(0, i + 1).map((c) => c.close);
@@ -272,13 +300,19 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
         const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
         const hitPartial = openPos.direction === 'buy' ? today.high >= openPos.partialTp : today.low <= openPos.partialTp;
         if (hitSl) {
-          capital = Math.max(0, capital - openPos.lossAtSl);
+          if (useLedger) ledgerState = applyLedgerTradeResult(ledgerState, openPos, -openPos.lossAtSl, cycleEvents, today.closeTime);
+          else capital = Math.max(0, capital - openPos.lossAtSl);
           trades.push({ ...openPos, exitReason: 'SL', rMultiple: -1, pnlUsd: -openPos.lossAtSl, exitTime: today.closeTime });
-          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+          capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         } else if (hitPartial) {
+          // Partial (2R) BUKAN full-close -- posisi masih idup (sisa 50%, SL digeser breakeven).
+          // JANGAN apply ke ledger di sini (lihat catatan panjang secureCompoundLedger.js: 1
+          // posisi = 1 kali applyTradeResult, pas BENERAN full-closed). `capital`/ledger baru
+          // ke-update nanti pas leg sisa selesai (blok `else` di bawah, `totalPnl` udah gabung
+          // `realizedPnl` partial ini + `pnlRest` leg sisa).
           const rewardPct = Math.abs(openPos.partialTp - openPos.entryPrice) / openPos.entryPrice * 100;
           const profitHalf = openPos.nilaiPosisi * 0.5 * (rewardPct / 100);
-          capital += profitHalf;
+          if (!useLedger) capital += profitHalf;
           openPos.realizedPnl = profitHalf;
           openPos.partialDone = true;
           openPos.sl = openPos.entryPrice;
@@ -289,11 +323,12 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
         if (hitSl || trendBroken) {
           const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
           const pnlRest = openPos.nilaiPosisi * 0.5 * (movePctSigned / 100);
-          capital = Math.max(0, capital + pnlRest);
           const totalPnl = openPos.realizedPnl + pnlRest;
+          if (useLedger) ledgerState = applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, today.closeTime);
+          else capital = Math.max(0, capital + pnlRest);
           const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
           trades.push({ ...openPos, exitReason: hitSl ? 'SL_BREAKEVEN' : 'TRAIL_EXIT', rMultiple: riskPct > 0 ? movePctSigned / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
-          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+          capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         }
       }
       continue;
@@ -328,9 +363,16 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
     if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
     // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
     // PERSIS aturan live sekarang, WAJIB dites di backtest ini SEBELUM dipercaya buat real trading.
-    const { nilaiPosisi, margin } = hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined });
-    if (margin > capital) continue;
-    const marginPct = margin / capital * 100;
+    // Ledger aktif (18 Sep 2026) -- sizing lewat `computeBetSizing` (fresh dari tradingCapital
+    // KALAU activeCompound=0, ATAU override nilaiPosisi=activeCompound kalau lagi streak menang),
+    // gerbang margin/marginPct dicek terhadap TOTAL WEALTH ledger (bukan cuma tradingCapital),
+    // biar tetap ada jaring pengaman yang analog sama versi non-ledger.
+    const refCapital = useLedger ? totalWealth(ledgerState) : capital;
+    const { nilaiPosisi, margin } = useLedger
+      ? computeBetSizing(ledgerState, { entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined })
+      : hitungExposure({ modal: capital, entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined });
+    if (margin > refCapital) continue;
+    const marginPct = margin / refCapital * 100;
     if (marginPct > maxMarginPct) continue;
     const lossAtSl = nilaiPosisi * (nyawaPct / 100);
     const partialTp = direction === 'buy' ? lastPrice + riskDistance * partialRR : lastPrice - riskDistance * partialRR;
@@ -343,7 +385,12 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
 
   let peak = -Infinity, maxDrawdownPct = 0;
   for (const pt of capitalSeries) { peak = Math.max(peak, pt.capital); maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.capital) / peak * 100); }
-  return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries };
+  return {
+    trades, finalCapital: useLedger ? totalWealth(ledgerState) : capital, maxDrawdownPct, capitalSeries,
+    // `ledgerState`/`cycleEvents` null/kosong kalau `ledgerStartCapital` gak diisi -- caller lama
+    // gak perlu peduli field baru ini.
+    ledgerState, cycleEvents,
+  };
 }
 
 // Strategi HEDGE PASIF (21 Agu 2026, usulan Olan): "ketika gak ada sinyal sniper sama sekali,
@@ -861,7 +908,21 @@ function summarize(trades) {
   return { n, winRate: (wins.length / n * 100).toFixed(1) + '%', profitFactor: grossLossR > 0 ? (grossWinR / grossLossR).toFixed(2) : 'inf', totalR: totalR.toFixed(2), avgR: (totalR / n).toFixed(2) };
 }
 
-module.exports = { runFlagBacktest, runFlagBacktestWindowGated, runShortHedgeBacktest, runFlag3TierBacktest, runFlag3TierProfitShortBacktest, runFlagFullTrailBacktest, detectFlag, detectWedge, summarize, fetchAllCandles };
+// Window bear Emas buat Sniper (harian) -- harga di bawah SMA200-hari sendiri, SAMA persis cara
+// sniperAutoAnalysis.js ngecek window Emas live. Diangkat ke scope modul (18 Sep 2026, tadinya
+// nested di `require.main===module` doang) biar bisa di-reuse script LAIN (mis.
+// `backtest/secureCompoundBacktest.js`) tanpa duplikasi -- zero perubahan perilaku, murni extract.
+function makeXauBearWindowFn(candles, smaLen = 200) {
+  const closes = candles.map((c) => c.close);
+  const map = new Map();
+  for (let i = 0; i < candles.length; i++) {
+    const s = i >= smaLen - 1 ? sma(closes.slice(0, i + 1), smaLen) : null;
+    map.set(new Date(candles[i].closeTime).toISOString().slice(0, 10), s !== null && candles[i].close < s);
+  }
+  return (d) => map.get(d.toISOString().slice(0, 10)) || false;
+}
+
+module.exports = { runFlagBacktest, runFlagBacktestWindowGated, runShortHedgeBacktest, runFlag3TierBacktest, runFlag3TierProfitShortBacktest, runFlagFullTrailBacktest, detectFlag, detectWedge, summarize, fetchAllCandles, makeXauBearWindowFn };
 
 if (require.main === module) {
   (async () => {
@@ -1013,18 +1074,6 @@ if (require.main === module) {
     console.log('\n\n\n########## EMAS (PAXGUSDT/XAU proxy, window = harga vs SMA200) ##########');
     const goldDaily = JSON.parse(fs.readFileSync(path.join(__dirname, 'backtest', 'gold-daily-cache.json'), 'utf8'));
     console.log('Gold daily candles:', goldDaily.length, '(', new Date(goldDaily[0].closeTime).toISOString().slice(0, 10), '->', new Date(goldDaily[goldDaily.length - 1].closeTime).toISOString().slice(0, 10), ')');
-
-    // Precompute SEKALI (bukan di dalam hot loop) -- map tanggal -> bear/bukan, SMA dihitung dari
-    // closes Emas-nya SENDIRI (SAMA persis cara sniperAutoAnalysis.js ngecek window Emas live).
-    function makeXauBearWindowFn(candles, smaLen = 200) {
-      const closes = candles.map((c) => c.close);
-      const map = new Map();
-      for (let i = 0; i < candles.length; i++) {
-        const s = i >= smaLen - 1 ? sma(closes.slice(0, i + 1), smaLen) : null;
-        map.set(new Date(candles[i].closeTime).toISOString().slice(0, 10), s !== null && candles[i].close < s);
-      }
-      return (d) => map.get(d.toISOString().slice(0, 10)) || false;
-    }
 
     const xauBearFn = makeXauBearWindowFn(goldDaily);
     const xauWg = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn });

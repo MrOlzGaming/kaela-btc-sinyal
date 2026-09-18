@@ -22,6 +22,7 @@ const tradeHistoryStore = require('./tradeHistoryStore');
 const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
 const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
+const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -201,6 +202,87 @@ async function main() {
     assert.strictEqual(positionTypeFor('sell'), 2, 'sell harus positionType 2 (short)');
     assert.strictEqual(openSideFor('sell'), 3, 'sell harus openSide 3 (open short)');
     assert.strictEqual(closeSideFor('sell'), 2, 'sell harus closeSide 2 (close short) -- ini yang kebalik di BUG-0007');
+  });
+
+  // secureCompoundLedger.js -- money management "Secure/Compound + Target 2x" (18 Sep 2026,
+  // permintaan Olan). Ground truth = ANGKA PERSIS dari contoh section 9 spec Olan sendiri (WIN
+  // branch pure aritmetik, gak tergantung formula Kalkulator Exposure). LOSS branch dites via
+  // hitungExposure() ASLI (bukan hardcode $1 -- di modal $100, MAX_LEVERAGE=50 bikin margin
+  // minimum $6, jauh dari ilustrasi "$1" Olan yang emang cuma simplifikasi buat jelasin KONSEP,
+  // bukan angka literal formula asli -- ini SESUAI temuan riset sebelum implementasi, dicatat di
+  // plan 18 Sep 2026).
+  await test('secureCompoundLedger: skenario penuh WIN-WIN-WIN-LOSS (ground truth contoh Olan)', () => {
+    let state = createLedgerState(100);
+    assert.strictEqual(state.tradingCapital, 100);
+    assert.strictEqual(totalWealth(state), 100);
+
+    // Trade 1 (fresh bet, activeCompound=0) -- WIN, profit $3 (angka ilustrasi Olan).
+    state = applyTradeResult(state, { pnlUsd: 3 });
+    assert.strictEqual(state.secure, 1.5, 'Trade 1 WIN: secure harus 1.50');
+    assert.strictEqual(state.activeCompound, 1.5, 'Trade 1 WIN: compound harus 1.50');
+    assert.strictEqual(state.tradingCapital, 100, 'Trading Capital DIAM selama streak menang');
+
+    // Trade 2 (compound bet, activeCompound=1.5) -- WIN, profit $4.50.
+    state = applyTradeResult(state, { pnlUsd: 4.5 });
+    assert.strictEqual(state.secure, 3.75, 'Trade 2 WIN: secure kumulatif harus 3.75 (1.50+2.25)');
+    assert.strictEqual(state.activeCompound, 2.25, 'Trade 2 WIN: compound REPLACE (bukan ditambah) jadi 2.25');
+    assert.strictEqual(state.tradingCapital, 100);
+
+    // Trade 3 (compound bet, activeCompound=2.25) -- WIN, profit $6.75.
+    state = applyTradeResult(state, { pnlUsd: 6.75 });
+    assert.strictEqual(state.secure, 7.125, 'Trade 3 WIN: secure kumulatif harus 7.125 (3.75+3.375)');
+    assert.strictEqual(state.activeCompound, 3.375, 'Trade 3 WIN: compound jadi 3.375');
+    assert.strictEqual(state.tradingCapital, 100);
+
+    // Trade 4 -- LOSS. Deduction Trading Capital pakai BET FRESH dari hitungExposure() ASLI
+    // (modal=tradingCapital SAAT INI=100), BUKAN nilai compound ($3.375) yang beneran dipasang
+    // pas kalah -- ini SENGAJA (lihat catatan panjang di secureCompoundLedger.js).
+    const entry = 65000, stopLoss = 63700, direction = 'buy'; // nyawa ~2%, representatif trade beneran
+    const expectedFreshBet = hitung({ modal: 100, entry, stopLoss, direction });
+    state = applyTradeResult(state, { pnlUsd: -expectedFreshBet.margin, entry, stopLoss, direction });
+    assert.strictEqual(state.activeCompound, 0, 'Trade 4 LOSS: compound harus direset ke 0');
+    assert.ok(Math.abs(state.tradingCapital - (100 - expectedFreshBet.margin)) < 1e-9, `Trading Capital harusnya ${100 - expectedFreshBet.margin}, malah ${state.tradingCapital}`);
+    assert.strictEqual(state.secure, 7.125, 'Secure TIDAK BOLEH kesentuh sama sekali pas LOSS');
+  });
+
+  await test('secureCompoundLedger: computeBetSizing -- fresh bet (activeCompound=0) PERSIS hitung() apa adanya', () => {
+    const state = createLedgerState(500);
+    const opts = { entry: 65000, stopLoss: 63700, direction: 'buy' };
+    const result = computeBetSizing(state, opts);
+    const expected = hitung({ modal: 500, ...opts });
+    assert.strictEqual(result.nilaiPosisi, expected.nilaiPosisi);
+    assert.strictEqual(result.leverage, expected.leverage);
+    assert.strictEqual(result.margin, expected.margin);
+    assert.strictEqual(result.usedCompound, false);
+  });
+
+  await test('secureCompoundLedger: computeBetSizing -- compound aktif override nilaiPosisi, short dibagi 2', () => {
+    let state = createLedgerState(100);
+    state = { ...state, activeCompound: 1.5 };
+    const long = computeBetSizing(state, { entry: 65000, stopLoss: 63700, direction: 'buy' });
+    assert.strictEqual(long.nilaiPosisi, 1.5, 'Long: nilaiPosisi harus PERSIS nilai compound');
+    assert.strictEqual(long.usedCompound, true);
+    const short = computeBetSizing(state, { entry: 65000, stopLoss: 66300, direction: 'sell' });
+    assert.strictEqual(short.nilaiPosisi, 0.75, 'Short: nilaiPosisi compound harus dibagi 2 (aturan besi short=separuh long)');
+    assert.strictEqual(short.margin, short.nilaiPosisi / short.leverage, 'Margin harus konsisten sama leverage yang dihitung ulang dari nyawa%');
+  });
+
+  await test('secureCompoundLedger: checkAndRolloverCycle -- target 2x tercapai vs belum', () => {
+    const belum = { ...createLedgerState(100), tradingCapital: 100, secure: 80, activeCompound: 10 }; // totalWealth=190 < 200
+    const r1 = checkAndRolloverCycle(belum);
+    assert.strictEqual(r1.cycleClosed, false);
+    assert.strictEqual(r1.state, belum, 'State gak diubah/dicopy kalau belum capai target');
+
+    const capai = { ...createLedgerState(100), tradingCapital: 100, secure: 90, activeCompound: 20 }; // totalWealth=210 >= 200
+    const r2 = checkAndRolloverCycle(capai);
+    assert.strictEqual(r2.cycleClosed, true);
+    assert.strictEqual(r2.state.startingWealth, 210, 'startingWealth siklus baru = totalWealth siklus lama');
+    assert.strictEqual(r2.state.activeCompound, 0, 'activeCompound direset pas rollover');
+    assert.strictEqual(r2.state.tradingCapital, 100, 'Trading Capital TIDAK direset pas rollover');
+    assert.strictEqual(r2.state.secure, 90, 'Secure TIDAK direset pas rollover');
+    assert.strictEqual(r2.state.cycleCount, 1);
+    assert.strictEqual(r2.state.closedCycles.length, 1);
+    assert.strictEqual(r2.cycleSummary.endingWealth, 210);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

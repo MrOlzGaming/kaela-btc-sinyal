@@ -24,6 +24,7 @@ const { sma } = require('../technicalAnalysis');
 const { hitung: hitungExposure } = require('../calculator');
 const { detectFlag, detectWedge } = require('../chartPatterns');
 const { isBtcBearWindow } = require('../halvingBearWindow');
+const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('../secureCompoundLedger');
 
 const HOURLY_BTC = JSON.parse(fs.readFileSync(path.join(__dirname, 'hourly-cache.json'), 'utf8'));
 // Emas (30 Agu 2026, permintaan Olan: "bukan cuma BTC.. tapi BTC dan Emas", sama pola kayak
@@ -322,11 +323,31 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
     // tren buat diikuti). `adxGateFn(candles, i) -> bool`, null (default) = tanpa gerbang,
     // backward-compatible sama caller lama.
     adxGateFn = null,
+    // Money management "Secure/Compound + Target 2x" (18 Sep 2026) -- OPSIONAL, default `null` =
+    // ZERO perubahan perilaku. Isi angka buat AKTIFKAN, lihat catatan lengkap di
+    // `backtestFlagBreakout.js` `runFlagBacktestWindowGated` (pola PERSIS sama). Bet FRESH di
+    // sini tetap pakai `tradingCapital/modalDivisor` (PRESERVE "cheat exposure" existing Nyopet).
+    ledgerStartCapital = null,
   } = opts;
   const trades = [];
   let openPos = null;
   let capital = startCapital, totalDeposited = startCapital, lastTopUpMonthKey = null;
-  const capitalSeries = [{ time: candles[warmupCandles] ? candles[warmupCandles].closeTime : 0, capital }];
+  let ledgerState = ledgerStartCapital != null ? createLedgerState(ledgerStartCapital) : null;
+  const useLedger = ledgerState !== null;
+  const cycleEvents = [];
+  const capitalSeries = [{ time: candles[warmupCandles] ? candles[warmupCandles].closeTime : 0, capital: useLedger ? totalWealth(ledgerState) : capital }];
+
+  // Helper (dipakai 3 titik full-close: WINDOW_FLIP, SL, SL_BREAKEVEN/TRAIL_EXIT) -- sama persis
+  // pola `applyLedgerTradeResult` di `backtestFlagBreakout.js`, disalin lokal (bukan diimpor)
+  // biar `freshModal` bisa dikunci ke `modalDivisor` file ini tanpa nambah parameter ekstra ke
+  // fungsi bersama di `secureCompoundLedger.js`.
+  function applyLedgerTradeResultLocal(state, pos, totalPnl, exitTime) {
+    let next = applyTradeResult(state, { pnlUsd: totalPnl, entry: pos.entryPrice, stopLoss: pos.originalSl, direction: pos.direction, freshModal: state.tradingCapital / modalDivisor });
+    const rollover = checkAndRolloverCycle(next);
+    next = rollover.state;
+    if (rollover.cycleClosed) cycleEvents.push({ ...rollover.cycleSummary, exitTime });
+    return next;
+  }
 
   for (let i = warmupCandles; i < candles.length; i++) {
     const today = candles[i];
@@ -337,7 +358,12 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
       const monthKey = d.getUTCFullYear() * 12 + d.getUTCMonth();
       if (d.getUTCDate() >= topUpDayOfMonth && monthKey !== lastTopUpMonthKey) {
         lastTopUpMonthKey = monthKey;
-        if (capital < topUpStopAt) { capital += topUpAmount; totalDeposited += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
+        if (useLedger) {
+          if (ledgerState.tradingCapital < topUpStopAt) {
+            ledgerState = { ...ledgerState, tradingCapital: ledgerState.tradingCapital + topUpAmount };
+            capitalSeries.push({ time: today.closeTime, capital: totalWealth(ledgerState) });
+          } else if (onRedirectedTopUp) onRedirectedTopUp(topUpAmount, today.closeTime);
+        } else if (capital < topUpStopAt) { capital += topUpAmount; totalDeposited += topUpAmount; capitalSeries.push({ time: today.closeTime, capital }); }
         else if (onRedirectedTopUp) onRedirectedTopUp(topUpAmount, today.closeTime);
       }
     }
@@ -349,10 +375,11 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
         const remainingFrac = openPos.partialDone ? 0.5 : 1;
         const pnlRest = openPos.nilaiPosisi * remainingFrac * (movePctSigned / 100);
         const totalPnl = openPos.realizedPnl + pnlRest;
-        capital = Math.max(0, capital + pnlRest);
+        if (useLedger) ledgerState = applyLedgerTradeResultLocal(ledgerState, openPos, totalPnl, today.closeTime);
+        else capital = Math.max(0, capital + pnlRest);
         const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
         trades.push({ ...openPos, exitReason: 'WINDOW_FLIP', rMultiple: riskPct > 0 ? (totalPnl / openPos.nilaiPosisi * 100) / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
-        capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+        capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         continue;
       }
       const closes = candles.slice(0, i + 1).map((c) => c.close);
@@ -361,13 +388,16 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
         const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
         const hitPartial = openPos.direction === 'buy' ? today.high >= openPos.partialTp : today.low <= openPos.partialTp;
         if (hitSl) {
-          capital = Math.max(0, capital - openPos.lossAtSl);
+          if (useLedger) ledgerState = applyLedgerTradeResultLocal(ledgerState, openPos, -openPos.lossAtSl, today.closeTime);
+          else capital = Math.max(0, capital - openPos.lossAtSl);
           trades.push({ ...openPos, exitReason: 'SL', rMultiple: -1, pnlUsd: -openPos.lossAtSl, exitTime: today.closeTime });
-          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+          capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         } else if (hitPartial) {
+          // Partial BUKAN full-close -- JANGAN apply ke ledger di sini (lihat catatan sama persis
+          // di backtestFlagBreakout.js). `totalPnl` di leg sisa (blok bawah) udah gabung ini.
           const rewardPct = Math.abs(openPos.partialTp - openPos.entryPrice) / openPos.entryPrice * 100;
           const profitHalf = openPos.nilaiPosisi * 0.5 * (rewardPct / 100);
-          capital += profitHalf;
+          if (!useLedger) capital += profitHalf;
           openPos.realizedPnl = profitHalf; openPos.partialDone = true; openPos.sl = openPos.entryPrice;
         }
       } else {
@@ -376,11 +406,12 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
         if (hitSl || trendBroken) {
           const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
           const pnlRest = openPos.nilaiPosisi * 0.5 * (movePctSigned / 100);
-          capital = Math.max(0, capital + pnlRest);
           const totalPnl = openPos.realizedPnl + pnlRest;
+          if (useLedger) ledgerState = applyLedgerTradeResultLocal(ledgerState, openPos, totalPnl, today.closeTime);
+          else capital = Math.max(0, capital + pnlRest);
           const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
           trades.push({ ...openPos, exitReason: hitSl ? 'SL_BREAKEVEN' : 'TRAIL_EXIT', rMultiple: riskPct > 0 ? movePctSigned / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
-          capitalSeries.push({ time: today.closeTime, capital }); openPos = null;
+          capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         }
       }
       continue;
@@ -418,12 +449,17 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
     if (riskDistance === 0) continue;
     const nyawaPct = riskDistance / lastPrice * 100;
     if (maxNyawaPct !== null && nyawaPct > maxNyawaPct) continue;
-    const sizingModal = capital / modalDivisor;
     // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
     // PERSIS aturan live sekarang, WAJIB dites di backtest ini SEBELUM dipercaya buat real trading.
-    const { nilaiPosisi, margin } = hitungExposure({ modal: sizingModal, entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined });
-    if (margin > capital) continue;
-    const marginPct = margin / capital * 100;
+    // Ledger aktif (18 Sep 2026) -- sizing lewat `computeBetSizing`, `freshModal` dikunci ke
+    // `tradingCapital/modalDivisor` biar "cheat exposure" existing Nyopet tetap kepakai buat bet
+    // fresh. Gerbang margin dicek terhadap TOTAL WEALTH ledger (bukan cuma tradingCapital).
+    const refCapital = useLedger ? totalWealth(ledgerState) : capital;
+    const { nilaiPosisi, margin } = useLedger
+      ? computeBetSizing(ledgerState, { entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined, freshModal: ledgerState.tradingCapital / modalDivisor })
+      : hitungExposure({ modal: capital / modalDivisor, entry: lastPrice, stopLoss: sl, direction: halfShortExposure ? direction : undefined });
+    if (margin > refCapital) continue;
+    const marginPct = margin / refCapital * 100;
     if (marginPct > maxMarginPct) continue;
     const lossAtSl = nilaiPosisi * (nyawaPct / 100);
     const partialTp = direction === 'buy' ? lastPrice + riskDistance * partialRR : lastPrice - riskDistance * partialRR;
@@ -433,7 +469,10 @@ function runNyopetV2BacktestWindowGated(candles, opts = {}) {
 
   let peak = -Infinity, maxDrawdownPct = 0;
   for (const pt of capitalSeries) { peak = Math.max(peak, pt.capital); maxDrawdownPct = Math.max(maxDrawdownPct, (peak - pt.capital) / peak * 100); }
-  return { trades, finalCapital: capital, maxDrawdownPct, capitalSeries, totalDeposited };
+  return {
+    trades, finalCapital: useLedger ? totalWealth(ledgerState) : capital, maxDrawdownPct, capitalSeries, totalDeposited,
+    ledgerState, cycleEvents,
+  };
 }
 
 function summarize(trades) {

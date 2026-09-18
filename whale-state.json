@@ -1,5 +1,5 @@
 {
-  "lastProcessedHeight": 967537,
+  "lastProcessedHeight": 967538,
   "lastDigest": {
     "dateKey": "2026-09-18",
     "totalBtc": 6861.65068429,
@@ -1502,6 +1502,21 @@
       },
       {
         "totalBtc": 350.03052551,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1200.91977148,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2398.80715184,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2466.77660038,
         "direction": null,
         "exchange": null
       }

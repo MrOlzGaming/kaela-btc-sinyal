@@ -2073,5 +2073,10 @@
     "type": "whale-daily",
     "date": "2026-09-18T16:31:11.874Z",
     "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-09-19\n21 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 45.851,05 BTC berpindah (~$3,717,355,155 / ~Rp65.948.003.378.036)\nTerbesar: 20.391,51 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 21 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "price-alert",
+    "date": "2026-09-18T21:00:57.601Z",
+    "content": "🟫 🚀 PERGERAKAN HARGA MENDADAK -- 🟧 BTCUSDT NAIK 6.00% dalam 24 jam terakhir\n\nDari $76,566 ke $81,163.\n\n⚠️ Fakta pergerakan harga murni -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

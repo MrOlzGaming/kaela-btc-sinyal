@@ -2078,5 +2078,10 @@
     "type": "price-alert",
     "date": "2026-09-18T21:00:57.601Z",
     "content": "🟫 🚀 PERGERAKAN HARGA MENDADAK -- 🟧 BTCUSDT NAIK 6.00% dalam 24 jam terakhir\n\nDari $76,566 ke $81,163.\n\n⚠️ Fakta pergerakan harga murni -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "anomaly",
+    "date": "2026-09-18T22:45:52.255Z",
+    "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n📉 Yield Curve 10Y-2Y: 0.25 -- JAUH DI BAWAH kebiasaan historis kita (median 0.41, z-score -2.6)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n📉 Yield Curve 10Y-2Y\nIni ngukur bunga obligasi Amerika jangka PANJANG (10 tahun) dibanding jangka PENDEK (2 tahun). Lebih sempit/negatif dari biasanya -- histori PANJANG nunjukin ini sering jadi \"alarm dini\" resesi 1-2 tahun ke depan. Bukan berarti BTC langsung jatuh SEKARANG, tapi ini radar makro besar yang dipantau serius analis institusional."
   }
 ]

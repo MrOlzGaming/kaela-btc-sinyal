@@ -10,6 +10,18 @@
 
 const crypto = require('crypto');
 
+// Prefix penanda order Kaela sendiri (19 Sep 2026, INSIDEN NYATA -- Olan minta Kaela bisa BEDAIN
+// PASTI posisi hasil kerjanya sendiri vs posisi manual, biar bisa auto-close yang manual TANPA
+// resiko nutup posisi Kaela sendiri yang kebetulan "kelupaan" di jurnal lokal -- lihat bug
+// dokumentasi di nyopetAutoTrader.js soal mesin eksekutor pindah leader). SEBELUM ini, order
+// dikirim TANPA `newClientOrderId` sama sekali -- gak ada cara pasti tau dari sisi EXCHANGE
+// sendiri apakah 1 order itu ditaruh Kaela atau manual (jurnal lokal doang, yang TERBUKTI bisa
+// "lupa"). Format Binance: max 36 karakter, alfanumerik+`-`/`_`/`.` -- prefix ini pendek+jelas.
+const KAELA_ORDER_PREFIX = 'kaela-';
+function generateKaelaClientOrderId() {
+  return `${KAELA_ORDER_PREFIX}${Date.now()}`;
+}
+
 function loadSecrets() {
   try {
     return require('./secrets');
@@ -168,7 +180,7 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     const quantity = roundToStepSize(rawQuantity, stepSize, quantityPrecision);
     if (quantity <= 0) throw new Error(`Quantity kehitung 0 buat ${symbol} (notional $${notionalUsd} kekecilan buat stepSize ${stepSize}) -- order gak dikirim.`);
     const side = direction === 'buy' ? 'BUY' : 'SELL';
-    const placed = await signedRequest('POST', '/fapi/v1/order', { symbol, side, type: 'MARKET', quantity });
+    const placed = await signedRequest('POST', '/fapi/v1/order', { symbol, side, type: 'MARKET', quantity, newClientOrderId: generateKaelaClientOrderId() });
     return waitForFill(symbol, placed.orderId);
   }
 
@@ -207,6 +219,20 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return (positions || []).filter((p) => Math.abs(parseFloat(p.positionAmt)) > 0);
   }
 
+  // Cek order TERBARU di simbol ini (19 Sep 2026, buat positionReconciler.js bedain PASTI posisi
+  // Kaela vs manual) -- balikin true kalau order PALING BARU (side pembuka posisi, BUKAN
+  // reduceOnly/close) punya `clientOrderId` berawalan KAELA_ORDER_PREFIX. `sinceMs` (opsional)
+  // batasin jendela waktu cek (posisi yang baru KEDETECT ~sekarang, order pembukanya harusnya
+  // juga BARU) -- default 24 jam ke belakang, cukup lebar buat nutup celah delay antara order
+  // kekirim vs posisi kedetect reconciler (siklus 15 menit).
+  async function wasLastEntryOrderByKaela(symbol, sinceMs = Date.now() - 24 * 3600 * 1000) {
+    const orders = await signedRequest('GET', '/fapi/v1/allOrders', { symbol, startTime: sinceMs, limit: 50 });
+    const openingOrders = (orders || []).filter((o) => o.status === 'FILLED' && !o.reduceOnly && !o.closePosition);
+    if (openingOrders.length === 0) return null; // gak ketemu order pembuka sama sekali di jendela ini -- gak bisa disimpulkan
+    const latest = openingOrders.sort((a, b) => b.time - a.time)[0];
+    return String(latest.clientOrderId || '').startsWith(KAELA_ORDER_PREFIX);
+  }
+
   // Jaring pengaman TERAKHIR -- kalau SL/TP gagal nempel SETELAH entry berhasil, posisi TIDAK
   // BOLEH dibiarin nganggur tanpa proteksi. Market close LANGSUNG (arah kebalikan entry).
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
@@ -221,6 +247,7 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
+    wasLastEntryOrderByKaela,
   };
 }
 
@@ -253,9 +280,11 @@ async function getPositionRisk(symbol) { return _defaultClient().getPositionRisk
 async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOpenOrders(symbol); }
 async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
 async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
+async function wasLastEntryOrderByKaela(symbol, sinceMs) { return _defaultClient().wasLastEntryOrderByKaela(symbol, sinceMs); }
 
 module.exports = {
   createBinanceClient,
   getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-  getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket,
+  getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, wasLastEntryOrderByKaela,
+  KAELA_ORDER_PREFIX,
 };

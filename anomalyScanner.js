@@ -262,9 +262,19 @@ async function main() {
     + anomalies.map((a) => formatAnomalyExplanation(a.key, a.z)).join('\n\n');
 
   console.log(dataMsg + '\n\n' + explainMsg);
-  addEntry('anomaly', dataMsg + '\n\n' + explainMsg, now);
-  await sendWhatsApp(dataMsg);
+  // 🐛 FIX 19 Sep 2026 -- `addEntry` dipanggil SEBELUM cek hasil `sendWhatsApp`, padahal
+  // `sendWhatsApp` gak pernah `throw` kalau Fonnte gagal (cuma balikin `{ok:false}`, lihat
+  // fonnte.js) -- arsip anomaly ini bisa kadung nyimpen record "udah kirim" walau WA-nya gagal
+  // beneran nyampe. Kedua sendWhatsApp di sini sama-sama broadcast (data + penjelasan, bukan
+  // broadcast vs Wibowo terpisah), jadi gerbang arsip ngikutin hasil pesan DATA (utama) --
+  // pesan penjelasan tetap dikirim best-effort karena cuma pelengkap, bukan penentu status arsip.
+  const sendResult = await sendWhatsApp(dataMsg);
   await sendWhatsApp(explainMsg);
+  if (sendResult && sendResult.ok === false) {
+    console.log('[AnomalyScanner] Kirim WA (pesan data) GAGAL -- SKIP addEntry, biar dicoba ulang siklus berikutnya.');
+  } else {
+    addEntry('anomaly', dataMsg + '\n\n' + explainMsg, now);
+  }
 }
 
 module.exports = { formatAnomalyData, formatAnomalyExplanation, collectTodayValues };

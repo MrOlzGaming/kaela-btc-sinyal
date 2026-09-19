@@ -97,8 +97,17 @@ async function main() {
     }
     const msg = entry.special ? greetingKaelaOlan() : greetingFor(entry.name);
     console.log(msg + '\n');
-    addOrReplaceDaily(type, msg, now); // anti-dobel kalau ke-run ulang di hari sama
-    await sendWhatsApp(msg, WIBOWO_GROUP_ID); // ke Wibowo Hedgefund doang, BUKAN broadcast semua grup
+    // 🐛 FIX 19 Sep 2026 -- `addOrReplaceDaily` dipanggil SEBELUM cek hasil `sendWhatsApp`, padahal
+    // `sendWhatsApp` gak pernah `throw` kalau Fonnte gagal (cuma balikin `{ok:false}`, lihat
+    // fonnte.js). Kalau itu kejadian, ucapan ultah dianggap "udah diucapin hari ini" padahal gak
+    // pernah nyampe, DAN gak dicoba ulang. Fix: kirim DULU, `addOrReplaceDaily` cuma kalau beneran
+    // sukses (atau skipped -- gak ada secrets.js, situasi normal).
+    const sendResult = await sendWhatsApp(msg, WIBOWO_GROUP_ID); // ke Wibowo Hedgefund doang, BUKAN broadcast semua grup
+    if (sendResult && sendResult.ok === false) {
+      console.log(`[BirthdayGreeting] Kirim WA ucapan "${entry.key}" GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya.`);
+    } else {
+      addOrReplaceDaily(type, msg, now); // anti-dobel kalau ke-run ulang di hari sama
+    }
   }
 }
 

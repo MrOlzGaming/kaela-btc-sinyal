@@ -93,10 +93,21 @@ async function main() {
     + `🔗 Ini laporan otomatis, BUKAN nunggu checklist 20:00 WITA -- lapor cepat begitu ketauan.\n\n`
     + `— Kaela`;
   console.log(msg);
+  // 🐛 FIX 19 Sep 2026 -- `try/catch` di sini CUMA nangkep exception JS asli, PADAHAL kegagalan
+  // Fonnte (yang paling sering kejadian -- token invalid/API down) gak pernah `throw`, cuma
+  // balikin `{ok:false}` (lihat fonnte.js). Akibatnya `state.lastAlertAt`/`saveState` TETAP jalan
+  // walau WA gagal diam-diam -- alert "macet" dianggap terkirim (cooldown 1 jam aktif), padahal
+  // Olan belum terima apa-apa PERSIS pas sistem lagi bermasalah (waktu paling butuh alert-nya).
+  // Fix: cek hasil eksplisit, cuma update state kalau beneran sukses (atau skipped -- gak ada
+  // secrets.js, situasi normal, bukan kegagalan kirim).
   try {
-    await sendWhatsApp(msg, MASTER_NOMOR);
-    state.lastAlertAt = now;
-    saveState(state);
+    const sendResult = await sendWhatsApp(msg, MASTER_NOMOR);
+    if (sendResult && sendResult.ok === false) {
+      console.log('[CheckExecutorStuck] Kirim WA GAGAL (Fonnte nolak/API down) -- state alert TIDAK diupdate, biar dicoba lagi menit depan.');
+    } else {
+      state.lastAlertAt = now;
+      saveState(state);
+    }
   } catch (e) {
     console.log('[CheckExecutorStuck] Gagal kirim WA (dicoba lagi menit depan):', e.message);
   }

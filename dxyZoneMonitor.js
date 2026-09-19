@@ -89,12 +89,32 @@ async function main() {
         ? 'dolar makin MELEMAH -- historisnya DUKUNG BTC/emas ke atas'
         : 'dolar makin MENGUAT -- historisnya TEKAN BTC/emas ke bawah';
       const msg = `💵 [Kaela] DXY TEMBUS ${sideLabel} $${fmtDxy(state.watchZone.price)}\n\nHarga sekarang $${fmtDxy(latest.close)} -- ${impact}.${DISCLAIMER}`;
-      console.log(msg); addEntry('dxy-zone', msg, new Date()); await sendWhatsApp(msg);
-      state.watchZone = null;
+      console.log(msg);
+      // 🐛 FIX 19 Sep 2026 -- `addEntry`+`state.watchZone = null` dipanggil SEBELUM cek hasil
+      // `sendWhatsApp`, padahal `sendWhatsApp` gak pernah `throw` kalau Fonnte gagal (cuma balikin
+      // `{ok:false}`, lihat fonnte.js). Kalau itu kejadian, watchZone udah kadung direset padahal
+      // alert TEMBUS-nya gak pernah nyampe, DAN gak akan dicoba ulang siklus depan. Fix: cek hasil
+      // dulu, arsip+reset watchZone cuma jalan kalau beneran sukses (atau skipped).
+      const sendResult = await sendWhatsApp(msg);
+      if (sendResult && sendResult.ok === false) {
+        console.log('[DxyZoneMonitor] Kirim WA (TEMBUS) GAGAL -- SKIP addEntry & reset watchZone, biar dicoba ulang siklus berikutnya.');
+      } else {
+        addEntry('dxy-zone', msg, new Date());
+        state.watchZone = null;
+      }
     } else if (pctDist(latest.close, state.watchZone.price) > PARAMS.MOVE_AWAY_PCT) {
       const msg = `💵 [Kaela] DXY GAGAL TEMBUS ${sideLabel} $${fmtDxy(state.watchZone.price)} -- mantul, harga sekarang $${fmtDxy(latest.close)}.${DISCLAIMER}`;
-      console.log(msg); addEntry('dxy-zone', msg, new Date()); await sendWhatsApp(msg);
-      state.watchZone = null;
+      console.log(msg);
+      // 🐛 FIX 19 Sep 2026 -- sama kayak blok TEMBUS di atas: `addEntry`+reset watchZone dipanggil
+      // SEBELUM cek hasil `sendWhatsApp`. Fix: cek hasil dulu, arsip+reset cuma jalan kalau
+      // beneran sukses (atau skipped).
+      const sendResultBounce = await sendWhatsApp(msg);
+      if (sendResultBounce && sendResultBounce.ok === false) {
+        console.log('[DxyZoneMonitor] Kirim WA (mantul) GAGAL -- SKIP addEntry & reset watchZone, biar dicoba ulang siklus berikutnya.');
+      } else {
+        addEntry('dxy-zone', msg, new Date());
+        state.watchZone = null;
+      }
     } else {
       console.log(`[DxyZoneMonitor] Masih mantengin ${sideLabel} $${fmtDxy(state.watchZone.price)}, harga sekarang $${fmtDxy(latest.close)}.`);
     }
@@ -102,10 +122,21 @@ async function main() {
     const touched = findTouchCandidate(latest, zones);
     if (touched) {
       const sideLabel = touched.direction === 'long' ? 'SUPPORT' : 'RESISTANCE';
-      state.watchZone = { price: touched.price, side: touched.direction === 'long' ? 'support' : 'resistance', kind: touched.kind, touches: touched.touches };
       const pair = findNearestPair(latest.close, zones);
       const msg = `💵 [Kaela] DXY DEKAT ${sideLabel} $${fmtDxy(touched.price)}\n\nHarga sekarang $${fmtDxy(latest.close)} -- WASPADA, titik ini biasanya jadi tempat mantul/tembus. Kaela kabarin lagi begitu arahnya jelas.${DISCLAIMER}`;
-      console.log(msg); addEntry('dxy-zone', msg, new Date()); await sendWhatsApp(msg);
+      console.log(msg);
+      // 🐛 FIX 19 Sep 2026 -- `state.watchZone` (mulai mantengin) + `addEntry` SEBELUMNYA di-set
+      // SEBELUM cek hasil `sendWhatsApp`. Kalau kirim gagal, sistem udah kadung "mantengin" zona
+      // ini diam-diam tanpa Olan pernah tau ada notifikasi DEKAT zona -- padahal notifnya gak
+      // pernah nyampe. Fix: `state.watchZone` (dan arsip) cuma di-set kalau kirim beneran sukses
+      // (atau skipped), biar gagal kirim gak nyaru jadi "udah mulai mantau".
+      const sendResult = await sendWhatsApp(msg);
+      if (sendResult && sendResult.ok === false) {
+        console.log('[DxyZoneMonitor] Kirim WA (DEKAT zona) GAGAL -- SKIP addEntry & watchZone, biar dicoba ulang siklus berikutnya.');
+      } else {
+        addEntry('dxy-zone', msg, new Date());
+        state.watchZone = { price: touched.price, side: touched.direction === 'long' ? 'support' : 'resistance', kind: touched.kind, touches: touched.touches };
+      }
     } else {
       console.log(`[DxyZoneMonitor] DXY $${fmtDxy(latest.close)} belum deket zona manapun, skip.`);
     }

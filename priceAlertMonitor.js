@@ -100,10 +100,19 @@ async function checkAsset(assetKey, assetCfg, now, state) {
     if (cooldownOk) {
       const msg = formatAlert({ assetCfg, pct: change1hPct, fromPrice: price1hAgo, toPrice: currentPrice, windowLabel: '1 jam terakhir', backtested: th.backtested });
       console.log(msg + '\n');
-      addEntry('price-alert', msg, now);
-      await sendWhatsApp(msg);
-      assetState.last1hAlert = now.toISOString();
-      sentAny = true;
+      // 🐛 FIX 19 Sep 2026 -- `addEntry`+`assetState.last1hAlert` (dedup-state cooldown) dipanggil
+      // SEBELUM cek hasil `sendWhatsApp`, padahal `sendWhatsApp` gak pernah `throw` kalau Fonnte
+      // gagal (cuma balikin `{ok:false}`, lihat fonnte.js). Kalau itu kejadian, cooldown 1 jam
+      // udah kadung aktif padahal alert-nya gak pernah nyampe. Fix: cek hasil dulu, arsip+cooldown
+      // cuma jalan kalau beneran sukses (atau skipped -- gak ada secrets.js, situasi normal).
+      const sendResult = await sendWhatsApp(msg);
+      if (sendResult && sendResult.ok === false) {
+        console.log(`[PriceAlert] Kirim WA (1 jam, ${assetCfg.label}) GAGAL -- SKIP addEntry & cooldown, biar dicoba ulang siklus berikutnya.`);
+      } else {
+        addEntry('price-alert', msg, now);
+        assetState.last1hAlert = now.toISOString();
+        sentAny = true;
+      }
     } else {
       console.log(`[PriceAlert] ${assetCfg.label} ambang 1 jam kelewat (${change1hPct.toFixed(2)}%) tapi masih cooldown, skip.`);
     }
@@ -115,10 +124,17 @@ async function checkAsset(assetKey, assetCfg, now, state) {
       const price24hAgo = currentPrice / (1 + change24hPct / 100);
       const msg = formatAlert({ assetCfg, pct: change24hPct, fromPrice: price24hAgo, toPrice: currentPrice, windowLabel: '24 jam terakhir', backtested: th.backtested });
       console.log(msg + '\n');
-      addEntry('price-alert', msg, now);
-      await sendWhatsApp(msg);
-      assetState.last24hAlert = now.toISOString();
-      sentAny = true;
+      // 🐛 FIX 19 Sep 2026 -- sama kayak titik 1 jam di atas: `addEntry`+cooldown dipanggil SEBELUM
+      // cek hasil `sendWhatsApp`. Fix: cek hasil dulu, arsip+cooldown cuma jalan kalau beneran
+      // sukses (atau skipped -- gak ada secrets.js, situasi normal).
+      const sendResult = await sendWhatsApp(msg);
+      if (sendResult && sendResult.ok === false) {
+        console.log(`[PriceAlert] Kirim WA (24 jam, ${assetCfg.label}) GAGAL -- SKIP addEntry & cooldown, biar dicoba ulang siklus berikutnya.`);
+      } else {
+        addEntry('price-alert', msg, now);
+        assetState.last24hAlert = now.toISOString();
+        sentAny = true;
+      }
     } else {
       console.log(`[PriceAlert] ${assetCfg.label} ambang 24 jam kelewat (${change24hPct.toFixed(2)}%) tapi masih cooldown, skip.`);
     }

@@ -26,7 +26,7 @@
 const fs = require('fs');
 const path = require('path');
 const { fetchWeekCalendar, getAllHighImpactUsdEvents } = require('./econCalendar');
-const { formatHeadsUp, formatResult, formatResultFollowup, formatResultExplanation, concludeHawkishDovish } = require('./econCalendarLog');
+const { formatHeadsUp, concludeHawkishDovish } = require('./econCalendarLog');
 const { enrichWithTvActual } = require('./tvEconActual');
 const { recordReaction } = require('./econReactionResearchLog');
 const { fetchDxy } = require('./macroData');
@@ -50,10 +50,6 @@ const { computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.j
 
 const HEADSUP_BEFORE_MIN = 5;
 const RESULT_AFTER_MIN = [5, 15];
-// 12 Sep 2026, permintaan Olan ("pastikan datanya bakal mantap") -- jendela SUSULAN kalau actual
-// masih kosong pas jendela utama (provider TradingView telat update, jarang tapi mungkin -- lihat
-// catatan tvEconActual.js). SATU KALI doang (state.followupSent), gak nge-loop cek selamanya.
-const RESULT_FOLLOWUP_AFTER_MIN = [60, 75];
 const STATE_PATH = path.join(__dirname, 'econ-calendar-live-notified.json');
 const PRUNE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
 

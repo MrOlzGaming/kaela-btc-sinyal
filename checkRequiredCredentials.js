@@ -37,4 +37,12 @@ function main() {
   }
 }
 
-main();
+module.exports = { main };
+
+// FIX 19 Sep 2026 (audit, lihat memori [[feedback-no-blind-require-scripts]]) -- guard
+// `require.main === module` DITAMBAHIN biar aman kalau file ini ke-`require()` dari script lain
+// (mis. smoke-test/syntax-check), bukan cuma dijalankan langsung via `node checkRequiredCredentials.js`.
+// Saat ini TIDAK ADA file lain yang require() file ini (sudah dicek) -- ini PENCEGAHAN.
+if (require.main === module) {
+  main();
+}

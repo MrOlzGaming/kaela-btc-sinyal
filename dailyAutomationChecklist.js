@@ -230,8 +230,20 @@ async function sendChecklistReport(now) {
     '— Kaela',
   ].join('\n');
   console.log(msg);
-  addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);
-  await sendWhatsApp(msg, OLAN_NUMBER); // DM ke Olan pribadi, BUKAN broadcast grup
+  // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA `addOrReplaceDaily` dipanggil SEBELUM `sendWhatsApp`, tanpa
+  // cek hasilnya. `sendWhatsApp` gak pernah `throw` kalau Fonnte gagal (sengaja, lihat fonnte.js)
+  // -- cuma balikin `{ok:false}`. Kalau itu kejadian PERSIS pas laporan mandor jam 20:00 WITA,
+  // `hasEntryToday(CHECKLIST_REPORT_TYPE)` udah kadung `true` SELAMANYA buat hari itu -- Olan gak
+  // pernah tau laporannya gagal terkirim, DAN besok gak dicoba ulang. Ini ironis: laporan mandor
+  // yang tugasnya "kabarin kalau ada yang gagal" justru bisa gagal diam-diam persis di titik yang
+  // sama. Fix: kirim DULU, `addOrReplaceDaily` cuma kalau beneran sukses (atau `skipped` -- gak
+  // ada secrets.js, itu situasi normal dev/testing, bukan kegagalan).
+  const sendResult = await sendWhatsApp(msg, OLAN_NUMBER); // DM ke Olan pribadi, BUKAN broadcast grup
+  if (sendResult && sendResult.ok === false) {
+    console.log('[DailyAutomationChecklist] Kirim laporan checklist ke Olan GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya (bukan ke-anggap udah lapor).');
+  } else {
+    addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);
+  }
   return { anyMissing, anyHealthIssue };
 }
 

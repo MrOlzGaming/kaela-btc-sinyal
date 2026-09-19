@@ -1003,7 +1003,15 @@ if (require.main === module) {
     // dianggap edge asli.
     console.log('\n\n=== WINDOW-GATED (bull=long only, bear=short only, force-close on flip) ===');
     const { isBtcBearWindow } = require('./halvingBearWindow');
-    const wg = runFlagBacktestWindowGated(daily);
+    // FIX 19 Sep 2026 (audit: maxNyawaPct gak pernah di-enforce di riset resmi ini padahal LIVE
+    // -- sniperAutoAnalysis.js -- HARD-REJECT tiap sinyal nyawa%>20) -- `maxNyawaPct: 20` DISAMAIN
+    // PERSIS `MAX_NYAWA_PCT` di sniperAutoAnalysis.js (hardcode angka, BUKAN require file itu --
+    // sniperAutoAnalysis.js berat/ada side-effect exchange client, import langsung riskan). Tanpa
+    // ini, angka finalCapital riset window-bear-short BTC yang dikutip di komentar
+    // sniperAutoAnalysis.js (~baris 290-291) memasukkan trade nyawa%-lebar yang di LIVE gak akan
+    // pernah tereksekusi -- SEMUA pemanggilan runFlagBacktestWindowGated di blok riset resmi ini
+    // (termasuk varian sensitivitas di bawah) ikut diberi batas yang sama biar representatif.
+    const wg = runFlagBacktestWindowGated(daily, { maxNyawaPct: 20 });
     const wgs = summarize(wg.trades);
     console.log(`[Window-gated FULL histori] n=${wgs.n} | winRate=${wgs.winRate} | PF=${wgs.profitFactor} | totalR=${wgs.totalR} | avgR=${wgs.avgR}`);
     console.log(`  finalCapital=$${wg.finalCapital.toFixed(2)} | maxDD=${wg.maxDrawdownPct.toFixed(1)}%`);
@@ -1041,17 +1049,17 @@ if (require.main === module) {
 
     console.log('\n-- Sensitivitas parameter (edge robust harus TAHAN diguncang dikit, bukan fragile) --');
     for (const forceCloseOnFlip of [true, false]) {
-      const v = runFlagBacktestWindowGated(daily, { forceCloseOnFlip });
+      const v = runFlagBacktestWindowGated(daily, { forceCloseOnFlip, maxNyawaPct: 20 });
       const vs = summarize(v.trades);
       console.log(`  forceCloseOnFlip=${forceCloseOnFlip}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)} | maxDD=${v.maxDrawdownPct.toFixed(1)}%`);
     }
     for (const partialRRvar of [1.5, 2, 2.5, 3]) {
-      const v = runFlagBacktestWindowGated(daily, { partialRR: partialRRvar });
+      const v = runFlagBacktestWindowGated(daily, { partialRR: partialRRvar, maxNyawaPct: 20 });
       const vs = summarize(v.trades);
       console.log(`  partialRR=${partialRRvar}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)}`);
     }
     for (const wedgeMinTouchesVar of [2, 3]) {
-      const v = runFlagBacktestWindowGated(daily, { wedgeMinTouches: wedgeMinTouchesVar });
+      const v = runFlagBacktestWindowGated(daily, { wedgeMinTouches: wedgeMinTouchesVar, maxNyawaPct: 20 });
       const vs = summarize(v.trades);
       console.log(`  wedgeMinTouches=${wedgeMinTouchesVar}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)}`);
     }
@@ -1059,7 +1067,7 @@ if (require.main === module) {
     // overfitting ke definisi window PERSIS itu, bukan edge rezim yang genuine.
     for (const shiftDays of [-30, 0, 30]) {
       const shiftedFn = (d) => isBtcBearWindow(new Date(d.getTime() + shiftDays * 86400000));
-      const v = runFlagBacktestWindowGated(daily, { bearWindowFn: shiftedFn });
+      const v = runFlagBacktestWindowGated(daily, { bearWindowFn: shiftedFn, maxNyawaPct: 20 });
       const vShorts = v.trades.filter((t) => t.direction === 'sell');
       const vs = summarize(v.trades);
       console.log(`  window shift ${shiftDays}hr: n=${vs.n} (short=${vShorts.length}) | PF=${vs.profitFactor} | totalR=${vs.totalR} | shortTotalR=${vShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | finalCapital=$${v.finalCapital.toFixed(2)}`);
@@ -1076,7 +1084,10 @@ if (require.main === module) {
     console.log('Gold daily candles:', goldDaily.length, '(', new Date(goldDaily[0].closeTime).toISOString().slice(0, 10), '->', new Date(goldDaily[goldDaily.length - 1].closeTime).toISOString().slice(0, 10), ')');
 
     const xauBearFn = makeXauBearWindowFn(goldDaily);
-    const xauWg = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn });
+    // (samain maxNyawaPct 20 kayak MAX_NYAWA_PCT sniperAutoAnalysis.js, lihat catatan panjang di
+    // pemanggilan `wg` BTC di atas -- ini persis yang dikutip komentar sniperAutoAnalysis.js
+    // soal "Emas justru lebih jelek", jadi WAJIB representatif juga.)
+    const xauWg = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn, maxNyawaPct: 20 });
     const xauWgs = summarize(xauWg.trades);
     console.log(`\n[Emas Window-gated FULL histori] n=${xauWgs.n} | winRate=${xauWgs.winRate} | PF=${xauWgs.profitFactor} | totalR=${xauWgs.totalR} | avgR=${xauWgs.avgR}`);
     console.log(`  finalCapital=$${xauWg.finalCapital.toFixed(2)} | maxDD=${xauWg.maxDrawdownPct.toFixed(1)}%`);
@@ -1123,13 +1134,13 @@ if (require.main === module) {
     console.log('\n-- Emas: Sensitivitas parameter (SMA length -- ganti "shift window" krn ini bukan window tanggal) --');
     for (const smaLen of [150, 200, 250]) {
       const fn = makeXauBearWindowFn(goldDaily, smaLen);
-      const v = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: fn });
+      const v = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: fn, maxNyawaPct: 20 });
       const vShorts = v.trades.filter((t) => t.direction === 'sell');
       const vs = summarize(v.trades);
       console.log(`  SMA${smaLen}: n=${vs.n} (short=${vShorts.length}) | PF=${vs.profitFactor} | totalR=${vs.totalR} | shortTotalR=${vShorts.reduce((s, t) => s + t.rMultiple, 0).toFixed(2)} | finalCapital=$${v.finalCapital.toFixed(2)}`);
     }
     for (const forceCloseOnFlip of [true, false]) {
-      const v = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn, forceCloseOnFlip });
+      const v = runFlagBacktestWindowGated(goldDaily, { bearWindowFn: xauBearFn, forceCloseOnFlip, maxNyawaPct: 20 });
       const vs = summarize(v.trades);
       console.log(`  forceCloseOnFlip=${forceCloseOnFlip}: n=${vs.n} | PF=${vs.profitFactor} | totalR=${vs.totalR} | finalCapital=$${v.finalCapital.toFixed(2)}`);
     }

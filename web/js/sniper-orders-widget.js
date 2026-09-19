@@ -102,7 +102,13 @@
     const hours = Math.floor((totalSec % 86400) / 3600);
     const mins = Math.floor((totalSec % 3600) / 60);
     const secs = totalSec % 60;
-    const units = en ? { w: 'w', d: 'd', h: 'h', m: 'm', s: 's' } : { w: 'mgg', d: 'h', h: 'j', m: 'm', s: 'd' };
+    // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA versi Indonesia: `d:'h'` (hari dilabelin "h") dan `s:'d'`
+    // (detik dilabelin "d") -- KEBALIKAN dari konvensi standar (h=jam, d=hari) yang dipakai versi
+    // Inggris 1 baris di bawah. Efek nyata: posisi yang udah floating 6 HARI 11 jam tertampil
+    // "6h 11j 2m 23d" -- gampang disalahbaca "baru 6 jam" (bahaya kalau posisinya lagi hampir
+    // liquidation, salah baca durasi = salah nilai seberapa urgent). Ganti ke singkatan Indonesia
+    // yang gak nabrak intuisi h/d siapapun: hr=hari, j=jam, m=menit, dt=detik.
+    const units = en ? { w: 'w', d: 'd', h: 'h', m: 'm', s: 's' } : { w: 'mgg', d: 'hr', h: 'j', m: 'm', s: 'dt' };
     const parts = [];
     if (weeks) parts.push(weeks + units.w);
     if (weeks || days) parts.push(days + units.d);

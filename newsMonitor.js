@@ -71,8 +71,18 @@ async function main() {
 
   const msg = formatNewsUpdate(now, items, slot);
   console.log(msg);
-  addOrReplaceDaily(type, msg, now); // anti-dobel kalau ke-run ulang di jam sama
-  await sendWhatsApp(msg);
+  // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA `addOrReplaceDaily` dipanggil SEBELUM `sendWhatsApp`, tanpa
+  // cek hasilnya. `sendWhatsApp` gak pernah `throw` kalau Fonnte gagal (sengaja, lihat fonnte.js)
+  // -- cuma balikin `{ok:false}`. Kalau itu kejadian, arsip udah kadung nyimpen "udah kirim edisi
+  // ini hari ini" padahal WA-nya gak pernah nyampe, DAN gak akan dicoba ulang. Fix: kirim DULU,
+  // `addOrReplaceDaily` cuma kalau beneran sukses (atau `skipped` -- gak ada secrets.js, situasi
+  // normal dev/testing, bukan kegagalan).
+  const sendResult = await sendWhatsApp(msg);
+  if (sendResult && sendResult.ok === false) {
+    console.log(`[NewsMonitor] Kirim WA edisi ${slot} GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya.`);
+  } else {
+    addOrReplaceDaily(type, msg, now); // anti-dobel kalau ke-run ulang di jam sama
+  }
 }
 
 main().catch((e) => {

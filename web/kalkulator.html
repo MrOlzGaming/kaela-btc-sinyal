@@ -21,7 +21,15 @@
   .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
   .mode-toggle button { flex: 1; background: var(--clr-bg-elevated); color: var(--clr-text); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 8px; cursor: pointer; }
   .mode-toggle button.active { background: var(--clr-primary); color: #000; border-color: var(--clr-primary); font-weight: 600; }
+  /* 🐛 FIX 19 Sep 2026 -- SEBELUMNYA `.hidden` didefinisikan SEBELUM `.result-row` di file yang
+     sama, spesifisitas CSS-nya SAMA (1 class) -- aturan yang datang BELAKANGAN (`.result-row`)
+     menang di elemen yang pakai KEDUA class-nya (`class="result-row hidden"`, baris "Modal
+     Aktif"), jadi `display:flex` selalu menang walau class `hidden` ketambahan lewat JS. Baris
+     itu jadi SELALU muncul (isinya kosong "-") walau harusnya disembunyikan buat strategi Sniper.
+     Fix: compound selector `.result-row.hidden` -- spesifisitas lebih tinggi, PASTI menang lawan
+     `.result-row` polos, gak peduli urutan definisi di stylesheet. */
   .hidden { display: none; }
+  .result-row.hidden { display: none; }
   .result { margin-top: 20px; }
   .result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--clr-border); }
   .result-row:last-child { border-bottom: none; }

@@ -12,12 +12,14 @@
 // - STOP kirim begitu window Tanam habis (>= HALVING_DATE) -- patokan siklus halving, SAMA
 //   persis kayak Compound Alt DCA sendiri (Olan: "patokannya btc halving... tunggu musim panen").
 //
-// ⚠️ CATATAN AKURASI: Binance pakai getWalletBalance (TOTAL wallet, termasuk margin yang lagi
-// kekunci di posisi terbuka) -- akurat. MEXC cuma punya getAccountBalance (availableBalance
-// doang, mexcExecutor.js gak ada endpoint total) -- kalau ada posisi Emas lagi kebuka gede,
-// angka MEXC di pesan ini bisa SEDIKIT lebih kecil dari total sebenarnya. Cap $1000 jadi
-// approksimasi buat MEXC, bukan presisi mutlak -- ini kebijakan MANUAL/saran, bukan gerbang
-// keras, jadi diterima sebagai keterbatasan wajar (bukan bug).
+// Total wallet REAL (bukan cuma saldo bebas) -- Binance getWalletBalance UDAH termasuk margin
+// yang lagi kekunci di posisi terbuka (dikonfirmasi komentar binanceExecutor.js). MEXC gak punya
+// endpoint total serupa -- availableBalance doang -- jadi kalau ada posisi Emas lagi kebuka,
+// margin-nya DIHITUNG MANUAL dari getAllPositions() (notional/leverage per simbol) dan
+// ditambahin ke availableBalance (20 Sep 2026, permintaan Olan: "kalo di mexc ada posisi, sistem
+// bisa ingat kan?" -- YA, sekarang eksplisit ngitung, bukan cuma saldo bebas doang). Aman dipakai
+// karena Olan konfirmasi 2 akun (Binance+MEXC) gak disentuh manual lagi semenjak insiden FOMC --
+// SEMUA posisi yang ada pasti punya Kaela sendiri, gak ada posisi asing yang perlu disaring.
 //
 // Dipanggil TIAP SIKLUS (~15 menit) dari run-vultr-executor.sh, SELF-GATING internal (state file
 // lastSentMonthKey) -- pola SAMA kayak spotDca.js/spotDcaAlt.js, aman dipanggil berkali-kali.
@@ -40,8 +42,11 @@ const REMINDER_DAY = 5; // tanggal 5 kalender (UTC) -- SAMA kayak MONTHLY_BUY_DA
 const WALLETS = [
   { key: 'sniperBtc', label: '🎯 Sniper BTC', exchange: 'binance', asset: 'USDT', share: 30 },
   { key: 'nyopetBtc', label: '🥷 Nyopet BTC', exchange: 'binance', asset: 'USDC', share: 40 },
-  { key: 'sniperEmas', label: '🎯 Sniper Emas', exchange: 'mexc', asset: 'USDT', share: 20 },
-  { key: 'nyopetEmas', label: '🥷 Nyopet Emas', exchange: 'mexc', asset: 'USDC', share: 10 },
+  // execSymbol (30 Agu 2026, assetConfig.js/nyopetAssetConfig.js) -- dipakai buat cocokin posisi
+  // terbuka MEXC ke wallet yang bener (Sniper Emas XAUT_USDT vs Nyopet Emas PAXG_USDC, 1 akun
+  // MEXC yang sama, dibedain dari SIMBOL kontraknya doang).
+  { key: 'sniperEmas', label: '🎯 Sniper Emas', exchange: 'mexc', asset: 'USDT', execSymbol: 'XAUT_USDT', share: 20 },
+  { key: 'nyopetEmas', label: '🥷 Nyopet Emas', exchange: 'mexc', asset: 'USDC', execSymbol: 'PAXG_USDC', share: 10 },
 ];
 
 function loadState() {
@@ -64,7 +69,12 @@ async function fetchBalance(wallet, secrets) {
   }
   if (!secrets.MEXC_API_KEY || !secrets.MEXC_API_SECRET) throw new Error('MEXC API key belum disetup.');
   const client = createMexcClient({ apiKey: secrets.MEXC_API_KEY, apiSecret: secrets.MEXC_API_SECRET });
-  return client.getAccountBalance(wallet.asset);
+  const [available, positions] = await Promise.all([client.getAccountBalance(wallet.asset), client.getAllPositions()]);
+  const ownPosition = positions.find((p) => p.symbol === wallet.execSymbol);
+  const positionMargin = ownPosition && Number(ownPosition.leverage) > 0
+    ? Math.abs(Number(ownPosition.notional)) / Number(ownPosition.leverage)
+    : 0;
+  return available + positionMargin;
 }
 
 // Dompet yang UDAH di bawah cap dapet jatah PROPORSIONAL sama rasio asalnya (3:4:2:1) -- kalau

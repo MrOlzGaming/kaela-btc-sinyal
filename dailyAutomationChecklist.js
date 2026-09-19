@@ -170,12 +170,40 @@ async function checkWhaleScanFreshness() {
   }
 }
 
+// 🐛 FIX 19 Sep 2026 (audit -- "gak ada task/health-check buat pipeline econCalendarLiveMonitor.js
+// sama sekali di sini, padahal ini pipeline yang baru terbukti (BUG-0010) berdampak finansial
+// nyata DAN diam-diam kehilangan arsipnya") -- pola SAMA kayak checkWhaleScanFreshness: cron
+// `run-econ-calendar-live-vultr.sh` jalan tiap 5 menit, `saveState()` (econCalendarLiveMonitor.js)
+// SELALU nulis ulang `econ-calendar-live-notified.json` di akhir `main()` TANPA SYARAT (bahkan
+// kalau "gak ada event" -- state di-prune tiap kali) -- jadi mtime file ini adalah sinyal jujur
+// "cron beneran jalan barusan", bukan cuma "ada event yang kena notif". Ambang 20 menit (~4x
+// interval cron) -- longgar dari steady-state normal, tapi jauh lebih ketat drpd "gak ketauan
+// sampai berhari-hari" kalau cron berhenti/macet.
+const ECON_CALENDAR_STATE_PATH = path.join(__dirname, 'econ-calendar-live-notified.json');
+const ECON_CALENDAR_STALE_ALERT_MIN = 20;
+
+function checkEconCalendarFreshness() {
+  if (!fs.existsSync(ECON_CALENDAR_STATE_PATH)) {
+    return { ok: false, line: '⚠️ Econ-calendar-live: state file belum pernah ada -- cron `run-econ-calendar-live-vultr.sh` kemungkinan belum pernah jalan sama sekali di mesin ini.' };
+  }
+  const ageMin = (Date.now() - fs.statSync(ECON_CALENDAR_STATE_PATH).mtimeMs) / 60000;
+  if (ageMin > ECON_CALENDAR_STALE_ALERT_MIN) {
+    return { ok: false, line: `⚠️ Econ-calendar-live KETINGGALAN -- state terakhir diupdate ${ageMin.toFixed(0)} menit lalu (harusnya tiap ~5 menit) -- cron kemungkinan berhenti/macet, cek run-econ-calendar-live-vultr.sh di VPS.` };
+  }
+  return { ok: true, line: `✅ Econ-calendar-live jalan (state terakhir ${ageMin.toFixed(0)} menit lalu).` };
+}
+
 // Tipe archive yang DIDESAIN 1x/hari (dedup via addOrReplaceDaily/hasEntryToday di script masing-
 // masing) -- kalau ketemu >1 entry di tanggal WITA yang sama, itu tandanya dedup INTERNAL-nya
 // jebol (bukan otomatis "WA dobel kekirim ke user" krn addOrReplaceDaily nimpa arsip web, TAPI
 // hasEntryToday yang harusnya nyegah panggilan sendWhatsApp() kedua -- kalau ini kejadian
 // beneran, WA-nya SANGAT MUNGKIN ikut dobel juga, worth diinvestigasi).
 const DAILY_DEDUP_TYPES = ['report-daily', 'report-daily-gold', 'whale-daily', 'news-pagi', 'news-sore', 'news-siang', 'daily-checklist-report'];
+// 🐛 FIX 19 Sep 2026 (audit) -- `birthdayGreeting.js` nulis type DINAMIS `birthday-<key>` per
+// orang (bukan 1 string tetap), jadi gak pernah cocok `DAILY_DEDUP_TYPES.includes(e.type)`
+// (exact-match) -- dedup ucapan ultah gak pernah ketutup mandor ini. Prefix di sini dicek TERPISAH
+// (startsWith), biar tetap 1 daftar tetap yang mudah dibaca buat tipe non-dinamis.
+const DAILY_DEDUP_PREFIXES = ['birthday-'];
 const SPAM_CHECK_DAYS_BACK = 7;
 
 function checkNoDuplicateSpam(now) {
@@ -183,7 +211,8 @@ function checkNoDuplicateSpam(now) {
   const cutoff = new Date(now.getTime() - SPAM_CHECK_DAYS_BACK * 24 * 60 * 60 * 1000);
   const counts = {}; // `${type}|${dayKey}` -> jumlah
   for (const e of entries) {
-    if (!DAILY_DEDUP_TYPES.includes(e.type)) continue;
+    const isTracked = DAILY_DEDUP_TYPES.includes(e.type) || DAILY_DEDUP_PREFIXES.some((p) => e.type.startsWith(p));
+    if (!isTracked) continue;
     const d = new Date(e.date);
     if (d < cutoff) continue;
     const key = `${e.type}|${localDateKey(d)}`;
@@ -191,7 +220,7 @@ function checkNoDuplicateSpam(now) {
   }
   const dupes = Object.entries(counts).filter(([, n]) => n > 1);
   if (dupes.length === 0) {
-    return { ok: true, line: `✅ Gak ada dobel-kirim ke ${DAILY_DEDUP_TYPES.length} tipe harian (cek ${SPAM_CHECK_DAYS_BACK} hari terakhir).` };
+    return { ok: true, line: `✅ Gak ada dobel-kirim ke ${DAILY_DEDUP_TYPES.length} tipe harian + ${DAILY_DEDUP_PREFIXES.length} prefix dinamis (cek ${SPAM_CHECK_DAYS_BACK} hari terakhir).` };
   }
   const detail = dupes.map(([key, n]) => `${key.replace('|', ' @ ')} (${n}x)`).join(', ');
   return { ok: false, line: `⚠️ KETEMU DOBEL-KIRIM: ${detail} -- dedup internal script itu kemungkinan jebol, cek segera.` };
@@ -209,9 +238,10 @@ async function sendChecklistReport(now) {
   // Mandor tahap 2 (13 Sep 2026): bukan cuma "kekirim apa nggak", TAPI "beneran ngejar apa nggak"
   // (freshness) + "beneran cuma sekali apa nggak" (anti-spam) -- lihat komentar definisi fungsi.
   const freshness = await checkWhaleScanFreshness();
+  const econFreshness = checkEconCalendarFreshness();
   const spamCheck = checkNoDuplicateSpam(now);
-  const healthLines = [freshness.line, spamCheck.line];
-  const anyHealthIssue = !freshness.ok || !spamCheck.ok;
+  const healthLines = [freshness.line, econFreshness.line, spamCheck.line];
+  const anyHealthIssue = !freshness.ok || !econFreshness.ok || !spamCheck.ok;
 
   const msg = [
     `${roleOpener('REED', `checklist otomatisasi harian ${localDateKey(now)} udah dicek`)}`,

@@ -173,7 +173,10 @@ async function main() {
   state.lastDigest = { dateKey: todayKey, totalBtc, count: allTx.length, toExchangeBtc, fromExchangeBtc };
   saveState(state);
   recordDailyNetflow({ dateKey: todayKey, totalBtc, count: allTx.length, toExchangeBtc, fromExchangeBtc, btcPriceUsd: btcPrice });
-  console.log(`[WhaleDailyDigest] ${now.toISOString()} -- rekap hari ${todayKey} dikirim (${allTx.length} transaksi >=${WHALE_THRESHOLD_BTC} BTC, ${totalBtc.toFixed(0)} BTC total) -- ditulis ke state buat anomalyScanner.js.`);
+  // 🐛 FIX 19 Sep 2026 (audit) -- kata "dikirim" menyesatkan: file ini gak lagi `require('./fonnte')`
+  // sama sekali sejak 12 Sep (digest dilebur ke anomalyScanner.js) -- log ini murni nulis STATE,
+  // gak ada WA yang keluar dari sini.
+  console.log(`[WhaleDailyDigest] ${now.toISOString()} -- rekap hari ${todayKey} SELESAI DIHITUNG (${allTx.length} transaksi >=${WHALE_THRESHOLD_BTC} BTC, ${totalBtc.toFixed(0)} BTC total) -- ditulis ke state buat anomalyScanner.js (BUKAN dikirim WA dari sini).`);
 }
 
 main().catch((e) => {

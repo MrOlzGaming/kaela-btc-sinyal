@@ -50,9 +50,25 @@ if [ -n "$CHANGED" ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: sync GAGAL percobaan $attempt, coba lagi..." >> "$LOG_FILE"
     sleep 3
   done
+  SYNC_STATUS_LINE=""
   if [ "$synced" -eq 1 ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: archive/research-log ke-sync." >> "$LOG_FILE"
   else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: sync GAGAL 3x -- entri BERISIKO kehapus git reset --hard siklus vultr-executor berikutnya." >> "$LOG_FILE"
+    SYNC_STATUS_LINE="econ-calendar-live: sync GAGAL 3x -- entri BERISIKO kehapus git reset --hard siklus vultr-executor berikutnya."
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $SYNC_STATUS_LINE" >> "$LOG_FILE"
   fi
+fi
+
+# 🐛 FIX 19 Sep 2026 (audit -- "siapa mengawasi run-econ-calendar-live-vultr.sh sendiri?") --
+# SEBELUM ini, error/exception di script ini (`node econCalendarLiveMonitor.js` gagal, atau sync
+# git gagal 3x di atas) cuma ditulis ke log lokal (`econ-calendar-live.log`) -- gak ada jalur ke
+# WA/GAS kayak `run-vultr-executor.sh`/`dark-kaela-monitor.yml` yang SAMA-SAMA punya
+# `reportCycleErrors.js` di ujung siklusnya. Kalau ForexFactory/Yahoo Finance berubah format dan
+# script ini error terus-menerus berhari-hari, gak ada yang bakal tahu kecuali baca log manual di
+# VPS. Fix: scan output NODE + status sync SIKLUS INI SAJA (variabel lokal, bukan baca ulang file
+# log), lapor ke Watchdog GAS (dedup+cooldown di sisi GAS, sama mekanisme run-vultr-executor.sh --
+# aman dipanggil tiap 5 menit, gak akan spam).
+CYCLE_ERRORS=$(printf '%s\n%s\n' "$output" "${SYNC_STATUS_LINE:-}" | grep -iE 'error|gagal' | sort -u | head -20 || true)
+if [ -n "$CYCLE_ERRORS" ]; then
+  node reportCycleErrors.js 'econ-calendar-live' "$CYCLE_ERRORS" >> "$LOG_FILE" 2>&1 || true
 fi

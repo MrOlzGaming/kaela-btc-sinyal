@@ -15,6 +15,7 @@
 
 const fs = require('fs');
 const { MAX_LEVERAGE } = require('./calculator');
+const { hasEntryToday } = require('./archive');
 
 function loadJson(f) {
   if (!fs.existsSync(f)) return null;
@@ -116,9 +117,39 @@ function checkJournal(f, anomalies) {
   }
 }
 
+// 🐛 FIX 19 Sep 2026 (audit -- BUG-KAELATRADE-0012, "checklist Sniper bisa lapor 'done' palsu
+// walau archive.json NOL entri hari itu") -- invariant GENERIK yang nutup KELAS bug ini
+// PERMANEN, bukan cuma instance Sniper yang udah dibenerin: kalau trigger-state bilang "hari X
+// udah beres", HARUS ADA minimal 1 entri archive.json tipe terkait di hari kalender WITA yang
+// sama. Data-driven (bukan hardcode logic per-modul) biar gampang nambah entry baru kalau modul
+// LAIN suatu saat punya pola trigger-state serupa (SATU baris tambahan, gak perlu fungsi baru).
+const TRIGGER_STATE_CHECKS = [
+  { statePath: 'sniper-trigger-state.json', dateField: 'lastSentDate', archiveType: 'sniper', label: 'Sniper' },
+];
+
+function checkTriggerStateVsArchive(anomalies) {
+  for (const check of TRIGGER_STATE_CHECKS) {
+    const state = loadJson(check.statePath);
+    if (state == null || state.__parseError) continue; // file gak ada/rusak -- ranah check LAIN, bukan invariant ini
+    const dateKey = state[check.dateField];
+    if (!dateKey) continue; // belum pernah jalan sama sekali -- wajar, bukan anomali
+    // Noon WITA (+08:00) -- aman dari edge-case timezone, `localDateKey()` di archive.js bakal
+    // baliknya balik ke dateKey yang SAMA persis.
+    const asDate = new Date(`${dateKey}T12:00:00+08:00`);
+    if (Number.isNaN(asDate.getTime())) {
+      anomalies.push(`${check.statePath}: field "${check.dateField}"="${dateKey}" bukan format tanggal valid`);
+      continue;
+    }
+    if (!hasEntryToday(check.archiveType, asDate)) {
+      anomalies.push(`${check.statePath}: ${check.label} ditandai "done" tanggal ${dateKey} TAPI archive.json NOL entri tipe "${check.archiveType}" di hari itu -- kelas bug BUG-KAELATRADE-0012, cek jalur addEntry yang mungkin ke-skip.`);
+    }
+  }
+}
+
 function main() {
   const anomalies = [];
   for (const f of listJournalFiles()) checkJournal(f, anomalies);
+  checkTriggerStateVsArchive(anomalies);
 
   if (anomalies.length === 0) {
     console.log('[SystemInvariantCheck] Semua invariant journal Nyopet/Sniper OK, gak ada anomali.');

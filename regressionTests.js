@@ -24,6 +24,7 @@ const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
 const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
+const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -296,6 +297,56 @@ async function main() {
     const nullPnl = formatManualOpenAutoClosed({ ...base, closePnlUsd: null }, null);
     assert.ok(nullPnl.includes('gak kebaca'), 'PnL null HARUS bilang jujur "gak kebaca", bukan pura-pura $0');
     assert.ok(!nullPnl.includes('$0.00') && !nullPnl.includes('$0,00'), 'PnL null JANGAN ditampilin sebagai $0 (menyesatkan, kesannya beneran impas)');
+  });
+
+  // monthlyFundingReminder.js (20 Sep 2026, kebijakan tetap setoran bulanan Olan -- lihat memori
+  // project-kaela-monthly-funding.md) -- ground-truth 4 skenario yang udah diverifikasi manual
+  // sebelum dipush: normal (semua di bawah cap), 1 capped (redistribusi proporsional 3 sisa),
+  // cuma 1 dompet masih terbuka (dapet full $100), dan SEMUA capped (fallback ke spot).
+  function mkBalances(overrides) { return WALLETS.map((w) => ({ ...w, balance: overrides[w.key] })); }
+
+  await test('monthlyFundingReminder: semua dompet di bawah cap -> split tetap 30/40/20/10', () => {
+    const split = computeSplit(mkBalances({ sniperBtc: 60, nyopetBtc: 80, sniperEmas: 40, nyopetEmas: 20 }));
+    assert.strictEqual(split.mode, 'futures');
+    assert.strictEqual(split.capped.length, 0);
+    const byKey = Object.fromEntries(split.allocations.map((a) => [a.key, a.amount]));
+    assert.strictEqual(byKey.sniperBtc, 30);
+    assert.strictEqual(byKey.nyopetBtc, 40);
+    assert.strictEqual(byKey.sniperEmas, 20);
+    assert.strictEqual(byKey.nyopetEmas, 10);
+  });
+
+  await test('monthlyFundingReminder: Sniper BTC capped -> jatahnya kebagi proporsional 4:2:1 ke 3 sisa, total tetap $100', () => {
+    const split = computeSplit(mkBalances({ sniperBtc: 1050, nyopetBtc: 500, sniperEmas: 300, nyopetEmas: 100 }));
+    assert.strictEqual(split.mode, 'futures');
+    assert.strictEqual(split.capped.length, 1);
+    assert.strictEqual(split.capped[0].key, 'sniperBtc');
+    const byKey = Object.fromEntries(split.allocations.map((a) => [a.key, a.amount]));
+    assert.strictEqual(byKey.nyopetBtc, 57.14, 'proporsi 40/(40+20+10) dari $100');
+    assert.strictEqual(byKey.sniperEmas, 28.57, 'proporsi 20/70 dari $100');
+    assert.strictEqual(byKey.nyopetEmas, 14.29, 'proporsi 10/70 dari $100 + sisa pembulatan');
+    const total = split.allocations.reduce((s, a) => s + a.amount, 0);
+    assert.ok(Math.abs(total - 100) < 1e-9, `Total alokasi HARUS persis $100, malah $${total} (pembulatan bocor)`);
+  });
+
+  await test('monthlyFundingReminder: cuma 1 dompet belum capped -> dia dapet FULL $100', () => {
+    const split = computeSplit(mkBalances({ sniperBtc: 1010, nyopetBtc: 1020, sniperEmas: 1005, nyopetEmas: 300 }));
+    assert.strictEqual(split.mode, 'futures');
+    assert.strictEqual(split.capped.length, 3);
+    assert.strictEqual(split.allocations.length, 1);
+    assert.strictEqual(split.allocations[0].key, 'nyopetEmas');
+    assert.strictEqual(split.allocations[0].amount, 100);
+  });
+
+  await test('monthlyFundingReminder: SEMUA 4 dompet capped -> mode spot (10 koin), bukan futures', () => {
+    const split = computeSplit(mkBalances({ sniperBtc: 1200, nyopetBtc: 1500, sniperEmas: 1050, nyopetEmas: 1010 }));
+    assert.strictEqual(split.mode, 'spot');
+    assert.strictEqual(split.capped.length, 4);
+    assert.strictEqual(split.allocations.length, 0);
+  });
+
+  await test('monthlyFundingReminder: CAP_PER_WALLET tetap $1000 (kebijakan tetap, jangan geser diam-diam)', () => {
+    assert.strictEqual(CAP_PER_WALLET, 1000);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

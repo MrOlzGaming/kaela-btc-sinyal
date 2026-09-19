@@ -997,7 +997,19 @@
   // 'fade'/'follow' DIPERTAHANKAN buat order LAMA (histori pre-30 Agu) yang masih di jurnal.
   const NYOPET_MODE_LABEL_WEB = {
     fade: 'Fade (asumsi mantul)', follow: 'Follow (ikutin tembusan)',
-    flag_bull: 'Bull Flag', pennant_bull: 'Pennant', wedge_falling: 'Falling Wedge', fvg_bounce: 'FVG',
+    // 🐛 FIX 19 Sep 2026 (Olan: "riwayat di jurnal amburadul") -- SEBELUMNYA cuma versi BULL/FALLING
+    // yang punya label ("Bull Flag"/"Falling Wedge"/dst), padahal chartPatterns.js/fvgDetector.js
+    // JUGA ngasilin versi BEAR/RISING (`flag_bear`, `pennant_bear`, `wedge_rising`,
+    // `fvg_bounce_bear` -- lihat chartPatterns.js baris ~126-137) buat sinyal short window-bear
+    // yang belakangan makin sering muncul. 4 tipe itu SEBELUMNYA gak ke-map, jatuh ke fallback
+    // `o.mode` polos -- kolom Mode nampilin kode mentah ("wedge_rising" dst) bukan label rapi.
+    // Ngikutin gaya labeling yang UDAH ADA per keluarga pola: flag/wedge sertain arah di label
+    // (konsisten sama flag_bull/wedge_falling), pennant/fvg TETAP generik (konsisten sama
+    // pennant_bull/fvg_bounce yang emang gak sertain arah -- kolom ARAH terpisah udah cukup jelas).
+    flag_bull: 'Bull Flag', flag_bear: 'Bear Flag',
+    pennant_bull: 'Pennant', pennant_bear: 'Pennant',
+    wedge_falling: 'Falling Wedge', wedge_rising: 'Rising Wedge',
+    fvg_bounce: 'FVG', fvg_bounce_bear: 'FVG',
     // 2-3 Sep 2026, permintaan Olan: posisi yang gak ketemu match Journal (dibuka LANGSUNG di
     // exchange, bukan lewat bot) WAJIB jujur dilabelin manual, BUKAN ditebak "Fade (asumsi mantul)".
     manual: 'Manual (dibuka langsung di exchange)',
@@ -1127,7 +1139,13 @@
     const wallet1Value = (opts && opts.wallet1Value !== undefined) ? opts.wallet1Value : (nyopetState.balanceUsdc || 0);
     const wallet2Label = (opts && opts.wallet2Label) || (en ? 'Demo Balance PAXGUSDT' : 'Saldo Demo PAXGUSDT');
     const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (nyopetState.balanceUsdt || 0);
-    const saldoCell = cell(wallet1Label, fmtUsdOrder(wallet1Value)) + cell(wallet2Label, fmtUsdOrder(wallet2Value));
+    // 🐛 FIX 19 Sep 2026 (audit -- "orang bisa salah kira SELURUH saldo ini kepakai") -- Nyopet
+    // cuma pakai 1/5 saldo penuh sbg modal aktif buat sizing posisi (`MODAL_ACTIVE_FRACTION`,
+    // nyopetAutoTrader.js) -- SEBELUMNYA angka itu gak kelihatan sama sekali di halaman ini
+    // (cuma dijelasin di Kalkulator, tempat beda). Tempelin sbg baris kedua di label, kecil,
+    // biar gak ganggu tampilan tapi info-nya ADA buat yang mau tau persis.
+    const modalAktifNote = (val) => `<br><span style="font-size:0.75em;opacity:0.65;font-weight:400;">${en ? 'active capital' : 'modal aktif'}: ${fmtUsdOrder(val / 5)}</span>`;
+    const saldoCell = cell(wallet1Label + modalAktifNote(wallet1Value), fmtUsdOrder(wallet1Value)) + cell(wallet2Label + modalAktifNote(wallet2Value), fmtUsdOrder(wallet2Value));
     const disclaimer = (opts && opts.disclaimer) || (en
       ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
       : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');

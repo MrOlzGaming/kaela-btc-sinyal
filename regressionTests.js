@@ -25,6 +25,7 @@ const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor')
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
 const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
+const { isInsufficientBalanceError } = require('./balanceAlert');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -347,6 +348,25 @@ async function main() {
 
   await test('monthlyFundingReminder: CAP_PER_WALLET tetap $1000 (kebijakan tetap, jangan geser diam-diam)', () => {
     assert.strictEqual(CAP_PER_WALLET, 1000);
+  });
+
+  // balanceAlert.js (20 Sep 2026, gap ditemuin pas audit minimum funding) -- ground-truth: pesan
+  // error ASLI yang beneran dilempar mexcExecutor.js/binanceExecutor.js pas order kekecilan,
+  // WAJIB kedeteksi isInsufficientBalanceError() (jatuh ke info-fallback, bukan hilang senyap).
+  await test('isInsufficientBalanceError: pre-check lokal MEXC ("kekecilan buat contractSize") kedeteksi', () => {
+    assert.ok(isInsufficientBalanceError('Vol kehitung 0 buat XAUT_USDT (notional $2.50 kekecilan buat contractSize 0.001) -- order gak dikirim.'));
+  });
+  await test('isInsufficientBalanceError: pre-check lokal Binance ("kekecilan buat stepSize") TETAP kedeteksi (regresi lama)', () => {
+    assert.ok(isInsufficientBalanceError('Quantity kehitung 0 buat BTCUSDT (notional $5.00 kekecilan buat stepSize 0.001) -- order gak dikirim.'));
+  });
+  await test('isInsufficientBalanceError: penolakan REMOTE Binance LOT_SIZE (-1013) kedeteksi', () => {
+    assert.ok(isInsufficientBalanceError('{"code":-1013,"msg":"Filter failure: LOT_SIZE"}'));
+  });
+  await test('isInsufficientBalanceError: penolakan REMOTE Binance MIN_NOTIONAL (-4164) kedeteksi', () => {
+    assert.ok(isInsufficientBalanceError('{"code":-4164,"msg":"Order\'s notional must be no smaller than 100"}'));
+  });
+  await test('isInsufficientBalanceError: error gak nyambung (mis. signature invalid) TETAP gak kedeteksi (no false-positive)', () => {
+    assert.strictEqual(isInsufficientBalanceError('{"code":-1022,"msg":"Signature for this request is not valid."}'), false);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

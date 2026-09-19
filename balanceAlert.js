@@ -47,12 +47,28 @@ function shouldAlertInsufficientBalance(key) {
 
 // Cocokin pola error saldo-kurang yang UDAH KETEMU nyata di log (24 Agu 2026) -- kalau nemu pola
 // baru di masa depan, tambahin di sini, JANGAN taro string baru di tempat lain.
+//
+// ⚠️ GAP ditemuin+difix 20 Sep 2026 (audit minimum funding buat kebijakan setoran bulanan) -- 2 hal:
+// (1) `/kekecilan buat stepSize/i` cuma cocok pre-check LOKAL Binance (binanceExecutor.js) --
+//     pre-check LOKAL MEXC (mexcExecutor.js) mesennya "kekecilan buat contractSize" (kata beda),
+//     GAK PERNAH match sama sekali sebelum fix ini -- sinyal Emas yang kena modal-super-kecil
+//     bisa HILANG SENYAP, bukan jatuh ke info-fallback kayak seharusnya.
+// (2) Order yang LOLOS pre-check lokal (qty>0) tapi TETAP di bawah minimum EXCHANGE (LOT_SIZE/
+//     MIN_NOTIONAL Binance) ditolak SAAT DIKIRIM ke API asli, kode BEDA TOTAL dari margin-
+//     insufficient (-1013/-4164, bukan -4050/-2019) -- SEBELUM fix ini juga gak pernah match.
+//     Ini kelas kegagalan NYATA yang bisa kejadian (lihat memori project-kaela-monthly-funding.md
+//     -- Nyopet BTC modal kecil ketemu "zona bahaya" tepat di batas bracket exposure, nilai
+//     posisi bisa dip di bawah minimum walau qty lolos hitung >0 lokal).
 const INSUFFICIENT_BALANCE_PATTERNS = [
-  /kekecilan buat stepSize/i,
+  /kekecilan buat (stepSize|contractSize)/i,
   /insufficient/i,
   /-4050/,
   /-2019/,
   /margin is insufficient/i,
+  /-1013/, // Binance: "Filter failure: LOT_SIZE"
+  /-4164/, // Binance: "Order's notional must be no smaller than X"
+  /notional must be no smaller/i,
+  /filter failure/i,
 ];
 
 function isInsufficientBalanceError(message) {

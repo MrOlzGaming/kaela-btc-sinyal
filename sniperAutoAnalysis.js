@@ -319,10 +319,24 @@ async function main() {
             const availableBalance = Math.max(0, totalBalance - usedMargin);
             const riskDistance = Math.abs(bearLivePrice - shortSig.sl);
             const nyawaPct = riskDistance / bearLivePrice * 100;
-            if (availableBalance > 1 && riskDistance > 0 && nyawaPct <= MAX_NYAWA_PCT) {
-              const partialTp = bearLivePrice - riskDistance * PARTIAL_RR;
-              if (partialTp > 0) {
-                // `direction: 'sell'` (14 Sep 2026, permintaan Olan: "kalo short exposurenya
+            const partialTpCheck = bearLivePrice - riskDistance * PARTIAL_RR;
+            // 🆕 FIX 19 Sep 2026 (permintaan Olan: "fokus real.. kalo ga ada uang bisa di info ke
+            // grup hedgefund wibowo.. ketika uang cukup auto trading, ketika uang tidak cukup
+            // berubah jadi sinyal") -- SEBELUMNYA kalau salah satu syarat auto-exec gagal (saldo
+            // kurang/nyawa% kelewat ambang/data gak valid), sinyal ini HILANG TOTAL, gak ada
+            // jejak/pesan apapun -- padahal pola chart-nya BENERAN ketemu, cuma duitnya yang gak
+            // cukup buat eksekusi aman. Fix: begitu syarat gagal, JATUHKAN ke sinyal informasional
+            // (persis format yang dipakai Emas) -- bukan diam. Begitu saldo/kondisi balik aman
+            // siklus berikutnya, otomatis balik auto-eksekusi lagi TANPA perlu ubah kode lagi.
+            let skipReason = null;
+            if (availableBalance <= 1) skipReason = `saldo available real Kaela tinggal $${availableBalance.toFixed(2)} -- gak cukup buat auto-eksekusi aman`;
+            else if (!(riskDistance > 0)) skipReason = 'data SL/entry gak valid (jarak nol) -- auto-eksekusi di-skip demi keamanan';
+            else if (nyawaPct > MAX_NYAWA_PCT) skipReason = `nyawa ${nyawaPct.toFixed(1)}% kelewat ambang aman ${MAX_NYAWA_PCT}% -- auto-eksekusi di-skip`;
+            else if (!(partialTpCheck > 0)) skipReason = 'target TP kehitung gak valid (harga negatif) -- auto-eksekusi di-skip';
+
+            if (!skipReason) {
+              const partialTp = partialTpCheck;
+              // `direction: 'sell'` (14 Sep 2026, permintaan Olan: "kalo short exposurenya
                 // separuh dari long") -- lihat calculator.js `hitung()`, exposure otomatis dibagi 2.
                 const calc = hitungExposure({ modal: availableBalance, entry: bearLivePrice, stopLoss: shortSig.sl, direction: 'sell' });
                 // mode: 'fvg' kalau patternType FVG (13 Sep 2026, biar formatAutoValid's modeExplain
@@ -382,7 +396,22 @@ async function main() {
                 await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, !isTestnet());
                 shortSignalSent = true;
                 anyMessageSentToday = true;
-              }
+            } else {
+              // 🆕 FIX 19 Sep 2026 -- jatuh ke sinyal informasional (bukan diam) begitu auto-exec
+              // gak bisa aman dilakukan. `convergenceNote` dipakai buat sisipin ALASAN eksplisit,
+              // biar Olan/grup tau ini BUKAN "sistem gak nemu apa-apa" tapi "nemu, cuma duitnya
+              // gak cukup/risikonya kelewatan buat auto-eksekusi kali ini".
+              const msg = formatBearShortSignal({
+                assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
+                entryPrice: bearLivePrice, sl: shortSig.sl, patternType: shortSig.patternType,
+                gapTop: shortSig.gapTop, gapBottom: shortSig.gapBottom,
+                convergenceNote: `⚠️ Auto-eksekusi DI-SKIP: ${skipReason}. Begitu kondisi ini balik normal, sinyal serupa auto-eksekusi lagi OTOMATIS -- ini sementara doang jadi info manual.`,
+              });
+              console.log(msg + '\n');
+              addEntry('sniper', msg, now);
+              await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+              shortSignalSent = true;
+              anyMessageSentToday = true;
             }
           } else {
             const msg = formatBearShortSignal({

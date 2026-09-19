@@ -47,6 +47,68 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-19 — Short Emas berbasis posisi COT Commercial (pengganti SMA200): TIDAK ROBUST, DITOLAK
+**Ide:** setelah bear-window Emas berbasis SMA200 (harga sendiri) terbukti gagal total (semua
+variasi SMA150/200/250 + forceCloseOnFlip on/off kalah jauh dari baseline buy-only $11.469,22 --
+lihat komentar `sniperAutoAnalysis.js` baris ~303), Olan minta riset "siapa hebat trading Emas di
+dunia, kita bisa tiru". Riset web: institusi (Soros, Jim Rogers dkk) baca lewat MAKRO, bukan pola
+harga sendiri -- kerangka paling konkret+terukur = posisi **Commercial** di laporan COT (CFTC
+resmi, BEDA dari `noncomm`/Managed Money yang udah dipakai indikator Analyst Terminal). Hipotesis:
+z-score net-positioning Commercial (vs rolling trailing sendiri) sbg gerbang bear-window,
+gantiin SMA200 total.
+
+**Metode:** `backtest/xauCotBearWindow.js` (BARU) -- fetch histori COT Gold penuh 1986-2026 dari
+`publicreporting.cftc.gov` (1934 laporan mingguan), hitung z-score net Commercial (%OI) vs rolling
+window (104/156/208/260 minggu dicoba), forward-fill ke harian dengan lag 4 hari (hindari
+lookahead -- COT publish Jumat buat data as-of Selasa). Test 2 ARAH (Commercial ekstrem net-short
+`low` vs ekstrem net-long `high`) x 3-4 threshold (1.0/1.5/2.0/2.25/2.5) x 4 panjang rolling
+window, semua pakai `maxNyawaPct:20` (SAMA kayak batas live) -- `backtest/xauCotShortBacktest.js`.
+
+**Hasil breakdown:**
+- `direction=high` (Commercial ekstrem net-LONG): SEMUA threshold LEBIH JELEK dari baseline DAN
+  dari `direction=low` (finalCapital $3.649-$8.962, maxDD sampai 62,9%) -- arah ini DITOLAK duluan.
+- `direction=low` (Commercial ekstrem net-SHORT, sesuai hipotesis awal): jauh LEBIH STABIL dari
+  SMA200 (whipsaw turun drastis dari 75x jadi 8-43x tergantung threshold, short trade dari rugi
+  jelas jadi mendekati impas) TAPI **TIDAK KONSISTEN/ROBUST** lintas parameter yang sama masuk
+  akalnya -- sensitivitas panjang rolling window (threshold=2.0 tetap, cuma window digeser):
+  104wk=$10.453 (shortPnL **-$269**) | 156wk=$10.001 (shortPnl **+$133**) | 208wk=$9.713
+  (shortPnl **+$12**) | 260wk=$13.954 (shortPnl **-$41**, "menang" total tapi BUKAN dari short-nya).
+  Angka lompat besar tanpa pola jelas antar pilihan window yang SAMA-SAMA masuk akal -- ciri khas
+  overfitting ke sedikit kejadian, BUKAN edge robust.
+- Threshold ketat (2.25/2.5) SEMPAT keliatan "menang" ($12.881/$13.187 vs baseline $11.469) --
+  **DIBONGKAR overfitting murni**: threshold=2.5 cuma aktif 24 hari dari 9.132 hari total (0,26%),
+  NOL short beneran, cuma 2x tutup-paksa LONG yang kebetulan lagi profit, SEMUA di 1 episode
+  Maret-Juni 2016. Threshold=2.25 sedikit kurang ekstrem (129 hari aktif, 4 short, 8 flip) tapi
+  TETAP cuma dari 2 episode independen (2016 + 2024) -- sample fatal buat disimpulkan apapun.
+- **Akar masalah sample size**: sepanjang 25 tahun data, cuma ada **~3 episode independen**
+  (2009/2016/2024) di mana Commercial positioning beneran ekstrem net-short. n=8 trade short
+  (threshold "wajar" 2.0) BUKAN sampel yang cukup buat klaim edge apapun, arah manapun.
+
+**Split-era:** GAGAL (secara implisit) -- dengan cuma 3 episode independen sepanjang 25 tahun,
+data gak cukup buat displit 2 era yang masing-masing punya sampel berarti.
+
+**Sensitivitas parameter:** GAGAL TEGAS -- ini justru bagian PALING penting dari temuan ini.
+Hasil (menang/kalah vs baseline, arah shortPnL positif/negatif) BERUBAH-UBAH tanpa pola konsisten
+cuma dari geser panjang rolling window 104->156->208->260 minggu, PADAHAL ke-4 pilihan itu
+sama-sama masuk akal secara konseptual (gak ada alasan kuat salah satu "lebih benar").
+
+**Kesimpulan: TIDAK CUKUP KUAT (bukan overfitting SEJELAS SMA200, tapi TETAP gak robust) --
+short Emas TETAP TIDAK LAYAK auto-live.** PENTING (revisi dari draft kesimpulan awal peneliti sesi
+ini sendiri, dikoreksi lewat skeptic review sebelum ditulis final di sini): COT Commercial
+positioning **BUKAN** "arah lebih menjanjikan drpd SMA200" -- itu framing kelewat optimis. Yang
+BENER: COT tidak menunjukkan mode-kegagalan SEJELAS SMA200 (whipsaw ekstrem), TAPI buktinya
+terlalu tipis (n kecil, gak robust lintas parameter yang sama masuk akalnya) buat disebut "lebih
+baik". "Belum terbukti gagal separah SMA200" ≠ "terbukti lebih baik" -- dua klaim itu BEDA, dan
+sesi ini SEMPAT salah nulis yang kedua sebelum dikoreksi.
+
+**Status implementasi:** TIDAK diterapkan. Short Emas tetap info-only permanen (sama seperti
+sebelumnya) -- riset ini TIDAK mengubah apapun di sistem live, murni catatan biar gak diulang
+tanpa ide baru. Kalau mau lanjut riset arah ini nanti: kombinasikan COT dengan sinyal LAIN
+(real yield/DXY correlation regime) alih-alih COT sendirian, atau terima bahwa Emas mungkin
+memang gak punya konsep "bear window" yang analog siklus halving BTC sama sekali.
+
+---
+
 ### 2026-09-19 — Money Management v3 (50% profit balik ke Trading Capital): NOLONG, TAPI proporsional sama win rate -- Nyopet Emas MASIH gagal
 **Ide:** fix LANGSUNG ke akar masalah v1/v2 (Olan: "coba isi separuh profit balik ke trading
 capital"). Split WIN sekarang 3 arah: 50% ke Trading Capital (BARU -- biar TC "bernapas" lagi
@@ -513,9 +575,13 @@ buat SEMUA riset selanjutnya di file ini.
 
 ## Ide-ide yang BELUM dicoba (kandidat buat riset besok, hapus dari daftar kalau udah dites)
 
-- Indikator makro lain sebagai konfirmasi entry (COT report positioning, Fear&Greed Index level,
-  korelasi DXY-Emas terpisah dari DXY-BTC) -- funding rate BTC UDAH DITES 14 Sep 2026, REJECTED
-  (lihat "Temuan Terbaru" di atas), jangan diulang persis sama tanpa ide baru
+- ~~Indikator makro COT report positioning sbg gerbang bear-window Emas~~ -- DITES 19 Sep 2026,
+  TIDAK CUKUP KUAT (gak robust lintas panjang rolling window, sample cuma ~3 episode independen
+  25 tahun, lihat "Temuan Terbaru" di atas). JANGAN diulang persis sama tanpa data/kombinasi baru
+  (mis. digabung real yield/DXY, bukan COT sendirian).
+- Indikator makro lain sebagai konfirmasi entry (Fear&Greed Index level, korelasi DXY-Emas
+  terpisah dari DXY-BTC, real yield TIPS trend) -- funding rate BTC UDAH DITES 14 Sep 2026,
+  REJECTED (lihat "Temuan Terbaru" di atas), jangan diulang persis sama tanpa ide baru
 - Parameter sweep lookback window Nyopet v2 (saat ini di-rescale ×6 dari tuning harian ke 4H
   — belum pernah divalidasi ulang secara independen apakah ×6 itu optimal)
 - Parameter sweep exit rule (partial 50% di 2R + trailing SMA60 — kenapa 2R dan SMA60

@@ -204,9 +204,22 @@ function createMexcClient({ apiKey, apiSecret }) {
 
   // Quantity (aset unit, misal BTC/XAUT) -> vol (jumlah kontrak) -- WAJIB pakai contractSize
   // simbol, INI TITIK PALING RISKAN kalau contractSize-nya salah/berubah (lihat catatan atas file).
+  //
+  // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA `Math.floor(quantity / contractSize)`. `quantity` yang
+  // masuk ke sini SELALU berasal dari posisi yang UDAH ADA di exchange (`_normalizePosition`:
+  // `qtyAsset = holdVol * contractSize`, hasil integer holdVol dikali contractSize) -- jadi
+  // `quantity / contractSize` SEHARUSNYA persis balik ke `holdVol` (integer), TAPI floating-point
+  // JS bisa ngasilin `9.999999999999998` alih-alih `10` buat contractSize non-bulat (mis. 0.0001).
+  // `Math.floor` pada kasus itu MEMBULATKAN KE BAWAH -- vol yang dikirim ke `order/create` jadi 1
+  // kontrak LEBIH KECIL dari posisi sebenarnya. Paling bahaya buat `emergencyCloseMarket` (dipakai
+  // fitur "auto-close posisi non-Kaela", positionReconciler.js) -- nutupnya JADI GAK TOTAL,
+  // nyisain residual kecil yang KEBACA CLOSED oleh reconciler (padahal masih nyangkut di exchange).
+  // Fix: `Math.round` -- `quantity` di sini SELALU representasi vol integer yang sudah eksis,
+  // gak pernah "notional baru yang perlu dibulatkan ke bawah biar gak over-order" (itu jalur
+  // TERPISAH, `placeMarketEntry` baris ~220, yang punya `Math.floor` sendiri buat alasan itu).
   async function quantityToVol(symbol, quantity) {
     const { contractSize } = await getContractDetail(symbol);
-    return Math.floor(quantity / contractSize);
+    return Math.round(quantity / contractSize);
   }
 
   // Interface DISAMAIN PERSIS kayak binanceExecutor.js (notionalUsd+livePrice masuk, BUKAN vol

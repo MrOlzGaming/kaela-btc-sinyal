@@ -288,7 +288,10 @@ async function main() {
           // (setLeverage->entry->SL dgn jaring pengaman emergency-close kalau SL gagal nempel->TP),
           // createOrder dicatat SAMA biar kekelola sniperOrderMonitor/sniperLiveMonitor normal.
           // UPDATE 13 Sep 2026 -- backtest window-gated: BTC membaik, Emas JUSTRU lebih jelek
-          // (SMA200 whipsaw 75x tutup-paksa vs 3x di BTC, finalCapital $3.139 vs baseline $11.469).
+          // (SMA200 whipsaw 75x tutup-paksa vs 3x di BTC, finalCapital $4.500 vs baseline $11.469
+          // -- angka direvisi 19 Sep 2026 setelah `maxNyawaPct` ditegakkan di backtest resmi
+          // biar SAMA kayak batas hard-reject live, MAX_NYAWA_PCT; kesimpulan ARAHNYA gak
+          // berubah -- Emas window-gated TETAP jauh kalah dari baseline buy-only-nya sendiri).
           // Olan: "emas long only btc boleh long short.. tapi untuk emas, tetep di sinyal" --
           // Emas DICABUT dari auto-exec (assetKey==='btc' ditambah ke syarat), tapi TETAP masuk
           // cabang `else` di bawah (sinyal informasional), gak diam total.
@@ -658,7 +661,17 @@ async function main() {
     }
   }
 
-  if (!anyNewSignal && invalidNotes.length > 0) {
+  // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA kedua gerbang di bawah ini ikut disyaratkan `!anyNewSignal`
+  // (flag GLOBAL lintas-aset, cuma disetel true oleh candidate valid dari ASET MANAPUN). Begitu
+  // 1 aset (misal BTC) dapet sinyal valid, `invalidNotes`/`wibowoNotes` yang UDAH KETUMPUK buat
+  // aset LAIN (misal Emas gagal fetch data/gak ada pola) DIBUANG TOTAL -- gak pernah dikirim WA,
+  // gak pernah ke-`addEntry()`. Ini bertentangan langsung sama invarian yang didokumentasikan
+  // sendiri di atas ("tiap aset WAJIB dapat MINIMAL 1 baris status per hari, apapun hasilnya...
+  // gak ada jalur yang bisa senyap total lagi") -- dan bikin archive.json bolong buat aset yang
+  // "kalah nasib" hari itu. Gerbang yang BENER: kirim kalau ADA notes buat dilaporkan, TITIK --
+  // gak peduli aset LAIN dapet sinyal valid atau nggak (pesan valid udah keluar sendiri di atas,
+  // pesan invalid ini soal aset yang BEDA, bukan duplikat/kontradiksi).
+  if (invalidNotes.length > 0) {
     const msg = formatAutoInvalid({ notes: invalidNotes });
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
@@ -671,7 +684,7 @@ async function main() {
   // wibowoNotify.js (SATU titik yang sama dipakai posisi real, otomatis hormat saklar Silent
   // Trade). Pesan TERPISAH dari yang di atas (bukan cuma nambah Wibowo ke daftar target) karena
   // isinya beda (subset notes yang wibowo-safe).
-  if (!anyNewSignal && wibowoNotes.length > 0) {
+  if (wibowoNotes.length > 0) {
     const wibowoMsg = formatAutoInvalid({ notes: wibowoNotes });
     await sendWhatsAppToWibowo(wibowoMsg).catch((e) =>
       console.log(`[SniperAutoAnalysis] Broadcast ANCANG-ANCANG ke Wibowo Hedgefund gagal:`, e.message));

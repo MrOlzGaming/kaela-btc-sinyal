@@ -55,7 +55,7 @@ const { generateNfpEvents, generateFomcEvents } = require('./fedEvents');
 const { computeSignals, computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.js');
 const { withJournalLock } = require('./nyopetJournalLock');
 const tradeHistoryStore = require('./tradeHistoryStore');
-const { isLiveTradingEnabled } = require('./killSwitch');
+const { isLiveTradingEnabled, isTestnet: isTestnetGlobal } = require('./killSwitch');
 const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
@@ -189,11 +189,22 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   const emit = onEvent || (() => {}); // 23 Agu 2026 -- hook OPSIONAL buat jurnal personal (Kaela Pro
                                        // Trader, multiAccountExecutor.js) -- default no-op, ZERO efek
                                        // samping buat akun Olan sendiri (dia gak butuh hook ini).
-  const baseUrl = apiCreds && apiCreds.testnet === false ? 'https://fapi.binance.com' : 'https://demo-fapi.binance.com';
+  // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA `isDemo`/`baseUrl` CUMA liat `apiCreds.testnet` (diisi
+  // multiAccountExecutor.js per akun member). Instance DEFAULT/legacy (`_defaultTrader` di bawah,
+  // akun Olan sendiri lewat run-vultr-executor.sh) gak pernah dikasih `apiCreds` -- jatuhnya
+  // SELALU testnet=true APAPUN status kill switch (`live-trading-config.json`) yang sebenarnya.
+  // Begitu modal real masuk & kill switch di-flip ke mainnet, instance ini bakal DIAM-DIAM tetap
+  // fetch harga/income dari demo-fapi (baseUrl salah) DAN pesan WA/jurnal GAS tetap ngaku "Demo"
+  // (isDemo salah) walau order asli (lewat binanceExecutorDefault, yang BENERAN ikutin
+  // killSwitch.isTestnet()) udah kena uang beneran -- laporan real jadi hilang/salah-label total.
+  // Fallback ke `isTestnetGlobal()` (SATU sumber kebenaran yang sama dipakai binanceExecutor.js)
+  // kalau `apiCreds.testnet` gak eksplisit diisi (undefined, BUKAN cuma `!== false`).
+  const effectiveTestnet = apiCreds && typeof apiCreds.testnet === 'boolean' ? apiCreds.testnet : isTestnetGlobal();
+  const baseUrl = effectiveTestnet === false ? 'https://fapi.binance.com' : 'https://demo-fapi.binance.com';
   // 29 Agu 2026: pesan WA dulu HARDCODE "(Binance Demo)" -- gak masalah selama Real belum pernah
   // beneran ngirim pesan, TAPI bakal MENYESATKAN begitu Real jalan (nunjuk "Demo" padahal duit
   // asli). isDemo dipakai formatAutoOpen/formatAutoClosed biar labelnya selalu bener.
-  const isDemo = !(apiCreds && apiCreds.testnet === false);
+  const isDemo = effectiveTestnet !== false;
 
   // 12 Sep 2026, permintaan Olan ("sertakan PnL hari ini" di redesign pesan) -- SAMA konsep kayak
   // positionReconciler.js buat trading manual, sekarang Nyopet AUTO (close/partial) juga dikasih
@@ -318,7 +329,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // 24 Agu 2026, permintaan Olan: member REAL yang sinyalnya kelewat krn saldo kurang WAJIB
       // dikasih tau (bukan cuma nyampah di log lokal) -- Demo gak usah (solusinya beda, reset
       // Testnet, bukan isi saldo beneran).
-      if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
+      if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(journalPath, '.json')}-nyopet-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
           await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }));
@@ -811,7 +822,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     try {
       entryOrder = await exec.placeMarketEntry({ symbol, direction: 'buy', notionalUsd, livePrice });
     } catch (e) {
-      if (apiCreds && apiCreds.testnet === false && isInsufficientBalanceError(e.message)) {
+      if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(journalPath, '.json')}-nyopet-fedgrid-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
           await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet (Fed Dovish Grid)', assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }));

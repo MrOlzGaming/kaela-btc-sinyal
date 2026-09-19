@@ -9,8 +9,22 @@
 // file udah ada), plus deteksi lock BASI (proses pemegang lock crash/mati tanpa sempat lepas --
 // kalau dibiarin, journal itu ke-lock SELAMANYA) via umur file lock.
 const fs = require('fs');
+const crypto = require('crypto');
 
-const LOCK_STALE_MS = 30 * 1000; // proses NORMAL harusnya kelar jauh di bawah ini -- lebih lama = anggap crash
+// 🐛 FIX 19 Sep 2026 -- SEBELUMNYA `LOCK_STALE_MS=30000` + `releaseLock()` unlink TANPA cek
+// kepemilikan. Skenario nyata: proses A pegang lock, kerjaannya (fetch candle 4H berpaginasi +
+// harga live + waitForFill + kirim WA -- SEMUA di dalam critical section yang sama) kebetulan
+// lambat (jaringan flaky, pola sama kayak BUG-KAELATRADE-0005a) tapi BELUM crash, cuma lewat 30
+// detik. Proses B nganggep lock basi, HAPUS lock A, bikin lock baru miliknya sendiri. Proses A
+// akhirnya kelar, panggil releaseLock() -- ini HAPUS lock milik B (unlink polos gak peduli isi
+// file), bukan lock A yang sebenernya udah dicuri. Proses C yang lagi antre bisa ikutan masuk
+// SEMENTARA B masih kerja -- 2+ proses nulis journal REAL yang sama bersamaan, race beneran
+// kejadian, persis yang komentar lama di atas klaim udah dicegah.
+// Fix: (1) NAIKIN ambang basi jadi 90 detik -- lebih toleran ke jaringan lambat, masih JAUH di
+// bawah interval cron 15 menit; (2) fencing TOKEN unik per-acquire, `releaseLock` WAJIB cocokin
+// token di isi file SEBELUM unlink -- kalau udah beda (berarti lock kita udah dicuri duluan
+// karena kelamaan), SKIP unlink, JANGAN ganggu pemegang baru yang sah.
+const LOCK_STALE_MS = 90 * 1000; // proses NORMAL harusnya kelar jauh di bawah ini -- lebih lama = anggap crash
 const LOCK_RETRY_MS = 300;
 const LOCK_MAX_WAIT_MS = 15 * 1000;
 
@@ -18,13 +32,14 @@ function lockPathFor(journalPath) { return journalPath + '.lock'; }
 
 async function acquireLock(journalPath) {
   const lockPath = lockPathFor(journalPath);
+  const token = `${process.pid}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const deadline = Date.now() + LOCK_MAX_WAIT_MS;
   for (;;) {
     try {
       const fd = fs.openSync(lockPath, 'wx');
-      fs.writeSync(fd, `${process.pid} ${new Date().toISOString()}`);
+      fs.writeSync(fd, `${token} ${new Date().toISOString()}`);
       fs.closeSync(fd);
-      return;
+      return token;
     } catch (e) {
       if (e.code !== 'EEXIST') throw e;
       try {
@@ -43,18 +58,26 @@ async function acquireLock(journalPath) {
   }
 }
 
-function releaseLock(journalPath) {
-  try { fs.unlinkSync(lockPathFor(journalPath)); } catch (e) { /* udah ke-unlink duluan (mis. dianggap basi proses lain) -- aman diabaikan */ }
+function releaseLock(journalPath, token) {
+  const lockPath = lockPathFor(journalPath);
+  try {
+    const content = fs.readFileSync(lockPath, 'utf8');
+    if (!content.startsWith(token + ' ')) {
+      console.log(`[NyopetJournalLock] Lock "${lockPath}" udah bukan token kita (dicuri proses lain krn dianggap basi duluan) -- SKIP unlink, biar gak nge-hapus lock milik proses yang lagi sah kerja.`);
+      return;
+    }
+    fs.unlinkSync(lockPath);
+  } catch (e) { /* lock udah gak ada / gak kebaca -- aman diabaikan */ }
 }
 
 // Pembungkus utama -- SEMUA titik keputusan "cek slot floating -> mungkin buka/tutup" yang nyentuh
 // journal yang sama WAJIB lewat sini, biar gak ada 2 proses beraksi bersamaan di journal yang sama.
 async function withJournalLock(journalPath, fn) {
-  await acquireLock(journalPath);
+  const token = await acquireLock(journalPath);
   try {
     return await fn();
   } finally {
-    releaseLock(journalPath);
+    releaseLock(journalPath, token);
   }
 }
 

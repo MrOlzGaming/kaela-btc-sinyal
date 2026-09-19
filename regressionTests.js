@@ -26,6 +26,7 @@ const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, chec
 const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 const { isInsufficientBalanceError } = require('./balanceAlert');
+const { computeProgress } = require('./walletCapProgress');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -367,6 +368,19 @@ async function main() {
   });
   await test('isInsufficientBalanceError: error gak nyambung (mis. signature invalid) TETAP gak kedeteksi (no false-positive)', () => {
     assert.strictEqual(isInsufficientBalanceError('{"code":-1022,"msg":"Signature for this request is not valid."}'), false);
+  });
+
+  // walletCapProgress.js (20 Sep 2026, widget dashboard "progress ke cap $1000") -- ground-truth
+  // pct sederhana + dua ujung penting: separuh jalan, dan LEWAT cap (harus dicap 100%, bukan
+  // >100% -- bisa kejadian di antara siklus sebelum Olan sadar berhenti isi dompet yang udah full).
+  await test('walletCapProgress: separuh cap -> 50.0%', () => {
+    assert.strictEqual(computeProgress(500, CAP_PER_WALLET), 50);
+  });
+  await test('walletCapProgress: saldo lewat cap -> dicap 100%, gak boleh >100', () => {
+    assert.strictEqual(computeProgress(1234.56, CAP_PER_WALLET), 100);
+  });
+  await test('walletCapProgress: pembulatan 1 desimal (contoh Nyopet BTC $40 dari $1000)', () => {
+    assert.strictEqual(computeProgress(40, CAP_PER_WALLET), 4);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

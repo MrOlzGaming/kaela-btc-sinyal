@@ -151,5 +151,5 @@ async function main() {
   console.log('[MonthlyFundingReminder] Pengingat bulan ini terkirim ke Wibowo Hedgefund.');
 }
 
-module.exports = { main, computeSplit, formatMessage, WALLETS, CAP_PER_WALLET, MONTHLY_TOTAL };
+module.exports = { main, computeSplit, formatMessage, fetchBalance, WALLETS, CAP_PER_WALLET, MONTHLY_TOTAL };
 if (require.main === module) { main().catch((e) => console.log('[MonthlyFundingReminder] ERROR:', e.message)); }

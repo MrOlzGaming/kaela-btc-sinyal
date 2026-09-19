@@ -62,6 +62,11 @@ function assessMarginRisk(marginPct) {
 function hitung({ modal, nyawa, entry, stopLoss, maxLeverage, direction }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
   let exposure = getExposure(modal);
+  // ⚠️ (audit 19 Sep 2026) `web/kalkulator.html` PUNYA IMPLEMENTASI TERPISAH dari `hitung()` ini
+  // (WAJIB identik, sengaja gak di-`require()` karena itu jalan di browser client-side) -- literal
+  // arah DI SINI `'sell'`, TAPI di kalkulator.html `'short'`. Ini BUKAN bug (dua-duanya independen,
+  // gak saling panggil), tapi kalau ubah kata "sell" di sini, JANGAN lupa cek `web/kalkulator.html`
+  // juga (dan sebaliknya) -- literal yang beda ini gampang ke-copy-paste salah tanpa error apapun.
   if (direction === 'sell') exposure /= 2;
   const nilaiPosisi = modal * exposure;
   const cap = maxLeverage !== undefined ? maxLeverage : MAX_LEVERAGE;

@@ -40,7 +40,7 @@ const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBank
 const { formatAutoValid, formatAutoInvalid, formatPositionMonitor, formatBearShortSignal } = require('./sniperOrderLog');
 const { sendWhatsApp, sendWhatsAppExcept } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
-const { addEntry } = require('./archive');
+const { addEntry, addOrReplaceDaily } = require('./archive');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey, isWaMuted } = require('./config');
 const { analyzeSentiment } = require('./marketSentiment');
@@ -163,9 +163,21 @@ async function main() {
 
   // Order 'pending' (belum floating) -- jarang kejadian dari jalur otomatis ini (order langsung
   // di-set floating begitu dibuat), tapi tetap jaga-jaga: kalau ADA, diam total dulu (behavior
-  // lama), biar gak numpuk analisa di atas state yang belum jelas.
+  // lama), biar gak numpuk analisa di atas state yang belum jelas. `return` di sini SENGAJA
+  // dibiarkan sebelum `saveTriggerState` (di ujung `main()`) -- trigger-state gak ditandai "done"
+  // hari ini, jadi cron berikutnya otomatis nyoba lagi (self-healing, gak perlu logic retry manual).
+  //
+  // 🐛 FIX 19 Sep 2026 (audit -- "laporan checklist 20:00 WITA cuma bilang '❌ BELUM Sniper
+  // Analisa Harian' tanpa jelasin PENYEBABNYA, keliatan kayak kegagalan generik padahal ada order
+  // nyangkut pending yang butuh dicek manual") -- kirim 1x/hari (addOrReplaceDaily, biar gak spam
+  // tiap 15 menit kalau order-nya nyangkut lama) biar Olan tau AKAR MASALAHNYA tanpa perlu baca
+  // log VPS manual.
   if (allActive.some((o) => o.status !== 'floating')) {
+    const pendingIds = allActive.filter((o) => o.status !== 'floating').map((o) => `#${o.id} (${o.status})`).join(', ');
     console.log('[SniperAutoAnalysis]', now.toISOString(), '-- ada posisi bayangan masih pending, skip pemantauan (belum floating).');
+    const stuckMsg = `${roleOpener('DRAKE', 'Sniper analisa harian KE-SKIP hari ini')}\n\nPenyebab: ada order bayangan masih status "pending" (belum "floating"): ${pendingIds}. Ini jarang kejadian dari jalur otomatis -- kemungkinan ada script yang macet di tengah proses buka order. Analisa sinyal baru DIJEDA sampai ini beres, cek jurnal/log VPS.\n\n— Kaela`;
+    addOrReplaceDaily('sniper-pending-stuck', stuckMsg, now);
+    await sendWhatsAppRespectMute(stuckMsg, 'Sniper pending stuck').catch((e) => console.log('[SniperAutoAnalysis] Gagal kirim alert pending-stuck:', e.message));
     return;
   }
 

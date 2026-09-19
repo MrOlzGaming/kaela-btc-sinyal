@@ -88,6 +88,21 @@ if ! timeout -k 10 30 git fetch origin-new master --quiet >> "$LOG_FILE" 2>&1; t
   log 'git fetch GAGAL/timeout -- coba lagi run berikutnya.'
   report_and_exit 'git fetch GAGAL/timeout di vultr-sg' 1
 fi
+# 🐛 FIX 19 Sep 2026 (audit -- "run-vultr-executor.sh gak pernah cek/warn kalau git reset --hard
+# bakal buang perubahan lokal yang belum ke-commit/ke-push") -- SEBELUM ini, reset --hard di bawah
+# jalan TANPA PERNAH ngecek apa yang bakal dibuang. Ada 2 skenario nyata: (1) working tree kotor
+# (perubahan file TRACKED yang belum sempat di-`git add`/commit -- seharusnya gak pernah kejadian
+# kalau semua script sudah commit sendiri, tapi ini jaring pengaman kalau ada yang kelewat), (2)
+# ada commit LOKAL yang udah ke-commit tapi GAGAL push siklus SEBELUMNYA (lihat log "Push GAGAL"
+# di ujung file ini) -- itu bakal DIBUANG TOTAL oleh reset --hard, bukan cuma di-skip. Log eksplisit
+# (kata "GAGAL"/"ERROR" biar ke-scan CYCLE_ERRORS -> reportCycleErrors.js) SEBELUM buang, biar ada
+# jejak kapan/kenapa state hilang -- bukan mencegah (reset --hard tetap WAJIB jalan buat sinkron
+# multi-mesin), cuma bikin kejadian ini KETAHUAN, bukan senyap total kayak sebelumnya.
+DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null || true)
+UNPUSHED_COMMITS=$(git rev-list --count origin-new/master..HEAD 2>/dev/null || echo 0)
+if [ -n "$DIRTY_BEFORE_RESET" ] || [ "$UNPUSHED_COMMITS" -gt 0 ]; then
+  log "PERINGATAN: git reset --hard AKAN MEMBUANG state -- working tree kotor: $([ -n "$DIRTY_BEFORE_RESET" ] && echo yes || echo no), commit lokal belum ke-push: $UNPUSHED_COMMITS. Kemungkinan besar sisa push GAGAL siklus sebelumnya -- cek log."
+fi
 if ! git reset --hard origin-new/master --quiet >> "$LOG_FILE" 2>&1; then
   log 'git reset --hard GAGAL -- coba lagi run berikutnya.'
   report_and_exit 'git reset --hard GAGAL di vultr-sg' 1

@@ -51,6 +51,11 @@ function rsi(values, period = 14) {
     if (diff >= 0) gains += diff; else losses -= diff;
   }
   const avgGain = gains / period, avgLoss = losses / period;
+  // 🐛 FIX 19 Sep 2026 (audit) -- SEBELUMNYA `avgLoss === 0` return 100 gak bedain 2 kasus: (a)
+  // avgGain>0 & avgLoss=0 (semua candle naik, RSI=100 BENAR), vs (b) avgGain=0 & avgLoss=0 (harga
+  // FLAT TOTAL sepanjang periode, harusnya NETRAL 50, bukan "overbought" 100). Edge case murni
+  // teoretis buat BTC/Emas real (harga gak pernah benar2 flat), tapi worth dibenerin sekalian.
+  if (avgGain === 0 && avgLoss === 0) return 50;
   if (avgLoss === 0) return 100;
   const rs = avgGain / avgLoss;
   return 100 - 100 / (1 + rs);

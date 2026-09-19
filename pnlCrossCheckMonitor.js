@@ -109,7 +109,16 @@ async function main() {
 
   const msg = formatAlert(allFindings);
   console.log(msg);
-  await sendWhatsApp(msg, MASTER_NOMOR); // DM ke Olan pribadi, BUKAN broadcast grup
+  // 🐛 FIX 19 Sep 2026 (audit) -- file ini gak punya arsip/dedup-state (tiap siklus deteksi ulang
+  // dari nol), jadi gerbang "arsip cuma kalau sukses" gak relevan di sini -- TAPI kalau kirim
+  // gagal, temuan PnL mismatch (yang bisa jadi TRANSIEN, ilang sendiri siklus berikutnya) berisiko
+  // gak pernah nyampe ke Olan sama sekali tanpa jejak. Fix: log eksplisit dengan kata "GAGAL" kalau
+  // kirim gagal -- otomatis ke-scan `run-vultr-executor.sh`'s CYCLE_ERRORS -> reportCycleErrors.js
+  // (jalur yang UDAH ADA, gak perlu bikin pipa notifikasi baru).
+  const sendResult = await sendWhatsApp(msg, MASTER_NOMOR); // DM ke Olan pribadi, BUKAN broadcast grup
+  if (sendResult && sendResult.ok === false) {
+    console.log(`[PnlCrossCheck] Kirim WA temuan mismatch GAGAL -- ${allFindings.length} temuan berisiko gak nyampe ke Olan.`);
+  }
 }
 
 module.exports = { main, fetchFreshTodayPnl, checkAccount, DIFF_THRESHOLD_USD };

@@ -136,6 +136,12 @@
     // PERSIS sama logic `calculator.js` `hitung()` (yang beneran dipakai Kaela live) -- kalkulator
     // ini 100% client-side (gak bisa require() modul Node), jadi rumusnya disalin manual di sini,
     // WAJIB disamain kalau `calculator.js` server-side berubah lagi ke depan.
+    // ⚠️ (audit 19 Sep 2026) Literal arah DI SINI `'short'`, TAPI di calculator.js server-side
+    // `'sell'` -- BEDA SENGAJA (tiap file punya konvensi caller sendiri, `hitung()` di sini dipanggil
+    // dari `arah` state UI "Long"/"Short", server dari `direction` "buy"/"sell" order exchange),
+    // TAPI kalau nanti mau nyamain/refactor salah satu, JANGAN asal copy-paste kondisinya -- cek
+    // literal exact-nya dulu, gak ada error yang bakal muncul kalau salah (exposure short diam2
+    // berhenti dibagi 2).
     function hitung(modal, nyawaPct, direction) {
       let exposure = getExposure(modal);
       if (direction === 'short') exposure /= 2;

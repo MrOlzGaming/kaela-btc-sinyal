@@ -62,6 +62,7 @@
     not_executed_yet: { id: 'belum dieksekusi', en: 'not executed yet' },
     live_exec_failed: { id: 'bayangan, gagal live', en: 'shadow only, live failed' },
     opened: { id: '🕐 Dibuka', en: '🕐 Opened' },
+    closed_at: { id: '🏁 Ditutup', en: '🏁 Closed' },
     calculating: { id: 'menghitung...', en: 'calculating...' },
     price_now: { id: 'Harga', en: 'Price of' },
     now_suffix: { id: 'sekarang:', en: 'right now:' },
@@ -474,12 +475,20 @@
           <div>🏁 ${rt('stage2_rest_at')} ${fmtUsdOrder(o.exitPrice != null ? o.exitPrice : (won ? o.tp : o.sl))}${o.closedAt ? ` (${fmtDateLong(new Date(o.closedAt))})` : ''}: ${(o.pnlUsd - (o.realizedPnlUsd || 0)) >= 0 ? '+' : ''}${fmtUsdOrder((o.pnlUsd || 0) - (o.realizedPnlUsd || 0))}</div>
         </div>`
       : '';
+    // 🐛 FIX 19 Sep 2026 (Olan: "riwayat trading amburadul.. ga tau trade tanggal berapa") --
+    // SEBELUMNYA tanggal cuma nongol di dalam `partialTimeline` (CUMA kalau `o.partialDone`
+    // true) -- trade closed BIASA (single-shot, mayoritas) gak punya tanggal SAMA SEKALI di
+    // kartunya sendiri, cuma keliatan dari header grup bulan di luar (kaela-access-app.js) yang
+    // gampang ilang di grid padat banyak kartu. Baris ini SELALU muncul (gak bersyarat), pakai
+    // `closedAt` (fallback `triggeredAt` kalau closedAt gak ada -- order lama/cancelled).
+    const closedDateLine = (o.closedAt || o.triggeredAt) ? `<div class="order-opened-since">${rt('closed_at')} ${fmtOpenedDate(o.closedAt || o.triggeredAt)}</div>` : '';
     return `<div class="order-card closed" data-strategy="${o.strategyType || ''}">
       ${idLine}
       ${assetBadge}
       <div class="order-header"><span class="order-dir">${dir}</span><span class="order-status-badge closed">${badge}</span></div>
       ${reasonLine}
       <div class="order-levels"><span>${rt('entry')} ${o.entryPrice ? fmtUsdOrder(o.entryPrice) : '-'}</span><span>${rt('exit')} ${o.status === 'closed_tp' ? fmtUsdOrder(o.tp) : o.status === 'closed_sl' ? slText : '-'}</span></div>
+      ${closedDateLine}
       ${partialTimeline}
       ${pnlLine}
     </div>`;
@@ -1091,6 +1100,12 @@
         </div>`;
     }
     const won = o.status === 'closed_tp';
+    // 🐛 FIX 19 Sep 2026 (Olan: "riwayat trading amburadul.. ga tau trade tanggal berapa") --
+    // kartu closed Nyopet SEBELUMNYA NOL referensi tanggal sama sekali (beda dari kartu floating
+    // yang punya "Dibuka ..."). Cuma keliatan dari header grup bulan di luar (kaela-access-app.js
+    // combinedHistoryHtml), gampang ilang di grid padat banyak kartu (persis kejadian di
+    // screenshot Olan). Tambahin eksplisit di kartu-nya sendiri, pakai `closedAt`.
+    const closedDateLine = o.closedAt ? `<div class="order-opened-since">${rt('closed_at')} ${fmtOpenedDate(o.closedAt)}</div>` : '';
     return `<div class="order-card closed">
         <div class="order-header">
           <span class="order-dir">${dirLabel}</span>
@@ -1098,6 +1113,7 @@
         </div>
         <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
         <div class="order-levels"><span>${rt('entry')} ${fmtUsdOrder(o.entryPrice)}</span><span>${rt('exit')} ${fmtUsdOrder(o.exitPrice)}</span></div>
+        ${closedDateLine}
         <div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${(o.pnlPct || 0).toFixed(1)}%)</div>
       </div>`;
   }

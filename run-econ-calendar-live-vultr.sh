@@ -36,6 +36,22 @@ fi
 
 CHANGED=$(git status --porcelain -- archive.json econ-reaction-research-log.json)
 if [ -n "$CHANGED" ]; then
+  # 🐛 FIX 19 Sep 2026 (review independen -- "klaim 'sudah ketutup' cuma dipersempit, bukan
+  # dihilangkan": run-vultr-executor.sh (cron 15 menit) pakai flock di /tmp/kaela-executor.lock
+  # SEPANJANG siklusnya, tapi script INI (cron 5 menit) gak pernah pakai lock yang sama -- masih
+  # ada jendela beberapa detik antara node nulis archive.json (baris 32) dan git commit di bawah
+  # ini di mana run-vultr-executor.sh bisa `reset --hard` di proses terpisah dan hapus balik
+  # tulisan yang belum sempat ke-commit). Fix: ambil lock SINGKAT (fd BEDA dari fd 200 yang
+  # dipakai run-vultr-executor.sh, tapi FILE lock-nya SAMA -- flock kerja per-file, bukan per-fd)
+  # SEBELUM commit, `-w 5` (tunggu maks 5 detik, BUKAN nunggu selama run-vultr-executor.sh
+  # megang -- itu bisa berjam-jam kalau kebetulan lambat). Gagal ambil lock TETAP lanjut commit
+  # (best-effort, sama filosofi retry push di bawah) -- ini MEMPERSEMPIT jendela race ke hampir
+  # nol, bukan klaim "pasti nol" (masih ada celah teoretis kalau lock gagal DIAMBIL tepat pas
+  # reset --hard proses lain kejadian di detik yang sama -- probabilitas sangat rendah).
+  exec 201>/tmp/kaela-executor.lock
+  if ! flock -w 5 201; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: gagal ambil lock commit dalam 5 detik (siklus 15-menit masih pegang) -- lanjut TANPA lock, retry push di bawah tetap jaga-jaga." >> "$LOG_FILE"
+  fi
   for f in archive.json econ-reaction-research-log.json; do
     [ -f "$f" ] && git add "$f"
   done

@@ -41,6 +41,7 @@ const { formatAutoValid, formatAutoInvalid, formatPositionMonitor, formatBearSho
 const { sendWhatsApp, sendWhatsAppExcept } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { addEntry, addOrReplaceDaily } = require('./archive');
+const { roleOpener } = require('./teamRoles');
 const { fetchWithRetry } = require('./httpRetry');
 const { localDateKey, isWaMuted } = require('./config');
 const { analyzeSentiment } = require('./marketSentiment');

@@ -9,12 +9,22 @@
 // kayak sniper-orders.json/nyopet-journal.json di dashboard-load.js -- data berubah tiap siklus,
 // jsDelivr purge kadang telat). Reuse WALLETS/CAP_PER_WALLET/fetchBalance dari
 // monthlyFundingReminder.js, JANGAN duplikat definisi dompet di sini.
+//
+// 21 Sep 2026 -- juga nulis web/wallet-cap-progress-history.json (1 titik/HARI, bukan 1/siklus --
+// chart pertumbuhan gak butuh resolusi 15 menit, dan 1/hari bikin filenya kecil selamanya, gak
+// perlu trim agresif). Cuma simpen ANGKA GABUNGAN (totalBalance/totalCap), BUKAN breakdown per
+// dompet -- samain sama keputusan Olan 20 Sep soal widget agregat shareholder (pola setoran/
+// prioritas dompet tetap privat, cuma total pool yang dibagi ke Saham Saya).
 
 const fs = require('fs');
 const path = require('path');
 const { WALLETS, CAP_PER_WALLET, fetchBalance } = require('./monthlyFundingReminder');
 
 const OUT_PATH = path.join(__dirname, 'web', 'wallet-cap-progress.json');
+const HISTORY_PATH = path.join(__dirname, 'web', 'wallet-cap-progress-history.json');
+// ~3 tahun harian -- lebih dari cukup buat 1 siklus tanam-panen halving (window_START 2026 ->
+// HALVING_DATE 2028), gak akan numpuk gak terkendali.
+const MAX_HISTORY_ENTRIES = 1095;
 
 function loadSecrets() {
   try { return require('./secrets'); } catch { return {}; }
@@ -24,6 +34,29 @@ function loadSecrets() {
 // dikit di antara siklus sebelum Olan sadar berhenti isi, jangan sampai progress bar > 100%).
 function computeProgress(balance, cap) {
   return Math.min(100, Math.round((balance / cap) * 1000) / 10);
+}
+
+// WITA (UTC+8) -- pola SAMA kayak witaDateKey balanceAlert.js, biar "hari" konsisten sama zona
+// waktu Olan (bukan UTC polos yang bisa geser tanggal beda hari pas malam WITA).
+function witaDateKey(d) {
+  return new Date(d.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+// Pure function (gampang ditest) -- kalau titik TERAKHIR histori tanggalnya SAMA (siklus lain di
+// hari yang sama), REPLACE (biar angka hari ini selalu yang PALING BARU, bukan numpuk berkali-kali
+// per hari). Kalau beda tanggal, APPEND baru + trim dari DEPAN kalau kelewat MAX_HISTORY_ENTRIES.
+function upsertHistoryEntry(history, dateKey, totalBalance, totalCap) {
+  const entry = { date: dateKey, totalBalance, totalCap };
+  if (history.length && history[history.length - 1].date === dateKey) {
+    return history.slice(0, -1).concat([entry]);
+  }
+  const next = history.concat([entry]);
+  return next.length > MAX_HISTORY_ENTRIES ? next.slice(next.length - MAX_HISTORY_ENTRIES) : next;
+}
+
+function loadHistory() {
+  if (!fs.existsSync(HISTORY_PATH)) return [];
+  try { return JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')); } catch { return []; }
 }
 
 async function main() {
@@ -44,10 +77,16 @@ async function main() {
     console.log('[WalletCapProgress] Gak semua dompet kebaca, snapshot lama dipertahankan.');
     return;
   }
+  const now = new Date();
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify({ updatedAt: new Date().toISOString(), wallets }, null, 2));
-  console.log('[WalletCapProgress] Snapshot ditulis.');
+  fs.writeFileSync(OUT_PATH, JSON.stringify({ updatedAt: now.toISOString(), wallets }, null, 2));
+
+  const totalBalance = Math.round(wallets.reduce((s, w) => s + w.balance, 0) * 100) / 100;
+  const totalCap = wallets.reduce((s, w) => s + w.cap, 0);
+  const history = upsertHistoryEntry(loadHistory(), witaDateKey(now), totalBalance, totalCap);
+  fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2));
+  console.log('[WalletCapProgress] Snapshot + histori ditulis.');
 }
 
-module.exports = { main, computeProgress };
+module.exports = { main, computeProgress, upsertHistoryEntry };
 if (require.main === module) { main().catch((e) => console.log('[WalletCapProgress] ERROR:', e.message)); }

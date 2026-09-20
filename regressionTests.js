@@ -26,7 +26,7 @@ const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, chec
 const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 const { isInsufficientBalanceError } = require('./balanceAlert');
-const { computeProgress } = require('./walletCapProgress');
+const { computeProgress, upsertHistoryEntry } = require('./walletCapProgress');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -381,6 +381,35 @@ async function main() {
   });
   await test('walletCapProgress: pembulatan 1 desimal (contoh Nyopet BTC $40 dari $1000)', () => {
     assert.strictEqual(computeProgress(40, CAP_PER_WALLET), 4);
+  });
+
+  // upsertHistoryEntry (21 Sep 2026, grafik pertumbuhan Modal Futures Pool di Saham Saya) --
+  // ground-truth: 1 titik/hari (siklus lain di hari SAMA REPLACE, bukan numpuk), hari BARU
+  // APPEND, dan trim gak boleh ngelewatin MAX_HISTORY_ENTRIES (1095, dicek pakai array pendek
+  // biar test-nya cepet -- logic trim sama persis independen dari ukuran cap-nya).
+  await test('upsertHistoryEntry: siklus lain hari SAMA -> REPLACE titik terakhir, panjang gak nambah', () => {
+    const history = [{ date: '2026-09-20', totalBalance: 100, totalCap: 4000 }];
+    const next = upsertHistoryEntry(history, '2026-09-20', 150, 4000);
+    assert.strictEqual(next.length, 1);
+    assert.strictEqual(next[0].totalBalance, 150);
+  });
+  await test('upsertHistoryEntry: hari BARU -> APPEND, titik lama tetap ada', () => {
+    const history = [{ date: '2026-09-20', totalBalance: 150, totalCap: 4000 }];
+    const next = upsertHistoryEntry(history, '2026-09-21', 190, 4000);
+    assert.strictEqual(next.length, 2);
+    assert.strictEqual(next[0].date, '2026-09-20');
+    assert.strictEqual(next[1].date, '2026-09-21');
+  });
+  await test('upsertHistoryEntry: array kosong -> jadi 1 titik pertama', () => {
+    const next = upsertHistoryEntry([], '2026-09-21', 40, 4000);
+    assert.deepStrictEqual(next, [{ date: '2026-09-21', totalBalance: 40, totalCap: 4000 }]);
+  });
+  await test('upsertHistoryEntry: udah penuh 1095 (~3 tahun harian) -> tetap 1095, titik TERTUA kebuang', () => {
+    const full = Array.from({ length: 1095 }, (_, i) => ({ date: `day-${i}`, totalBalance: i, totalCap: 4000 }));
+    const next = upsertHistoryEntry(full, 'day-BARU', 999, 4000);
+    assert.strictEqual(next.length, 1095);
+    assert.strictEqual(next[0].date, 'day-1'); // day-0 (paling tua) kebuang
+    assert.strictEqual(next[next.length - 1].date, 'day-BARU');
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

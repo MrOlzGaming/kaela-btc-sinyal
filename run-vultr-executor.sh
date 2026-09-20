@@ -176,7 +176,7 @@ timeout -k 10 30 node monthlyFundingReminder.js >> "$LOG_FILE" 2>&1 || log "mont
 # nulis web/wallet-cap-progress.json tiap siklus biar progress yang keliatan di dashboard LIVE.
 timeout -k 10 30 node walletCapProgress.js >> "$LOG_FILE" 2>&1 || log "walletCapProgress.js ERROR (exit $?)"
 
-# Tripwire keamanan (21 Sep 2026, permintaan Olan) -- WA darurat PRIBADI kalau total Modal Futures
+# Tripwire keamanan (21 Sep 2026, permintaan Olan) -- WA darurat ke grup Wibowo Hedgefund kalau total Modal Futures
 # Pool turun drastis (>=50% + >=$50) dalam 1 hari. Dipanggil SETELAH walletCapProgress.js di atas
 # (butuh histori hari ini yang BARU ditulis). Self-gating internal (wallet-cap-anomaly-state.json).
 timeout -k 10 30 node walletCapAnomalyWatch.js >> "$LOG_FILE" 2>&1 || log "walletCapAnomalyWatch.js ERROR (exit $?)"

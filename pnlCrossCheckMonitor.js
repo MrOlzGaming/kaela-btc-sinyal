@@ -11,17 +11,18 @@
 //       ground truth independen, sama distinct dari jalur (1) walau kebetulan sama-sama akhirnya
 //       pakai `getIncomeHistory`.
 // Kalau selisihnya lebih dari ambang kecil (bukan cuma beda rounding/timing), itu SINYAL ada yang
-// gak beres (bug baru, sync gagal diam-diam, dst) -- alarm ke Olan PRIBADI (DM, bukan grup) SEBELUM
-// pesan salah lagi-lagi kekirim ke investor.
+// gak beres (bug baru, sync gagal diam-diam, dst) -- alarm ke grup Wibowo Hedgefund SEBELUM pesan
+// salah lagi-lagi kekirim ke investor.
 //
-// ⛔ MURNI PENGECEKAN -- gak pernah kirim ke grup Wibowo/member, gak pernah ubah data apapun.
+// ⛔ MURNI PENGECEKAN -- gak pernah ubah data apapun. Alarm kirim ke grup Wibowo Hedgefund (21 Sep
+// 2026, direvisi dari DM pribadi -- permintaan Olan: "kalo DM takut ga kebaca", lihat wibowoNotify.js).
 
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
 const { sendWhatsApp } = require('./fonnte');
 const tradeHistoryStore = require('./tradeHistoryStore');
-const { MASTER_NOMOR } = require('./multiAccountExecutor');
 const { roleOpener } = require('./teamRoles');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 const DIFF_THRESHOLD_USD = 0.5; // toleransi kecil (rounding/timing entry yg baru masuk pas dicek)
 // Simbol per akun -- BTCUSDC (Nyopet) + BTCUSDT (Sniper, kalau ada) buat Olan. Abdu cuma BTCUSDC
@@ -115,7 +116,13 @@ async function main() {
   // gak pernah nyampe ke Olan sama sekali tanpa jejak. Fix: log eksplisit dengan kata "GAGAL" kalau
   // kirim gagal -- otomatis ke-scan `run-vultr-executor.sh`'s CYCLE_ERRORS -> reportCycleErrors.js
   // (jalur yang UDAH ADA, gak perlu bikin pipa notifikasi baru).
-  const sendResult = await sendWhatsApp(msg, MASTER_NOMOR); // DM ke Olan pribadi, BUKAN broadcast grup
+  //
+  // 21 Sep 2026 (permintaan Olan: "jangan pesan pribadi.. ke grup hedgefund wibowo aja, kalo DM
+  // takut ga kebaca") -- pindah dari DM MASTER_NOMOR ke grup Wibowo Hedgefund. LANGSUNG
+  // sendWhatsApp+WIBOWO_GROUP_ID (BUKAN sendWhatsAppToWibowo/wibowoNotify.js) -- pola SAMA kayak
+  // exchangeWalletTracker.js: ini laporan data QA, BUKAN update posisi trading, jadi TETAP harus
+  // nyampe walau toggle "Silent Trade" lagi OFF.
+  const sendResult = await sendWhatsApp(msg, WIBOWO_GROUP_ID);
   if (sendResult && sendResult.ok === false) {
     console.log(`[PnlCrossCheck] Kirim WA temuan mismatch GAGAL -- ${allFindings.length} temuan berisiko gak nyampe ke Olan.`);
   }

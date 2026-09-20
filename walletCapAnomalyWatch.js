@@ -1,6 +1,7 @@
 // walletCapAnomalyWatch.js (21 Sep 2026, permintaan Olan) -- tripwire keamanan: kalau TOTAL Modal
-// Futures Pool (4 dompet gabungan) turun DRASTIS dalam 1 hari, WA darurat ke Olan PRIBADI. Baca
-// histori web/wallet-cap-progress-history.json (ditulis walletCapProgress.js, 1 titik/hari WITA).
+// Futures Pool (4 dompet gabungan) turun DRASTIS dalam 1 hari, WA darurat ke grup Wibowo
+// Hedgefund. Baca histori web/wallet-cap-progress-history.json (ditulis walletCapProgress.js,
+// 1 titik/hari WITA).
 //
 // KENAPA threshold doang, BUKAN cross-check ke journal trading (sniper-orders.json dkk) -- Olan
 // nanya "kalo turun karena trading?": ambangnya (50% + minimal $50 absolut) disetel JAUH di atas
@@ -14,12 +15,18 @@
 //
 // Dedup: SEKALI per hari (WITA) -- kalau kondisi anomali masih sama besok (belum ditangani Olan),
 // gak spam ulang tiap ~15 menit siklus VPS.
+//
+// 21 Sep 2026 (permintaan Olan: "jangan pesan pribadi.. ke grup hedgefund wibowo aja, kalo DM
+// takut ga kebaca") -- kirim ke WIBOWO_GROUP_ID LANGSUNG via sendWhatsApp (BUKAN
+// sendWhatsAppToWibowo/wibowoNotify.js) -- pola SAMA kayak exchangeWalletTracker.js: ini dugaan
+// insiden keamanan, BUKAN update posisi trading, jadi TETAP harus nyampe walau toggle "Silent
+// Trade" lagi OFF (itu gate KHUSUS visibilitas trade, gak relevan buat "duit ilang").
 
 const fs = require('fs');
 const path = require('path');
 const { loadHistory } = require('./walletCapHistory');
 const { sendWhatsApp } = require('./fonnte');
-const { MASTER_NOMOR } = require('./multiAccountExecutor');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 const { roleOpener } = require('./teamRoles');
 
 const STATE_PATH = path.join(__dirname, 'wallet-cap-anomaly-state.json');
@@ -49,7 +56,10 @@ function detectAnomaly(history) {
 function formatAlert(a) {
   const pct = (a.dropPct * 100).toFixed(1);
   return [
-    roleOpener('REED', 'ada penurunan drastis di Modal Futures Pool'),
+    // MARCUS (Security Specialist) -- "petugas" yang bener buat laporan keamanan, BUKAN REED
+    // (Archive) yang kepake awalnya (salah pilih role, dikoreksi Olan 21 Sep: "sesuaikan sama
+    // petugasnya, anggota nexus forge punya tugas masing-masing" -- lihat teamRoles.js).
+    roleOpener('MARCUS', 'ada penurunan drastis di Modal Futures Pool'),
     '',
     `Total 4 dompet trading (Sniper+Nyopet, gabungan) turun dari $${a.yesterday.toFixed(2)} ke $${a.today.toFixed(2)} -- turun $${a.drop.toFixed(2)} (${pct}%) dalam 1 hari terakhir.`,
     '',
@@ -70,9 +80,7 @@ async function main() {
 
   const msg = formatAlert(anomaly);
   console.log('[WalletCapAnomalyWatch]', msg);
-  // DM Olan PRIBADI (BUKAN grup Wibowo Hedgefund) -- ini dugaan insiden keamanan, bukan info
-  // trading rutin, pola SAMA kayak pnlCrossCheckMonitor.js.
-  const sendResult = await sendWhatsApp(msg, MASTER_NOMOR);
+  const sendResult = await sendWhatsApp(msg, WIBOWO_GROUP_ID);
   if (sendResult && sendResult.ok === false) {
     console.log('[WalletCapAnomalyWatch] Kirim WA GAGAL -- state belum ditandai, dicoba lagi siklus berikutnya.');
     return;

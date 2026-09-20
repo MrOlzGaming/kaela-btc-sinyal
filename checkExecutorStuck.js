@@ -21,11 +21,11 @@ const fs = require('fs');
 const path = require('path');
 const { sendWhatsApp } = require('./fonnte');
 const { roleOpener } = require('./teamRoles');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 const HEARTBEAT_FILE = path.join(__dirname, 'cron-heartbeat.log');
 const EXEC_LOG_FILE = path.join(__dirname, 'local-executor.log');
 const STATE_FILE = path.join(__dirname, 'executor-stuck-state.json');
-const MASTER_NOMOR = '6281299303888';
 
 const STUCK_THRESHOLD_CYCLES = 3; // 3x siklus 15-menit berturut-turut skip (~45 menit) baru dianggap "macet", bukan cuma 1 siklus lambat wajar
 const ALERT_COOLDOWN_MS = 60 * 60 * 1000; // max 1x lapor/jam walau tetap macet -- anti-spam, bukan nunggu pulih baru boleh lapor lagi
@@ -100,8 +100,15 @@ async function main() {
   // Olan belum terima apa-apa PERSIS pas sistem lagi bermasalah (waktu paling butuh alert-nya).
   // Fix: cek hasil eksplisit, cuma update state kalau beneran sukses (atau skipped -- gak ada
   // secrets.js, situasi normal, bukan kegagalan kirim).
+  //
+  // 21 Sep 2026 (permintaan Olan: "jangan pesan pribadi.. ke grup hedgefund wibowo aja, kalo DM
+  // takut ga kebaca") -- pindah dari DM MASTER_NOMOR ke grup Wibowo Hedgefund. LANGSUNG
+  // sendWhatsApp+WIBOWO_GROUP_ID (BUKAN sendWhatsAppToWibowo/wibowoNotify.js) -- pola SAMA kayak
+  // exchangeWalletTracker.js: ini laporan infra/debug, BUKAN update posisi trading, jadi TETAP
+  // harus nyampe walau toggle "Silent Trade" lagi OFF (itu gate KHUSUS visibilitas trade, gak
+  // relevan buat "sistem lagi macet").
   try {
-    const sendResult = await sendWhatsApp(msg, MASTER_NOMOR);
+    const sendResult = await sendWhatsApp(msg, WIBOWO_GROUP_ID);
     if (sendResult && sendResult.ok === false) {
       console.log('[CheckExecutorStuck] Kirim WA GAGAL (Fonnte nolak/API down) -- state alert TIDAK diupdate, biar dicoba lagi menit depan.');
     } else {

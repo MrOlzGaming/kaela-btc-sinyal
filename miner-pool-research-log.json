@@ -98,13 +98,14 @@
   {
     "dateKey": "2026-09-20",
     "poolCounts": {
-      "AntPool": 16,
+      "AntPool": 17,
       "Foundry USA": 26,
       "OCEAN": 2,
       "unidentified": 15,
       "F2Pool": 14,
       "SpiderPool": 12,
-      "ViaBTC": 9
+      "ViaBTC": 9,
+      "Luxor": 1
     }
   }
 ]

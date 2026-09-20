@@ -29,7 +29,7 @@ const { isInsufficientBalanceError } = require('./balanceAlert');
 const { computeProgress } = require('./walletCapProgress');
 const { upsertHistoryEntry, estimateMonthsToCap } = require('./walletCapHistory');
 const { detectAnomaly } = require('./walletCapAnomalyWatch');
-const { summarizeEvents, nearbyClusters } = require('./actionableLiquidityRadar');
+const { summarizeEvents, nearbyClusters, detectImbalance } = require('./actionableLiquidityRadar');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -520,6 +520,36 @@ async function main() {
     const result = nearbyClusters(heatmap, 80000, 'above', 'shortLiquidatedUsd');
     assert.strictEqual(result.length, 1);
     assert.strictEqual(result[0].price, 80500);
+  });
+
+  // detectImbalance (21 Sep 2026, jalur B "jangan mangkrak" -- crowding SEBELUM ledakan) --
+  // ground-truth: funding ekstrem SENDIRIAN gak cukup, WAJIB ada cluster historis "notable" DEKAT
+  // harga di arah yang relevan. Dua syarat ini KEDUANYA harus kepenuhan, bukan salah satu.
+  await test('detectImbalance: funding short-crowded + cluster short notable 3% di atas -> KEDETEKSI', () => {
+    const heatmap = { '81000': { shortLiquidatedUsd: 600000 } }; // 1,25% di atas 80000, notable
+    const r = detectImbalance(heatmap, 80000, -0.05); // funding di bawah threshold -0.03
+    assert.ok(r);
+    assert.strictEqual(r.side, 'short');
+    assert.strictEqual(r.cluster.price, 81000);
+  });
+  await test('detectImbalance: funding ekstrem TAPI cluster kejauhan (>3%) -> null', () => {
+    const heatmap = { '85000': { shortLiquidatedUsd: 900000 } }; // 6,25% di atas 80000, terlalu jauh
+    assert.strictEqual(detectImbalance(heatmap, 80000, -0.05), null);
+  });
+  await test('detectImbalance: funding ekstrem TAPI cluster kekecilan (<$500rb) -> null', () => {
+    const heatmap = { '81000': { shortLiquidatedUsd: 100000 } };
+    assert.strictEqual(detectImbalance(heatmap, 80000, -0.05), null);
+  });
+  await test('detectImbalance: funding NORMAL (di antara 2 threshold) -> null walau cluster gede ada', () => {
+    const heatmap = { '81000': { shortLiquidatedUsd: 900000 }, '79000': { longLiquidatedUsd: 900000 } };
+    assert.strictEqual(detectImbalance(heatmap, 80000, 0.01), null);
+  });
+  await test('detectImbalance: funding long-crowded + cluster long notable di bawah -> KEDETEKSI', () => {
+    const heatmap = { '79000': { longLiquidatedUsd: 700000 } }; // 1,25% di bawah 80000
+    const r = detectImbalance(heatmap, 80000, 0.08); // di atas threshold 0.05
+    assert.ok(r);
+    assert.strictEqual(r.side, 'long');
+    assert.strictEqual(r.cluster.price, 79000);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

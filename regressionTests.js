@@ -29,6 +29,7 @@ const { isInsufficientBalanceError } = require('./balanceAlert');
 const { computeProgress } = require('./walletCapProgress');
 const { upsertHistoryEntry, estimateMonthsToCap } = require('./walletCapHistory');
 const { detectAnomaly } = require('./walletCapAnomalyWatch');
+const { summarizeEvents, nearbyClusters } = require('./actionableLiquidityRadar');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -473,6 +474,52 @@ async function main() {
   });
   await test('detectAnomaly: histori kurang dari 2 titik -> null (belum bisa dibandingin)', () => {
     assert.strictEqual(detectAnomaly([{ date: '2026-09-21', totalBalance: 100, totalCap: 4000 }]), null);
+  });
+
+  // actionableLiquidityRadar.js (21 Sep 2026, Fase 1 "forced-flow / liquidity analyst") --
+  // ground-truth konvensi side liquidationListener.js: 'SELL' = LONG kena force-close, 'BUY' =
+  // SHORT kena force-close. summarizeEvents HARUS pisahin dua sisi bener, nearbyClusters HARUS
+  // urutin dari yang PALING DEKAT ke harga sekarang (bukan yang paling BESAR).
+  await test('summarizeEvents: pisahin notional LONG (SELL) vs SHORT (BUY) dengan bener', () => {
+    const events = [
+      { side: 'SELL', price: 80000, qty: 0.5 }, // LONG liquidated, notional $40.000
+      { side: 'BUY', price: 80000, qty: 1 },    // SHORT liquidated, notional $80.000
+      { side: 'SELL', price: 79000, qty: 0.1 }, // LONG liquidated, notional $7.900
+    ];
+    const r = summarizeEvents(events);
+    assert.strictEqual(r.longUsd, 47900);
+    assert.strictEqual(r.shortUsd, 80000);
+    assert.strictEqual(r.longCount, 2);
+    assert.strictEqual(r.shortCount, 1);
+  });
+  await test('nearbyClusters: arah "above" -- urut dari PALING DEKAT ke harga sekarang, bukan paling BESAR', () => {
+    const heatmap = {
+      '81000': { shortLiquidatedUsd: 500000 }, // paling BESAR, tapi paling JAUH
+      '80250': { shortLiquidatedUsd: 100000 }, // paling DEKAT
+      '80750': { shortLiquidatedUsd: 200000 },
+      '79000': { shortLiquidatedUsd: 999999 }, // di BAWAH harga sekarang -- harus DIABAIKAN buat arah 'above'
+    };
+    const result = nearbyClusters(heatmap, 80000, 'above', 'shortLiquidatedUsd', 2);
+    assert.strictEqual(result.length, 2);
+    assert.strictEqual(result[0].price, 80250); // paling dekat duluan
+    assert.strictEqual(result[1].price, 80750);
+  });
+  await test('nearbyClusters: arah "below" -- urut dari PALING DEKAT (harga TERTINGGI di bawah current)', () => {
+    const heatmap = {
+      '78000': { longLiquidatedUsd: 300000 },
+      '79500': { longLiquidatedUsd: 150000 }, // paling DEKAT ke 80000
+      '81000': { longLiquidatedUsd: 999999 }, // di ATAS harga sekarang -- harus DIABAIKAN buat arah 'below'
+    };
+    const result = nearbyClusters(heatmap, 80000, 'below', 'longLiquidatedUsd', 5);
+    assert.strictEqual(result.length, 2);
+    assert.strictEqual(result[0].price, 79500);
+    assert.strictEqual(result[1].price, 78000);
+  });
+  await test('nearbyClusters: bucket dengan usd 0 gak ikut kehitung (belum pernah ada liquidation di situ)', () => {
+    const heatmap = { '80250': { shortLiquidatedUsd: 0 }, '80500': { shortLiquidatedUsd: 50000 } };
+    const result = nearbyClusters(heatmap, 80000, 'above', 'shortLiquidatedUsd');
+    assert.strictEqual(result.length, 1);
+    assert.strictEqual(result[0].price, 80500);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

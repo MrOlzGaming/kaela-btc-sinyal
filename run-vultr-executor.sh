@@ -209,6 +209,12 @@ timeout -k 10 30 node dxyZoneMonitor.js >> "$LOG_FILE" 2>&1 || log "dxyZoneMonit
 # lain selamanya, cuma skip siklus itu (state per-item, aman diulang siklus berikutnya).
 timeout -k 10 120 node squeezeDetector.js >> "$LOG_FILE" 2>&1 || log "squeezeDetector.js ERROR/TIMEOUT (exit $?)"
 
+# Radar forced-flow/liquidity (21 Sep 2026, Fase 1 -- lihat memori project-kaela-btc-sinyal.md) --
+# gabungin heatmap likuidasi historis (liquidationListener.js) + crowding live (marketSentiment.js)
+# + burst likuidasi real-time (liquidation-events.jsonl). MURNI radar info, threshold+cooldown
+# internal sendiri (aman dipanggil tiap siklus), belum masuk sinyal/Anomaly Scanner.
+timeout -k 10 60 node actionableLiquidityRadar.js >> "$LOG_FILE" 2>&1 || log "actionableLiquidityRadar.js ERROR/TIMEOUT (exit $?)"
+
 # Divergensi smart money -- top trader jumlah-akun vs nilai-duit (12 Sep 2026, permintaan Olan:
 # "kalo long short secara duit perbandingannya aneh boleh di info?"). Endpoint Binance publik,
 # aman dipanggil tiap siklus 15 menit (state dedup+cooldown sendiri, lihat file-nya).
@@ -261,7 +267,7 @@ timeout -k 10 30 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "report
 # hilang (beda dari cursor/state operasional lain di baris ini) -- lihat catatan panjang di
 # .gitignore. WAJIB ikut daftar ini, kalau nggak `git reset --hard` box ini nelen balik histori
 # yang baru ke-tulis siklus ini (KELAS BUG SAMA PERSIS kayak insiden state.json 8 Sep 2026).
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json)
+CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json actionable-liquidity-state.json)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
@@ -278,7 +284,7 @@ if [ -n "$CHANGED" ]; then
   # perubahan lokalnya -- dedup "udah kekirim hari ini" ilang, tugas yang BARU DIPAKSA jalan bakal
   # KEBACA "belum" lagi cycle depan dan DIPAKSA ULANG TERUS-MENERUS tiap 15 menit (dobel WA/sinyal
   # tanpa henti), persis kelas bug yang lagi dibenerin hari ini.
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json; do
+  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json actionable-liquidity-state.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

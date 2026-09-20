@@ -29,13 +29,16 @@ const { sendWhatsApp } = require('./fonnte');
 const { roleOpener } = require('./teamRoles');
 const { birthdayRanToday } = require('./birthdayGreeting');
 const { fetchLatestBlockHeight } = require('./whaleFetch');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 // Laporan checklist ini status OPERASIONAL internal (buat Olan mantau sistem), BUKAN konten buat
-// member -- WAJIB DM ke Olan pribadi, JANGAN sendWhatsApp(msg) polos (itu broadcast ke SEMUA grup
-// termasuk Sniper Club/Wibowo Hedgefund, ketauan salah 8 Sep 2026: "kenapa ceklist otomatisasi
-// dikirim ke grup juga"). Nomor SAMA PERSIS kayak MASTER_NOMOR/OLAN_NUMBER di file lain
-// (nyopetOtp.js dkk) -- bukan secret, cuma ID member Olan sendiri.
-const OLAN_NUMBER = '6281299303888';
+// member biasa -- awalnya (8 Sep 2026) sengaja DM Olan pribadi, JANGAN sendWhatsApp(msg) polos
+// (itu broadcast ke SEMUA grup termasuk Sniper Club/Wibowo Hedgefund, ketauan salah waktu itu:
+// "kenapa ceklist otomatisasi dikirim ke grup juga"). REVISI 21 Sep 2026 (Olan: "jangan pesan
+// pribadi.. ke grup hedgefund wibowo aja, kalo DM takut ga kebaca") -- fix-nya BUKAN balik ke
+// broadcast SEMUA grup (itu tetap salah, alasan 8 Sep masih berlaku), tapi ke SATU grup spesifik
+// (WIBOWO_GROUP_ID) LANGSUNG via sendWhatsApp (BUKAN sendWhatsAppToWibowo -- itu ke-gate toggle
+// Silent Trade, gak relevan buat laporan checklist ops). Lihat feedback-wa-no-personal-dm-reports.md.
 
 function runNode(args) {
   execFileSync('node', args, { cwd: __dirname, stdio: 'inherit' });
@@ -244,7 +247,10 @@ async function sendChecklistReport(now) {
   const anyHealthIssue = !freshness.ok || !econFreshness.ok || !spamCheck.ok;
 
   const msg = [
-    `${roleOpener('REED', `checklist otomatisasi harian ${localDateKey(now)} udah dicek`)}`,
+    // VECTOR (QA Tester) -- "petugas" yang bener buat checklist verifikasi tugas jalan/nggak,
+    // BUKAN REED (Archive) yang kepake sebelumnya (dikoreksi 21 Sep, sama audit role kayak
+    // walletCapAnomalyWatch.js -- lihat feedback-wa-no-personal-dm-reports.md).
+    `${roleOpener('VECTOR', `checklist otomatisasi harian ${localDateKey(now)} udah dicek`)}`,
     '',
     ...lines,
     '',
@@ -268,9 +274,9 @@ async function sendChecklistReport(now) {
   // yang tugasnya "kabarin kalau ada yang gagal" justru bisa gagal diam-diam persis di titik yang
   // sama. Fix: kirim DULU, `addOrReplaceDaily` cuma kalau beneran sukses (atau `skipped` -- gak
   // ada secrets.js, itu situasi normal dev/testing, bukan kegagalan).
-  const sendResult = await sendWhatsApp(msg, OLAN_NUMBER); // DM ke Olan pribadi, BUKAN broadcast grup
+  const sendResult = await sendWhatsApp(msg, WIBOWO_GROUP_ID);
   if (sendResult && sendResult.ok === false) {
-    console.log('[DailyAutomationChecklist] Kirim laporan checklist ke Olan GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya (bukan ke-anggap udah lapor).');
+    console.log('[DailyAutomationChecklist] Kirim laporan checklist ke Wibowo Hedgefund GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya (bukan ke-anggap udah lapor).');
   } else {
     addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);
   }

@@ -14,17 +14,17 @@
 // chart pertumbuhan gak butuh resolusi 15 menit, dan 1/hari bikin filenya kecil selamanya, gak
 // perlu trim agresif). Cuma simpen ANGKA GABUNGAN (totalBalance/totalCap), BUKAN breakdown per
 // dompet -- samain sama keputusan Olan 20 Sep soal widget agregat shareholder (pola setoran/
-// prioritas dompet tetap privat, cuma total pool yang dibagi ke Saham Saya).
+// prioritas dompet tetap privat, cuma total pool yang dibagi ke Saham Saya). Logic histori
+// (upsert/loadHistory/proyeksi) ada di walletCapHistory.js (file TERPISAH, lihat komentar di
+// situ -- circular require kalau digabung ke sini, karena file ini require monthlyFundingReminder.js
+// juga).
 
 const fs = require('fs');
 const path = require('path');
 const { WALLETS, CAP_PER_WALLET, fetchBalance } = require('./monthlyFundingReminder');
+const { loadHistory, upsertHistoryEntry } = require('./walletCapHistory');
 
 const OUT_PATH = path.join(__dirname, 'web', 'wallet-cap-progress.json');
-const HISTORY_PATH = path.join(__dirname, 'web', 'wallet-cap-progress-history.json');
-// ~3 tahun harian -- lebih dari cukup buat 1 siklus tanam-panen halving (window_START 2026 ->
-// HALVING_DATE 2028), gak akan numpuk gak terkendali.
-const MAX_HISTORY_ENTRIES = 1095;
 
 function loadSecrets() {
   try { return require('./secrets'); } catch { return {}; }
@@ -40,23 +40,6 @@ function computeProgress(balance, cap) {
 // waktu Olan (bukan UTC polos yang bisa geser tanggal beda hari pas malam WITA).
 function witaDateKey(d) {
   return new Date(d.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-}
-
-// Pure function (gampang ditest) -- kalau titik TERAKHIR histori tanggalnya SAMA (siklus lain di
-// hari yang sama), REPLACE (biar angka hari ini selalu yang PALING BARU, bukan numpuk berkali-kali
-// per hari). Kalau beda tanggal, APPEND baru + trim dari DEPAN kalau kelewat MAX_HISTORY_ENTRIES.
-function upsertHistoryEntry(history, dateKey, totalBalance, totalCap) {
-  const entry = { date: dateKey, totalBalance, totalCap };
-  if (history.length && history[history.length - 1].date === dateKey) {
-    return history.slice(0, -1).concat([entry]);
-  }
-  const next = history.concat([entry]);
-  return next.length > MAX_HISTORY_ENTRIES ? next.slice(next.length - MAX_HISTORY_ENTRIES) : next;
-}
-
-function loadHistory() {
-  if (!fs.existsSync(HISTORY_PATH)) return [];
-  try { return JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')); } catch { return []; }
 }
 
 async function main() {
@@ -84,9 +67,9 @@ async function main() {
   const totalBalance = Math.round(wallets.reduce((s, w) => s + w.balance, 0) * 100) / 100;
   const totalCap = wallets.reduce((s, w) => s + w.cap, 0);
   const history = upsertHistoryEntry(loadHistory(), witaDateKey(now), totalBalance, totalCap);
-  fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2));
+  fs.writeFileSync(path.join(__dirname, 'web', 'wallet-cap-progress-history.json'), JSON.stringify(history, null, 2));
   console.log('[WalletCapProgress] Snapshot + histori ditulis.');
 }
 
-module.exports = { main, computeProgress, upsertHistoryEntry };
+module.exports = { main, computeProgress };
 if (require.main === module) { main().catch((e) => console.log('[WalletCapProgress] ERROR:', e.message)); }

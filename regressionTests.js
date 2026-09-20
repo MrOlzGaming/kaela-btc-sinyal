@@ -26,7 +26,8 @@ const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, chec
 const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 const { isInsufficientBalanceError } = require('./balanceAlert');
-const { computeProgress, upsertHistoryEntry } = require('./walletCapProgress');
+const { computeProgress } = require('./walletCapProgress');
+const { upsertHistoryEntry, estimateMonthsToCap } = require('./walletCapHistory');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -410,6 +411,30 @@ async function main() {
     assert.strictEqual(next.length, 1095);
     assert.strictEqual(next[0].date, 'day-1'); // day-0 (paling tua) kebuang
     assert.strictEqual(next[next.length - 1].date, 'day-BARU');
+  });
+
+  // estimateMonthsToCap (21 Sep 2026, "berapa bulan lagi Modal Futures Pool penuh") -- ground-truth
+  // sengaja pakai angka bulat biar gampang diverifikasi manual (30 hari, tumbuh $10/hari -> sisa
+  // $300 butuh 30 hari = 1,0 bulan PERSIS).
+  await test('estimateMonthsToCap: tren naik $10/hari, sisa $300 ke cap -> 1,0 bulan', () => {
+    const history = [
+      { date: '2026-08-22', totalBalance: 100, totalCap: 4000 },
+      { date: '2026-09-21', totalBalance: 400, totalCap: 4000 }, // 30 hari, +300 -> $10/hari
+    ];
+    assert.strictEqual(estimateMonthsToCap(history, 3700, 4000), 1);
+  });
+  await test('estimateMonthsToCap: udah >= cap -> 0 (gak perlu histori sama sekali)', () => {
+    assert.strictEqual(estimateMonthsToCap([], 4000, 4000), 0);
+  });
+  await test('estimateMonthsToCap: histori kurang dari 2 titik -> null (belum bisa diproyeksi)', () => {
+    assert.strictEqual(estimateMonthsToCap([{ date: '2026-09-21', totalBalance: 100, totalCap: 4000 }], 100, 4000), null);
+  });
+  await test('estimateMonthsToCap: tren STAGNAN/TURUN -> null (jujur, jangan proyeksi ngasal)', () => {
+    const history = [
+      { date: '2026-08-22', totalBalance: 500, totalCap: 4000 },
+      { date: '2026-09-21', totalBalance: 480, totalCap: 4000 }, // turun (rugi trading), bukan naik
+    ];
+    assert.strictEqual(estimateMonthsToCap(history, 480, 4000), null);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

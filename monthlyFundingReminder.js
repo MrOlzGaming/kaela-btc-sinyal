@@ -33,6 +33,7 @@ const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { HALVING_DATE, ALT10_SYMBOLS, monthKey } = require('./spotDcaAltShared');
+const { loadHistory, estimateMonthsToCap } = require('./walletCapHistory');
 
 const STATE_PATH = path.join(__dirname, 'monthly-funding-reminder-state.json');
 const MONTHLY_TOTAL = 100;
@@ -97,7 +98,10 @@ function computeSplit(balances) {
   return { mode: 'futures', capped, allocations };
 }
 
-function formatMessage(now, balances, split) {
+// estimateMonths (21 Sep 2026, "berapa bulan lagi Modal Futures Pool penuh") -- OPSIONAL,
+// null/undefined = ZERO perubahan tampilan (baris ini di-skip). Cuma ditampilin mode 'futures'
+// (mode 'spot' berarti udah capped semua, gak relevan lagi diproyeksi).
+function formatMessage(now, balances, split, estimateMonths) {
   const dateStr = now.toISOString().slice(0, 10);
   const lines = [`🔔 *Pengingat Setoran Bulanan Kaela* -- ${dateStr}`, '', `*Olan,* ini saldo 4 dompet sekarang:`];
   balances.forEach((w) => {
@@ -110,6 +114,9 @@ function formatMessage(now, balances, split) {
     split.allocations.forEach((a) => lines.push(`  ${a.label}: $${a.amount.toFixed(2)}`));
     if (split.capped.length > 0) {
       lines.push('', `(${split.capped.map((c) => c.label).join(', ')} udah capped -- jatahnya dialihin ke dompet di atas, bukan porsi tetap lama.)`);
+    }
+    if (typeof estimateMonths === 'number' && estimateMonths > 0) {
+      lines.push('', `📅 Estimasi kasar (tren 30 hari terakhir): ~${estimateMonths} bulan lagi Modal Futures Pool (gabungan 4 dompet) penuh $${CAP_PER_WALLET * WALLETS.length}.`);
     }
   } else {
     const perCoin = Math.round((MONTHLY_TOTAL / ALT10_SYMBOLS.length) * 100) / 100;
@@ -144,7 +151,9 @@ async function main() {
   }
 
   const split = computeSplit(balances);
-  const msg = formatMessage(now, balances, split);
+  const totalBalance = balances.reduce((s, w) => s + w.balance, 0);
+  const estimateMonths = estimateMonthsToCap(loadHistory(), totalBalance, CAP_PER_WALLET * WALLETS.length);
+  const msg = formatMessage(now, balances, split, estimateMonths);
   console.log(msg);
   await sendWhatsAppToWibowo(msg);
   saveState({ lastSentMonthKey: mk });

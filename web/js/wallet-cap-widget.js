@@ -46,11 +46,15 @@
   }
 
   // Agregat -- SATU angka gabungan (total balance vs total cap), gak nyebut label dompet mana pun.
-  function renderAggregate(wallets) {
+  // `estimateMonths` OPSIONAL (null/undefined = baris estimasi di-skip).
+  function renderAggregate(wallets, estimateMonths) {
     const totalBalance = wallets.reduce((s, w) => s + w.balance, 0);
     const totalCap = wallets.reduce((s, w) => s + w.cap, 0);
     const pct = totalCap > 0 ? Math.min(100, Math.round((totalBalance / totalCap) * 1000) / 10) : 0;
     const capped = totalBalance >= totalCap;
+    const estimateHtml = (typeof estimateMonths === 'number' && estimateMonths > 0)
+      ? `<p class="sub" style="font-size:0.72rem; margin-top:6px;">📅 Estimasi kasar (tren 30 hari terakhir): ~${estimateMonths} bulan lagi penuh.</p>`
+      : '';
     return `<div style="margin-bottom:6px;">
       <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
         <span>Modal Futures</span>
@@ -59,7 +63,26 @@
       <div style="background:var(--border,#1c3040); border-radius:6px; height:10px; overflow:hidden;">
         <div style="width:${pct}%; background:var(--primary,#2dd4f0); height:100%;"></div>
       </div>
+      ${estimateHtml}
     </div>`;
+  }
+
+  // Duplikat SENGAJA dari estimateMonthsToCap Node (walletCapHistory.js) -- pola SAMA kayak
+  // calculator.js/kalkulator.html (lihat komentar di situ): script browser gak bisa require()
+  // modul Node, jadi logic sama harus di-copy manual. WAJIB samain kalau salah satu diubah.
+  function estimateMonthsToCap(history, currentBalance, cap) {
+    if (currentBalance >= cap) return 0;
+    if (!history || history.length < 2) return null;
+    const LOOKBACK = 30;
+    const window = history.slice(-Math.min(LOOKBACK, history.length));
+    const first = window[0];
+    const last = window[window.length - 1];
+    const daysElapsed = (new Date(last.date) - new Date(first.date)) / 86400000;
+    if (daysElapsed <= 0) return null;
+    const growthPerDay = (last.totalBalance - first.totalBalance) / daysElapsed;
+    if (growthPerDay <= 0) return null;
+    const daysToCap = (cap - currentBalance) / growthPerDay;
+    return Math.round((daysToCap / 30) * 10) / 10;
   }
 
   // Chart area pertumbuhan Modal Futures (history = [{date:'yyyy-MM-dd', totalBalance, totalCap}]).
@@ -103,27 +126,44 @@
     const aggBox = document.getElementById('walletCapAggregateBox');
     const chartBox = document.getElementById('walletCapGrowthChart');
     if (!detailBox && !aggBox && !chartBox) return;
+
+    let wallets = null;
+    let updatedAt = null;
     try {
       const res = await fetch(URL + '?t=' + Date.now());
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      if (detailBox) detailBox.innerHTML = data.wallets.map(renderRow).join('') + updatedAtLine(data.updatedAt);
-      if (aggBox) aggBox.innerHTML = renderAggregate(data.wallets) + updatedAtLine(data.updatedAt);
+      wallets = data.wallets;
+      updatedAt = data.updatedAt;
     } catch (e) {
       const msg = `<p class="sub">Gagal muat progress dompet (${e.message}).</p>`;
       if (detailBox) detailBox.innerHTML = msg;
       if (aggBox) aggBox.innerHTML = msg;
     }
 
-    if (chartBox) {
+    // Histori CUMA di-fetch kalau beneran dibutuhin (aggBox buat baris estimasi, chartBox buat
+    // grafik) -- halaman yang cuma punya detailBox (tab Developer) gak perlu network call ekstra.
+    let history = null;
+    if (aggBox || chartBox) {
       try {
         const res = await fetch(HISTORY_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        renderChart(chartBox, await res.json());
+        history = await res.json();
       } catch (e) {
-        chartBox.innerHTML = `<p class="sub">Gagal muat histori pertumbuhan (${e.message}).</p>`;
+        console.error('[WalletCapWidget] Gagal muat histori:', e.message); // non-fatal -- estimasi/chart skip, progress bar tetap jalan
       }
     }
+
+    if (wallets) {
+      if (detailBox) detailBox.innerHTML = wallets.map(renderRow).join('') + updatedAtLine(updatedAt);
+      if (aggBox) {
+        const totalBalance = wallets.reduce((s, w) => s + w.balance, 0);
+        const totalCap = wallets.reduce((s, w) => s + w.cap, 0);
+        const estimateMonths = estimateMonthsToCap(history, totalBalance, totalCap);
+        aggBox.innerHTML = renderAggregate(wallets, estimateMonths) + updatedAtLine(updatedAt);
+      }
+    }
+    if (chartBox) renderChart(chartBox, history);
   }
 
   main();

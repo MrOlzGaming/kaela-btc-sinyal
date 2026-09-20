@@ -28,6 +28,7 @@ const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingRemin
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { computeProgress } = require('./walletCapProgress');
 const { upsertHistoryEntry, estimateMonthsToCap } = require('./walletCapHistory');
+const { detectAnomaly } = require('./walletCapAnomalyWatch');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -435,6 +436,43 @@ async function main() {
       { date: '2026-09-21', totalBalance: 480, totalCap: 4000 }, // turun (rugi trading), bukan naik
     ];
     assert.strictEqual(estimateMonthsToCap(history, 480, 4000), null);
+  });
+
+  // detectAnomaly (21 Sep 2026, tripwire keamanan) -- ground-truth JAWABAN buat Olan "kalo turun
+  // karena trading?": kerugian trading WAJAR (rugi 1 posisi SL kena, atau bahkan beberapa
+  // sekaligus) HARUS tetap null, CUMA drop di luar nalar (>=50% DAN >=$50 absolut) yang nembak.
+  await test('detectAnomaly: rugi trading wajar (turun 15%, ~1 posisi SL kena) -> null, BUKAN anomali', () => {
+    const history = [
+      { date: '2026-09-20', totalBalance: 1000, totalCap: 4000 },
+      { date: '2026-09-21', totalBalance: 850, totalCap: 4000 }, // turun $150 (15%) -- wajar buat hari sial
+    ];
+    assert.strictEqual(detectAnomaly(history), null);
+  });
+  await test('detectAnomaly: turun drastis 60% ($1000->$400) -> KEDETEKSI anomali', () => {
+    const history = [
+      { date: '2026-09-20', totalBalance: 1000, totalCap: 4000 },
+      { date: '2026-09-21', totalBalance: 400, totalCap: 4000 },
+    ];
+    const a = detectAnomaly(history);
+    assert.ok(a);
+    assert.strictEqual(a.drop, 600);
+  });
+  await test('detectAnomaly: persentase gede tapi absolut kecil ($40->$15, total masih kecil) -> null (floor $50)', () => {
+    const history = [
+      { date: '2026-09-20', totalBalance: 40, totalCap: 4000 },
+      { date: '2026-09-21', totalBalance: 15, totalCap: 4000 }, // turun 62,5% TAPI cuma $25 absolut
+    ];
+    assert.strictEqual(detectAnomaly(history), null);
+  });
+  await test('detectAnomaly: saldo NAIK -> null (bukan drop sama sekali)', () => {
+    const history = [
+      { date: '2026-09-20', totalBalance: 1000, totalCap: 4000 },
+      { date: '2026-09-21', totalBalance: 1200, totalCap: 4000 },
+    ];
+    assert.strictEqual(detectAnomaly(history), null);
+  });
+  await test('detectAnomaly: histori kurang dari 2 titik -> null (belum bisa dibandingin)', () => {
+    assert.strictEqual(detectAnomaly([{ date: '2026-09-21', totalBalance: 100, totalCap: 4000 }]), null);
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

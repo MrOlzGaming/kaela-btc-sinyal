@@ -57,8 +57,9 @@ GAS) -- BEDA folder, BEDA repo, mapping ini GAK nyakup itu.
 | Whale netflow (exchange in/out) | 🟡 INFO-ONLY (via Anomaly Scanner) | `whaleDailyDigest.js`+`exchangeAddresses.js` | Riset lama gagal (data lemah), data BARU (WalletExplorer, jutaan alamat) numpuk di `whaleNetflowResearchLog.js` (harian) + `whaleNetflowResearchLog.js`'s `whale-netflow-4h-research-log.json` (4H, nyamain candle Nyopet, mulai 13 Sep 2026). ⛔ BUG DIPERBAIKI 13 Sep 2026: scan blok dulu KEGATE status kirim-WA-harian (`hasEntryToday`), backlog numpuk TERUS gak pernah kekejar (~211 blok/1,5 hari ketauan pas dicek) -- SEKARANG scan jalan tiap run, cuma kirim-WA yg 1x/hari |
 | Miner pool + outflow tracking | 🟡 NUMPUK DATA, BELUM JADI SINYAL | `minerPools.js`+`minerWalletTracker.js`+`whaleFetch.js` | Tahap 1: tag pool via scriptSig coinbase (GRATIS+PASTI). Tahap 2 (13 Sep 2026): alamat payout coinbase direkam ke peta persisten (`miner-pool-wallets.json`) -- `findLargeTransactions` sekarang tag `minerPool` kalau sumber tx raksasa itu wallet pool dikenal (kombinasi + `direction==='TO_EXCHANGE'` = miner outflow). Peta cuma numpuk MULAI SEKARANG (gak bisa backfill), wajar kosong/dikit di awal |
 | Liquidation listener real-time | ✅ LIVE (data collection) | `liquidationListener.js` | 13 Sep 2026: ganti Binance (TERBUKTI diblokir IP datacenter) -> Bybit `allLiquidation.BTCUSDT` (diverifikasi 4 lapis dari VPS asli). `systemctl enable --now` aktif di VPS -- MURNI arsip (`liquidation-heatmap.json`), belum jadi filter/sinyal, numpuk histori dulu |
-| Mandor PnL vs Binance | ✅ LIVE | `pnlCrossCheckMonitor.js` | 13 Sep 2026, lahir dari insiden bug dedup tradeHistoryStore -- hitung PnL hari ini 2 jalur independen (store lokal vs fresh Binance), DM Olan kalau beda >$0.5. Cegah kelas bug serupa gak ketauan sampai investor komplain |
+| Mandor PnL vs Binance | ✅ LIVE | `pnlCrossCheckMonitor.js` | 13 Sep 2026, lahir dari insiden bug dedup tradeHistoryStore -- hitung PnL hari ini 2 jalur independen (store lokal vs fresh Binance), lapor ke grup Wibowo Hedgefund kalau beda >$0.5 (direvisi 21 Sep 2026 dari DM pribadi -- lihat "Tim Kaela" soal kenapa). Cegah kelas bug serupa gak ketauan sampai investor komplain |
 | Order book wall + exchange cold wallet | 🟡 NUMPUK DATA, BELUM JADI SINYAL | `orderBookSnapshot.js`+`exchangeWalletTracker.js` | 13 Sep 2026, tema "mikir kayak bandar" -- snapshot dinding likuiditas BTCUSDT tiap siklus + pantau 3 wallet cold storage Binance yang dikenal publik (diverifikasi saldo asli). MURNI arsip |
+| Kebijakan setoran bulanan + tripwire dompet | ✅ LIVE (mulai 5 Okt 2026) | `monthlyFundingReminder.js`+`walletCapProgress.js`+`walletCapHistory.js`+`walletCapAnomalyWatch.js` | 20-21 Sep 2026 -- kebijakan tetap Olan: $100/bln dibagi 4 dompet (Sniper/Nyopet BTC+Emas, split 30/40/20/10), cap $1000/dompet independen, redistribusi proporsional ke dompet lain kalau ada yang capped, baru ke Compound Alt DCA kalau SEMUA capped. `walletCapProgress.js` nulis snapshot+histori harian (`web/wallet-cap-progress*.json`, konsumsi widget `APPS/kaela-multi-akun` dashboard). `walletCapAnomalyWatch.js` = tripwire keamanan (turun >=50%+$50/hari -> WA grup, role MARCUS). Detail lengkap+alasan angka: memori `project-kaela-monthly-funding.md` |
 
 ## 🧩 Peta File (kalau mau ngerti X, baca Y)
 
@@ -97,12 +98,15 @@ whale -- **kalau mau nambah indikator baru yang "cuma ngomong kalau aneh", ini t
 arah exchange via WalletExplorer.com), `econCalendarMonitor.js` (heads-up 48 jam) +
 `econCalendarLiveMonitor.js` (jendela sempit 5 menit + eksekusi Econ-Reaction Scalp),
 `dailyAutomationChecklist.js` ("mandor" -- ngecek+maksa tugas 1x/hari yang mungkin ke-skip GH
-Actions, laporan ke Olan jam 20:00 WITA). 13 Sep 2026: mandor DIPERLUAS -- gak cuma "kekirim apa
-nggak" (exit-0 doang gak cukup, whale-digest tetep exit-0 pas backlog-nya diam2 numpuk 211 blok),
-SEKARANG juga cek "beneran ngejar apa nggak" (freshness whale-state.json vs tip blockchain,
-`checkWhaleScanFreshness`) + "beneran cuma sekali apa nggak" (`checkNoDuplicateSpam`, scan
-archive.json 7 hari terakhir buat 7 tipe yang harusnya 1x/hari) -- masuk laporan 20:00 WITA yang
-sama, bagian "🔍 Kesehatan Mandor".
+Actions, laporan ke grup Wibowo Hedgefund jam 20:00 WITA). 13 Sep 2026: mandor DIPERLUAS -- gak
+cuma "kekirim apa nggak" (exit-0 doang gak cukup, whale-digest tetep exit-0 pas backlog-nya diam2
+numpuk 211 blok), SEKARANG juga cek "beneran ngejar apa nggak" (freshness whale-state.json vs tip
+blockchain, `checkWhaleScanFreshness`) + "beneran cuma sekali apa nggak" (`checkNoDuplicateSpam`,
+scan archive.json 7 hari terakhir buat 7 tipe yang harusnya 1x/hari) -- masuk laporan 20:00 WITA
+yang sama, bagian "🔍 Kesehatan Mandor". `monthlyFundingReminder.js` (WA tanggal 5, saran setoran
++ proyeksi bulan ke cap) + `walletCapProgress.js`/`walletCapHistory.js` (snapshot+histori harian
+Modal Futures Pool, TANPA gating tanggal, buat widget dashboard) + `walletCapAnomalyWatch.js`
+(tripwire keamanan turun drastis) -- lihat baris "Kebijakan setoran bulanan" di tabel status atas.
 
 **Sumber data (semua GRATIS, no-key kecuali disebut lain):**
 `marketSentiment.js` (Fear&Greed, funding, OI, long/short ratio OKX/Bybit/**Binance resmi**),
@@ -233,14 +237,26 @@ Implementasi: `teamRoles.js` (root folder) -- SATU sumber kebenaran emoji+nama+d
 + helper `roleOpener(roleKey, opening)` yang ngasilin baris pembuka siap tempel. SEMUA titik yang
 tadinya pakai TTD penutup lama (`checkExecutorStuck.js`, `dailyAutomationChecklist.js`,
 `darkKaelaLog.js`, `exchangeWalletTracker.js`, `newsUpdate.js`, `orderBookSnapshot.js`,
-`pnlCrossCheckMonitor.js`, `vultrBalanceMonitor.js`, `reportResearchFindings.js`) UDAH dipindah ke
-opener ini, penutup pesan sekarang cukup `'— Kaela'` polos (nama role gak perlu diulang di bawah,
-udah disebut di baris pertama). **Kalau nambah pesan WA BARU yang cocok satu domain role** (tabel
-sama kayak tag commit di atas), WAJIB pakai `roleOpener()` dari `teamRoles.js`, JANGAN hardcode
-ulang string badge sendiri di file baru -- ikutin pola call site manapun di atas sbg contoh.
+`pnlCrossCheckMonitor.js`, `vultrBalanceMonitor.js`, `reportResearchFindings.js`,
+`walletCapAnomalyWatch.js`) UDAH dipindah ke opener ini, penutup pesan sekarang cukup `'— Kaela'`
+polos (nama role gak perlu diulang di bawah, udah disebut di baris pertama). **Kalau nambah pesan
+WA BARU yang cocok satu domain role** (tabel sama kayak tag commit di atas), WAJIB pakai
+`roleOpener()` dari `teamRoles.js`, JANGAN hardcode ulang string badge sendiri di file baru --
+ikutin pola call site manapun di atas sbg contoh, dan **pilih role sesuai DOMAIN ASLINYA** (lihat
+tabel di atas) -- 21 Sep 2026 ketauan `walletCapAnomalyWatch.js` (laporan keamanan) sempat salah
+pakai `REED` (Archive), dikoreksi ke `MARCUS` (Security); `dailyAutomationChecklist.js` (checklist
+verifikasi tugas) dikoreksi dari `REED` ke `VECTOR` (QA Tester). `REED` TETAP benar buat
+`exchangeWalletTracker.js`/`orderBookSnapshot.js` -- keduanya SECARA EKSPLISIT "MURNI ARSIP"
+(belum jadi sinyal, murni numpuk data historis), jadi domain Archive-nya PAS.
 Disclaimer kejujuran "bukan tim manusia terpisah" TETAP cukup di `teamDigestReport.js` (laporan
 mingguan investor) SAJA, gak perlu diulang di tiap pesan role individual (sama presisi kayak
 sebelum perubahan ini -- TTD lama juga gak pernah bawa disclaimer per-pesan).
+
+**21 Sep 2026 -- laporan status/debug/QA/keamanan (BUKAN update posisi trading) sekarang WAJIB ke
+grup Wibowo Hedgefund, BUKAN DM pribadi Olan** (Olan: "kalo DM takut ga kebaca") -- kirim LANGSUNG
+`sendWhatsApp(msg, WIBOWO_GROUP_ID)`, BUKAN `sendWhatsAppToWibowo()` (itu ke-gate toggle Silent
+Trade, gak relevan buat laporan non-trading). Detail lengkap + kapan TETAP boleh DM (OTP,
+data pribadi member lain) ada di memori `feedback-wa-no-personal-dm-reports.md`.
 
 ## 📚 Kalau mau riset ide baru
 

@@ -1,7 +1,14 @@
 // wallet-cap-widget.js (20 Sep 2026) -- render progress 4 dompet trading Kaela (Sniper/Nyopet
-// BTC/Emas) menuju cap $1000/dompet, dipasang di dashboard Kaela Access (tab Developer, kartu
-// WIBOWO HEDGE FUND, owner-only -- lihat memori project-kaela-monthly-funding.md). No-op kalau
-// elemen target gak ada di halaman (dashboard lain yang numpang <script> ini gak kena efek apapun).
+// BTC/Emas) menuju cap $1000/dompet. DUA target elemen, DUA level detail (lihat memori
+// project-kaela-monthly-funding.md):
+//   #walletCapProgressBox   -- tab Developer (owner-only), breakdown PENUH per dompet.
+//   #walletCapAggregateBox  -- tab Saham Saya (SEMUA shareholder), CUMA total gabungan vs $4000
+//                              (Olan eksplisit TOLAK expose breakdown/pola setoran pribadi ke
+//                              anggota lain, 20 Sep 2026) -- pola setoran/prioritas dompet mana
+//                              duluan TETAP privat, cuma "berapa total modal futures pool sekarang"
+//                              yang dibagi ke shareholder.
+// No-op per elemen kalau gak ada di halaman (dashboard lain yang numpang <script> ini gak kena
+// efek apapun, dan halaman yang cuma punya salah satu tetap jalan normal).
 //
 // Data dari wallet-cap-progress.json, ditulis walletCapProgress.js TIAP SIKLUS (~15 menit) di
 // Trading Engine. raw.githubusercontent.com (BUKAN jsDelivr) -- pola SAMA kayak sniper-orders.json
@@ -10,6 +17,10 @@
   const URL = 'https://raw.githubusercontent.com/MrOlzGaming/kaela-btc-sinyal/master/web/wallet-cap-progress.json';
 
   function fmtUsd(n) { return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }); }
+
+  function updatedAtLine(updatedAt) {
+    return `<p class="sub" style="font-size:0.68rem; margin-top:4px;">Update terakhir: ${new Date(updatedAt).toLocaleString('id-ID')}</p>`;
+  }
 
   function renderRow(w) {
     const capped = w.balance >= w.cap;
@@ -25,17 +36,37 @@
     </div>`;
   }
 
+  // Agregat -- SATU angka gabungan (total balance vs total cap), gak nyebut label dompet mana pun.
+  function renderAggregate(wallets) {
+    const totalBalance = wallets.reduce((s, w) => s + w.balance, 0);
+    const totalCap = wallets.reduce((s, w) => s + w.cap, 0);
+    const pct = totalCap > 0 ? Math.min(100, Math.round((totalBalance / totalCap) * 1000) / 10) : 0;
+    const capped = totalBalance >= totalCap;
+    return `<div style="margin-bottom:6px;">
+      <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
+        <span>Modal Futures</span>
+        <span>${fmtUsd(totalBalance)} / ${fmtUsd(totalCap)}${capped ? ' ✅' : ''}</span>
+      </div>
+      <div style="background:var(--border,#1c3040); border-radius:6px; height:10px; overflow:hidden;">
+        <div style="width:${pct}%; background:var(--primary,#2dd4f0); height:100%;"></div>
+      </div>
+    </div>`;
+  }
+
   async function main() {
-    const box = document.getElementById('walletCapProgressBox');
-    if (!box) return;
+    const detailBox = document.getElementById('walletCapProgressBox');
+    const aggBox = document.getElementById('walletCapAggregateBox');
+    if (!detailBox && !aggBox) return;
     try {
       const res = await fetch(URL + '?t=' + Date.now());
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      box.innerHTML = data.wallets.map(renderRow).join('')
-        + `<p class="sub" style="font-size:0.68rem; margin-top:4px;">Update terakhir: ${new Date(data.updatedAt).toLocaleString('id-ID')}</p>`;
+      if (detailBox) detailBox.innerHTML = data.wallets.map(renderRow).join('') + updatedAtLine(data.updatedAt);
+      if (aggBox) aggBox.innerHTML = renderAggregate(data.wallets) + updatedAtLine(data.updatedAt);
     } catch (e) {
-      box.innerHTML = `<p class="sub">Gagal muat progress dompet (${e.message}).</p>`;
+      const msg = `<p class="sub">Gagal muat progress dompet (${e.message}).</p>`;
+      if (detailBox) detailBox.innerHTML = msg;
+      if (aggBox) aggBox.innerHTML = msg;
     }
   }
 

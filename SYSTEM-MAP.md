@@ -99,7 +99,9 @@ whale -- **kalau mau nambah indikator baru yang "cuma ngomong kalau aneh", ini t
 arah exchange via WalletExplorer.com), `econCalendarMonitor.js` (heads-up 48 jam) +
 `econCalendarLiveMonitor.js` (jendela sempit 5 menit + eksekusi Econ-Reaction Scalp),
 `dailyAutomationChecklist.js` ("mandor" -- ngecek+maksa tugas 1x/hari yang mungkin ke-skip GH
-Actions, laporan ke grup Wibowo Hedgefund jam 20:00 WITA). 13 Sep 2026: mandor DIPERLUAS -- gak
+Actions, laporan DM Olan pribadi jam 20:00 WITA -- sempat dicoba pindah ke grup Wibowo Hedgefund
+21 Sep 2026, DIBALIKIN sama hari, "japri aja dah bener": konfirmasi rutin teknis, beda kelas dari
+alert). 13 Sep 2026: mandor DIPERLUAS -- gak
 cuma "kekirim apa nggak" (exit-0 doang gak cukup, whale-digest tetep exit-0 pas backlog-nya diam2
 numpuk 211 blok), SEKARANG juga cek "beneran ngejar apa nggak" (freshness whale-state.json vs tip
 blockchain, `checkWhaleScanFreshness`) + "beneran cuma sekali apa nggak" (`checkNoDuplicateSpam`,

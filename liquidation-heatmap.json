@@ -210,19 +210,19 @@
     },
     "81250": {
       "longLiquidatedUsd": 3836637.215200002,
-      "shortLiquidatedUsd": 77672.9188,
+      "shortLiquidatedUsd": 78160.354,
       "longCount": 371,
-      "shortCount": 16,
+      "shortCount": 17,
       "firstSeen": 1789741341930,
-      "lastSeen": 1789943179103
+      "lastSeen": 1789951357866
     },
     "81500": {
       "longLiquidatedUsd": 4142000.7281000004,
-      "shortLiquidatedUsd": 3831.8979,
+      "shortLiquidatedUsd": 4646.7429,
       "longCount": 405,
-      "shortCount": 5,
+      "shortCount": 6,
       "firstSeen": 1789745109307,
-      "lastSeen": 1789950123195
+      "lastSeen": 1789951524439
     },
     "81750": {
       "longLiquidatedUsd": 2809734.8459999994,
@@ -233,12 +233,12 @@
       "lastSeen": 1789949579365
     },
     "82000": {
-      "longLiquidatedUsd": 3385184.9256999996,
+      "longLiquidatedUsd": 3396332.1221,
       "shortLiquidatedUsd": 0,
-      "longCount": 357,
+      "longCount": 360,
       "shortCount": 0,
       "firstSeen": 1789779556046,
-      "lastSeen": 1789950671163
+      "lastSeen": 1789951521623
     },
     "82250": {
       "longLiquidatedUsd": 808812.2240000003,

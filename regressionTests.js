@@ -29,7 +29,7 @@ const { isInsufficientBalanceError } = require('./balanceAlert');
 const { computeProgress } = require('./walletCapProgress');
 const { upsertHistoryEntry, estimateMonthsToCap } = require('./walletCapHistory');
 const { detectAnomaly } = require('./walletCapAnomalyWatch');
-const { summarizeEvents, nearbyClusters, detectImbalance } = require('./actionableLiquidityRadar');
+const { summarizeEvents, nearbyClusters, detectImbalance, updateBurstEpisode, BURST_THRESHOLD_USD: LIQ_BURST_THRESHOLD_USD } = require('./actionableLiquidityRadar');
 
 const FIXTURE_PHONE = '000TESTFIXTURE000';
 const FIXTURE_MODE = 'regression';
@@ -550,6 +550,52 @@ async function main() {
     assert.ok(r);
     assert.strictEqual(r.side, 'long');
     assert.strictEqual(r.cluster.price, 79000);
+  });
+
+  // updateBurstEpisode (21 Sep 2026, jalur C "kekeringan" -- Olan liat CoinGlass Liquidation Map,
+  // mau deteksi versi REAL-nya) -- ground-truth: episode mulai pas burst nembak, TETAP nge-track
+  // sisi yang SAMA walau sisi lain sempat lebih gede, exhausted CUMA sekali pas beneran anjlok
+  // <=30% dari puncak, dan basi kalau kelamaan diem.
+  await test('updateBurstEpisode: belum ada episode + burst di bawah threshold -> tetap null', () => {
+    const r = updateBurstEpisode(null, { longUsd: 1000, shortUsd: 500 }, 1000);
+    assert.strictEqual(r.episode, null);
+    assert.strictEqual(r.exhausted, false);
+  });
+  await test('updateBurstEpisode: burst SHORT nembak -> episode BARU mulai, peak = burst awal', () => {
+    const r = updateBurstEpisode(null, { longUsd: 0, shortUsd: LIQ_BURST_THRESHOLD_USD + 1 }, 1000);
+    assert.ok(r.episode);
+    assert.strictEqual(r.episode.side, 'short');
+    assert.strictEqual(r.episode.peakUsd, LIQ_BURST_THRESHOLD_USD + 1);
+    assert.strictEqual(r.exhausted, false);
+  });
+  await test('updateBurstEpisode: volume TETAP tinggi (>30% peak) -> episode LANJUT, belum exhausted', () => {
+    const episode = { side: 'short', startedAt: 1000, peakUsd: 1000000 };
+    const r = updateBurstEpisode(episode, { longUsd: 0, shortUsd: 500000 }, 2000); // 50% dari peak
+    assert.ok(r.episode);
+    assert.strictEqual(r.exhausted, false);
+    assert.strictEqual(r.episode.peakUsd, 1000000); // peak gak turun cuma karena window ini lebih kecil
+  });
+  await test('updateBurstEpisode: volume anjlok <=30% peak -> EXHAUSTED, episode ditutup', () => {
+    const episode = { side: 'short', startedAt: 1000, peakUsd: 1000000 };
+    const r = updateBurstEpisode(episode, { longUsd: 0, shortUsd: 200000 }, 2000); // 20% dari peak
+    assert.strictEqual(r.exhausted, true);
+    assert.strictEqual(r.exhaustedSide, 'short');
+    assert.strictEqual(r.episode, null); // episode ditutup, gak lanjut di-track lagi
+  });
+  await test('updateBurstEpisode: episode SELALU pantau sisi yang SAMA, walau sisi LAIN sempat lebih gede', () => {
+    // Episode lagi track 'short'. Siklus ini LONG kebetulan gede banget, tapi short tetap tinggi
+    // (masih di atas 30% peak) -- HARUS tetap ngukur short, bukan ke-distract sisi long.
+    const episode = { side: 'short', startedAt: 1000, peakUsd: 1000000 };
+    const r = updateBurstEpisode(episode, { longUsd: 5000000, shortUsd: 600000 }, 2000);
+    assert.strictEqual(r.exhausted, false);
+    assert.strictEqual(r.episode.side, 'short');
+  });
+  await test('updateBurstEpisode: episode basi (kelewat EPISODE_MAX_AGE_MS) -> dianggap gak ada, mulai fresh', () => {
+    const oldEpisode = { side: 'short', startedAt: 1000, peakUsd: 1000000 };
+    const farFuture = 1000 + 7 * 60 * 60 * 1000; // 7 jam kemudian, lewat EPISODE_MAX_AGE_MS (6 jam)
+    const r = updateBurstEpisode(oldEpisode, { longUsd: 0, shortUsd: 100 }, farFuture); // volume kecil, di bawah threshold burst baru
+    assert.strictEqual(r.episode, null);
+    assert.strictEqual(r.exhausted, false); // BUKAN exhausted -- episode lama dianggap gak pernah ke-track lagi, bukan "ditutup exhausted"
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

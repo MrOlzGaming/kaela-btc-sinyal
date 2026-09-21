@@ -14,15 +14,24 @@
 //   3. FORCED-FLOW REAL-TIME (liquidation-events.jsonl, filter window terakhir -- liquidation yang
 //      BENERAN kejadian barusan, bukan histori lama).
 //
-// DUA jalur trigger, INDEPENDEN, jalan tiap siklus 15 menit (state/cooldown sendiri-sendiri):
+// TIGA jalur trigger, INDEPENDEN, jalan tiap siklus 15 menit (state/cooldown sendiri-sendiri):
 //   A. BURST -- forced-flow yang LAGI KEJADIAN (>=$300rb likuidasi 1 sisi dalam 30 menit). Jarang
 //      (nunggu ledakan beneran), tapi ini yang PALING "live"/konkret.
 //   B. IMBALANCE -- crowding yang KELIATAN DULUAN, SEBELUM ledakan kejadian (funding rate ekstrem
 //      + ada cluster historis lumayan besar deket harga di arah yang bakal kena squeeze). Lebih
 //      SERING nembak (21 Sep 2026, permintaan Olan: "jangan jadi sinyal mangkrak, beneran jalan
 //      donk") -- funding rate berubah lebih pelan/kelihatan duluan drpd ledakannya sendiri.
+//   C. EXHAUSTION/"kekeringan" (21 Sep 2026, Olan liat CoinGlass Liquidation Map, nanya "bisa
+//      deteksi kekeringan gini gak, secara live") -- BEDA dari model OI+asumsi-leverage CoinGlass
+//      (itu nebak "amunisi TERSISA", gak ada sumbernya di manapun beneran). Ini PANTAU forced-flow
+//      REAL yang LAGI kejadian (mulai dari trigger BURST di atas) -- begitu kecepatan likuidasi di
+//      sisi yang sama ANJLOK ke <=30% dari puncaknya, itu tanda tenaga forced-flow abis "kering".
+//      Olan pakai ini buat FADE manual (short kalau short-liquidation kering [harga abis naik
+//      kepaksa], long kalau long-liquidation kering [harga abis turun kepaksa]) -- di akun/exchange
+//      TERPISAH dari Binance/MEXC (yang itu 100% domain Kaela), modal sangat kecil, EKSEKUSI
+//      MANUAL SENDIRI (Kaela cuma kasih info, gak pegang akses exchange itu sama sekali).
 //
-// Threshold KEDUANYA ini TITIK AWAL (belum divalidasi backtest, status SAMA kayak
+// Threshold KETIGANYA ini TITIK AWAL (belum divalidasi backtest, status SAMA kayak
 // OI_RISE_THRESHOLD_PCT squeezeDetector.js) -- worth ditinjau ulang begitu keliatan seberapa
 // sering nembak + gimana respons harga abis itu di praktiknya.
 //
@@ -68,7 +77,15 @@ const NEARBY_CLUSTER_PCT = 0.03; // cluster relevan = dalam 3% dari harga sekara
 const MIN_CLUSTER_USD = 500000; // cluster historis di bawah ini dianggap gak cukup "notable"
 const IMBALANCE_COOLDOWN_MS = 8 * 60 * 60 * 1000; // ~1x per periode funding (8 jam)
 
-const MAX_SIGNAL_LOG_ENTRIES = 5000; // numpuk bertahun-tahun sebelum kepenuhan (kedua jalur cooldown-gated, gak akan sering)
+// --- Jalur C: EXHAUSTION/"kekeringan" (21 Sep 2026) ---
+// Titik awal, BELUM divalidasi -- 30% dipilih biar cukup jelas "udah ngerem drastis" (bukan cuma
+// naik-turun wajar antar siklus), bukan dari backtest ketat.
+const EXHAUSTION_RATIO_THRESHOLD = 0.3;
+// Episode basi (gak pernah nyampe exhaustion, likuidasi diem gak nambah2) -- lepas tracking-nya
+// biar gak numpuk state selamanya nunggu kondisi yang mungkin gak pernah kepenuhan lagi.
+const EPISODE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+
+const MAX_SIGNAL_LOG_ENTRIES = 5000; // numpuk bertahun-tahun sebelum kepenuhan (ketiga jalur cooldown/episode-gated, gak akan sering)
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return {};
@@ -153,6 +170,30 @@ function detectImbalance(heatmap, currentPrice, fundingPct) {
   return null;
 }
 
+// Pure function (gampang ditest) -- lacak 1 "episode" burst aktif (per SISI, mulai dari trigger
+// BURST). SELALU pantau sisi yang SAMA sepanjang episode (bukan "sisi dominan siklus ini") --
+// begitu volume di sisi itu ANJLOK ke <=EXHAUSTION_RATIO_THRESHOLD dari puncaknya, episode DITUTUP
+// + tandain exhausted (SEKALI doang per episode, gak diulang-ulang). Episode BARU cuma mulai kalau
+// gak lagi nge-track apapun (atau yang lama udah basi) DAN ada sisi yang crossing BURST_THRESHOLD_USD.
+function updateBurstEpisode(episode, burst, now) {
+  const isStale = episode && (now - episode.startedAt > EPISODE_MAX_AGE_MS);
+  if (episode && !isStale) {
+    const windowUsd = episode.side === 'long' ? burst.longUsd : burst.shortUsd;
+    const peakUsd = Math.max(episode.peakUsd, windowUsd);
+    const ratio = peakUsd > 0 ? windowUsd / peakUsd : 0;
+    if (ratio <= EXHAUSTION_RATIO_THRESHOLD) {
+      return { episode: null, exhausted: true, exhaustedSide: episode.side, peakUsd };
+    }
+    return { episode: { side: episode.side, startedAt: episode.startedAt, peakUsd }, exhausted: false };
+  }
+  const dominant = burst.longUsd > burst.shortUsd ? 'long' : 'short';
+  const dominantUsd = Math.max(burst.longUsd, burst.shortUsd);
+  if (dominantUsd >= BURST_THRESHOLD_USD) {
+    return { episode: { side: dominant, startedAt: now, peakUsd: dominantUsd }, exhausted: false };
+  }
+  return { episode: null, exhausted: false };
+}
+
 function fmtUsd(n) { return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
 
 function sentimentLines(sentiment) {
@@ -223,9 +264,33 @@ function formatImbalanceAlert({ price, imbalance, sentiment }) {
   return lines.join('\n');
 }
 
-async function checkBurst(state, price, sentiment, heatmap, now) {
-  const events = readRecentEvents(RECENT_WINDOW_MS, now);
-  const burst = summarizeEvents(events);
+function formatExhaustionAlert({ price, exhaustedSide, peakUsd, sentiment }) {
+  const isShort = exhaustedSide === 'short';
+  // short-liquidation kering = harga abis dipaksa NAIK (short kepaksa beli), tenaga itu abis
+  // -> fade = SHORT. long-liquidation kering = harga abis dipaksa TURUN, tenaga itu abis -> fade = LONG.
+  const fadeAction = isShort ? 'SHORT' : 'LONG';
+  const causeLabel = isShort ? 'short kepaksa beli balik (harga abis NAIK)' : 'long kepaksa jual paksa (harga abis TURUN)';
+
+  const lines = [
+    '🟣 🏜️ KAELA -- FORCED-FLOW MULAI KERING (BTC)',
+    '',
+    `Ledakan likuidasi ${exhaustedSide.toUpperCase()} (${causeLabel}) kelihatan udah NGEREM DRASTIS -- kecepatannya turun ke bawah 30% dari puncaknya (puncak sempat ${fmtUsd(peakUsd)}/30 menit).`,
+    `Harga sekarang: $${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+    '',
+    `Sesuai logic fade yang kamu pakai: ini titik yang biasanya jadi pertimbangan buka ${fadeAction} manual (di akun terpisah, modal kecil) -- tenaga forced-flow yang tadi dorong harga kemungkinan udah abis.`,
+    '',
+  ];
+  lines.push(...sentimentLines(sentiment));
+  lines.push(
+    '',
+    '⚠️ Ini RADAR FASE 1 (belum divalidasi backtest) -- MURNI observasi kecepatan forced-flow, BUKAN sinyal entry resmi Kaela. Keputusan & eksekusi manual sepenuhnya di tangan kamu.',
+    '',
+    '— Kaela',
+  );
+  return lines.join('\n');
+}
+
+async function checkBurst(state, price, sentiment, heatmap, burst, now) {
   const dominant = Math.max(burst.longUsd, burst.shortUsd);
   if (dominant < BURST_THRESHOLD_USD) {
     console.log(`[ActionableLiquidityRadar] Burst: belum signifikan (long ${fmtUsd(burst.longUsd)}, short ${fmtUsd(burst.shortUsd)}) -- skip.`);
@@ -268,21 +333,36 @@ async function checkImbalance(state, price, sentiment, heatmap, now) {
   appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'imbalance', side: imbalance.side, price, fundingPct, clusterPrice: imbalance.cluster.price, clusterUsd: imbalance.cluster.usd });
 }
 
+// Jalur C -- update tracking episode SETIAP siklus (regardless nembak atau nggak, biar peak/basi
+// ke-track bener), kirim WA CUMA pas beneran exhausted (sekali per episode).
+async function checkExhaustion(state, price, sentiment, burst, now) {
+  const result = updateBurstEpisode(state.burstEpisode || null, burst, now);
+  state.burstEpisode = result.episode;
+  if (!result.exhausted) return;
+  const msg = formatExhaustionAlert({ price, exhaustedSide: result.exhaustedSide, peakUsd: result.peakUsd, sentiment });
+  console.log(msg);
+  await sendWhatsApp(msg);
+  appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'exhaustion', side: result.exhaustedSide, price, peakUsd: result.peakUsd });
+}
+
 async function main() {
   const now = Date.now();
   const [price, sentiment] = await Promise.all([fetchLivePrice(), analyzeSentiment()]);
   const heatmap = loadHeatmap();
   const state = loadState();
+  const burst = summarizeEvents(readRecentEvents(RECENT_WINDOW_MS, now));
 
-  await checkBurst(state, price, sentiment, heatmap, now);
+  await checkBurst(state, price, sentiment, heatmap, burst, now);
   await checkImbalance(state, price, sentiment, heatmap, now);
+  await checkExhaustion(state, price, sentiment, burst, now);
 
   saveState(state);
 }
 
 module.exports = {
-  main, summarizeEvents, nearbyClusters, readRecentEvents, detectImbalance,
+  main, summarizeEvents, nearbyClusters, readRecentEvents, detectImbalance, updateBurstEpisode,
   BURST_THRESHOLD_USD, RECENT_WINDOW_MS, BURST_COOLDOWN_MS,
   FUNDING_LONG_THRESHOLD_PCT, FUNDING_SHORT_THRESHOLD_PCT, NEARBY_CLUSTER_PCT, MIN_CLUSTER_USD, IMBALANCE_COOLDOWN_MS,
+  EXHAUSTION_RATIO_THRESHOLD, EPISODE_MAX_AGE_MS,
 };
 if (require.main === module) { main().catch((e) => console.log('[ActionableLiquidityRadar] ERROR:', e.message)); }

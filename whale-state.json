@@ -1,5 +1,5 @@
 {
-  "lastProcessedHeight": 968003,
+  "lastProcessedHeight": 968006,
   "lastDigest": {
     "dateKey": "2026-09-21",
     "totalBtc": 11917.67924758,
@@ -1729,6 +1729,86 @@
         "totalBtc": 578.97563338,
         "direction": "TO_EXCHANGE",
         "exchange": "Kraken"
+      },
+      {
+        "totalBtc": 1048.10819253,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 369.36951699,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 589.00287055,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 622.19013276,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 385.46033025,
+        "direction": "TO_EXCHANGE",
+        "exchange": "Kraken"
+      },
+      {
+        "totalBtc": 3751.99755407,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2478.24231053,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 422.24670847,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 591.48983998,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 622.12537197,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 385.42694056,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2476.54623115,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 769.84659756,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 537.72162971,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1409.04726145,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2476.55166105,
+        "direction": null,
+        "exchange": null
       }
     ]
   }

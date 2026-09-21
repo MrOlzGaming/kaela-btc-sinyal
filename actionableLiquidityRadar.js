@@ -270,20 +270,29 @@ function formatImbalanceAlert({ price, imbalance, sentiment }) {
   return lines.join('\n');
 }
 
+// 21 Sep 2026 (permintaan Olan: "tandai pake emot brutal sinyal shortnya.. kalo long biasa aja")
+// -- SENGAJA beda tampilan, BUKAN kosmetik doang: short punya resiko GAK SIMETRIS (rugi bisa
+// LEBIH dari 100% modal kalau harga naik terus, beda dari long yang mentok rugi 100%) -- visual
+// "brutal" ini pengingat WAJIB keliatan sebelum baca teksnya, sesuai psikologi resiko Olan sendiri
+// ("nahan short itu sakit" -- lihat memori project-kaela-btc-sinyal.md).
 function formatExhaustionAlert({ price, exhaustedSide, peakUsd, sentiment }) {
   const isShort = exhaustedSide === 'short';
   // short-liquidation kering = harga abis dipaksa NAIK (short kepaksa beli), tenaga itu abis
   // -> fade = SHORT. long-liquidation kering = harga abis dipaksa TURUN, tenaga itu abis -> fade = LONG.
   const fadeAction = isShort ? 'SHORT' : 'LONG';
   const causeLabel = isShort ? 'short kepaksa beli balik (harga abis NAIK)' : 'long kepaksa jual paksa (harga abis TURUN)';
+  const dangerTag = isShort ? '🔪☠️ ' : '';
+  const fadeCallout = isShort
+    ? `🔪☠️ SHORT -- RESIKO GAK SIMETRIS (rugi bisa LEBIH dari 100% modal kalau salah arah, beda dari long) -- pertimbangkan buka SHORT manual (di akun terpisah, modal kecil) TAPI stop-loss WAJIB, jangan nekat nahan. 🔪☠️`
+    : `Sesuai logic fade yang kamu pakai: ini titik yang biasanya jadi pertimbangan buka LONG manual (di akun terpisah, modal kecil) -- tenaga forced-flow yang tadi dorong harga kemungkinan udah abis.`;
 
   const lines = [
-    '🟣 🏜️ KAELA -- FORCED-FLOW MULAI KERING (BTC)',
+    `🟣 ${dangerTag}🏜️ KAELA -- FORCED-FLOW MULAI KERING (BTC)`,
     '',
     `Ledakan likuidasi ${exhaustedSide.toUpperCase()} (${causeLabel}) kelihatan udah NGEREM DRASTIS -- kecepatannya turun ke bawah 30% dari puncaknya (puncak sempat ${fmtUsd(peakUsd)}/30 menit).`,
     `Harga sekarang: $${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
     '',
-    `Sesuai logic fade yang kamu pakai: ini titik yang biasanya jadi pertimbangan buka ${fadeAction} manual (di akun terpisah, modal kecil) -- tenaga forced-flow yang tadi dorong harga kemungkinan udah abis.`,
+    fadeCallout,
     '',
   ];
   lines.push(...sentimentLines(sentiment));

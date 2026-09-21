@@ -1,5 +1,5 @@
 {
-  "lastProcessedHeight": 967971,
+  "lastProcessedHeight": 967973,
   "lastDigest": {
     "dateKey": "2026-09-21",
     "totalBtc": 11917.67924758,
@@ -1439,6 +1439,66 @@
         "totalBtc": 623.20877167,
         "direction": null,
         "exchange": null
+      },
+      {
+        "totalBtc": 1626.36345079,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1308.32502917,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1504.47133079,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 671.00048404,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 362.86982048,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 13457.02625203,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 385.80154011,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 623.1720617,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2477.31675802,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 385.73823603,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 623.10611179,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 621.49060725,
+        "direction": "TO_EXCHANGE",
+        "exchange": "Kraken"
       }
     ]
   }

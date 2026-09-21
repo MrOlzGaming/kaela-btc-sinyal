@@ -29,16 +29,19 @@ const { sendWhatsApp } = require('./fonnte');
 const { roleOpener } = require('./teamRoles');
 const { birthdayRanToday } = require('./birthdayGreeting');
 const { fetchLatestBlockHeight } = require('./whaleFetch');
-const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 // Laporan checklist ini status OPERASIONAL internal (buat Olan mantau sistem), BUKAN konten buat
 // member biasa -- awalnya (8 Sep 2026) sengaja DM Olan pribadi, JANGAN sendWhatsApp(msg) polos
 // (itu broadcast ke SEMUA grup termasuk Sniper Club/Wibowo Hedgefund, ketauan salah waktu itu:
-// "kenapa ceklist otomatisasi dikirim ke grup juga"). REVISI 21 Sep 2026 (Olan: "jangan pesan
-// pribadi.. ke grup hedgefund wibowo aja, kalo DM takut ga kebaca") -- fix-nya BUKAN balik ke
-// broadcast SEMUA grup (itu tetap salah, alasan 8 Sep masih berlaku), tapi ke SATU grup spesifik
-// (WIBOWO_GROUP_ID) LANGSUNG via sendWhatsApp (BUKAN sendWhatsAppToWibowo -- itu ke-gate toggle
-// Silent Trade, gak relevan buat laporan checklist ops). Lihat feedback-wa-no-personal-dm-reports.md.
+// "kenapa ceklist otomatisasi dikirim ke grup juga"). SEMPAT dipindah ke grup Wibowo Hedgefund
+// (21 Sep 2026, permintaan Olan "jangan pesan pribadi.. kalo DM takut ga kebaca"), TAPI langsung
+// DIBALIKIN ke DM sama hari -- Olan liat isinya (checklist teknis "Anomaly Scanner"/"Whale Daily
+// Digest" dst) dan bilang "pesan ini jangan kirim di grup.. japri aja dah bener". BEDA dari 3
+// laporan lain yang TETAP ke grup (checkExecutorStuck.js/pnlCrossCheckMonitor.js/
+// walletCapAnomalyWatch.js -- itu ALERT hal yang gak beres, checklist ini KONFIRMASI RUTIN semua
+// beres, kelas beda) -- lihat feedback-wa-no-personal-dm-reports.md buat detail lengkap + kenapa
+// keduanya bisa beda perlakuan padahal sama-sama "laporan otomatis".
+const OLAN_NUMBER = '6281299303888';
 
 function runNode(args) {
   execFileSync('node', args, { cwd: __dirname, stdio: 'inherit' });
@@ -274,9 +277,9 @@ async function sendChecklistReport(now) {
   // yang tugasnya "kabarin kalau ada yang gagal" justru bisa gagal diam-diam persis di titik yang
   // sama. Fix: kirim DULU, `addOrReplaceDaily` cuma kalau beneran sukses (atau `skipped` -- gak
   // ada secrets.js, itu situasi normal dev/testing, bukan kegagalan).
-  const sendResult = await sendWhatsApp(msg, WIBOWO_GROUP_ID);
+  const sendResult = await sendWhatsApp(msg, OLAN_NUMBER); // DM ke Olan pribadi -- lihat catatan atas kenapa BEDA dari laporan alert lain
   if (sendResult && sendResult.ok === false) {
-    console.log('[DailyAutomationChecklist] Kirim laporan checklist ke Wibowo Hedgefund GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya (bukan ke-anggap udah lapor).');
+    console.log('[DailyAutomationChecklist] Kirim laporan checklist ke Olan GAGAL -- SKIP addOrReplaceDaily, biar dicoba ulang siklus berikutnya (bukan ke-anggap udah lapor).');
   } else {
     addOrReplaceDaily(CHECKLIST_REPORT_TYPE, msg, now);
   }

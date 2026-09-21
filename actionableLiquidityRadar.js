@@ -30,6 +30,8 @@
 //      kepaksa], long kalau long-liquidation kering [harga abis turun kepaksa]) -- di akun/exchange
 //      TERPISAH dari Binance/MEXC (yang itu 100% domain Kaela), modal sangat kecil, EKSEKUSI
 //      MANUAL SENDIRI (Kaela cuma kasih info, gak pegang akses exchange itu sama sekali).
+//      ⛔ GAK broadcast WA (beda dari A/B) -- eksperimen PRIBADI Olan, bukan info buat Sniper
+//      Club/Wibowo Hedgefund. Tetap ke-log (appendSignalLog), Olan review manual lewat chat Kaela.
 //
 // Threshold KETIGANYA ini TITIK AWAL (belum divalidasi backtest, status SAMA kayak
 // OI_RISE_THRESHOLD_PCT squeezeDetector.js) -- worth ditinjau ulang begitu keliatan seberapa
@@ -335,13 +337,18 @@ async function checkImbalance(state, price, sentiment, heatmap, now) {
 
 // Jalur C -- update tracking episode SETIAP siklus (regardless nembak atau nggak, biar peak/basi
 // ke-track bener), kirim WA CUMA pas beneran exhausted (sekali per episode).
+// 21 Sep 2026 (permintaan Olan: "gausah kirim ke grup.. aku mau liat detektor lapor ke sini
+// aja.. soal sinyal itu biar aku review") -- BEDA dari jalur A/B, jalur C SENGAJA GAK broadcast
+// WA sama sekali (ini eksperimen pribadi Olan doang, bukan info buat Sniper Club/Wibowo Hedgefund
+// kayak jalur A/B). Tetap kelog ke console (kebaca di local-executor.log VPS kalau perlu debug)
+// + appendSignalLog (data-nya TETAP kesimpen) -- Olan review manual lewat chat Kaela kapan aja
+// mau ("cek hasil radarnya"), BUKAN nunggu WA masuk.
 async function checkExhaustion(state, price, sentiment, burst, now) {
   const result = updateBurstEpisode(state.burstEpisode || null, burst, now);
   state.burstEpisode = result.episode;
   if (!result.exhausted) return;
   const msg = formatExhaustionAlert({ price, exhaustedSide: result.exhaustedSide, peakUsd: result.peakUsd, sentiment });
-  console.log(msg);
-  await sendWhatsApp(msg);
+  console.log('[ActionableLiquidityRadar] Exhaustion terdeteksi (GAK dikirim WA, review manual):\n' + msg);
   appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'exhaustion', side: result.exhaustedSide, price, peakUsd: result.peakUsd });
 }
 

@@ -30,8 +30,11 @@
 //      kepaksa], long kalau long-liquidation kering [harga abis turun kepaksa]) -- di akun/exchange
 //      TERPISAH dari Binance/MEXC (yang itu 100% domain Kaela), modal sangat kecil, EKSEKUSI
 //      MANUAL SENDIRI (Kaela cuma kasih info, gak pegang akses exchange itu sama sekali).
-//      ⛔ GAK broadcast WA (beda dari A/B) -- eksperimen PRIBADI Olan, bukan info buat Sniper
-//      Club/Wibowo Hedgefund. Tetap ke-log (appendSignalLog), Olan review manual lewat chat Kaela.
+//      WA TETAP OTOMATIS KEKIRIM (Olan koreksi 21 Sep -- sempat salah paham sebentar, DIBALIKIN
+//      sama hari), tapi CUMA ke grup Wibowo Hedgefund (beda dari A/B yang broadcast SEMUA grup
+//      -- ini eksperimen pribadi Olan, bukan konten publik Sniper Club). Olan JUGA bisa review
+//      manual lewat chat Kaela kapan aja (appendSignalLog nyimpen semua) -- dua-duanya jalan,
+//      bukan salah satu.
 //
 // Threshold KETIGANYA ini TITIK AWAL (belum divalidasi backtest, status SAMA kayak
 // OI_RISE_THRESHOLD_PCT squeezeDetector.js) -- worth ditinjau ulang begitu keliatan seberapa
@@ -54,6 +57,7 @@ const path = require('path');
 const { fetchWithRetry } = require('./httpRetry');
 const { sendWhatsApp } = require('./fonnte');
 const { analyzeSentiment } = require('./marketSentiment');
+const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
 
 const HEATMAP_PATH = path.join(__dirname, 'liquidation-heatmap.json');
 const RAW_LOG_PATH = path.join(__dirname, 'liquidation-events.jsonl');
@@ -337,18 +341,21 @@ async function checkImbalance(state, price, sentiment, heatmap, now) {
 
 // Jalur C -- update tracking episode SETIAP siklus (regardless nembak atau nggak, biar peak/basi
 // ke-track bener), kirim WA CUMA pas beneran exhausted (sekali per episode).
-// 21 Sep 2026 (permintaan Olan: "gausah kirim ke grup.. aku mau liat detektor lapor ke sini
-// aja.. soal sinyal itu biar aku review") -- BEDA dari jalur A/B, jalur C SENGAJA GAK broadcast
-// WA sama sekali (ini eksperimen pribadi Olan doang, bukan info buat Sniper Club/Wibowo Hedgefund
-// kayak jalur A/B). Tetap kelog ke console (kebaca di local-executor.log VPS kalau perlu debug)
-// + appendSignalLog (data-nya TETAP kesimpen) -- Olan review manual lewat chat Kaela kapan aja
-// mau ("cek hasil radarnya"), BUKAN nunggu WA masuk.
+// 21 Sep 2026 -- WA TETAP OTOMATIS ke grup Wibowo Hedgefund (Olan konfirmasi ulang: "sinyal ttep
+// otomatis kirim ke grup hedgefund wibowo.. tadi itu aku mau minta tampilanya disini juga biar
+// aku review" -- jadi DUA-DUANYA jalan, WA + review manual, bukan salah satu). BEDA dari jalur
+// A/B yang broadcast ke SEMUA grup (Sniper Club juga) -- jalur C CUMA ke Wibowo Hedgefund
+// (WIBOWO_GROUP_ID spesifik), karena ini eksperimen pribadi Olan, bukan konten publik Sniper
+// Club. LANGSUNG sendWhatsApp+WIBOWO_GROUP_ID (BUKAN sendWhatsAppToWibowo -- itu ke-gate toggle
+// Silent Trade, gak relevan di sini), pola sama kayak laporan non-trading lain
+// (feedback-wa-no-personal-dm-reports.md).
 async function checkExhaustion(state, price, sentiment, burst, now) {
   const result = updateBurstEpisode(state.burstEpisode || null, burst, now);
   state.burstEpisode = result.episode;
   if (!result.exhausted) return;
   const msg = formatExhaustionAlert({ price, exhaustedSide: result.exhaustedSide, peakUsd: result.peakUsd, sentiment });
-  console.log('[ActionableLiquidityRadar] Exhaustion terdeteksi (GAK dikirim WA, review manual):\n' + msg);
+  console.log(msg);
+  await sendWhatsApp(msg, WIBOWO_GROUP_ID);
   appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'exhaustion', side: result.exhaustedSide, price, peakUsd: result.peakUsd });
 }
 

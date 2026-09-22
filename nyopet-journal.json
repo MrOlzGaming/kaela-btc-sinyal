@@ -5,7 +5,7 @@
       "asset": "btc",
       "exchange": "binance",
       "direction": "buy",
-      "status": "floating",
+      "status": "closed_untracked",
       "mode": "unknown",
       "patternType": "unknown",
       "entryPrice": 86127.90000000001,
@@ -22,13 +22,18 @@
       "remainingFraction": 1,
       "realizedPnlUsd": 0,
       "triggeredAt": "2026-09-22T10:15:07.922Z",
-      "manualReason": null
+      "manualReason": null,
+      "exitPrice": null,
+      "pnlUsd": null,
+      "pnlPct": null,
+      "closeReason": "OFFLINE_UNKNOWN",
+      "closedAt": "2026-09-22T14:45:07.991Z"
     }
   ],
   "demoEraStartedAt": "2026-09-19T14:35:00.000Z",
   "demoEraNote": "Restart total 19 Sep 2026 atas permintaan Olan (\"bersihkan jurnal, fresh kayak aplikasi baru\") -- akun demo Binance di-reset Olan sendiri lewat UI (USDT $5.000 + USDC $5.000 bersih, posisi 0), jurnal lokal disamain. Riwayat lama diarsipkan ke .KAELA-TRASH/2026-09-19-journal-reset/, bukan dihapus.",
   "watchZoneByAsset": {},
-  "balanceUsdc": 4498.99360473,
+  "balanceUsdc": 5000,
   "balanceUsdt": 5000,
   "mexcBalanceUsdc": 10.00006016148
 }

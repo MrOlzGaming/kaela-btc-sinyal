@@ -1,7 +1,7 @@
 {
-  "enabled": false,
+  "enabled": true,
   "testnet": true,
   "allowReal": false,
   "_note": "Saklar KHUSUS strategi Channel Breakout -- TERPISAH dari live-trading-config.json (killSwitch.js) yang dipakai Sniper/Nyopet. enabled=false berarti gak ngapa-ngapain sama sekali. testnet HARUS true KECUALI allowReal JUGA true (2 kunci sengaja) -- Olan WAJIB ubah dua-duanya bareng buat ke real, gak bisa kecelakaan lewat 1 saklar aja.",
-  "_status": "22 Sep 2026 -- baru ditulis, BELUM diaktifin. Nyalain enabled:true dulu buat mulai demo, testnet TETAP true."
+  "_status": "22 Sep 2026 -- DEMO AKTIF (enabled:true, testnet:true). Olan minta lihat proses trading demo langsung."
 }

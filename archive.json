@@ -2298,5 +2298,15 @@
     "type": "anomaly",
     "date": "2026-09-22T22:45:53.337Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n🔗 Korelasi BTC-Nasdaq (90 hari): 0.40 -- JAUH DI ATAS kebiasaan historis kita (median 0.36, z-score 3.5)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n🔗 Korelasi BTC-Nasdaq (90 hari)\nIni ngukur seberapa MIRIP gerakan harga BTC sama indeks saham teknologi Nasdaq belakangan ini. Lagi TINGGI banget dari biasanya -- BTC lagi \"nempel\" ke saham teknologi, berita ekonomi Amerika/suku bunga jadi LEBIH RELEVAN buat BTC drpd berita crypto sendiri."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-22T23:15:55.241Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-09-23\nHarga sekarang: $86,432 (📈 +6.5% dari kemarin)\n⏳ Halving berikutnya: 569 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.43 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.08 (Normal)\n\n💵 DXY: 100.5 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.25 (normal)\n🛢️ Minyak WTI: $107.0/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 20.4 poin) -- top 68% long vs global 47% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-22T23:15:55.241Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-09-23\nHarga sekarang: $4,357.17/oz (≈Rp77.733.820) atau $140.09/gram (≈Rp2.499.200) (📉 -0.2% dari kemarin)\n💵 DXY: 100.5 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.62% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.25 (normal)\n🛢️ Minyak WTI: $107.0/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

@@ -97,12 +97,26 @@ function channelLinesAtTime(channel, startCandleOpenTime, nowOpenTime) {
   return { top, bottom };
 }
 
-function execFor(testnet) {
+// ⚠️ WAJIB 1 AKUN/API-KEY TERPISAH per (varian x demo/real) -- 23 Sep 2026, ketemu Olan sendiri
+// ("kan mexc dan binance ga bisa buka 2 layer.. kayak mt5"). Binance/MEXC futures BUKAN kayak
+// MT4/5 -- gak ada "ticket" independen, SEMUA order di 1 symbol digabung jadi 1 posisi (mode
+// one-way), DAN leverage itu PER SYMBOL (bukan per order) -- kalau 2 varian numpang 1 akun,
+// entry varian kedua bakal NIMPA leverage varian pertama, ngerusak SL-via-likuidasi buat
+// DUA-DUANYA. Makanya 4 SLOT KEY TERPISAH (2 varian x demo/real), BUKAN 2 (demo/real doang).
+// Key yang belum diisi = variant itu OTOMATIS gak jalan (execFor return null, caller skip) --
+// gak perlu saklar enable/disable manual terpisah, nempel langsung ke ada/gak-adanya akun.
+const VARIANT_SECRET_FIELDS = {
+  tpFixed: { demo: ['BINANCE_API_KEY', 'BINANCE_API_SECRET'], real: ['BINANCE_API_KEY_REAL', 'BINANCE_API_SECRET_REAL'] },
+  trailing: { demo: ['BINANCE_API_KEY_TRAILING_DEMO', 'BINANCE_API_SECRET_TRAILING_DEMO'], real: ['BINANCE_API_KEY_TRAILING_REAL', 'BINANCE_API_SECRET_TRAILING_REAL'] },
+};
+
+function execFor(variant, testnet) {
   const { loadSecrets, createBinanceClient } = binanceExecutorDefault;
   const secrets = loadSecrets();
-  if (testnet) return createBinanceClient({ apiKey: secrets.BINANCE_API_KEY, apiSecret: secrets.BINANCE_API_SECRET, testnet: true });
-  if (!secrets.BINANCE_API_KEY_REAL || !secrets.BINANCE_API_SECRET_REAL) return null; // real belum ada key -- caller WAJIB cek null sebelum pakai
-  return createBinanceClient({ apiKey: secrets.BINANCE_API_KEY_REAL, apiSecret: secrets.BINANCE_API_SECRET_REAL, testnet: false });
+  const [keyField, secretField] = VARIANT_SECRET_FIELDS[variant][testnet ? 'demo' : 'real'];
+  const apiKey = secrets[keyField], apiSecret = secrets[secretField];
+  if (!apiKey || !apiSecret) return null; // akun buat (varian, mode) ini belum disiapin -- caller WAJIB skip
+  return createBinanceClient({ apiKey, apiSecret, testnet });
 }
 
 function baseUrlFor(testnet) {
@@ -175,9 +189,10 @@ function updateTrailing(sub, dir, trailDistancePct, livePrice) {
 
 async function processVariant(variant, journal, cfg, candles, lastCandle) {
   const v = journal[variant];
-  const demoExec = execFor(true);
+  const demoExec = execFor(variant, true);
+  if (!demoExec) { console.log(`[ChannelBreakout/${variant}] Skip -- belum ada akun/API-key demo buat varian ini.`); return; }
   const realAvailable = cfg.allowReal === true;
-  const realExec = realAvailable ? execFor(false) : null; // null kalau key belum keisi meski allowReal:true
+  const realExec = realAvailable ? execFor(variant, false) : null; // null kalau key belum keisi meski allowReal:true
 
   // === ADA POSISI FLOATING -- cek exit dulu ===
   if (v.floating) {

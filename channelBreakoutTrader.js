@@ -105,10 +105,19 @@ function channelLinesAtTime(channel, startCandleOpenTime, nowOpenTime) {
 // DUA-DUANYA. Makanya 4 SLOT KEY TERPISAH (2 varian x demo/real), BUKAN 2 (demo/real doang).
 // Key yang belum diisi = variant itu OTOMATIS gak jalan (execFor return null, caller skip) --
 // gak perlu saklar enable/disable manual terpisah, nempel langsung ke ada/gak-adanya akun.
+// 23 Sep 2026 (revisi -- Olan: "pake salah 1 aja.. yang trailing stop.. tp tetap disimpan
+// secara silent aja") -- Trailing jadi PRIORITAS UTAMA (dilaporin ke WA, dipantau langsung),
+// makanya dia yang numpang akun demo yang UDAH ADA/jalan (biar gak perlu nunggu akun baru buat
+// mulai). TP Tetap (sekarang SILENT -- lihat SILENT_VARIANTS bawah) nunggu akun baru, gak
+// mendesak karena emang gak ditampilin.
 const VARIANT_SECRET_FIELDS = {
-  tpFixed: { demo: ['BINANCE_API_KEY', 'BINANCE_API_SECRET'], real: ['BINANCE_API_KEY_REAL', 'BINANCE_API_SECRET_REAL'] },
-  trailing: { demo: ['BINANCE_API_KEY_TRAILING_DEMO', 'BINANCE_API_SECRET_TRAILING_DEMO'], real: ['BINANCE_API_KEY_TRAILING_REAL', 'BINANCE_API_SECRET_TRAILING_REAL'] },
+  trailing: { demo: ['BINANCE_API_KEY', 'BINANCE_API_SECRET'], real: ['BINANCE_API_KEY_REAL', 'BINANCE_API_SECRET_REAL'] },
+  tpFixed: { demo: ['BINANCE_API_KEY_TPFIXED_DEMO', 'BINANCE_API_SECRET_TPFIXED_DEMO'], real: ['BINANCE_API_KEY_TPFIXED_REAL', 'BINANCE_API_SECRET_TPFIXED_REAL'] },
 };
+
+// Varian yang trading TERUS TAPI GAK KIRIM WA sama sekali -- murni buat perbandingan nanti
+// (journal/log tetap kecatat lengkap, tinggal dibaca manual kapan Olan mau bandingin).
+const SILENT_VARIANTS = new Set(['tpFixed']);
 
 function execFor(variant, testnet) {
   const { loadSecrets, createBinanceClient } = binanceExecutorDefault;
@@ -234,11 +243,15 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     const realDone = !f.real || !!f.realClosedAt;
     if (demoDone && realDone) {
       v.closedCount = (v.closedCount || 0) + 1;
-      await reportClose({
-        variant, dir: f.dir, wibowoRoute: f.wibowoRoute, outcome: demoHit || 'SL',
-        demoExit: f.demoExitPrice, realExit: f.realExitPrice, entryPriceDemo: f.demo.entryPrice,
-        entryPriceReal: f.real ? f.real.entryPrice : null, closedCount: v.closedCount,
-      });
+      if (SILENT_VARIANTS.has(variant)) {
+        console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice}`);
+      } else {
+        await reportClose({
+          variant, dir: f.dir, wibowoRoute: f.wibowoRoute, outcome: demoHit || 'SL',
+          demoExit: f.demoExitPrice, realExit: f.realExitPrice, entryPriceDemo: f.demo.entryPrice,
+          entryPriceReal: f.real ? f.real.entryPrice : null, closedCount: v.closedCount,
+        });
+      }
       v.floating = null;
       v.channel = null;
     }
@@ -309,7 +322,11 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     };
     v.channel = null;
     console.log(`[ChannelBreakout/${variant}] Entry ${dir.toUpperCase()} demo @ ${demoResult.entryPrice}${realResult ? ` + real @ ${realResult.entryPrice}` : ''}.`);
-    await reportOpen({ variant, dir, wibowoRoute, demo: v.floating.demo, real: v.floating.real, sl, tp, entryPriceTheoretical });
+    if (SILENT_VARIANTS.has(variant)) {
+      console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA)`);
+    } else {
+      await reportOpen({ variant, dir, wibowoRoute, demo: v.floating.demo, real: v.floating.real, sl, tp, entryPriceTheoretical });
+    }
     return;
   }
 

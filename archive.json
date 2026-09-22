@@ -2223,5 +2223,70 @@
     "type": "daily-checklist-report",
     "date": "2026-09-21T12:00:56.998Z",
     "content": "🧪 *Vector [QA Tester]* lapor ke Kaela, checklist otomatisasi harian 2026-09-21 udah dicek:\n\n✅ Berita Pagi\n✅ Berita Siang\n✅ Berita Sore\n✅ Anomaly Scanner\n✅ Bloomberg Mini (laporan pribadi Olan)\n✅ Bloomberg Mini (laporan grup WA)\n✅ Sniper Analisa Harian\n✅ Ucapan Ulang Tahun\n✅ Whale Daily Digest\n\nSemua tugas harian beres. 🎉\n\n🔍 Kesehatan Mandor (jalan beneran + gak spam):\n✅ Whale scan up-to-date (ketinggalan 4 blok, wajar).\n✅ Econ-calendar-live jalan (state terakhir 1 menit lalu).\n✅ Gak ada dobel-kirim ke 7 tipe harian + 1 prefix dinamis (cek 7 hari terakhir).\n\n— Kaela"
+  },
+  {
+    "type": "smart-money-divergence",
+    "date": "2026-09-21T14:31:22.810Z",
+    "content": "⬛ 🐋 KAELA — DIVERGENSI SMART MONEY (BTC)\nJUMLAH AKUN LEBIH SHORT DARIPADA NILAI DUITNYA\nBanyak akun kakap ikut SHORT (mayoritas jumlah), tapi kalau ditimbang duit porsinya gak sebesar itu -- posisi short-nya lebih \"ramai-ramai kecil\" drpd \"whale gede\".\nHarga sekarang: $85,615\nTop trader by JUMLAH AKUN: 49.2% long / 50.8% short\nTop trader by NILAI POSISI ($): 69.3% long / 30.7% short\nAkun global (mayoritas retail): 47.3% long\nSelisih (jumlah akun - nilai duit): -20.0 poin\n⚠️ Ini MURNI radar/pengamatan posisi (riset pola \"mikir kayak bandar\"), BUKAN sinyal entry -- Kaela gak buka posisi dari ini.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "price-alert",
+    "date": "2026-09-21T15:31:17.319Z",
+    "content": "🟫 🚀 PERGERAKAN HARGA MENDADAK -- 🟧 BTCUSDT NAIK 6.34% dalam 24 jam terakhir\n\nDari $80,722 ke $85,841.\n\n⚠️ Fakta pergerakan harga murni -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-09-21T16:01:16.402Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-09-22\n19 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 32.491,21 BTC berpindah (~$2,792,086,567 / ~Rp49.672.540.561.036)\nTerbesar: 10.485,41 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 19 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "price-alert",
+    "date": "2026-09-21T21:46:44.015Z",
+    "content": "🟫 🚀 PERGERAKAN HARGA MENDADAK -- 🟧 BTCUSDT NAIK 7.20% dalam 24 jam terakhir\n\nDari $80,900 ke $86,723.\n\n⚠️ Fakta pergerakan harga murni -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-21T23:15:52.129Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-09-22\nHarga sekarang: $86,675.11 (📈 +6.7% dari kemarin)\n⏳ Halving berikutnya: 570 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.48 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.01 (Normal)\n\n💵 DXY: 100.4 (STABIL)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.20 (normal)\n🛢️ Minyak WTI: $107.0/barel (NAIK TAJAM)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 21.4 poin) -- top 69% long vs global 47% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-21T23:15:52.129Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-09-22\nHarga sekarang: $4,358.21/oz (≈Rp77.534.617) atau $140.12/gram (≈Rp2.492.796) (📉 -0.2% dari kemarin)\n💵 DXY: 100.4 (STABIL)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.68% (NAIK)\n📊 Yield Curve 10Y-2Y: 0.20 (normal)\n🛢️ Minyak WTI: $107.0/barel (NAIK TAJAM)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-09-22T00:15:52.170Z",
+    "content": "🟧 🎯 SNIPER · Kaela — 🐻 SINYAL SHORT (window bear, MANUAL)\n🟡 XAUUSDT · Pola: fvg_bounce_bear\n\n🔴 Zona short yang DITUNGGU: $4,467 -- $4,560 (harga sekarang $4,366)\n📌 Bukan entry sekarang -- tunggu harga NAIK balik ke zona ini dulu, BARU short kalau ada tanda ditolak turun lagi (jangan asal short pas nyentuh doang).\n⚠️ Invalidasi/SL referensi @ $4,560 (jarak ~4.5%)\n\n⛔ INI SINYAL DOANG -- Kaela GAK auto-eksekusi short. Timing & eksekusi 100% di tangan MASING-MASING (cek liq heatmap + faktor lain dulu, posisi mini disarankan).\n\n🔗 Liq Heatmap: https://www.coinglass.com/pro/futures/LiquidationHeatMap\n\n2026-09-22 08:15 WITA"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-09-22T00:15:52.170Z",
+    "content": "🟧 🎯 SNIPER · Kaela — ❌ BELUM ADA SINYAL\nBelum ada posisi baru. Masih nunggu syarat terpenuhi.\n\n🟧 Sniper (BTCUSDT): lagi window ISTIRAHAT siklus halving (fase pasca-puncak, historis rawan bear/crash) -- sinyal baru dimatikan sementara sampai window ini lewat.\n\n2026-09-22 08:15 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "news-pagi",
+    "date": "2026-09-22T01:15:58.039Z",
+    "content": "📦 *Reed [Archive]* lapor ke Kaela, ada update berita ekonomi/kripto (PAGI) 2026-09-22:\n\n⚪ Tukar Bitcoin ke emas di Jerman biasanya kena p...\n   Pluang — https://pluang.com\n⚪ Bitcoin Cetak Level Tertinggi 8 Bulan, Pasar Pantau US$90.000\n   InvestorTrust — https://investortrust.id\n🟢 Saham kripto menguat saat bitcoin capai level tertinggi tujuh bulan\n   Investing.com Indonesia — https://id.investing.com\n⚪ KTT Pertemuan Trump dan Xi Jinping Bayangi Arah Ekonomi Global\n   investor.id — https://investor.id\n⚪ IMF: Ekonomi dunia hadapi berbagai risiko meski tunjukkan ketahanan\n   ANTARA News — https://www.antaranews.com\n⚪ Sorotan berita ekonomi dunia pada 21 September 2026\n   Vietnam.vn — https://www.vietnam.vn\n⚪ Investasi Deras, Manfaat Ekonomi Masih Terbatas\n   KONTAN — https://insight.kontan.co.id\n⚪ Rupiah Tergerus Sentimen Global dan Domestik\n   Kompas.id — https://www.kompas.id\n⚪ Populer Ekonomi: Pemutihan Pajak Kendaraan hingga 50 Orang Terkaya di Indonesia\n   MetroTVNews.com — https://www.metrotvnews.com\n⚪ Hadapi Potensi Bencana Alam dan Industri, Pemkot Cilegon Gelar Rakor Kesiapsiagaan Penanggulangan Bencana\n   Berita Cilegon — https://berita.cilegon.go.id\n⚪ Temuan Utama Bencana Geologis Himalaya, Kenaikan Suhu yang Cepat Perparah Kerusakan\n   Darilaut.id — https://darilaut.id\n⚪ Hujan Lebat Cianjur Picu Risiko Bencana, Warga Diminta Siaga\n   Pikiran Rakyat Koran — https://koran.pikiran-rakyat.com\n🔴 Konflik Geopolitik dan Suku Bunga Tinggi Hantam Pasar Emas Global\n   Rmol.id — https://rmol.id\n🔴 Rupiah Tertekan Konflik Geopolitik, BI Intervensi dan Kawal Pasar Valas\n   Bisnis.com — https://finansial.bisnis.com\n\n🔗 https://kaela-btc-sinyal.netlify.app\n\n— Kaela"
+  },
+  {
+    "type": "price-alert",
+    "date": "2026-09-22T04:00:57.181Z",
+    "content": "🟫 🚀 PERGERAKAN HARGA MENDADAK -- 🟧 BTCUSDT NAIK 5.21% dalam 24 jam terakhir\n\nDari $81,425 ke $85,665.\n\n⚠️ Fakta pergerakan harga murni -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "news-siang",
+    "date": "2026-09-22T05:15:55.604Z",
+    "content": "📦 *Reed [Archive]* lapor ke Kaela, ada update berita ekonomi/kripto (SIANG) 2026-09-22:\n\n⚪ Kenaikan Bitcoin didorong oleh permintaan insti...\n   Pluang — https://pluang.com\n🟢 Harga Bitcoin Tembus $87.000, Naik 47,60% Sepanjang Q3\n   Ajaib — https://ajaib.co.id\n⚪ Bitcoin, Token AI reli didorong arus masuk ETF, ekspansi pasca-CLARITY Act\n   fxstreet-id.com — https://www.fxstreet-id.com\n🔴 Ketegangan Memuncak Jelang Pertemuan Xi dan Trump\n   dw.com — https://www.dw.com\n🔴 Houthi Kuasai Bab al-Mandeb dan Picu Ancaman Ekonomi Global\n   suaralandak.co.id — https://www.suaralandak.co.id\n⚪ Keterbukaan Informasi Jadi Kunci Tingkatkan Kepercayaan Investor di Tengah Ketidakpastian Global\n   Suara Pemerintah — https://suarapemerintah.id\n⚪ Dua Tahun Pemerintahan Presiden Prabowo, Wujudkan Kemandirian Pangan dan Energi Berkelanjutan\n   beritanasionalupdate.com — https://beritanasionalupdate.com\n⚪ Target Rasio UKM terhadap Total Unit Usaha di Indonesia 2025-2029\n   Databoks Katadata — https://databoks.katadata.co.id\n⚪ OPINI: Mendongkrak Ekonomi Digital Daerah\n   Bisnis.com - Ekonomi — https://ekonomi.bisnis.com\n⚪ Pemerintah Kabupaten Pesisir Selatan\n   Pemerintah Kabupaten Pesisir Selatan — https://pesisirselatankab.go.id\n⚪ BMKG imbau waspada potensi bencana November hingga Desember 2026\n   ANTARA News Kepri — https://kepri.antaranews.com\n⚪ Siaran Pers: CDC AS Dukung Penilaian Kesehatan Pasca Bencana Gempa Bumi di Nusa Tenggara Timur\n   Terkininews.com — https://terkininews.com\n🔴 Tensi Geopolitik Makin Memanas, Lebih Menjanjikan Emas atau Tembaga?\n   KONTAN — https://insight.kontan.co.id\n⚪ Rupiah Tergerus Sentimen Global dan Domestik\n   Kompas.id — https://www.kompas.id\n🔴 Konflik Geopolitik dan Suku Bunga Tinggi Hantam Pasar Emas Global\n   Rmol.id — https://rmol.id\n\n🔗 https://kaela-btc-sinyal.netlify.app\n\n— Kaela"
+  },
+  {
+    "type": "news-sore",
+    "date": "2026-09-22T10:31:17.758Z",
+    "content": "📦 *Reed [Archive]* lapor ke Kaela, ada update berita ekonomi/kripto (SORE) 2026-09-22:\n\n⚪ Bitcoin melonjak 7% ke $87K didorong rencana en...\n   Pluang — https://pluang.com\n⚪ Bitcoin tembus US$86.000, pasar mulai tinggalkan crypto winter\n   IDNFinancials — https://www.idnfinancials.com\n🟢 Prakiraan Harga Bitcoin: BTC Hentikan Reli saat Aksi Ambil Untung Capai Tertinggi Tahunan\n   fxstreet-id.com — https://www.fxstreet-id.com\n⚪ Balada Trump-Xi Jinping dan Nasib Ekonomi Dunia\n   detikNews — https://news.detik.com\n⚪ Wamenlu Havas: Transisi Energi Berbasis Kelapa Sawit Tegaskan Posisi Indonesia di Ekonomi Global\n   InvestorTrust — https://investortrust.id\n⚪ IMF Ingatkan Risiko Ekonomi Global: Inflasi, Utang, dan Investasi AI\n   Jawa Pos — https://batampos.jawapos.com\n⚪ Pemerintah Perkuat Keterbukaan Informasi untuk Dorong Investasi Berkualitas dan Ekonomi Daerah\n   InvestorTrust — https://investortrust.id\n⚪ Gekrafs perkuat jejaring ekonomi kreatif Indonesia di Jerman\n   ANTARA News — https://m.antaranews.com\n⚪ Artikel Kanwil DJKN Papua, Papua Barat, dan Maluku\n   Website DJKN — https://www.djkn.kemenkeu.go.id\n⚪ Melalui BAZNAS RI, Ultima Markets Salurkan Bantuan Kemanusian untuk Penyintas Gempa NTT\n   baznas.go.id — https://baznas.go.id\n⚪ Puan Minta Mitigasi Bencana Diperkuat Usai Solok Diterjang Banjir Bandang\n   detikNews — https://news.detik.com\n🔴 Tensi Geopolitik Makin Memanas, Lebih Menjanjikan Emas atau Tembaga?\n   KONTAN — https://insight.kontan.co.id\n🔴 VIDEO: Cara Jumhur Hidayat Menyikapi Konflik Geopolitik Dunia\n   Kedai Pena — https://www.kedaipena.com\n⚪ Rupiah Tergerus Sentimen Global dan Domestik\n   Kompas.id — https://www.kompas.id\n\n🔗 https://kaela-btc-sinyal.netlify.app\n\n— Kaela"
+  },
+  {
+    "type": "daily-checklist-report",
+    "date": "2026-09-22T12:01:03.117Z",
+    "content": "🧪 *Vector [QA Tester]* lapor ke Kaela, checklist otomatisasi harian 2026-09-22 udah dicek:\n\n✅ Berita Pagi\n✅ Berita Siang\n✅ Berita Sore\n✅ Anomaly Scanner\n✅ Bloomberg Mini (laporan pribadi Olan)\n✅ Bloomberg Mini (laporan grup WA)\n✅ Sniper Analisa Harian\n✅ Ucapan Ulang Tahun\n✅ Whale Daily Digest\n\nSemua tugas harian beres. 🎉\n\n🔍 Kesehatan Mandor (jalan beneran + gak spam):\n✅ Whale scan up-to-date (ketinggalan 1 blok, wajar).\n✅ Econ-calendar-live jalan (state terakhir 1 menit lalu).\n✅ Gak ada dobel-kirim ke 7 tipe harian + 1 prefix dinamis (cek 7 hari terakhir).\n\n— Kaela"
   }
 ]

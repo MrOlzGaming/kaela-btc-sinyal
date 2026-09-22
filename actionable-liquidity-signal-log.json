@@ -6,5 +6,35 @@
     "price": 84527.81,
     "burstUsd": 354097.36669999996,
     "burstCount": 18
+  },
+  {
+    "timestamp": "2026-09-21T14:01:03.364Z",
+    "type": "burst",
+    "side": "long",
+    "price": 85483.78,
+    "burstUsd": 913715.6440999997,
+    "burstCount": 127
+  },
+  {
+    "timestamp": "2026-09-21T14:31:21.553Z",
+    "type": "exhaustion",
+    "side": "long",
+    "price": 85652,
+    "peakUsd": 913715.6440999997
+  },
+  {
+    "timestamp": "2026-09-21T19:31:00.321Z",
+    "type": "burst",
+    "side": "long",
+    "price": 86334.01,
+    "burstUsd": 616804.2379000001,
+    "burstCount": 49
+  },
+  {
+    "timestamp": "2026-09-21T20:01:04.242Z",
+    "type": "exhaustion",
+    "side": "long",
+    "price": 86579.99,
+    "peakUsd": 617064.2770000001
   }
 ]

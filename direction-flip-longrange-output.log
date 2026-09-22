@@ -1,0 +1,21 @@
+[DirectionFlipLongRange] Fetch BTCUSDT 5m, 2 tahun terakhir (2024-09-22 -> 2026-09-22)...
+  ... 50000 candle (2025-03-15)
+  ... 100000 candle (2025-09-04)
+  ... 150000 candle (2026-02-25)
+  ... 200000 candle (2026-08-18)
+[DirectionFlipLongRange] 210240 candle kefetch.
+
+=== ARAH ASLI -- AGREGAT 2 TAHUN ===
+Total trade: 2961, Win rate: 74.9%, Total R: 1475.0, PF: 2.99
+Breakdown per tahun:
+  2024: n=431, win=74.7%, totalR=213.0, PF=2.95
+  2025: n=1451, win=74.4%, totalR=707.0, PF=2.90
+  2026: n=1079, win=75.7%, totalR=555.0, PF=3.12
+
+=== ARAH DIBALIK -- AGREGAT 2 TAHUN ===
+Total trade: 2961, Win rate: 21.9%, Total R: -1665.0, PF: 0.28
+Breakdown per tahun:
+  2024: n=431, win=21.1%, totalR=-249.0, PF=0.27
+  2025: n=1451, win=22.7%, totalR=-791.0, PF=0.29
+  2026: n=1079, win=21.0%, totalR=-625.0, PF=0.27
+

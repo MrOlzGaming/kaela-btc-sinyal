@@ -1,0 +1,12 @@
+[RigorCheck] Fetch BTCUSDT 5m, 2 tahun terakhir...
+[RigorCheck] 210240 candle kefetch.
+
+=== SPLIT-ERA (2 potongan independen, ~1 tahun tiap era) ===
+Era 1 (lebih lama): n=1465, win=74.7%, PF=2.95, totalR=723.0
+Era 2 (lebih baru): n=1496, win=75.1%, PF=3.02, totalR=752.0
+
+=== SENSITIVITAS PARAMETER (maxWidthAtrMultiple, default=1.5) ===
+  1x: n=222, win=91.4%, PF=10.68, totalR=184.0
+  1.5x: n=2961, win=74.9%, PF=2.99, totalR=1475.0
+  2x: n=11003, win=67.4%, PF=2.06, totalR=3821.0
+  2.5x: n=15307, win=63.7%, PF=1.76, totalR=4203.0

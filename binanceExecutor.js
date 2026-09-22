@@ -283,7 +283,7 @@ async function emergencyCloseMarket(args) { return _defaultClient().emergencyClo
 async function wasLastEntryOrderByKaela(symbol, sinceMs) { return _defaultClient().wasLastEntryOrderByKaela(symbol, sinceMs); }
 
 module.exports = {
-  createBinanceClient,
+  createBinanceClient, loadSecrets, // loadSecrets diexport 22 Sep 2026 buat channelBreakoutTrader.js -- reuse fallback secrets.js/env yang SAMA, bukan duplikat
   getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
   getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, wasLastEntryOrderByKaela,
   KAELA_ORDER_PREFIX,

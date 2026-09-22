@@ -1,0 +1,18 @@
+[FeeCheck] Fetch BTCUSDT 5m, 2 tahun terakhir...
+[FeeCheck] 210240 candle kefetch.
+
+Asumsi fee round-trip: 0.1% dari notional (taker+taker kasar), leverage cap 50x.
+
+=== TP TETAP (breakout-only) ===
+GROSS: n=2961, win=74.9%, totalR=1475.0, PF=2.99
+NET (fee-adjusted): totalR=1327.0, PF=2.70, winRate(net>0)=74.9%
+nyawa% (SL distance): median=0.103%, mean=0.121%
+leverage terpakai: median=50x, mean=50.0x, %trade kena cap 50x=100.0%
+Fee rata-rata per trade: 0.050R
+
+=== TRAILING % ===
+GROSS: n=2694, win=71.4%, totalR=6419.4, PF=11.68
+NET (fee-adjusted): totalR=6284.7, PF=10.82, winRate(net>0)=70.9%
+nyawa% (SL distance): median=0.104%, mean=0.121%
+leverage terpakai: median=50x, mean=50.0x, %trade kena cap 50x=100.0%
+Fee rata-rata per trade: 0.050R

@@ -1,0 +1,25 @@
+[LongRange] Fetch BTCUSDT 5m, 2 tahun terakhir (2024-09-22 -> 2026-09-22)...
+  ... 50000 candle (2025-03-15)
+  ... 100000 candle (2025-09-04)
+  ... 150000 candle (2026-02-25)
+  ... 200000 candle (2026-08-18)
+[LongRange] 210240 candle kefetch.
+
+=== TP TETAP (breakout-only) -- AGREGAT 2 TAHUN ===
+Total trade: 2961, Win rate: 74.9%, Total R: 1475.0, PF: 2.99
+Breakdown per tahun:
+  2024: n=431, win=74.7%, totalR=213.0, PF=2.95
+  2025: n=1451, win=74.4%, totalR=707.0, PF=2.90
+  2026: n=1079, win=75.7%, totalR=555.0, PF=3.12
+
+=== TRAILING % (breakout+trailing) -- PER TAHUN (re-run per potongan tahun) ===
+  2024: n=393, win=71.0%, totalR=917.0, PF=11.77
+  2025: n=1317, win=70.6%, totalR=3086.4, PF=11.15
+  2026: n=984, win=72.6%, totalR=2416.1, PF=12.39
+
+Agregat trailing % 2 tahun: n=2694, win=71.4%, totalR=6419.4, PF=11.68
+
+=== BAR PERMUTATION TEST -- TP TETAP, full range (50x) ===
+Observed PF: 2.99 (n=2961)
+Null mean PF: 3.59 +- 0.22
+p-value: 1.000 (< 0.05 = signifikan, bukan kebetulan)

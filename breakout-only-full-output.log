@@ -1,0 +1,17 @@
+[BacktestBreakoutOnly] Fetch BTCUSDT 5m, 120 hari terakhir...
+[BacktestBreakoutOnly] 34560 candle 5m kefetch.
+
+=== HASIL BREAKOUT-ONLY BERDIRI SENDIRI (120 hari, BTCUSDT 5m) ===
+Total trade: 542
+Win rate: 75.8%
+Total R: 280.0
+Profit Factor: 3.14
+Ulcer Index: 1.20
+Max Drawdown: 6.8%
+Ulcer Performance Index: 1250.10
+Deflated Sharpe Ratio: psr=0.000
+
+=== BAR PERMUTATION TEST (200x) ===
+Observed PF: 3.14 (n=542)
+Null mean PF: 3.70 +- 0.64
+p-value: 0.790 (< 0.05 = signifikan)

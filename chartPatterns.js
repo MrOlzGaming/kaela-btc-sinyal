@@ -9,7 +9,7 @@
 //   WEDGE (pembalikan) -- 2 trendline (dari swing high & swing low) konvergen ke arah SAMA,
 //     breakout KEBALIKAN dari kemiringan wedge-nya sendiri. SL di swing extreme terakhir.
 
-const { findSwingPoints } = require('./technicalAnalysis');
+const { findSwingPoints, atr } = require('./technicalAnalysis');
 
 function linearRegression(points) {
   const n = points.length;
@@ -111,6 +111,73 @@ function detectWedge(daily, i, opts = {}) {
   return null;
 }
 
+// detectChannel -- kanal PARALEL (22 Sep 2026, permintaan Olan: strategi Nyopet-scalp 5-menit,
+// "channel-fade") -- BEDA dari detectWedge di atas yang WAJIB mengerucut (konvergen ke 1 titik,
+// sinyal pembalikan lewat breakout), channel di sini WAJIB SEJAJAR (lebar awal vs akhir gak beda
+// jauh) -- dua trendline dari swing high & swing low TERPISAH, reuse findSwingPoints+
+// linearRegression PERSIS sama kayak wedge, cuma syarat konvergensinya dibalik. minTouches=2
+// default (Olan: "minimal 2 titik atas 2 titik bawah") -- pola sama kayak wedgeMinTouches=2.
+//
+// Dipakai buat strategi TRADING DI DALAM channel (fade -- beli garis bawah, jual garis atas),
+// KEBALIKAN dari flag/wedge yang trading BREAKOUT (keluar channel). Return { highReg, lowReg,
+// startIndex } -- caller pakai channelLinesAt() buat dapetin harga top/bottom/mid di index
+// candle MANAPUN (channel bisa miring -- sideways/naik/turun tergantung slope regresinya).
+function detectChannel(candles, i, opts = {}) {
+  const {
+    channelLookbackRange = [10, 40], minTouches = 2, parallelToleranceRatio = 0.3, swingPointLookback = 2,
+    // Filter KETATAN (22 Sep 2026, ketemu perlu pas tes awal -- "2 titik atas + 2 titik bawah
+    // kira-kira sejajar" doang TERLALU LONGGAR, hampir SELALU ketemu di noise 5-menit manapun,
+    // >100 "channel" per hari). "Konsolidasi" makna aslinya SEMPIT relatif volatilitas SAAT ITU --
+    // channel gak boleh lebih lebar dari maxWidthAtrMultiple x ATR, biar cuma tangkep RANGE BENERAN
+    // sempit, bukan garis yang kebetulan nembus titik-titik acak yang jauh mencar.
+    maxWidthAtrMultiple = 3, atrPeriod = 14,
+    // 🐛 FIX 22 Sep 2026 (ketemu pas tes trailing-stop -- 1 trade "untung" 15.946R, jelas bug,
+    // bukan hasil beneran) -- root cause: channel dengan lebar $0,005 dari harga $63.000
+    // (0,0000%) LOLOS pengecekan `spreadEnd <= 0` (0,005 itu POSITIF, cuma nyaris nol). Regresi
+    // dari swing point yang kebetulan HAMPIR sama tinggi bisa ngasilin garis yang praktis
+    // BERHIMPIT, bukan channel beneran -- R-multiple (dibagi halfWidth) meledak kalau lebar
+    // pembaginya nyaris nol. minWidthPct -- channel WAJIB minimal sekian % dari harga biar
+    // dianggap "channel" beneran, bukan noise regresi/floating-point.
+    minWidthPct = 0.05,
+  } = opts;
+  for (let len = channelLookbackRange[0]; len <= channelLookbackRange[1]; len++) {
+    const start = i - len;
+    if (start < 0) continue;
+    const window = candles.slice(start, i);
+    if (window.length < len) continue;
+    const { highs, lows } = findSwingPoints(window, swingPointLookback);
+    if (highs.length < minTouches || lows.length < minTouches) continue;
+
+    const highReg = linearRegression(highs.map((h) => ({ x: h.index, y: h.price })));
+    const lowReg = linearRegression(lows.map((l) => ({ x: l.index, y: l.price })));
+    if (!highReg || !lowReg) continue;
+
+    const spreadStart = highReg.intercept - lowReg.intercept;
+    const spreadEnd = (highReg.slope * len + highReg.intercept) - (lowReg.slope * len + lowReg.intercept);
+    if (spreadStart <= 0 || spreadEnd <= 0) continue; // garis udah kesilang -- invalid
+    if (spreadEnd / candles[i - 1].close * 100 < minWidthPct) continue; // kelewat sempit -- praktis berhimpit, bukan channel beneran
+    // PARALEL (kebalikan syarat wedge) -- lebar akhir gak boleh beda jauh dari lebar awal.
+    const ratio = spreadEnd / spreadStart;
+    if (ratio < (1 - parallelToleranceRatio) || ratio > (1 + parallelToleranceRatio)) continue;
+
+    const atrVal = atr(candles.slice(Math.max(0, start - atrPeriod), i), atrPeriod);
+    if (atrVal != null && spreadEnd > atrVal * maxWidthAtrMultiple) continue; // kelewat lebar dibanding volatilitas -- bukan konsolidasi sempit
+
+    return { highReg, lowReg, len, spreadStart, spreadEnd, startIndex: start };
+  }
+  return null;
+}
+
+// Harga top/bottom/mid channel di index CANDLE ASLI manapun (bukan relatif ke window deteksi) --
+// dipakai caller buat cek posisi harga SEKARANG (candle SETELAH channel kedeteksi) relatif ke
+// garis-garis channel yang udah ketemu sebelumnya.
+function channelLinesAt(channel, candleIndex) {
+  const x = candleIndex - channel.startIndex;
+  const top = channel.highReg.slope * x + channel.highReg.intercept;
+  const bottom = channel.lowReg.slope * x + channel.lowReg.intercept;
+  return { top, bottom, mid: (top + bottom) / 2 };
+}
+
 // Deteksi TERPADU (buat live -- sniperAutoAnalysis.js) -- cek flag dulu, baru wedge kalau flag
 // gak ketemu, normalisasi ke bentuk sinyal generik { direction, sl, patternType, ... } biar
 // caller gak perlu tau beda struktur flag vs wedge. `allowShort=false` = default tervalidasi
@@ -140,4 +207,4 @@ function detectPatternSignal(daily, i, opts = {}) {
   return null;
 }
 
-module.exports = { linearRegression, detectFlag, detectWedge, detectPatternSignal };
+module.exports = { linearRegression, detectFlag, detectWedge, detectPatternSignal, detectChannel, channelLinesAt };

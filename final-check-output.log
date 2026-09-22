@@ -1,0 +1,21 @@
+[FinalCheck] Fetch BTCUSDT 5m, 2 tahun terakhir...
+[FinalCheck] 210240 candle kefetch.
+
+=== SENSITIVITAS GRANULAR (1.1x - 1.9x, langkah 0.1) ===
+  1.1x: n=386, win=87.3%, PF=6.88, totalR=288.0
+  1.2x: n=673, win=84.0%, PF=5.23, totalR=457.0
+  1.3x: n=1120, win=80.4%, PF=4.11, totalR=682.0
+  1.4x: n=1860, win=77.6%, PF=3.46, totalR=1026.0
+  1.5x: n=2961, win=74.9%, PF=2.99, totalR=1475.0
+  1.6x: n=4384, win=72.5%, PF=2.64, totalR=1976.0
+  1.7x: n=5973, win=70.5%, PF=2.39, totalR=2445.0
+  1.8x: n=7703, win=68.7%, PF=2.20, totalR=2883.0
+  1.9x: n=9405, win=68.0%, PF=2.13, totalR=3391.0
+
+=== STRESS TEST SLIPPAGE (% dari lebar-SL/halfWidth, round-trip 2x) ===
+  slippage=0% dari halfWidth (=0.00R/trade): PF=2.99, totalR=1475.0, winRate(net>0)=74.9%
+  slippage=5% dari halfWidth (=0.10R/trade): PF=2.44, totalR=1178.9, winRate(net>0)=74.9%
+  slippage=10% dari halfWidth (=0.20R/trade): PF=1.99, totalR=882.8, winRate(net>0)=74.9%
+  slippage=20% dari halfWidth (=0.40R/trade): PF=1.28, totalR=290.6, winRate(net>0)=74.9%
+  slippage=30% dari halfWidth (=0.60R/trade): PF=0.75, totalR=-301.6, winRate(net>0)=74.9%
+  slippage=50% dari halfWidth (=1.00R/trade): PF=0.00, totalR=-1486.0, winRate(net>0)=0.0%

@@ -2293,5 +2293,10 @@
     "type": "whale-daily",
     "date": "2026-09-22T16:01:19.411Z",
     "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-09-23\n11 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 10.575,63 BTC berpindah (~$914,801,020 / ~Rp16.320.450.672.516)\nTerbesar: 2.479,97 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 11 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "anomaly",
+    "date": "2026-09-22T22:45:53.337Z",
+    "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n🔗 Korelasi BTC-Nasdaq (90 hari): 0.40 -- JAUH DI ATAS kebiasaan historis kita (median 0.36, z-score 3.5)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n🔗 Korelasi BTC-Nasdaq (90 hari)\nIni ngukur seberapa MIRIP gerakan harga BTC sama indeks saham teknologi Nasdaq belakangan ini. Lagi TINGGI banget dari biasanya -- BTC lagi \"nempel\" ke saham teknologi, berita ekonomi Amerika/suku bunga jadi LEBIH RELEVAN buat BTC drpd berita crypto sendiri."
   }
 ]

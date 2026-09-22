@@ -33,6 +33,8 @@ const { sendWhatsApp } = require('./fonnte');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./channelBreakoutBalanceRecap');
+const { fmtUsd, fmtUsdWithIdr } = require('./darkKaelaLog');
+const { getUsdIdrRate } = require('./kaelaProTraderClient');
 
 const SYMBOL = 'BTCUSDT';
 const CHANNEL_OPTS = { maxWidthAtrMultiple: 1.5 }; // SAMA PERSIS parameter yang divalidasi backtest (backtestNyopetChannelBreakoutOnly.js)
@@ -184,7 +186,12 @@ async function process() {
         journal.floating = { dir, entryPrice: livePrice, sl, tp, quantity: placed.executedQty ? parseFloat(placed.executedQty) : calc.nilaiPosisi / livePrice, openedAt: Date.now() };
         journal.channel = null;
         console.log(`[ChannelBreakout] Entry ${dir.toUpperCase()} @ ${livePrice} (level breakout teoritis: ${entryPrice.toFixed(2)}), SL ${sl.toFixed(2)}, TP ${tp.toFixed(2)}.`);
-        await reportWa(`🚀 *Channel Breakout ${testnet ? 'DEMO' : 'REAL'}* -- posisi baru *${dir === 'long' ? 'LONG' : 'SHORT'}*\nEntry: $${livePrice.toFixed(2)} (level teoritis $${entryPrice.toFixed(2)})\nSL: $${sl.toFixed(2)} · TP: $${tp.toFixed(2)}\nLeverage: ${calc.leverage}x · Margin: $${calc.margin.toFixed(2)}\n\n— Kaela`);
+        // idrRate (23 Sep 2026, permintaan Olan: "margin+nilai investasi dikasih kurung rupiah
+        // terbaru") -- reuse getUsdIdrRate() (kaelaProTraderClient.js) + fmtUsdWithIdr()
+        // (darkKaelaLog.js), SAMA persis fungsi yang dipakai Sniper/Nyopet buat baris Margin/Nilai
+        // Investasi, bukan format baru. Null-safe (gagal fetch -> fallback USD doang, gak gugurin pesan).
+        const idrRate = await getUsdIdrRate().catch(() => null);
+        await reportWa(`🚀 *Channel Breakout ${testnet ? 'DEMO' : 'REAL'}* -- posisi baru *${dir === 'long' ? 'LONG' : 'SHORT'}*\nEntry: ${fmtUsd(livePrice)} (level teoritis ${fmtUsd(entryPrice)})\nSL: ${fmtUsd(sl)} · TP: ${fmtUsd(tp)}\nMargin: ${fmtUsdWithIdr(calc.margin, idrRate)} (${calc.leverage}x)\nNilai Investasi: ${fmtUsdWithIdr(calc.nilaiPosisi, idrRate)}\n\n— Kaela`);
       } catch (e) {
         if (!testnet && isInsufficientBalanceError(e.message)) {
           recordSkippedInsufficientBalance({ dir, entryPrice, sl, tp });

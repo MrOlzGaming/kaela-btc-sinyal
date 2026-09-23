@@ -154,7 +154,9 @@
     "poolCounts": {
       "Luxor": 1,
       "ViaBTC": 2,
-      "AntPool": 1
+      "AntPool": 2,
+      "F2Pool": 1,
+      "SpiderPool": 1
     }
   }
 ]

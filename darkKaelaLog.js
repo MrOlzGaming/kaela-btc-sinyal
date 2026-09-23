@@ -166,8 +166,13 @@ const CLOSE_REASON_LABEL = {
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
 // (12 Sep 2026, permintaan Olan: "Manual (Olan) / Auto (Kaela)" -- badge auto sekarang eksplisit
 // nyebut "Kaela" juga, sejajar sama MANUAL_BADGE "Manual (Olan)" di bawah.
-function _nyopetBadge(pos, isDemo) {
-  return `🥷 NYOPET · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}`;
+// `exchangeBadge` (23 Sep 2026, permintaan Olan: "badge exchange juga dipake di pesan buka
+// tutup" -- setelah Channel Breakout pindah ke BingX sementara Sniper/Nyopet tetap Binance/MEXC,
+// shareholder butuh liat sekilas exchange mana dari pesan auto, PERSIS alasan exchangeBadge udah
+// dipake di pesan manual/positionReconciler.js) -- OPSIONAL, undefined -> badge PERSIS sama
+// kayak sebelumnya (caller Sniper/Nyopet lama gak perlu diubah).
+function _nyopetBadge(pos, isDemo, exchangeBadge) {
+  return `🥷 NYOPET · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
 }
 
 // (5 Sep 2026, permintaan Olan: "nilai investasi juga ada dalam kurung rupiah.. lalu rapikan
@@ -183,10 +188,10 @@ function _nyopetBadge(pos, isDemo) {
 // buat semua ya jangan ini aja") -- Buka Posisi SEKARANG ikut kasih gambaran besar hari itu, SAMA
 // kayak Partial/Tutup yang udah duluan punya baris ini. Taro PALING BAWAH (abis smartMoneyLine)
 // biar urutan baca tetap: apa yang kejadian -> alasan/konteks pattern -> baru gambaran hari ini.
-function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl) {
+function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
-  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Buka Posisi*
+  return `${_nyopetBadge(pos, isDemo, exchangeBadge)} ${shortId(pos.id)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 TP1: ${pos.tp != null ? fmtUsd(pos.tp) : '(trailing, ngikutin harga terbaik yang dicapai)'}
@@ -238,12 +243,12 @@ function formatWinRateLines(stats, label, idrRate) {
     + `Akumulasi profit ${label}: ${stats.totalPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(stats.totalPnlUsd, idrRate)}\n\n`;
 }
 
-function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl) {
+function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, exchangeBadge) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const sign = trade.pnlUsd >= 0 ? '+' : '';
   const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${sign}${trade.pnlPct.toFixed(1)}%)` : '';
-  return `${_nyopetBadge(trade, isDemo)} ${shortId(trade.id)} — *Tutup Posisi*
+  return `${_nyopetBadge(trade, isDemo, exchangeBadge)} ${shortId(trade.id)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
 PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*${_todaysPnlLine(todaysPnl, idrRate)}

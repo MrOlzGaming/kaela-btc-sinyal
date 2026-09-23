@@ -40,7 +40,7 @@ const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./channelBreakoutBalanceRecap');
-const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines } = require('./darkKaelaLog');
+const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed } = require('./darkKaelaLog');
 const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -51,6 +51,10 @@ const CHANNEL_OPTS = { maxWidthAtrMultiple: 1.5 }; // SAMA PERSIS parameter terv
 const TRADE_EXPIRY_MS = 100 * 5 * 60 * 1000; // 100 candle 5m -- SAMA `tradeExpiryBars` backtest
 const MODAL_ACTIVE_FRACTION = 1 / 5; // SAMA konvensi "cheat exposure" Nyopet
 const VARIANTS = ['tpFixed', 'trailing'];
+// Badge exchange (23 Sep 2026, permintaan Olan: "badge exchange juga dipake di pesan buka tutup"
+// -- setelah migrasi ke BingX) -- gaya SAMA kayak EXCHANGE_BADGE positionReconciler.js (Binance
+// 🟨/MEXC 🔷), warna beda biar gampang dibedain sekilas.
+const EXCHANGE_BADGE = '🟣 BingX';
 
 const CONFIG_PATH = path.join(__dirname, 'channel-breakout-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'channel-breakout-journal.json');
@@ -165,6 +169,67 @@ async function closeSubPosition(exec, dir, quantity) {
   return exec.emergencyCloseMarket({ symbol: EXEC_SYMBOL, direction: dir === 'long' ? 'buy' : 'sell', quantity });
 }
 
+// (23 Sep 2026, permintaan Olan: "sekarang demo juga selesaikan masalah tumpukan posisi, kita
+// dah ada 2 tempat nih.. bisa aman kan?" -- abis dia sendiri tes buka/tutup manual di akun BingX
+// yang SAMA dipakai Channel Breakout Trailing pas verifikasi live tadi) -- BingX "1 akun 1
+// posisi" (dibuktikan empiris 23 Sep 2026, lihat komentar VARIANT_SECRET_FIELDS di atas): kalau
+// ADA posisi manual nyangkut di akun ini pas Kaela mau entry baru, order Kaela bakal KEGABUNG jadi
+// 1 posisi sama punya Olan (bukan reject/2 posisi terpisah) -- entry price/quantity kecampur,
+// SL/TP/trailing yang dihitung dari sini jadi SALAH TOTAL. Fix: SEBELUM tiap entry baru, cek dulu
+// akun bersih. PERSIS pola isKaelaOrder tri-state punya positionReconciler.js (true=punya Kaela
+// sendiri cuma jurnal lupa krn mesin pindah leader, false=PASTI manual -> auto-close kebijakan
+// Olan 19 Sep 2026, null=gak bisa dipastikan) -- BEDA dari reconciler yang jalan di SIKLUS
+// TERPISAH (5/15 menit), di sini nempel LANGSUNG sebelum openSubPositionSafe biar gak ada window
+// balapan antara "posisi nyasar ke-detect" dan "Kaela buka order baru".
+// Return: 'clear' (aman langsung/abis dibersihin) atau 'unsafe' (JANGAN entry siklus ini).
+async function checkAndClearStrayPosition(exec, idrRate) {
+  let stray;
+  try {
+    stray = await exec.getPositionRisk(EXEC_SYMBOL);
+  } catch (e) {
+    console.log(`[ChannelBreakout] Gagal cek posisi nyasar (${EXCHANGE_BADGE}), skip entry siklus ini demi aman:`, e.message);
+    return 'unsafe';
+  }
+  if (!stray || Math.abs(Number(stray.positionAmt)) === 0) return 'clear';
+
+  let isKaelaOrder = null;
+  try { isKaelaOrder = await exec.wasLastEntryOrderByKaela(EXEC_SYMBOL); }
+  catch (e) { console.log(`[ChannelBreakout] Gagal cek asal posisi nyasar (${EXCHANGE_BADGE}):`, e.message); }
+
+  if (isKaelaOrder === true) {
+    // Punya Kaela sendiri, jurnal lokal doang yang lupa (mesin eksekutor pindah leader) -- JANGAN
+    // digabung sotoy, tapi JUGA jangan auto-close punya sendiri. Skip aman siklus ini.
+    console.log(`[ChannelBreakout] Posisi nyasar (${EXCHANGE_BADGE}) ternyata punya Kaela sendiri (jurnal lupa) -- skip entry siklus ini biar gak salah gabung.`);
+    return 'unsafe';
+  }
+
+  if (isKaelaOrder === null) {
+    // Gak bisa dipastikan (API gagal) -- default AMAN: JANGAN entry (resiko gabung kalau ternyata manual).
+    console.log(`[ChannelBreakout] Posisi nyasar (${EXCHANGE_BADGE}) gak bisa dipastikan asalnya -- skip entry siklus ini (default aman).`);
+    return 'unsafe';
+  }
+
+  // isKaelaOrder === false -- PASTI manual (dikonfirmasi ke exchange). Kebijakan Olan 19 Sep 2026
+  // ("trading 100% ku serahkan ke Kaela... posisi non-Kaela boleh auto-close") berlaku sama di sini.
+  const closeDirection = Number(stray.positionAmt) > 0 ? 'buy' : 'sell';
+  try {
+    await exec.emergencyCloseMarket({ symbol: EXEC_SYMBOL, direction: closeDirection, quantity: Math.abs(Number(stray.positionAmt)) });
+  } catch (e) {
+    console.log(`[ChannelBreakout] GAGAL nutup posisi nyasar (${EXCHANGE_BADGE}) -- skip entry siklus ini:`, e.message);
+    return 'unsafe';
+  }
+
+  const msg = formatManualOpenAutoClosed({
+    exchangeBadge: EXCHANGE_BADGE, symbol: EXEC_SYMBOL, direction: closeDirection,
+    entryPrice: Number(stray.avgPrice), closePrice: Number(stray.markPrice) || Number(stray.avgPrice),
+    leverage: Number(stray.leverage) || 0, marginUsd: Number(stray.margin) || 0,
+    nilaiPosisi: Number(stray.positionValue) || 0, closePnlUsd: null,
+  }, idrRate);
+  console.log(`[ChannelBreakout] Posisi nyasar (${EXCHANGE_BADGE}, BUKAN order Kaela) ketemu di akun Channel Breakout -- ditutup paksa biar gak numpuk sama entry baru.`);
+  await sendWhatsAppToWibowo(msg).catch((e) => console.log('[ChannelBreakout] Gagal kirim WA (posisi nyasar auto-closed):', e.message));
+  return 'clear';
+}
+
 function variantLabel(variant) { return variant === 'tpFixed' ? 'TP Tetap' : 'Trailing Stop'; }
 
 // 23 Sep 2026, REVISI TOTAL (Olan, 3x koreksi sampai kena): "mode ada Sniper ada Nyopet..
@@ -177,7 +242,7 @@ function variantLabel(variant) { return variant === 'tpFixed' ? 'TP Tetap' : 'Tr
 // CB_TRAIL (CLOSE_REASON_LABEL, mekanisme beda dari SL/TRAIL Nyopet lama makanya kode terpisah).
 function buildOpenMsg({ id, dir, entryPrice, sl, tp, margin, leverage, nilaiPosisi, idrRate, isDemo }) {
   const pos = { id, direction: dir === 'long' ? 'buy' : 'sell', entryPrice, tp, sl, marginUsd: margin, nilaiPosisi, leverage, mode: 'channel_breakout', assetLabel: 'BTC' };
-  return formatAutoOpen(pos, new Date(), '', isDemo, idrRate, '', null);
+  return formatAutoOpen(pos, new Date(), '', isDemo, idrRate, '', null, EXCHANGE_BADGE);
 }
 
 // outcome mentah dari checkTpFixedHit/updateTrailing ('SL'/'TP'/'TRAIL') -> kode CB_ (darkKaelaLog.js)
@@ -188,7 +253,7 @@ function outcomeCodeFor(outcome) { return outcome === 'TP' ? 'CB_TP' : outcome =
 // template baru) tepat sebelum link, biar strukturnya tetap 1:1 sama Nyopet + tambahan.
 function buildCloseMsg({ id, variant, dir, entryPrice, exitPrice, pnlUsd, stats, outcomeCode, idrRate, isDemo }) {
   const trade = { id, direction: dir, entryPrice, exitPrice, pnlUsd, pnlPct: null, mode: 'channel_breakout', assetLabel: 'BTC' };
-  const base = formatAutoClosed(trade, new Date(), isDemo, CLOSE_REASON_LABEL[outcomeCode] || outcomeCode, idrRate, null);
+  const base = formatAutoClosed(trade, new Date(), isDemo, CLOSE_REASON_LABEL[outcomeCode] || outcomeCode, idrRate, null, EXCHANGE_BADGE);
   const extraLines = formatWinRateLines(stats, `${variantLabel(variant)} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
   return base.replace(`🔗 ${KAELA_ACCESS_URL}`, extraLines + `🔗 ${KAELA_ACCESS_URL}`);
 }
@@ -353,6 +418,14 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     const tp = variant === 'tpFixed' ? (dir === 'long' ? entryPriceTheoretical + halfWidth : entryPriceTheoretical - halfWidth) : null;
     const trailDistancePct = variant === 'trailing' ? (halfWidth / entryPriceTheoretical) * 100 : null;
 
+    // Cek akun bersih SEBELUM entry (23 Sep 2026, lihat komentar panjang checkAndClearStrayPosition
+    // -- BingX gabung posisi manual+bot jadi 1 kalau dibiarin, "unsafe" = SKIP total siklus ini).
+    const idrRateForClean = await getUsdIdrRate().catch(() => null);
+    if ((await checkAndClearStrayPosition(demoExec, idrRateForClean)) === 'unsafe') {
+      console.log(`[ChannelBreakout/${variant}] Skip entry DEMO siklus ini -- akun belum dipastikan bersih.`);
+      return;
+    }
+
     let demoResult;
     try {
       demoResult = await openSubPositionSafe(demoExec, true, dir, sl, entryPriceTheoretical);
@@ -364,7 +437,9 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
 
     let realResult = null;
     let wibowoRoute = 'demo';
-    if (realAvailable && realExec) {
+    if (realAvailable && realExec && (await checkAndClearStrayPosition(realExec, idrRateForClean)) === 'unsafe') {
+      console.log(`[ChannelBreakout/${variant}] Skip entry REAL siklus ini -- akun belum dipastikan bersih (demo tetap lanjut).`);
+    } else if (realAvailable && realExec) {
       try {
         realResult = await openSubPositionSafe(realExec, false, dir, sl, entryPriceTheoretical);
         wibowoRoute = 'real';

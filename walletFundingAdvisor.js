@@ -40,6 +40,37 @@ function minModalForNotional(minNotional, exposureModal, direction) {
   return minNotional / probe.exposure;
 }
 
+// Saran REBALANCE (23 Sep 2026, permintaan Olan: "kalo seluruh modal harusnya cukup buat open
+// posisi, tapi malah gak bisa.. sistem lapor buat bagi modal ke dompet lain") -- BUKAN eksekusi
+// transfer (mindahin duit beneran WAJIB manual, Kaela gak pernah pegang kunci withdraw), MURNI
+// saran ANGKA+ARAH biar Olan tau harus mindahin dari mana ke mana. Prioritas SAMA EXCHANGE dulu
+// (Binance USDT<->USDC convert instan, gratis/murah) sebelum LINTAS exchange (Binance->MEXC
+// butuh withdraw+deposit, lebih lambat+ada network fee) -- exchange diturunin dari walletId
+// (`"binance:USDT"` -> `"binance"`), bukan field baru terpisah.
+function suggestRebalance(breakdown, minModal) {
+  const withSurplus = breakdown.map((w) => ({ ...w, exchange: w.walletId.split(':')[0], modalAktif: w.balance * MODAL_ACTIVE_FRACTION, surplus: w.balance * MODAL_ACTIVE_FRACTION - minModal }));
+  const deficits = withSurplus.filter((w) => w.surplus < 0).sort((a, b) => a.surplus - b.surplus); // paling kurang duluan
+  const donors = withSurplus.filter((w) => w.surplus > 0).map((w) => ({ ...w, remaining: w.surplus })); // salinan -- `remaining` abis dipotong tiap sumbang, JANGAN pakai `surplus` asli lagi
+  const suggestions = [];
+
+  for (const d of deficits) {
+    let need = -d.surplus; // deficit positif
+    // Same-exchange dulu (diurutin remaining terbesar), baru lintas-exchange kalau gak cukup.
+    const sorted = [...donors].sort((a, b) => (b.exchange === d.exchange) - (a.exchange === d.exchange) || b.remaining - a.remaining);
+    for (const donor of sorted) {
+      if (need <= 0) break;
+      if (donor.remaining <= 0) continue;
+      const amountModal = Math.min(need, donor.remaining); // dalam satuan "modal aktif" (1/5 saldo)
+      const amountSaldo = amountModal / MODAL_ACTIVE_FRACTION; // konversi balik ke satuan saldo ASLI (yang beneran ditransfer Olan)
+      suggestions.push({ from: donor.name, to: d.name, amountSaldo, sameExchange: donor.exchange === d.exchange });
+      donor.remaining -= amountModal;
+      need -= amountModal;
+    }
+    if (need > 0.01) suggestions.push({ from: null, to: d.name, amountSaldo: need / MODAL_ACTIVE_FRACTION, sameExchange: null }); // gak ada donor cukup -- WAJIB top-up dari luar sistem
+  }
+  return suggestions;
+}
+
 async function main() {
   console.log('=== Wallet Funding Advisor -- ' + new Date().toISOString().slice(0, 10) + ' ===\n');
   const minNotional = await fetchMinNotional('BTCUSDT');
@@ -57,7 +88,16 @@ async function main() {
     for (const w of agg.breakdown) {
       const modalAktif = w.balance * MODAL_ACTIVE_FRACTION;
       const cukup = modalAktif >= minModal;
-      console.log(`  ${w.name}: saldo $${w.balance.toFixed(2)} (modal aktif $${modalAktif.toFixed(2)}, butuh min $${minModal.toFixed(2)}) -- ${cukup ? '✅ CUKUP buat trading' : `❌ KURANG -- saran tambah saldo min $${((minModal - modalAktif) / MODAL_ACTIVE_FRACTION).toFixed(2)} biar dompet ini bisa dipakai`}`);
+      console.log(`  ${w.name}: saldo $${w.balance.toFixed(2)} (modal aktif $${modalAktif.toFixed(2)}, butuh min $${minModal.toFixed(2)}) -- ${cukup ? '✅ CUKUP buat trading' : '❌ KURANG'}`);
+    }
+
+    const suggestions = suggestRebalance(agg.breakdown, minModal);
+    if (suggestions.length > 0) {
+      console.log('\n  📋 Saran (TOTAL kekayaan sebenarnya CUKUP, cuma perlu digeser -- transfer manual, Kaela gak eksekusi ini):');
+      suggestions.forEach((s) => {
+        if (!s.from) console.log(`    ⚠️ ${s.to}: gak ada surplus dompet lain yang cukup -- WAJIB top-up ~$${s.amountSaldo.toFixed(2)} dari luar sistem.`);
+        else console.log(`    Pindahin ~$${s.amountSaldo.toFixed(2)} dari "${s.from}" -> "${s.to}"${s.sameExchange ? ' (1 exchange, convert instan)' : ' (⚠️ BEDA exchange, butuh withdraw+deposit, gak instan)'}`);
+      });
     }
     console.log();
   }
@@ -65,4 +105,4 @@ async function main() {
 }
 
 if (require.main === module) { main().catch((e) => { console.error('ERROR:', e.message, e.stack); process.exit(1); }); }
-module.exports = { minModalForNotional, fetchMinNotional };
+module.exports = { minModalForNotional, fetchMinNotional, suggestRebalance };

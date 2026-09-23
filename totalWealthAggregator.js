@@ -76,7 +76,7 @@ async function getTotalWealth({ real }) {
     try {
       const bal = await exec.getAccountBalance(w.asset);
       total += bal;
-      breakdown.push({ name: w.name, balance: bal });
+      breakdown.push({ name: w.name, balance: bal, walletId: w.walletId, asset: w.asset });
       seenWalletIds.add(w.walletId);
     } catch (e) {
       console.log(`[TotalWealthAggregator] Gagal ambil saldo "${w.name}" (dilewatin, JANGAN gagalin total gara2 1 dompet error):`, e.message);

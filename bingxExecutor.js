@@ -114,10 +114,14 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     return signedRequest('POST', '/openApi/swap/v2/trade/leverage', { symbol, side: positionSide, leverage });
   }
 
+  // Fallback SAJA -- ketemu 23 Sep 2026 (tes empiris VPS) BingX MARKET order balikin status
+  // FILLED LANGSUNG di response POST awal (beda dari Binance yang butuh polling, lihat catatan
+  // binanceExecutor.js). placeMarketEntry cek fast-path dulu, CUMA masuk sini kalau ternyata BELUM
+  // filled di respons awal (jaga-jaga async fill langka, bukan perilaku normal yang diamati).
   async function waitForFill(symbol, orderId, attempts = 6, delayMs = 400) {
     for (let i = 0; i < attempts; i++) {
-      const orders = await signedRequest('GET', '/openApi/swap/v2/trade/order', { symbol, orderId }).catch(() => null);
-      const order = orders && orders.order;
+      const result = await signedRequest('GET', '/openApi/swap/v2/trade/order', { symbol, orderId }).catch(() => null);
+      const order = result && result.order;
       if (order && order.status === 'FILLED' && parseFloat(order.executedQty) > 0) return order;
       await new Promise((r) => setTimeout(r, delayMs));
     }
@@ -134,6 +138,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     const side = direction === 'buy' ? 'BUY' : 'SELL';
     const positionSide = direction === 'buy' ? 'LONG' : 'SHORT';
     const placed = await signedRequest('POST', '/openApi/swap/v2/trade/order', { symbol, side, positionSide, type: 'MARKET', quantity, clientOrderId: generateKaelaClientOrderId() });
+    if (placed.order.status === 'FILLED' && parseFloat(placed.order.executedQty) > 0) return placed.order;
     return waitForFill(symbol, placed.order.orderId);
   }
 
@@ -161,10 +166,14 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   // dibalik (buy->SELL, sell->BUY) TAPI positionSide TETAP SAMA kayak posisi aslinya (VERIFIED
   // EMPIRIS 23 Sep 2026: tutup SHORT = side BUY + positionSide SHORT, BUKAN LONG -- salah di sini
   // bisa kebuka posisi arah SEBALIKNYA alih-alih nutup yang ada).
+  // ⚠️ `reduceOnly` SENGAJA GAK dikirim -- BingX TOLAK field ini di hedge mode ("In the Hedge
+  // mode, the 'ReduceOnly' field can not be filled", ketemu 23 Sep 2026 tes empiris). Beda dari
+  // Binance yang WAJIB reduceOnly:true. Di hedge mode, side+positionSide kebalik SUDAH CUKUP
+  // nandain ini order penutup (exchange yang nentuin otomatis, bukan flag eksplisit).
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
     const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
     const positionSide = direction === 'buy' ? 'LONG' : 'SHORT';
-    return signedRequest('POST', '/openApi/swap/v2/trade/order', { symbol, side: closeSide, positionSide, type: 'MARKET', quantity, reduceOnly: true });
+    return signedRequest('POST', '/openApi/swap/v2/trade/order', { symbol, side: closeSide, positionSide, type: 'MARKET', quantity });
   }
 
   async function cancelAllOpenOrders(symbol) {

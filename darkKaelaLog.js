@@ -132,6 +132,12 @@ const PATTERN_REASON_LABEL = {
   fvg_bounce: 'FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)',
   econ_reaction: 'Reaksi Kalender Ekonomi -- BTC bereaksi searah abis rilis data high-impact, ikut kelanjutannya (exit paksa ~30 menit, jendela tervalidasi backtest)',
   fed_dovish_grid: 'Fed Dovish Grid -- BTC bereaksi NAIK abis rilis FOMC/NFP (sinyal dovish) + tren jangka pendek masih naik, nyicil stacking sampai TP/SL agregat atau 7 hari (tervalidasi backtest, LONG-only)',
+  // channelBreakoutTrader.js (23 Sep 2026) -- alasan BUKA ke-3 (setelah chart-pattern/FVG), SAMA
+  // badge "NYOPET" (Olan eksplisit: "mode ada Sniper ada Nyopet.. channel breakout itu alasan
+  // buka posisi" -- BUKAN badge/mode terpisah). 1 label GENERIK buat 2 varian (TP Tetap/Trailing)
+  // -- detail MEKANISME EXIT (yang beda antar varian) itu tugas CLOSE_REASON_LABEL (CB_TRAIL/CB_TP/
+  // CB_SL di bawah), bukan diulang di sini.
+  channel_breakout: 'Channel Breakout -- harga breakout terkonfirmasi dari channel konsolidasi candle 5-menit',
 };
 function patternReason(mode) { return PATTERN_REASON_LABEL[mode] || patternTag(mode); }
 
@@ -155,14 +161,6 @@ const CLOSE_REASON_LABEL = {
   CB_SL: 'Stop Loss kena -- breakout ternyata gagal lanjut (fakeout)',
   CB_TP: 'Target Profit tercapai (1:1 R:R dari lebar channel)',
   CB_TRAIL: 'Trailing stop kena -- sempat untung, harga berbalik nyentuh stop yang udah ikut naik/turun',
-};
-
-// channelBreakoutTrader.js (23 Sep 2026) -- alasan BUKA posisi, gaya SAMA kayak PATTERN_REASON_LABEL
-// di atas tapi field terpisah (bukan numpang situ) krn "mode" Channel Breakout bukan pattern-type
-// Nyopet (flag/wedge/FVG), konsepnya beda (channel breakout candle 5-menit).
-const CHANNEL_BREAKOUT_REASON_LABEL = {
-  tpFixed: 'Channel Breakout (TP Tetap) -- harga breakout terkonfirmasi dari channel konsolidasi 5-menit, target 1:1 R:R dari lebar channel',
-  trailing: 'Channel Breakout (Trailing Stop) -- harga breakout terkonfirmasi dari channel konsolidasi 5-menit, ikut momentum sampai trailing stop kena',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
@@ -191,7 +189,7 @@ function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, toda
   return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
-TP1: ${fmtUsd(pos.tp)}
+TP1: ${pos.tp != null ? fmtUsd(pos.tp) : '(trailing, ngikutin harga terbaik yang dicapai)'}
 SL: ${fmtUsd(pos.sl)}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
@@ -229,6 +227,17 @@ SL sisa digeser breakeven, separuh posisi di-trail.
 // `alasanText` (3 Sep 2026) -- WAJIB dioper caller (nyopetAutoTrader.js), sumbernya beda
 // tergantung KENAPA ditutup: kode close-reason (SL/TRAIL/dst, lewat CLOSE_REASON_LABEL) buat
 // otomatis, teks yang Olan TULIS SENDIRI buat manual -- fungsi ini gak nebak-nebak sendiri.
+// 23 Sep 2026, permintaan Olan ("tutup posisi sertakan winrate dan akumulasi profit", dipakai
+// PERTAMA di Channel Breakout, SEKARANG disamain ke Nyopet chart-pattern/FVG juga) -- helper
+// SATU sumber (bukan duplikat 2x di channelBreakoutTrader.js DAN nyopetAutoTrader.js). Caller
+// nyuntik ke output formatAutoClosed via .replace() pas link, lihat contoh pemakaian di 2 file itu.
+function formatWinRateLines(stats, label, idrRate) {
+  const total = stats.wins + stats.losses;
+  const pct = total > 0 ? (stats.wins / total * 100) : 0;
+  return `Win rate ${label}: ${stats.wins}/${total} (${pct.toFixed(1)}%)\n`
+    + `Akumulasi profit ${label}: ${stats.totalPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(stats.totalPnlUsd, idrRate)}\n\n`;
+}
+
 function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
@@ -439,7 +448,7 @@ module.exports = {
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
-  fmtUsd, shortId, fmtUsdWithIdr, CHANNEL_BREAKOUT_REASON_LABEL,
+  fmtUsd, shortId, fmtUsdWithIdr, formatWinRateLines,
   // 12 Sep 2026 -- diexpose biar sniperOrderLog.js (Sniper Club REAL Olan sendiri) bisa reuse SAMA
   // baris "PnL hari ini", bukan reimplementasi/format beda sendiri.
   todaysPnlLine: _todaysPnlLine,

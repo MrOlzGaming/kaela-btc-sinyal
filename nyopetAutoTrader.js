@@ -44,7 +44,7 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL } = require('./darkKaelaLog');
+const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL, formatWinRateLines, KAELA_ACCESS_URL } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 // (5 Sep 2026, metode Nyopet BARU "Fed Dovish Grid" -- lihat backtest/fedSignalGridBacktest.js
 // buat riset lengkapnya) -- fetchKlines/computeSignals/computeSMA/FINAL_RECIPE di-REUSE LANGSUNG
@@ -495,7 +495,15 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
     const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl);
+    let msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl);
+    // Win-rate + akumulasi (23 Sep 2026, permintaan Olan, disamain dari Channel Breakout) --
+    // dihitung LANGSUNG dari journal.orders (bukan counter terpisah kayak channelBreakoutTrader.js)
+    // -- Nyopet journal SATU-SATUNYA sumber kebenaran, scan ulang tiap kali lebih aman drpd nyimpen
+    // counter kedua yang bisa drift. Cuma order auto (`_isManual` false) & aset yang SAMA dihitung.
+    const closedAuto = journal.orders.filter((o) => o.asset === assetCfg.key && (o.status === 'closed_tp' || o.status === 'closed_sl') && o.mode !== 'manual');
+    const stats = { wins: closedAuto.filter((o) => (o.pnlUsd || 0) >= 0).length, losses: closedAuto.filter((o) => (o.pnlUsd || 0) < 0).length, totalPnlUsd: closedAuto.reduce((s, o) => s + (o.pnlUsd || 0), 0) };
+    const winRateLines = formatWinRateLines(stats, `Nyopet ${assetCfg.label} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
+    msg = msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });

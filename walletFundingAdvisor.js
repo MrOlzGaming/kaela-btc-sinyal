@@ -15,6 +15,11 @@ const { hitung: hitungExposure } = require('./calculator');
 
 const MODAL_ACTIVE_FRACTION = 1 / 5; // SAMA "cheat" yang dipakai Nyopet -- exposureModal juga pakai fraksi ini (lihat nyopetAutoTrader.js)
 const ASSUMED_MIN_NOTIONAL_USD = 20; // fallback kalau fetch live gagal (lihat fetchMinNotional())
+// Buffer (23 Sep 2026, permintaan Olan: "exchange lain diisi minimal sesuai kalkulator exposure,
+// ditambah sedikit biar gak mepet banget") -- target saran BUKAN pas-pasan di garis MIN_NOTIONAL
+// (kalau harga gerak dikit turun, langsung di bawah minimum lagi), tapi minimum + 25% ekstra.
+// Angka 25% TITIK AWAL (belum di-tuning/backtest), gampang diubah kalau kerasa kurang/lebih.
+const MIN_MODAL_BUFFER_PCT = 25;
 
 async function fetchMinNotional(symbol) {
   try {
@@ -35,9 +40,12 @@ async function fetchMinNotional(symbol) {
 // (independen dari nyawa%/SL -- itu cuma ngaruh ke LEVERAGE/margin, bukan ke besar nilaiPosisi).
 // Jadi modal_minimal buat clear MIN_NOTIONAL = minNotional / exposure, SATU angka doang, gak perlu
 // diulang per skenario nyawa% (awalnya sempet dikira perlu, ternyata gak relevan buat cek ini).
-function minModalForNotional(minNotional, exposureModal, direction) {
+// `withBuffer` (default true) -- tambah MIN_MODAL_BUFFER_PCT di atas garis pas-pasan, biar saran
+// gak ngasih angka yang begitu harga gerak dikit langsung di bawah minimum lagi.
+function minModalForNotional(minNotional, exposureModal, direction, withBuffer = true) {
   const probe = hitungExposure({ modal: 1, exposureModal, entry: 100, stopLoss: direction === 'sell' ? 105 : 95, direction });
-  return minNotional / probe.exposure;
+  const bare = minNotional / probe.exposure;
+  return withBuffer ? bare * (1 + MIN_MODAL_BUFFER_PCT / 100) : bare;
 }
 
 // Saran REBALANCE (23 Sep 2026, permintaan Olan: "kalo seluruh modal harusnya cukup buat open
@@ -85,6 +93,7 @@ async function main() {
     console.log(`exposureModal (basis bracket exposure, total x 1/5): $${exposureModal.toFixed(2)}\n`);
 
     const minModal = minModalForNotional(minNotional, exposureModal, undefined);
+    console.log(`Target minimal per-dompet (MIN_NOTIONAL + buffer ${MIN_MODAL_BUFFER_PCT}%): $${minModal.toFixed(2)}\n`);
     for (const w of agg.breakdown) {
       const modalAktif = w.balance * MODAL_ACTIVE_FRACTION;
       const cukup = modalAktif >= minModal;

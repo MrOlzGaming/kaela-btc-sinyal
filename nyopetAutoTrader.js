@@ -311,9 +311,26 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const modal = modalFull * MODAL_ACTIVE_FRACTION;
     const riskDistance = Math.abs(livePrice - sig.sl);
     if (riskDistance === 0) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: SL sama persis harga entry (riskDistance=0), skip sinyal ini.`); return null; }
+    // exposureModal (23 Sep 2026, permintaan Olan: "modal kepisah dompet tapi 1 management --
+    // kalkulator exposure harusnya ngitung pake TOTAL modal semua dompet") -- CUMA buat akun
+    // DEFAULT Olan sendiri (`!apiCreds`), BUKAN member Kaela Access lain (nge-agregat kekayaan
+    // member LAIN ke bracket exposure member ini bakal SALAH TOTAL, beda orang beda dompet).
+    // Null-safe: gagal fetch (network dst) -> exposureModal undefined, `hitung()` fallback ke
+    // behavior LAMA (modal sendiri doang) -- JANGAN gagalin entry cuma gara2 agregator error.
+    let exposureModal;
+    if (!apiCreds) {
+      try {
+        const { getTotalWealth } = require('./totalWealthAggregator');
+        const { total } = await getTotalWealth({ real: effectiveTestnet === false });
+        exposureModal = total * MODAL_ACTIVE_FRACTION; // SAMA fraksi "cheat" yang udah dipakai, cuma basisnya total bukan 1 dompet
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: total kekayaan semua dompet $${total.toFixed(2)} -> exposureModal $${exposureModal.toFixed(2)} (dompet ini doang $${modalFull.toFixed(2)}).`);
+      } catch (e) {
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: gagal ambil total kekayaan (${e.message}) -- fallback ke modal dompet ini doang buat bracket exposure.`);
+      }
+    }
     // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
     // lihat calculator.js `hitung()`, exposure otomatis dibagi 2 kalau sig.direction==='sell'.
-    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
+    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction, exposureModal });
     const partialTp = sig.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
     console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | nyawa ${(riskDistance / livePrice * 100).toFixed(2)}% -> leverage ${calc.leverage}x | pattern=${sig.patternType}`);
 

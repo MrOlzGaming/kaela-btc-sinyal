@@ -1,0 +1,23 @@
+=== PERBANDINGAN: Trailing Stop (SMA-60, LIVE sekarang) vs TP Tetap (2R, gak ada trail) ===
+SAMA PERSIS: sinyal (flag/wedge/FVG), window-gating, sizing/leverage, cuma exit-nya beda.
+
+--- TRAILING STOP (live sekarang) ---
+n=252 | win rate=44.0% | PF=2.01 | totalR=139.96 | avgR=0.56
+Final capital: $7348.37 | Max DD: 27.8%
+Exit breakdown: {"TRAIL_EXIT":105,"SL":137,"SL_BREAKEVEN":6,"WINDOW_FLIP":4}
+
+--- TP TETAP (2R, tanpa trail sama sekali) ---
+n=192 | win rate=50.0% | PF=1.98 | totalR=93.50 | avgR=0.49
+Final capital: $7966.72 | Max DD: 32.6%
+Exit breakdown: {"TP":93,"SL":95,"WINDOW_FLIP":4}
+
+--- SELISIH ---
+Total R: Trailing 139.96R vs TP Tetap 93.50R (selisih 46.5R)
+Final capital: Trailing $7348.37 vs TP Tetap $7966.72
+
+--- Contoh trade yang HASILNYA BEDA (trailing dapat >2R, TP tetap cuma dapat pas 2R) ---
+  2018-09-04 wedge_rising sell: trailing dapat 10.9R (TP tetap cuma bakal dapat 2R di titik yang sama)
+  2025-09-27 wedge_falling buy: trailing dapat 10.9R (TP tetap cuma bakal dapat 2R di titik yang sama)
+  2019-10-25 wedge_falling buy: trailing dapat 10.0R (TP tetap cuma bakal dapat 2R di titik yang sama)
+  2023-02-13 wedge_falling buy: trailing dapat 8.8R (TP tetap cuma bakal dapat 2R di titik yang sama)
+  2023-03-12 wedge_falling buy: trailing dapat 7.1R (TP tetap cuma bakal dapat 2R di titik yang sama)

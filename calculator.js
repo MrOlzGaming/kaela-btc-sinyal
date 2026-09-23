@@ -59,9 +59,18 @@ function assessMarginRisk(marginPct) {
 // jalur short auto-eksekusi di proyek ini) exposure-nya dibagi 2 di sini -- SATU tempat resmi,
 // biar semua titik short (Sniper harian, Sniper 4H, Nyopet BTC) otomatis ikut aturan yang sama,
 // gak perlu diinget manual di tiap call site.
-function hitung({ modal, nyawa, entry, stopLoss, maxLeverage, direction }) {
+// `exposureModal` (23 Sep 2026, permintaan Olan: "modal kepisah dompet tapi 1 management --
+// kalkulator exposure harusnya ngitung pake TOTAL modal semua dompet, bukan modal 1 dompet doang")
+// -- OPSIONAL, default `undefined` = ZERO perubahan perilaku (pola SAMA persis `direction` di
+// atas). Kalau diisi (total kekayaan gabungan semua dompet SATU mode/real-atau-demo, dari
+// `totalWealthAggregator.js`), BRACKET exposure (leverage konservatif makin gede) diambil dari
+// angka itu -- TAPI `nilaiPosisi` TETAP dikali `modal` (saldo dompet INI doang, gak mungkin bayar
+// margin USDC pakai saldo USDT). Filosofinya: seberapa AGRESIF (leverage) ditentuin kekayaan
+// ASLI Olan secara keseluruhan (biar makin kaya makin konservatif SESUAI DESAIN "cheat anti-
+// rungkad" awal), tapi seberapa BESAR posisi TETAP dibatasin uang yang BENERAN ada di dompet itu.
+function hitung({ modal, nyawa, entry, stopLoss, maxLeverage, direction, exposureModal }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
-  let exposure = getExposure(modal);
+  let exposure = getExposure(exposureModal !== undefined ? exposureModal : modal);
   // ⚠️ (audit 19 Sep 2026) `web/kalkulator.html` PUNYA IMPLEMENTASI TERPISAH dari `hitung()` ini
   // (WAJIB identik, sengaja gak di-`require()` karena itu jalan di browser client-side) -- literal
   // arah DI SINI `'sell'`, TAPI di kalkulator.html `'short'`. Ini BUKAN bug (dua-duanya independen,

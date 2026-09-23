@@ -36,7 +36,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { detectChannel, channelLinesAt } = require('./chartPatterns');
 const { hitung: hitungExposure } = require('./calculator');
-const binanceExecutorDefault = require('./binanceExecutor');
+const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./channelBreakoutBalanceRecap');
@@ -45,7 +45,8 @@ const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 
-const SYMBOL = 'BTCUSDT';
+const SYMBOL = 'BTCUSDT'; // format Binance -- CUMA buat fetch candle publik (data-api.binance.vision, sumber data channel/backtest)
+const EXEC_SYMBOL = 'BTC-USDT'; // format BingX (hyphen) -- dipakai SEMUA panggilan eksekusi (order/posisi/ticker)
 const CHANNEL_OPTS = { maxWidthAtrMultiple: 1.5 }; // SAMA PERSIS parameter tervalidasi backtest
 const TRADE_EXPIRY_MS = 100 * 5 * 60 * 1000; // 100 candle 5m -- SAMA `tradeExpiryBars` backtest
 const MODAL_ACTIVE_FRACTION = 1 / 5; // SAMA konvensi "cheat exposure" Nyopet
@@ -101,8 +102,8 @@ async function fetchClosedCandles5m(count) {
 }
 
 async function fetchLivePrice(baseUrl) {
-  const res = await fetch(`${baseUrl}/fapi/v1/ticker/price?symbol=${SYMBOL}`);
-  return parseFloat((await res.json()).price);
+  const res = await fetch(`${baseUrl}/openApi/swap/v1/ticker/price?symbol=${EXEC_SYMBOL}`);
+  return parseFloat((await res.json()).data.price);
 }
 
 // x diitung dari SELISIH WAKTU (bukan index array) -- robust lintas siklus walau candle
@@ -116,20 +117,20 @@ function channelLinesAtTime(channel, startCandleOpenTime, nowOpenTime) {
 
 // ⚠️ WAJIB 1 AKUN/API-KEY TERPISAH per (varian x demo/real) -- 23 Sep 2026, ketemu Olan sendiri
 // ("kan mexc dan binance ga bisa buka 2 layer.. kayak mt5"). Binance/MEXC futures BUKAN kayak
-// MT4/5 -- gak ada "ticket" independen, SEMUA order di 1 symbol digabung jadi 1 posisi (mode
-// one-way), DAN leverage itu PER SYMBOL (bukan per order) -- kalau 2 varian numpang 1 akun,
-// entry varian kedua bakal NIMPA leverage varian pertama, ngerusak SL-via-likuidasi buat
-// DUA-DUANYA. Makanya 4 SLOT KEY TERPISAH (2 varian x demo/real), BUKAN 2 (demo/real doang).
-// Key yang belum diisi = variant itu OTOMATIS gak jalan (execFor return null, caller skip) --
-// gak perlu saklar enable/disable manual terpisah, nempel langsung ke ada/gak-adanya akun.
-// 23 Sep 2026 (revisi -- Olan: "pake salah 1 aja.. yang trailing stop.. tp tetap disimpan
-// secara silent aja") -- Trailing jadi PRIORITAS UTAMA (dilaporin ke WA, dipantau langsung),
-// makanya dia yang numpang akun demo yang UDAH ADA/jalan (biar gak perlu nunggu akun baru buat
-// mulai). TP Tetap (sekarang SILENT -- lihat SILENT_VARIANTS bawah) nunggu akun baru, gak
-// mendesak karena emang gak ditampilin.
+// MT4/5 -- gak ada "ticket" independen, SEMUA order di 1 symbol digabung jadi 1 posisi. BingX
+// SEMPET disangka beda ("Separate Isolated Margin Mode") -- TERNYATA SAMA (dites empiris 23 Sep
+// 2026: 2 order arah sama via API TETAP digabung 1 posisi, fitur itu cuma app/web, gak ada
+// parameter API publik). Jadi TETAP 4 SLOT KEY TERPISAH (2 varian x demo/real). Key yang belum
+// diisi = variant itu OTOMATIS gak jalan (execFor return null, caller skip).
+//
+// MIGRASI ke BingX (23 Sep 2026) -- SEBELUMNYA numpang akun Sniper-Binance (BINANCE_API_KEY),
+// collision SEPARATE dari masalah TP-Tetap/Trailing (numpang SNIPER, bukan cuma sesama Channel
+// Breakout) -- lihat memori project-kaela-channel-breakout.md. Trailing (varian utama, DILAPORIN)
+// sekarang pakai BINGX_API_KEY ("Kaela Access Real", akun Olan sendiri, testnet=demo VST BingX).
+// TP Tetap (SILENT) masih nunggu akun BingX KEDUA (belum ada) -- tetap skip otomatis.
 const VARIANT_SECRET_FIELDS = {
-  trailing: { demo: ['BINANCE_API_KEY', 'BINANCE_API_SECRET'], real: ['BINANCE_API_KEY_REAL', 'BINANCE_API_SECRET_REAL'] },
-  tpFixed: { demo: ['BINANCE_API_KEY_TPFIXED_DEMO', 'BINANCE_API_SECRET_TPFIXED_DEMO'], real: ['BINANCE_API_KEY_TPFIXED_REAL', 'BINANCE_API_SECRET_TPFIXED_REAL'] },
+  trailing: { demo: ['BINGX_API_KEY', 'BINGX_API_SECRET'], real: ['BINGX_API_KEY_REAL', 'BINGX_API_SECRET_REAL'] },
+  tpFixed: { demo: ['BINGX_API_KEY_TPFIXED_DEMO', 'BINGX_API_SECRET_TPFIXED_DEMO'], real: ['BINGX_API_KEY_TPFIXED_REAL', 'BINGX_API_SECRET_TPFIXED_REAL'] },
 };
 
 // Varian yang trading TERUS TAPI GAK KIRIM WA sama sekali -- murni buat perbandingan nanti
@@ -137,16 +138,23 @@ const VARIANT_SECRET_FIELDS = {
 const SILENT_VARIANTS = new Set(['tpFixed']);
 
 function execFor(variant, testnet) {
-  const { loadSecrets, createBinanceClient } = binanceExecutorDefault;
+  const { loadSecrets, createBingxClient } = bingxExecutorDefault;
   const secrets = loadSecrets();
   const [keyField, secretField] = VARIANT_SECRET_FIELDS[variant][testnet ? 'demo' : 'real'];
   const apiKey = secrets[keyField], apiSecret = secrets[secretField];
   if (!apiKey || !apiSecret) return null; // akun buat (varian, mode) ini belum disiapin -- caller WAJIB skip
-  return createBinanceClient({ apiKey, apiSecret, testnet });
+  return createBingxClient({ apiKey, apiSecret, testnet });
 }
 
 function baseUrlFor(testnet) {
-  return testnet ? 'https://demo-fapi.binance.com' : 'https://fapi.binance.com';
+  return testnet ? 'https://open-api-vst.bingx.com' : 'https://open-api.bingx.com';
+}
+
+// BingX: saldo demo (VST) namanya literal "VST", BUKAN "USDT" -- beda dari Binance yang testnet
+// TETAP pakai nama asset asli. Real pakai "USDT" normal (Perpetual Futures BingX cuma dukung
+// USDT-margined sekarang, per riset 23 Sep 2026).
+function balanceAssetFor(testnet) {
+  return testnet ? 'VST' : 'USDT';
 }
 
 // Buka 1 sub-posisi (demo ATAU real) -- implementasi ASLI ada di openSubPositionSafe (bawah),
@@ -154,7 +162,7 @@ function baseUrlFor(testnet) {
 // perbandingan instance exec, itu bug lama).
 
 async function closeSubPosition(exec, dir, quantity) {
-  return exec.emergencyCloseMarket({ symbol: SYMBOL, direction: dir === 'long' ? 'buy' : 'sell', quantity });
+  return exec.emergencyCloseMarket({ symbol: EXEC_SYMBOL, direction: dir === 'long' ? 'buy' : 'sell', quantity });
 }
 
 function variantLabel(variant) { return variant === 'tpFixed' ? 'TP Tetap' : 'Trailing Stop'; }
@@ -398,13 +406,14 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
 // yang RAPUH (bikin instance baru tiap panggil, perbandingan objek gak pernah match) -- fix di sini
 // pakai param testnet eksplisit, JANGAN pakai openSubPosition yang lama langsung.
 async function openSubPositionSafe(exec, testnet, dir, sl, entryPriceTheoretical) {
-  const balance = await exec.getAccountBalance('USDT');
+  const balance = await exec.getAccountBalance(balanceAssetFor(testnet));
   const modal = balance * MODAL_ACTIVE_FRACTION;
   const calc = hitungExposure({ modal, entry: entryPriceTheoretical, stopLoss: sl, direction: dir === 'long' ? 'buy' : 'sell' });
-  await exec.setIsolatedMargin(SYMBOL);
-  await exec.setLeverage(SYMBOL, calc.leverage);
+  const positionSide = dir === 'long' ? 'LONG' : 'SHORT';
+  await exec.setIsolatedMargin(EXEC_SYMBOL);
+  await exec.setLeverage(EXEC_SYMBOL, calc.leverage, positionSide);
   const livePrice = await fetchLivePrice(baseUrlFor(testnet));
-  const placed = await exec.placeMarketEntry({ symbol: SYMBOL, direction: dir === 'long' ? 'buy' : 'sell', notionalUsd: calc.nilaiPosisi, livePrice });
+  const placed = await exec.placeMarketEntry({ symbol: EXEC_SYMBOL, direction: dir === 'long' ? 'buy' : 'sell', notionalUsd: calc.nilaiPosisi, livePrice });
   const quantity = placed.executedQty ? parseFloat(placed.executedQty) : calc.nilaiPosisi / livePrice;
   return { entryPrice: livePrice, quantity, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, openedAt: Date.now() };
 }

@@ -243,6 +243,25 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     return (journal.orders || []).find((o) => o.status === 'floating' && o.asset === assetKey) || null;
   }
 
+  // 2 SLOT INDEPENDEN (23 Sep 2026, permintaan Olan "pecah Nyopet jadi 2 slot independen wedge
+  // vs FVG" -- PERSIS pola Sniper daily yang udah live sejak 22 Agu 2026, lihat hasSniperOpen/
+  // hasFvgOpen di sniperAutoAnalysis.js) -- `getFloatingOrder` di atas TETAP APA ADANYA (dipakai
+  // caller LAMA yang emang butuh cek "ANY floating" apapun modenya: checkManualOpenRequest.js,
+  // econCalendarLiveMonitor.js, + guard method eksklusif di bawah). Fungsi BARU ini KHUSUS
+  // bedain slot pattern vs FVG buat _processAssetLocked.
+  //
+  // 'exclusive' (Fed Dovish Grid/econ_reaction) SENGAJA GAK dapet kategori sendiri di sini --
+  // 2 method itu strukturnya beda total (basket/hold-durasi-tetap, bukan single-entry+partial 2R)
+  // dan TETAP "menang sendirian" blokir SEMUA slot lain PERSIS kayak sebelum 2-slot split (dicek
+  // TERPISAH lewat getFloatingOrder biasa di _processAssetLocked, SEBELUM fungsi ini kepake sama
+  // sekali) -- scope perubahan ini SENGAJA dibatasin cuma pattern<->fvg.
+  function _slotCategory(patternType) {
+    return (patternType && patternType.startsWith('fvg')) ? 'fvg' : 'pattern';
+  }
+  function getFloatingOrderByCategory(journal, assetKey, category) {
+    return (journal.orders || []).find((o) => o.status === 'floating' && o.asset === assetKey && _slotCategory(o.patternType) === category) || null;
+  }
+
   // exchange param (30 Agu 2026, migrasi Emas ke MEXC) -- default 'binance' biar SEMUA caller lama
   // (BTC, atau siapapun yang belum sempat update panggilannya) ZERO PERUBAHAN PERILAKU.
   async function fetchLivePrice(symbol, exchange = 'binance') {
@@ -534,25 +553,13 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     return withJournalLock(jPath, () => _processAssetLocked(assetCfg));
   }
 
-  async function _processAssetLocked(assetCfg) {
-    const { symbol, zoneSymbol, key: assetKey } = assetCfg;
+  // Diekstrak dari _processAssetLocked (23 Sep 2026, 2-slot split) -- body PERSIS SAMA (cuma
+  // `floating` jadi parameter, bukan closure-var), dipanggil TERPISAH per slot (pattern & FVG)
+  // biar 1 slot bisa dikelola independen dari slot lainnya di siklus yang sama.
+  async function manageFloatingOrder(assetCfg, floating) {
+    const { symbol, zoneSymbol } = assetCfg;
     const exec = execFor(assetCfg);
-    const journal = loadJournal();
-    const floating = getFloatingOrder(journal, assetKey);
-
-    // (5 Sep 2026, metode Fed Dovish Grid BARU -- lihat processFedDovishGrid di bawah) -- floating
-    // order method ITU punya bentuk beda (basket multi-layer, TP/SL agregat % modal, gak ada
-    // partialTp) -- logic GENERIK di bawah (chart-pattern/FVG, single-entry + partial 2-tahap)
-    // TIDAK BOLEH ikut nyentuh floating order ini, WAJIB diserahin PENUH ke processFedDovishGrid
-    // (dipanggil terpisah di main()) -- ⚠️ BUG NYATA ketemu pas testing: tanpa guard ini, kode
-    // generik di bawah bisa DOBEL PROSES floating order yang sama di siklus yang sama (processAsset
-    // jalan duluan sebelum processFedDovishGrid di main()), risiko close/skip yang gak konsisten.
-    if (floating && floating.patternType === 'fed_dovish_grid') {
-      console.log(`[NyopetAutoTrader] ${assetCfg.label}: slot floating lagi kepake method "Fed Dovish Grid" -- serahin penuh ke processFedDovishGrid, skip logic generik di sini.`);
-      return;
-    }
-
-    if (floating) {
+    {
       // ⚠️ BUG ketemu 30 Agu 2026 (dari laporan watchdog "Cannot read properties of null") --
       // beda perilaku Binance vs MEXC: Binance getPositionRisk BIASANYA tetap balikin object
       // (positionAmt="0") walau posisi flat, tapi MEXC open_positions cuma balikin posisi yang
@@ -584,8 +591,8 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // (izin Olan malam ini) -- proteksi ini WAJIB ikut berlaku, kalau enggak posisi short real
       // bisa nyangkut tanpa pengaman pas window balik ke bull. Gerbang `isDemo` DICABUT.
       {
-        const windowCandles = assetKey === 'btc' ? null : await fetchCandles4hPaginated(zoneSymbol, FVG_TREND_SMA_LEN_4H + 10).catch(() => null);
-        const bearNow = isBearWindowFor(assetKey, windowCandles);
+        const windowCandles = assetCfg.key === 'btc' ? null : await fetchCandles4hPaginated(zoneSymbol, FVG_TREND_SMA_LEN_4H + 10).catch(() => null);
+        const bearNow = isBearWindowFor(assetCfg.key, windowCandles);
         const wrongSide = (floating.direction === 'buy' && bearNow) || (floating.direction === 'sell' && !bearNow);
         if (wrongSide) {
           console.log(`[NyopetAutoTrader] ${assetCfg.label}: window rezim ganti, posisi ${floating.direction} ini jadi ARAH SALAH (bearNow=${bearNow}) -- tutup PAKSA demi keamanan.`);
@@ -655,6 +662,42 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       await closePosition(assetCfg, floating, { alreadyClosed: false, reason: hitBreakevenSl ? 'SL_BREAKEVEN' : 'TRAIL' });
       return;
     }
+  }
+
+  async function _processAssetLocked(assetCfg) {
+    const { symbol, zoneSymbol, key: assetKey } = assetCfg;
+    const exec = execFor(assetCfg);
+    const journal = loadJournal();
+
+    // Method EKSKLUSIF (Fed Dovish Grid / econ_reaction scalp NFP-FOMC) -- TETAP blokir SEMUA
+    // slot lain PERSIS kayak sebelum 2-slot split (23 Sep 2026, permintaan Olan "pecah Nyopet jadi
+    // 2 slot independen wedge vs FVG" -- SCOPE SENGAJA dibatasin cuma pattern<->fvg, 2 method
+    // spesial ini strukturnya beda total -- basket multi-layer/hold-durasi-tetap, bukan
+    // single-entry+partial 2R -- jadi TETAP "menang sendirian" kayak lama, gak didesain ulang
+    // independen di sini). Dicek lewat getFloatingOrder LAMA (ANY floating, bukan per-kategori).
+    const anyFloating = getFloatingOrder(journal, assetKey);
+    if (anyFloating && (anyFloating.patternType === FED_GRID_PATTERN_TYPE || anyFloating.patternType === 'econ_reaction')) {
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: slot lagi kepake method eksklusif (${anyFloating.patternType}) -- skip logic pattern/FVG di sini, serahin ke handler-nya sendiri.`);
+      return;
+    }
+
+    // 2 SLOT INDEPENDEN (23 Sep 2026) -- pattern (flag/wedge/pennant) vs FVG BISA floating
+    // BARENGAN buat 1 aset yang sama (maks 2 posisi/aset), PERSIS pola Sniper daily yang udah
+    // live sejak 22 Agu 2026 (hasSniperOpen/hasFvgOpen, sniperAutoAnalysis.js). AMAN dari
+    // "tumpukan posisi" ala BingX (lihat channelBreakoutTrader.js checkAndClearStrayPosition)
+    // krn Binance/MEXC di sini SATU akun net-1-posisi/symbol JUGA (one-way mode, gak ada
+    // positionSide) -- TAPI kedua slot SELALU dipaksa arah SAMA (`inBearWindow` yang SAMA
+    // dipakai buat gerbang allowShort keduanya di bawah), jadi 2 entry cuma NAMBAH quantity
+    // posisi net yang sama arah (BUKAN buka posisi lawan arah yang bisa nge-flip/gabung salah).
+    // Exit per-slot TETAP pakai quantity SENDIRI-SENDIRI (closePosition/closePartial ->
+    // emergencyCloseMarket quantity:order.qty*fraction, BUKAN "tutup semua") -- slot lain gak
+    // ikut kesenggol pas 1 slot ditutup duluan.
+    const patternFloating = getFloatingOrderByCategory(journal, assetKey, 'pattern');
+    const fvgFloating = getFloatingOrderByCategory(journal, assetKey, 'fvg');
+
+    if (patternFloating) await manageFloatingOrder(assetCfg, patternFloating);
+    if (fvgFloating) await manageFloatingOrder(assetCfg, fvgFloating);
+    if (patternFloating && fvgFloating) return; // kedua slot penuh -- gak ada ruang buat sinyal baru siklus ini
 
     // ⚠️ BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan nyoba buka posisi manual, GAGAL "Leverage
     // reduction is not supported... with open positions") -- journal LOKAL bilang gak ada floating
@@ -667,51 +710,58 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // nambah size gak sengaja kalau kebetulan leverage-nya sama. Fix: SELALU cek live position
     // Binance/MEXC dulu SEBELUM nyimpulkan "gak ada posisi" -- kalau ternyata ADA (journal lokal
     // yang salah), SKIP total siklus ini (jangan coba apa-apa) daripada eksekusi ngawur.
-    const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
-    if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
-      // ⛔ FIX 12 Sep 2026 (root cause dari bug "posisi ngarang" di closePosition, Olan sengaja
-      // stress-test manual trading buat cari bug) -- SEBELUM adopsi, cek dulu apa positionReconciler.js
-      // UDAH mantau symbol ini secara manual (state file-nya sendiri, `${exchange}:${symbol}`,
-      // cuma keisi kalau BENERAN lagi disentuh manual Olan langsung di exchange). Kalau IYA, jangan
-      // ikut adopsi -- biarin SATU sistem doang yang megang symbol ini di satu waktu (Reconciler,
-      // yang emang didesain akurat per-transaksi). Adopsi+Reconciler jalan bareng tanpa saling tau
-      // itu PERSIS akar masalah kenapa closePosition() dulu bisa ngarang harga/PnL (income history
-      // kecampur 2 sumber kebenaran yang gak saling koordinasi).
-      if (_isReconcilerTrackingManually(reconcilerStatePath, assetCfg.exchange, symbol)) {
-        console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi live ADA tapi lagi ditrack manual (positionReconciler.js) -- SKIP adopsi total, biarin Reconciler yang urus sepenuhnya (cegah dobel-catat/PnL ngarang). Skip cari sinyal baru siklus ini.`);
+    // 23 Sep 2026 (2-slot split) -- cek ini CUMA relevan kalau journal BUTA TOTAL soal symbol ini
+    // (KEDUA slot kosong). Kalau salah satu slot UDAH ke-track jurnal, mesin ini JELAS udah
+    // "kenal" symbol ini -- skenario "journal lupa total" (leader pindah mesin) gak berlaku lagi.
+    if (!patternFloating && !fvgFloating) {
+      const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
+      if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
+        // ⛔ FIX 12 Sep 2026 (root cause dari bug "posisi ngarang" di closePosition, Olan sengaja
+        // stress-test manual trading buat cari bug) -- SEBELUM adopsi, cek dulu apa positionReconciler.js
+        // UDAH mantau symbol ini secara manual (state file-nya sendiri, `${exchange}:${symbol}`,
+        // cuma keisi kalau BENERAN lagi disentuh manual Olan langsung di exchange). Kalau IYA, jangan
+        // ikut adopsi -- biarin SATU sistem doang yang megang symbol ini di satu waktu (Reconciler,
+        // yang emang didesain akurat per-transaksi). Adopsi+Reconciler jalan bareng tanpa saling tau
+        // itu PERSIS akar masalah kenapa closePosition() dulu bisa ngarang harga/PnL (income history
+        // kecampur 2 sumber kebenaran yang gak saling koordinasi).
+        if (_isReconcilerTrackingManually(reconcilerStatePath, assetCfg.exchange, symbol)) {
+          console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi live ADA tapi lagi ditrack manual (positionReconciler.js) -- SKIP adopsi total, biarin Reconciler yang urus sepenuhnya (cegah dobel-catat/PnL ngarang). Skip cari sinyal baru siklus ini.`);
+          return;
+        }
+        // ⛔ FIX 8 Sep 2026 (Olan, ketemu pas Nirwan/member: posisi nyangkut PERMANEN gara2 skip
+        // total di sini -- gak ada auto-heal, journal harus dibenerin manual selamanya). Dulu cuma
+        // SKIP + log warning (aman dari dobel-eksekusi, TAPI bot berhenti nyari sinyal baru
+        // SELAMANYA buat aset ini sampai ada yang benerin journal manual). Sekarang AUTO-ADOPT --
+        // tulis entry `mode:'unknown'` (sl/tp/liqPrice SENGAJA null, PERSIS skema "LEGACY pre-v2"
+        // yang UDAH ADA di manageFloatingOrder -- floating.sl==null -> monitor doang, GAK PERNAH
+        // force-close sendiri, aman) ke journal, SKIP siklus INI doang (gak cari sinyal baru
+        // sekarang), siklus BERIKUTNYA otomatis ketemu entry ini via getFloatingOrder dan mantau
+        // normal. Kategori 'unknown' default masuk slot 'pattern' (_slotCategory), pilihan aman
+        // sewenang-wenang krn asal-usul aslinya emang gak diketahui.
+        const adoptedAmt = parseFloat(liveCheckPos.positionAmt);
+        const adoptedLeverage = Number(liveCheckPos.leverage) || 0;
+        const adoptedNotional = Math.abs(Number(liveCheckPos.notional) || 0);
+        const adopted = {
+          id: 'nyopet-adopted-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange,
+          direction: adoptedAmt > 0 ? 'buy' : 'sell', status: 'floating',
+          mode: 'unknown', patternType: 'unknown', entryPrice: parseFloat(liveCheckPos.entryPrice),
+          sl: null, originalSl: null, tp: null, partialTp: null, liqPrice: null,
+          qty: Math.abs(adoptedAmt), leverage: adoptedLeverage,
+          marginUsd: adoptedLeverage > 0 ? adoptedNotional / adoptedLeverage : 0, nilaiPosisi: adoptedNotional,
+          partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
+          triggeredAt: new Date().toISOString(), manualReason: null,
+        };
+        journal.orders.push(adopted);
+        saveJournal(journal);
+        console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- DIADOPSI otomatis ke journal (#${adopted.id}, mode legacy/unknown, sl/tp gak diketahui, monitor doang gak di-force-close) biar gak nyangkut permanen. Skip cari sinyal baru siklus ini.`);
         return;
       }
-      // ⛔ FIX 8 Sep 2026 (Olan, ketemu pas Nirwan/member: posisi nyangkut PERMANEN gara2 skip
-      // total di sini -- gak ada auto-heal, journal harus dibenerin manual selamanya). Dulu cuma
-      // SKIP + log warning (aman dari dobel-eksekusi, TAPI bot berhenti nyari sinyal baru
-      // SELAMANYA buat aset ini sampai ada yang benerin journal manual). Sekarang AUTO-ADOPT --
-      // tulis entry `mode:'unknown'` (sl/tp/liqPrice SENGAJA null, PERSIS skema "LEGACY pre-v2"
-      // yang UDAH ADA di bawah -- floating.sl==null -> monitor doang, GAK PERNAH force-close
-      // sendiri, aman) ke journal, SKIP siklus INI doang (gak cari sinyal baru sekarang), siklus
-      // BERIKUTNYA otomatis ketemu entry ini via getFloatingOrder dan mantau normal. Pola field
-      // (dirWord dari positionAmt, marginUsd dari notional/leverage) SAMA kayak
-      // positionReconciler.js `_reconcileOneExchange` MANUAL OPEN, cuma DI SINI ditulis ke journal
-      // nyopetAutoTrader SENDIRI (bukan state notifikasi terpisah) biar ke-track/pantau beneran.
-      const adoptedAmt = parseFloat(liveCheckPos.positionAmt);
-      const adoptedLeverage = Number(liveCheckPos.leverage) || 0;
-      const adoptedNotional = Math.abs(Number(liveCheckPos.notional) || 0);
-      const adopted = {
-        id: 'nyopet-adopted-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange,
-        direction: adoptedAmt > 0 ? 'buy' : 'sell', status: 'floating',
-        mode: 'unknown', patternType: 'unknown', entryPrice: parseFloat(liveCheckPos.entryPrice),
-        sl: null, originalSl: null, tp: null, partialTp: null, liqPrice: null,
-        qty: Math.abs(adoptedAmt), leverage: adoptedLeverage,
-        marginUsd: adoptedLeverage > 0 ? adoptedNotional / adoptedLeverage : 0, nilaiPosisi: adoptedNotional,
-        partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
-        triggeredAt: new Date().toISOString(), manualReason: null,
-      };
-      journal.orders.push(adopted);
-      saveJournal(journal);
-      console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- DIADOPSI otomatis ke journal (#${adopted.id}, mode legacy/unknown, sl/tp gak diketahui, monitor doang gak di-force-close) biar gak nyangkut permanen. Skip cari sinyal baru siklus ini.`);
-      return;
     }
 
-    // ============ Gak ada posisi floating -- cari sinyal baru (chart pattern -> FVG, 4H) ============
+    // ============ Cari sinyal baru per slot kosong (chart pattern & FVG, 4H) -- 23 Sep 2026,
+    // 2-slot independen: dua-duanya dicek TERPISAH, BISA dua-duanya kebuka di siklus yang SAMA
+    // kalau breakout bareng (beda dari perilaku LAMA yang cuma ambil salah satu via priority
+    // sig tunggal) -- PERSIS pola `for (const cand of candidates)` Sniper. ============
     const candles4h = await fetchCandles4hPaginated(zoneSymbol, CANDLES_NEEDED_4H);
     if (candles4h.length < 300) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: candle 4H belum cukup (${candles4h.length}), skip siklus ini.`); return; }
     const i = candles4h.length - 1;
@@ -746,41 +796,52 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const inBearWindow = assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
 
-    let sig = detectPatternSignal(candles4h, i, patternParams);
-    if (!sig) {
+    // 2-slot independen (23 Sep 2026) -- pattern & FVG dicek TERPISAH per slot yang KOSONG,
+    // BUKAN priority-sig-tunggal lama (chart pattern nemu -> FVG gak pernah dicek cycle itu).
+    // Kedua kandidat (kalau ada) SAMA-SAMA lolos filter arah-vs-window + DXY di bawah sebelum
+    // dieksekusi -- SAMA PERSIS syarat lama, cuma sekarang dievaluasi per-kandidat.
+    const sigCandidates = [];
+    if (!patternFloating) {
+      const patternSig = detectPatternSignal(candles4h, i, patternParams);
+      if (patternSig) sigCandidates.push(patternSig);
+    }
+    if (!fvgFloating) {
       // allowShort dioper SAMA kayak patternParams di atas (13 Sep 2026, permintaan Olan: "sinyal
       // shortnya begitu ketemu FVG, sebut price area yang ditunggu") -- FVG bearish sekarang JUGA
       // dicek buat auto-entry short pas window bear (BTC doang, Emas tetap allowShort:false lewat
       // inBearWindow yang udah di-gate assetKey==='btc' di atas).
       const fvgSig = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: inBearWindow });
-      if (fvgSig) sig = fvgSig;
+      if (fvgSig) sigCandidates.push(fvgSig);
     }
+
     // ⛔ BUG KETEMU+FIX 13 Sep 2026 (Olan: "pas window bear, pastikan jangan kasih sinyal atau
     // buka posisi long.. pas window bull, jangan short") -- `detectPatternSignal` SELALU cek pola
     // BULL juga regardless `allowShort` (cuma cabang SELL yang digerbang flag itu, lihat
     // chartPatterns.js) -- jadi kalau pas window bear kebetulan ada pola bull flag/falling wedge
-    // kebentuk, `sig.direction` bisa balik 'buy' walau lagi bear, dan SEBELUM fix ini gak ada yang
-    // nyaring itu sebelum `openPosition` dipanggil -- auto-LONG bisa ke-eksekusi PAS window bear.
-    // Filter EKSPLISIT di sini, JANGAN cuma andelin flag `allowShort` (yang emang cuma ADDITIVE,
-    // bukan EXCLUSIVE).
-    if (sig && ((sig.direction === 'buy' && inBearWindow) || (sig.direction === 'sell' && !inBearWindow))) {
-      console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ${sig.patternType} (${sig.direction}) ketemu TAPI arahnya GAK COCOK window sekarang (bearWindow=${inBearWindow}) -- dibuang, JANGAN buka posisi.`);
-      sig = null;
-    }
-    if (!sig) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada sinyal (flag/wedge/FVG) -- tunggu siklus depan.`); return; }
+    // kebentuk, `sig.direction` bisa balik 'buy' walau lagi bear. Filter EKSPLISIT di sini per
+    // kandidat, JANGAN cuma andelin flag `allowShort` (yang emang cuma ADDITIVE, bukan EXCLUSIVE).
+    const validSigs = sigCandidates.filter((sig) => {
+      const mismatch = (sig.direction === 'buy' && inBearWindow) || (sig.direction === 'sell' && !inBearWindow);
+      if (mismatch) console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ${sig.patternType} (${sig.direction}) ketemu TAPI arahnya GAK COCOK window sekarang (bearWindow=${inBearWindow}) -- dibuang, JANGAN buka posisi.`);
+      return !mismatch;
+    });
+    if (validSigs.length === 0) { console.log(`[NyopetAutoTrader] ${assetCfg.label}: belum ada sinyal (flag/wedge/FVG) -- tunggu siklus depan.`); return; }
 
     // Konfirmasi DXY (31 Agu 2026, permintaan Olan: "setiap entry juga diyakinkan dengan dxy")
     // -- KHUSUS Nyopet (lolos 2 tes ketat: split era + sensitivitas parameter, lihat backtest/
     // dxySniperScrutiny.js vs dxyNyopetScrutiny.js). Sniper SENGAJA TIDAK dikasih ini (gagal di
     // dua tes yang sama). null (fetch DXY gagal) = treat LOLOS, jangan block trading gara2 DXY
-    // down -- ini konfirmasi TAMBAHAN, bukan syarat mutlak.
+    // down -- ini konfirmasi TAMBAHAN, bukan syarat mutlak. 1x fetch dipakai bareng SEMUA kandidat
+    // siklus ini (bukan per-kandidat) -- kalau dolar kuat, jedain SEMUA entry baru siklus ini.
     const dxyWeak = await isDxyWeak(20).catch(() => null);
     if (dxyWeak === false) {
-      console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ${sig.patternType} ketemu TAPI DXY lagi kuat (dolar menguat) -- skip, tunggu konfirmasi dolar lemah.`);
+      console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ketemu (${validSigs.map((s) => s.patternType).join(', ')}) TAPI DXY lagi kuat (dolar menguat) -- skip, tunggu konfirmasi dolar lemah.`);
       return;
     }
 
-    await openPosition(assetCfg, sig, candles4h[i].close);
+    for (const sig of validSigs) {
+      await openPosition(assetCfg, sig, candles4h[i].close);
+    }
   }
 
   // ============ Fed Dovish Grid (5 Sep 2026, metode Nyopet BARU) ============
@@ -1065,11 +1126,16 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const assetCfg = Object.values(NYOPET_ASSETS).find((a) => a.key === assetKey);
     if (!assetCfg) return { ok: false, error: `Asset "${assetKey}" gak dikenal.` };
     const journal = loadJournal();
-    const order = getFloatingOrder(journal, assetKey);
-    if (!order) return { ok: false, error: `Gak ada posisi floating buat ${assetCfg.label}.` };
+    // 23 Sep 2026 (2-slot split) -- BISA ada 2 floating (pattern+FVG) buat 1 aset sekarang, tutup
+    // manual dari web WAJIB nutup SEMUA (bukan cuma yang pertama ketemu) biar gak ada slot lain
+    // nyangkut kesisa diam-diam abis Olan/member ngerasa "udah ditutup".
+    const orders = (journal.orders || []).filter((o) => o.status === 'floating' && o.asset === assetKey);
+    if (orders.length === 0) return { ok: false, error: `Gak ada posisi floating buat ${assetCfg.label}.` };
 
     const manualNote = reason || (requestedBy ? `Ditutup manual atas permintaan ${requestedBy}` : 'Ditutup manual');
-    await closePosition(assetCfg, order, { alreadyClosed: false, reason: 'MANUAL', manualNote });
+    for (const order of orders) {
+      await closePosition(assetCfg, order, { alreadyClosed: false, reason: 'MANUAL', manualNote });
+    }
     return { ok: true };
   }
 

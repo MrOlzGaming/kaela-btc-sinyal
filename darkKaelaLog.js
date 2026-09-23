@@ -149,6 +149,20 @@ const CLOSE_REASON_LABEL = {
   // tiang ijo") -- window regime ganti, posisi yang lagi kebuka jadi ARAH SALAH buat rezim baru,
   // ditutup PAKSA walau rugi drpd nekat nunggu SL asli kena di kondisi yang udah berubah total.
   WINDOW_FLIP: 'Window rezim ganti (bull<->bear), posisi ini jadi arah salah -- ditutup paksa demi keamanan (walau rugi)',
+  // channelBreakoutTrader.js (23 Sep 2026, permintaan Olan: "alasan buka trailing alasan tutup,
+  // mode nyopet") -- kode CB_ (prefix Channel Breakout) biar gak ketuker sama SL/TRAIL/TP Nyopet
+  // lama yang mekanismenya beda (SMA trail vs trailing-% channel, dll).
+  CB_SL: 'Stop Loss kena -- breakout ternyata gagal lanjut (fakeout)',
+  CB_TP: 'Target Profit tercapai (1:1 R:R dari lebar channel)',
+  CB_TRAIL: 'Trailing stop kena -- sempat untung, harga berbalik nyentuh stop yang udah ikut naik/turun',
+};
+
+// channelBreakoutTrader.js (23 Sep 2026) -- alasan BUKA posisi, gaya SAMA kayak PATTERN_REASON_LABEL
+// di atas tapi field terpisah (bukan numpang situ) krn "mode" Channel Breakout bukan pattern-type
+// Nyopet (flag/wedge/FVG), konsepnya beda (channel breakout candle 5-menit).
+const CHANNEL_BREAKOUT_REASON_LABEL = {
+  tpFixed: 'Channel Breakout (TP Tetap) -- harga breakout terkonfirmasi dari channel konsolidasi 5-menit, target 1:1 R:R dari lebar channel',
+  trailing: 'Channel Breakout (Trailing Stop) -- harga breakout terkonfirmasi dari channel konsolidasi 5-menit, ikut momentum sampai trailing stop kena',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
@@ -425,7 +439,7 @@ module.exports = {
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
-  fmtUsd, shortId, fmtUsdWithIdr,
+  fmtUsd, shortId, fmtUsdWithIdr, CHANNEL_BREAKOUT_REASON_LABEL,
   // 12 Sep 2026 -- diexpose biar sniperOrderLog.js (Sniper Club REAL Olan sendiri) bisa reuse SAMA
   // baris "PnL hari ini", bukan reimplementasi/format beda sendiri.
   todaysPnlLine: _todaysPnlLine,

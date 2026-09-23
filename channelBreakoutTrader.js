@@ -39,7 +39,7 @@ const binanceExecutorDefault = require('./binanceExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./channelBreakoutBalanceRecap');
-const { fmtUsd, fmtUsdWithIdr } = require('./darkKaelaLog');
+const { fmtUsd, fmtUsdWithIdr, CLOSE_REASON_LABEL, CHANNEL_BREAKOUT_REASON_LABEL, KAELA_ACCESS_URL } = require('./darkKaelaLog');
 const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -58,15 +58,31 @@ function loadConfig() {
   try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch { return { enabled: false, allowReal: false }; }
 }
 
+// stats terpisah demo/real (23 Sep 2026, permintaan Olan: "tutup posisi sertakan winrate dan
+// akumulasi profit") -- akun BEDA (modal beda), jadi win-rate/profit HARUS dihitung terpisah,
+// gak boleh dicampur (demo pakai saldo testnet $5rb, real nanti modal beneran -- angka gabungan
+// gak ada artinya).
+function freshStats() { return { wins: 0, losses: 0, totalPnlUsd: 0 }; }
 function defaultJournal() {
-  return { tpFixed: { channel: null, floating: null, closedCount: 0 }, trailing: { channel: null, floating: null, closedCount: 0 } };
+  return {
+    tpFixed: { channel: null, floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() } },
+    trailing: { channel: null, floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() } },
+  };
 }
 
 function loadJournal() {
   if (!fs.existsSync(JOURNAL_PATH)) return defaultJournal();
   try {
     const j = JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8'));
-    return { ...defaultJournal(), ...j };
+    const merged = { ...defaultJournal(), ...j };
+    // Merge SHALLOW doang gak cukup buat field baru DI DALAM tiap varian (mis. `stats`, ditambah
+    // 23 Sep 2026) -- journal lama yang udah kesave duluan gak punya field itu, jadi WAJIB
+    // isi ulang manual per-varian biar gak `undefined` pas dipakai (v.stats.demo.wins dst).
+    for (const variant of VARIANTS) {
+      merged[variant] = { ...defaultJournal()[variant], ...(j[variant] || {}) };
+      merged[variant].stats = { demo: { ...freshStats(), ...(j[variant]?.stats?.demo || {}) }, real: { ...freshStats(), ...(j[variant]?.stats?.real || {}) } };
+    }
+    return merged;
   } catch { return defaultJournal(); }
 }
 
@@ -142,34 +158,86 @@ async function closeSubPosition(exec, dir, quantity) {
 
 function variantLabel(variant) { return variant === 'tpFixed' ? 'TP Tetap' : 'Trailing Stop'; }
 
+// Badge+Alasan (23 Sep 2026, permintaan Olan: "alasan buka trailing alasan tutup, mode nyopet")
+// -- struktur SAMA kayak formatAutoOpen/formatAutoClosed (darkKaelaLog.js): badge + arah@harga +
+// TP/SL + Margin + Nilai Investasi + baris Alasan: WAJIB ada + link Kaela Access. Badge SENGAJA
+// "CHANNEL BREAKOUT" (bukan numpang badge "NYOPET") -- strategi BEDA, biar gak dikira bagian dari
+// Nyopet lama walau gaya pesannya konsisten/reuse helper yang sama (CLOSE_REASON_LABEL,
+// CHANNEL_BREAKOUT_REASON_LABEL, fmtUsdWithIdr -- SEMUA dari darkKaelaLog.js, bukan duplikat).
+// Badge = identitas sistem+aset+demo doang (SAMA pola _nyopetBadge: "🥷 NYOPET · Kaela BTC
+// (Demo)") -- detail varian (Trailing/TP Tetap) JANGAN diulang di sini, itu tugas baris Alasan
+// (CHANNEL_BREAKOUT_REASON_LABEL udah nyebutin variannya sendiri). Olan: "channel breakout itu
+// alasan buka posisi, bukan mode" -- badge bukan tempat nge-tag mode/varian.
+function cbBadge(isDemo) {
+  return `🎯 CHANNEL BREAKOUT · Kaela BTC${isDemo ? ' (Demo)' : ''}`;
+}
+
+function buildOpenMsg({ variant, dir, entryPrice, entryPriceTheoretical, sl, tp, margin, leverage, nilaiPosisi, idrRate, isDemo }) {
+  const dirLabel = dir === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const tpLine = tp != null ? `TP1: ${fmtUsd(tp)}` : `TP: (trailing, gak fix -- ngikutin harga terbaik yg dicapai)`;
+  return `${cbBadge(isDemo)} — *Buka Posisi*
+${dirLabel} @ ${fmtUsd(entryPrice)} (level breakout teoritis ${fmtUsd(entryPriceTheoretical)})
+
+${tpLine}
+SL: ${fmtUsd(sl)}
+Margin: ${fmtUsdWithIdr(margin, idrRate)} (${leverage}x)
+Nilai Investasi: ${fmtUsdWithIdr(nilaiPosisi, idrRate)}
+Alasan: ${CHANNEL_BREAKOUT_REASON_LABEL[variant]}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
+// PnL + win-rate + akumulasi (23 Sep 2026, permintaan Olan: "tutup posisi sertakan winrate dan
+// akumulasi profit") -- gaya SAMA kayak formatAutoClosed (darkKaelaLog.js) buat baris PnL, DITAMBAH
+// 2 baris baru (win-rate + akumulasi) yang Nyopet lama sendiri belum punya -- khusus buat strategi
+// baru ini biar gampang dipantau progressnya dari WA doang tanpa buka journal manual.
+function buildCloseMsg({ variant, dir, entryPrice, exitPrice, pnlUsd, stats, outcomeCode, closedCount, idrRate, isDemo }) {
+  const dirLabel = dir === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
+  const won = pnlUsd >= 0;
+  const sign = won ? '+' : '';
+  const totalTrades = stats.wins + stats.losses;
+  const winRatePct = totalTrades > 0 ? (stats.wins / totalTrades * 100) : 0;
+  return `${cbBadge(isDemo)} — *Tutup Posisi*
+${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(entryPrice)} → ${fmtUsd(exitPrice)}
+
+PnL: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*
+Alasan: ${CLOSE_REASON_LABEL[outcomeCode] || outcomeCode}
+
+Win rate ${variantLabel(variant)} (${isDemo ? 'Demo' : 'Real'}): ${stats.wins}/${totalTrades} (${winRatePct.toFixed(1)}%)
+Akumulasi profit ${variantLabel(variant)} (${isDemo ? 'Demo' : 'Real'}): ${stats.totalPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(stats.totalPnlUsd, idrRate)}
+
+🔗 ${KAELA_ACCESS_URL}`;
+}
+
 async function reportOpen({ variant, dir, wibowoRoute, demo, real, sl, tp, entryPriceTheoretical }) {
   const idrRate = await getUsdIdrRate().catch(() => null);
-  const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
-  const label = variantLabel(variant);
 
-  const demoMsg = `🚀 *Channel Breakout ${label} DEMO* -- posisi baru *${dirLabel}*\nEntry: ${fmtUsd(demo.entryPrice)} (level teoritis ${fmtUsd(entryPriceTheoretical)})\n${tp != null ? `SL: ${fmtUsd(sl)} · TP: ${fmtUsd(tp)}` : `SL awal: ${fmtUsd(sl)} (trailing)`}\nMargin: ${fmtUsdWithIdr(demo.margin, idrRate)} (${demo.leverage}x)\nNilai Investasi: ${fmtUsdWithIdr(demo.nilaiPosisi, idrRate)}\n\n— Kaela`;
+  const demoMsg = buildOpenMsg({ variant, dir, entryPrice: demo.entryPrice, entryPriceTheoretical, sl, tp, margin: demo.margin, leverage: demo.leverage, nilaiPosisi: demo.nilaiPosisi, idrRate, isDemo: true });
   await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && real) {
-    const realMsg = `🚀 *Channel Breakout ${label} REAL* -- posisi baru *${dirLabel}*\nEntry: ${fmtUsd(real.entryPrice)} (level teoritis ${fmtUsd(entryPriceTheoretical)})\n${tp != null ? `SL: ${fmtUsd(sl)} · TP: ${fmtUsd(tp)}` : `SL awal: ${fmtUsd(sl)} (trailing)`}\nMargin: ${fmtUsdWithIdr(real.margin, idrRate)} (${real.leverage}x)\nNilai Investasi: ${fmtUsdWithIdr(real.nilaiPosisi, idrRate)}\n\n— Kaela`;
+    const realMsg = buildOpenMsg({ variant, dir, entryPrice: real.entryPrice, entryPriceTheoretical, sl, tp, margin: real.margin, leverage: real.leverage, nilaiPosisi: real.nilaiPosisi, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
-    await sendWhatsAppToWibowo(demoMsg.replace('DEMO*', 'DEMO* _(real belum jalan/saldo kurang)_')).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
+    await sendWhatsAppToWibowo(`${demoMsg}\n_(real belum jalan/saldo kurang)_`).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
   }
 }
 
-async function reportClose({ variant, dir, wibowoRoute, outcome, demoExit, realExit, entryPriceDemo, entryPriceReal, closedCount }) {
-  const dirLabel = dir === 'long' ? 'LONG' : 'SHORT';
-  const label = variantLabel(variant);
+// outcome mentah dari checkTpFixedHit/updateTrailing ('SL'/'TP'/'TRAIL') -> kode CB_ (darkKaelaLog.js)
+function outcomeCodeFor(outcome) { return outcome === 'TP' ? 'CB_TP' : outcome === 'TRAIL' ? 'CB_TRAIL' : 'CB_SL'; }
 
-  const demoMsg = `🎯 *Channel Breakout ${label} DEMO* -- posisi ${dirLabel} ditutup *${outcome}*\nEntry: ${fmtUsd(entryPriceDemo)} -> Exit: ${fmtUsd(demoExit)}\nTotal trade ${label} selesai: ${closedCount}\n\n— Kaela`;
+async function reportClose({ variant, dir, wibowoRoute, outcome, demoExit, realExit, entryPriceDemo, entryPriceReal, demoPnlUsd, realPnlUsd, demoStats, realStats }) {
+  const idrRate = await getUsdIdrRate().catch(() => null);
+  const outcomeCode = outcomeCodeFor(outcome);
+
+  const demoMsg = buildCloseMsg({ variant, dir, entryPrice: entryPriceDemo, exitPrice: demoExit, pnlUsd: demoPnlUsd, stats: demoStats, outcomeCode, idrRate, isDemo: true });
   await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && realExit != null) {
-    const realMsg = `🎯 *Channel Breakout ${label} REAL* -- posisi ${dirLabel} ditutup *${outcome}*\nEntry: ${fmtUsd(entryPriceReal)} -> Exit: ${fmtUsd(realExit)}\nTotal trade ${label} selesai: ${closedCount}\n\n— Kaela`;
+    const realMsg = buildCloseMsg({ variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
-    await sendWhatsAppToWibowo(demoMsg.replace('DEMO*', 'DEMO* _(real belum jalan/saldo kurang)_')).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
+    await sendWhatsAppToWibowo(`${demoMsg}\n_(real belum jalan/saldo kurang)_`).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
   }
 }
 
@@ -243,13 +311,28 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     const realDone = !f.real || !!f.realClosedAt;
     if (demoDone && realDone) {
       v.closedCount = (v.closedCount || 0) + 1;
+
+      // PnL$ + winrate + akumulasi (23 Sep 2026, permintaan Olan) -- dihitung TERPISAH demo/real
+      // (modal beda akun, gak boleh dicampur -- lihat catatan freshStats()).
+      const pnlSign = f.dir === 'long' ? 1 : -1;
+      const demoPnlUsd = (f.demoExitPrice - f.demo.entryPrice) * f.demo.quantity * pnlSign;
+      v.stats.demo.totalPnlUsd += demoPnlUsd;
+      if (demoPnlUsd >= 0) v.stats.demo.wins += 1; else v.stats.demo.losses += 1;
+      let realPnlUsd = null;
+      if (f.real) {
+        realPnlUsd = (f.realExitPrice - f.real.entryPrice) * f.real.quantity * pnlSign;
+        v.stats.real.totalPnlUsd += realPnlUsd;
+        if (realPnlUsd >= 0) v.stats.real.wins += 1; else v.stats.real.losses += 1;
+      }
+
       if (SILENT_VARIANTS.has(variant)) {
-        console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice}`);
+        console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice} (pnl ${demoPnlUsd.toFixed(2)})`);
       } else {
         await reportClose({
           variant, dir: f.dir, wibowoRoute: f.wibowoRoute, outcome: demoHit || 'SL',
           demoExit: f.demoExitPrice, realExit: f.realExitPrice, entryPriceDemo: f.demo.entryPrice,
           entryPriceReal: f.real ? f.real.entryPrice : null, closedCount: v.closedCount,
+          demoPnlUsd, realPnlUsd, demoStats: v.stats.demo, realStats: v.stats.real,
         });
       }
       v.floating = null;

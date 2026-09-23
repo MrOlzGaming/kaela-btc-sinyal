@@ -414,9 +414,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 78469.47,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "naik",
+    "correct": null,
+    "actualChangePct": 10.147296776695445
   },
   {
     "asset": "xau",
@@ -425,9 +426,10 @@
     "verdict": "🔴 Condong Bearish",
     "direction": "bearish",
     "priceAtVerdict": 4298.01,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "naik",
+    "correct": false,
+    "actualChangePct": 1.376450962189475
   },
   {
     "asset": "btc",
@@ -436,9 +438,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 75898.84,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "naik",
+    "correct": null,
+    "actualChangePct": 13.877893258974714
   },
   {
     "asset": "xau",
@@ -447,9 +450,10 @@
     "verdict": "🔴 Condong Bearish",
     "direction": "bearish",
     "priceAtVerdict": 4289.36,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "naik",
+    "correct": false,
+    "actualChangePct": 1.5808885241621222
   },
   {
     "asset": "btc",
@@ -579,6 +583,28 @@
     "verdict": "🔴 Condong Bearish",
     "direction": "bearish",
     "priceAtVerdict": 4358.21,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "btc",
+    "date": "2026-09-22T23:15:55.241Z",
+    "score": -2,
+    "verdict": "⚪ NETRAL / Campuran",
+    "direction": "netral",
+    "priceAtVerdict": 86432,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "xau",
+    "date": "2026-09-22T23:15:55.241Z",
+    "score": -1,
+    "verdict": "🔴 Condong Bearish",
+    "direction": "bearish",
+    "priceAtVerdict": 4357.17,
     "graded": false,
     "actualDirection": null,
     "correct": null

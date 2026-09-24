@@ -36466,5 +36466,86 @@
     "qty": 9.9,
     "notionalUsd": 834098.76,
     "distPct": 0.067640234715768
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "BID",
+    "price": 84775,
+    "qty": 6.009,
+    "notionalUsd": 509412.97500000003,
+    "distPct": -0.00041285585964059217
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "BID",
+    "price": 84773,
+    "qty": 6.281,
+    "notionalUsd": 532459.213,
+    "distPct": -0.002772032200404741
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84777.7,
+    "qty": 15.841,
+    "notionalUsd": 1342963.5457,
+    "distPct": 0.0027720322003875757
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84788,
+    "qty": 12.616,
+    "notionalUsd": 1069685.408,
+    "distPct": 0.014921790355326375
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84798.9,
+    "qty": 9.153,
+    "notionalUsd": 776164.3317,
+    "distPct": 0.02777930141248412
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84799,
+    "qty": 12.129,
+    "notionalUsd": 1028527.071,
+    "distPct": 0.027897260229529194
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84800,
+    "qty": 42.984,
+    "notionalUsd": 3645043.2,
+    "distPct": 0.02907684839991127
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84804.3,
+    "qty": 12.36,
+    "notionalUsd": 1048181.148,
+    "distPct": 0.03414907753255762
+  },
+  {
+    "timestamp": "2026-09-24T16:18:02.622Z",
+    "midPrice": 84775.35,
+    "side": "ASK",
+    "price": 84832.7,
+    "qty": 15.872,
+    "notionalUsd": 1346464.6143999998,
+    "distPct": 0.06764938157140167
   }
 ]

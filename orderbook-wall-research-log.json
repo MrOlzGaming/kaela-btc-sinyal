@@ -34315,5 +34315,86 @@
     "qty": 12.099,
     "notionalUsd": 1016620.8948,
     "distPct": 0.06782325462302369
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "BID",
+    "price": 83825.1,
+    "qty": 7.792,
+    "notionalUsd": 653165.1792,
+    "distPct": -0.06062524478112173
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83876,
+    "qty": 6.886,
+    "notionalUsd": 577570.136,
+    "distPct": 0.000059611843446077665
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83882,
+    "qty": 6.329,
+    "notionalUsd": 530889.178,
+    "distPct": 0.007213033056559015
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83894.9,
+    "qty": 7.251,
+    "notionalUsd": 608321.9199,
+    "distPct": 0.02259288866474489
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83903.5,
+    "qty": 6.548,
+    "notionalUsd": 549400.118,
+    "distPct": 0.03284612573688037
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83911.5,
+    "qty": 6.85,
+    "notionalUsd": 574793.775,
+    "distPct": 0.04238402068769762
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83920.2,
+    "qty": 6.575,
+    "notionalUsd": 551775.315,
+    "distPct": 0.05275648144670791
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83928.4,
+    "qty": 21.097,
+    "notionalUsd": 1770637.4548,
+    "distPct": 0.06253282377129211
+  },
+  {
+    "timestamp": "2026-09-24T04:01:44.863Z",
+    "midPrice": 83875.95,
+    "side": "ASK",
+    "price": 83930.1,
+    "qty": 6.206,
+    "notionalUsd": 520870.2006000001,
+    "distPct": 0.06455962644835467
   }
 ]

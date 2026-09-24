@@ -44,16 +44,16 @@
   "3K9KZZPB8NRwZVP5wNKX4VYhnswrJxpgZ4": {
     "pool": "Luxor",
     "firstSeenAt": "2026-09-13T06:04:53.097Z",
-    "blockCount": 53,
-    "totalReceivedBtc": 0.00028937999999999983,
-    "lastSeenAt": "2026-09-23T16:01:28.507Z"
+    "blockCount": 54,
+    "totalReceivedBtc": 0.0002948399999999998,
+    "lastSeenAt": "2026-09-24T04:46:14.679Z"
   },
   "32BfKjhByDSxx3BM5vUkQ3NQq9csZR6nt6": {
     "pool": "Luxor",
     "firstSeenAt": "2026-09-13T06:04:53.097Z",
-    "blockCount": 53,
-    "totalReceivedBtc": 166.72860523,
-    "lastSeenAt": "2026-09-23T16:01:28.507Z"
+    "blockCount": 54,
+    "totalReceivedBtc": 169.86350545,
+    "lastSeenAt": "2026-09-24T04:46:14.679Z"
   },
   "1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4": {
     "pool": "ViaBTC",
@@ -863,8 +863,8 @@
   "bc1qtm7ye0wm085hhv88japwkalmwkt3amec5z9c7a3unv05tfg6y2pstr3xfz": {
     "pool": "Foundry USA",
     "firstSeenAt": "2026-09-23T14:31:28.145Z",
-    "blockCount": 23,
-    "totalReceivedBtc": 72.50466506000002,
-    "lastSeenAt": "2026-09-24T04:16:14.220Z"
+    "blockCount": 24,
+    "totalReceivedBtc": 75.65193931000002,
+    "lastSeenAt": "2026-09-24T04:46:06.734Z"
   }
 }

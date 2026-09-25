@@ -163,6 +163,14 @@
     result: { id: 'Hasil', en: 'Result' },
     win: { id: 'MENANG', en: 'WIN' },
     lose: { id: 'KALAH', en: 'LOSS' },
+    ninja_positions_open: { id: 'posisi Ninja lagi terbuka', en: 'Ninja position(s) currently open' },
+    no_ninja_open: { id: 'Gak ada posisi Ninja yang lagi terbuka.', en: 'No open Ninja positions right now.' },
+    ninja_home_disclaimer: { id: '🥷 Ninja -- deteksi breakout channel candle 5-menit, BingX (Demo VST + Real berbarengan).', en: '🥷 Ninja -- 5-minute channel breakout detection, on BingX (Demo VST + Real running together).' },
+    ninja_jurnal_disclaimer: { id: '🥷 Ninja Market -- breakout dari channel konsolidasi (candle 5-menit BTCUSDT), di BingX. 2 varian dites BARENGAN dari sinyal yang sama: Trailing (utama, dilaporin WA) &amp; TP Tetap (silent, murni buat perbandingan -- statistiknya tetap ditampilin di sini apa adanya).', en: '🥷 Ninja Market -- breakout from a consolidation channel (5-minute BTCUSDT candles), on BingX. 2 variants tested TOGETHER from the same signal: Trailing (main, reported via WA) &amp; Fixed-TP (silent, purely for comparison -- its stats are still shown here as-is).' },
+    ninja_silent_note: { id: '🔇 Varian silent -- trading TERUS jalan tapi gak kirim WA, murni buat bandingin manual vs Trailing.', en: '🔇 Silent variant -- keeps trading but sends no WA messages, purely for manual comparison vs Trailing.' },
+    position_open_now: { id: 'Ada posisi lagi terbuka', en: 'Position currently open' },
+    no_position_open_now: { id: 'Gak ada posisi lagi terbuka.', en: 'No open position right now.' },
+    closed_trades_count: { id: 'Trade selesai', en: 'Closed trades' },
   };
   function rt(key) {
     const entry = RT[key];
@@ -1241,6 +1249,68 @@
     </div>`;
   }
 
+  // ============ Ninja (dulu Channel Breakout) -- 26 Sep 2026 ============
+  // Journal-nya BEDA STRUKTUR dari Sniper/Ranger (channel-breakout-journal.json, lihat
+  // ninjaTrader.js defaultJournal()) -- gak nyimpen histori order per-trade sama sekali, cuma
+  // `floating` (posisi SEKARANG doang) + `closedCount` (angka doang) + `stats.demo`/`stats.real`
+  // (agregat wins/losses/totalPnlUsd), per VARIAN (tpFixed/trailing). Makanya render-nya gak bisa
+  // reuse computeJournalStats/renderEquityCurveSvg (itu butuh array per-trade) -- versi Ninja ini
+  // SENGAJA lebih sederhana (kartu ringkasan doang, gak ada equity curve/kalender/tabel riwayat)
+  // sampai journal-nya beneran nyimpen histori per-trade suatu saat nanti.
+  function renderNinjaHomePanel(ninjaJournal) {
+    const nj = ninjaJournal || {};
+    const trailing = nj.trailing || {};
+    const hasFloating = !!trailing.floating;
+    const summaryLine = hasFloating
+      ? `📡 <strong>1 ${rt('ninja_positions_open')}</strong> -- ${rt('detail_full_at')} <a href="jurnal.html"><strong>${rt('journal')}</strong></a>.`
+      : rt('no_ninja_open');
+    const en = lang() === 'en';
+    const introHtml = en
+      ? `<p class="strategy-intro">🥷 Ninja detects <strong>breakouts from consolidation channels</strong> on <strong>5-minute BTCUSDT candles</strong> -- very fast/frequent, on BingX. 2 variants tested in parallel from the same signal: Trailing (main, reported) &amp; Fixed-TP (silent, comparison-only). <a href="metodologi-dark-kaela.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🥷 Ninja deteksi <strong>breakout dari channel konsolidasi</strong> di <strong>candle 5-menit BTCUSDT</strong> -- super gesit/sering, di BingX. 2 varian dites BARENGAN dari sinyal yang sama: Trailing (utama, dilaporin) &amp; TP Tetap (silent, murni perbandingan). <a href="metodologi-dark-kaela.html">Baca metodologi lengkap →</a></p>`;
+    return `<div class="sniper-orders-panel">
+      ${introHtml}
+      <p class="order-disclaimer">${rt('ninja_home_disclaimer')}</p>
+      <div class="empty">${summaryLine}</div>
+    </div>`;
+  }
+
+  function _ninjaStatsCell(stats, label) {
+    const s = stats || { wins: 0, losses: 0, totalPnlUsd: 0 };
+    const total = s.wins + s.losses;
+    const pct = total > 0 ? (s.wins / total * 100) : 0;
+    const cell = (l, v, cls) => `<div class="journal-stat"><div class="journal-stat-label">${l}</div><div class="journal-stat-value ${cls || ''}">${v}</div></div>`;
+    return cell(`${label} -- ${rt('win_rate')}`, total > 0 ? `${pct.toFixed(0)}% (${s.wins}/${total})` : '-', total > 0 ? (pct >= 50 ? 'up' : 'down') : '')
+      + cell(`${label} -- ${rt('total_pnl')}`, fmtSignedUsd(s.totalPnlUsd || 0), (s.totalPnlUsd || 0) >= 0 ? 'up' : 'down');
+  }
+
+  function renderNinjaJurnalPanel(ninjaJournal) {
+    const nj = ninjaJournal || {};
+    const en = lang() === 'en';
+    const variantMeta = [
+      { key: 'trailing', label: 'Trailing', silent: false },
+      { key: 'tpFixed', label: en ? 'Fixed-TP' : 'TP Tetap', silent: true },
+    ];
+    const blocks = variantMeta.map((vm) => {
+      const v = nj[vm.key] || {};
+      const floatingHtml = v.floating
+        ? `<div class="empty">📡 ${rt('position_open_now')} (${v.floating.dir === 'long' ? rt('long') : rt('short')})${v.floating.real ? ' + REAL' : ''}</div>`
+        : `<div class="empty">${rt('no_position_open_now')}</div>`;
+      return `<div class="journal-section-title">🥷 Ninja -- ${vm.label}${vm.silent ? ' (silent)' : ''}</div>
+        ${vm.silent ? `<p class="order-disclaimer">${rt('ninja_silent_note')}</p>` : ''}
+        ${floatingHtml}
+        <div class="journal-stats-grid">
+          ${_ninjaStatsCell(v.stats && v.stats.demo, rt('demo'))}
+          ${_ninjaStatsCell(v.stats && v.stats.real, rt('real'))}
+        </div>
+        <div class="empty" style="font-size:0.85em;opacity:0.7;">${rt('closed_trades_count')}: ${v.closedCount || 0}</div>`;
+    }).join('');
+    return `<div class="ranger-panel">
+      <p class="order-disclaimer">${rt('ninja_jurnal_disclaimer')}</p>
+      ${blocks}
+    </div>`;
+  }
+
   // Buka/tutup riwayat 1 dompet (kartu wallet-grid) -- toggle simpel, 1 dompet kebuka di satu
   // waktu gak dipaksa (boleh banyak kebuka bareng, biar gampang bandingin).
   function toggleWalletDetail(symbol) {
@@ -1337,6 +1407,7 @@
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,
     renderSpotAltJurnalPanel, toggleWalletDetail, ALT10_SYMBOLS,
     renderRangerJurnalPanel, renderRangerOrderCard, renderRangerHomePanel,
+    renderNinjaHomePanel, renderNinjaJurnalPanel,
     wireStrategyFilter,
   };
 })(window);

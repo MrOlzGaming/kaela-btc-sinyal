@@ -33,13 +33,14 @@
 
   async function main() {
     const now = new Date();
-    const [ordersState, bankrollState, spotState, altState, rangerState, liveConfig] = await Promise.all([
+    const [ordersState, bankrollState, spotState, altState, rangerState, liveConfig, ninjaJournal] = await Promise.all([
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
       fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }, { freshOnly: true }),
       fetchJson('kaela-spot.json', { btcHeld: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, completedCycles: [], buyLog: [] }),
       fetchJson('kaela-spot-alt.json', defaultAltState()),
       fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }, { freshOnly: true }),
       fetchJson('live-trading-config.json', { enabled: false, testnet: true }),
+      fetchJson('channel-breakout-journal.json', {}, { freshOnly: true }),
     ]);
 
     const spotEl = document.querySelector('[data-panel="spot"]');
@@ -60,6 +61,10 @@
 
     const rangerEl = document.querySelector('[data-panel="ranger"]');
     if (rangerEl) rangerEl.innerHTML = KaelaRender.renderRangerJurnalPanel(rangerState, now);
+
+    // Ninja (26 Sep 2026, permintaan Olan "pastikan web kita dah terupdate sistem ninja bingx").
+    const ninjaEl = document.querySelector('[data-panel="ninja"]');
+    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderNinjaJurnalPanel(ninjaJournal, now);
   }
 
   main();

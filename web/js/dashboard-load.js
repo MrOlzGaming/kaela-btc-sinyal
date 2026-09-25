@@ -32,11 +32,12 @@
 
   async function main() {
     const now = new Date();
-    const [state, ordersState, archive, rangerState] = await Promise.all([
+    const [state, ordersState, archive, rangerState, ninjaJournal] = await Promise.all([
       fetchJson('state.json', { status: 'TUNAI', position: null }),
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
       fetchJson('archive.json', []),
       fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }, { freshOnly: true }),
+      fetchJson('channel-breakout-journal.json', {}, { freshOnly: true }),
     ]);
 
     const musimanEl = document.getElementById('musiman-container');
@@ -51,6 +52,11 @@
     // home dan di jurnal") -- sebelumnya cuma ada di tab Jurnal.
     const rangerEl = document.getElementById('ranger-container');
     if (rangerEl) rangerEl.innerHTML = KaelaRender.renderRangerHomePanel(rangerState);
+
+    // Ninja muncul di Home juga (26 Sep 2026, permintaan Olan "pastikan web kita dah terupdate
+    // sistem ninja bingx") -- pola sama kayak Ranger di atas.
+    const ninjaEl = document.getElementById('ninja-container');
+    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderNinjaHomePanel(ninjaJournal);
   }
 
   main();

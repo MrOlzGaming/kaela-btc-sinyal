@@ -143,22 +143,30 @@ function channelLinesAtTime(channel, startCandleOpenTime, nowOpenTime) {
   return { top, bottom };
 }
 
-// ⚠️ WAJIB 1 AKUN/API-KEY TERPISAH per (varian x demo/real) -- 23 Sep 2026, ketemu Olan sendiri
-// ("kan mexc dan binance ga bisa buka 2 layer.. kayak mt5"). Binance/MEXC futures BUKAN kayak
-// MT4/5 -- gak ada "ticket" independen, SEMUA order di 1 symbol digabung jadi 1 posisi. BingX
-// SEMPET disangka beda ("Separate Isolated Margin Mode") -- TERNYATA SAMA (dites empiris 23 Sep
-// 2026: 2 order arah sama via API TETAP digabung 1 posisi, fitur itu cuma app/web, gak ada
-// parameter API publik). Jadi TETAP 4 SLOT KEY TERPISAH (2 varian x demo/real). Key yang belum
-// diisi = variant itu OTOMATIS gak jalan (execFor return null, caller skip).
+// ⚠️ WAJIB 1 AKUN/API-KEY TERPISAH per VARIAN (tpFixed vs trailing) -- 23 Sep 2026, ketemu Olan
+// sendiri ("kan mexc dan binance ga bisa buka 2 layer.. kayak mt5"). Binance/MEXC futures BUKAN
+// kayak MT4/5 -- gak ada "ticket" independen, SEMUA order di 1 symbol digabung jadi 1 posisi.
+// BingX SEMPET disangka beda ("Separate Isolated Margin Mode") -- TERNYATA SAMA (dites empiris 23
+// Sep 2026: 2 order arah sama via API TETAP digabung 1 posisi, fitur itu cuma app/web, gak ada
+// parameter API publik). Jadi 2 akun TERPISAH (1 per varian) -- BUKAN 4 kayak asumsi awal.
+//
+// demo(VST)/real SATU KEY YANG SAMA (26 Sep 2026, koreksi Olan langsung: "ga ada api terpisah
+// bingX, yang aku kasih kemarin bisa buat real itu") -- BEDA dari Binance/MEXC yang testnet-nya
+// akun/kredensial TERPISAH TOTAL dari mainnet. Di BingX, VST (demo/virtual) itu MODE di akun yang
+// SAMA, dibedain lewat base URL (open-api-vst vs open-api.bingx.com) doang, key-nya identik --
+// makanya `demo`/`real` di bawah SEKARANG nunjuk field secrets.js yang SAMA per varian (dulu
+// sempet dikira butuh 4 field kayak Binance TP-Tetap, ternyata kelebihan).
 //
 // MIGRASI ke BingX (23 Sep 2026) -- SEBELUMNYA numpang akun Sniper-Binance (BINANCE_API_KEY),
 // collision SEPARATE dari masalah TP-Tetap/Trailing (numpang SNIPER, bukan cuma sesama Channel
 // Breakout) -- lihat memori project-kaela-channel-breakout.md. Trailing (varian utama, DILAPORIN)
-// sekarang pakai BINGX_API_KEY ("Kaela Access Real", akun Olan sendiri, testnet=demo VST BingX).
-// TP Tetap (SILENT) masih nunggu akun BingX KEDUA (belum ada) -- tetap skip otomatis.
+// pakai BINGX_API_KEY ("Kaela Access Real", akun Olan sendiri) -- SATU key ini dipakai demo (VST)
+// MAUPUN real, tinggal testnet true/false yang nentuin base URL-nya.
+// TP Tetap (SILENT) masih nunggu akun BingX KEDUA (belum ada) -- tetap skip otomatis, dan begitu
+// ada nanti CUKUP 1 key pair juga (BINGX_API_KEY_TPFIXED/BINGX_API_SECRET_TPFIXED), bukan 4.
 const VARIANT_SECRET_FIELDS = {
-  trailing: { demo: ['BINGX_API_KEY', 'BINGX_API_SECRET'], real: ['BINGX_API_KEY_REAL', 'BINGX_API_SECRET_REAL'] },
-  tpFixed: { demo: ['BINGX_API_KEY_TPFIXED_DEMO', 'BINGX_API_SECRET_TPFIXED_DEMO'], real: ['BINGX_API_KEY_TPFIXED_REAL', 'BINGX_API_SECRET_TPFIXED_REAL'] },
+  trailing: { demo: ['BINGX_API_KEY', 'BINGX_API_SECRET'], real: ['BINGX_API_KEY', 'BINGX_API_SECRET'] },
+  tpFixed: { demo: ['BINGX_API_KEY_TPFIXED', 'BINGX_API_SECRET_TPFIXED'], real: ['BINGX_API_KEY_TPFIXED', 'BINGX_API_SECRET_TPFIXED'] },
 };
 
 // Varian yang trading TERUS TAPI GAK KIRIM WA sama sekali -- murni buat perbandingan nanti

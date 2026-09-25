@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "allowReal": false,
-  "_note": "Saklar KHUSUS strategi Channel Breakout -- TERPISAH dari live-trading-config.json (killSwitch.js) Sniper/Nyopet. enabled=false berarti gak ngapa-ngapain sama sekali. Demo SELALU jalan (testnet) selama enabled:true -- allowReal cuma nambah eksekusi REAL BERBARENGAN (bukan gantian), butuh JUGA BINANCE_API_KEY_REAL/SECRET_REAL keisi di secrets.js (kosong sampai Olan topup, rencana 5 Okt 2026).",
-  "_status": "23 Sep 2026 -- DEMO 2 varian (TP Tetap + Trailing) jalan berbarengan, laporan ke Sniper Club (selalu) + Wibowo Hedgefund (demo sbg pengganti selama allowReal:false). Real BELUM aktif, nunggu topup Olan."
+  "allowReal": true,
+  "_note": "Saklar KHUSUS strategi Ninja (dulu Channel Breakout) -- TERPISAH dari live-trading-config.json (killSwitch.js) Sniper/Ranger. enabled=false berarti gak ngapa-ngapain sama sekali. Demo (VST) SELALU jalan selama enabled:true -- allowReal cuma nambah eksekusi REAL BERBARENGAN (bukan gantian). Per-varian: real cuma AKTIF kalau key BingX varian itu keisi di secrets.js (execFor return null kalau kosong, caller auto-skip) -- Trailing UDAH keisi (BINGX_API_KEY, SATU key dipakai demo+real, lihat komentar VARIANT_SECRET_FIELDS di ninjaTrader.js), TP Tetap MASIH kosong (nunggu akun BingX kedua), otomatis tetap demo-only walau allowReal:true.",
+  "_status": "26 Sep 2026 -- REAL Trailing AKTIF (saldo real BingX dicek $14,05 USDT, cukup buat notional minimum $2 tapi KECIL -- posisi real bakal mini banget selama saldo segini). TP Tetap tetap demo-only (SILENT) sampai akun BingX kedua ada. Laporan real -> Wibowo Hedgefund, demo tetap ke Sniper Club (selalu)."
 }

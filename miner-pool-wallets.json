@@ -16,30 +16,30 @@
   "1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 293,
-    "totalReceivedBtc": 0.0015997800000000103,
-    "lastSeenAt": "2026-09-25T08:31:56.879Z"
+    "blockCount": 295,
+    "totalReceivedBtc": 0.0016107000000000105,
+    "lastSeenAt": "2026-09-25T10:02:52.682Z"
   },
   "1AfCc4F9c4VTYSE31PUe2kUEKs6ZxiDjxm": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 293,
-    "totalReceivedBtc": 921.4614983699996,
-    "lastSeenAt": "2026-09-25T08:31:56.879Z"
+    "blockCount": 295,
+    "totalReceivedBtc": 927.7955844799997,
+    "lastSeenAt": "2026-09-25T10:02:52.683Z"
   },
   "37jKPSmbEGwgfacCr2nayn1wTaqMAbA94Z": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 397,
-    "totalReceivedBtc": 0.0021676200000000207,
-    "lastSeenAt": "2026-09-25T07:47:01.910Z"
+    "blockCount": 398,
+    "totalReceivedBtc": 0.002173080000000021,
+    "lastSeenAt": "2026-09-25T10:03:01.715Z"
   },
   "39C7fxSzEACPjM78Z7xdPxhf7mKxJwvfMJ": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 397,
-    "totalReceivedBtc": 1248.1994106699985,
-    "lastSeenAt": "2026-09-25T07:47:01.910Z"
+    "blockCount": 398,
+    "totalReceivedBtc": 1251.3297923699986,
+    "lastSeenAt": "2026-09-25T10:03:01.715Z"
   },
   "3K9KZZPB8NRwZVP5wNKX4VYhnswrJxpgZ4": {
     "pool": "Luxor",
@@ -58,9 +58,9 @@
   "1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4": {
     "pool": "ViaBTC",
     "firstSeenAt": "2026-09-13T06:05:30.452Z",
-    "blockCount": 178,
-    "totalReceivedBtc": 559.74415199,
-    "lastSeenAt": "2026-09-25T06:16:13.360Z"
+    "blockCount": 179,
+    "totalReceivedBtc": 562.90732428,
+    "lastSeenAt": "2026-09-25T10:02:22.939Z"
   },
   "bc1q2824ekxc6ewypfpzv64h69frnx9dx6rsgek6ec": {
     "pool": "OCEAN",
@@ -863,8 +863,8 @@
   "bc1qtm7ye0wm085hhv88japwkalmwkt3amec5z9c7a3unv05tfg6y2pstr3xfz": {
     "pool": "Foundry USA",
     "firstSeenAt": "2026-09-23T14:31:28.145Z",
-    "blockCount": 60,
-    "totalReceivedBtc": 188.95581307,
-    "lastSeenAt": "2026-09-25T09:01:43.840Z"
+    "blockCount": 61,
+    "totalReceivedBtc": 192.08614569,
+    "lastSeenAt": "2026-09-25T10:02:29.984Z"
   }
 }

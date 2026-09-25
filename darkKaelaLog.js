@@ -43,7 +43,13 @@ function fmtWita(date) {
 // gitu" -- biar gampang dicocokin pas nanya manual ("sinyal yang mana yang bengong"). Id asli
 // (`nyopet-demo-<timestamp>`) kepanjangan buat disebut lisan/WA -- ambil 6 digit terakhir timestamp
 // aja, cukup unik buat referensi jangka pendek (bukan buat storage/lookup presisi).
-function shortId(id) {
+// `signalId` (25 Sep 2026, unifikasi desain Sniper) -- Sniper punya id sendiri format base36
+// (bukan timestamp murni kayak Ranger/Ninja), digit-extraction di atas jadi gak berarti buat dia --
+// Sniper sebenarnya udah punya identifier manusiawi SENDIRI yang LEBIH BAIK (dayKey+urutan harian,
+// mis. "2026092501", lihat sniperOrders.js createOrder) -- kalau caller ngasih ini, PAKAI ITU
+// LANGSUNG (gak perlu digit-extraction sama sekali), gak nebak-nebak dari id.
+function shortId(id, signalId) {
+  if (signalId) return '#' + signalId;
   const digits = String(id || '').replace(/[^0-9]/g, '');
   return '#' + (digits.slice(-6) || '000000');
 }
@@ -138,8 +144,27 @@ const PATTERN_REASON_LABEL = {
   // -- detail MEKANISME EXIT (yang beda antar varian) itu tugas CLOSE_REASON_LABEL (CB_TRAIL/CB_TP/
   // CB_SL di bawah), bukan diulang di sini.
   channel_breakout: 'Channel Breakout -- harga breakout terkonfirmasi dari channel konsolidasi candle 5-menit',
+  // Varian BEARISH (25 Sep 2026, unifikasi desain pesan Sniper+Ranger+Ninja -- Sniper punya sinyal
+  // short window-bear yang sebelumnya pakai teks lokal sendiri di sniperOrderLog.js PATTERN_EXPLAIN,
+  // dipindah ke sini biar 1 sumber dipakai semua caller, bukan duplikat).
+  flag_bear: 'Chart Pattern (Bear Flag) -- breakout tiang+bendera turun terkonfirmasi',
+  pennant_bear: 'Chart Pattern (Bearish Pennant) -- breakout tiang+segitiga turun terkonfirmasi',
+  wedge_rising: 'Chart Pattern (Rising Wedge) -- breakout wedge naik terkonfirmasi (pembalikan turun)',
+  fvg_bounce_bear: 'FVG Bounce (bearish) -- harga ditolak dari Fair Value Gap (zona resistance), deket zona (gak nge-chase)',
 };
 function patternReason(mode) { return PATTERN_REASON_LABEL[mode] || patternTag(mode); }
+
+// Harga LIKUIDASI (14 Agu 2026, permintaan Olan: "ada liquidated dimana" -- awalnya CUMA di pesan
+// Sniper/sniperOrderLog.js, 25 Sep 2026 dipindah ke sini biar Ranger/Ninja kebagian juga lewat
+// formatAutoOpen, unifikasi "1 desain terbaik" permintaan Olan) -- BEDA dari SL walau sering
+// deket/sama: margin abis kalau harga gerak 100/leverage% lawan posisi. SL biasanya kena DULUAN
+// (floor(leverage) di calculator.js ngasih buffer kecil), tapi titik likuidasi sesungguhnya tetap
+// ditampilkan terpisah, jangan disamain sama SL biar gak nyesatin.
+function liquidationPrice(entryPrice, leverage, direction) {
+  if (!leverage || !entryPrice) return null;
+  const distPct = 100 / leverage;
+  return direction === 'sell' ? entryPrice * (1 + distPct / 100) : entryPrice * (1 - distPct / 100);
+}
 
 // Kode close-reason internal (nyopetAutoTrader.js) -> teks manusia, dipakai baris "Alasan:" pas
 // nutup posisi OTOMATIS (bukan manual Olan -- itu pakai teks yang DIA TULIS SENDIRI, lihat caller).
@@ -210,14 +235,19 @@ function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name
 // buat semua ya jangan ini aja") -- Buka Posisi SEKARANG ikut kasih gambaran besar hari itu, SAMA
 // kayak Partial/Tutup yang udah duluan punya baris ini. Taro PALING BAWAH (abis smartMoneyLine)
 // biar urutan baca tetap: apa yang kejadian -> alasan/konteks pattern -> baru gambaran hari ini.
+// `pos.patternType || pos.mode` (25 Sep 2026, unifikasi desain) -- Ranger/Ninja set `pos.mode`
+// SAMA PERSIS dengan patternType (lihat rangerAutoTrader.js), tapi Sniper punya `mode` yang artinya
+// BEDA (kategori kasar 'sniper'/'fvg', bukan patternType) -- patternType ASLI-nya field terpisah.
+// Prioritasin patternType kalau ada, biar caller manapun (Sniper termasuk) dapet alasan yang BENER.
 function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge, system) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
-  const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
-  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Buka Posisi*
+  const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.patternType || pos.mode);
+  const liqPrice = liquidationPrice(pos.entryPrice, pos.leverage, pos.direction);
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 TP1: ${pos.tp != null ? fmtUsd(pos.tp) : '(trailing, ngikutin harga terbaik yang dicapai)'}
-SL: ${fmtUsd(pos.sl)}
+SL: ${fmtUsd(pos.sl)}${liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
 Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}${_todaysPnlLine(todaysPnl, idrRate)}
@@ -229,7 +259,7 @@ Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smart
 // masih floating, BUKAN posisi baru/tutup posisi). `pos.layers` = jumlah layer SETELAH ditambah.
 // `todaysPnl` -- lihat catatan di formatAutoOpen di atas, alasan sama persis.
 function formatAutoAddLayer(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
-  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Nambah Posisi* (Layer ${pos.layers})
 🟢 *LONG* rata-rata baru @ ${fmtUsd(pos.entryPrice)}
 
 Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
@@ -241,12 +271,18 @@ Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam b
 
 // Tahap 1 (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper) -- separuh posisi diamankan,
 // SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
+// `pos.trailSmaLen` (25 Sep 2026, unifikasi desain -- opsional) -- Sniper ngasih tau PERSIS SMA
+// berapa hari dipakai buat trail sisa posisi + harga breakeven eksaknya (lebih lengkap dari teks
+// generik). Ranger/Ninja gak ngirim field ini -- fallback ke teks generik APA ADANYA, gak berubah.
 function formatAutoPartial(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
   const sign = pos.realizedPnlUsd >= 0 ? '+' : '';
-  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Partial TP Diamankan*
+  const detailLine = (pos.entryPrice != null && pos.trailSmaLen)
+    ? `SL sisa digeser ke BREAKEVEN (${fmtUsd(pos.entryPrice)}) -- gak bisa rugi lagi dari sini. Sisa posisi di-trail SMA${pos.trailSmaLen} sampai momentum patah.`
+    : 'SL sisa digeser breakeven, separuh posisi di-trail.';
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Partial TP Diamankan*
 🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}
 
-SL sisa digeser breakeven, separuh posisi di-trail.
+${detailLine}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
@@ -270,7 +306,7 @@ function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, ex
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const sign = trade.pnlUsd >= 0 ? '+' : '';
   const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${sign}${trade.pnlPct.toFixed(1)}%)` : '';
-  return `${_rangerBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id)} — *Tutup Posisi*
+  return `${_rangerBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id, trade.signalId)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
 PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*${_todaysPnlLine(todaysPnl, idrRate)}
@@ -475,7 +511,7 @@ module.exports = {
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
-  fmtUsd, shortId, fmtUsdWithIdr, formatWinRateLines,
+  fmtUsd, shortId, fmtUsdWithIdr, formatWinRateLines, liquidationPrice,
   // 12 Sep 2026 -- diexpose biar sniperOrderLog.js (Sniper Club REAL Olan sendiri) bisa reuse SAMA
   // baris "PnL hari ini", bukan reimplementasi/format beda sendiri.
   todaysPnlLine: _todaysPnlLine,

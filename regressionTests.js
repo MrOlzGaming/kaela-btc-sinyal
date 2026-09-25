@@ -23,7 +23,8 @@ const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
 const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
-const { formatManualOpenAutoClosed } = require('./darkKaelaLog');
+const { formatManualOpenAutoClosed, formatAutoOpen, shortId, liquidationPrice, SYSTEM_LABEL, EXCHANGE_BADGE } = require('./darkKaelaLog');
+const { formatTriggered: sniperFormatTriggered, formatClosed: sniperFormatClosed, formatPartialClosed: sniperFormatPartialClosed } = require('./sniperOrderLog');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { computeProgress } = require('./walletCapProgress');
@@ -302,6 +303,52 @@ async function main() {
     const nullPnl = formatManualOpenAutoClosed({ ...base, closePnlUsd: null }, null);
     assert.ok(nullPnl.includes('gak kebaca'), 'PnL null HARUS bilang jujur "gak kebaca", bukan pura-pura $0');
     assert.ok(!nullPnl.includes('$0.00') && !nullPnl.includes('$0,00'), 'PnL null JANGAN ditampilin sebagai $0 (menyesatkan, kesannya beneran impas)');
+  });
+
+  // Unifikasi desain pesan buka/tutup (25 Sep 2026, permintaan Olan "desain 1 aja yang terbaik
+  // dan terlengkap") -- Sniper/Ranger/Ninja SEKARANG reuse formatAutoOpen/Partial/Closed yang SAMA
+  // dari darkKaelaLog.js. Ground-truth: harga likuidasi LONG di bawah entry, SHORT di atas entry
+  // (rumus 100/leverage%, sama persis yang tadinya cuma dipakai Sniper).
+  await test('liquidationPrice: LONG di bawah entry, SHORT di atas entry, null kalau data kosong', () => {
+    assert.strictEqual(liquidationPrice(100, 10, 'buy'), 90);
+    assert.ok(Math.abs(liquidationPrice(100, 10, 'sell') - 110) < 1e-9, 'SHORT harus ~110 (toleransi floating-point)');
+    assert.strictEqual(liquidationPrice(100, 0, 'buy'), null);
+    assert.strictEqual(liquidationPrice(null, 10, 'buy'), null);
+  });
+
+  await test('shortId: signalId (Sniper) dipakai APA ADANYA, fallback ke digit-extraction (Ranger/Ninja)', () => {
+    assert.strictEqual(shortId('ranger-demo-1758801234567'), '#234567');
+    assert.strictEqual(shortId('anything', '2026092501'), '#2026092501');
+  });
+
+  await test('formatAutoOpen: nampilin baris Likuidasi + patternType diprioritasin drpd mode', () => {
+    const pos = { id: 'x', direction: 'buy', entryPrice: 100, tp: 110, sl: 90, leverage: 10, marginUsd: 10, nilaiPosisi: 100, mode: 'sniper', patternType: 'flag_bull', assetLabel: 'BTC' };
+    const msg = formatAutoOpen(pos, new Date(), '', false, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.SNIPER);
+    assert.ok(msg.includes('Likuidasi: $90'), `Harus nampilin harga likuidasi, malah:\n${msg}`);
+    assert.ok(msg.includes('Bull Flag'), `Alasan harus dari patternType (flag_bull), bukan mode ('sniper'):\n${msg}`);
+  });
+
+  await test('sniperOrderLog: formatTriggered pakai template SAMA kayak Ranger/Ninja (badge SNIPER + signalId + likuidasi)', () => {
+    const order = { id: 'abc123', signalId: '2026092501', asset: 'btc', mode: 'sniper', patternType: 'flag_bull', direction: 'buy', entryPrice: 64000, tp: 66000, sl: 62000, leverage: 20, marginUsd: 50 };
+    const msg = sniperFormatTriggered(order, null);
+    assert.ok(msg.includes('🎯 SNIPER'), 'Badge harus tetap SNIPER');
+    assert.ok(msg.includes('#2026092501'), 'Harus pakai signalId manusiawi, bukan digit-extraction dari id');
+    assert.ok(msg.includes('*Buka Posisi*'), 'Judul harus 1 desain SAMA persis kayak Ranger/Ninja');
+    assert.ok(msg.includes('Likuidasi:'), 'Fitur likuidasi Sniper HARUS tetap ada setelah unifikasi');
+  });
+
+  await test('sniperOrderLog: formatPartialClosed nampilin detail breakeven+SMA (field trailSmaLen Sniper)', () => {
+    const order = { id: 'abc123', signalId: '2026092501', asset: 'btc', direction: 'buy', entryPrice: 64000, realizedPnlUsd: 30, trailSmaLen: 10 };
+    const msg = sniperFormatPartialClosed(order, null, null);
+    assert.ok(msg.includes('SMA10'), `Harus nampilin SMA berapa hari (fitur ekstra Sniper), malah:\n${msg}`);
+    assert.ok(msg.includes('BREAKEVEN ($64,000)'), 'Harus nampilin harga breakeven eksak');
+  });
+
+  await test('sniperOrderLog: formatClosed nampilin win-rate+akumulasi (formatWinRateLines shared) + alasan TP polos', () => {
+    const order = { id: 'abc123', signalId: '2026092501', asset: 'btc', direction: 'buy', entryPrice: 64000, exitPrice: 66000, status: 'closed_tp', pnlUsd: 55, pnlPct: 110, closeReason: 'TP' };
+    const msg = sniperFormatClosed(order, null, null);
+    assert.ok(msg.includes('Win rate Sniper BTCUSDT'), `Harus reuse formatWinRateLines yang SAMA dipakai Ranger/Ninja, malah:\n${msg}`);
+    assert.ok(msg.includes('Take Profit kena'), 'Alasan TP tunggal Sniper HARUS teks polos, BUKAN reuse CLOSE_REASON_LABEL.TP (itu teksnya "agregat kena", khusus basket Fed Dovish Grid)');
   });
 
   // monthlyFundingReminder.js (20 Sep 2026, kebijakan tetap setoran bulanan Olan -- lihat memori

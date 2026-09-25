@@ -10,7 +10,13 @@ const { ASSETS } = require('./assetConfig');
 // fmtUsdWithIdr (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
 // Sniper lama ini juga, biar konsisten) -- REUSE dari darkKaelaLog.js (SATU sumber format IDR,
 // gak duplikat). `idrRate` OPSIONAL, null/gagal -> fallback USD doang, gak gugurin pesan.
-const { fmtUsdWithIdr, todaysPnlLine, COINGLASS_LINK, EXCHANGE_BADGE, formatWinRateLines } = require('./darkKaelaLog');
+// formatAutoOpen/formatAutoPartial/formatAutoClosed/CLOSE_REASON_LABEL/KAELA_ACCESS_URL (25 Sep
+// 2026, permintaan Olan "desain 1 aja yang terbaik dan terlengkap" -- unifikasi TOTAL) -- pesan
+// buka/partial/tutup Sniper SEKARANG reuse TEMPLATE YANG SAMA PERSIS dipakai Ranger/Ninja (lihat
+// formatTriggered/formatClosed/formatPartialClosed di bawah), bukan implementasi terpisah lagi.
+// Field ekstra yang Sniper PUNYA duluan (harga likuidasi, signal ID manusiawi) udah dipindah JADI
+// bagian shared template itu sendiri (darkKaelaLog.js), jadi Ranger/Ninja ikut kebagian juga.
+const { fmtUsdWithIdr, todaysPnlLine, COINGLASS_LINK, EXCHANGE_BADGE, formatWinRateLines, formatAutoOpen, formatAutoPartial, formatAutoClosed, CLOSE_REASON_LABEL, KAELA_ACCESS_URL, SYSTEM_LABEL } = require('./darkKaelaLog');
 // 25 Sep 2026, permintaan Olan ("info buka tutup formatnya perlu konsistensi... jangan lupa
 // exchangenya... pas tutup sertakan winrate dan profit akumulasi... tiap mode sendiri-sendiri")
 // -- getClosedOrders (sniperOrders.js) dipakai HITUNG stats Sniper SENDIRI (terpisah dari Ranger/
@@ -47,26 +53,6 @@ const STRATEGY_LABEL = { range: 'Range Trading', breakout: 'Breakout', trend: 'T
 
 function seqLabel(order) {
   return order.signalId ? `🆔 ID Sinyal: ${order.signalId}` : '';
-}
-
-// Harga LIKUIDASI (14 Agu 2026, permintaan Olan: "ada liquidated dimana") -- BEDA dari SL walau
-// sering deket/sama: margin abis kalau harga gerak 100/leverage% lawan posisi. SL biasanya
-// kena DULUAN (floor(leverage) di calculator.js ngasih buffer kecil), tapi titik likuidasi
-// sesungguhnya tetap ditampilkan terpisah, jangan disamain sama SL biar gak nyesatin.
-function liquidationPrice(order) {
-  if (!order.leverage || !order.entryPrice) return null;
-  const distPct = 100 / order.leverage;
-  return order.direction === 'buy' ? order.entryPrice * (1 - distPct / 100) : order.entryPrice * (1 + distPct / 100);
-}
-
-// Baris margin/leverage/volume/likuidasi -- volume (nilai posisi/notional) = margin x leverage,
-// dihitung on-the-fly (bukan field tersendiri di data). Margin & Volume = NILAI INVESTASI -> pakai
-// fmtUsdWithIdr (13 Sep 2026, "nilai investasi juga di rupiahin.. berlaku semua"); Liquidated tetap
-// USD polos karena itu level HARGA, bukan nilai investasi.
-function tradeMetaLine(order, idrRate) {
-  const volumeUsd = (order.marginUsd && order.leverage) ? order.marginUsd * order.leverage : null;
-  const liqPrice = liquidationPrice(order);
-  return `Margin ${fmtUsdWithIdr(order.marginUsd, idrRate)} · Leverage ${order.leverage}× · Volume ${volumeUsd !== null ? fmtUsdWithIdr(volumeUsd, idrRate) : '-'}${liqPrice !== null ? ` · Liquidated @ ${fmt(liqPrice)}` : ''}`;
 }
 
 // (12 Sep 2026, kebijakan baru Olan -- lihat memori project-kaela-btc-sinyal.md "GANTUNGAN
@@ -142,22 +128,20 @@ function formatRencana(order) {
   return lines.join('\n');
 }
 
+// (25 Sep 2026, unifikasi desain -- "info buka posisi" SEKARANG reuse formatAutoOpen yang SAMA
+// dipakai Ranger/Ninja, bukan template terpisah lagi) -- `pos` dirakit dari `order` (field yang
+// namanya beda dipetakan, field yang SAMA persis dioper apa adanya). `nilaiPosisi` dihitung PERSIS
+// formula calculator.js (margin x leverage) karena order Sniper gak nyimpen field itu langsung.
 function formatTriggered(order, idrRate) {
   const asset = assetOf(order);
-  return [
-    `🎯 SNIPER · Kaela ${asset.emoji} ${asset.label} (${modeLabel(order)}) · ${exchangeBadgeFor(order)} — ✅ KENA TRIGGER, SEKARANG FLOATING`,
-    seqLabel(order),
-    `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
-    '',
-    `✅ TP: ${fmt(order.tp)}`,
-    `❌ SL: ${fmt(order.sl)}`,
-    order.leverage ? tradeMetaLine(order, idrRate) : '',
-    '',
-    'Live floating P&L bisa dipantau di web.',
-    '',
-    nowStr(),
-    `🔗 ${WEB_URL}`,
-  ].join('\n');
+  const pos = {
+    id: order.id, signalId: order.signalId, direction: order.direction,
+    entryPrice: order.entryPrice, tp: order.tp, sl: order.sl,
+    leverage: order.leverage, marginUsd: order.marginUsd,
+    nilaiPosisi: (order.marginUsd && order.leverage) ? order.marginUsd * order.leverage : null,
+    assetLabel: asset.label, mode: order.mode, patternType: order.patternType,
+  };
+  return formatAutoOpen(pos, new Date(), '', false, idrRate, '', null, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
 }
 
 // `todaysPnl` (12 Sep 2026, permintaan Olan "Auto (Kaela)... sertakan PnL hari ini" -- diperluas
@@ -180,47 +164,43 @@ function sniperWinRateLines(order, idrRate) {
   return formatWinRateLines(stats, `Sniper ${asset.label}`, idrRate);
 }
 
+// (25 Sep 2026, unifikasi desain) -- reuse formatAutoClosed yang SAMA dipakai Ranger/Ninja.
+// `direction` DIKONVERSI 'buy'/'sell' -> 'long'/'short' (formatAutoClosed pakai konvensi itu,
+// PERSIS pola yang sama juga dipakai rangerAutoTrader.js pas manggil fungsi ini). Alasan TP
+// sengaja teks polos "Take Profit kena" (bukan reuse CLOSE_REASON_LABEL.TP yang teksnya "...
+// agregat kena", itu spesifik buat basket Fed Dovish Grid, gak cocok buat TP tunggal Sniper).
 function formatClosed(order, idrRate, todaysPnl) {
-  const asset = assetOf(order);
   const won = order.status === 'closed_tp';
-  const pnlSign = order.pnlUsd >= 0 ? '+' : '-';
-  const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)', WINDOW_FLIP: '🔄 TUTUP PAKSA -- WINDOW REZIM GANTI' };
-  const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
-  return [
-    `🎯 SNIPER · Kaela ${asset.emoji} ${asset.label} (${modeLabel(order)}) · ${exchangeBadgeFor(order)} — ${exitLabel}`,
-    seqLabel(order),
-    `${DIR_LABEL[order.direction] || order.direction}`,
-    '',
-    `Entry: ${fmt(order.entryPrice)}`,
-    `Exit (${order.closeReason || (won ? 'TP' : 'SL')}): ${fmt(order.exitPrice ?? (won ? order.tp : order.sl))}`,
-    order.partialDone ? `(Ini penutupan sisa posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)` : '',
-    `P&L TOTAL: ${order.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.pnlUsd, idrRate)} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)${todaysPnlLine(todaysPnl, idrRate)}`,
-    '',
-    sniperWinRateLines(order, idrRate),
-    nowStr(),
-    `🔗 ${WEB_URL}`,
-  ].join('\n');
+  const asset = assetOf(order);
+  const trade = {
+    id: order.id, signalId: order.signalId,
+    direction: order.direction === 'buy' ? 'long' : 'short',
+    entryPrice: order.entryPrice,
+    exitPrice: order.exitPrice ?? (won ? order.tp : order.sl),
+    pnlUsd: order.pnlUsd, pnlPct: order.pnlPct, assetLabel: asset.label,
+  };
+  const partialNote = order.partialDone ? ' (ini penutupan SISA posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)' : '';
+  const alasanText = (won ? 'Take Profit kena' : (CLOSE_REASON_LABEL[order.closeReason] || 'Stop Loss kena')) + partialNote;
+  let msg = formatAutoClosed(trade, new Date(), false, alasanText, idrRate, todaysPnl, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
+  const winRateLines = sniperWinRateLines(order, idrRate);
+  return msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
 }
 
 // Notifikasi TAHAP 1 (10 Agu 2026, strategi pola chart flag/wedge) -- separuh posisi diamankan
 // pas kena target 2R, SL sisanya digeser ke breakeven (gak bisa rugi lagi dari titik ini), sisa
 // separuh di-trail pakai SMA harian sampai momentum patah. Notifikasi TERPISAH dari formatClosed
 // (posisi BELUM full closed, cuma dikurangin).
+// (25 Sep 2026, unifikasi desain) -- reuse formatAutoPartial. `trailSmaLen` dioper apa adanya
+// (Sniper satu-satunya caller yang PUNYA angka ini) -- formatAutoPartial otomatis nampilin detail
+// breakeven+SMA lengkap kalau field ini keisi (lihat komentar di darkKaelaLog.js).
 function formatPartialClosed(order, idrRate, todaysPnl) {
   const asset = assetOf(order);
-  return [
-    `🎯 SNIPER · Kaela ${asset.emoji} ${asset.label} (${modeLabel(order)}) · ${exchangeBadgeFor(order)} — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
-    seqLabel(order),
-    `${DIR_LABEL[order.direction] || order.direction}`,
-    '',
-    `Entry: ${fmt(order.entryPrice)}`,
-    `Separuh posisi diamankan @ ${fmt(order.partialTp)} -- P&L separuh: ${order.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.realizedPnlUsd, idrRate)}${todaysPnlLine(todaysPnl, idrRate)}`,
-    `SL sisa separuh digeser ke BREAKEVEN (${fmt(order.entryPrice)}) -- gak bisa rugi lagi dari sini.`,
-    `Sisa separuh di-trail pakai SMA${order.trailSmaLen} harian -- ditutup kalau momentum patah, biar gak buru-buru lepas semua pas trend masih jalan.`,
-    '',
-    nowStr(),
-    `🔗 ${WEB_URL}`,
-  ].join('\n');
+  const pos = {
+    id: order.id, signalId: order.signalId, direction: order.direction,
+    entryPrice: order.entryPrice, realizedPnlUsd: order.realizedPnlUsd,
+    trailSmaLen: order.trailSmaLen, assetLabel: asset.label,
+  };
+  return formatAutoPartial(pos, new Date(), false, idrRate, todaysPnl, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
 }
 
 // Laporan PEMANTAUAN harian (12 Agu 2026, permintaan Olan: "saat dipantau, tiap hari berarti

@@ -164,6 +164,25 @@ const CLOSE_REASON_LABEL = {
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
+
+// Badge exchange TERPUSAT (25 Sep 2026, sebelumnya tiap file define sendiri-sendiri lokal --
+// channelBreakoutTrader.js/positionReconciler.js -- sekarang SATU sumber dipakai Sniper/Ranger/
+// Ninja biar warnanya konsisten kalau ada exchange baru nanti). File LAMA yang udah punya versi
+// lokal sendiri (positionReconciler.js) SENGAJA gak diubah (resiko regresi kecil, gak worth-nya
+// buat perubahan kosmetik doang di file yang udah jalan).
+const EXCHANGE_BADGE = { binance: '🟨 Binance', mexc: '🔷 MEXC', bingx: '🟣 BingX', bitget: '🟢 Bitget' };
+
+// Nama+emoji sistem (25 Sep 2026, permintaan Olan: rename biar konsisten -- Sniper harian tetap
+// "Sniper", Nyopet 4-jam jadi "Ranger" (Sniper tapi timeframe lebih rendah, sinyal masih agak
+// jarang), Channel Breakout 5-menit jadi "Ninja" (gesit, super sering -- ambil alih nama & badge
+// 🥷 yang tadinya dipakai Nyopet). Default TETAP NYOPET/🥷 buat backward-compat -- caller LAMA yang
+// belum sempat update systemLabel-nya gak berubah pesannya sama sekali.
+const SYSTEM_LABEL = {
+  SNIPER: { emoji: '🎯', name: 'SNIPER' },
+  RANGER: { emoji: '🏹', name: 'RANGER' },
+  NINJA: { emoji: '🥷', name: 'NINJA' },
+};
+
 // (12 Sep 2026, permintaan Olan: "Manual (Olan) / Auto (Kaela)" -- badge auto sekarang eksplisit
 // nyebut "Kaela" juga, sejajar sama MANUAL_BADGE "Manual (Olan)" di bawah.
 // `exchangeBadge` (23 Sep 2026, permintaan Olan: "badge exchange juga dipake di pesan buka
@@ -171,8 +190,11 @@ function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'm
 // shareholder butuh liat sekilas exchange mana dari pesan auto, PERSIS alasan exchangeBadge udah
 // dipake di pesan manual/positionReconciler.js) -- OPSIONAL, undefined -> badge PERSIS sama
 // kayak sebelumnya (caller Sniper/Nyopet lama gak perlu diubah).
-function _nyopetBadge(pos, isDemo, exchangeBadge) {
-  return `🥷 NYOPET · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
+// `system` (25 Sep 2026) -- OPSIONAL, default {emoji:'🥷',name:'NYOPET'} (backward-compat) --
+// caller BARU (nyopetAutoTrader.js/channelBreakoutTrader.js/sniperOrderLog.js) oper
+// SYSTEM_LABEL.RANGER/NINJA/SNIPER eksplisit.
+function _nyopetBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name: 'NYOPET' }) {
+  return `${system.emoji} ${system.name} · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
 }
 
 // (5 Sep 2026, permintaan Olan: "nilai investasi juga ada dalam kurung rupiah.. lalu rapikan
@@ -188,10 +210,10 @@ function _nyopetBadge(pos, isDemo, exchangeBadge) {
 // buat semua ya jangan ini aja") -- Buka Posisi SEKARANG ikut kasih gambaran besar hari itu, SAMA
 // kayak Partial/Tutup yang udah duluan punya baris ini. Taro PALING BAWAH (abis smartMoneyLine)
 // biar urutan baca tetap: apa yang kejadian -> alasan/konteks pattern -> baru gambaran hari ini.
-function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge) {
+function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge, system) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
-  return `${_nyopetBadge(pos, isDemo, exchangeBadge)} ${shortId(pos.id)} — *Buka Posisi*
+  return `${_nyopetBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 TP1: ${pos.tp != null ? fmtUsd(pos.tp) : '(trailing, ngikutin harga terbaik yang dicapai)'}
@@ -206,8 +228,8 @@ Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smart
 // (5 Sep 2026, method baru "Fed Dovish Grid") -- notif TIAP KALI nambah layer stacking (basket
 // masih floating, BUKAN posisi baru/tutup posisi). `pos.layers` = jumlah layer SETELAH ditambah.
 // `todaysPnl` -- lihat catatan di formatAutoOpen di atas, alasan sama persis.
-function formatAutoAddLayer(pos, now, isDemo, idrRate, todaysPnl) {
-  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
+function formatAutoAddLayer(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
+  return `${_nyopetBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
 🟢 *LONG* rata-rata baru @ ${fmtUsd(pos.entryPrice)}
 
 Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
@@ -219,9 +241,9 @@ Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam b
 
 // Tahap 1 (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper) -- separuh posisi diamankan,
 // SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
-function formatAutoPartial(pos, now, isDemo, idrRate, todaysPnl) {
+function formatAutoPartial(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
   const sign = pos.realizedPnlUsd >= 0 ? '+' : '';
-  return `${_nyopetBadge(pos, isDemo)} ${shortId(pos.id)} — *Partial TP Diamankan*
+  return `${_nyopetBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Partial TP Diamankan*
 🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}
 
 SL sisa digeser breakeven, separuh posisi di-trail.
@@ -243,12 +265,12 @@ function formatWinRateLines(stats, label, idrRate) {
     + `Akumulasi profit ${label}: ${stats.totalPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(stats.totalPnlUsd, idrRate)}\n\n`;
 }
 
-function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, exchangeBadge) {
+function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, exchangeBadge, system) {
   const won = trade.pnlUsd >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const sign = trade.pnlUsd >= 0 ? '+' : '';
   const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${sign}${trade.pnlPct.toFixed(1)}%)` : '';
-  return `${_nyopetBadge(trade, isDemo, exchangeBadge)} ${shortId(trade.id)} — *Tutup Posisi*
+  return `${_nyopetBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
 PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*${_todaysPnlLine(todaysPnl, idrRate)}
@@ -457,4 +479,6 @@ module.exports = {
   // 12 Sep 2026 -- diexpose biar sniperOrderLog.js (Sniper Club REAL Olan sendiri) bisa reuse SAMA
   // baris "PnL hari ini", bukan reimplementasi/format beda sendiri.
   todaysPnlLine: _todaysPnlLine,
+  // 25 Sep 2026 -- badge exchange + nama sistem TERPUSAT (lihat komentar deklarasi masing-masing).
+  EXCHANGE_BADGE, SYSTEM_LABEL,
 };

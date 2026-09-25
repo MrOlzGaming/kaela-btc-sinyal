@@ -10,7 +10,19 @@ const { ASSETS } = require('./assetConfig');
 // fmtUsdWithIdr (4 Sep 2026, permintaan Olan "untuk pnl sertakan idr nya" -- diperluas ke channel
 // Sniper lama ini juga, biar konsisten) -- REUSE dari darkKaelaLog.js (SATU sumber format IDR,
 // gak duplikat). `idrRate` OPSIONAL, null/gagal -> fallback USD doang, gak gugurin pesan.
-const { fmtUsdWithIdr, todaysPnlLine, COINGLASS_LINK } = require('./darkKaelaLog');
+const { fmtUsdWithIdr, todaysPnlLine, COINGLASS_LINK, EXCHANGE_BADGE, formatWinRateLines } = require('./darkKaelaLog');
+// 25 Sep 2026, permintaan Olan ("info buka tutup formatnya perlu konsistensi... jangan lupa
+// exchangenya... pas tutup sertakan winrate dan profit akumulasi... tiap mode sendiri-sendiri")
+// -- getClosedOrders (sniperOrders.js) dipakai HITUNG stats Sniper SENDIRI (terpisah dari Ranger/
+// Ninja, masing-masing sistem punya jurnal/sumber sendiri) tiap posisi ditutup.
+const { getClosedOrders } = require('./sniperOrders');
+
+// Badge exchange (25 Sep 2026) -- Sniper BTC=Binance, Sniper Emas=MEXC (assetConfig.js). Dulu
+// Sniper gak nampilin exchange sama sekali di pesan buka/tutup -- SEKARANG konsisten sama Ranger/Ninja.
+function exchangeBadgeFor(order) {
+  const asset = assetOf(order);
+  return EXCHANGE_BADGE[asset.exchange] || asset.exchange;
+}
 
 // assetLabel (22 Agu 2026, upgrade multi-aset) -- semua fungsi format di bawah TERIMA order yang
 // sekarang punya field `order.asset` ('btc'/'xau') -- fallback ke ASSETS.btc kalau order LAMA
@@ -133,7 +145,7 @@ function formatRencana(order) {
 function formatTriggered(order, idrRate) {
   const asset = assetOf(order);
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ✅ KENA TRIGGER, SEKARANG FLOATING`,
+    `🎯 SNIPER · Kaela ${asset.emoji} ${asset.label} (${modeLabel(order)}) · ${exchangeBadgeFor(order)} — ✅ KENA TRIGGER, SEKARANG FLOATING`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction} @ ${fmt(order.entryPrice)}`,
     '',
@@ -152,6 +164,22 @@ function formatTriggered(order, idrRate) {
 // ke Sniper Club REAL Olan sendiri, sama pola kayak Nyopet/manual reconciler) -- PnL REAL akun
 // Binance Olan hari ini (symbol yang sama persis lagi ditutup), BUKAN dari bankroll bayangan
 // simulasi order ini. `null`/gagal sync -> baris DIILANGIN (lihat todaysPnlLine, darkKaelaLog.js).
+// Win-rate + akumulasi profit (25 Sep 2026, permintaan Olan "pas tutup sertakan winrate dan
+// profit akumulasi... tiap mode sendiri-sendiri") -- stats Sniper DIHITUNG DARI sniperOrders.js
+// SENDIRI (getClosedOrders), per ASET (BTC/Emas dipisah -- SAMA konvensi Ranger/Ninja yang juga
+// pisah per-aset, bukan digabung 1 angka buat semua). `formatWinRateLines` di-reuse dari
+// darkKaelaLog.js -- SATU fungsi dipakai Sniper/Ranger/Ninja, bukan reimplementasi 3x.
+function sniperWinRateLines(order, idrRate) {
+  const asset = assetOf(order);
+  const closedSameAsset = getClosedOrders().filter((o) => (o.asset || 'btc') === order.asset);
+  const stats = {
+    wins: closedSameAsset.filter((o) => o.status === 'closed_tp').length,
+    losses: closedSameAsset.filter((o) => o.status === 'closed_sl').length,
+    totalPnlUsd: closedSameAsset.reduce((s, o) => s + (o.pnlUsd || 0), 0),
+  };
+  return formatWinRateLines(stats, `Sniper ${asset.label}`, idrRate);
+}
+
 function formatClosed(order, idrRate, todaysPnl) {
   const asset = assetOf(order);
   const won = order.status === 'closed_tp';
@@ -159,7 +187,7 @@ function formatClosed(order, idrRate, todaysPnl) {
   const exitLabelMap = { TP: '✅ TP KENA', SL: '❌ KENA STOP LOSS', SL_BREAKEVEN: '⚪ TUTUP DI BREAKEVEN (abis partial)', TRAIL: '🏁 TUTUP -- MOMENTUM PATAH (trailing exit)', WINDOW_FLIP: '🔄 TUTUP PAKSA -- WINDOW REZIM GANTI' };
   const exitLabel = exitLabelMap[order.closeReason] || (won ? '✅ TP KENA' : '❌ KENA STOP LOSS');
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — ${exitLabel}`,
+    `🎯 SNIPER · Kaela ${asset.emoji} ${asset.label} (${modeLabel(order)}) · ${exchangeBadgeFor(order)} — ${exitLabel}`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',
@@ -168,6 +196,7 @@ function formatClosed(order, idrRate, todaysPnl) {
     order.partialDone ? `(Ini penutupan sisa posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)` : '',
     `P&L TOTAL: ${order.pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(order.pnlUsd, idrRate)} (${pnlSign}${Math.abs(order.pnlPct).toFixed(2)}%)${todaysPnlLine(todaysPnl, idrRate)}`,
     '',
+    sniperWinRateLines(order, idrRate),
     nowStr(),
     `🔗 ${WEB_URL}`,
   ].join('\n');
@@ -180,7 +209,7 @@ function formatClosed(order, idrRate, todaysPnl) {
 function formatPartialClosed(order, idrRate, todaysPnl) {
   const asset = assetOf(order);
   return [
-    `${CATEGORY_COLOR.sniper.emoji} 🎯 SNIPER · Kaela — ${asset.emoji} ${asset.label} (${modeLabel(order)}) — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
+    `🎯 SNIPER · Kaela ${asset.emoji} ${asset.label} (${modeLabel(order)}) · ${exchangeBadgeFor(order)} — 🟡 TARGET TAHAP 1 KENA (separuh diamankan)`,
     seqLabel(order),
     `${DIR_LABEL[order.direction] || order.direction}`,
     '',

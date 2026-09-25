@@ -40,7 +40,7 @@ const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./channelBreakoutBalanceRecap');
-const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed } = require('./darkKaelaLog');
+const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed, SYSTEM_LABEL } = require('./darkKaelaLog');
 const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -242,7 +242,7 @@ function variantLabel(variant) { return variant === 'tpFixed' ? 'TP Tetap' : 'Tr
 // CB_TRAIL (CLOSE_REASON_LABEL, mekanisme beda dari SL/TRAIL Nyopet lama makanya kode terpisah).
 function buildOpenMsg({ id, dir, entryPrice, sl, tp, margin, leverage, nilaiPosisi, idrRate, isDemo }) {
   const pos = { id, direction: dir === 'long' ? 'buy' : 'sell', entryPrice, tp, sl, marginUsd: margin, nilaiPosisi, leverage, mode: 'channel_breakout', assetLabel: 'BTC' };
-  return formatAutoOpen(pos, new Date(), '', isDemo, idrRate, '', null, EXCHANGE_BADGE);
+  return formatAutoOpen(pos, new Date(), '', isDemo, idrRate, '', null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
 }
 
 // outcome mentah dari checkTpFixedHit/updateTrailing ('SL'/'TP'/'TRAIL') -> kode CB_ (darkKaelaLog.js)
@@ -253,7 +253,7 @@ function outcomeCodeFor(outcome) { return outcome === 'TP' ? 'CB_TP' : outcome =
 // template baru) tepat sebelum link, biar strukturnya tetap 1:1 sama Nyopet + tambahan.
 function buildCloseMsg({ id, variant, dir, entryPrice, exitPrice, pnlUsd, stats, outcomeCode, idrRate, isDemo }) {
   const trade = { id, direction: dir, entryPrice, exitPrice, pnlUsd, pnlPct: null, mode: 'channel_breakout', assetLabel: 'BTC' };
-  const base = formatAutoClosed(trade, new Date(), isDemo, CLOSE_REASON_LABEL[outcomeCode] || outcomeCode, idrRate, null, EXCHANGE_BADGE);
+  const base = formatAutoClosed(trade, new Date(), isDemo, CLOSE_REASON_LABEL[outcomeCode] || outcomeCode, idrRate, null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
   const extraLines = formatWinRateLines(stats, `${variantLabel(variant)} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
   return base.replace(`🔗 ${KAELA_ACCESS_URL}`, extraLines + `🔗 ${KAELA_ACCESS_URL}`);
 }

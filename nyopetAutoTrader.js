@@ -44,7 +44,7 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL, formatWinRateLines, KAELA_ACCESS_URL } = require('./darkKaelaLog');
+const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL, formatWinRateLines, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
 const { sendWhatsApp } = require('./fonnte');
 // (5 Sep 2026, metode Nyopet BARU "Fed Dovish Grid" -- lihat backtest/fedSignalGridBacktest.js
 // buat riset lengkapnya) -- fetchKlines/computeSignals/computeSMA/FINAL_RECIPE di-REUSE LANGSUNG
@@ -397,7 +397,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
     const dxyLine = await formatDxyLine().catch(() => '');
     const todaysPnlOpen = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate, smartMoney.line, todaysPnlOpen);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate, smartMoney.line, todaysPnlOpen, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
     await notify(msg);
     // 6 Sep 2026, permintaan Olan (jurnal member: "beda dia trade sendiri atau karena kaela") --
@@ -428,7 +428,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     saveJournal(journal);
 
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnl);
+    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'partial', realizedPnlUsd, sl: order.entryPrice, exchange: assetCfg.exchange });
@@ -531,14 +531,16 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
     const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
-    let msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl);
+    let msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     // Win-rate + akumulasi (23 Sep 2026, permintaan Olan, disamain dari Channel Breakout) --
     // dihitung LANGSUNG dari journal.orders (bukan counter terpisah kayak channelBreakoutTrader.js)
     // -- Nyopet journal SATU-SATUNYA sumber kebenaran, scan ulang tiap kali lebih aman drpd nyimpen
     // counter kedua yang bisa drift. Cuma order auto (`_isManual` false) & aset yang SAMA dihitung.
     const closedAuto = journal.orders.filter((o) => o.asset === assetCfg.key && (o.status === 'closed_tp' || o.status === 'closed_sl') && o.mode !== 'manual');
     const stats = { wins: closedAuto.filter((o) => (o.pnlUsd || 0) >= 0).length, losses: closedAuto.filter((o) => (o.pnlUsd || 0) < 0).length, totalPnlUsd: closedAuto.reduce((s, o) => s + (o.pnlUsd || 0), 0) };
-    const winRateLines = formatWinRateLines(stats, `Nyopet ${assetCfg.label} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
+    // Label "Ranger" (25 Sep 2026, rename dari Nyopet) -- badge di atas UDAH ganti ke SYSTEM_LABEL.RANGER,
+    // baris win-rate ini eksplisit sama biar gak ketuker sisa teks "Nyopet" yang udah gak dipakai.
+    const winRateLines = formatWinRateLines(stats, `Ranger ${assetCfg.label} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
     msg = msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
     console.log(msg + '\n');
     await notify(msg);
@@ -937,7 +939,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     saveJournal(journal);
 
     const todaysPnlGridOpen = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate, smartMoney.line, todaysPnlGridOpen);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate, smartMoney.line, todaysPnlGridOpen, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', entryPrice, sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: order.marginUsd, status: 'open', openedAt: order.triggeredAt, note: `Fed Dovish Grid (${signal.label})` });
@@ -973,7 +975,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
     saveJournal(journal);
 
     const todaysPnlLayer = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoAddLayer({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnlLayer);
+    const msg = formatAutoAddLayer({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnlLayer, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: target.id, type: 'addLayer', layers: target.layers, entryPrice: newEntryPrice, exchange: assetCfg.exchange });

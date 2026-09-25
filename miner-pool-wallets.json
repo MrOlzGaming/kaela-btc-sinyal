@@ -58,9 +58,9 @@
   "1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4": {
     "pool": "ViaBTC",
     "firstSeenAt": "2026-09-13T06:05:30.452Z",
-    "blockCount": 176,
-    "totalReceivedBtc": 553.4408499,
-    "lastSeenAt": "2026-09-25T05:16:16.228Z"
+    "blockCount": 177,
+    "totalReceivedBtc": 556.61034265,
+    "lastSeenAt": "2026-09-25T06:01:18.200Z"
   },
   "bc1q2824ekxc6ewypfpzv64h69frnx9dx6rsgek6ec": {
     "pool": "OCEAN",
@@ -184,9 +184,9 @@
   "3QmwRxUVQSobeKnNWSjtYmRbU2uxYQzRrG": {
     "pool": "WhitePool",
     "firstSeenAt": "2026-09-13T09:31:23.604Z",
-    "blockCount": 4,
-    "totalReceivedBtc": 12.56771393,
-    "lastSeenAt": "2026-09-20T12:16:43.923Z"
+    "blockCount": 5,
+    "totalReceivedBtc": 15.69780612,
+    "lastSeenAt": "2026-09-25T06:01:45.615Z"
   },
   "bc1q2lq6qpqfvazlfk6fclpr27pvkgs77m7x7dxjxp": {
     "pool": "OCEAN",
@@ -863,8 +863,8 @@
   "bc1qtm7ye0wm085hhv88japwkalmwkt3amec5z9c7a3unv05tfg6y2pstr3xfz": {
     "pool": "Foundry USA",
     "firstSeenAt": "2026-09-23T14:31:28.145Z",
-    "blockCount": 55,
-    "totalReceivedBtc": 173.26291429,
-    "lastSeenAt": "2026-09-25T05:31:12.536Z"
+    "blockCount": 56,
+    "totalReceivedBtc": 176.40207938,
+    "lastSeenAt": "2026-09-25T06:01:35.031Z"
   }
 }

@@ -63,6 +63,14 @@ async function executeOne(order) {
   const exec = execFor(assetCfg);
   const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
   console.log(`\n[LocalLiveExecutor] Eksekusi ${assetCfg.label} ${order.mode} (${order.direction}) via ${assetCfg.exchange || 'binance'}...`);
+  // 🐛 FIX 26 Sep 2026 (audit "pastikan semua tradingan real jalan", ketemu bareng kasus MEXC/Emas
+  // Ranger yang sama -- Olan konfirmasi "iya real dari dulu, benerin labelnya aja") -- MEXC GAK
+  // PERNAH punya mode demo (base URL tunggal), jadi Emas (execFor->mexcClient) SELALU real apapun
+  // status killSwitch.isTestnet() (itu murni saklar Binance/BTC). `effectiveTestnet` di bawah
+  // dipakai buat SEMUA field `testnet:` di liveExecution (sukses MAUPUN gagal) biar journal + pesan
+  // WA (sniperOrderLog.js baca liveExecution.testnet) selalu jujur per-aset, bukan ke-generalisir
+  // dari status Binance doang.
+  const effectiveTestnet = assetCfg.exchange === 'mexc' ? false : isTestnet();
 
   let entryFilledQty = null;
   try {
@@ -103,7 +111,7 @@ async function executeOne(order) {
     updateOrder(order.id, {
       liveExecutedAt: new Date().toISOString(),
       liveExecution: {
-        ok: true, filledQty: entryFilledQty, halfQty: halfQty > 0 ? halfQty : entryFilledQty, testnet: isTestnet(),
+        ok: true, filledQty: entryFilledQty, halfQty: halfQty > 0 ? halfQty : entryFilledQty, testnet: effectiveTestnet,
         modal, livePrice, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
         entryPriceReal, leg2: null, fullyClosedAt: null,
       },
@@ -111,12 +119,12 @@ async function executeOne(order) {
     // Jurnal (3 Sep 2026, fix "Jurnal Demo/Real Olan bagian Sniper selalu kosong") -- entryId =
     // order.id SNIPER ASLI (sniper-orders.json), dipakai lagi di sniperOrderMonitor.js pas nutup
     // biar updateJournalEntry nyambung ke baris yang SAMA (bukan bikin baris baru tiap close).
-    kaela.recordJournalEntry(MASTER_NOMOR, isTestnet() ? 'demo' : 'real', {
+    kaela.recordJournalEntry(MASTER_NOMOR, effectiveTestnet ? 'demo' : 'real', {
       entryId: order.id, strategy: 'sniper', asset: order.asset, direction: order.direction,
       entryPrice: entryPriceReal, sl: order.sl, tp: tpPrice, leverage: calc.leverage, marginUsd: calc.margin,
       status: 'open', openedAt: new Date().toISOString(), note: `Chart Pattern/FVG (${order.mode || 'sniper'})`,
     }).catch((e) => console.log('[LocalLiveExecutor] recordJournalEntry gagal:', e.message));
-    console.log(`[LocalLiveExecutor] ✅ SUKSES -- qty ${entryFilledQty} (${isTestnet() ? 'Demo Trading' : 'MAINNET ASLI'}).`);
+    console.log(`[LocalLiveExecutor] ✅ SUKSES -- qty ${entryFilledQty} (${effectiveTestnet ? 'Demo Trading' : 'MAINNET ASLI'}).`);
   } catch (e) {
     // 5 Sep 2026, bug ketemu Olan ("posisi bayangan yang notabene udah gak kepake.. kita dah live
     // demo") -- SEBELUMNYA cuma nyimpen liveExecution:{ok:false}, `status` TETAP 'floating'
@@ -131,7 +139,7 @@ async function executeOne(order) {
     // gak ditutup-tutupin.
     updateOrder(order.id, {
       liveExecutedAt: new Date().toISOString(),
-      liveExecution: { ok: false, error: e.message, testnet: isTestnet() },
+      liveExecution: { ok: false, error: e.message, testnet: effectiveTestnet },
       status: 'cancelled', closedAt: new Date().toISOString(), closeReason: 'LIVE_EXEC_FAILED',
     });
     console.log(`[LocalLiveExecutor] ❌ GAGAL: ${e.message} -- order ditandai cancelled (gak nyangkut floating).`);

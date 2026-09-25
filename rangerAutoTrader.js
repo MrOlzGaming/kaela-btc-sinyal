@@ -205,7 +205,18 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // 29 Agu 2026: pesan WA dulu HARDCODE "(Binance Demo)" -- gak masalah selama Real belum pernah
   // beneran ngirim pesan, TAPI bakal MENYESATKAN begitu Real jalan (nunjuk "Demo" padahal duit
   // asli). isDemo dipakai formatAutoOpen/formatAutoClosed biar labelnya selalu bener.
+  // `isDemo` (BTC/Binance doang, lewat killSwitch global) TETAP dipakai apa adanya di titik yang
+  // memang BTC-only (_todaysBtcPnl, Fed Dovish Grid).
   const isDemo = effectiveTestnet !== false;
+  // 🐛 FIX 26 Sep 2026 (audit "pastikan semua tradingan real jalan", Olan konfirmasi: "iya real
+  // dari dulu, benerin labelnya aja") -- MEXC (Emas) GAK PERNAH punya mode demo sama sekali (base
+  // URL tunggal, contract.mexc.com -- lihat mexcExecutor.js) -- Emas SELALU eksekusi REAL,
+  // apapun status kill switch Binance. SEBELUMNYA `isDemo` global dipakai buta buat SEMUA aset,
+  // jadi pesan/win-rate Emas selalu ngaku "(Demo)" walau beneran real dari migrasi ke MEXC (30 Agu
+  // 2026). Fix: per-asset -- Binance ikutin isDemo global apa adanya, MEXC SELALU false (Real).
+  function isDemoFor(assetCfg) {
+    return assetCfg && assetCfg.exchange === 'mexc' ? false : isDemo;
+  }
 
   // 12 Sep 2026, permintaan Olan ("sertakan PnL hari ini" di redesign pesan) -- SAMA konsep kayak
   // positionReconciler.js buat trading manual, sekarang Nyopet AUTO (close/partial) juga dikasih
@@ -406,7 +417,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
     const dxyLine = await formatDxyLine().catch(() => '');
     const todaysPnlOpen = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemo, idrRate, smartMoney.line, todaysPnlOpen, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
+    const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemoFor(assetCfg), idrRate, smartMoney.line, todaysPnlOpen, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
     await notify(msg);
     // 6 Sep 2026, permintaan Olan (jurnal member: "beda dia trade sendiri atau karena kaela") --
@@ -437,7 +448,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     saveJournal(journal);
 
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
-    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
+    const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemoFor(assetCfg), idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
     await notify(msg);
     emit({ entryId: order.id, type: 'partial', realizedPnlUsd, sl: order.entryPrice, exchange: assetCfg.exchange });
@@ -480,7 +491,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       const msg = formatAutoClosedUntracked({
         id: order.id, direction: order.direction === 'buy' ? 'long' : 'short',
         assetLabel: assetCfg.label, entryPrice: order.entryPrice,
-      }, isDemo);
+      }, isDemoFor(assetCfg));
       console.log(msg + '\n');
       await notify(msg);
       emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: null, closedAt: target.closedAt, exchange: assetCfg.exchange });
@@ -540,7 +551,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
     const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
-    let msg = formatAutoClosed({ id: order.id, signalId: order.signalId, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
+    let msg = formatAutoClosed({ id: order.id, signalId: order.signalId, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemoFor(assetCfg), alasanText, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     // Win-rate + akumulasi (23 Sep 2026, permintaan Olan, disamain dari Channel Breakout) --
     // dihitung LANGSUNG dari journal.orders (bukan counter terpisah kayak ninjaTrader.js)
     // -- Nyopet journal SATU-SATUNYA sumber kebenaran, scan ulang tiap kali lebih aman drpd nyimpen
@@ -549,7 +560,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const stats = { wins: closedAuto.filter((o) => (o.pnlUsd || 0) >= 0).length, losses: closedAuto.filter((o) => (o.pnlUsd || 0) < 0).length, totalPnlUsd: closedAuto.reduce((s, o) => s + (o.pnlUsd || 0), 0) };
     // Label "Ranger" (25 Sep 2026, rename dari Nyopet) -- badge di atas UDAH ganti ke SYSTEM_LABEL.RANGER,
     // baris win-rate ini eksplisit sama biar gak ketuker sisa teks "Nyopet" yang udah gak dipakai.
-    const winRateLines = formatWinRateLines(stats, `Ranger ${assetCfg.label} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
+    const winRateLines = formatWinRateLines(stats, `Ranger ${assetCfg.label} (${isDemoFor(assetCfg) ? 'Demo' : 'Real'})`, idrRate);
     msg = msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
     console.log(msg + '\n');
     await notify(msg);

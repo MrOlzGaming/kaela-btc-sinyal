@@ -132,6 +132,22 @@ function formatRencana(order) {
 // dipakai Ranger/Ninja, bukan template terpisah lagi) -- `pos` dirakit dari `order` (field yang
 // namanya beda dipetakan, field yang SAMA persis dioper apa adanya). `nilaiPosisi` dihitung PERSIS
 // formula calculator.js (margin x leverage) karena order Sniper gak nyimpen field itu langsung.
+// isDemoFor (26 Sep 2026, audit "pastikan semua tradingan real jalan" -- Olan konfirmasi "iya real
+// dari dulu, benerin labelnya aja") -- SEBELUMNYA badge Demo/Real Sniper hardcode `false` (waktu
+// unifikasi desain pesan, Sniper emang belum pernah nunjukin badge ini sama sekali) -- SALAH buat
+// 2 kasus: (1) Sniper BTC ikutin killSwitch GLOBAL lewat localLiveExecutor.js (sekarang MASIH
+// demo, bakal real bulan depan), (2) Emas/MEXC SELALU real, gak pernah demo (base URL tunggal).
+// Derive dari `order.liveExecution.testnet` (localLiveExecutor.js yang nyimpen, sekarang per-aset
+// udah bener) -- default AMAN kalau field gak ada/ambigu (order lama pre-fitur-ini): ANGGAP DEMO,
+// sama filosofi killSwitch.isTestnet(). Override MEXC SELALU real tetap dipasang di sini juga
+// (defense-in-depth) buat jaga-jaga order LAMA yang sempat kesimpen field testnet yang salah.
+function isDemoFor(order) {
+  const asset = assetOf(order);
+  if (asset.exchange === 'mexc') return false;
+  if (order.liveExecution && typeof order.liveExecution.testnet === 'boolean') return order.liveExecution.testnet;
+  return true;
+}
+
 function formatTriggered(order, idrRate) {
   const asset = assetOf(order);
   const pos = {
@@ -141,7 +157,7 @@ function formatTriggered(order, idrRate) {
     nilaiPosisi: (order.marginUsd && order.leverage) ? order.marginUsd * order.leverage : null,
     assetLabel: asset.label, mode: order.mode, patternType: order.patternType,
   };
-  return formatAutoOpen(pos, new Date(), '', false, idrRate, '', null, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
+  return formatAutoOpen(pos, new Date(), '', isDemoFor(order), idrRate, '', null, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
 }
 
 // `todaysPnl` (12 Sep 2026, permintaan Olan "Auto (Kaela)... sertakan PnL hari ini" -- diperluas
@@ -181,7 +197,7 @@ function formatClosed(order, idrRate, todaysPnl) {
   };
   const partialNote = order.partialDone ? ' (ini penutupan SISA posisi -- separuh pertama udah diamankan duluan pas kena target tahap 1)' : '';
   const alasanText = (won ? 'Take Profit kena' : (CLOSE_REASON_LABEL[order.closeReason] || 'Stop Loss kena')) + partialNote;
-  let msg = formatAutoClosed(trade, new Date(), false, alasanText, idrRate, todaysPnl, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
+  let msg = formatAutoClosed(trade, new Date(), isDemoFor(order), alasanText, idrRate, todaysPnl, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
   const winRateLines = sniperWinRateLines(order, idrRate);
   return msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
 }
@@ -200,7 +216,7 @@ function formatPartialClosed(order, idrRate, todaysPnl) {
     entryPrice: order.entryPrice, realizedPnlUsd: order.realizedPnlUsd,
     trailSmaLen: order.trailSmaLen, assetLabel: asset.label,
   };
-  return formatAutoPartial(pos, new Date(), false, idrRate, todaysPnl, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
+  return formatAutoPartial(pos, new Date(), isDemoFor(order), idrRate, todaysPnl, exchangeBadgeFor(order), SYSTEM_LABEL.SNIPER);
 }
 
 // Laporan PEMANTAUAN harian (12 Agu 2026, permintaan Olan: "saat dipantau, tiap hari berarti
@@ -522,4 +538,4 @@ function formatAutoInvalid({ notes }) {
   ].join('\n');
 }
 
-module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid, formatSignalInfoOnly, formatBearShortSignal };
+module.exports = { formatRencana, formatTriggered, formatClosed, formatPartialClosed, formatPositionMonitor, formatCancelled, formatDailyTrigger, formatAutoValid, formatAutoInvalid, formatSignalInfoOnly, formatBearShortSignal, isDemoFor };

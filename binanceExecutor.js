@@ -29,6 +29,8 @@ function loadSecrets() {
     return {
       BINANCE_API_KEY: process.env.BINANCE_API_KEY,
       BINANCE_API_SECRET: process.env.BINANCE_API_SECRET,
+      BINANCE_API_KEY_REAL: process.env.BINANCE_API_KEY_REAL,
+      BINANCE_API_SECRET_REAL: process.env.BINANCE_API_SECRET_REAL,
     };
   }
 }
@@ -258,14 +260,25 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
 // (bukan bikin instance baru tiap panggilan) -- biar symbolInfoCache-nya TETAP kepakai lintas
 // pemanggilan dalam 1x run kayak perilaku asli SEBELUM refactor ini (module-level cache).
 let _defaultClientInstance = null;
+// 🐛 FIX 26 Sep 2026 (audit "pastikan semua tradingan real jalan" -- Olan minta cek Sniper/Ranger
+// sebelum real bulan depan) -- SEBELUM ini SELALU baca `BINANCE_API_KEY`/`_SECRET` (key DEMO) di
+// sini, GAK PERNAH `_REAL`, walau `isTestnet()` bilang `false` (real) -- SEMUA caller lama
+// (sniperLiveMonitor.js/rangerAutoTrader.js/localLiveExecutor.js, lihat komentar di atas) bakal
+// nembak MAINNET pakai key DEMO begitu Olan nyalain real bulan depan -- 401 "Invalid API-key"
+// PERSIS kelas bug yang baru dibenerin di monthlyFundingReminder.js (fetchBalance ketuker key).
+// Ketemu SEKARANG lewat audit proaktif, SEBELUM sempat kejadian beneran pas real dinyalain.
 function _defaultClient() {
   if (_defaultClientInstance) return _defaultClientInstance;
   const secrets = loadSecrets();
-  if (!secrets.BINANCE_API_KEY || !secrets.BINANCE_API_SECRET) {
-    throw new Error('BINANCE_API_KEY/BINANCE_API_SECRET belum di-setup (secrets.js atau env var) -- gak bisa eksekusi order real.');
-  }
   const { isTestnet } = require('./killSwitch');
-  _defaultClientInstance = createBinanceClient({ apiKey: secrets.BINANCE_API_KEY, apiSecret: secrets.BINANCE_API_SECRET, testnet: isTestnet() });
+  const testnet = isTestnet();
+  const apiKey = testnet ? secrets.BINANCE_API_KEY : secrets.BINANCE_API_KEY_REAL;
+  const apiSecret = testnet ? secrets.BINANCE_API_SECRET : secrets.BINANCE_API_SECRET_REAL;
+  if (!apiKey || !apiSecret) {
+    const suffix = testnet ? '' : '_REAL';
+    throw new Error(`BINANCE_API_KEY${suffix}/BINANCE_API_SECRET${suffix} belum di-setup (secrets.js atau env var) -- gak bisa eksekusi order ${testnet ? 'demo' : 'real'}.`);
+  }
+  _defaultClientInstance = createBinanceClient({ apiKey, apiSecret, testnet });
   return _defaultClientInstance;
 }
 

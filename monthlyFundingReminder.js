@@ -62,10 +62,18 @@ function loadSecrets() {
 
 // Balance REAL selalu mainnet (testnet: false eksplisit) -- ini laporan uang beneran, TIDAK
 // boleh ikut global isTestnet() (yang ngatur mode eksekusi trading, bukan buat cek modal setor).
+// 🐛 FIX 26 Sep 2026 (Watchdog lapor 401 "Invalid API-key" 1000+ kali di histori log, Olan
+// eksplisit minta ditelusuri) -- SEBELUM ini baca `secrets.BINANCE_API_KEY` (key DEMO,
+// demo-fapi.binance.com) tapi dipakai buat manggil MAINNET (`testnet: false` di atas) -- ketuker
+// nama variabel, BUKAN masalah IP/permission kayak pesan errornya. Key demo emang TOLAK
+// permanen di endpoint real (beda sistem total, lihat catatan Accounts.gs kaela-multi-akun).
+// `BINANCE_API_KEY_REAL` masih kosong (Olan belum topup, rencana 5 Okt 2026) -- throw
+// "belum disetup" (skip bersih, SAMA pola kayak execFor return null di ninjaTrader.js) jauh
+// lebih murah/jujur drpd 1000+ percobaan HTTP nyata ke Binance yang emang pasti gagal terus.
 async function fetchBalance(wallet, secrets) {
   if (wallet.exchange === 'binance') {
-    if (!secrets.BINANCE_API_KEY || !secrets.BINANCE_API_SECRET) throw new Error('Binance API key belum disetup.');
-    const client = createBinanceClient({ apiKey: secrets.BINANCE_API_KEY, apiSecret: secrets.BINANCE_API_SECRET, testnet: false });
+    if (!secrets.BINANCE_API_KEY_REAL || !secrets.BINANCE_API_SECRET_REAL) throw new Error('Binance API key REAL belum disetup.');
+    const client = createBinanceClient({ apiKey: secrets.BINANCE_API_KEY_REAL, apiSecret: secrets.BINANCE_API_SECRET_REAL, testnet: false });
     return client.getWalletBalance(wallet.asset);
   }
   if (!secrets.MEXC_API_KEY || !secrets.MEXC_API_SECRET) throw new Error('MEXC API key belum disetup.');

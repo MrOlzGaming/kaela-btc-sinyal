@@ -17,7 +17,7 @@ const { isBtcBearWindow } = require('../halvingBearWindow');
 const {
   runNyopetV2BacktestWindowGated, summarize: summarizeNyopet, makeBtcBearWindowFn, makeEmasBearWindowFn,
   CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H,
-} = require('./nyopetChartPatternFvg');
+} = require('./rangerChartPatternFvg');
 
 const START_2020 = new Date('2020-01-01T00:00:00Z').getTime();
 const ERA_SPLIT = new Date('2023-01-01T00:00:00Z').getTime();

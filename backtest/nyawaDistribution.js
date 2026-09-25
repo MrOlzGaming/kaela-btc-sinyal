@@ -74,7 +74,7 @@ const sniperGoldStats = sniperNyawaScan(goldDaily, 'Sniper Emas');
 
 // ============ Nyopet v2 (reuse runNyopetV2Backtest -- trades array udah punya originalSl) ============
 console.log('\n--- NYOPET v2 (4H) ---');
-const { runNyopetV2Backtest, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H } = require('./nyopetChartPatternFvg.js');
+const { runNyopetV2Backtest, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H } = require('./rangerChartPatternFvg');
 
 function nyopetNyawaFromTrades(candles, opts, label) {
   const r = runNyopetV2Backtest(candles, opts);

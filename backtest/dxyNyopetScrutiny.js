@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
-const { runNyopetV2Backtest, summarize, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H } = require('./nyopetChartPatternFvg.js');
+const { runNyopetV2Backtest, summarize, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H } = require('./rangerChartPatternFvg');
 const { buildDxyWeakLookup } = require('./dxyFilter.js');
 
 function runEra(candles, startMs, endMs, dxyFilter) {

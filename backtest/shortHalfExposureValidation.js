@@ -14,7 +14,7 @@ const { runFlagBacktestWindowGated, summarize: summarizeSniper } = require('../b
 const {
   runNyopetV2BacktestWindowGated, makeBtcBearWindowFn, makeEmasBearWindowFn,
   summarize: summarizeNyopet, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H,
-} = require('./nyopetChartPatternFvg');
+} = require('./rangerChartPatternFvg');
 
 function byYear(trades) {
   const years = {};

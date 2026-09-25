@@ -35,8 +35,8 @@ jobs:
           };
           EOF
 
-      - name: Generate + kirim OTP (nyopetRequestOtp.js)
-        run: node nyopetRequestOtp.js
+      - name: Generate + kirim OTP (rangerRequestOtp.js)
+        run: node rangerRequestOtp.js
 
       - name: Commit & push nyopet-otp-state.json
         run: |

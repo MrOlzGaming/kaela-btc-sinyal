@@ -1,5 +1,5 @@
 // Runner buat workflow nyopet-request-otp.yml -- generate + kirim OTP ke WA Olan.
-const { requestOtp } = require('./nyopetOtp');
+const { requestOtp } = require('./rangerOtp');
 
 requestOtp()
   .then(() => console.log('[NyopetRequestOtp] OTP dikirim.'))

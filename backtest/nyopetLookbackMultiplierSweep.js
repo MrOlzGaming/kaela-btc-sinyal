@@ -18,7 +18,7 @@
 // ke 3 nilai doang (bukan sweep 9 nilai), dan script ini dijalanin di background/nohup, BUKAN
 // lewat pipe ke `tail` (itu nge-buffer semua output sampe EOF, bikin kelihatan macet).
 
-const { runNyopetV2Backtest, summarize, CANDLES_4H, CANDLES_4H_GOLD } = require('./nyopetChartPatternFvg.js');
+const { runNyopetV2Backtest, summarize, CANDLES_4H, CANDLES_4H_GOLD } = require('./rangerChartPatternFvg');
 
 function scaledParams(M) {
   return {

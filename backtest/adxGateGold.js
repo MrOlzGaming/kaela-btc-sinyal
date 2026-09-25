@@ -19,7 +19,7 @@
 // berharap Era1 jadi UNTUNG besar, realistisnya cuma NGURANGIN kerugian.
 
 const { adxSeries } = require('../technicalAnalysis');
-const { CANDLES_4H_GOLD } = require('./nyopetChartPatternFvg');
+const { CANDLES_4H_GOLD } = require('./rangerChartPatternFvg');
 const { makeBufferedBearWindowFn, runVariant, countWindowFlips } = require('./goldWindowMaturation');
 
 const START_2020 = new Date('2020-01-01T00:00:00Z').getTime();

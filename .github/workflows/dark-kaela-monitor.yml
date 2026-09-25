@@ -65,7 +65,7 @@ jobs:
       # live: loop internal ~5j20m, cek+commit+push tiap iterasi, sleep 300dtk antar iterasi --
       # ini yang beneran ngasih cadence ~5 menit (gak minta GitHub dispatch job baru tiap kali).
       #
-      # Ikut jalan bareng (16 Agu 2026, permintaan Olan): nyopetPositionMonitor.js -- mantau
+      # Ikut jalan bareng (16 Agu 2026, permintaan Olan): rangerPositionMonitor.js -- mantau
       # posisi Nyopet REAL yang dibuka MANUAL sama Olan di exchange asli (bukan sinyal zona),
       # cek likuidasi/profit 100% ROI tiap iterasi yang sama, catat ke nyopet-journal.json.
       - name: Cek zona likuiditas + posisi Nyopet real -- sekali (dry-run) atau loop ~5,5 jam (live)
@@ -74,7 +74,7 @@ jobs:
         run: |
           if [ "$DARK_KAELA_DRY_RUN" = "1" ]; then
             node darkKaelaMonitor.js
-            node nyopetPositionMonitor.js
+            node rangerPositionMonitor.js
             exit 0
           fi
           git config user.name "Kaela Bot"
@@ -85,7 +85,7 @@ jobs:
             # pernah re-pull kecuali pas KEBETULAN ada perubahan lokal buat di-push. Di sisi lain,
             # run-vultr-executor.sh (VPS, TERPISAH total, siklus 15 menit) BISA JUGA nulis+commit+
             # push nyopet-journal.json yang SAMA (lewat `_defaultTrader` akun Olan sendiri) kapan
-            # aja. Tanpa pull di sini, `nyopetPositionMonitor.js` bisa baca journal yang udah BASI
+            # aja. Tanpa pull di sini, `rangerPositionMonitor.js` bisa baca journal yang udah BASI
             # sampai berjam-jam (posisi yang udah dibuka/ditutup VPS gak kebaca di sini) -- dan
             # kalau ujung-ujungnya nyoba commit dari basis basi itu, `git pull --rebase` di blok
             # push bawah lebih gampang gagal/konflik. Fix: tarik update TERBARU DULU tiap awal
@@ -102,7 +102,7 @@ jobs:
             # cooldown di sisi GAS, gak akan spam walau kepanggil tiap iterasi 5 menit).
             ITER_LOG=$(mktemp)
             node darkKaelaMonitor.js 2>&1 | tee "$ITER_LOG"
-            node nyopetPositionMonitor.js 2>&1 | tee -a "$ITER_LOG"
+            node rangerPositionMonitor.js 2>&1 | tee -a "$ITER_LOG"
             ITER_ERRORS=$(grep -i "ERROR\|GAGAL" "$ITER_LOG" || true)
             if [ -n "$ITER_ERRORS" ]; then
               node reportCycleErrors.js 'github-dark-kaela' "$ITER_ERRORS" || true

@@ -111,13 +111,14 @@ try {
   Log "sniperLiveMonitor.js ERROR: $($_.Exception.Message)"
 }
 
-# Nyopet Auto-Trader (23 Agu 2026) -- ping-pong zona likuiditas, numpang cadence yang sama (BTCUSDC
+# Ranger Auto-Trader (bekas nama "Nyopet", di-rename 25 Sep 2026 -- lihat feedback-system-map-pattern
+# soal alasan rename) -- 23 Agu 2026, ping-pong zona likuiditas, numpang cadence yang sama (BTCUSDC
 # beda wallet dari Sniper BTCUSDT jadi aman jalan bareng, gak rebutan margin).
 try {
-  $output2 = node nyopetAutoTrader.js 2>&1 | Out-String
+  $output2 = node rangerAutoTrader.js 2>&1 | Out-String
   Add-Content -Path $logFile -Value $output2 -Encoding utf8
 } catch {
-  Log "nyopetAutoTrader.js ERROR: $($_.Exception.Message)"
+  Log "rangerAutoTrader.js ERROR: $($_.Exception.Message)"
 }
 
 # Kaela Pro Trader -- eksekutor MULTI-AKUN (23 Agu 2026) -- JALAN TERAKHIR (butuh sniper-orders.json

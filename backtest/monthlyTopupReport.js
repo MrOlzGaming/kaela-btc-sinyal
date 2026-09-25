@@ -22,7 +22,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 
 const { runCrossAssetBacktest, summarize: summarizeSniper } = require(path.join(ROOT, 'backtestCrossAsset.js'));
-const { runNyopetV2Backtest, summarize: summarizeNyopet, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H } = require('./nyopetChartPatternFvg.js');
+const { runNyopetV2Backtest, summarize: summarizeNyopet, CANDLES_4H, CANDLES_4H_GOLD, RESCALED_4H } = require('./rangerChartPatternFvg');
 
 const TOPUP = { startCapital: 50, topUpAmount: 50, topUpStopAt: 1000, topUpDayOfMonth: 5 };
 

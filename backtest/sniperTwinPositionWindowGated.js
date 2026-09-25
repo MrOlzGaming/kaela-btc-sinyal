@@ -9,7 +9,7 @@ const { hitung: hitungExposure } = require('../calculator');
 const { sma } = require('../technicalAnalysis');
 const { isBtcBearWindow } = require('../halvingBearWindow');
 const { simulateFixedTp, simulateOldStyleExit } = require('./rangerTwinPositionBacktest');
-const { detectFvgSignalBoth } = require('./nyopetChartPatternFvg');
+const { detectFvgSignalBoth } = require('./rangerChartPatternFvg');
 const { DAILY_BTC, summarizeLeg } = require('./sniperTwinPositionBacktest');
 const { TAKER_FEE_PERCENT } = require('./scoutTrailingInvalidationBacktest');
 

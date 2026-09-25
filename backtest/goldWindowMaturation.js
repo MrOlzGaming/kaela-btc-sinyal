@@ -13,7 +13,7 @@ const path = require('path');
 const { sma } = require('../technicalAnalysis');
 const {
   runNyopetV2BacktestWindowGated, summarize, CANDLES_4H_GOLD, RESCALED_4H,
-} = require('./nyopetChartPatternFvg');
+} = require('./rangerChartPatternFvg');
 
 const START_2020 = new Date('2020-01-01T00:00:00Z').getTime();
 const ERA_SPLIT = new Date('2023-01-01T00:00:00Z').getTime();
@@ -95,7 +95,7 @@ function runVariant(label, bearWindowFn, extraOpts = {}) {
 // langsung kalau mau lihat laporan buffer-band ini sendiri.
 if (require.main === module) {
   console.log('========== BASELINE (crossover polos, SMA1200-4H, LIVE SEKARANG) ==========');
-  const { makeEmasBearWindowFn } = require('./nyopetChartPatternFvg');
+  const { makeEmasBearWindowFn } = require('./rangerChartPatternFvg');
   runVariant('Baseline (buffer 0%)', makeEmasBearWindowFn());
 
   console.log('\n\n========== KANDIDAT: Buffer band (Schmitt trigger), SMA1200 ==========');

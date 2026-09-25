@@ -18,8 +18,8 @@ const path = require('path');
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
-const { createNyopetTrader } = require('./nyopetAutoTrader');
-const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
+const { createNyopetTrader } = require('./rangerAutoTrader');
+const { NYOPET_ASSETS } = require('./rangerAssetConfig');
 const { buildJournalHook, buildSendWA, safeKey, MASTER_NOMOR } = require('./multiAccountExecutor');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');

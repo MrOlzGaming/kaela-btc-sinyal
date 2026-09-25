@@ -20,7 +20,7 @@ const { detectFlag, detectWedge } = require('../chartPatterns');
 const { hitung: hitungExposure } = require('../calculator');
 const { sma } = require('../technicalAnalysis');
 const { simulateTrailingInvalidation } = require('../masterRuleTrailingInvalidation');
-const { detectFvgSignalBoth, CANDLES_4H, CANDLES_4H_GOLD } = require('./nyopetChartPatternFvg');
+const { detectFvgSignalBoth, CANDLES_4H, CANDLES_4H_GOLD } = require('./rangerChartPatternFvg');
 const { TAKER_FEE_PERCENT } = require('./scoutTrailingInvalidationBacktest');
 
 // "Opsi A" (25 Sep 2026, permintaan Olan setelah lihat Fixed-TP murni GAK reliable buat BTC di

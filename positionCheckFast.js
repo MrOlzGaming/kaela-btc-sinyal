@@ -26,7 +26,7 @@ const path = require('path');
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
-const { createNyopetTrader } = require('./nyopetAutoTrader');
+const { createNyopetTrader } = require('./rangerAutoTrader');
 const { reconcileWibowoPositions } = require('./positionReconciler');
 const { buildJournalHook, buildSendWA, buildModalOverride, safeKey, MASTER_NOMOR, _mexcNotConfiguredStub } = require('./multiAccountExecutor');
 

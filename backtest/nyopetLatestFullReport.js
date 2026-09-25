@@ -12,7 +12,7 @@
 // sedikit lebih banyak entry buy dari yang live beneran ambil), TAPI arah/pola hasil tetap
 // representatif.
 
-const { CANDLES_4H, RESCALED_4H, makeBtcBearWindowFn, runNyopetV2BacktestWindowGated, summarize, byYear } = require('./nyopetChartPatternFvg');
+const { CANDLES_4H, RESCALED_4H, makeBtcBearWindowFn, runNyopetV2BacktestWindowGated, summarize, byYear } = require('./rangerChartPatternFvg');
 
 function breakdownByPatternAndDirection(trades) {
   const groups = {};

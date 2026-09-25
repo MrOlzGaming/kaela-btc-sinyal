@@ -11,9 +11,9 @@
 // lama (dicek di WORKFLOW sebelum checkout) -- OTP WAJIB dicek SETELAH checkout karena butuh baca
 // nyopet-otp-state.json dari repo, jadi gerbangnya pindah ke sini bukan lagi di YAML.
 
-const { verifyOtp } = require('./nyopetOtp');
-const { openPosition, closePosition, getSummary, markProfit100Notified, markWarning80Notified } = require('./nyopetJournal');
-const { formatOpened, formatManualClosed, format100TradeEvaluasi } = require('./nyopetJournalLog');
+const { verifyOtp } = require('./rangerOtp');
+const { openPosition, closePosition, getSummary, markProfit100Notified, markWarning80Notified } = require('./rangerJournal');
+const { formatOpened, formatManualClosed, format100TradeEvaluasi } = require('./rangerJournalLog');
 const { sendWhatsApp } = require('./fonnte');
 const kaela = require('./kaelaProTraderClient');
 

@@ -11,7 +11,7 @@
 const { sma } = require('../technicalAnalysis');
 const { hitung: hitungExposure } = require('../calculator');
 const { detectFlag, detectWedge } = require('../chartPatterns');
-const { CANDLES_4H, RESCALED_4H, makeBtcBearWindowFn, detectFvgSignalBoth, summarize, byYear } = require('./nyopetChartPatternFvg');
+const { CANDLES_4H, RESCALED_4H, makeBtcBearWindowFn, detectFvgSignalBoth, summarize, byYear } = require('./rangerChartPatternFvg');
 
 function runSimpleTpVariant(candles, opts) {
   const {
@@ -90,7 +90,7 @@ function runSimpleTpVariant(candles, opts) {
 
 function main() {
   const opts = { ...RESCALED_4H, modalDivisor: 5, bearWindowFn: makeBtcBearWindowFn(), tpRMultiple: 2 };
-  const { runNyopetV2BacktestWindowGated } = require('./nyopetChartPatternFvg');
+  const { runNyopetV2BacktestWindowGated } = require('./rangerChartPatternFvg');
 
   console.log('=== PERBANDINGAN: Trailing Stop (SMA-60, LIVE sekarang) vs TP Tetap (2R, gak ada trail) ===');
   console.log('SAMA PERSIS: sinyal (flag/wedge/FVG), window-gating, sizing/leverage, cuma exit-nya beda.\n');

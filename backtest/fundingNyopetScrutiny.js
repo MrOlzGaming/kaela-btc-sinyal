@@ -3,7 +3,7 @@
 // BTC DOANG (bukan Emas) -- funding rate itu mekanisme perpetual futures BTC yang udah lama
 // establish datanya, Emas/PAXG di MEXC funding history-nya BELUM ketest/dipunya di project ini.
 
-const { runNyopetV2Backtest, summarize, byYear, CANDLES_4H, RESCALED_4H } = require('./nyopetChartPatternFvg.js');
+const { runNyopetV2Backtest, summarize, byYear, CANDLES_4H, RESCALED_4H } = require('./rangerChartPatternFvg');
 const { buildFundingFavorableLookup } = require('./fundingFilter.js');
 
 const BASE_OPTS = { ...RESCALED_4H, allowShort: false, modalDivisor: 5, startCapital: 100 };

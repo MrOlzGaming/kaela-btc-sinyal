@@ -16,7 +16,7 @@ const { detectFlag, detectWedge } = require('../chartPatterns');
 const { hitung: hitungExposure } = require('../calculator');
 const { sma } = require('../technicalAnalysis');
 const { simulateFixedTp, simulateOldStyleExit } = require('./rangerTwinPositionBacktest');
-const { detectFvgSignalBoth, CANDLES_4H, CANDLES_4H_GOLD, makeBtcBearWindowFn, makeEmasBearWindowFn } = require('./nyopetChartPatternFvg');
+const { detectFvgSignalBoth, CANDLES_4H, CANDLES_4H_GOLD, makeBtcBearWindowFn, makeEmasBearWindowFn } = require('./rangerChartPatternFvg');
 const { TAKER_FEE_PERCENT } = require('./scoutTrailingInvalidationBacktest');
 
 // Trailing invalidation VERSI window-gated -- inti matematikanya SAMA PERSIS masterRuleTrailingInvalidation.js

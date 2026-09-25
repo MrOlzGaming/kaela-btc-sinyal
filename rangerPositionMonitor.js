@@ -3,8 +3,8 @@
 // likuidasi/profit 100% ROI, catat hasilnya ke nyopet-journal.json, dan kirim WA -- TIDAK PERNAH
 // eksekusi apapun ke exchange asli (gak ada API key exchange sama sekali di sistem ini).
 
-const { getSummary, closePosition, markProfit100Notified, markWarning80Notified } = require('./nyopetJournal');
-const { formatLiquidated, formatProfit100, formatWarning80, format100TradeEvaluasi } = require('./nyopetJournalLog');
+const { getSummary, closePosition, markProfit100Notified, markWarning80Notified } = require('./rangerJournal');
+const { formatLiquidated, formatProfit100, formatWarning80, format100TradeEvaluasi } = require('./rangerJournalLog');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
 

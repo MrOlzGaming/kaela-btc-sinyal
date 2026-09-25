@@ -41,7 +41,7 @@ function reportSection(label, returns, numTrials) {
 
 async function main() {
   console.log('########## 1) SNIPER/NYOPET CHART PATTERN + FVG (nyopetChartPatternFvg.js) ##########');
-  const cpf = require('./nyopetChartPatternFvg.js');
+  const cpf = require('./rangerChartPatternFvg');
   const btcResult = cpf.runNyopetV2Backtest(cpf.CANDLES_4H, { ...cpf.RESCALED_4H, allowShort: false, modalDivisor: 1 });
   const btcTrades = btcResult.trades.slice().sort((a, b) => a.exitTime - b.exitTime);
   reportSection('BTC Chart Pattern+FVG (buy-only, sizing normal) -- rMultiple per trade', btcTrades.map((t) => t.rMultiple), TRIALS_CHART_PATTERN);

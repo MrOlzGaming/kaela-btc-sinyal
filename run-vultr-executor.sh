@@ -129,7 +129,7 @@ timeout -k 10 90 node localLiveExecutor.js >> "$LOG_FILE" 2>&1 || log "localLive
 timeout -k 10 60 node sniperLiveMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperLiveMonitor.js ERROR (exit $?)"
 
 # Nyopet Auto-Trader -- ping-pong zona likuiditas, numpang cadence yang sama.
-timeout -k 10 90 node nyopetAutoTrader.js >> "$LOG_FILE" 2>&1 || log "nyopetAutoTrader.js ERROR (exit $?)"
+timeout -k 10 90 node rangerAutoTrader.js >> "$LOG_FILE" 2>&1 || log "rangerAutoTrader.js ERROR (exit $?)"
 
 # Kaela Pro Trader -- eksekutor MULTI-AKUN, JALAN TERAKHIR (butuh sniper-orders.json fresh).
 timeout -k 10 180 node multiAccountExecutor.js >> "$LOG_FILE" 2>&1 || log "multiAccountExecutor.js ERROR (exit $?)"

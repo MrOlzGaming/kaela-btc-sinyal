@@ -6,7 +6,7 @@
 // seperti permutationTest biasa. Resolusi p-value = 1/ITERATIONS -- cukup buat deteksi "beda
 // drastis dari acak", kurang presisi buat p-value yang mepet 0,05 (kalau hasilnya di kisaran itu,
 // pertimbangkan iterations lebih banyak, jalan overnight).
-const cpf = require('./nyopetChartPatternFvg.js');
+const cpf = require('./rangerChartPatternFvg');
 const { barPermutationTest, metricAvgReturn, metricProfitFactor } = require('./backtestValidation');
 
 const ITERATIONS = 40; // ~128 detik x 41 run (1 observed + 40 null) = ~87 menit

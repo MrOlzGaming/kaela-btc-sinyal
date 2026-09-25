@@ -36,15 +36,15 @@ const { addEntry } = require('./archive');
 
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
-const { createNyopetTrader } = require('./nyopetAutoTrader');
-const { NYOPET_ASSETS } = require('./nyopetAssetConfig');
+const { createNyopetTrader } = require('./rangerAutoTrader');
+const { NYOPET_ASSETS } = require('./rangerAssetConfig');
 const { buildJournalHook, buildSendWA, MASTER_NOMOR } = require('./multiAccountExecutor');
 // (5 Sep 2026, permintaan Olan: "atasi sinyal yang numpukin sinyal lain") -- journal REAL Olan
 // BISA disentuh proses INI (siklus 5 menit) DAN nyopetAutoTrader.js (siklus 15 menit, chart-
 // pattern/FVG/Fed Dovish Grid) buat event FOMC/NFP yang SAMA -- lock cegah race condition,
 // wouldFedGridClaim cegah econ_reaction ngerebut sinyal yang harusnya milik Fed Dovish Grid
 // (keputusan Olan: Fed Dovish Grid menang krn edge-nya lebih tebal/robust di backtest).
-const { withJournalLock } = require('./nyopetJournalLock');
+const { withJournalLock } = require('./rangerJournalLock');
 const { fetchKlines } = require('./backtest/fetchKlines');
 const { computeSMA, FINAL_RECIPE } = require('./backtest/fedSignalGridBacktest.js');
 

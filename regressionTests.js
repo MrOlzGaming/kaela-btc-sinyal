@@ -477,14 +477,16 @@ async function main() {
   });
 
   // actionableLiquidityRadar.js (21 Sep 2026, Fase 1 "forced-flow / liquidity analyst") --
-  // ground-truth konvensi side liquidationListener.js: 'SELL' = LONG kena force-close, 'BUY' =
-  // SHORT kena force-close. summarizeEvents HARUS pisahin dua sisi bener, nearbyClusters HARUS
-  // urutin dari yang PALING DEKAT ke harga sekarang (bukan yang paling BESAR).
-  await test('summarizeEvents: pisahin notional LONG (SELL) vs SHORT (BUY) dengan bener', () => {
+  // ⛔ FIX 25 Sep 2026: ground-truth konvensi side DIBALIK (bug nyata ketemu -- lihat
+  // feedback-bybit-liquidation-side-convention.md) -- Bybit allLiquidation `side` = POSISI ASLI
+  // yang kelikuidasi (BUKAN arah order penutup ala Binance): 'BUY' = LONG kena force-close,
+  // 'SELL' = SHORT kena force-close. summarizeEvents HARUS pisahin dua sisi bener, nearbyClusters
+  // HARUS urutin dari yang PALING DEKAT ke harga sekarang (bukan yang paling BESAR).
+  await test('summarizeEvents: pisahin notional LONG (BUY) vs SHORT (SELL) dengan bener', () => {
     const events = [
-      { side: 'SELL', price: 80000, qty: 0.5 }, // LONG liquidated, notional $40.000
-      { side: 'BUY', price: 80000, qty: 1 },    // SHORT liquidated, notional $80.000
-      { side: 'SELL', price: 79000, qty: 0.1 }, // LONG liquidated, notional $7.900
+      { side: 'BUY', price: 80000, qty: 0.5 },  // LONG liquidated, notional $40.000
+      { side: 'SELL', price: 80000, qty: 1 },   // SHORT liquidated, notional $80.000
+      { side: 'BUY', price: 79000, qty: 0.1 },  // LONG liquidated, notional $7.900
     ];
     const r = summarizeEvents(events);
     assert.strictEqual(r.longUsd, 47900);

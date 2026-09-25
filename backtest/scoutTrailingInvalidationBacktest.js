@@ -18,7 +18,7 @@ const path = require('path');
 const { detectFlag, detectWedge } = require('../chartPatterns');
 const { hitung: hitungExposure } = require('../calculator');
 const { simulateTrailingInvalidation, FALLBACK_FEE_PERCENT } = require('../masterRuleTrailingInvalidation');
-const { detectFvgSignalBoth, CANDLES_4H, CANDLES_4H_GOLD } = require('./nyopetChartPatternFvg');
+const { detectFvgSignalBoth, CANDLES_4H, CANDLES_4H_GOLD } = require('./rangerChartPatternFvg');
 
 // Binance Futures base/VIP0 taker (dipakai exit MARKET order -- Bagian 5 dokumen: "order akan
 // jadi taker -> pakai taker_fee"). SAMA tier yang udah dipakai asumsi Channel Breakout/BingX di

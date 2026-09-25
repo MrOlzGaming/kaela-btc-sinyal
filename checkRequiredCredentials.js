@@ -15,6 +15,10 @@ const REQUIRED = [
   { key: 'BINANCE_API_SECRET', why: 'trading BTC (Sniper+Nyopet)' },
   { key: 'MEXC_API_KEY', why: 'trading Emas/PAXG (Sniper+Nyopet)' },
   { key: 'MEXC_API_SECRET', why: 'trading Emas/PAXG (Sniper+Nyopet)' },
+  // 26 Sep 2026, ditambah begitu Ninja (BingX) mulai REAL -- SAMA kelas kredensial kritis kayak
+  // Binance/MEXC di atas (key ini juga dipakai demo VST, tapi lebih penting lagi buat real).
+  { key: 'BINGX_API_KEY', why: 'trading BTC breakout (Ninja)' },
+  { key: 'BINGX_API_SECRET', why: 'trading BTC breakout (Ninja)' },
   { key: 'FONNTE_TOKEN', why: 'kirim notifikasi WA' },
 ];
 

@@ -146,13 +146,70 @@ function checkTriggerStateVsArchive(anomalies) {
   }
 }
 
+// Ninja (26 Sep 2026, permintaan Olan "sempurnakan Ninja" begitu real BingX mulai jalan) --
+// journal-nya BEDA STRUKTUR TOTAL dari Sniper/Ranger (channel-breakout-journal.json, lihat
+// ninjaTrader.js defaultJournal()): gak ada array `orders` sama sekali, cuma floating (posisi
+// SEKARANG) + closedCount (angka) + stats.demo/real (agregat) per varian -- checkJournal() di
+// atas gak nangkep apapun buat file ini (orders selalu undefined -> silently no-op), makanya
+// invariant TERPISAH sendiri di sini.
+function checkNinjaJournal(anomalies) {
+  const f = 'channel-breakout-journal.json';
+  const j = loadJson(f);
+  if (j == null) return; // belum pernah jalan sama sekali -- wajar
+  if (j.__parseError) { anomalies.push(`${f}: GAGAL parse JSON -- ${j.__parseError}`); return; }
+
+  for (const variant of ['tpFixed', 'trailing']) {
+    const v = j[variant];
+    if (!v) continue;
+
+    // 1) closedCount HARUS PERSIS sama kayak stats.demo.wins+losses -- demo SELALU dieksekusi
+    // tiap sinyal (beda dari real yang bisa skip kalau saldo kurang/akun kotor), jadi keduanya
+    // WAJIB sinkron 1:1. Nyimpang = closedCount ke-increment tanpa update stats (atau sebaliknya).
+    if (v.stats && v.stats.demo && typeof v.closedCount === 'number') {
+      const demoTotal = (v.stats.demo.wins || 0) + (v.stats.demo.losses || 0);
+      if (demoTotal !== v.closedCount) {
+        anomalies.push(`${f} [${variant}]: closedCount=${v.closedCount} tapi stats.demo.wins+losses=${demoTotal} (harusnya SAMA PERSIS, demo selalu dieksekusi tiap sinyal)`);
+      }
+      // 2) real WINS+LOSSES gak boleh lebih dari closedCount (real bisa skip, gak bisa lebih sering dari demo).
+      if (v.stats.real) {
+        const realTotal = (v.stats.real.wins || 0) + (v.stats.real.losses || 0);
+        if (realTotal > v.closedCount) {
+          anomalies.push(`${f} [${variant}]: stats.real.wins+losses=${realTotal} MELEBIHI closedCount=${v.closedCount} (mustahil, real gak bisa lebih sering trade dari demo)`);
+        }
+      }
+    }
+
+    // 3) totalPnlUsd numerik valid (kelas bug SAMA kayak cek #7 checkJournal di atas).
+    for (const mode of ['demo', 'real']) {
+      const s = v.stats && v.stats[mode];
+      if (s && (typeof s.totalPnlUsd !== 'number' || Number.isNaN(s.totalPnlUsd))) {
+        anomalies.push(`${f} [${variant}.${mode}]: totalPnlUsd=${JSON.stringify(s.totalPnlUsd)} (${typeof s.totalPnlUsd}) -- harusnya angka valid`);
+      }
+    }
+
+    // 4) Floating posisi (kalau ada) -- harga/qty masuk akal, arah valid.
+    if (v.floating) {
+      if (v.floating.dir !== 'long' && v.floating.dir !== 'short') {
+        anomalies.push(`${f} [${variant}]: floating.dir="${v.floating.dir}" (harusnya 'long'/'short')`);
+      }
+      for (const mode of ['demo', 'real']) {
+        const sub = v.floating[mode];
+        if (sub && (!(sub.entryPrice > 0) || !(sub.quantity > 0))) {
+          anomalies.push(`${f} [${variant}].floating.${mode}: entryPrice=${sub.entryPrice} quantity=${sub.quantity} (harusnya positif)`);
+        }
+      }
+    }
+  }
+}
+
 function main() {
   const anomalies = [];
   for (const f of listJournalFiles()) checkJournal(f, anomalies);
+  checkNinjaJournal(anomalies);
   checkTriggerStateVsArchive(anomalies);
 
   if (anomalies.length === 0) {
-    console.log('[SystemInvariantCheck] Semua invariant journal Nyopet/Sniper OK, gak ada anomali.');
+    console.log('[SystemInvariantCheck] Semua invariant journal Nyopet/Sniper/Ninja OK, gak ada anomali.');
     return;
   }
   // Kata "GAGAL" SENGAJA -- di-scan run-*-executor.sh, relay ke Watchdog/WA (pola sama auditGithubActions.js).

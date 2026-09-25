@@ -1,0 +1,44 @@
+{
+  "tpFixed": {
+    "channel": null,
+    "floating": null,
+    "closedCount": 0,
+    "stats": {
+      "demo": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      },
+      "real": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      }
+    },
+    "dailySignalSeq": {
+      "dayKey": null,
+      "count": 0
+    }
+  },
+  "trailing": {
+    "channel": null,
+    "floating": null,
+    "closedCount": 17,
+    "stats": {
+      "demo": {
+        "wins": 9,
+        "losses": 8,
+        "totalPnlUsd": 44.90630999999923
+      },
+      "real": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      }
+    },
+    "dailySignalSeq": {
+      "dayKey": null,
+      "count": 0
+    }
+  }
+}

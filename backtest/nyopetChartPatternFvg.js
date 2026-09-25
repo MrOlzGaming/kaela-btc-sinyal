@@ -33,17 +33,29 @@ const goldCachePath = path.join(__dirname, 'gold-hourly-cache.json');
 const HOURLY_GOLD = fs.existsSync(goldCachePath) ? JSON.parse(fs.readFileSync(goldCachePath, 'utf8')) : null;
 
 // ============ Resample HOURLY -> 4H (candle mentah gak ada di cache, hemat 1 fetch network) ============
+// ⛔ BUG NYATA ketemu+fix 25 Sep 2026 (riset MASTER_RULE trailing invalidation -- kecurigaan dari
+// jumlah "candle 4H" BTC 59.735, harusnya ~19.912 buat 79.646 candle jam yang ada) -- versi LAMA
+// bandingin `new Date(bucket.closeTime).getUTCHours()` (jam candle TERAKHIR yang udah masuk bucket,
+// BERUBAH tiap kali digabung) vs `bucketHour` (target floor/4 punya candle BARU) -- begitu bucket
+// digabung sekali, closeTime-nya keupdate ke candle barusan, jadi perbandingan berikutnya SALAH
+// (bandingin jam mentah candle sebelumnya, bukan target bucket aslinya) -- hasil nyata: buckets
+// pecah jadi ~3x lipat (contoh nyata: bucket berturutan cuma beda 1 JAM, bukan 4 -- diverifikasi
+// manual). CUMA mempengaruhi file BACKTEST ini (live nyopetAutoTrader.js pakai fetchCandles4hPaginated,
+// candle 4H ASLI dari Binance, TIDAK lewat resample -- trading real AMAN, gak kena bug ini).
+// Fix: simpen `bucketTargetHour`+`bucketDateKey` TERPISAH (dikunci sekali pas bucket baru dibuat),
+// JANGAN pernah derive ulang dari closeTime yang udah berubah.
 function resampleTo4h(hourly) {
   const out = [];
-  let bucket = null;
+  let bucket = null, bucketTargetHour = null, bucketDateKey = null;
   for (const c of hourly) {
-    const hour = new Date(c.closeTime).getUTCHours();
-    const bucketHour = Math.floor(hour / 4) * 4;
-    const isNewBucket = !bucket || new Date(bucket.closeTime).getUTCHours() !== bucketHour
-      || (c.closeTime - bucket.closeTime) > 4 * 3600 * 1000;
+    const d = new Date(c.closeTime);
+    const bucketHour = Math.floor(d.getUTCHours() / 4) * 4;
+    const dateKey = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    const isNewBucket = !bucket || bucketHour !== bucketTargetHour || dateKey !== bucketDateKey;
     if (isNewBucket) {
       if (bucket) out.push(bucket);
       bucket = { openTime: c.openTime, open: c.open, high: c.high, low: c.low, close: c.close, closeTime: c.closeTime };
+      bucketTargetHour = bucketHour; bucketDateKey = dateKey;
     } else {
       bucket.high = Math.max(bucket.high, c.high);
       bucket.low = Math.min(bucket.low, c.low);

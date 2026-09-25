@@ -185,7 +185,13 @@ const CLOSE_REASON_LABEL = {
   // lama yang mekanismenya beda (SMA trail vs trailing-% channel, dll).
   CB_SL: 'Stop Loss kena -- breakout ternyata gagal lanjut (fakeout)',
   CB_TP: 'Target Profit tercapai (1:1 R:R dari lebar channel)',
-  CB_TRAIL: 'Trailing stop kena -- sempat untung, harga berbalik nyentuh stop yang udah ikut naik/turun',
+  // 🐛 FIX 26 Sep 2026 (Olan: "cek anomali pesan trailing boleh kok") -- SEBELUMNYA teks ini
+  // SELALU bilang "sempat untung", padahal trailing invalidation bisa juga kena di level AWAL
+  // (belum pernah sempat ratchet naik/turun sama sekali, kalau harga langsung lawan arah dari
+  // entry) -- posisi kayak gitu BISA TUTUP RUGI tanpa pernah "sempat untung" beneran, teks lama
+  // jadi salah/menyesatkan buat kasus itu. Sekarang netral -- gak nebak status untung/rugi (✅/❌
+  // + angka PnL di baris atasnya udah cukup buat itu), cuma jelasin MEKANISME apa yang kena.
+  CB_TRAIL: 'Trailing stop kena -- harga nyentuh level yang otomatis nyesuain sejak entry (ratchet cuma ke arah untung)',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
@@ -301,15 +307,28 @@ function formatWinRateLines(stats, label, idrRate) {
     + `Akumulasi profit ${label}: ${stats.totalPnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(stats.totalPnlUsd, idrRate)}\n\n`;
 }
 
+// `trade.feeUsd` (26 Sep 2026, permintaan Olan "aku mau fee trading tampil juga, biar ketemu net
+// trading" -- MASTER_RULE_DYNAMIC_CANDLE_INVALIDATION Bagian 3-5+22, "Prompt Awal Backtest Wajib"
+// v3.4: "Tampilkan gross vs net berdampingan") -- OPSIONAL, caller kirim fee ROUND-TRIP (entry+exit,
+// fallback 0.10% per Bagian 4 kalau fee real exchange gak kebaca -- lihat masterRuleTrailingInvalidation.js
+// FALLBACK_FEE_PERCENT). Kalau gak dikirim, baris PnL TETAP APA ADANYA (backward-compat, caller
+// lama -- Ranger/Sniper yang belum sempat dikasih nilaiPosisi di titik tutup -- gak berubah pesannya
+// sama sekali). Status ✅/❌ pakai PnL BERSIH (setelah fee) kalau ada, biar jujur -- trade yang
+// gross untung tapi abis fee jadi rugi HARUS keliatan ❌, bukan ✅ yang menyesatkan.
 function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, exchangeBadge, system) {
-  const won = trade.pnlUsd >= 0;
+  const hasFee = trade.feeUsd != null;
+  const netPnl = hasFee ? trade.pnlUsd - trade.feeUsd : trade.pnlUsd;
+  const won = netPnl >= 0;
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
-  const sign = trade.pnlUsd >= 0 ? '+' : '';
-  const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${sign}${trade.pnlPct.toFixed(1)}%)` : '';
+  const grossSign = trade.pnlUsd >= 0 ? '+' : '';
+  const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${grossSign}${trade.pnlPct.toFixed(1)}%)` : '';
+  const pnlBlock = hasFee
+    ? `PnL Kotor: ${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}\nFee (round-trip): -${fmtUsdWithIdr(trade.feeUsd, idrRate)}\nPnL Bersih: *${netPnl >= 0 ? '+' : ''}${fmtUsdWithIdr(netPnl, idrRate)}*`
+    : `PnL: *${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*`;
   return `${_rangerBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id, trade.signalId)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
-PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*${_todaysPnlLine(todaysPnl, idrRate)}
+${pnlBlock}${_todaysPnlLine(todaysPnl, idrRate)}
 Alasan: ${alasanText || '-'}
 
 🔗 ${KAELA_ACCESS_URL}`;

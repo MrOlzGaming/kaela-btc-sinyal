@@ -36,6 +36,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { detectChannel, channelLinesAt } = require('./chartPatterns');
 const { hitung: hitungExposure } = require('./calculator');
+const { FALLBACK_FEE_PERCENT } = require('./masterRuleTrailingInvalidation');
 const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
@@ -283,8 +284,8 @@ function outcomeCodeFor(outcome) { return outcome === 'TP' ? 'CB_TP' : outcome =
 // Win-rate+akumulasi (permintaan Olan: "tutup posisi sertakan winrate dan akumulasi profit") --
 // Nyopet lama BELUM punya 2 baris ini, jadi DISISIPKAN ke output formatAutoClosed (bukan bikin
 // template baru) tepat sebelum link, biar strukturnya tetap 1:1 sama Nyopet + tambahan.
-function buildCloseMsg({ id, signalId, variant, dir, entryPrice, exitPrice, pnlUsd, stats, outcomeCode, idrRate, isDemo }) {
-  const trade = { id, signalId, direction: dir, entryPrice, exitPrice, pnlUsd, pnlPct: null, mode: 'channel_breakout', assetLabel: 'BTC' };
+function buildCloseMsg({ id, signalId, variant, dir, entryPrice, exitPrice, pnlUsd, feeUsd, stats, outcomeCode, idrRate, isDemo }) {
+  const trade = { id, signalId, direction: dir, entryPrice, exitPrice, pnlUsd, feeUsd, pnlPct: null, mode: 'channel_breakout', assetLabel: 'BTC' };
   const base = formatAutoClosed(trade, new Date(), isDemo, CLOSE_REASON_LABEL[outcomeCode] || outcomeCode, idrRate, null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
   const extraLines = formatWinRateLines(stats, `${variantLabel(variant)} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
   return base.replace(`🔗 ${KAELA_ACCESS_URL}`, extraLines + `🔗 ${KAELA_ACCESS_URL}`);
@@ -310,15 +311,15 @@ async function reportOpen({ id, signalId, dir, wibowoRoute, demo, real, sl, tp }
   }
 }
 
-async function reportClose({ id, signalId, variant, dir, wibowoRoute, outcome, demoExit, realExit, entryPriceDemo, entryPriceReal, demoPnlUsd, realPnlUsd, demoStats, realStats }) {
+async function reportClose({ id, signalId, variant, dir, wibowoRoute, outcome, demoExit, realExit, entryPriceDemo, entryPriceReal, demoPnlUsd, demoFeeUsd, realPnlUsd, realFeeUsd, demoStats, realStats }) {
   const idrRate = await getUsdIdrRate().catch(() => null);
   const outcomeCode = outcomeCodeFor(outcome);
 
-  const demoMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceDemo, exitPrice: demoExit, pnlUsd: demoPnlUsd, stats: demoStats, outcomeCode, idrRate, isDemo: true });
+  const demoMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceDemo, exitPrice: demoExit, pnlUsd: demoPnlUsd, feeUsd: demoFeeUsd, stats: demoStats, outcomeCode, idrRate, isDemo: true });
   await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && realExit != null) {
-    const realMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });
+    const realMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, feeUsd: realFeeUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
     // Sama kebijakan "silent" kayak reportOpen di atas -- lihat komentar di situ.
@@ -399,25 +400,36 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
 
       // PnL$ + winrate + akumulasi (23 Sep 2026, permintaan Olan) -- dihitung TERPISAH demo/real
       // (modal beda akun, gak boleh dicampur -- lihat catatan freshStats()).
+      // Fee round-trip (26 Sep 2026, permintaan Olan "aku mau fee trading tampil juga, biar ketemu
+      // net trading" -- MASTER_RULE Bagian 3-5, fallback 0.10% kalau fee real exchange gak dicari)
+      // -- dihitung dari nilai posisi ENTRY+EXIT (fee dipungut 2x per round-trip, bukan cuma
+      // sekali). Stats/akumulasi SEKARANG pakai PnL BERSIH (net, abis fee) -- bukan gross lagi --
+      // biar win-rate/total profit jangka panjang jujur nyerminin hasil BENERAN, gak dilebih-lebihin.
+      const feeFraction = FALLBACK_FEE_PERCENT / 100;
       const pnlSign = f.dir === 'long' ? 1 : -1;
-      const demoPnlUsd = (f.demoExitPrice - f.demo.entryPrice) * f.demo.quantity * pnlSign;
+      const demoPnlGross = (f.demoExitPrice - f.demo.entryPrice) * f.demo.quantity * pnlSign;
+      const demoFeeUsd = (f.demo.nilaiPosisi + f.demoExitPrice * f.demo.quantity) * feeFraction;
+      const demoPnlUsd = demoPnlGross - demoFeeUsd;
       v.stats.demo.totalPnlUsd += demoPnlUsd;
       if (demoPnlUsd >= 0) v.stats.demo.wins += 1; else v.stats.demo.losses += 1;
-      let realPnlUsd = null;
+      let realPnlGross = null, realFeeUsd = null, realPnlUsd = null;
       if (f.real) {
-        realPnlUsd = (f.realExitPrice - f.real.entryPrice) * f.real.quantity * pnlSign;
+        realPnlGross = (f.realExitPrice - f.real.entryPrice) * f.real.quantity * pnlSign;
+        realFeeUsd = (f.real.nilaiPosisi + f.realExitPrice * f.real.quantity) * feeFraction;
+        realPnlUsd = realPnlGross - realFeeUsd;
         v.stats.real.totalPnlUsd += realPnlUsd;
         if (realPnlUsd >= 0) v.stats.real.wins += 1; else v.stats.real.losses += 1;
       }
 
       if (SILENT_VARIANTS.has(variant)) {
-        console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice} (pnl ${demoPnlUsd.toFixed(2)})`);
+        console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice} (pnl net ${demoPnlUsd.toFixed(2)}, gross ${demoPnlGross.toFixed(2)}, fee ${demoFeeUsd.toFixed(2)})`);
       } else {
         await reportClose({
           id: f.id, signalId: f.signalId, variant, dir: f.dir, wibowoRoute: f.wibowoRoute, outcome: demoHit || 'SL',
           demoExit: f.demoExitPrice, realExit: f.realExitPrice, entryPriceDemo: f.demo.entryPrice,
           entryPriceReal: f.real ? f.real.entryPrice : null,
-          demoPnlUsd, realPnlUsd, demoStats: v.stats.demo, realStats: v.stats.real,
+          demoPnlUsd: demoPnlGross, demoFeeUsd, realPnlUsd: realPnlGross, realFeeUsd,
+          demoStats: v.stats.demo, realStats: v.stats.real,
         });
       }
       v.floating = null;

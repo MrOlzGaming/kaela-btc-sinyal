@@ -24,7 +24,7 @@ const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
 const { formatManualOpenAutoClosed, formatAutoOpen, shortId, liquidationPrice, SYSTEM_LABEL, EXCHANGE_BADGE } = require('./darkKaelaLog');
-const { formatTriggered: sniperFormatTriggered, formatClosed: sniperFormatClosed, formatPartialClosed: sniperFormatPartialClosed } = require('./sniperOrderLog');
+const { formatTriggered: sniperFormatTriggered, formatClosed: sniperFormatClosed, formatPartialClosed: sniperFormatPartialClosed, isDemoFor: sniperIsDemoFor } = require('./sniperOrderLog');
 const { nextVariantSignalId } = require('./ninjaTrader');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 const { isInsufficientBalanceError } = require('./balanceAlert');
@@ -329,6 +329,24 @@ async function main() {
     assert.ok(msg.includes('Bull Flag'), `Alasan harus dari patternType (flag_bull), bukan mode ('sniper'):\n${msg}`);
   });
 
+  // Fee round-trip (26 Sep 2026, permintaan Olan "aku mau fee trading tampil juga, biar ketemu net
+  // trading" -- MASTER_RULE_DYNAMIC_CANDLE_INVALIDATION Bagian 3-5+22). Ground-truth: status
+  // ✅/❌ HARUS ikutin PnL BERSIH (net), bukan gross -- trade gross untung tapi abis fee jadi rugi
+  // WAJIB tampil ❌, jangan sampai menyesatkan. Caller lama (gak kirim feeUsd) TETAP 1 baris PnL
+  // apa adanya (backward-compat, zero regresi).
+  await test('formatAutoClosed: fee round-trip -- status ikutin NET (bukan gross), backward-compat kalau feeUsd gak dikirim', () => {
+    const { formatAutoClosed } = require('./darkKaelaLog');
+    const grossWinNetLoss = formatAutoClosed({ id: 'x', direction: 'long', entryPrice: 84000, exitPrice: 84050, pnlUsd: 2, feeUsd: 6.75, pnlPct: 0.4 }, new Date(), false, 'Target Profit tercapai', null, null, '🟣 BingX', { emoji: '🥷', name: 'NINJA' });
+    assert.ok(grossWinNetLoss.includes('❌'), `Gross untung ($2) tapi abis fee ($6.75) jadi rugi net -- HARUS ❌, malah:\n${grossWinNetLoss}`);
+    assert.ok(grossWinNetLoss.includes('PnL Kotor: +$2'), 'Harus tampilin PnL Kotor apa adanya');
+    assert.ok(grossWinNetLoss.includes('Fee (round-trip): -$6.75'), 'Harus tampilin fee round-trip');
+    assert.ok(grossWinNetLoss.includes('PnL Bersih: *-$4.75*') || grossWinNetLoss.includes('PnL Bersih: *-$4.75'), `Net harusnya -$4.75 (2 - 6.75), malah:\n${grossWinNetLoss}`);
+
+    const noFeeMsg = formatAutoClosed({ id: 'x', direction: 'long', entryPrice: 84000, exitPrice: 84500, pnlUsd: 12, pnlPct: 2.4 }, new Date(), false, 'Take Profit kena', null, null, '🟨 Binance', { emoji: '🏹', name: 'RANGER' });
+    assert.ok(!noFeeMsg.includes('PnL Kotor') && !noFeeMsg.includes('Fee (round-trip)'), `Caller LAMA (gak kirim feeUsd) HARUS tetap 1 baris PnL polos, gak ada breakdown fee, malah:\n${noFeeMsg}`);
+    assert.ok(noFeeMsg.includes('✅'), 'Tanpa fee, status ikutin gross apa adanya (satu-satunya angka yang ada)');
+  });
+
   await test('sniperOrderLog: formatTriggered pakai template SAMA kayak Ranger/Ninja (badge SNIPER + signalId + likuidasi)', () => {
     const order = { id: 'abc123', signalId: '2026092501', asset: 'btc', mode: 'sniper', patternType: 'flag_bull', direction: 'buy', entryPrice: 64000, tp: 66000, sl: 62000, leverage: 20, marginUsd: 50 };
     const msg = sniperFormatTriggered(order, null);
@@ -343,6 +361,18 @@ async function main() {
     const msg = sniperFormatPartialClosed(order, null, null);
     assert.ok(msg.includes('SMA10'), `Harus nampilin SMA berapa hari (fitur ekstra Sniper), malah:\n${msg}`);
     assert.ok(msg.includes('BREAKEVEN ($64,000)'), 'Harus nampilin harga breakeven eksak');
+  });
+
+  // isDemoFor (26 Sep 2026, audit "pastikan semua tradingan real jalan" -- Olan konfirmasi "iya
+  // real dari dulu, benerin labelnya aja") -- ground-truth: MEXC (Emas) SELALU real regardless
+  // liveExecution, Binance (BTC) ikutin liveExecution.testnet, default AMAN (anggap demo) kalau
+  // field itu gak ada (order lama pre-fix).
+  await test('sniperOrderLog: isDemoFor -- MEXC selalu real, Binance ikutin liveExecution.testnet, default aman demo', () => {
+    assert.strictEqual(sniperIsDemoFor({ asset: 'xau', liveExecution: { testnet: false } }), false, 'Emas/MEXC HARUS selalu real walau liveExecution bilang testnet:false eksplisit -- override, bukan dibaca apa adanya');
+    assert.strictEqual(sniperIsDemoFor({ asset: 'xau' }), false, 'Emas/MEXC real walau liveExecution gak ada sama sekali');
+    assert.strictEqual(sniperIsDemoFor({ asset: 'btc', liveExecution: { testnet: false } }), false, 'BTC real kalau liveExecution eksplisit bilang testnet:false');
+    assert.strictEqual(sniperIsDemoFor({ asset: 'btc', liveExecution: { testnet: true } }), true, 'BTC demo kalau liveExecution eksplisit bilang testnet:true');
+    assert.strictEqual(sniperIsDemoFor({ asset: 'btc' }), true, 'BTC default AMAN (anggap demo) kalau liveExecution gak ada -- order lama pre-fix');
   });
 
   await test('sniperOrderLog: formatClosed nampilin win-rate+akumulasi (formatWinRateLines shared) + alasan TP polos', () => {

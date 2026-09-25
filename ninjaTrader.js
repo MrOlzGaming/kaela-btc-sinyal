@@ -300,7 +300,13 @@ async function reportOpen({ id, signalId, dir, wibowoRoute, demo, real, sl, tp }
     const realMsg = buildOpenMsg({ id, signalId, dir, entryPrice: real.entryPrice, sl, tp, margin: real.margin, leverage: real.leverage, nilaiPosisi: real.nilaiPosisi, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
-    await sendWhatsAppToWibowo(`${demoMsg}\n_(real belum jalan/saldo kurang)_`).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
+    // 26 Sep 2026, permintaan Olan ("kalo real trading kurang saldonya, silent aja -- tapi diem
+    // diem jalanin demo trading yang di infokan ke grup hedgefund juga") -- SEBELUM ini nempelin
+    // caveat "(real belum jalan/saldo kurang)" -- DICABUT, Wibowo Hedgefund JANGAN diekspos alasan
+    // operasional (kurang saldo/akun kotor/dst). Badge pesan SENDIRI tetap jujur nunjuk "(Demo)"
+    // (lihat isDemo di buildOpenMsg) -- cuma catatan PENJELAS tambahan yang dihilangin, bukan
+    // nyamarin demo jadi kelihatan real.
+    await sendWhatsAppToWibowo(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
   }
 }
 
@@ -315,7 +321,8 @@ async function reportClose({ id, signalId, variant, dir, wibowoRoute, outcome, d
     const realMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
-    await sendWhatsAppToWibowo(`${demoMsg}\n_(real belum jalan/saldo kurang)_`).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
+    // Sama kebijakan "silent" kayak reportOpen di atas -- lihat komentar di situ.
+    await sendWhatsAppToWibowo(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
   }
 }
 

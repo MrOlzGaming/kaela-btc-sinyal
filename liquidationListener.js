@@ -101,10 +101,16 @@ function bucketKey(symbol, price) {
   return String(Math.round(price / size) * size);
 }
 
-// side 'SELL' = posisi LONG kena force-close (bursa jual paksa) -> tekanan harga TURUN.
-// side 'BUY' = posisi SHORT kena force-close (bursa beli paksa balik) -> tekanan harga NAIK.
-// (Bybit kirim 'Sell'/'Buy' kapital-awal-doang -- dinormalisasi ke UPPERCASE di pemanggil biar
-// fungsi ini tetap sama persis kayak versi Binance lama, gak perlu diubah.)
+// ⛔ BUG NYATA ketemu+fix 25 Sep 2026 (Olan curiga "kok short yang meledak pas naik DAN turun") --
+// asumsi LAMA (side SELL=long force-close, BUY=short force-close) itu konvensi BINANCE forceOrder
+// (side = ARAH ORDER PENUTUP, kebalik dari posisi aslinya) -- TERBAWA gak sengaja pas migrasi ke
+// Bybit 13 Sep 2026, PADAHAL dokumentasi resmi Bybit `allLiquidation` v5 EKSPLISIT bilang beda:
+// "When you receive a Buy update, this means that a LONG position has been liquidated" -- side di
+// Bybit = ARAH POSISI ASLI yang kelikuidasi LANGSUNG, BUKAN arah order penutup. Dibuktikan empiris:
+// burst 21 Sep 09:30 (18 event side=SELL, longUsd lama) justru pas harga NAIK 84.299->84.764 --
+// cuma masuk akal kalau itu SHORT yang kelikuidasi (kepaksa beli balik pas harga naik), bukan long.
+// side 'BUY' = posisi LONG kena force-close (Bybit: Buy liquidation = long position closed).
+// side 'SELL' = posisi SHORT kena force-close (Bybit: Sell liquidation = short position closed).
 function recordLiquidation(heatmap, { symbol, side, price, qty, timestamp }) {
   const bkt = bucketKey(symbol, price);
   if (!bkt) return;
@@ -114,7 +120,7 @@ function recordLiquidation(heatmap, { symbol, side, price, qty, timestamp }) {
     heatmap[symbol][bkt] = { longLiquidatedUsd: 0, shortLiquidatedUsd: 0, longCount: 0, shortCount: 0, firstSeen: timestamp, lastSeen: timestamp };
   }
   const b = heatmap[symbol][bkt];
-  if (side === 'SELL') { b.longLiquidatedUsd += notional; b.longCount++; }
+  if (side === 'BUY') { b.longLiquidatedUsd += notional; b.longCount++; }
   else { b.shortLiquidatedUsd += notional; b.shortCount++; }
   b.lastSeen = timestamp;
 }

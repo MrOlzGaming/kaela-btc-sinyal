@@ -132,13 +132,14 @@ function readRecentEvents(windowMs, now = Date.now()) {
 }
 
 // Pure function biar gampang ditest -- ringkas event jadi total notional per sisi.
-// side 'SELL' = LONG kena force-close (tekanan harga TURUN). side 'BUY' = SHORT kena force-close
-// (tekanan harga NAIK) -- konvensi SAMA PERSIS liquidationListener.js recordLiquidation().
+// ⛔ BUG NYATA ketemu+fix 25 Sep 2026 (lihat catatan panjang liquidationListener.js
+// recordLiquidation()) -- side 'BUY' = LONG kena force-close, side 'SELL' = SHORT kena
+// force-close (konvensi RESMI Bybit allLiquidation, KEBALIK dari asumsi Binance-style lama).
 function summarizeEvents(events) {
   let longUsd = 0, shortUsd = 0, longCount = 0, shortCount = 0;
   for (const e of events) {
     const notional = e.price * e.qty;
-    if (e.side === 'SELL') { longUsd += notional; longCount++; }
+    if (e.side === 'BUY') { longUsd += notional; longCount++; }
     else { shortUsd += notional; shortCount++; }
   }
   return { longUsd, shortUsd, longCount, shortCount };

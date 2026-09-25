@@ -25,13 +25,13 @@ const fs = require('fs');
 const path = require('path');
 const { load: loadSniperOrders } = require('./sniperOrders');
 const { ASSETS } = require('./assetConfig');
-const { NYOPET_ASSETS } = require('./rangerAssetConfig');
+const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
 const { isMexcNotConfiguredError } = require('./balanceAlert');
 const tradeHistoryStore = require('./tradeHistoryStore');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
-const { createNyopetTrader } = require('./rangerAutoTrader');
+const { createRangerTrader } = require('./rangerAutoTrader');
 const { createSniperAccountTrader } = require('./sniperMultiAccount');
 const { createSpotDcaAltAccountTrader } = require('./spotDcaAltAccount');
 const { createSpotDcaAccountTrader } = require('./spotDcaAccount');
@@ -80,7 +80,7 @@ function buildModalOverride(account, client) {
 // buka/tutup" (skip, udah dihandle notify() sendiri) vs "ini muncul/ilang tanpa event bot = manual
 // Olan". Pola SAMA kayak binanceSymbols/mexcSymbols di processAccount di bawah.
 function _symbolForEvent(evt) {
-  const cfg = evt.strategy === 'sniper' ? ASSETS[evt.asset] : NYOPET_ASSETS[evt.asset];
+  const cfg = evt.strategy === 'sniper' ? ASSETS[evt.asset] : RANGER_ASSETS[evt.asset];
   if (!cfg) return null;
   return cfg.exchange === 'mexc' ? (cfg.execSymbol || cfg.symbol) : cfg.symbol;
 }
@@ -217,7 +217,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     // akun laen (mis. demo member) beresiko salah nyuppress adopsi mereka sendiri kalau kebetulan
     // symbol-nya sama (BTCUSDC) tapi konteksnya beda total.
     const isOlanRealAccount = safeKey(account.phone) === MASTER_NOMOR && account.mode === 'real';
-    const nyopetTrader = createNyopetTrader({
+    const nyopetTrader = createRangerTrader({
       client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
       sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate, phone: account.phone,
       reconcilerStatePath: isOlanRealAccount ? path.join(STATE_DIR, 'wibowo-reconciler-state.json') : undefined,
@@ -333,7 +333,7 @@ async function processAccount(account, sharedSniperOrders, adminRelay, closeRequ
     // Fix WAKTU ITU: tambahin symbol Nyopet secara eksplisit -- TAPI itu tambal SATU kasus doang.
     // BUG SERUPA ketemu LAGI 3-4 Sep 2026 (Olan buka posisi manual BTC di MEXC buat tes, "kok ga
     // ada informasi? jangan-jangan 4 posisi terbuka juga cuma 1 posisi buka di web") -- symbol
-    // APAPUN di luar daftar konfigurasi (ASSETS/NYOPET_ASSETS) MASIH gak pernah kecek, PERSIS pola
+    // APAPUN di luar daftar konfigurasi (ASSETS/RANGER_ASSETS) MASIH gak pernah kecek, PERSIS pola
     // bug yang sama, cuma beda exchange. Fix TUNTAS kali ini: getAllPositions() (TANPA filter
     // symbol, lihat binanceExecutor.js/mexcExecutor.js) -- balikin SEMUA posisi terbuka di akun
     // ini apapun symbol-nya, bot kenal ATAU enggak. "Posisi Kebuka" card di web sekarang selalu

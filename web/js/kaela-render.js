@@ -78,9 +78,9 @@
     no_open_position_last_analysis: { id: '📡 Belum ada posisi terbuka -- analisa terakhir: lihat di', en: '📡 No open positions -- latest analysis: see' },
     no_sniper_analysis: { id: '🎯 Belum ada analisa Sniper.', en: '🎯 No Sniper analysis yet.' },
     sniper_disclaimer: { id: '🤖 Sinyal VALID sekarang dieksekusi OTOMATIS di akun Binance Demo (duit virtual, riset/uji coba) -- bukan cuma monitor bayangan lagi.', en: '🤖 VALID signals are now executed AUTOMATICALLY on a Binance Demo account (virtual money, research/testing) -- no longer just shadow monitoring.' },
-    nyopet_positions_open: { id: 'posisi Nyopet lagi terbuka', en: 'Nyopet position(s) currently open' },
-    no_nyopet_open: { id: 'Gak ada posisi Nyopet yang lagi terbuka.', en: 'No open Nyopet positions right now.' },
-    nyopet_home_disclaimer: { id: '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (USDC).', en: '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (USDC).' },
+    ranger_positions_open: { id: 'posisi Ranger lagi terbuka', en: 'Ranger position(s) currently open' },
+    no_ranger_open: { id: 'Gak ada posisi Ranger yang lagi terbuka.', en: 'No open Ranger positions right now.' },
+    ranger_home_disclaimer: { id: '🏹 Ranger Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (USDC).', en: '🏹 Ranger Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (USDC).' },
     total_trade: { id: 'Total Trade', en: 'Total Trades' },
     win_rate: { id: 'Win Rate', en: 'Win Rate' },
     profit_factor: { id: 'Profit Factor', en: 'Profit Factor' },
@@ -155,7 +155,7 @@
     nyawa_hit: { id: '❌ NYAWA', en: '❌ STOP' },
     nyawa: { id: 'Nyawa:', en: 'Stop:' },
     zona: { id: 'Zona', en: 'Zone' },
-    no_trade_done_nyopet: { id: '📓 Belum ada trade yang selesai. Statistik bakal keisi otomatis begitu ada posisi Nyopet yang kena target/nyawa.', en: '📓 No completed trades yet. Statistics will fill in automatically once a Nyopet position hits its target/stop.' },
+    no_trade_done_ranger: { id: '📓 Belum ada trade yang selesai. Statistik bakal keisi otomatis begitu ada posisi Ranger yang kena target/nyawa.', en: '📓 No completed trades yet. Statistics will fill in automatically once a Ranger position hits its target/stop.' },
     no_trade_done_short: { id: 'Belum ada trade yang selesai.', en: 'No completed trades yet.' },
     asset: { id: 'Aset', en: 'Asset' },
     direction: { id: 'Arah', en: 'Direction' },
@@ -387,10 +387,10 @@
     btc: { symbol: 'BTCUSDT', label: 'BTCUSDT', emoji: '🟧' },
     xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
   };
-  // Mirror TERPISAH khusus Nyopet -- Nyopet BTC pakai wallet USDC (ticker BTCUSDC), BEDA dari
-  // Sniper (BTCUSDT) -- pakai ASSETS_WEB biasa bikin kartu Nyopet salah nunjukkin ticker (dan
+  // Mirror TERPISAH khusus Ranger -- Ranger BTC pakai wallet USDC (ticker BTCUSDC), BEDA dari
+  // Sniper (BTCUSDT) -- pakai ASSETS_WEB biasa bikin kartu Ranger salah nunjukkin ticker (dan
   // salah poll harga live-nya, sniper-orders-widget.js baca data-symbol dari sini).
-  const NYOPET_ASSETS_WEB = {
+  const RANGER_ASSETS_WEB = {
     btc: { symbol: 'BTCUSDC', label: 'BTCUSDC', emoji: '🟧' },
     xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
   };
@@ -402,10 +402,10 @@
     const slText = (o.sl !== null && o.sl !== undefined) ? fmtUsdOrder(o.sl) : '-';
     const idLine = o.signalId ? `<div class="order-id">🆔 ${o.signalId}</div>` : '';
     const asset = ASSETS_WEB[o.asset] || ASSETS_WEB.btc;
-    // (6 Sep 2026, permintaan Olan: "riwayat jurnal boleh jadi 1 [Sniper+Nyopet], asal ada
+    // (6 Sep 2026, permintaan Olan: "riwayat jurnal boleh jadi 1 [Sniper+Ranger], asal ada
     // keterangan mode+alasan" -- kartu Sniper SEBELUMNYA gak pernah nyebut "Sniper" eksplisit
     // (identitasnya cuma keliatan dari HEADER SEKSI di luar kartu ini) -- begitu digabung sama
-    // kartu Nyopet di 1 daftar, itu ambigu. "🎯 Sniper" ditaruh di badge yang SAMA dipakai
+    // kartu Ranger di 1 daftar, itu ambigu. "🎯 Sniper" ditaruh di badge yang SAMA dipakai
     // pending/floating/closed (1 variabel, 3 state) biar konsisten tanpa nulis ulang di tiap state.
     const assetBadge = `<span class="order-asset-badge">🎯 Sniper · ${asset.emoji} ${asset.label} · ${MODE_LABEL_WEB[o.mode] || 'Pola Chart'}</span>`;
     // `reasonLine` (6 Sep 2026) -- jurnal member (Sheet-sourced, o.reasonNote) butuh alasan
@@ -506,7 +506,7 @@
         ? `${rt('no_open_position_last_analysis')} <a href="jurnal.html"><strong>${rt('journal')}</strong></a>.`
         : rt('no_sniper_analysis'));
     // 5 Sep 2026, permintaan Olan ("home itu aku mau ada juga penjelasan singkat dari sniper dan
-    // nyopet", sama kayak Musiman yang udah punya paragraf fase di renderSiklusHalvingPanel di
+    // ranger", sama kayak Musiman yang udah punya paragraf fase di renderSiklusHalvingPanel di
     // atas) -- panel ini SEBELUMNYA cuma disclaimer operasional ("sinyal dieksekusi otomatis"),
     // gak pernah jelasin APA itu Sniper. Teks diambil FAITHFUL dari metodologi-sniper.html (2
     // aset x 2 mode deteksi, buy-only, exit 2 tahap) -- bukan karangan baru.
@@ -522,21 +522,21 @@
   }
 
   // Ringkasan doang buat Home (29 Agu 2026) -- sama alasan kayak renderSniperOrdersPanel di atas.
-  function renderNyopetHomePanel(nyopetState) {
-    const floating = (nyopetState.orders || []).filter((o) => o.status === 'floating');
+  function renderRangerHomePanel(rangerState) {
+    const floating = (rangerState.orders || []).filter((o) => o.status === 'floating');
     const summaryLine = floating.length > 0
-      ? `📡 <strong>${floating.length} ${rt('nyopet_positions_open')}</strong> -- ${rt('detail_full_at')} <a href="jurnal.html"><strong>${rt('journal')}</strong></a>.`
-      : rt('no_nyopet_open');
+      ? `📡 <strong>${floating.length} ${rt('ranger_positions_open')}</strong> -- ${rt('detail_full_at')} <a href="jurnal.html"><strong>${rt('journal')}</strong></a>.`
+      : rt('no_ranger_open');
     // 5 Sep 2026, permintaan Olan -- sama alasan kayak introHtml Sniper di atas. Teks diambil
     // FAITHFUL dari metodologi-dark-kaela.html (mesin SAMA kayak Sniper, timeframe 4 jam,
     // bankroll+jurnal terpisah).
     const en = lang() === 'en';
     const introHtml = en
-      ? `<p class="strategy-intro">🥷 Nyopet uses the <strong>same detection engine as Sniper</strong> (Chart Pattern + FVG), but on a <strong>4-hour timeframe</strong> instead of daily -- moves more actively/frequently. Auto-executes on Binance Demo, with its own bankroll & journal separate from Sniper. <a href="metodologi-dark-kaela.html">Read the full methodology →</a></p>`
-      : `<p class="strategy-intro">🥷 Nyopet pakai <strong>mesin deteksi yang sama kayak Sniper</strong> (Pola Chart + FVG), tapi timeframe <strong>4 jam</strong> (bukan harian) -- gerak lebih gesit/sering. Auto-eksekusi di Binance Demo, bankroll &amp; jurnal terpisah dari Sniper. <a href="metodologi-dark-kaela.html">Baca metodologi lengkap →</a></p>`;
+      ? `<p class="strategy-intro">🏹 Ranger uses the <strong>same detection engine as Sniper</strong> (Chart Pattern + FVG), but on a <strong>4-hour timeframe</strong> instead of daily -- moves more actively/frequently. Auto-executes on Binance Demo, with its own bankroll & journal separate from Sniper. <a href="metodologi-dark-kaela.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🏹 Ranger pakai <strong>mesin deteksi yang sama kayak Sniper</strong> (Pola Chart + FVG), tapi timeframe <strong>4 jam</strong> (bukan harian) -- gerak lebih gesit/sering. Auto-eksekusi di Binance Demo, bankroll &amp; jurnal terpisah dari Sniper. <a href="metodologi-dark-kaela.html">Baca metodologi lengkap →</a></p>`;
     return `<div class="sniper-orders-panel">
       ${introHtml}
-      <p class="order-disclaimer">${rt('nyopet_home_disclaimer')}</p>
+      <p class="order-disclaimer">${rt('ranger_home_disclaimer')}</p>
       <div class="empty">${summaryLine}</div>
     </div>`;
   }
@@ -721,7 +721,7 @@
   }
 
   // `opts.hideHistoryList` (6 Sep 2026, permintaan Olan: "riwayat jurnal boleh jadi 1 [Sniper+
-  // Nyopet]") -- caller (kaela-access-app.js _renderJurnalStatuses) yang mau nampilin RIWAYAT
+  // Ranger]") -- caller (kaela-access-app.js _renderJurnalStatuses) yang mau nampilin RIWAYAT
   // gabungan (bukan dipisah per-strategi kayak biasa) manggil ini DUA-DUANYA dengan flag ini true,
   // skip bagian "Riwayat Trade" di sini (floating+stats+equity+kalender TETAP tampil apa adanya,
   // itu emang wajarnya beda per-strategi karena dompetnya beneran terpisah -- lihat memori
@@ -837,8 +837,8 @@
       ${cell(rt('cycles_completed'), spotState.completedCycles.length)}
     </div>`;
 
-    // Countup "udah jalan berapa lama" (29 Agu 2026, permintaan Olan: "cara jurnal di nyopet.. itu
-    // tiru buat semua") -- DCA gak punya TP/SL/liq kayak Sniper/Nyopet, tapi konsep "dibuka sejak
+    // Countup "udah jalan berapa lama" (29 Agu 2026, permintaan Olan: "cara jurnal di ranger.. itu
+    // tiru buat semua") -- DCA gak punya TP/SL/liq kayak Sniper/Ranger, tapi konsep "dibuka sejak
     // + durasi live" tetap relevan (siklus Tanam ini udah jalan berapa lama). Reuse data-opened-at
     // + tickDurations() yang UDAH ADA di sniper-orders-widget.js (query GLOBAL, otomatis kepakai).
     const startedSince = spotState.cycleStartedAt
@@ -896,8 +896,8 @@
     const held = coinState.heldQty > 0;
     const valueLabel = held ? `${coinState.heldQty.toFixed(6)} ${label}` : (coinState.totalRealizedCash > 0 ? fmtUsdOrder(coinState.totalRealizedCash) : '$0');
     const subLabel = held ? `${rt('capital')}: ${fmtUsdOrder(coinState.totalInvestedCurrentCycle)}` : (coinState.totalRealizedCash > 0 ? rt('wait_next_tanam_allin') : rt('not_started'));
-    // Countup durasi (29 Agu 2026, "cara jurnal di nyopet.. itu tiru buat semua") -- dompet ini
-    // udah nyicil berapa lama, sama konsep kayak "Dibuka sejak" Sniper/Nyopet.
+    // Countup durasi (29 Agu 2026, "cara jurnal di ranger.. itu tiru buat semua") -- dompet ini
+    // udah nyicil berapa lama, sama konsep kayak "Dibuka sejak" Sniper/Ranger.
     const startedSince = held && coinState.cycleStartedAt
       ? `<div class="wallet-sub" data-opened-at="${coinState.cycleStartedAt}">🕐 <span data-duration-target>${rt('calculating')}</span></div>`
       : '';
@@ -984,8 +984,8 @@
     const walletDetailsHtml = ALT10_SYMBOLS.map((s) => renderWalletDetail(s, altState.coins[s] || { heldQty: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, buyLog: [], completedCycles: [] })).join('');
 
     const altDisclaimer = en
-      ? `Compound Alt DCA $${PER_COIN_USD}/coin/month (10 coins, $${PER_COIN_USD * 10}/month total) is now executed AUTOMATICALLY on a Binance Demo account (Spot Testnet, virtual money), fully separate from the Sniper/Nyopet/Spot BTC bankroll. Kaela reports each action (buy/stop/sell) to the WA group so it can be followed manually. Starting October 19, 2026.`
-      : `Compound Alt DCA $${PER_COIN_USD}/koin/bulan (10 koin, total $${PER_COIN_USD * 10}/bulan) sekarang dieksekusi OTOMATIS di akun Binance Demo (Spot Testnet, duit virtual), terpisah total dari bankroll Sniper/Nyopet/Spot BTC. Kaela info tiap aksi (beli/stop/jual) ke grup WA biar bisa diikutin manual. Mulai 19 Oktober 2026.`;
+      ? `Compound Alt DCA $${PER_COIN_USD}/coin/month (10 coins, $${PER_COIN_USD * 10}/month total) is now executed AUTOMATICALLY on a Binance Demo account (Spot Testnet, virtual money), fully separate from the Sniper/Ranger/Spot BTC bankroll. Kaela reports each action (buy/stop/sell) to the WA group so it can be followed manually. Starting October 19, 2026.`
+      : `Compound Alt DCA $${PER_COIN_USD}/koin/bulan (10 koin, total $${PER_COIN_USD * 10}/bulan) sekarang dieksekusi OTOMATIS di akun Binance Demo (Spot Testnet, duit virtual), terpisah total dari bankroll Sniper/Ranger/Spot BTC. Kaela info tiap aksi (beli/stop/jual) ke grup WA biar bisa diikutin manual. Mulai 19 Oktober 2026.`;
     return `<div class="spot-panel">
       <div class="phase-badge ${badgeClass}">${badgeText}</div>
       <p class="halving-note" style="margin-top:0;">${phaseNote}</p>
@@ -996,15 +996,15 @@
     </div>`;
   }
 
-  // ============ Nyopet Market (Dark Kaela, posisi REAL) ============
-  // 16 Agu 2026, permintaan Olan: "trading jujur kita nyopet market.. buat jurnal jujur..
+  // ============ Ranger Market (Dark Kaela, posisi REAL) ============
+  // 16 Agu 2026, permintaan Olan: "trading jujur kita ranger market.. buat jurnal jujur..
   // tracking winrate 100 trade ke depan" -- BEDA dari Spot/Sniper (bankroll bayangan): posisi
-  // Nyopet REAL, dibuka manual di exchange asli, saldo/bankroll SENGAJA gak dihitung ("cuma
+  // Ranger REAL, dibuka manual di exchange asli, saldo/bankroll SENGAJA gak dihitung ("cuma
   // mini game") -- yang ditrack cuma menang/kalah per trade jadi win rate.
-  // 30 Agu 2026, Nyopet v2 (chart pattern+FVG ganti zona-ping-pong, lihat memori
+  // 30 Agu 2026, Ranger v2 (chart pattern+FVG ganti zona-ping-pong, lihat memori
   // project-dark-kaela) -- `o.mode` sekarang patternType dari chartPatterns.js/fvgDetector.js.
   // 'fade'/'follow' DIPERTAHANKAN buat order LAMA (histori pre-30 Agu) yang masih di jurnal.
-  const NYOPET_MODE_LABEL_WEB = {
+  const RANGER_MODE_LABEL_WEB = {
     fade: 'Fade (asumsi mantul)', follow: 'Follow (ikutin tembusan)',
     // 🐛 FIX 19 Sep 2026 (Olan: "riwayat di jurnal amburadul") -- SEBELUMNYA cuma versi BULL/FALLING
     // yang punya label ("Bull Flag"/"Falling Wedge"/dst), padahal chartPatterns.js/fvgDetector.js
@@ -1022,54 +1022,54 @@
     // 2-3 Sep 2026, permintaan Olan: posisi yang gak ketemu match Journal (dibuka LANGSUNG di
     // exchange, bukan lewat bot) WAJIB jujur dilabelin manual, BUKAN ditebak "Fade (asumsi mantul)".
     manual: 'Manual (dibuka langsung di exchange)',
-    // 6 Sep 2026, metode Nyopet ke-5 -- tanpa entry ini, kartu nampilin raw string "fed_dovish_grid".
+    // 6 Sep 2026, metode Ranger ke-5 -- tanpa entry ini, kartu nampilin raw string "fed_dovish_grid".
     fed_dovish_grid: 'Fed Dovish Grid',
     // 12 Sep 2026 -- posisi "adopsi otomatis" (journal lokal gak pernah beneran nyatet buka-nya,
-    // lihat status closed_untracked/nyopetAutoTrader.js) -- tanpa entry ini raw string "unknown".
+    // lihat status closed_untracked/rangerAutoTrader.js) -- tanpa entry ini raw string "unknown".
     unknown: 'Diadopsi otomatis (sumber gak diketahui)',
   };
 
-  // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "nyopet ga dibatasi
+  // Skema disamain 100% sama sniper-orders.json 23 Agu 2026 (permintaan Olan: "ranger ga dibatasi
   // 100 trade.. 100% sama kayak sniper pencatatanya") -- {balance, orders[]}, tiap order punya
   // `status` (floating/closed_tp/closed_sl) + `direction` (buy/sell), BUKAN openPosition+trades[]
   // terpisah kayak versi lama. Kartu posisi REUSE kontrak class/data-attribute `order-card
   // floating` Sniper -- sniper-orders-widget.js (query GLOBAL, gak di-scope ke 1 container)
   // otomatis nyalain live price+PNL di kartu ini juga tanpa widget baru.
-  function renderNyopetOrderCard(o) {
+  function renderRangerOrderCard(o) {
     const dirLabel = o.direction === 'sell' ? rt('short') : rt('long');
     // (6 Sep 2026, permintaan Olan: "trader boleh Kaela kalo Manual Olan" -- kartu ini WAJIB
     // bedain 2 jenis 'manual': dibuka lewat popup alasan web (o.manualReason keisi, TULISAN
     // OLAN SENDIRI, sama sumber yang udah dipakai pesan WA -- lihat darkKaelaLog.js formatAutoOpen)
-    // vs kedetect reconciler di exchange TANPA alasan (fallback generik NYOPET_MODE_LABEL_WEB.manual
+    // vs kedetect reconciler di exchange TANPA alasan (fallback generik RANGER_MODE_LABEL_WEB.manual
     // yang UDAH ADA sejak 2-3 Sep). Selain manual, modeLabel = nama pola (Kaela otomatis, gak perlu
     // label "Kaela" eksplisit -- default-nya emang otomatis).
     const modeLabel = o.mode === 'manual'
-      ? (o.manualReason ? `Manual Olan -- ${o.manualReason}` : NYOPET_MODE_LABEL_WEB.manual)
+      ? (o.manualReason ? `Manual Olan -- ${o.manualReason}` : RANGER_MODE_LABEL_WEB.manual)
       // `reasonNote` (6 Sep 2026) -- jurnal member (Sheet, bukan file lokal Olan) sering gak
-      // punya `o.mode` yang cocok ke NYOPET_MODE_LABEL_WEB (kode short kayak flag_bull) --
-      // fallback ke teks alasan APA ADANYA drpd nampilin raw key mentah kayak "nyopet-auto".
-      : (NYOPET_MODE_LABEL_WEB[o.mode] || o.reasonNote || o.mode);
+      // punya `o.mode` yang cocok ke RANGER_MODE_LABEL_WEB (kode short kayak flag_bull) --
+      // fallback ke teks alasan APA ADANYA drpd nampilin raw key mentah kayak "ranger-auto".
+      : (RANGER_MODE_LABEL_WEB[o.mode] || o.reasonNote || o.mode);
     // nyawaVal (25 Agu 2026 bug, masih relevan buat order LAMA pre-30 Agu yang cuma punya
-    // `liqPrice`) -- order BARU (Nyopet v2, chart pattern+FVG) selalu punya `sl` asli (dari
+    // `liqPrice`) -- order BARU (Ranger v2, chart pattern+FVG) selalu punya `sl` asli (dari
     // struktur pola, bukan cuma likuidasi tersirat), jadi fallback ini jarang kepake lagi tapi
     // TETAP aman buat histori lama yang masih nangkring di jurnal.
     const nyawaVal = o.sl != null ? o.sl : o.liqPrice;
     const nyawaText = nyawaVal != null ? fmtUsdOrder(nyawaVal) : '-';
     // Label harga hidup asset-aware (25 Agu 2026) -- sebelumnya hardcode "Harga BTC sekarang"
-    // padahal Nyopet udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
-    const assetInfo = NYOPET_ASSETS_WEB[o.asset] || NYOPET_ASSETS_WEB.btc;
-    // BUG KETEMU 30 Agu 2026 (Nyopet v2 -- order gak punya `zonePrice` lagi, chart pattern+FVG
+    // padahal Ranger udah multi-aset (BTC+PAXG/XAU), salah buat posisi XAU.
+    const assetInfo = RANGER_ASSETS_WEB[o.asset] || RANGER_ASSETS_WEB.btc;
+    // BUG KETEMU 30 Agu 2026 (Ranger v2 -- order gak punya `zonePrice` lagi, chart pattern+FVG
     // gak ada konsep "zona" sama sekali) -- "Zona $NaN" muncul kalau dipaksa tampil terus. Fix:
     // baris zona CUMA ditampilin kalau `zonePrice` beneran ada (order LAMA pre-30 Agu).
     const zonaMeta = o.zonePrice != null ? ` · ${rt('zona')} ${fmtUsdOrder(o.zonePrice)}` : '';
     if (o.status === 'floating') {
       // Badge (Demo)/(Real) (29 Agu 2026, bug ketemu: dulu hardcode "(Demo)" -- gak masalah
-      // selama Nyopet publik SELALU Demo, tapi kartu ini SEKARANG dipakai bareng Kaela Access
-      // buat posisi Real member juga (renderNyopetOrderCard dipanggil langsung dari sana, "kenapa
+      // selama Ranger publik SELALU Demo, tapi kartu ini SEKARANG dipakai bareng Kaela Access
+      // buat posisi Real member juga (renderRangerOrderCard dipanggil langsung dari sana, "kenapa
       // ga copy 100%"), jadi WAJIB dinamis. Default Demo kalau liveExecution gak diisi (publik).
       const floatingModeLabel = o.liveExecution && o.liveExecution.testnet === false ? rt('real') : rt('demo');
-      // Partial-exit progress (30 Agu 2026, Nyopet v2 -- exit 2-tahap sama kayak Sniper, kartu
-      // ini SEBELUMNYA gak pernah punya badge ini krn Nyopet lama single-shot doang) -- reuse
+      // Partial-exit progress (30 Agu 2026, Ranger v2 -- exit 2-tahap sama kayak Sniper, kartu
+      // ini SEBELUMNYA gak pernah punya badge ini krn Ranger lama single-shot doang) -- reuse
       // teks/style PERSIS sama Sniper punya (renderOrderCard), biar konsisten visual.
       const partialBadge = o.partialDone
         ? `<div class="order-partial-note">🟡 ${rt('stage1_secured')} ${o.realizedPnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.realizedPnlUsd || 0)} -- ${rt('sl_rest_be')} ${((o.remainingFraction != null ? o.remainingFraction : 0.5) * 100).toFixed(0)}${rt('of_position_trailed')}</div>`
@@ -1085,7 +1085,7 @@
             <span class="order-dir">${dirLabel}</span>
             <span class="order-status-badge floating">${rt('floating')} (${floatingModeLabel})</span>
           </div>
-          <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
+          <div class="order-strategy">🏹 Ranger -- ${modeLabel}</div>
           ${o.triggeredAt ? `<div class="order-opened-since">${rt('opened')} ${fmtOpenedDate(o.triggeredAt)} · <span data-duration-target>${rt('calculating')}</span></div>` : ''}
           <div class="order-live-price">${rt('price_now')} ${assetInfo.label} ${rt('now_suffix')} <strong data-price-target>${rt('loading')}</strong></div>
           <div class="order-levels">
@@ -1101,7 +1101,7 @@
     }
     const won = o.status === 'closed_tp';
     // 🐛 FIX 19 Sep 2026 (Olan: "riwayat trading amburadul.. ga tau trade tanggal berapa") --
-    // kartu closed Nyopet SEBELUMNYA NOL referensi tanggal sama sekali (beda dari kartu floating
+    // kartu closed Ranger SEBELUMNYA NOL referensi tanggal sama sekali (beda dari kartu floating
     // yang punya "Dibuka ..."). Cuma keliatan dari header grup bulan di luar (kaela-access-app.js
     // combinedHistoryHtml), gampang ilang di grid padat banyak kartu (persis kejadian di
     // screenshot Olan). Tambahin eksplisit di kartu-nya sendiri, pakai `closedAt`.
@@ -1111,7 +1111,7 @@
           <span class="order-dir">${dirLabel}</span>
           <span class="order-status-badge closed">${won ? rt('target_hit') : rt('nyawa_hit')}</span>
         </div>
-        <div class="order-strategy">🥷 Nyopet -- ${modeLabel}</div>
+        <div class="order-strategy">🏹 Ranger -- ${modeLabel}</div>
         <div class="order-levels"><span>${rt('entry')} ${fmtUsdOrder(o.entryPrice)}</span><span>${rt('exit')} ${fmtUsdOrder(o.exitPrice)}</span></div>
         ${closedDateLine}
         <div class="order-pnl ${won ? 'up' : 'down'}">${o.pnlUsd >= 0 ? '+' : ''}${fmtUsdOrder(o.pnlUsd)} (${o.pnlUsd >= 0 ? '+' : ''}${(o.pnlPct || 0).toFixed(1)}%)</div>
@@ -1119,7 +1119,7 @@
   }
 
   // Diseragamkan sama renderJurnalPanel Sniper (23 Agu 2026, permintaan Olan: "samain jurnal
-  // sniper dan nyopet") -- reuse LANGSUNG computeJournalStats/renderJournalStatsGrid/
+  // sniper dan ranger") -- reuse LANGSUNG computeJournalStats/renderJournalStatsGrid/
   // renderEquityCurveSvg/renderPnlCalendar Sniper, aman dipakai karena skema data udah 100% sama
   // (status/pnlUsd/marginUsd/closedAt). Posisi FLOATING SEKARANG DITAMPILIN di sini (29 Agu 2026,
   // dicabut dari Home -- "kartu posisi floating semua pindah ke jurnal aja"), satu timeline utuh.
@@ -1130,15 +1130,15 @@
   // (Demo tetap Binance PAXGUSDT, Real sekarang MEXC PAXG_USDC) -- lihat memori
   // project-kaela-multi-exchange. opts: { wallet1Label, wallet1Value, wallet2Label, wallet2Value,
   // disclaimer, disclaimerFull }.
-  function renderNyopetJurnalPanel(nyopetState, now, opts) {
+  function renderRangerJurnalPanel(rangerState, now, opts) {
     const cell = (label, value, cls) => `<div class="journal-stat"><div class="journal-stat-label">${label}</div><div class="journal-stat-value ${cls || ''}">${value}</div></div>`;
-    const orders = nyopetState.orders || [];
+    const orders = rangerState.orders || [];
     const floating = orders.filter((o) => o.status === 'floating');
     const floatingHtml = floating.length > 0
-      ? `<div class="journal-section-title">${rt('positions_open')} (${floating.length})</div><div class="order-grid">${floating.map(renderNyopetOrderCard).join('')}</div>`
+      ? `<div class="journal-section-title">${rt('positions_open')} (${floating.length})</div><div class="order-grid">${floating.map(renderRangerOrderCard).join('')}</div>`
       : '';
     // 12 Sep 2026 -- `closed_untracked` (posisi "adopsi otomatis" yang closePosition() SENGAJA
-    // gak hitung exitPrice/PnL, lihat komentar nyopetAutoTrader.js) DIIKUTIN di tabel riwayat
+    // gak hitung exitPrice/PnL, lihat komentar rangerAutoTrader.js) DIIKUTIN di tabel riwayat
     // (jangan sampai ngilang gitu aja, biar catatannya tetep lengkap -- Olan: "riwayat di web
     // brantakan"), TAPI DIPISAH dari `statsEligible` -- PnL-nya null/gak diketahui, kalau ikut
     // kehitung stats (win rate/profit factor/equity curve) bakal keitung "trade $0" yang SALAH
@@ -1147,34 +1147,34 @@
     const statsEligible = closed.filter((o) => o.status !== 'closed_untracked');
     const stats = computeJournalStats(statsEligible);
 
-    // 2 wallet terpisah (29 Agu 2026, fix bug saldo stale -- lihat nyopetAutoTrader.js
+    // 2 wallet terpisah (29 Agu 2026, fix bug saldo stale -- lihat rangerAutoTrader.js
     // syncBalances) -- BTCUSDC buat posisi BTC, PAXGUSDT buat posisi PAXG, JANGAN digabung 1
     // angka lagi (dulu ketuker/nimpa satu sama lain tergantung aset mana yang terakhir buka posisi).
     const en = lang() === 'en';
     const wallet1Label = (opts && opts.wallet1Label) || (en ? 'Demo Balance BTCUSDC' : 'Saldo Demo BTCUSDC');
-    const wallet1Value = (opts && opts.wallet1Value !== undefined) ? opts.wallet1Value : (nyopetState.balanceUsdc || 0);
+    const wallet1Value = (opts && opts.wallet1Value !== undefined) ? opts.wallet1Value : (rangerState.balanceUsdc || 0);
     const wallet2Label = (opts && opts.wallet2Label) || (en ? 'Demo Balance PAXGUSDT' : 'Saldo Demo PAXGUSDT');
-    const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (nyopetState.balanceUsdt || 0);
-    // 🐛 FIX 19 Sep 2026 (audit -- "orang bisa salah kira SELURUH saldo ini kepakai") -- Nyopet
+    const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (rangerState.balanceUsdt || 0);
+    // 🐛 FIX 19 Sep 2026 (audit -- "orang bisa salah kira SELURUH saldo ini kepakai") -- Ranger
     // cuma pakai 1/5 saldo penuh sbg modal aktif buat sizing posisi (`MODAL_ACTIVE_FRACTION`,
-    // nyopetAutoTrader.js) -- SEBELUMNYA angka itu gak kelihatan sama sekali di halaman ini
+    // rangerAutoTrader.js) -- SEBELUMNYA angka itu gak kelihatan sama sekali di halaman ini
     // (cuma dijelasin di Kalkulator, tempat beda). Tempelin sbg baris kedua di label, kecil,
     // biar gak ganggu tampilan tapi info-nya ADA buat yang mau tau persis.
     const modalAktifNote = (val) => `<br><span style="font-size:0.75em;opacity:0.65;font-weight:400;">${en ? 'active capital' : 'modal aktif'}: ${fmtUsdOrder(val / 5)}</span>`;
     const saldoCell = cell(wallet1Label + modalAktifNote(wallet1Value), fmtUsdOrder(wallet1Value)) + cell(wallet2Label + modalAktifNote(wallet2Value), fmtUsdOrder(wallet2Value));
     const disclaimer = (opts && opts.disclaimer) || (en
-      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
-      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
+      ? '🏹 Ranger Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
+      : '🏹 Ranger Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
 
     // 12 Sep 2026 -- gerbangnya `closed.length` (SEMUA yang pernah ditutup, termasuk
     // closed_untracked), BUKAN `!stats` lagi -- posisi untracked TETAP harus tampil di tabel
     // riwayat walau statsEligible-nya kosong (0 trade beneran, cuma ada yang gak ke-track).
     if (closed.length === 0) {
-      return `<div class="nyopet-panel">
+      return `<div class="ranger-panel">
         <p class="order-disclaimer">${disclaimer}</p>
         <div class="journal-stats-grid">${saldoCell}</div>
         ${floatingHtml}
-        <div class="empty">${rt('no_trade_done_nyopet')}</div>
+        <div class="empty">${rt('no_trade_done_ranger')}</div>
       </div>`;
     }
 
@@ -1183,13 +1183,13 @@
           <thead><tr><th>${rt('asset')}</th><th>${rt('direction')}</th><th>${rt('mode')}</th><th>${rt('entry').replace(':', '')}</th><th>${rt('exit').replace(':', '')}</th><th>${rt('result')}</th><th>PNL</th><th>${rt('date')}</th></tr></thead>
           <tbody>${closed.map((o) => {
             // closed_untracked (12 Sep 2026, fix bug "posisi ngarang") -- exitPrice/pnlUsd SENGAJA
-            // null (lihat nyopetAutoTrader.js), tampilin "?" JUJUR drpd fmtUsdOrder(null) yang
+            // null (lihat rangerAutoTrader.js), tampilin "?" JUJUR drpd fmtUsdOrder(null) yang
             // keluar "$0" (kesannya impas beneran, padahal cuma gak diketahui).
             if (o.status === 'closed_untracked') {
               return `<tr title="${en ? 'Position adopted automatically, closing price/PnL not tracked -- see accurate PnL in the separate Manual message if this was a manual trade.' : 'Posisi diadopsi otomatis, harga tutup/PnL gak ke-track -- PnL akuratnya ada di pesan Manual terpisah kalau ini trading manual.'}">
-                <td>${NYOPET_ASSETS_WEB[o.asset] ? NYOPET_ASSETS_WEB[o.asset].emoji + ' ' + NYOPET_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
+                <td>${RANGER_ASSETS_WEB[o.asset] ? RANGER_ASSETS_WEB[o.asset].emoji + ' ' + RANGER_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
                 <td>${o.direction === 'sell' ? rt('short') : rt('long')}</td>
-                <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
+                <td>${RANGER_MODE_LABEL_WEB[o.mode] || o.mode}</td>
                 <td>${fmtUsdOrder(o.entryPrice)}</td>
                 <td>❓</td>
                 <td>❓ ${en ? 'untracked' : 'gak ke-track'}</td>
@@ -1198,9 +1198,9 @@
               </tr>`;
             }
             return `<tr>
-            <td>${NYOPET_ASSETS_WEB[o.asset] ? NYOPET_ASSETS_WEB[o.asset].emoji + ' ' + NYOPET_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
+            <td>${RANGER_ASSETS_WEB[o.asset] ? RANGER_ASSETS_WEB[o.asset].emoji + ' ' + RANGER_ASSETS_WEB[o.asset].label : '🟧 BTCUSDC'}</td>
             <td>${o.direction === 'sell' ? rt('short') : rt('long')}</td>
-            <td>${NYOPET_MODE_LABEL_WEB[o.mode] || o.mode}</td>
+            <td>${RANGER_MODE_LABEL_WEB[o.mode] || o.mode}</td>
             <td>${fmtUsdOrder(o.entryPrice)}</td>
             <td>${fmtUsdOrder(o.exitPrice)}</td>
             <td class="${o.status === 'closed_tp' ? 'up' : 'down'}">${o.status === 'closed_tp' ? rt('win') : rt('lose')}</td>
@@ -1216,7 +1216,7 @@
     // 12 Sep 2026 -- gerbang PAKAI statsEligible.length (BUKAN closed.length lagi) -- trade
     // untracked gak boleh ikut "ngelunasin" syarat minimal 2 trade buat nampilin statistik,
     // dan `stats` sendiri bisa null kalau statsEligible kosong (SEMUA closed-nya untracked).
-    const nyopetSummaryHtml = (!stats || statsEligible.length < 2)
+    const rangerSummaryHtml = (!stats || statsEligible.length < 2)
       ? `<div class="empty">📓 ${rt('new_trades_done')} ${statsEligible.length} ${rt('trades_done')} ${rt('summary_held_back')}</div>`
       : `${renderJournalStatsGrid(stats)}
       <div class="journal-section-title">${rt('equity_curve_pertrade')}</div>
@@ -1225,18 +1225,18 @@
       ${renderPnlCalendar(statsEligible, now)}`;
 
     const disclaimerFull = (opts && opts.disclaimerFull) || (en
-      ? '🥷 Nyopet Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
-      : '🥷 Nyopet Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
+      ? '🏹 Ranger Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
+      : '🏹 Ranger Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
     // `opts.hideHistoryList` -- lihat catatan panjang di renderJurnalPanel (Sniper) di atas, alasan
-    // sama persis, dipakai bareng buat riwayat gabungan Sniper+Nyopet.
+    // sama persis, dipakai bareng buat riwayat gabungan Sniper+Ranger.
     const historyBlock = (opts && opts.hideHistoryList) ? '' : `
       <div class="journal-section-title">${rt('trade_history')} (${closed.length})</div>
       ${historyHtml}`;
-    return `<div class="nyopet-panel">
+    return `<div class="ranger-panel">
       <p class="order-disclaimer">${disclaimerFull}</p>
       <div class="journal-stats-grid">${saldoCell}</div>
       ${floatingHtml}
-      ${nyopetSummaryHtml}
+      ${rangerSummaryHtml}
       ${historyBlock}
     </div>`;
   }
@@ -1254,7 +1254,7 @@
 
   // ── Toggle mata uang $ <-> Rp lintas-iframe (31 Agu 2026, permintaan Olan) -- Kaela Access
   // (script.google.com/kaela-access.netlify.app) NGE-IFRAME halaman ini (index.html/jurnal.html)
-  // buat nampilin kartu posisi Sniper/Nyopet. Halaman induk (dashboard.html) PUNYA tombol toggle
+  // buat nampilin kartu posisi Sniper/Ranger. Halaman induk (dashboard.html) PUNYA tombol toggle
   // sendiri, tapi karena iframe ini beda origin, JS induk gak bisa nyentuh DOM di dalam sini
   // langsung (dicoba, kebukti: tombol ganti "Rp" tapi angka di kartu posisi TETAP dolar -- bug
   // NYATA dilaporin Olan). Fix: halaman ini dengerin `postMessage` dari induk, terus jalanin
@@ -1336,7 +1336,7 @@
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,
     renderSpotAltJurnalPanel, toggleWalletDetail, ALT10_SYMBOLS,
-    renderNyopetJurnalPanel, renderNyopetOrderCard, renderNyopetHomePanel,
+    renderRangerJurnalPanel, renderRangerOrderCard, renderRangerHomePanel,
     wireStrategyFilter,
   };
 })(window);

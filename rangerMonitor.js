@@ -1,5 +1,5 @@
-// Jalankan tiap jam: node nyopetMonitor.js
-// Sinyal LIVE Mode Nyopet — terpisah total dari monitor.js (Siklus Halving utama).
+// Jalankan tiap jam: node rangerMonitor.js
+// Sinyal LIVE Mode Ranger — terpisah total dari monitor.js (Siklus Halving utama).
 // Spesifikasi final (lihat nyopetLog.js header, hasil sweep 315 kombinasi):
 //   Hourly (entry) + Weekly (filter arah, wajib BULLISH), Long-only,
 //   Nyawa 10%, TP tunggal RR 1:2, stake 15% saldo terbaru (compound).
@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { superTrend } = require('./backtest/indicators');
 const { adaptiveSuperTrend } = require('./backtest/adaptiveSuperTrend');
-const { formatNyopetEvent, formatNyopetNoSignal, computeLevels } = require('./rangerLog');
+const { formatRangerEvent, formatRangerNoSignal, computeLevels } = require('./rangerLog');
 const { addEntry } = require('./archive');
 const { sendWhatsApp } = require('./fonnte');
 const { fetchWithRetry } = require('./httpRetry');
@@ -53,7 +53,7 @@ async function main() {
   const weekly = weeklyRaw.filter((c) => c.closeTime <= nowMs);
 
   if (hourly.length < 60 || weekly.length < 15) {
-    console.log('[Nyopet] Data belum cukup buat hitung indikator, skip siklus ini.');
+    console.log('[Ranger] Data belum cukup buat hitung indikator, skip siklus ini.');
     return;
   }
 
@@ -77,7 +77,7 @@ async function main() {
       if (hitSL || hitTP) {
         const type = hitTP ? 'TP' : 'SL';
         const price = hitTP ? pos.tpPrice : pos.slPrice;
-        events.push(formatNyopetEvent({ type, price, entry: pos.entry }));
+        events.push(formatRangerEvent({ type, price, entry: pos.entry }));
         state.position = null;
       }
     }
@@ -92,27 +92,27 @@ async function main() {
           entry, slPrice: lv.sl, tpPrice: lv.tp,
           entryDate: new Date(last.closeTime).toISOString(),
         };
-        events.push(formatNyopetEvent({ type: 'ENTRY', price: entry }));
+        events.push(formatRangerEvent({ type: 'ENTRY', price: entry }));
       }
     }
 
     state.lastProcessedCloseTime = last.closeTime;
   } else {
-    console.log('[Nyopet Market]', now.toISOString(), '— candle jam ini sudah diproses.');
+    console.log('[Ranger Market]', now.toISOString(), '— candle jam ini sudah diproses.');
   }
 
   // Status harian: kalau HARI INI belum ada event nyata, gak ada posisi terbuka,
   // dan belum kirim status hari ini -- kirim 1x "sedang mengumpulkan data" (keputusan Olan: lapor tiap hari, jangan diam total).
   const todayStr = localDateKey(now); // hari kalender WITA, bukan UTC
   if (events.length === 0 && !state.position && state.lastNoSignalStatusDate !== todayStr) {
-    events.push(formatNyopetNoSignal(now));
+    events.push(formatRangerNoSignal(now));
     state.lastNoSignalStatusDate = todayStr;
   }
 
   saveState(state);
 
   if (events.length === 0) {
-    console.log(`[Nyopet Market] ${now.toISOString()} — gak ada yang perlu dikirim. posisi: ${state.position ? 'OPEN sejak ' + state.position.entryDate : '-'}`);
+    console.log(`[Ranger Market] ${now.toISOString()} — gak ada yang perlu dikirim. posisi: ${state.position ? 'OPEN sejak ' + state.position.entryDate : '-'}`);
     return;
   }
 
@@ -124,6 +124,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error('ERROR nyopetMonitor.js:', e.message);
+  console.error('ERROR rangerMonitor.js:', e.message);
   process.exit(1);
 });

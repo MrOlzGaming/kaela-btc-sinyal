@@ -32,7 +32,7 @@
 
   async function main() {
     const now = new Date();
-    const [state, ordersState, archive, nyopetState] = await Promise.all([
+    const [state, ordersState, archive, rangerState] = await Promise.all([
       fetchJson('state.json', { status: 'TUNAI', position: null }),
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
       fetchJson('archive.json', []),
@@ -49,8 +49,8 @@
 
     // Nyopet muncul di Home juga (23 Agu 2026, permintaan Olan: "floatingnya juga muncul di
     // home dan di jurnal") -- sebelumnya cuma ada di tab Jurnal.
-    const nyopetEl = document.getElementById('nyopet-container');
-    if (nyopetEl) nyopetEl.innerHTML = KaelaRender.renderNyopetHomePanel(nyopetState);
+    const rangerEl = document.getElementById('ranger-container');
+    if (rangerEl) rangerEl.innerHTML = KaelaRender.renderRangerHomePanel(rangerState);
   }
 
   main();

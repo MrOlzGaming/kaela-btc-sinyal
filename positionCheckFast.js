@@ -26,7 +26,7 @@ const path = require('path');
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
-const { createNyopetTrader } = require('./rangerAutoTrader');
+const { createRangerTrader } = require('./rangerAutoTrader');
 const { reconcileWibowoPositions } = require('./positionReconciler');
 const { buildJournalHook, buildSendWA, buildModalOverride, safeKey, MASTER_NOMOR, _mexcNotConfiguredStub } = require('./multiAccountExecutor');
 
@@ -57,7 +57,7 @@ async function main() {
   const key = safeKey(account.phone) + '-' + account.mode;
   const reconcilerStatePath = path.join(STATE_DIR, 'wibowo-reconciler-state.json');
 
-  const nyopetTrader = createNyopetTrader({
+  const nyopetTrader = createRangerTrader({
     client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
     sendWA, getModalBase: modalOverride, apiCreds, onEvent: journalHook, idrRate, phone: account.phone,
     reconcilerStatePath,

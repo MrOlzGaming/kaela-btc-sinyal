@@ -1,4 +1,4 @@
-// Monitor posisi Nyopet REAL -- jalan bareng dark-kaela-monitor.yml (cron 5 menit). Posisi
+// Monitor posisi Ranger REAL -- jalan bareng dark-kaela-monitor.yml (cron 5 menit). Posisi
 // dibuka MANUAL sama Olan langsung di exchange asli; sistem CUMA mantau harga live buat deteksi
 // likuidasi/profit 100% ROI, catat hasilnya ke nyopet-journal.json, dan kirim WA -- TIDAK PERNAH
 // eksekusi apapun ke exchange asli (gak ada API key exchange sama sekali di sistem ini).
@@ -11,7 +11,7 @@ const { fetchWithRetry } = require('./httpRetry');
 const DRY_RUN = process.env.DARK_KAELA_DRY_RUN === '1';
 async function sendWhatsAppOrDryRun(msg) {
   if (DRY_RUN) {
-    console.log('[NyopetPositionMonitor] DRY RUN -- gak beneran kirim WA. Pesan yang HARUSNYA terkirim:\n' + msg);
+    console.log('[RangerPositionMonitor] DRY RUN -- gak beneran kirim WA. Pesan yang HARUSNYA terkirim:\n' + msg);
     return;
   }
   await sendWhatsApp(msg);
@@ -27,7 +27,7 @@ async function main() {
   const summary = getSummary();
   const pos = summary.openPosition;
   if (!pos) {
-    console.log('[NyopetPositionMonitor]', new Date().toISOString(), '-- gak ada posisi Nyopet terbuka, skip.');
+    console.log('[RangerPositionMonitor]', new Date().toISOString(), '-- gak ada posisi Ranger terbuka, skip.');
     return;
   }
 
@@ -50,7 +50,7 @@ async function main() {
     if (newSummary.total === newSummary.targetTrades) {
       await sendWhatsAppOrDryRun(format100TradeEvaluasi(newSummary, new Date()));
     }
-    console.log('[NyopetPositionMonitor] Posisi kena likuidasi @', price);
+    console.log('[RangerPositionMonitor] Posisi kena likuidasi @', price);
     return;
   }
 
@@ -62,7 +62,7 @@ async function main() {
     console.log(msg + '\n');
     await sendWhatsAppOrDryRun(msg);
     if (!DRY_RUN) markWarning80Notified();
-    console.log('[NyopetPositionMonitor] Warning -80% ROI terkirim.');
+    console.log('[RangerPositionMonitor] Warning -80% ROI terkirim.');
     return;
   }
 
@@ -71,14 +71,14 @@ async function main() {
     console.log(msg + '\n');
     await sendWhatsAppOrDryRun(msg);
     if (!DRY_RUN) markProfit100Notified();
-    console.log('[NyopetPositionMonitor] Profit 100% tercapai, notifikasi terkirim.');
+    console.log('[RangerPositionMonitor] Profit 100% tercapai, notifikasi terkirim.');
     return;
   }
 
-  console.log('[NyopetPositionMonitor]', new Date().toISOString(), '-- posisi masih jalan, harga', price, '| ROI', roiPct.toFixed(1) + '%');
+  console.log('[RangerPositionMonitor]', new Date().toISOString(), '-- posisi masih jalan, harga', price, '| ROI', roiPct.toFixed(1) + '%');
 }
 
 main().catch((e) => {
-  console.error('ERROR nyopetPositionMonitor.js:', e.message);
+  console.error('ERROR rangerPositionMonitor.js:', e.message);
   process.exit(1);
 });

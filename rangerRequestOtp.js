@@ -2,5 +2,5 @@
 const { requestOtp } = require('./rangerOtp');
 
 requestOtp()
-  .then(() => console.log('[NyopetRequestOtp] OTP dikirim.'))
-  .catch((e) => { console.error('ERROR nyopetRequestOtp.js:', e.message); process.exit(1); });
+  .then(() => console.log('[RangerRequestOtp] OTP dikirim.'))
+  .catch((e) => { console.error('ERROR rangerRequestOtp.js:', e.message); process.exit(1); });

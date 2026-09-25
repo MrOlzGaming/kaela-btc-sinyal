@@ -61,7 +61,7 @@ function formatSignal(signal, now) {
   const downLine = signal.nearestSupport
     ? `📉 Likuiditas BAWAH: ${fmtUsd(signal.nearestSupport.price)} (${signal.nearestSupport.distPct.toFixed(2)}% dari sekarang)`
     : '📉 Likuiditas BAWAH: -';
-  return `🥷 NYOPET · Kaela — 💸 Sinyal Nyopet Market
+  return `🏹 RANGER · Kaela — 💸 Sinyal Ranger Market
 ${dirLabel} (zona likuiditas)
 
 Harga sekarang: ${fmtUsd(signal.price)}
@@ -85,7 +85,7 @@ ${fmtWita(now)}`;
 
 function formatBroken(activeZone, breakPrice, now) {
   const dirLabel = activeZone.direction === 'long' ? 'LONG' : 'SHORT';
-  return `🥷 NYOPET · Kaela — 💸 Sinyal Nyopet Market
+  return `🏹 RANGER · Kaela — 💸 Sinyal Ranger Market
 ⚠️ ZONA ${fmtUsd(activeZone.price)} DITEMBUS
 
 Sinyal potensi ${dirLabel} sebelumnya gak jalan sesuai rencana -- harga nembus zona, bukan mantul (closing sekarang ${fmtUsd(breakPrice)}).
@@ -193,7 +193,7 @@ const SYSTEM_LABEL = {
 // `system` (25 Sep 2026) -- OPSIONAL, default {emoji:'🥷',name:'NYOPET'} (backward-compat) --
 // caller BARU (nyopetAutoTrader.js/channelBreakoutTrader.js/sniperOrderLog.js) oper
 // SYSTEM_LABEL.RANGER/NINJA/SNIPER eksplisit.
-function _nyopetBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name: 'NYOPET' }) {
+function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name: 'NYOPET' }) {
   return `${system.emoji} ${system.name} · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
 }
 
@@ -213,7 +213,7 @@ function _nyopetBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name
 function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge, system) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.mode);
-  return `${_nyopetBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Buka Posisi*
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 TP1: ${pos.tp != null ? fmtUsd(pos.tp) : '(trailing, ngikutin harga terbaik yang dicapai)'}
@@ -229,7 +229,7 @@ Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smart
 // masih floating, BUKAN posisi baru/tutup posisi). `pos.layers` = jumlah layer SETELAH ditambah.
 // `todaysPnl` -- lihat catatan di formatAutoOpen di atas, alasan sama persis.
 function formatAutoAddLayer(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
-  return `${_nyopetBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Nambah Posisi* (Layer ${pos.layers})
 🟢 *LONG* rata-rata baru @ ${fmtUsd(pos.entryPrice)}
 
 Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
@@ -243,7 +243,7 @@ Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam b
 // SL sisa geser breakeven, posisi TETAP floating (belum ditutup penuh).
 function formatAutoPartial(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
   const sign = pos.realizedPnlUsd >= 0 ? '+' : '';
-  return `${_nyopetBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Partial TP Diamankan*
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id)} — *Partial TP Diamankan*
 🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}
 
 SL sisa digeser breakeven, separuh posisi di-trail.
@@ -270,7 +270,7 @@ function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, ex
   const dirLabel = trade.direction === 'long' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const sign = trade.pnlUsd >= 0 ? '+' : '';
   const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${sign}${trade.pnlPct.toFixed(1)}%)` : '';
-  return `${_nyopetBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id)} — *Tutup Posisi*
+  return `${_rangerBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
 PnL: *${sign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*${_todaysPnlLine(todaysPnl, idrRate)}
@@ -322,7 +322,7 @@ Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- 
 const MANUAL_BADGE = '🙋 Manual (Olan)';
 // (12 Sep 2026, permintaan Olan: "alasan yang manual ga usah kepanjangan.. cukup alasan open
 // posisi manual") -- DIPENDEKIN dari versi lama yang jelasin detail kenapa (exchange gak ngasih
-// tau alasannya, dst) -- sekarang cukup label singkat, konsisten sama NYOPET_MODE_LABEL_WEB.manual
+// tau alasannya, dst) -- sekarang cukup label singkat, konsisten sama RANGER_MODE_LABEL_WEB.manual
 // di kaela-render.js.
 const MANUAL_ALASAN = 'Posisi manual (dibuka langsung di exchange)';
 

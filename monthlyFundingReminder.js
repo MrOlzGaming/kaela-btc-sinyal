@@ -42,12 +42,12 @@ const REMINDER_DAY = 5; // tanggal 5 kalender (UTC) -- SAMA kayak MONTHLY_BUY_DA
 
 const WALLETS = [
   { key: 'sniperBtc', label: '🎯 Sniper BTC', exchange: 'binance', asset: 'USDT', share: 30 },
-  { key: 'nyopetBtc', label: '🥷 Nyopet BTC', exchange: 'binance', asset: 'USDC', share: 40 },
-  // execSymbol (30 Agu 2026, assetConfig.js/nyopetAssetConfig.js) -- dipakai buat cocokin posisi
-  // terbuka MEXC ke wallet yang bener (Sniper Emas XAUT_USDT vs Nyopet Emas PAXG_USDC, 1 akun
+  { key: 'nyopetBtc', label: '🏹 Ranger BTC', exchange: 'binance', asset: 'USDC', share: 40 },
+  // execSymbol (30 Agu 2026, assetConfig.js/rangerAssetConfig.js) -- dipakai buat cocokin posisi
+  // terbuka MEXC ke wallet yang bener (Sniper Emas XAUT_USDT vs Ranger Emas PAXG_USDC, 1 akun
   // MEXC yang sama, dibedain dari SIMBOL kontraknya doang).
   { key: 'sniperEmas', label: '🎯 Sniper Emas', exchange: 'mexc', asset: 'USDT', execSymbol: 'XAUT_USDT', share: 20 },
-  { key: 'nyopetEmas', label: '🥷 Nyopet Emas', exchange: 'mexc', asset: 'USDC', execSymbol: 'PAXG_USDC', share: 10 },
+  { key: 'nyopetEmas', label: '🏹 Ranger Emas', exchange: 'mexc', asset: 'USDC', execSymbol: 'PAXG_USDC', share: 10 },
 ];
 
 function loadState() {

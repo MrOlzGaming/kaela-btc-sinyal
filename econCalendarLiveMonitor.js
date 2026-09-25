@@ -36,8 +36,8 @@ const { addEntry } = require('./archive');
 
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
-const { createNyopetTrader } = require('./rangerAutoTrader');
-const { NYOPET_ASSETS } = require('./rangerAssetConfig');
+const { createRangerTrader } = require('./rangerAutoTrader');
+const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { buildJournalHook, buildSendWA, MASTER_NOMOR } = require('./multiAccountExecutor');
 // (5 Sep 2026, permintaan Olan: "atasi sinyal yang numpukin sinyal lain") -- journal REAL Olan
 // BISA disentuh proses INI (siklus 5 menit) DAN nyopetAutoTrader.js (siklus 15 menit, chart-
@@ -57,7 +57,7 @@ const PRUNE_AFTER_MS = 2 * 24 * 60 * 60 * 1000;
 const BTC_REACTION_THRESHOLD_PCT = 0.10; // ambang sinyal, SAMA kayak REACTION_THRESHOLD_PCT di backtest
 const SCALP_NYAWA_PCT = 2; // SL ~2% dari entry -> leverage 100/2=50x pas kena batas MAX_LEVERAGE (permintaan Olan, "leverage 50 aja")
 const SCALP_HOLD_MINUTES = 30; // WAJIB dipaksa tutup ~30 menit -- itu satu-satunya jendela yang kebukti backtest, JANGAN diperpanjang tanpa backtest baru
-const BTC_ASSET = NYOPET_ASSETS.btc; // BTCUSDC, margin USDC -- "dompet Nyopet" per permintaan Olan
+const BTC_ASSET = RANGER_ASSETS.btc; // BTCUSDC, margin USDC -- "dompet Nyopet" per permintaan Olan
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return {};
@@ -105,7 +105,7 @@ async function safeFetchPositioning() {
 // sama kayak fitur baru lain di proyek ini -- Sniper/Nyopet live juga mulai dari Olan duluan
 // sebelum ke member lain).
 // journalPath DIEKSTRAK jadi fungsi sendiri (5 Sep 2026) -- dipakai withJournalLock di bawah,
-// WAJIB persis sama path yang dipakai createNyopetTrader di bawah biar lock-nya nge-kunci FILE
+// WAJIB persis sama path yang dipakai createRangerTrader di bawah biar lock-nya nge-kunci FILE
 // yang bener (sama file yang dipegang nyopetAutoTrader.js buat akun real Olan).
 function olanRealNyopetJournalPath() {
   const STATE_DIR = path.join(__dirname, 'multi-account-state');
@@ -122,7 +122,7 @@ async function getOlanNyopetTrader() {
   const apiCreds = { apiKey: account.apiKey, apiSecret: account.apiSecret, testnet: false };
   const journalHook = buildJournalHook(account, null);
   const sendWA = buildSendWA(account, null);
-  return createNyopetTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA, phone: account.phone });
+  return createRangerTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA, phone: account.phone });
 }
 
 // Cek judul event pakai pencocokan teks (data live gak selalu dalam format persis sama kayak

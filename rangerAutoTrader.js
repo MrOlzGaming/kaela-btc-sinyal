@@ -3,8 +3,8 @@
 // Actions, dan sistem ini butuh cek SETIAP SIKLUS (bukan cuma pas ada sinyal baru) buat mantau
 // posisi floating, jadi gak worth dipisah cloud-detect/local-execute kayak Sniper.
 //
-// MULTI-ASET -- loop tiap aset di NYOPET_ASSETS, TIAP ASET dapet slot 1 posisi SENDIRI-SENDIRI.
-// MULTI-AKUN -- factory `createNyopetTrader({...})`, kredensial/journal-path/pengirim-WA di-CLOSURE
+// MULTI-ASET -- loop tiap aset di RANGER_ASSETS, TIAP ASET dapet slot 1 posisi SENDIRI-SENDIRI.
+// MULTI-AKUN -- factory `createRangerTrader({...})`, kredensial/journal-path/pengirim-WA di-CLOSURE
 // per instance. Wrapper module-level (main di bawah) = instance DEFAULT (akun Olan sendiri).
 //
 // ============ "NYOPET V2" (30 Agu 2026, riset backtest -- lihat memori project-dark-kaela) ============
@@ -56,7 +56,7 @@ const { computeSignals, computeSMA, FINAL_RECIPE } = require('./backtest/fedSign
 const { withJournalLock } = require('./rangerJournalLock');
 const tradeHistoryStore = require('./tradeHistoryStore');
 const { isLiveTradingEnabled, isTestnet: isTestnetGlobal } = require('./killSwitch');
-const { NYOPET_ASSETS } = require('./rangerAssetConfig');
+const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const { fetchBinancePositioning } = require('./marketSentiment');
@@ -180,7 +180,7 @@ function _isReconcilerTrackingManually(reconcilerStatePath, exchange, symbol) {
   }
 }
 
-function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath, phone } = {}) {
+function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath, phone } = {}) {
   const c = client || binanceExecutorDefault;
   const mc = mexcClient || mexcExecutorDefault;
   function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : c; }
@@ -1067,7 +1067,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   }
 
   async function main() {
-    for (const assetCfg of Object.values(NYOPET_ASSETS)) {
+    for (const assetCfg of Object.values(RANGER_ASSETS)) {
       try {
         await processAsset(assetCfg);
       } catch (e) {
@@ -1075,7 +1075,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
       }
     }
     try {
-      await processFedDovishGrid(NYOPET_ASSETS.btc);
+      await processFedDovishGrid(RANGER_ASSETS.btc);
     } catch (e) {
       console.log(`[NyopetAutoTrader][FedGrid] ERROR:`, e.message);
     }
@@ -1102,7 +1102,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // pola nama kayak multiAccountExecutor.js/Sheet.gs member-status, biar konsisten 1 sistem).
   async function syncBalances() {
     const journal = loadJournal();
-    for (const assetCfg of Object.values(NYOPET_ASSETS)) {
+    for (const assetCfg of Object.values(RANGER_ASSETS)) {
       try {
         const bal = await execFor(assetCfg).getAccountBalance(assetCfg.marginAsset);
         const capMargin = assetCfg.marginAsset.charAt(0) + assetCfg.marginAsset.slice(1).toLowerCase(); // USDC -> Usdc, USDT -> Usdt
@@ -1125,7 +1125,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // "Tutup Posisi Client" (admin nutupin MEMBER LAIN) TETAP gak ngirim `reason` -- fallback
   // generik di bawah TETAP jalan buat jalur itu, SENGAJA gak diubah (dikonfirmasi scope Olan).
   async function forceClosePosition(assetKey, requestedBy, reason) {
-    const assetCfg = Object.values(NYOPET_ASSETS).find((a) => a.key === assetKey);
+    const assetCfg = Object.values(RANGER_ASSETS).find((a) => a.key === assetKey);
     if (!assetCfg) return { ok: false, error: `Asset "${assetKey}" gak dikenal.` };
     const journal = loadJournal();
     // 23 Sep 2026 (2-slot split) -- BISA ada 2 floating (pattern+FVG) buat 1 aset sekarang, tutup
@@ -1157,7 +1157,7 @@ function createNyopetTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
 // ============ Wrapper backward-compatible (akun Olan sendiri) -- ZERO perubahan perilaku, path
 // journal SAMA (nyopet-journal.json), kredensial/WA SAMA (binanceExecutor default + fonnte.js). ============
-// BUG ketemu 3 Sep 2026: createNyopetTrader({}) TANPA onEvent -- Demo Olan lewat jalur INI (bukan
+// BUG ketemu 3 Sep 2026: createRangerTrader({}) TANPA onEvent -- Demo Olan lewat jalur INI (bukan
 // multiAccountExecutor.js, yang SENGAJA skip Demo Olan, lihat catatan di file itu) gak PERNAH
 // nulis ke Sheet Journal GAS, padahal tab "Jurnal Demo" (Kaela Access, keliatan buat semua
 // anggota) baca dari situ -- selamanya kosong walau posisi Demo beneran jalan. Fix: kasih onEvent
@@ -1184,7 +1184,7 @@ function _journalHookOlanDemo(evt) {
 // (broadcast SEMUA grup di FONNTE_BROADCAST_GROUPS, otomatis kena Sniper Club + Wibowo Hedgefund
 // dua-duanya) biar konsisten sama aturan baru: apapun yang nyampe Sniper Club WAJIB nyampe Wibowo
 // Hedgefund juga.
-const _defaultTrader = createNyopetTrader({ onEvent: _journalHookOlanDemo, sendWA: sendWhatsApp });
+const _defaultTrader = createRangerTrader({ onEvent: _journalHookOlanDemo, sendWA: sendWhatsApp });
 
 async function main() {
   if (!isLiveTradingEnabled()) {
@@ -1196,9 +1196,9 @@ async function main() {
 
 // fetchCandles4hPaginated/PATTERN_PARAMS_4H/CANDLES_NEEDED_4H diexpose (12 Sep 2026) biar
 // sniperAutoAnalysis.js bisa REUSE buat sinyal short window-bear timeframe Nyopet (4H) -- fungsi
-// murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createNyopetTrader
+// murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createRangerTrader
 // yang emang eksekusi trading, itu tetap TERGUARD if require.main===module di bawah).
-module.exports = { createNyopetTrader, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
+module.exports = { createRangerTrader, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR nyopetAutoTrader.js:', e.message); process.exit(1); });

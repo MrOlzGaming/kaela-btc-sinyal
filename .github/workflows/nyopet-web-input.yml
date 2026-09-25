@@ -77,16 +77,16 @@ jobs:
 
       - name: Proses input posisi Nyopet (rangerWebInput.js -- OTP dicek di dalam sini duluan)
         env:
-          NYOPET_OTP: ${{ inputs.otp }}
-          NYOPET_ACTION: ${{ inputs.action }}
-          NYOPET_DIRECTION: ${{ inputs.direction }}
-          NYOPET_ENTRY: ${{ inputs.entry }}
-          NYOPET_LIQ: ${{ inputs.liq }}
-          NYOPET_MARGIN: ${{ inputs.margin }}
-          NYOPET_SIZE: ${{ inputs.size }}
-          NYOPET_LEVERAGE: ${{ inputs.leverage }}
-          NYOPET_NOTES: ${{ inputs.notes }}
-          NYOPET_EXIT: ${{ inputs.exit }}
+          RANGER_OTP: ${{ inputs.otp }}
+          RANGER_ACTION: ${{ inputs.action }}
+          RANGER_DIRECTION: ${{ inputs.direction }}
+          RANGER_ENTRY: ${{ inputs.entry }}
+          RANGER_LIQ: ${{ inputs.liq }}
+          RANGER_MARGIN: ${{ inputs.margin }}
+          RANGER_SIZE: ${{ inputs.size }}
+          RANGER_LEVERAGE: ${{ inputs.leverage }}
+          RANGER_NOTES: ${{ inputs.notes }}
+          RANGER_EXIT: ${{ inputs.exit }}
         run: node rangerWebInput.js
 
       - name: Commit & push nyopet-journal.json + nyopet-otp-state.json (OTP kepake)

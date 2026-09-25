@@ -53,10 +53,10 @@ function dirWord(positionAmt) { return Number(positionAmt) > 0 ? 'buy' : 'sell';
 // literal token MEXC, Olan bingung"). Fix: lookup KECIL cuma buat symbol yang UDAH DIKENAL
 // (dari asset config Sniper+Nyopet) -- symbol LAIN yang beneran gak dikenal (BENERAN "asset
 // apapun" yang jadi alasan desain awal fungsi ini) TETAP tampil apa adanya, gak dipaksa.
-const { NYOPET_ASSETS } = require('./rangerAssetConfig');
+const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { ASSETS: SNIPER_ASSETS } = require('./assetConfig');
 const _displayLabelBySymbol = {};
-Object.values(NYOPET_ASSETS).forEach((a) => { _displayLabelBySymbol[a.symbol] = a.label; });
+Object.values(RANGER_ASSETS).forEach((a) => { _displayLabelBySymbol[a.symbol] = a.label; });
 Object.values(SNIPER_ASSETS).forEach((a) => { if (a.execSymbol) _displayLabelBySymbol[a.execSymbol] = a.label; });
 function displaySymbol(rawSymbol) { return _displayLabelBySymbol[rawSymbol] || rawSymbol; }
 

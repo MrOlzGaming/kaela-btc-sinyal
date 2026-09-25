@@ -1,5 +1,5 @@
 // nyopetJournalLock.js -- (5 Sep 2026, permintaan Olan: "bantu atasi sinyal yang numpukin sinyal
-// lain") -- KUNCI ANTAR-PROSES buat journal Nyopet. Masalah nyata: nyopetAutoTrader.js (siklus 15
+// lain") -- KUNCI ANTAR-PROSES buat journal Ranger. Masalah nyata: rangerAutoTrader.js (siklus 15
 // menit, chart-pattern/FVG/Fed Dovish Grid) DAN econCalendarLiveMonitor.js (siklus 5 menit,
 // econ_reaction) BISA SAMA-SAMA nyentuh journal REAL Olan (multi-account-state/<...>-nyopet.json)
 // buat event FOMC/NFP yang SAMA -- tanpa kunci, 2 proses `node` terpisah bisa SAMA-SAMA baca "slot
@@ -45,7 +45,7 @@ async function acquireLock(journalPath) {
       try {
         const stat = fs.statSync(lockPath);
         if (Date.now() - stat.mtimeMs > LOCK_STALE_MS) {
-          console.log(`[NyopetJournalLock] Lock "${lockPath}" basi (>${LOCK_STALE_MS}ms) -- proses pemegang kemungkinan crash, lepas paksa.`);
+          console.log(`[RangerJournalLock] Lock "${lockPath}" basi (>${LOCK_STALE_MS}ms) -- proses pemegang kemungkinan crash, lepas paksa.`);
           fs.unlinkSync(lockPath);
           continue;
         }
@@ -63,7 +63,7 @@ function releaseLock(journalPath, token) {
   try {
     const content = fs.readFileSync(lockPath, 'utf8');
     if (!content.startsWith(token + ' ')) {
-      console.log(`[NyopetJournalLock] Lock "${lockPath}" udah bukan token kita (dicuri proses lain krn dianggap basi duluan) -- SKIP unlink, biar gak nge-hapus lock milik proses yang lagi sah kerja.`);
+      console.log(`[RangerJournalLock] Lock "${lockPath}" udah bukan token kita (dicuri proses lain krn dianggap basi duluan) -- SKIP unlink, biar gak nge-hapus lock milik proses yang lagi sah kerja.`);
       return;
     }
     fs.unlinkSync(lockPath);

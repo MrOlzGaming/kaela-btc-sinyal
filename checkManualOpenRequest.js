@@ -18,14 +18,14 @@ const path = require('path');
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
 const { createMexcClient } = require('./mexcExecutor');
-const { createNyopetTrader } = require('./rangerAutoTrader');
-const { NYOPET_ASSETS } = require('./rangerAssetConfig');
+const { createRangerTrader } = require('./rangerAutoTrader');
+const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { buildJournalHook, buildSendWA, safeKey, MASTER_NOMOR } = require('./multiAccountExecutor');
 
 const STATE_DIR = path.join(__dirname, 'multi-account-state');
 
 async function processRequest(req, adminRelay) {
-  const assetCfg = NYOPET_ASSETS[req.asset];
+  const assetCfg = RANGER_ASSETS[req.asset];
   if (!assetCfg) {
     await kaela.resolveManualOpenRequest(req.requestId, 'failed', `Asset "${req.asset}" gak dikenal.`);
     return;
@@ -55,7 +55,7 @@ async function processRequest(req, adminRelay) {
   const journalHook = buildJournalHook(account, null); // touchedSymbols null -- gak dipakai di jalur ini
   const sendWA = buildSendWA(account, adminRelay);
 
-  const trader = createNyopetTrader({
+  const trader = createRangerTrader({
     client, mexcClient, journalPath: path.join(STATE_DIR, `${key}-nyopet.json`),
     apiCreds, onEvent: journalHook, sendWA,
   });

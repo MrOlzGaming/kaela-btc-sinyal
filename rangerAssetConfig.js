@@ -12,7 +12,7 @@
 // minta ini SETELAH ketauan MEXC ternyata beneran punya kontrak USDC buat emas juga, bukan cuma
 // USDT). Nyopet Emas dapat token PAXG+USDC (beda dari Sniper Emas yang dapat XAUT+USDT) -- 2 lapis
 // pembeda sekaligus (token BEDA + margin asset BEDA), gak kembar sama sekali walau exchange sama.
-const NYOPET_ASSETS = {
+const RANGER_ASSETS = {
   // Label = PERSIS simbol Binance (29 Agu 2026, Olan: "kalo di akun binance pasang paxg ya di
   // web paxg juga bukan malah xau, biar ga muter muter kepalaku") -- Nyopet BTC pakai wallet
   // USDC jadi tikernya BTCUSDC, BEDA dari Sniper (BTCUSDT). BTC TETAP Binance, gak pindah apa-apa.
@@ -26,4 +26,4 @@ const NYOPET_ASSETS = {
   xau: { key: 'xau', symbol: 'PAXG_USDC', exchange: 'mexc', marginAsset: 'USDC', zoneSymbol: 'PAXGUSDT', label: 'XAUUSDC', emoji: '🟡' },
 };
 
-module.exports = { NYOPET_ASSETS };
+module.exports = { RANGER_ASSETS };

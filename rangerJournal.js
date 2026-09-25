@@ -1,4 +1,4 @@
-// Jurnal JUJUR trading Nyopet Market (Dark Kaela) -- posisi REAL, dibuka MANUAL oleh Olan
+// Jurnal JUJUR trading Ranger Market (Dark Kaela) -- posisi REAL, dibuka MANUAL oleh Olan
 // langsung di exchange asli, sistem cuma MEMANTAU + MENCATAT (permintaan Olan 16 Agu 2026:
 // "trading jujur kita nyopet market.. buat jurnal jujur.. tracking winrate 100 trade ke depan,
 // jika sudah kecapai kita bisa evaluasi"). Saldo/bankroll BERJALAN (compound/sizing) SENGAJA gak
@@ -35,7 +35,7 @@ function save(data) {
 
 function openPosition({ direction, entryPrice, liqPrice, marginUsd, sizeUsd, leverage, notes }, now = new Date()) {
   const data = load();
-  if (data.openPosition) throw new Error('Udah ada posisi Nyopet yang lagi terbuka -- tutup dulu sebelum buka baru (1 posisi per waktu).');
+  if (data.openPosition) throw new Error('Udah ada posisi Ranger yang lagi terbuka -- tutup dulu sebelum buka baru (1 posisi per waktu).');
   data.openPosition = {
     id: 'nyopet-' + now.getTime(),
     direction, entryPrice, liqPrice, marginUsd, sizeUsd, leverage,
@@ -58,7 +58,7 @@ function markWarning80Notified() {
 
 function closePosition({ exitPrice, exitReason, result }, now = new Date()) {
   const data = load();
-  if (!data.openPosition) throw new Error('Gak ada posisi Nyopet yang lagi terbuka.');
+  if (!data.openPosition) throw new Error('Gak ada posisi Ranger yang lagi terbuka.');
   const pos = data.openPosition;
   const pnlUsd = computePnlUsd(pos, exitPrice, exitReason);
   const trade = { ...pos, exitPrice, exitReason, result, pnlUsd, closedAt: now.toISOString() };

@@ -26,7 +26,7 @@ function fmt(n) {
   return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-function formatNyopetEvent({ type, price, entry }) {
+function formatRangerEvent({ type, price, entry }) {
   const time = toLocal(new Date()).toISOString().slice(0, 16).replace('T', ' ');
 
   if (type === 'ENTRY') {
@@ -66,7 +66,7 @@ function formatNyopetEvent({ type, price, entry }) {
   ].join('\n');
 }
 
-function formatNyopetNoSignal(now = new Date()) {
+function formatRangerNoSignal(now = new Date()) {
   return [
     `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${localDateKey(now)}`,
     'Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.',
@@ -75,12 +75,12 @@ function formatNyopetNoSignal(now = new Date()) {
   ].join('\n');
 }
 
-module.exports = { formatNyopetEvent, formatNyopetNoSignal, computeLevels, NYAWA_PCT, RR };
+module.exports = { formatRangerEvent, formatRangerNoSignal, computeLevels, NYAWA_PCT, RR };
 
 if (require.main === module) {
-  console.log(formatNyopetEvent({ type: 'ENTRY', price: 64500 }));
+  console.log(formatRangerEvent({ type: 'ENTRY', price: 64500 }));
   console.log();
-  console.log(formatNyopetEvent({ type: 'TP', price: 77400, entry: 64500 }));
+  console.log(formatRangerEvent({ type: 'TP', price: 77400, entry: 64500 }));
   console.log();
-  console.log(formatNyopetEvent({ type: 'SL', price: 58050, entry: 64500 }));
+  console.log(formatRangerEvent({ type: 'SL', price: 58050, entry: 64500 }));
 }

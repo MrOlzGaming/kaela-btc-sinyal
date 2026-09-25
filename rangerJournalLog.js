@@ -15,13 +15,13 @@ function fmtWita(date) {
 function dirLabel(direction) {
   return direction === 'short' ? '🔴 SHORT' : '🟢 LONG';
 }
-const BADGE = '🥷 NYOPET · Manual Olan';
+const BADGE = '🏹 RANGER · Manual Olan';
 
 // idrRate (13 Sep 2026, "nilai investasi juga di rupiahin dalam kurung.. berlaku semua") -- Margin
 // & Ukuran (nilai investasi/notional) pakai fmtUsdWithIdr; entryPrice/liqPrice TETAP USD polos
 // karena level HARGA, bukan nilai investasi.
 function formatOpened(pos, now, idrRate) {
-  return `${BADGE} — 📌 Posisi Nyopet DIBUKA
+  return `${BADGE} — 📌 Posisi Ranger DIBUKA
 ${dirLabel(pos.direction)} @ ${fmtUsd(pos.entryPrice)} | Leverage ${pos.leverage}x
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)}
 Ukuran: ${fmtUsdWithIdr(pos.sizeUsd, idrRate)}
@@ -33,7 +33,7 @@ ${fmtWita(now)}`;
 }
 
 function formatLiquidated(trade, summary, now) {
-  return `${BADGE} — 💥 POSISI NYOPET KENA LIKUIDASI
+  return `${BADGE} — 💥 POSISI RANGER KENA LIKUIDASI
 ${dirLabel(trade.direction)} @ ${fmtUsd(trade.entryPrice)} -> likuidasi @ ${fmtUsd(trade.exitPrice)}
 
 Rekor jurnal: ${summary.total}/${summary.targetTrades} trade | Win rate ${summary.winRate.toFixed(1)}% (${summary.wins}W-${summary.losses}L)
@@ -42,7 +42,7 @@ ${fmtWita(now)}`;
 }
 
 function formatProfit100(pos, price, roiPct, now) {
-  return `${BADGE} — 🎉 POSISI NYOPET UDAH +${roiPct.toFixed(0)}% ROI
+  return `${BADGE} — 🎉 POSISI RANGER UDAH +${roiPct.toFixed(0)}% ROI
 ${dirLabel(pos.direction)} @ ${fmtUsd(pos.entryPrice)} | Harga sekarang ${fmtUsd(price)}
 
 Udah tembus 100% ROI -- keputusan close/tahan sepenuhnya di tangan Olan, ini cuma pengingat otomatis.
@@ -51,7 +51,7 @@ ${fmtWita(now)}`;
 }
 
 function formatWarning80(pos, price, roiPct, now) {
-  return `${BADGE} — ⚠️ POSISI NYOPET UDAH ${roiPct.toFixed(0)}% ROI (mepet likuidasi)
+  return `${BADGE} — ⚠️ POSISI RANGER UDAH ${roiPct.toFixed(0)}% ROI (mepet likuidasi)
 ${dirLabel(pos.direction)} @ ${fmtUsd(pos.entryPrice)} | Harga sekarang ${fmtUsd(price)} | Likuidasi di ${fmtUsd(pos.liqPrice)}
 
 Belum kena likuidasi, tapi udah deket. Ini pengingat DINI (bukan tunggu kena beneran) buat mutusin: tambah margin, tutup manual, atau biarin -- keputusan sepenuhnya di tangan Olan.
@@ -60,7 +60,7 @@ ${fmtWita(now)}`;
 }
 
 function formatManualClosed(trade, summary, now) {
-  return `${BADGE} — ✅ Posisi Nyopet DITUTUP manual
+  return `${BADGE} — ✅ Posisi Ranger DITUTUP manual
 ${dirLabel(trade.direction)} @ ${fmtUsd(trade.entryPrice)} -> ditutup @ ${fmtUsd(trade.exitPrice)} (${trade.result === 'win' ? 'MENANG' : 'KALAH'})
 
 Rekor jurnal: ${summary.total}/${summary.targetTrades} trade | Win rate ${summary.winRate.toFixed(1)}% (${summary.wins}W-${summary.losses}L)
@@ -69,11 +69,11 @@ ${fmtWita(now)}`;
 }
 
 function format100TradeEvaluasi(summary, now) {
-  return `${BADGE} — 📊 100 TRADE NYOPET TERCAPAI, WAKTUNYA EVALUASI
+  return `${BADGE} — 📊 100 TRADE RANGER TERCAPAI, WAKTUNYA EVALUASI
 Total: ${summary.total} trade | Menang: ${summary.wins} | Kalah: ${summary.losses}
 Win rate: ${summary.winRate.toFixed(1)}%
 
-Ini titik yang udah disepakati buat evaluasi jujur apa strategi Nyopet (sinyal zona likuiditas + konfirmasi manual heatmap) beneran punya edge atau enggak.
+Ini titik yang udah disepakati buat evaluasi jujur apa strategi Ranger (sinyal zona likuiditas + konfirmasi manual heatmap) beneran punya edge atau enggak.
 
 ${fmtWita(now)}`;
 }

@@ -34,7 +34,7 @@ async function requestOtp() {
   const now = Date.now();
   saveState({ code, expiresAt: now + OTP_TTL_MS, used: false, requestedAt: new Date(now).toISOString() });
   const msg = [
-    '🔐 *Kode OTP Input Nyopet*',
+    '🔐 *Kode OTP Input Ranger*',
     '',
     `Kode kamu: *${code}*`,
     '',

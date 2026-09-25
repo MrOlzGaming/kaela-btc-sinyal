@@ -55,7 +55,7 @@ const kaela = require('./kaelaProTraderClient');
 const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist');
 // (12 Sep 2026, permintaan Olan: "Nyopet modenya sama kek Sniper, cuma timeframe lebih rendah" --
 // sinyal short window-bear WAJIB ada di Nyopet juga) -- REUSE fetch 4H+parameter Nyopet APA
-// ADANYA (jangan reimplementasi/duplikat), gak nyentuh createNyopetTrader/main (yang beneran
+// ADANYA (jangan reimplementasi/duplikat), gak nyentuh createRangerTrader/main (yang beneran
 // eksekusi trading) -- cuma 2 fungsi/konstanta MURNI ini yang dipakai, aman.
 const { fetchCandles4hPaginated, PATTERN_PARAMS_4H, FVG_TREND_SMA_LEN_4H } = require('./rangerAutoTrader');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');

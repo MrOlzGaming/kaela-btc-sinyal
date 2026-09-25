@@ -1,4 +1,4 @@
-// Handler input posisi Nyopet dari FORM WEB (17 Agu 2026, permintaan Olan: "kasih aku metode
+// Handler input posisi Ranger dari FORM WEB (17 Agu 2026, permintaan Olan: "kasih aku metode
 // input lewat web langsung.. karena sampe jumat aku ga bisa input kayak tadi kasih foto disini").
 // Dipanggil dari .github/workflows/nyopet-web-input.yml (workflow_dispatch). Baca semua input dari
 // environment variable (workflow_dispatch inputs -> env), BUKAN argv, biar konsisten sama pola
@@ -18,36 +18,36 @@ const { sendWhatsApp } = require('./fonnte');
 const kaela = require('./kaelaProTraderClient');
 
 async function main() {
-  const otpCheck = verifyOtp(process.env.NYOPET_OTP);
+  const otpCheck = verifyOtp(process.env.RANGER_OTP);
   if (!otpCheck.valid) {
     throw new Error(`OTP gak valid: ${otpCheck.reason}`);
   }
 
-  const action = process.env.NYOPET_ACTION;
+  const action = process.env.RANGER_ACTION;
   const now = new Date();
 
   if (action === 'open') {
     const pos = openPosition({
-      direction: process.env.NYOPET_DIRECTION,
-      entryPrice: parseFloat(process.env.NYOPET_ENTRY),
-      liqPrice: parseFloat(process.env.NYOPET_LIQ),
-      marginUsd: parseFloat(process.env.NYOPET_MARGIN),
-      sizeUsd: parseFloat(process.env.NYOPET_SIZE),
-      leverage: parseFloat(process.env.NYOPET_LEVERAGE),
-      notes: process.env.NYOPET_NOTES || null,
+      direction: process.env.RANGER_DIRECTION,
+      entryPrice: parseFloat(process.env.RANGER_ENTRY),
+      liqPrice: parseFloat(process.env.RANGER_LIQ),
+      marginUsd: parseFloat(process.env.RANGER_MARGIN),
+      sizeUsd: parseFloat(process.env.RANGER_SIZE),
+      leverage: parseFloat(process.env.RANGER_LEVERAGE),
+      notes: process.env.RANGER_NOTES || null,
     }, now);
     const idrRate = await kaela.getUsdIdrRate().catch(() => null);
     const msg = formatOpened(pos, now, idrRate);
     console.log(msg + '\n');
     await sendWhatsApp(msg);
-    console.log('[NyopetWebInput] Posisi dibuka via web:', pos.direction, '@', pos.entryPrice);
+    console.log('[RangerWebInput] Posisi dibuka via web:', pos.direction, '@', pos.entryPrice);
     return;
   }
 
   if (action === 'close') {
     const entry = getSummary().openPosition;
-    if (!entry) throw new Error('Gak ada posisi Nyopet yang lagi terbuka buat ditutup.');
-    const exitPrice = parseFloat(process.env.NYOPET_EXIT);
+    if (!entry) throw new Error('Gak ada posisi Ranger yang lagi terbuka buat ditutup.');
+    const exitPrice = parseFloat(process.env.RANGER_EXIT);
     // Hasil dihitung OTOMATIS dari arah+entry+exit -- bukan dipilih manual, biar gak ada salah
     // ketik "menang" pas sebenarnya rugi (atau sebaliknya).
     const result = entry.direction === 'short'
@@ -61,14 +61,14 @@ async function main() {
     if (summary.total === summary.targetTrades) {
       await sendWhatsApp(format100TradeEvaluasi(summary, now));
     }
-    console.log('[NyopetWebInput] Posisi ditutup via web:', trade.result, '@', trade.exitPrice);
+    console.log('[RangerWebInput] Posisi ditutup via web:', trade.result, '@', trade.exitPrice);
     return;
   }
 
-  throw new Error('NYOPET_ACTION gak dikenali: ' + action);
+  throw new Error('RANGER_ACTION gak dikenali: ' + action);
 }
 
 main().catch((e) => {
-  console.error('ERROR nyopetWebInput.js:', e.message);
+  console.error('ERROR rangerWebInput.js:', e.message);
   process.exit(1);
 });

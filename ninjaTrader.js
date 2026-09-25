@@ -44,6 +44,7 @@ const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, 
 const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
+const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
 
 const SYMBOL = 'BTCUSDT'; // format Binance -- CUMA buat fetch candle publik (data-api.binance.vision, sumber data channel/backtest)
 const EXEC_SYMBOL = 'BTC-USDT'; // format BingX (hyphen) -- dipakai SEMUA panggilan eksekusi (order/posisi/ticker)
@@ -69,10 +70,14 @@ function loadConfig() {
 // gak boleh dicampur (demo pakai saldo testnet $5rb, real nanti modal beneran -- angka gabungan
 // gak ada artinya).
 function freshStats() { return { wins: 0, losses: 0, totalPnlUsd: 0 }; }
+// dailySignalSeq (26 Sep 2026, unifikasi "id juga kasih logika seragam") -- counter kecil per
+// varian, lihat nextVariantSignalId() di bawah buat penjelasan lengkap kenapa Ninja butuh
+// mekanisme beda dari Sniper/Ranger (journal Ninja gak nyimpen histori order penuh).
+function freshDailySignalSeq() { return { dayKey: null, count: 0 }; }
 function defaultJournal() {
   return {
-    tpFixed: { channel: null, floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() } },
-    trailing: { channel: null, floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() } },
+    tpFixed: { channel: null, floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() }, dailySignalSeq: freshDailySignalSeq() },
+    trailing: { channel: null, floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() }, dailySignalSeq: freshDailySignalSeq() },
   };
 }
 
@@ -82,11 +87,13 @@ function loadJournal() {
     const j = JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8'));
     const merged = { ...defaultJournal(), ...j };
     // Merge SHALLOW doang gak cukup buat field baru DI DALAM tiap varian (mis. `stats`, ditambah
-    // 23 Sep 2026) -- journal lama yang udah kesave duluan gak punya field itu, jadi WAJIB
-    // isi ulang manual per-varian biar gak `undefined` pas dipakai (v.stats.demo.wins dst).
+    // 23 Sep 2026; `dailySignalSeq`, ditambah 26 Sep 2026) -- journal lama yang udah kesave duluan
+    // gak punya field itu, jadi WAJIB isi ulang manual per-varian biar gak `undefined` pas dipakai
+    // (v.stats.demo.wins dst, v.dailySignalSeq.count dst).
     for (const variant of VARIANTS) {
       merged[variant] = { ...defaultJournal()[variant], ...(j[variant] || {}) };
       merged[variant].stats = { demo: { ...freshStats(), ...(j[variant]?.stats?.demo || {}) }, real: { ...freshStats(), ...(j[variant]?.stats?.real || {}) } };
+      merged[variant].dailySignalSeq = { ...freshDailySignalSeq(), ...(j[variant]?.dailySignalSeq || {}) };
     }
     return merged;
   } catch { return defaultJournal(); }
@@ -94,6 +101,23 @@ function loadJournal() {
 
 function saveJournal(j) {
   fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null, 2));
+}
+
+// signalId per-varian (26 Sep 2026, permintaan Olan "id juga kasih logika seragam biar itu 1
+// manajemen mantap") -- FORMAT dan LOGIKA hitungnya SAMA PERSIS dipakai Sniper/Ranger
+// (nextSignalId, signalIdGenerator.js: dayKey WITA + urutan 2 digit hari itu). BEDA cuma cara
+// nyimpen "udah kepake berapa kali hari ini"nya -- Sniper/Ranger scan array histori order penuh
+// yang emang udah ada, journal Ninja TIDAK nyimpen histori itu (cuma `floating`+`closedCount`),
+// jadi dipakai counter kecil TERSENDIRI (`dailySignalSeq`) yang di-reset otomatis begitu dayKey
+// ganti. Caller WAJIB `saveJournal()` abis manggil ini (mutasi `variantJournal` in-place).
+function nextVariantSignalId(variantJournal, date = new Date()) {
+  const dayKey = dayKeyOf(date);
+  if (!variantJournal.dailySignalSeq || variantJournal.dailySignalSeq.dayKey !== dayKey) {
+    variantJournal.dailySignalSeq = { dayKey, count: 0 };
+  }
+  const id = nextSignalId(variantJournal.dailySignalSeq.count, date);
+  variantJournal.dailySignalSeq.count += 1;
+  return id;
 }
 
 async function fetchClosedCandles5m(count) {
@@ -240,8 +264,8 @@ function variantLabel(variant) { return variant === 'tpFixed' ? 'TP Tetap' : 'Tr
 // jadi "🥷 NYOPET · Kaela BTC (Demo) #id" identik, alasan buka = `channel_breakout` (PATTERN_
 // REASON_LABEL, key baru ke-3 setelah flag/wedge & fvg_bounce), alasan tutup = CB_SL/CB_TP/
 // CB_TRAIL (CLOSE_REASON_LABEL, mekanisme beda dari SL/TRAIL Nyopet lama makanya kode terpisah).
-function buildOpenMsg({ id, dir, entryPrice, sl, tp, margin, leverage, nilaiPosisi, idrRate, isDemo }) {
-  const pos = { id, direction: dir === 'long' ? 'buy' : 'sell', entryPrice, tp, sl, marginUsd: margin, nilaiPosisi, leverage, mode: 'channel_breakout', assetLabel: 'BTC' };
+function buildOpenMsg({ id, signalId, dir, entryPrice, sl, tp, margin, leverage, nilaiPosisi, idrRate, isDemo }) {
+  const pos = { id, signalId, direction: dir === 'long' ? 'buy' : 'sell', entryPrice, tp, sl, marginUsd: margin, nilaiPosisi, leverage, mode: 'channel_breakout', assetLabel: 'BTC' };
   return formatAutoOpen(pos, new Date(), '', isDemo, idrRate, '', null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
 }
 
@@ -251,36 +275,36 @@ function outcomeCodeFor(outcome) { return outcome === 'TP' ? 'CB_TP' : outcome =
 // Win-rate+akumulasi (permintaan Olan: "tutup posisi sertakan winrate dan akumulasi profit") --
 // Nyopet lama BELUM punya 2 baris ini, jadi DISISIPKAN ke output formatAutoClosed (bukan bikin
 // template baru) tepat sebelum link, biar strukturnya tetap 1:1 sama Nyopet + tambahan.
-function buildCloseMsg({ id, variant, dir, entryPrice, exitPrice, pnlUsd, stats, outcomeCode, idrRate, isDemo }) {
-  const trade = { id, direction: dir, entryPrice, exitPrice, pnlUsd, pnlPct: null, mode: 'channel_breakout', assetLabel: 'BTC' };
+function buildCloseMsg({ id, signalId, variant, dir, entryPrice, exitPrice, pnlUsd, stats, outcomeCode, idrRate, isDemo }) {
+  const trade = { id, signalId, direction: dir, entryPrice, exitPrice, pnlUsd, pnlPct: null, mode: 'channel_breakout', assetLabel: 'BTC' };
   const base = formatAutoClosed(trade, new Date(), isDemo, CLOSE_REASON_LABEL[outcomeCode] || outcomeCode, idrRate, null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
   const extraLines = formatWinRateLines(stats, `${variantLabel(variant)} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
   return base.replace(`🔗 ${KAELA_ACCESS_URL}`, extraLines + `🔗 ${KAELA_ACCESS_URL}`);
 }
 
-async function reportOpen({ id, dir, wibowoRoute, demo, real, sl, tp }) {
+async function reportOpen({ id, signalId, dir, wibowoRoute, demo, real, sl, tp }) {
   const idrRate = await getUsdIdrRate().catch(() => null);
 
-  const demoMsg = buildOpenMsg({ id, dir, entryPrice: demo.entryPrice, sl, tp, margin: demo.margin, leverage: demo.leverage, nilaiPosisi: demo.nilaiPosisi, idrRate, isDemo: true });
+  const demoMsg = buildOpenMsg({ id, signalId, dir, entryPrice: demo.entryPrice, sl, tp, margin: demo.margin, leverage: demo.leverage, nilaiPosisi: demo.nilaiPosisi, idrRate, isDemo: true });
   await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && real) {
-    const realMsg = buildOpenMsg({ id, dir, entryPrice: real.entryPrice, sl, tp, margin: real.margin, leverage: real.leverage, nilaiPosisi: real.nilaiPosisi, idrRate, isDemo: false });
+    const realMsg = buildOpenMsg({ id, signalId, dir, entryPrice: real.entryPrice, sl, tp, margin: real.margin, leverage: real.leverage, nilaiPosisi: real.nilaiPosisi, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
     await sendWhatsAppToWibowo(`${demoMsg}\n_(real belum jalan/saldo kurang)_`).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
   }
 }
 
-async function reportClose({ id, variant, dir, wibowoRoute, outcome, demoExit, realExit, entryPriceDemo, entryPriceReal, demoPnlUsd, realPnlUsd, demoStats, realStats }) {
+async function reportClose({ id, signalId, variant, dir, wibowoRoute, outcome, demoExit, realExit, entryPriceDemo, entryPriceReal, demoPnlUsd, realPnlUsd, demoStats, realStats }) {
   const idrRate = await getUsdIdrRate().catch(() => null);
   const outcomeCode = outcomeCodeFor(outcome);
 
-  const demoMsg = buildCloseMsg({ id, variant, dir, entryPrice: entryPriceDemo, exitPrice: demoExit, pnlUsd: demoPnlUsd, stats: demoStats, outcomeCode, idrRate, isDemo: true });
+  const demoMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceDemo, exitPrice: demoExit, pnlUsd: demoPnlUsd, stats: demoStats, outcomeCode, idrRate, isDemo: true });
   await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && realExit != null) {
-    const realMsg = buildCloseMsg({ id, variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });
+    const realMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (real):', e.message));
   } else {
     await sendWhatsAppToWibowo(`${demoMsg}\n_(real belum jalan/saldo kurang)_`).catch((e) => console.log('[ChannelBreakout] Gagal kirim Wibowo (demo pengganti):', e.message));
@@ -375,7 +399,7 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
         console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice} (pnl ${demoPnlUsd.toFixed(2)})`);
       } else {
         await reportClose({
-          id: f.id, variant, dir: f.dir, wibowoRoute: f.wibowoRoute, outcome: demoHit || 'SL',
+          id: f.id, signalId: f.signalId, variant, dir: f.dir, wibowoRoute: f.wibowoRoute, outcome: demoHit || 'SL',
           demoExit: f.demoExitPrice, realExit: f.realExitPrice, entryPriceDemo: f.demo.entryPrice,
           entryPriceReal: f.real ? f.real.entryPrice : null,
           demoPnlUsd, realPnlUsd, demoStats: v.stats.demo, realStats: v.stats.real,
@@ -454,18 +478,20 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
       }
     }
 
-    const tradeId = crypto.randomUUID(); // 1 ID per trade (permintaan Olan, samain gaya shortId Nyopet), dipakai konsisten di pesan buka+tutup
+    const tradeId = crypto.randomUUID(); // id INTERNAL unik (uniqueness key doang) -- referensi manusiawi buat pesan WA sekarang pakai signalId (di bawah), bukan digit-extraction dari UUID ini lagi
+    const signalId = nextVariantSignalId(v, new Date());
     v.floating = {
-      id: tradeId, dir, sl, tp, trailDistancePct, wibowoRoute,
+      id: tradeId, signalId, dir, sl, tp, trailDistancePct, wibowoRoute,
       demo: { ...demoResult, extreme: demoResult.entryPrice, sl: dir === 'long' ? demoResult.entryPrice - halfWidth : demoResult.entryPrice + halfWidth },
       real: realResult ? { ...realResult, extreme: realResult.entryPrice, sl: dir === 'long' ? realResult.entryPrice - halfWidth : realResult.entryPrice + halfWidth } : null,
     };
     v.channel = null;
+    saveJournal(journal);
     console.log(`[ChannelBreakout/${variant}] Entry ${dir.toUpperCase()} demo @ ${demoResult.entryPrice}${realResult ? ` + real @ ${realResult.entryPrice}` : ''}.`);
     if (SILENT_VARIANTS.has(variant)) {
       console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA)`);
     } else {
-      await reportOpen({ id: tradeId, dir, wibowoRoute, demo: v.floating.demo, real: v.floating.real, sl, tp });
+      await reportOpen({ id: tradeId, signalId, dir, wibowoRoute, demo: v.floating.demo, real: v.floating.real, sl, tp });
     }
     return;
   }
@@ -511,7 +537,7 @@ async function process() {
   saveJournal(journal);
 }
 
-module.exports = { process, loadConfig };
+module.exports = { process, loadConfig, nextVariantSignalId };
 
 if (require.main === module) {
   process().catch((e) => { console.error('[ChannelBreakout] ERROR:', e.message, e.stack); process.exitCode = 1; });

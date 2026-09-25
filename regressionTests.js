@@ -25,6 +25,7 @@ const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor')
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
 const { formatManualOpenAutoClosed, formatAutoOpen, shortId, liquidationPrice, SYSTEM_LABEL, EXCHANGE_BADGE } = require('./darkKaelaLog');
 const { formatTriggered: sniperFormatTriggered, formatClosed: sniperFormatClosed, formatPartialClosed: sniperFormatPartialClosed } = require('./sniperOrderLog');
+const { nextVariantSignalId } = require('./ninjaTrader');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { computeProgress } = require('./walletCapProgress');
@@ -349,6 +350,19 @@ async function main() {
     const msg = sniperFormatClosed(order, null, null);
     assert.ok(msg.includes('Win rate Sniper BTCUSDT'), `Harus reuse formatWinRateLines yang SAMA dipakai Ranger/Ninja, malah:\n${msg}`);
     assert.ok(msg.includes('Take Profit kena'), 'Alasan TP tunggal Sniper HARUS teks polos, BUKAN reuse CLOSE_REASON_LABEL.TP (itu teksnya "agregat kena", khusus basket Fed Dovish Grid)');
+  });
+
+  // ninjaTrader.js: nextVariantSignalId (26 Sep 2026) -- Ninja journal gak nyimpen histori order
+  // penuh kayak Sniper/Ranger (cuma floating+closedCount), jadi pakai counter kecil TERSENDIRI
+  // (dailySignalSeq) buat format ID yang SAMA (dayKey+urutan). Ground-truth: urut naik dalam 1
+  // hari, RESET ke 01 begitu dayKey ganti (WITA, bukan UTC polos).
+  await test('ninjaTrader: nextVariantSignalId urut dalam 1 hari + reset begitu dayKey ganti', () => {
+    const v = { dailySignalSeq: { dayKey: null, count: 0 } };
+    const d1 = new Date('2026-09-26T01:00:00+08:00');
+    assert.strictEqual(nextVariantSignalId(v, d1), '2026092601');
+    assert.strictEqual(nextVariantSignalId(v, d1), '2026092602');
+    const d2 = new Date('2026-09-27T01:00:00+08:00');
+    assert.strictEqual(nextVariantSignalId(v, d2), '2026092701', 'Harus reset ke 01 begitu tanggalnya ganti, bukan lanjut 03');
   });
 
   // monthlyFundingReminder.js (20 Sep 2026, kebijakan tetap setoran bulanan Olan -- lihat memori

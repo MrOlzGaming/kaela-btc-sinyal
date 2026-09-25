@@ -7,7 +7,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const { localDateKey } = require('./config');
+// nextSignalId/countSignalIdsToday (25 Sep 2026, unifikasi desain -- "id juga kasih logika
+// seragam") -- logika ID manusiawi INI yang aslinya dari file ini, sekarang dipindah jadi 1
+// sumber dipakai Ranger/Ninja juga (lihat signalIdGenerator.js), Sniper REUSE balik biar semuanya
+// beneran 1 logika yang sama persis, bukan cuma format teksnya doang.
+const { nextSignalId, countSignalIdsToday } = require('./signalIdGenerator');
 
 const ORDERS_PATH = path.join(__dirname, 'sniper-orders.json');
 
@@ -40,9 +44,7 @@ function createOrder(order, date = new Date()) {
   const id = date.getTime().toString(36) + Math.random().toString(36).slice(2, 6);
   // ID Sinyal manusiawi: YYYYMMDD (kalender WITA) + nomor urut 2 digit HARI ITU.
   // Contoh: 2026080801 = 2026, bulan 08, tanggal 08, sinyal ke-1 hari itu.
-  const dayKey = localDateKey(date).replace(/-/g, ''); // 'YYYY-MM-DD' -> 'YYYYMMDD'
-  const countToday = (state.orders || []).filter((o) => (o.signalId || '').startsWith(dayKey)).length;
-  const signalId = dayKey + String(countToday + 1).padStart(2, '0');
+  const signalId = nextSignalId(countSignalIdsToday((state.orders || []).map((o) => o.signalId), date), date);
   const entry = {
     id,
     signalId,

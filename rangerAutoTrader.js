@@ -61,6 +61,7 @@ const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertI
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const { fetchBinancePositioning } = require('./marketSentiment');
 const { isBtcBearWindow, isBtcApproachingWindowFlip, daysUntilBtcWindowFlip } = require('./halvingBearWindow');
+const { nextSignalId, countSignalIdsToday } = require('./signalIdGenerator');
 
 // 12 Sep 2026, permintaan Olan ("Nyopet chart-pattern juga dikasih konteks smart-money yang
 // sama" -- lanjutan Fase 1 Sniper) -- KONTEKS doang, BELUM ngaruh eksekusi/gating apapun. Cuma
@@ -376,8 +377,17 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const qty = parseFloat(entryOrder.executedQty);
     const entryPrice = parseFloat(entryOrder.avgPrice);
 
+    // signalId (25 Sep 2026, permintaan Olan "id juga kasih logika seragam") -- ID manusiawi
+    // dayKey+urutan-harian, SATU logika sama dipakai Sniper/Ranger/Ninja (lihat signalIdGenerator.js).
+    // journal.orders nyimpen SEMUA order dari awal (gak pernah dihapus), scope hitungannya PER
+    // INSTANCE (per akun -- beda phone/mode = beda file journal = beda hitungan, konsisten sama
+    // cara Sniper ngitung dari sniper-orders.json-nya sendiri).
+    const journal = loadJournal();
+    const now = new Date();
+    const signalId = nextSignalId(countSignalIdsToday((journal.orders || []).map((o) => o.signalId), now), now);
+
     const order = {
-      id: 'nyopet-demo-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, status: 'floating',
+      id: 'ranger-demo-' + Date.now(), signalId, asset: assetKey, exchange: assetCfg.exchange, direction: sig.direction, status: 'floating',
       mode: sig.patternType, patternType: sig.patternType, entryPrice,
       sl: sig.sl, originalSl: sig.sl, tp: partialTp, partialTp, qty,
       leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
@@ -391,7 +401,6 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     };
     const smartMoney = await fetchSmartMoneyContext(assetKey, sig.direction);
     order.smartMoneyGapAtEntry = smartMoney.gap;
-    const journal = loadJournal();
     journal.orders.push(order);
     saveJournal(journal);
 
@@ -531,7 +540,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // otomatis pakai CLOSE_REASON_LABEL (mapping kode->teks manusia).
     const alasanText = manualNote || CLOSE_REASON_LABEL[reason] || reason || '-';
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
-    let msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
+    let msg = formatAutoClosed({ id: order.id, signalId: order.signalId, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     // Win-rate + akumulasi (23 Sep 2026, permintaan Olan, disamain dari Channel Breakout) --
     // dihitung LANGSUNG dari journal.orders (bukan counter terpisah kayak ninjaTrader.js)
     // -- Nyopet journal SATU-SATUNYA sumber kebenaran, scan ulang tiap kali lebih aman drpd nyimpen
@@ -743,8 +752,10 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
         const adoptedAmt = parseFloat(liveCheckPos.positionAmt);
         const adoptedLeverage = Number(liveCheckPos.leverage) || 0;
         const adoptedNotional = Math.abs(Number(liveCheckPos.notional) || 0);
+        const adoptedNow = new Date();
         const adopted = {
-          id: 'nyopet-adopted-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange,
+          id: 'ranger-adopted-' + Date.now(), signalId: nextSignalId(countSignalIdsToday((journal.orders || []).map((o) => o.signalId), adoptedNow), adoptedNow),
+          asset: assetKey, exchange: assetCfg.exchange,
           direction: adoptedAmt > 0 ? 'buy' : 'sell', status: 'floating',
           mode: 'unknown', patternType: 'unknown', entryPrice: parseFloat(liveCheckPos.entryPrice),
           sl: null, originalSl: null, tp: null, partialTp: null, liqPrice: null,
@@ -923,8 +934,11 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const totalSizeFrac = FINAL_RECIPE.layerSchedulePct[0] / 100;
     const { sl, tp } = _fedGridImpliedSlTp(entryPrice, totalSizeFrac);
 
+    const journal = loadJournal();
+    const gridNow = new Date();
     const order = {
-      id: 'nyopet-demo-' + Date.now(), asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', status: 'floating',
+      id: 'ranger-demo-' + Date.now(), signalId: nextSignalId(countSignalIdsToday((journal.orders || []).map((o) => o.signalId), gridNow), gridNow),
+      asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', status: 'floating',
       mode: FED_GRID_PATTERN_TYPE, patternType: FED_GRID_PATTERN_TYPE, entryPrice, qty,
       sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: notionalUsd / FINAL_RECIPE.leverage, nilaiPosisi: notionalUsd,
       modalAtOpen: modal, layers: 1, layerSizesFrac: [totalSizeFrac],
@@ -934,7 +948,6 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     };
     const smartMoney = await fetchSmartMoneyContext(assetKey);
     order.smartMoneyGapAtEntry = smartMoney.gap;
-    const journal = loadJournal();
     journal.orders.push(order);
     saveJournal(journal);
 

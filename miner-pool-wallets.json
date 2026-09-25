@@ -16,16 +16,16 @@
   "1K6KoYC69NnafWJ7YgtrpwJxBLiijWqwa6": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 291,
-    "totalReceivedBtc": 0.00158886000000001,
-    "lastSeenAt": "2026-09-25T06:31:29.269Z"
+    "blockCount": 293,
+    "totalReceivedBtc": 0.0015997800000000103,
+    "lastSeenAt": "2026-09-25T08:31:56.879Z"
   },
   "1AfCc4F9c4VTYSE31PUe2kUEKs6ZxiDjxm": {
     "pool": "F2Pool",
     "firstSeenAt": "2026-09-13T05:49:35.147Z",
-    "blockCount": 291,
-    "totalReceivedBtc": 915.1688703999997,
-    "lastSeenAt": "2026-09-25T06:31:29.269Z"
+    "blockCount": 293,
+    "totalReceivedBtc": 921.4614983699996,
+    "lastSeenAt": "2026-09-25T08:31:56.879Z"
   },
   "37jKPSmbEGwgfacCr2nayn1wTaqMAbA94Z": {
     "pool": "AntPool",
@@ -863,8 +863,8 @@
   "bc1qtm7ye0wm085hhv88japwkalmwkt3amec5z9c7a3unv05tfg6y2pstr3xfz": {
     "pool": "Foundry USA",
     "firstSeenAt": "2026-09-23T14:31:28.145Z",
-    "blockCount": 58,
-    "totalReceivedBtc": 182.68803173999999,
-    "lastSeenAt": "2026-09-25T07:46:22.493Z"
+    "blockCount": 59,
+    "totalReceivedBtc": 185.8198152,
+    "lastSeenAt": "2026-09-25T08:32:04.778Z"
   }
 }

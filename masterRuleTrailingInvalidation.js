@@ -5,7 +5,7 @@
 // backtest (BTC/Emas, Sniper harian & sistem 4-jam) SEBELUM dipasang live di manapun (permintaan
 // eksplisit Olan: "coba dulu di backtest.. fokus ke logikanya dulu").
 //
-// BEDA dari trailing yang UDAH ADA (channelBreakoutTrader.js updateTrailing, nyopetChartPatternFvg.js
+// BEDA dari trailing yang UDAH ADA (ninjaTrader.js updateTrailing, nyopetChartPatternFvg.js
 // trail-SMA): itu semua trail dari HARGA SESAAT/close per siklus, modul INI trail dari CANDLE
 // HIGH/LOW (nangkep wick), dan trigger-exit dicek pakai invalidation SEBELUM di-update candle yang
 // sama (Bagian 16.1 dokumen -- cegah look-ahead, urutan: cek trigger dulu, baru ratchet).

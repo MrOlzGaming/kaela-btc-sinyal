@@ -1,6 +1,6 @@
 #!/bin/bash
 # run-channel-breakout-vultr.sh (22 Sep 2026) -- runner cadence CEPAT (tiap 1 menit) khusus
-# strategi "Channel Breakout" (channelBreakoutTrader.js). TERPISAH TOTAL dari run-vultr-executor.sh
+# strategi "Ninja" (dulu "Channel Breakout", ninjaTrader.js). TERPISAH TOTAL dari run-vultr-executor.sh
 # (15 menit) DAN dari run-position-check-fast.sh (5 menit, Nyopet lama) -- strategi ini punya
 # journal SENDIRI (channel-breakout-journal.json), TIDAK nyentuh file/state yang dipakai script
 # lain, jadi AMAN pakai LOCK FILE SENDIRI (bukan numpang lock bersama) tanpa risiko korup data
@@ -23,12 +23,12 @@ if ! flock -n 200; then
   exit 0
 fi
 
-output=$(node channelBreakoutTrader.js 2>&1)
+output=$(node ninjaTrader.js 2>&1)
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
 
 # Cek rekap saldo-kurang harian TIAP SIKLUS (murah -- cuma baca state lokal, kirim WA 0x atau 1x
-# aja per hari begitu tanggalnya kepotong, lihat channelBreakoutBalanceRecap.js).
-node -e "require('./channelBreakoutBalanceRecap').reportYesterdayRecapIfPending().then(r=>console.log(JSON.stringify(r)))" >> "$LOG_FILE" 2>&1
+# aja per hari begitu tanggalnya kepotong, lihat ninjaBalanceRecap.js).
+node -e "require('./ninjaBalanceRecap').reportYesterdayRecapIfPending().then(r=>console.log(JSON.stringify(r)))" >> "$LOG_FILE" 2>&1
 
 # Log cap ~5000 baris (cadence 1 menit = ~1440x/hari, numpuk cepat).
 if [ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt 5000 ]; then

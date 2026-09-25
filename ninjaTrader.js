@@ -1,4 +1,4 @@
-// channelBreakoutTrader.js (22-23 Sep 2026) -- eksekutor LIVE strategi "Channel Breakout"
+// ninjaTrader.js (22-23 Sep 2026) -- eksekutor LIVE strategi "Ninja" (dulu "Channel Breakout")
 // (BTCUSDT candle 5-menit), divalidasi backtest 2-tahun (lihat backtestNyopetChannelBreakout*.js):
 // per-tahun konsisten, split-era hampir identik, sensitivitas parameter halus/monoton,
 // direction-flip kuat (75% arah asli vs 22% dibalik), tahan fee (PF 2.99->2.70 net TP-tetap).
@@ -39,7 +39,7 @@ const { hitung: hitungExposure } = require('./calculator');
 const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
-const { recordSkippedInsufficientBalance } = require('./channelBreakoutBalanceRecap');
+const { recordSkippedInsufficientBalance } = require('./ninjaBalanceRecap');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed, SYSTEM_LABEL } = require('./darkKaelaLog');
 const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');

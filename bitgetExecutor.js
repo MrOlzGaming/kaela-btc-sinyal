@@ -246,7 +246,7 @@ function createBitgetClient({ apiKey, apiSecret, passphrase, testnet }) {
 // ============ Wrapper backward-compatible (pola SAMA persis binanceExecutor.js/bingxExecutor.js)
 // -- akun default Olan sendiri dari secrets.js (BITGET_API_KEY/SECRET/PASSPHRASE). JANGAN numpang
 // wrapper default ini kalau butuh saklar independen per-strategi -- bikin instance sendiri via
-// createBitgetClient LANGSUNG (pola channelBreakoutTrader.js ke BingX).
+// createBitgetClient LANGSUNG (pola ninjaTrader.js ke BingX).
 let _defaultClientInstance = null;
 function _defaultClient() {
   if (_defaultClientInstance) return _defaultClientInstance;

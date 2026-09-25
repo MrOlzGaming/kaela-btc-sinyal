@@ -1,7 +1,7 @@
 // Eksekusi order di BingX Perpetual Futures (23 Sep 2026, Olan siapin akun "Kaela Access Real" --
 // tujuan REAL dari awal, tapi mulai dari DEMO/VST dulu sesuai disiplin backtest->demo->real yang
 // dipegang proyek ini). Struktur/interface SENGAJA disamain PERSIS `binanceExecutor.js` (factory
-// createXClient({apiKey,apiSecret,testnet}), fungsi sama nama) -- caller (channelBreakoutTrader.js
+// createXClient({apiKey,apiSecret,testnet}), fungsi sama nama) -- caller (ninjaTrader.js
 // dst) bisa tukar exec Binance<->BingX tanpa ubah logic, cuma beda `require()`.
 //
 // ⚠️ TEMUAN PENTING (23 Sep 2026, dites EMPIRIS bukan asumsi): "Separate Isolated Margin Mode"
@@ -189,7 +189,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
 
 // ============ Wrapper backward-compatible (pola SAMA persis binanceExecutor.js) -- akun default
 // Olan sendiri dari secrets.js (BINGX_API_KEY/SECRET), testnet ikut killSwitch.js GLOBAL kalau
-// caller gak spesifikasiin (channelBreakoutTrader.js dkk sebaiknya bikin instance sendiri via
+// caller gak spesifikasiin (ninjaTrader.js dkk sebaiknya bikin instance sendiri via
 // createBingxClient LANGSUNG, sama pola kayak Channel Breakout treatment ke binanceExecutor.js --
 // JANGAN numpang wrapper default ini kalau butuh saklar independen per-strategi).
 let _defaultClientInstance = null;

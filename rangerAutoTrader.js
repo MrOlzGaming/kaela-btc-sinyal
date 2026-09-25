@@ -533,7 +533,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
     let msg = formatAutoClosed({ id: order.id, direction: order.direction === 'buy' ? 'long' : 'short', mode: order.mode, entryPrice: order.entryPrice, exitPrice, pnlUsd: totalPnlUsd, pnlPct, assetLabel: assetCfg.label }, new Date(), isDemo, alasanText, idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     // Win-rate + akumulasi (23 Sep 2026, permintaan Olan, disamain dari Channel Breakout) --
-    // dihitung LANGSUNG dari journal.orders (bukan counter terpisah kayak channelBreakoutTrader.js)
+    // dihitung LANGSUNG dari journal.orders (bukan counter terpisah kayak ninjaTrader.js)
     // -- Nyopet journal SATU-SATUNYA sumber kebenaran, scan ulang tiap kali lebih aman drpd nyimpen
     // counter kedua yang bisa drift. Cuma order auto (`_isManual` false) & aset yang SAMA dihitung.
     const closedAuto = journal.orders.filter((o) => o.asset === assetCfg.key && (o.status === 'closed_tp' || o.status === 'closed_sl') && o.mode !== 'manual');
@@ -686,7 +686,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // 2 SLOT INDEPENDEN (23 Sep 2026) -- pattern (flag/wedge/pennant) vs FVG BISA floating
     // BARENGAN buat 1 aset yang sama (maks 2 posisi/aset), PERSIS pola Sniper daily yang udah
     // live sejak 22 Agu 2026 (hasSniperOpen/hasFvgOpen, sniperAutoAnalysis.js). AMAN dari
-    // "tumpukan posisi" ala BingX (lihat channelBreakoutTrader.js checkAndClearStrayPosition)
+    // "tumpukan posisi" ala BingX (lihat ninjaTrader.js checkAndClearStrayPosition)
     // krn Binance/MEXC di sini SATU akun net-1-posisi/symbol JUGA (one-way mode, gak ada
     // positionSide) -- TAPI kedua slot SELALU dipaksa arah SAMA (`inBearWindow` yang SAMA
     // dipakai buat gerbang allowShort keduanya di bawah), jadi 2 entry cuma NAMBAH quantity

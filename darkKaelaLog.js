@@ -132,7 +132,7 @@ const PATTERN_REASON_LABEL = {
   fvg_bounce: 'FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)',
   econ_reaction: 'Reaksi Kalender Ekonomi -- BTC bereaksi searah abis rilis data high-impact, ikut kelanjutannya (exit paksa ~30 menit, jendela tervalidasi backtest)',
   fed_dovish_grid: 'Fed Dovish Grid -- BTC bereaksi NAIK abis rilis FOMC/NFP (sinyal dovish) + tren jangka pendek masih naik, nyicil stacking sampai TP/SL agregat atau 7 hari (tervalidasi backtest, LONG-only)',
-  // channelBreakoutTrader.js (23 Sep 2026) -- alasan BUKA ke-3 (setelah chart-pattern/FVG), SAMA
+  // ninjaTrader.js (23 Sep 2026) -- alasan BUKA ke-3 (setelah chart-pattern/FVG), SAMA
   // badge "NYOPET" (Olan eksplisit: "mode ada Sniper ada Nyopet.. channel breakout itu alasan
   // buka posisi" -- BUKAN badge/mode terpisah). 1 label GENERIK buat 2 varian (TP Tetap/Trailing)
   // -- detail MEKANISME EXIT (yang beda antar varian) itu tugas CLOSE_REASON_LABEL (CB_TRAIL/CB_TP/
@@ -155,7 +155,7 @@ const CLOSE_REASON_LABEL = {
   // tiang ijo") -- window regime ganti, posisi yang lagi kebuka jadi ARAH SALAH buat rezim baru,
   // ditutup PAKSA walau rugi drpd nekat nunggu SL asli kena di kondisi yang udah berubah total.
   WINDOW_FLIP: 'Window rezim ganti (bull<->bear), posisi ini jadi arah salah -- ditutup paksa demi keamanan (walau rugi)',
-  // channelBreakoutTrader.js (23 Sep 2026, permintaan Olan: "alasan buka trailing alasan tutup,
+  // ninjaTrader.js (23 Sep 2026, permintaan Olan: "alasan buka trailing alasan tutup,
   // mode nyopet") -- kode CB_ (prefix Channel Breakout) biar gak ketuker sama SL/TRAIL/TP Nyopet
   // lama yang mekanismenya beda (SMA trail vs trailing-% channel, dll).
   CB_SL: 'Stop Loss kena -- breakout ternyata gagal lanjut (fakeout)',
@@ -166,7 +166,7 @@ const CLOSE_REASON_LABEL = {
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
 
 // Badge exchange TERPUSAT (25 Sep 2026, sebelumnya tiap file define sendiri-sendiri lokal --
-// channelBreakoutTrader.js/positionReconciler.js -- sekarang SATU sumber dipakai Sniper/Ranger/
+// ninjaTrader.js/positionReconciler.js -- sekarang SATU sumber dipakai Sniper/Ranger/
 // Ninja biar warnanya konsisten kalau ada exchange baru nanti). File LAMA yang udah punya versi
 // lokal sendiri (positionReconciler.js) SENGAJA gak diubah (resiko regresi kecil, gak worth-nya
 // buat perubahan kosmetik doang di file yang udah jalan).
@@ -191,7 +191,7 @@ const SYSTEM_LABEL = {
 // dipake di pesan manual/positionReconciler.js) -- OPSIONAL, undefined -> badge PERSIS sama
 // kayak sebelumnya (caller Sniper/Nyopet lama gak perlu diubah).
 // `system` (25 Sep 2026) -- OPSIONAL, default {emoji:'🥷',name:'NYOPET'} (backward-compat) --
-// caller BARU (nyopetAutoTrader.js/channelBreakoutTrader.js/sniperOrderLog.js) oper
+// caller BARU (nyopetAutoTrader.js/ninjaTrader.js/sniperOrderLog.js) oper
 // SYSTEM_LABEL.RANGER/NINJA/SNIPER eksplisit.
 function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name: 'NYOPET' }) {
   return `${system.emoji} ${system.name} · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
@@ -256,7 +256,7 @@ SL sisa digeser breakeven, separuh posisi di-trail.
 // otomatis, teks yang Olan TULIS SENDIRI buat manual -- fungsi ini gak nebak-nebak sendiri.
 // 23 Sep 2026, permintaan Olan ("tutup posisi sertakan winrate dan akumulasi profit", dipakai
 // PERTAMA di Channel Breakout, SEKARANG disamain ke Nyopet chart-pattern/FVG juga) -- helper
-// SATU sumber (bukan duplikat 2x di channelBreakoutTrader.js DAN nyopetAutoTrader.js). Caller
+// SATU sumber (bukan duplikat 2x di ninjaTrader.js DAN nyopetAutoTrader.js). Caller
 // nyuntik ke output formatAutoClosed via .replace() pas link, lihat contoh pemakaian di 2 file itu.
 function formatWinRateLines(stats, label, idrRate) {
   const total = stats.wins + stats.losses;

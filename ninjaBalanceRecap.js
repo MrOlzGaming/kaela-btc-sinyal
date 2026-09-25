@@ -1,4 +1,4 @@
-// channelBreakoutBalanceRecap.js (22 Sep 2026) -- Olan: "untuk real trading saldo ga cukup jangan
+// ninjaBalanceRecap.js (22 Sep 2026, dulu channelBreakoutBalanceRecap.js) -- Olan: "untuk real trading saldo ga cukup jangan
 // spam dm dan grup.. tapi di rekap aja.. dan dilaporkan hari esok.. misal total trading kemarin
 // 10 trade tidak tereksekusi karena saldo tidak cukup". BEDA dari balanceAlert.js (yang kirim WA
 // tiap kejadian, deduped max 1x/hari) -- di sini GAK ada WA sama sekali pas kejadian, MURNI

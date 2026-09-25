@@ -30,16 +30,16 @@
   "37jKPSmbEGwgfacCr2nayn1wTaqMAbA94Z": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 392,
-    "totalReceivedBtc": 0.00214032000000002,
-    "lastSeenAt": "2026-09-25T04:01:27.061Z"
+    "blockCount": 393,
+    "totalReceivedBtc": 0.0021457800000000203,
+    "lastSeenAt": "2026-09-25T04:32:05.180Z"
   },
   "39C7fxSzEACPjM78Z7xdPxhf7mKxJwvfMJ": {
     "pool": "AntPool",
     "firstSeenAt": "2026-09-13T05:49:45.477Z",
-    "blockCount": 392,
-    "totalReceivedBtc": 1232.5100761499984,
-    "lastSeenAt": "2026-09-25T04:01:27.061Z"
+    "blockCount": 393,
+    "totalReceivedBtc": 1235.6419461999985,
+    "lastSeenAt": "2026-09-25T04:32:05.180Z"
   },
   "3K9KZZPB8NRwZVP5wNKX4VYhnswrJxpgZ4": {
     "pool": "Luxor",
@@ -58,9 +58,9 @@
   "1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4": {
     "pool": "ViaBTC",
     "firstSeenAt": "2026-09-13T06:05:30.452Z",
-    "blockCount": 173,
-    "totalReceivedBtc": 544.03168018,
-    "lastSeenAt": "2026-09-25T03:31:23.751Z"
+    "blockCount": 174,
+    "totalReceivedBtc": 547.17345387,
+    "lastSeenAt": "2026-09-25T04:31:51.625Z"
   },
   "bc1q2824ekxc6ewypfpzv64h69frnx9dx6rsgek6ec": {
     "pool": "OCEAN",
@@ -863,8 +863,8 @@
   "bc1qtm7ye0wm085hhv88japwkalmwkt3amec5z9c7a3unv05tfg6y2pstr3xfz": {
     "pool": "Foundry USA",
     "firstSeenAt": "2026-09-23T14:31:28.145Z",
-    "blockCount": 51,
-    "totalReceivedBtc": 160.73060643,
-    "lastSeenAt": "2026-09-25T04:02:01.801Z"
+    "blockCount": 52,
+    "totalReceivedBtc": 163.86461101,
+    "lastSeenAt": "2026-09-25T04:31:32.968Z"
   }
 }

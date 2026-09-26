@@ -159,6 +159,19 @@ async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positio
   });
 }
 
+// (26 Sep 2026) Update SEBAGIAN doang -- KHUSUS kolom BingxBalance (dipakai reportOlanBingxStatus.js,
+// SATU-SATUNYA penulis kolom ini, TERPISAH dari penulis balanceUsdt/mexcBalance/dst di atas). SENGAJA
+// gak reuse recordMemberStatus() di atas -- fungsi itu SELALU ngirim positions/mexcBalance/wallet
+// (default 0/[] kalau caller gak tau), yang bakal NIMPA data asli lewat partial-merge GAS (Sheet.gs)
+// kalau field itu KEBETULAN ke-isi 0 di sini padahal caller gak pernah maksud nulis 0. Wrapper ini
+// CUMA kirim {phone, mode, bingxBalance} -- key lain SAMA SEKALI GAK ADA di object (bukan `undefined`
+// sbg value, itu beda -- `URLSearchParams` stringify `undefined` jadi literal teks "undefined"
+// kalau key-nya ADA, makanya key-nya harus BENERAN gak disertain), GAS baca itu sbg field kosong
+// asli -> partial-merge preserve nilai lama, cuma BingxBalance yang keupdate.
+async function recordBingxBalance(phone, mode, bingxBalance) {
+  return callGas('recordMemberStatus', { phone, mode, bingxBalance });
+}
+
 // 28 Agu 2026 -- matiin toggle trading member SECARA OTOMATIS (dompet kosong 3 hari beruntun,
 // lihat emptyWalletWatchdog.js). BUKAN dipanggil dari aksi member sendiri.
 async function setTradingToggleForExecutor(phone, mode, enabled) {
@@ -238,4 +251,4 @@ async function resolveManualOpenRequest(requestId, status, resultMessage) {
   return callGas('resolveManualOpenRequest', { requestId, status, resultMessage: resultMessage || '' });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };

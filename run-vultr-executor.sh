@@ -262,6 +262,13 @@ timeout -k 10 60 node sniperOrderMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperOr
 # state lokal apapun jadi gak perlu masuk daftar CHANGED di bawah.
 timeout -k 10 30 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanDemoStatus.js ERROR (exit $?)"
 
+# Lapor saldo BingX (Ninja) Olan sendiri ke GAS MemberStatus (26 Sep 2026, permintaan Olan "tiap
+# dompet dari jurnal... ninja kah") -- pola SAMA reportOlanDemoStatus.js di atas (MURNI baca+lapor,
+# NOL order/trading), TAPI nulis kolom BingxBalance doang lewat partial-merge (lihat komentar
+# recordBingxBalance di kaelaProTraderClient.js) biar gak nimpa balanceUsdt/positions Binance/MEXC
+# yang ditulis script LAIN di baris (Olan, demo)/(Olan, real) yang SAMA.
+timeout -k 10 30 node reportOlanBingxStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanBingxStatus.js ERROR (exit $?)"
+
 # whale-netflow-research-log.json dst (13 Sep 2026, permintaan Olan "data itu kita simpen sendiri
 # ya, penting buat masa depan") -- histori riset TERAKUMULASI yang GAK BISA di-backfill kalau
 # hilang (beda dari cursor/state operasional lain di baris ini) -- lihat catatan panjang di

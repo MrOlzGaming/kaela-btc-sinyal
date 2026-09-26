@@ -382,6 +382,20 @@ async function main() {
     assert.ok(msg.includes('Take Profit kena'), 'Alasan TP tunggal Sniper HARUS teks polos, BUKAN reuse CLOSE_REASON_LABEL.TP (itu teksnya "agregat kena", khusus basket Fed Dovish Grid)');
   });
 
+  // 🐛 FIX 26 Sep 2026 (audit proaktif, permintaan Olan "beresin sekalian biar clean") -- label
+  // win-rate Sniper SEBELUMNYA gak nyebut (Demo)/(Real) sama sekali (beda dari Ranger/Ninja/
+  // rangerBtcDualExec.js/sniperBtcDualExec.js yang SEMUA udah misahin) -- stats-nya JUGA gabung
+  // demo+real jadi 1 angka. Ground-truth: label WAJIB include mode yang bener SESUAI
+  // liveExecution.testnet order yang lagi ditutup.
+  await test('sniperOrderLog: formatClosed label win-rate SEKARANG include (Demo)/(Real), gak digabung', () => {
+    const demoOrder = { id: 'd1', signalId: '2026092502', asset: 'btc', direction: 'buy', entryPrice: 64000, exitPrice: 66000, status: 'closed_tp', pnlUsd: 55, pnlPct: 110, closeReason: 'TP', liveExecution: { testnet: true } };
+    const realOrder = { id: 'r1', signalId: '2026092503', asset: 'btc', direction: 'buy', entryPrice: 64000, exitPrice: 66000, status: 'closed_tp', pnlUsd: 55, pnlPct: 110, closeReason: 'TP', liveExecution: { testnet: false } };
+    const demoMsg = sniperFormatClosed(demoOrder, null, null);
+    const realMsg = sniperFormatClosed(realOrder, null, null);
+    assert.ok(demoMsg.includes('Win rate Sniper BTCUSDT (Demo)'), `Order testnet:true harus label (Demo), malah:\n${demoMsg}`);
+    assert.ok(realMsg.includes('Win rate Sniper BTCUSDT (Real)'), `Order testnet:false harus label (Real), malah:\n${realMsg}`);
+  });
+
   // ninjaTrader.js: nextVariantSignalId (26 Sep 2026) -- Ninja journal gak nyimpen histori order
   // penuh kayak Sniper/Ranger (cuma floating+closedCount), jadi pakai counter kecil TERSENDIRI
   // (dailySignalSeq) buat format ID yang SAMA (dayKey+urutan). Ground-truth: urut naik dalam 1

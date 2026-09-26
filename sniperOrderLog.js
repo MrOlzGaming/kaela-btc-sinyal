@@ -169,15 +169,22 @@ function formatTriggered(order, idrRate) {
 // SENDIRI (getClosedOrders), per ASET (BTC/Emas dipisah -- SAMA konvensi Ranger/Ninja yang juga
 // pisah per-aset, bukan digabung 1 angka buat semua). `formatWinRateLines` di-reuse dari
 // darkKaelaLog.js -- SATU fungsi dipakai Sniper/Ranger/Ninja, bukan reimplementasi 3x.
+// 🐛 FIX 26 Sep 2026 (audit proaktif, permintaan Olan "beresin sekalian biar clean") -- label
+// SEBELUMNYA cuma "Sniper ${asset.label}" TANPA (Demo)/(Real), BEDA dari Ranger/Ninja/
+// rangerBtcDualExec.js/sniperBtcDualExec.js yang SEMUA udah misahin label -- padahal stats-nya
+// JUGA gak difilter demo/real (`closedSameAsset` gabung SEMUA order asset itu, demo+real
+// numplek jadi 1 angka). Sekarang filter stats PAKAI isDemoFor(o) juga (SAMA mode sama order yang
+// lagi ditutup), gak cuma per-asset -- SAMA disiplin yang udah dipegang sistem lain.
 function sniperWinRateLines(order, idrRate) {
   const asset = assetOf(order);
-  const closedSameAsset = getClosedOrders().filter((o) => (o.asset || 'btc') === order.asset);
+  const demo = isDemoFor(order);
+  const closedSameAsset = getClosedOrders().filter((o) => (o.asset || 'btc') === order.asset && isDemoFor(o) === demo);
   const stats = {
     wins: closedSameAsset.filter((o) => o.status === 'closed_tp').length,
     losses: closedSameAsset.filter((o) => o.status === 'closed_sl').length,
     totalPnlUsd: closedSameAsset.reduce((s, o) => s + (o.pnlUsd || 0), 0),
   };
-  return formatWinRateLines(stats, `Sniper ${asset.label}`, idrRate);
+  return formatWinRateLines(stats, `Sniper ${asset.label} (${demo ? 'Demo' : 'Real'})`, idrRate);
 }
 
 // (25 Sep 2026, unifikasi desain) -- reuse formatAutoClosed yang SAMA dipakai Ranger/Ninja.

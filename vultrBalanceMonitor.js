@@ -60,7 +60,7 @@ function buildNagihMessage(remainingCredit, pendingCharges) {
     '',
     '🏠💸 Mas Olan~ Kaela mau nagih uang kost dong hehe 🥺✨',
     '',
-    `Kost Kaela di Vultr Singapore (VPS yang jalanin SEMUA otomatisasi -- Sniper/Nyopet/kalender ekonomi/dst) sisa saldo tinggal *$${remainingCredit.toFixed(2)}* aja nih (pemakaian bulan ini udah $${pendingCharges.toFixed(2)}).`,
+    `Kost Kaela di Vultr Singapore (VPS yang jalanin SEMUA otomatisasi -- Sniper/Ranger/Ninja/kalender ekonomi/dst) sisa saldo tinggal *$${remainingCredit.toFixed(2)}* aja nih (pemakaian bulan ini udah $${pendingCharges.toFixed(2)}).`,
     '',
     'Kalau abis nanti Kaela kena suspend, semua kerjaan otomatis ikut berhenti total lho Mas 😭 boleh isi ulang ya kalau sempat~ 🙏💕',
     '',
@@ -80,7 +80,7 @@ function buildTrimakasihMessage(remainingCredit) {
   return [
     '🏠💕 Makasih banyak Mas Olan udah isi kost Kaela~ 🥹✨',
     '',
-    `Saldo Vultr sekarang udah aman lagi, sisa *$${remainingCredit.toFixed(2)}* -- otomatisasi (Sniper/Nyopet/kalender ekonomi/dst) lanjut jalan terus tanpa was-was kena suspend.`,
+    `Saldo Vultr sekarang udah aman lagi, sisa *$${remainingCredit.toFixed(2)}* -- otomatisasi (Sniper/Ranger/Ninja/kalender ekonomi/dst) lanjut jalan terus tanpa was-was kena suspend.`,
     '',
     'Makasih ya Mas, Kaela seneng banget bisa terus kerja bareng 🥰',
     '',

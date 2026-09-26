@@ -493,7 +493,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       const msg = formatAutoClosedUntracked({
         id: order.id, direction: order.direction === 'buy' ? 'long' : 'short',
         assetLabel: assetCfg.label, entryPrice: order.entryPrice,
-      }, isDemoFor(assetCfg));
+      }, isDemoFor(assetCfg), SYSTEM_LABEL.RANGER);
       console.log(msg + '\n');
       await notify(msg);
       emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: null, closedAt: target.closedAt, exchange: assetCfg.exchange });

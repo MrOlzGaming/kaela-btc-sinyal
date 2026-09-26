@@ -209,7 +209,7 @@ function main() {
   checkTriggerStateVsArchive(anomalies);
 
   if (anomalies.length === 0) {
-    console.log('[SystemInvariantCheck] Semua invariant journal Nyopet/Sniper/Ninja OK, gak ada anomali.');
+    console.log('[SystemInvariantCheck] Semua invariant journal Sniper/Ranger/Ninja OK, gak ada anomali.');
     return;
   }
   // Kata "GAGAL" SENGAJA -- di-scan run-*-executor.sh, relay ke Watchdog/WA (pola sama auditGithubActions.js).

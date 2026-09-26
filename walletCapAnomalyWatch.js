@@ -61,7 +61,7 @@ function formatAlert(a) {
     // petugasnya, anggota nexus forge punya tugas masing-masing" -- lihat teamRoles.js).
     roleOpener('MARCUS', 'ada penurunan drastis di Modal Futures Pool'),
     '',
-    `Total 4 dompet trading (Sniper+Nyopet, gabungan) turun dari $${a.yesterday.toFixed(2)} ke $${a.today.toFixed(2)} -- turun $${a.drop.toFixed(2)} (${pct}%) dalam 1 hari terakhir.`,
+    `Total 4 dompet trading (Sniper+Ranger, gabungan) turun dari $${a.yesterday.toFixed(2)} ke $${a.today.toFixed(2)} -- turun $${a.drop.toFixed(2)} (${pct}%) dalam 1 hari terakhir.`,
     '',
     'Ini JAUH di atas kerugian trading normal (tiap posisi Kaela dibatasin SL/margin risk) -- worth dicek LANGSUNG ke akun Binance/MEXC: API key bocor? Ada penarikan yang bukan kamu? Atau insiden lain?',
     '',

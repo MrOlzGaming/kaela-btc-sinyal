@@ -32,7 +32,7 @@ function formatRangerEvent({ type, price, entry }) {
   if (type === 'ENTRY') {
     const lv = computeLevels(price);
     return [
-      `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ENTRY BARU`,
+      `${CATEGORY_COLOR.nyopet.emoji} ⚡ RANGER MARKET — ENTRY BARU`,
       `🟢 LONG @ ${fmt(price)}`,
       `Nyawa (SL): ${fmt(lv.sl)}`,
       `TP (1:2): ${fmt(lv.tp)}`,
@@ -48,7 +48,7 @@ function formatRangerEvent({ type, price, entry }) {
 
   if (type === 'SL') {
     return [
-      `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ❌ KENA STOP LOSS`,
+      `${CATEGORY_COLOR.nyopet.emoji} ⚡ RANGER MARKET — ❌ KENA STOP LOSS`,
       `🟢 LONG | Entry ${fmt(entry)} -> SL ${fmt(price)}`,
       time,
       '',
@@ -58,7 +58,7 @@ function formatRangerEvent({ type, price, entry }) {
 
   // TP
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ✅ TP KENA (RR 1:2)`,
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ RANGER MARKET — ✅ TP KENA (RR 1:2)`,
     `🟢 LONG | Entry ${fmt(entry)} -> TP ${fmt(price)}`,
     time,
     '',
@@ -68,8 +68,8 @@ function formatRangerEvent({ type, price, entry }) {
 
 function formatRangerNoSignal(now = new Date()) {
   return [
-    `${CATEGORY_COLOR.nyopet.emoji} ⚡ NYOPET MARKET — ${localDateKey(now)}`,
-    'Tidak ada sinyal Nyopet Market hari ini. Status: sedang mengumpulkan data.',
+    `${CATEGORY_COLOR.nyopet.emoji} ⚡ RANGER MARKET — ${localDateKey(now)}`,
+    'Tidak ada sinyal Ranger Market hari ini. Status: sedang mengumpulkan data.',
     '',
     `🔗 ${WEB_URL}`,
   ].join('\n');

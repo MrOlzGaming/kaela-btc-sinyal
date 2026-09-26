@@ -355,7 +355,7 @@ async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
   const stats = slot.stats[mode];
 
   if (leg.untracked) {
-    const msg = formatAutoClosedUntracked({ id: f.id, direction: f.direction === 'buy' ? 'long' : 'short', assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice }, isDemo);
+    const msg = formatAutoClosedUntracked({ id: f.id, direction: f.direction === 'buy' ? 'long' : 'short', assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice }, isDemo, SYSTEM_LABEL.RANGER);
     if (mode === 'demo') await sendWhatsAppToSniperClub(msg).catch(() => {});
     if ((mode === 'real') === (f.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch(() => {});
     return;

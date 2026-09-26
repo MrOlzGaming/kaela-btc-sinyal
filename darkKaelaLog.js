@@ -349,11 +349,16 @@ Alasan: ${alasanText || '-'}
 // padahal itu 100% posisi Kaela sendiri, BUKAN manual Olan). Nuduh "manual" doang di sini BISA
 // bikin Olan ngerasa disalahin buat kesalahan yang sebenarnya bukan aksinya -- gak jujur/adil
 // kalau sistem sendiri gak tau pasti mana dari 2 kemungkinan ini yang beneran kejadian.
-function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, isDemo) {
+// `system` (26 Sep 2026, BUG ketemu Olan -- "masih ada pesan otomatisasi nyopet" -- fungsi ini
+// SEBELUMNYA hardcode badge "NYOPET" tanpa parameter sama sekali, BEDA dari sibling-nya
+// (formatAutoOpen/formatAutoClosed/formatAutoPartial) yang UDAH lama nerima `system` eksplisit.
+// Default TETAP NYOPET/🥷 buat backward-compat (SAMA pola _rangerBadge) -- caller lama yang belum
+// sempat update gak berubah pesannya.
+function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, isDemo, system = { emoji: '🥷', name: 'NYOPET' }) {
   const dirLabel = direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
-  return `${roleOpener('DRAKE', 'ada posisi Nyopet yang gak ke-track')}
+  return `${roleOpener('DRAKE', `ada posisi ${system.name} yang gak ke-track`)}
 
-🥷 NYOPET ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
+${system.emoji} ${system.name} ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
 ⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya, sekarang udah gak ada lagi. Kaela GAK BISA mastiin kenapa dari sini -- 2 kemungkinan yang SAMA-SAMA masuk akal: (1) disentuh trading manual langsung di exchange, ATAU (2) mesin eksekutor sempat pindah (data posisi ini memang sengaja gak disinkron antar-mesin) sehingga posisi Kaela sendiri "kelupaan" jurnalnya -- BUKAN berarti ini otomatis manual.
 
 Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan (kemungkinan #2), cek langsung riwayat exchange buat angka pastinya.

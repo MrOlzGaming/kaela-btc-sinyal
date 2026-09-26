@@ -372,7 +372,16 @@ async function main() {
                     await exec.emergencyCloseMarket({ symbol: execSymbol, direction: 'sell', quantity: entryFilledQty });
                     throw new Error(`Entry short masuk tapi SL gagal nempel (${slError.message}) -- UDAH DITUTUP PAKSA otomatis.`);
                   }
-                  await exec.placeTakeProfit({ symbol: execSymbol, direction: 'sell', tpPrice: partialTp, quantity: entryFilledQty });
+                  // 🐛 FIX 26 Sep 2026 (Olan, audit proaktif) -- SEBELUMNYA `quantity: entryFilledQty`
+                  // (FULL, bukan separuh) -- kontradiksi sama `tpReasoning` sendiri ("Target tahap 1
+                  // (beli-balik separuh)"). TP native FULL-qty berarti begitu 2R kesentuh, SELURUH
+                  // posisi langsung tertutup di exchange (bukan cuma separuh) -- mekanisme "sisa
+                  // di-trail SMA" gak pernah beneran kesempatan jalan. Fix: separuh qty (dibulatkan
+                  // stepSize), SAMA pola persis `sniperMultiAccount.js` (`halfQty > 0 ? halfQty :
+                  // filledQty`, fallback full kalau posisi kekecilan buat dibagi 2).
+                  const { stepSize: slotStepSize, quantityPrecision: slotQtyPrecision } = await exec.getSymbolInfo(execSymbol);
+                  const shortHalfQty = binanceEx.roundToStepSize(entryFilledQty / 2, slotStepSize, slotQtyPrecision);
+                  await exec.placeTakeProfit({ symbol: execSymbol, direction: 'sell', tpPrice: partialTp, quantity: shortHalfQty > 0 ? shortHalfQty : entryFilledQty });
                   // `testnet` (14 Sep 2026) -- SEBELUMNYA hardcode `true` (waktu itu emang CUMA
                   // bisa demo). SEKARANG ikutin `isTestnet()` ASLI biar pesan WA jujur nyebut
                   // Demo/Real yang beneran kejadian (lihat liveExecutionLines, sniperOrderLog.js).
@@ -672,7 +681,12 @@ async function main() {
             throw new Error(`Entry masuk tapi SL gagal nempel (${slError.message}) -- posisi UDAH DITUTUP PAKSA otomatis demi keamanan, gak ada yang nganggur tanpa proteksi.`);
           }
 
-          await exec.placeTakeProfit({ symbol: execSymbol, direction: cand.direction, tpPrice: partialTp, quantity: entryFilledQty });
+          // 🐛 FIX 26 Sep 2026 -- SAMA bug persis kayak cabang SHORT window-bear di atas (lihat
+          // catatan lengkap di situ): TP native SEBELUMNYA full qty, sekarang separuh (pola
+          // `sniperMultiAccount.js`).
+          const { stepSize: candStepSize, quantityPrecision: candQtyPrecision } = await exec.getSymbolInfo(execSymbol);
+          const candHalfQty = binanceEx.roundToStepSize(entryFilledQty / 2, candStepSize, candQtyPrecision);
+          await exec.placeTakeProfit({ symbol: execSymbol, direction: cand.direction, tpPrice: partialTp, quantity: candHalfQty > 0 ? candHalfQty : entryFilledQty });
           liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet(), exchange: assetCfg.exchange };
           console.log(`[SniperAutoAnalysis] EKSEKUSI LIVE (${assetCfg.exchange}, ${isTestnet() ? 'testnet' : 'MAINNET ASLI'}) sukses -- qty ${entryFilledQty}.`);
         } catch (e) {

@@ -33,11 +33,12 @@
 // AWAL udah bener (separuh qty, pola sniperMultiAccount.js).
 //
 // ⚠️ Scope simplification SADAR drpd jalur lama: (1) TIDAK ada rekonsiliasi offline
-// summed-since-triggeredAt (akar bug clamp/dobel-catat) -- leg1 SL-hit diapproksimasi dari harga SL
-// (STOP_MARKET native fill SANGAT dekat harga trigger buat pair seliquid BTCUSDT, SAMA
-// approksimasi yang udah dipakai sniperOrderMonitor.js versi lama), leg1 partial-TP-hit
-// diapproksimasi dari harga TP (SAMA alasan) -- HANYA leg2-hilang-tanpa-jejak (likuidasi murni,
-// gak ada order kita sendiri buat baca harga) yang PAKAI income-history, TAPI di-scope SEMPIT
+// summed-since-triggeredAt (akar bug clamp/dobel-catat) -- leg1 SL-hit/partial-TP-hit BACA HARGA
+// FILL ASLI dari order native yang fired (fetchLastReduceOnlyFill, query /fapi/v1/allOrders
+// SEMPIT sejak leg dibuka), fallback ke harga target (SL/TP) HANYA kalau query itu gagal/gak
+// ketemu (rate-limit/clock-drift dst -- 26 Sep 2026, awalnya approksimasi harga target doang tanpa
+// coba baca fill asli dulu, dibenerin atas permintaan Olan). leg2-hilang-tanpa-jejak (likuidasi
+// murni, gak ada order kita sendiri buat baca harga) TETAP PAKAI income-history, di-scope SEMPIT
 // (`since: leg2.openedAt`, BUKAN since order.triggeredAt) -- interval jauh lebih pendek, jauh
 // lebih kecil resiko kecampur aktivitas simbol lain (akar masalah bug clamp lama). (2) TIDAK ada
 // auto-adopt posisi nyasar ke journal (SAMA arsitektur ninjaTrader.js/rangerBtcDualExec.js).
@@ -116,6 +117,30 @@ async function fetchRealizedPnlSince(mode, startTimeMs) {
   return income.reduce((s, inc) => s + parseFloat(inc.income), 0);
 }
 
+// (26 Sep 2026, permintaan Olan "benerin" kendala yang disebut sebelumnya -- exit leg1 SEBELUMNYA
+// diapproksimasi dari harga TARGET (order.sl/order.tp), bukan harga FILL ASLI) -- native
+// STOP_MARKET/TAKE_PROFIT_MARKET yang FILLED nyimpen `avgPrice` ASLI di /fapi/v1/allOrders, gak
+// perlu nebak. Query SEMPIT (`since: leg.openedAt`, bukan seluruh histori) -- ambil order
+// reduceOnly FILLED PALING BARU sejak leg ini dibuka (SL/TP leg1 cuma ADA 2 kandidat, salah
+// satunya yang fired). null kalau query gagal/gak ketemu (rate-limit, clock drift, dst) -- caller
+// WAJIB fallback ke approksimasi harga target, JANGAN gagalin proses close cuma gara2 ini.
+async function fetchLastReduceOnlyFill(mode, sinceMs) {
+  const secrets = binanceExecutorDefault.loadSecrets();
+  const apiKey = mode === 'real' ? secrets.BINANCE_API_KEY_REAL : secrets.BINANCE_API_KEY;
+  const apiSecret = mode === 'real' ? secrets.BINANCE_API_SECRET_REAL : secrets.BINANCE_API_SECRET;
+  const params = { symbol: SYMBOL, startTime: sinceMs, timestamp: Date.now(), recvWindow: 15000, limit: 50 };
+  const query = new URLSearchParams(params).toString();
+  const sig = sign(query, apiSecret);
+  const res = await fetch(`${baseUrlFor(mode)}/fapi/v1/allOrders?${query}&signature=${sig}`, { headers: { 'X-MBX-APIKEY': apiKey } });
+  const orders = await res.json();
+  if (!Array.isArray(orders)) return null;
+  const filled = orders.filter((o) => o.status === 'FILLED' && o.reduceOnly === true);
+  if (filled.length === 0) return null;
+  const latest = filled.sort((a, b) => Number(b.time) - Number(a.time))[0];
+  const avgPrice = parseFloat(latest.avgPrice);
+  return avgPrice > 0 ? avgPrice : null;
+}
+
 // ============ Buka posisi (2 leg) ============
 // `order` = shadow order YANG UDAH DIBUAT+status:'floating' (createOrder/updateOrder,
 // sniperAutoAnalysis.js) -- modul ini gak deteksi/nyimpen shadow record sendiri, cuma nambahin
@@ -151,7 +176,7 @@ async function openSniperBtcDual({ order, livePrice }) {
     await exec.placeTakeProfit({ symbol: SYMBOL, direction: order.direction, tpPrice: order.tp, quantity: halfQty > 0 ? halfQty : filledQty });
     return {
       entryPrice, qty: filledQty, leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
-      partialDone: false, partialPnlUsd: 0, leg2: null, closedAt: null, exitPrice: null, pnlUsd: null,
+      openedAt: new Date().toISOString(), partialDone: false, partialPnlUsd: 0, leg2: null, closedAt: null, exitPrice: null, pnlUsd: null,
     };
   }
 
@@ -220,11 +245,10 @@ async function openSniperBtcDual({ order, livePrice }) {
 async function _doPartialAndReopen(o, mode, exec, posQtyBeforeClose, idrRate) {
   const leg = o[mode];
   await exec.cancelAllOpenOrders(SYMBOL).catch(() => {});
-  // Exit price leg1 diapproksimasi dari harga TP target (native TAKE_PROFIT_MARKET fill SANGAT
-  // dekat trigger price buat pair seliquid BTCUSDT) -- BUKAN nebak dari income-history (lihat
-  // catatan header kenapa). Approksimasi SAMA persis yang udah dipakai sniperOrderMonitor.js versi
-  // lama buat kasus serupa.
-  const exitPriceLeg1 = o.tp;
+  // Exit price leg1 -- harga FILL ASLI order TAKE_PROFIT_MARKET (query sempit sejak leg dibuka,
+  // lihat fetchLastReduceOnlyFill) -- fallback ke harga TP target kalau query gagal/gak ketemu
+  // (rate-limit/clock-drift, dst -- JANGAN gagalin proses partial cuma gara2 ini).
+  const exitPriceLeg1 = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? o.tp;
   leg.partialPnlUsd = o.direction === 'buy' ? (exitPriceLeg1 - leg.entryPrice) * posQtyBeforeClose : (leg.entryPrice - exitPriceLeg1) * posQtyBeforeClose;
   leg.partialDone = true;
 
@@ -305,11 +329,13 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
         // ============ Fase leg1 (belum partial) ============
         if (posQty <= 0) {
           // Posisi abis -- native SL FULL qty adalah SATU-SATUNYA mekanisme yang bisa nutup
-          // leg1 ke NOL (TP sekarang cuma separuh qty, gak pernah nutup penuh sendirian) --
-          // diapproksimasi dari harga SL (lihat catatan header).
+          // leg1 ke NOL (TP sekarang cuma separuh qty, gak pernah nutup penuh sendirian). Exit
+          // price = harga FILL ASLI order STOP_MARKET (query sempit sejak leg dibuka), fallback
+          // ke harga SL target kalau query gagal/gak ketemu.
+          const exitPriceLeg1Sl = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? o.sl;
           leg.closedAt = new Date().toISOString();
-          leg.exitPrice = o.sl;
-          leg.pnlUsd = o.direction === 'buy' ? (o.sl - leg.entryPrice) * leg.qty : (leg.entryPrice - o.sl) * leg.qty;
+          leg.exitPrice = exitPriceLeg1Sl;
+          leg.pnlUsd = o.direction === 'buy' ? (exitPriceLeg1Sl - leg.entryPrice) * leg.qty : (leg.entryPrice - exitPriceLeg1Sl) * leg.qty;
           journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL');
           continue;
         }

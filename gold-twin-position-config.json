@@ -1,6 +1,6 @@
 {
   "enabled": false,
   "allowReal": false,
-  "_note": "Saklar KHUSUS twin-position Emas (Ranger+Sniper, lihat goldTwinPosition.js). enabled=false berarti Ranger/Sniper Emas TETAP pakai openPosition() versi lama, modul ini gak disentuh sama sekali. Begitu enabled=true: allowReal=false -> PAPER/simulasi murni (gak ada panggilan exchange), trading real Emas versi LAMA otomatis pause selama fase ini. allowReal=true -> Leg Trailing REAL ke MEXC (akun yang udah jalan), Leg FixedTP REAL ke Bybit (skip aman kalau BYBIT_API_KEY_DEMO/BYBIT_API_KEY kosong).",
-  "_status": "26 Sep 2026 -- baru dibangun, BELUM diaktifin. Nunggu Olan review + Bybit demo key sebelum enabled:true."
+  "_note": "Saklar KHUSUS twin-position Emas (Ranger+Sniper, lihat goldTwinPosition.js). enabled=false berarti Ranger/Sniper Emas TETAP pakai openPosition() versi lama, modul ini gak disentuh sama sekali. Begitu enabled=true: allowReal=false -> KEDUA leg PAPER/simulasi murni (gak ada exchange manapun yang punya demo asli buat Emas -- Bybit gak punya produk Emas sama sekali, Bitget demo-nya juga gak cover Emas), trading real Emas versi LAMA otomatis pause selama fase ini. allowReal=true -> Leg Trailing REAL ke MEXC (akun yang udah jalan), Leg FixedTP REAL ke Bitget (skip aman kalau BITGET_API_KEY kosong).",
+  "_status": "26 Sep 2026 -- baru dibangun, BELUM diaktifin. Migrasi Bybit->Bitget selesai (Bybit gak punya produk Emas, batal total). Nunggu Olan review + test placeMarketEntry/emergencyCloseMarket Bitget beneran sebelum enabled:true."
 }

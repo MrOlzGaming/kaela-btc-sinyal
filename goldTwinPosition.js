@@ -5,28 +5,38 @@
 //   - Leg TRAILING : ratchet stop (SAMA logika masterRuleTrailingInvalidation.js, versi LIVE per-
 //                    tick bukan per-candle) -- exchange SAMA kayak yang UDAH jalan sekarang (MEXC,
 //                    lewat execFor(assetCfg) punya caller) -- REAL DOANG (MEXC gak punya demo).
-//   - Leg FIXED_TP : target keras 3:1 R:R, full-close SEKALI kena -- exchange BARU (Bybit, lihat
-//                    bybitExecutor.js) -- demo+real KREDENSIAL TERPISAH (BEDA dari BingX).
+//   - Leg FIXED_TP : target keras 3:1 R:R, full-close SEKALI kena -- exchange Bitget (lihat
+//                    bitgetExecutor.js).
 //
-// Riset (25-26 Sep 2026, backtest/rangerTwinPositionBacktest.js + filter DXY dipasang manual buat
-// tes): PF-net Trailing 1,79 / FixedTP 2,38 lintas 2020-2026, split-era DUA-DUANYA positif ($100->
-// $145 era1, $100->$418 era2) -- jauh lebih tahan lintas rezim drpd versi tanpa DXY (yang cuma 3
-// dari 7 tahun untung). TETAP ada tahun rugi (2026 parsial, -20%) -- BUKAN mesin ajaib.
+// ⚠️ RISET EXCHANGE KEDUA (26 Sep 2026, jangan diulang -- 2 dead-end ketemu sebelum Bitget):
+//   1. Bybit DICOBA duluan (sampe sempet bikin BYBIT_API_KEY_DEMO segala di secrets.js) --
+//      TERNYATA gak punya produk Emas SAMA SEKALI (nol simbol PAXG/XAU/GOLD di /v5/market/
+//      instruments-info, category linear MAUPUN inverse, dites langsung ke API). Dibatalkan total.
+//   2. Bitget PUNYA produk Emas real (PAXGUSDT/XAUTUSDT/XAUUSDT, semua status normal, dites
+//      empiris) -- DIPILIH. TAPI Demo Trading Bitget-nya SENDIRI TERNYATA JUGA gak cover Emas
+//      (productType SUSDT-FUTURES cuma 3 simbol: SBTCSUSDT/SETHSUSDT/SXRPSUSDT).
+// Kesimpulan: TIDAK ADA exchange manapun yang punya demo-trading ASLI buat Emas (beda dari Ninja/
+// BingX yang demo-nya genuinely exchange asli). Leg FixedTP fase evaluasi (allowReal:false) WAJIB
+// paper/simulasi lokal, SAMA kayak leg Trailing -- BUKAN eksekusi ke exchange manapun.
+//
+// Riset backtest (25-26 Sep 2026, backtest/rangerTwinPositionBacktest.js + filter DXY dipasang
+// manual buat tes): PF-net Trailing 1,79 / FixedTP 2,38 lintas 2020-2026, split-era DUA-DUANYA
+// positif ($100->$145 era1, $100->$418 era2) -- jauh lebih tahan lintas rezim drpd versi tanpa
+// filter DXY (yang cuma 3 dari 7 tahun untung). TETAP ada tahun rugi (2026 parsial, -20%) --
+// BUKAN mesin ajaib.
 //
 // ⚠️ DEFAULT AMAN (gold-twin-position-config.json): enabled:false -- caller (rangerAutoTrader.js)
 // TETAP jalanin openPosition() versi lama 100% gak berubah selama ini false. Begitu enabled:true:
-//   - allowReal:false (default) -> Leg Trailing PAPER murni (MEXC gak punya demo apapun, gak ada
-//     exchange nyata buat ini), Leg FixedTP EKSEKUSI BENERAN ke Bybit Demo Trading (api-demo.
-//     bybit.com, uang virtual asli -- BYBIT_API_KEY_DEMO/SECRET_DEMO, 26 Sep 2026) kalau key udah
-//     ada, fallback paper kalau belum/gagal. Trading real Gold versi LAMA otomatis PAUSE selama
-//     fase ini (caller berhenti manggil openPosition lama, gantiin dengan modul ini) -- keputusan
-//     sadar Olan lewat kapan dia enable, bukan kecelakaan.
+//   - allowReal:false (default) -> KEDUA leg PAPER/SIMULASI MURNI, livePrice publik doang, NOL
+//     panggilan exchange -- gak ada demo asli yang bisa dipakai (lihat riset di atas). Trading
+//     real Gold versi LAMA otomatis PAUSE selama fase ini (caller berhenti manggil openPosition
+//     lama, gantiin modul ini) -- keputusan sadar Olan lewat kapan dia enable, bukan kecelakaan.
 //   - allowReal:true -> Leg Trailing REAL ke MEXC (persis akun/wallet yang udah dipakai gold
-//     sekarang), Leg FixedTP REAL ke Bybit KALAU BYBIT_API_KEY ada (skip aman kalau kosong, sama
-//     pola execFor return-null di seluruh proyek ini).
-// Setiap leg nyimpen `execMode` sendiri ('paper'/'mexc-real'/'bybit-real'/'bybit-demo') di journal
-// pas open -- dipakai monitor buat mutusin exec mana yang dipanggil pas close (SUMBER KEBENARAN
-// dari journal, bukan baca ulang config, biar konsisten walau config keubah pas posisi floating).
+//     sekarang), Leg FixedTP REAL ke Bitget KALAU BITGET_API_KEY ada (skip aman kalau kosong,
+//     sama pola execFor return-null di seluruh proyek ini).
+// Setiap leg nyimpen `execMode` sendiri ('paper'/'mexc-real'/'bitget-real') di journal pas open --
+// dipakai monitor buat mutusin exec mana yang dipanggil pas close (SUMBER KEBENARAN dari journal,
+// bukan baca ulang config, biar konsisten walau config keubah pas posisi floating).
 //
 // Journal per SYSTEM (biar Sniper/Ranger gak numpuk data), 1 slot floating per system (assetKey
 // SELALU 'xau' -- modul ini KHUSUS Emas, BTC TETAP pola lama di rangerAutoTrader.js/
@@ -36,7 +46,7 @@ const fs = require('fs');
 const path = require('path');
 const { hitung: hitungExposure } = require('./calculator');
 const { FALLBACK_FEE_PERCENT } = require('./masterRuleTrailingInvalidation');
-const bybitExecutorDefault = require('./bybitExecutor');
+const bitgetExecutorDefault = require('./bitgetExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, SYSTEM_LABEL } = require('./darkKaelaLog');
 const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
@@ -45,7 +55,8 @@ const CONFIG_PATH = path.join(__dirname, 'gold-twin-position-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'gold-twin-position-journal.json');
 const MODAL_ACTIVE_FRACTION = 1 / 5; // SAMA konvensi "cheat exposure" seluruh proyek ini
 const MEXC_BADGE = '🔷 MEXC';
-const BYBIT_BADGE = '🟢 Bybit';
+const BITGET_BADGE = '🟩 Bitget';
+const BITGET_SYMBOL = 'PAXGUSDT'; // format Bitget (tanpa underscore) -- token PAXG sama kayak Ranger/Sniper Emas MEXC (PAXG_USDT)
 
 function loadConfig() {
   if (!fs.existsSync(CONFIG_PATH)) return { enabled: false, allowReal: false };
@@ -89,16 +100,14 @@ function nextSysSignalId(sysJournal, date = new Date()) {
   return id;
 }
 
-// Bybit key/secret -- demo/real TERPISAH TOTAL (beda dari BingX), lihat bybitExecutor.js header.
-function bybitExecFor(testnet) {
-  const secrets = bybitExecutorDefault.loadSecrets();
-  const apiKey = testnet ? secrets.BYBIT_API_KEY_DEMO : secrets.BYBIT_API_KEY;
-  const apiSecret = testnet ? secrets.BYBIT_API_SECRET_DEMO : secrets.BYBIT_API_SECRET;
-  if (!apiKey || !apiSecret) return null; // belum disiapin Olan -- skip aman, SAMA pola execFor lain
-  return bybitExecutorDefault.createBybitClient({ apiKey, apiSecret, testnet });
+// Bitget real key -- testnet:true SENGAJA throw di bitgetExecutor.js (gak ada demo yang cover
+// Emas, jangan dicoba -- lihat riset di header file). Cukup 1 fungsi TANPA param testnet (beda
+// dari exchange lain yang punya varian demo genuinely bisa dipakai), krn cuma 1 mode yang valid.
+function bitgetExecForReal() {
+  const secrets = bitgetExecutorDefault.loadSecrets();
+  if (!secrets.BITGET_API_KEY || !secrets.BITGET_API_SECRET || !secrets.BITGET_API_PASSPHRASE) return null; // belum disiapin -- skip aman, SAMA pola execFor lain
+  return bitgetExecutorDefault.createBitgetClient({ apiKey: secrets.BITGET_API_KEY, apiSecret: secrets.BITGET_API_SECRET, passphrase: secrets.BITGET_API_PASSPHRASE, testnet: false });
 }
-
-const BYBIT_SYMBOL = 'PAXGUSDT'; // format Bybit (tanpa hyphen, tanpa underscore) -- token PAXG sama kayak Ranger/Sniper Emas MEXC (PAXG_USDT)
 
 // ============ Live trailing (ratchet) -- versi PER-TICK dari masterRuleTrailingInvalidation.js ============
 // Logika SAMA PERSIS (extreme + invalidation ratchet cuma ke arah untung), cuma di sini dipanggil
@@ -137,25 +146,26 @@ async function openGoldTwinPosition({ system, assetCfg, sig, livePrice, mexcExec
   const tp = sig.direction === 'buy' ? livePrice + riskDistance * 3 : livePrice - riskDistance * 3; // Fixed-TP 3:1
 
   async function openLeg(exec, symbol, execMode) {
-    const balance = await exec.getAccountBalance().catch(() => 0);
+    const balance = await exec.getAccountBalance('USDT').catch(() => 0);
     const modal = (balance || 0) * MODAL_ACTIVE_FRACTION / 2; // /2 -- separuh modal per leg (twin), dari akun exchange leg ITU SENDIRI
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
     if (calc.nilaiPosisi <= 0) return null;
-    await exec.setIsolatedMargin(symbol, calc.leverage).catch(() => {});
+    await exec.setIsolatedMargin(symbol).catch(() => {});
     // 3 arg (positionType) WAJIB buat MEXC (setLeverage(symbol,leverage,positionType), default 1
-    // kalau diomit -- salah kalau ini pernah dipanggil buat SHORT) -- Bybit setLeverage(symbol,
-    // leverage) abaikan arg ke-3 apa adanya, aman dipanggil generik kayak gini.
+    // kalau diomit -- salah kalau ini pernah dipanggil buat SHORT) -- Bitget setLeverage(symbol,
+    // leverage) abaikan arg ke-3 apa adanya (leverage sama utk 2 arah per docs-nya), aman
+    // dipanggil generik kayak gini.
     await exec.setLeverage(symbol, calc.leverage, mexcExecutorDefault.positionTypeFor(sig.direction)).catch(() => {});
     const placed = await exec.placeMarketEntry({ symbol, direction: sig.direction === 'buy' ? 'buy' : 'sell', notionalUsd: calc.nilaiPosisi, livePrice });
-    const quantity = placed.cumExecQty ? parseFloat(placed.cumExecQty) : placed.executedQty ? parseFloat(placed.executedQty) : calc.nilaiPosisi / livePrice;
+    const quantity = placed.executedQty ? parseFloat(placed.executedQty) : calc.nilaiPosisi / livePrice;
     return { entryPrice: livePrice, quantity, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, openedAt: Date.now(), symbol, execMode };
   }
 
   // Simulasi lokal MURNI -- livePrice diambil apa adanya, nilai posisi dihitung dari
   // MODAL_ACTIVE_FRACTION/2 x $1000 (angka referensi tetap, BUKAN saldo real), NOL panggilan
-  // exchange. Dipakai buat leg Trailing selama allowReal:false (MEXC gak punya demo sama sekali,
-  // gak ada exchange nyata buat "demo Trailing" beneran) DAN fallback FixedTP kalau Bybit demo
-  // belum/gagal disiapin.
+  // exchange. Dipakai buat KEDUA leg selama allowReal:false -- gak ada exchange manapun yang
+  // punya demo asli buat Emas (lihat riset di header file), jadi paper itu SATU-SATUNYA cara
+  // evaluasi yang aman.
   function paperLeg() {
     const modal = (1000 * MODAL_ACTIVE_FRACTION) / 2;
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
@@ -167,24 +177,17 @@ async function openGoldTwinPosition({ system, assetCfg, sig, livePrice, mexcExec
   if (allowReal) {
     try { trailingResult = await openLeg(mexcExec, assetCfg.execSymbol, 'mexc-real'); }
     catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg Trailing (MEXC real):`, e.message); trailingResult = null; }
-    const bybitReal = bybitExecFor(false);
-    if (bybitReal) {
-      try { fixedTpResult = await openLeg(bybitReal, BYBIT_SYMBOL, 'bybit-real'); }
-      catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg FixedTP (Bybit real):`, e.message); fixedTpResult = null; }
-    } else { console.log(`[GoldTwin/${system}] Bybit real belum disiapin -- leg FixedTP skip, Trailing tetap jalan sendiri.`); }
+    const bitgetReal = bitgetExecForReal();
+    if (bitgetReal) {
+      try { fixedTpResult = await openLeg(bitgetReal, BITGET_SYMBOL, 'bitget-real'); }
+      catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg FixedTP (Bitget real):`, e.message); fixedTpResult = null; }
+    } else { console.log(`[GoldTwin/${system}] Bitget real belum disiapin -- leg FixedTP skip, Trailing tetap jalan sendiri.`); }
   } else {
-    // 26 Sep 2026 -- Bybit Demo Trading key udah ada, leg FixedTP SEKARANG bener-bener eksekusi
-    // ke api-demo.bybit.com (uang virtual asli, mekanika exchange nyata) selama fase evaluasi,
-    // BUKAN cuma simulasi lokal lagi -- lebih realistis (fill/slippage/rate-limit beneran).
-    // Trailing TETAP paperLeg() -- MEXC gak punya demo apapun, gak ada exchange nyata buat ini.
+    // Fase evaluasi -- KEDUA leg paper, gak ada exchange manapun (Bybit/Bitget) yang punya demo
+    // asli buat Emas (lihat riset di header file). JANGAN coba testnet:true ke bitgetExecutor.js,
+    // itu SENGAJA throw.
     trailingResult = paperLeg();
-    const bybitDemo = bybitExecFor(true);
-    if (bybitDemo) {
-      try { fixedTpResult = await openLeg(bybitDemo, BYBIT_SYMBOL, 'bybit-demo'); }
-      catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg FixedTP (Bybit demo), fallback paper:`, e.message); fixedTpResult = paperLeg(); }
-    } else {
-      fixedTpResult = paperLeg();
-    }
+    fixedTpResult = paperLeg();
   }
 
   if (!trailingResult && !fixedTpResult) { console.log(`[GoldTwin/${system}] Kedua leg gagal dibuka, batal.`); return; }
@@ -201,16 +204,16 @@ async function openGoldTwinPosition({ system, assetCfg, sig, livePrice, mexcExec
   const sysLabel = system === 'ranger' ? SYSTEM_LABEL.RANGER : SYSTEM_LABEL.SNIPER;
   console.log(`[GoldTwin/${system}] Entry ${sig.direction.toUpperCase()} @ ${livePrice} -- Trailing ${trailingResult ? trailingResult.execMode : 'skip'}, FixedTP ${fixedTpResult ? fixedTpResult.execMode : 'skip'}.`);
 
-  // Demo (paper ATAU bybit-demo) ke Sniper Club, Real (mexc-real/bybit-real) ke Wibowo -- per LEG,
-  // BUKAN per keseluruhan posisi (leg bisa beda execMode kalau salah satu real-nya gagal parsial).
+  // Demo (paper) ke Sniper Club, Real (mexc-real/bitget-real) ke Wibowo -- per LEG, BUKAN per
+  // keseluruhan posisi (leg bisa beda execMode kalau salah satu real-nya gagal parsial).
   if (trailingResult) {
     const isDemo = trailingResult.execMode !== 'mexc-real';
     const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: trailingResult.entryPrice, tp: null, sl: sig.sl, marginUsd: trailingResult.margin, nilaiPosisi: trailingResult.nilaiPosisi, leverage: trailingResult.leverage, mode: 'gold_twin_trailing', assetLabel: 'XAU' }, new Date(), '', isDemo, idrRate, '', null, MEXC_BADGE, sysLabel);
     await (isDemo ? notifySilent : notify)(msg).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (open Trailing):`, e.message));
   }
   if (fixedTpResult) {
-    const isDemo = fixedTpResult.execMode !== 'bybit-real';
-    const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: fixedTpResult.entryPrice, tp, sl: sig.sl, marginUsd: fixedTpResult.margin, nilaiPosisi: fixedTpResult.nilaiPosisi, leverage: fixedTpResult.leverage, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), '', isDemo, idrRate, '', null, BYBIT_BADGE, sysLabel);
+    const isDemo = fixedTpResult.execMode !== 'bitget-real';
+    const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: fixedTpResult.entryPrice, tp, sl: sig.sl, marginUsd: fixedTpResult.margin, nilaiPosisi: fixedTpResult.nilaiPosisi, leverage: fixedTpResult.leverage, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), '', isDemo, idrRate, '', null, BITGET_BADGE, sysLabel);
     await (isDemo ? notifySilent : notify)(msg).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (open FixedTP):`, e.message));
   }
 }
@@ -227,8 +230,7 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
   // masih floating, closing WAJIB konsisten sama exchange yang beneran dipakai buka).
   function execFor(execMode) {
     if (execMode === 'mexc-real') return mexcExec;
-    if (execMode === 'bybit-real') return bybitExecFor(false);
-    if (execMode === 'bybit-demo') return bybitExecFor(true);
+    if (execMode === 'bitget-real') return bitgetExecForReal();
     return null; // 'paper' -- gak ada exec, gak pernah dipanggil closeLeg
   }
   async function closeLeg(execMode, symbol, quantity) {
@@ -271,9 +273,9 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
     await (isDemo ? notifySilent : notify)(msg.replace(`🔗 ${KAELA_ACCESS_URL}`, extra + `🔗 ${KAELA_ACCESS_URL}`)).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (close Trailing):`, e.message));
   }
   if (fixedTpHit && f.fixedTp && !f.fixedTp.closedAt) {
-    const isDemo = f.fixedTp.execMode !== 'bybit-real';
+    const isDemo = f.fixedTp.execMode !== 'bitget-real';
     const exitPrice = fixedTpHit === 'TP' ? f.tp : f.sl;
-    try { await closeLeg(f.fixedTp.execMode, BYBIT_SYMBOL, f.fixedTp.quantity); } catch (e) { console.log(`[GoldTwin/${system}] Gagal tutup leg FixedTP (${f.fixedTp.execMode}):`, e.message); }
+    try { await closeLeg(f.fixedTp.execMode, BITGET_SYMBOL, f.fixedTp.quantity); } catch (e) { console.log(`[GoldTwin/${system}] Gagal tutup leg FixedTP (${f.fixedTp.execMode}):`, e.message); }
     f.fixedTp.closedAt = Date.now();
     f.fixedTp.exitPrice = exitPrice;
     const gross = (exitPrice - f.fixedTp.entryPrice) * f.fixedTp.quantity * pnlSign;
@@ -281,7 +283,7 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
     const net = gross - feeUsd;
     v.stats.fixedTp.totalPnlUsd += net;
     if (net >= 0) v.stats.fixedTp.wins += 1; else v.stats.fixedTp.losses += 1;
-    const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: dirLongShort, entryPrice: f.fixedTp.entryPrice, exitPrice, pnlUsd: gross, feeUsd, pnlPct: null, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), isDemo, fixedTpHit === 'TP' ? 'Target tercapai' : 'Stop loss kena', idrRate, null, BYBIT_BADGE, sysLabel);
+    const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: dirLongShort, entryPrice: f.fixedTp.entryPrice, exitPrice, pnlUsd: gross, feeUsd, pnlPct: null, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), isDemo, fixedTpHit === 'TP' ? 'Target tercapai' : 'Stop loss kena', idrRate, null, BITGET_BADGE, sysLabel);
     const extra = formatWinRateLines(v.stats.fixedTp, `Gold TP Tetap (${isDemo ? 'Demo' : 'Real'})`, idrRate);
     await (isDemo ? notifySilent : notify)(msg.replace(`🔗 ${KAELA_ACCESS_URL}`, extra + `🔗 ${KAELA_ACCESS_URL}`)).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (close FixedTP):`, e.message));
   }

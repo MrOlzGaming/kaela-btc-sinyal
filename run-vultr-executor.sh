@@ -98,7 +98,14 @@ fi
 # (kata "GAGAL"/"ERROR" biar ke-scan CYCLE_ERRORS -> reportCycleErrors.js) SEBELUM buang, biar ada
 # jejak kapan/kenapa state hilang -- bukan mencegah (reset --hard tetap WAJIB jalan buat sinkron
 # multi-mesin), cuma bikin kejadian ini KETAHUAN, bukan senyap total kayak sebelumnya.
-DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null || true)
+# ⛔ BUG NYATA ketemu+fix 27 Sep 2026 (Drake auto-lapor "PERINGATAN git reset --hard" muncul di
+# HAMPIR SETIAP siklus, 1+ jam berturut-turut tanpa henti) -- `git status --porcelain` POLOS ikut
+# nangkep file UNTRACKED (baris `??`, arsip .bak/.log/scratch yang emang SENGAJA gak di-.gitignore-
+# in semua tapi juga gak pernah di-commit) -- padahal `git reset --hard` SAMA SEKALI GAK NYENTUH
+# file untracked (cuma revert file TRACKED yang berubah). Peringatan ini jadi "false alarm permanen"
+# sejak ditulis 19 Sep -- nyala TERUS gara-gara file untracked yang emang selalu ada, nutupin sinyal
+# asli (tracked file beneran kotor, yang WAJIB diwaspadai). Fix: filter buang baris `??` dulu.
+DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null | grep -v '^??' || true)
 UNPUSHED_COMMITS=$(git rev-list --count origin-new/master..HEAD 2>/dev/null || echo 0)
 if [ -n "$DIRTY_BEFORE_RESET" ] || [ "$UNPUSHED_COMMITS" -gt 0 ]; then
   log "PERINGATAN: git reset --hard AKAN MEMBUANG state -- working tree kotor: $([ -n "$DIRTY_BEFORE_RESET" ] && echo yes || echo no), commit lokal belum ke-push: $UNPUSHED_COMMITS. Kemungkinan besar sisa push GAGAL siklus sebelumnya -- cek log."

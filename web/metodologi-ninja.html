@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
+<title>Metodologi Ninja — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Metodologi Ninja — breakout channel konsolidasi candle 5-menit BTCUSDT, eksekusi di BingX.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  h2 { font-size: 1.1rem; color: var(--clr-primary); margin-top: 32px; }
+  nav { margin: 14px 0; }
+  .tagline { color: var(--clr-text-muted); font-style: italic; font-size: 0.9rem; }
+  ul.limits { padding-left: 20px; }
+  ul.limits li { margin-bottom: 10px; }
+  .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
+  strong { color: var(--clr-text); }
+  .back-note { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-primary); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--clr-text-muted); }
+  .risk-banner { background: rgba(248,81,73,0.1); border: 1px solid var(--clr-danger); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .risk-banner-title { color: var(--clr-danger); font-weight: 800; font-size: 1rem; margin-bottom: 8px; }
+  .risk-banner p { margin: 0; font-size: 0.9rem; line-height: 1.6; }
+  code { background: var(--clr-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+  .lang-toggle-row { display: flex; justify-content: flex-end; margin: 10px 0 -6px; }
+  .lang-toggle-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); border: 1px solid var(--clr-border); background: var(--clr-bg-elevated); color: var(--clr-text-muted); cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <h1>Kaela BTC Sinyal — Metodologi</h1>
+  </div>
+  <p class="tagline" data-i18n="tagline">Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.</p>
+
+  <div class="lang-toggle-row"><button type="button" class="lang-toggle-btn" id="metaLangBtn" onclick="toggleMetaLang()">🇬🇧 English</button></div>
+
+  <p class="back-note" data-i18n="back_note">Ini halaman pelengkap. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-musiman.html">🌾 Musiman</a> buat metodologi intinya.</p>
+
+  <div class="risk-banner">
+    <div class="risk-banner-title" data-i18n="risk_title">🚨 RISIKO TINGGI — BACA DULU SEBELUM LANJUT</div>
+    <p data-i18n="risk_body">Ninja <strong>langsung buka posisi BENERAN di akun BingX</strong> (demo VST + real, dua-duanya berbarengan) begitu breakout kekonfirmasi. Timeframe SANGAT pendek (candle 5 menit) -- frekuensi trade jauh lebih tinggi dari Sniper/Ranger. <strong>BUKAN sinyal untuk diikuti buta di akun sendiri.</strong></p>
+  </div>
+
+  <h2 data-i18n="h_kenapa">🥷 Kenapa "Ninja"?</h2>
+  <p data-i18n="p_kenapa">Nama sebelumnya "Channel Breakout" (nama teknis) -- diganti "Ninja" karena cocok sama vibe-nya: gerak cepat &amp; senyap, masuk-keluar posisi dalam hitungan menit di timeframe 5-menit, jauh lebih gesit dari Sniper (harian) maupun Ranger (4 jam).</p>
+
+  <h2 data-i18n="h_cara">Cara kerja</h2>
+  <ul class="limits">
+    <li data-i18n="li_cara_1"><strong>Deteksi channel konsolidasi</strong> (regresi high/low) di candle 5-menit BTCUSDT -- begitu harga breakout dari batas channel sebesar setengah lebar channel lagi, itu sinyal entry. Konfirmasi 2x cek berturut-turut (candle 1 menit bisa "bohong") sebelum entry beneran.</li>
+    <li data-i18n="li_cara_2"><strong>Exit Trailing Stop</strong> -- stop-loss otomatis nyesuain (ratchet) searah untung seiring harga bergerak, jarak trailing dari lebar channel awal. Cuma bisa bergerak ke arah lebih aman, gak pernah mundur.</li>
+    <li data-i18n="li_cara_3"><strong>Eksekusi di BingX</strong> -- exchange terpisah dari Sniper/Ranger (Binance) &amp; Sniper/Ranger Emas (MEXC). 1 API key yang sama dipakai buat Demo (VST, saldo virtual) maupun Real (saldo asli), base URL beda -- bukan 2 kredensial terpisah kayak Binance/MEXC.</li>
+    <li data-i18n="li_cara_4"><strong>Demo + Real berbarengan</strong> -- bukan gantian kayak Sniper/Ranger. Demo selalu jalan, Real jalan tambahan kalau saldo cukup.</li>
+  </ul>
+
+  <h2 data-i18n="h_riwayat">🔬 Riwayat -- dulu 2 varian, sekarang cuma 1 (jujur, apa adanya)</h2>
+  <p data-i18n="p_riwayat">Sempat dites 2 varian exit sekaligus dari sinyal breakout yang sama: Trailing Stop (yang sekarang) vs TP Tetap (target tetap 1:1 R:R). Backtest 2 tahun (BTCUSDT 5-menit) nunjukin Trailing menang TELAK: Profit Factor 11,67 vs TP Tetap cuma 2,97 -- dan dari 2.411 sinyal yang identik di dua-duanya, Trailing menang lebih besar 1.612 kali berbanding 579 kali buat TP Tetap. Karena kalah jauh (bukan cuma beda gaya), varian TP Tetap DIHENTIKAN (26 September 2026) -- Ninja sekarang cuma jalan Trailing.</p>
+
+  <h2 data-i18n="h_saran">Saran cara pakai</h2>
+  <ul class="limits">
+    <li data-i18n="li_saran_1"><strong>Ini eksekusi Kaela sendiri</strong> (Demo + Real) -- bukan ajakan buat ikut-ikutan buta di akun sendiri. Anggap ini riset/uji coba yang transparan.</li>
+    <li data-i18n="li_saran_2"><strong>Frekuensi trade tinggi</strong> -- fee round-trip (0,10% per sisi) bisa jadi beban signifikan relatif ke pergerakan harga yang kecil, terutama pas leverage lagi tinggi (stop-loss sempit). Selalu lihat PnL Bersih (net, sudah potong fee) di jurnal, bukan cuma PnL Kotor.</li>
+  </ul>
+
+  <p class="footer-note" data-i18n="footer_note">Ninja (Trailing) aktif sejak 23 September 2026, varian TP Tetap dihentikan 26 September 2026 -- mekanismenya bisa berubah/disempurnakan seiring waktu berdasar hasil nyata di lapangan.</p>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <script src="js/i18n-meta.js"></script>
+  <script>
+    I18N_META.tagline = { id: 'Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.', en: 'Not financial advice. Based on research &amp; historical data. The decision always stays with you.' };
+    I18N_META.back_note = { id: 'Ini halaman pelengkap. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-musiman.html">🌾 Musiman</a> buat metodologi intinya.', en: 'This is a supplementary page. Kaela\'s main strategy is still the Halving Cycle (CAGR 73.8%/year) — see the <a href="metodologi-musiman.html">🌾 Seasonal</a> tab for the core methodology.' };
+    I18N_META.risk_title = { id: '🚨 RISIKO TINGGI — BACA DULU SEBELUM LANJUT', en: '🚨 HIGH RISK — READ FIRST BEFORE CONTINUING' };
+    I18N_META.risk_body = { id: 'Ninja <strong>langsung buka posisi BENERAN di akun BingX</strong> (demo VST + real, dua-duanya berbarengan) begitu breakout kekonfirmasi. Timeframe SANGAT pendek (candle 5 menit) -- frekuensi trade jauh lebih tinggi dari Sniper/Ranger. <strong>BUKAN sinyal untuk diikuti buta di akun sendiri.</strong>', en: 'Ninja <strong>immediately opens a real position on BingX</strong> (demo VST + real, both simultaneously) the moment a breakout is confirmed. Timeframe is VERY short (5-minute candles) -- trade frequency is much higher than Sniper/Ranger. <strong>This is NOT a signal to blindly copy on your own account.</strong>' };
+    I18N_META.h_kenapa = { id: '🥷 Kenapa "Ninja"?', en: '🥷 Why "Ninja"?' };
+    I18N_META.p_kenapa = { id: 'Nama sebelumnya "Channel Breakout" (nama teknis) -- diganti "Ninja" karena cocok sama vibe-nya: gerak cepat &amp; senyap, masuk-keluar posisi dalam hitungan menit di timeframe 5-menit, jauh lebih gesit dari Sniper (harian) maupun Ranger (4 jam).', en: 'The previous name was "Channel Breakout" (a technical name) -- changed to "Ninja" because it fits the vibe: fast &amp; silent movement, in and out of positions within minutes on a 5-minute timeframe, far nimbler than Sniper (daily) or Ranger (4-hour).' };
+    I18N_META.h_cara = { id: 'Cara kerja', en: 'How it works' };
+    I18N_META.li_cara_1 = { id: '<strong>Deteksi channel konsolidasi</strong> (regresi high/low) di candle 5-menit BTCUSDT -- begitu harga breakout dari batas channel sebesar setengah lebar channel lagi, itu sinyal entry. Konfirmasi 2x cek berturut-turut (candle 1 menit bisa "bohong") sebelum entry beneran.', en: '<strong>Detects a consolidation channel</strong> (high/low regression) on 5-minute BTCUSDT candles -- once price breaks out past the channel boundary by another half-channel-width, that\'s the entry signal. Confirmed by 2 consecutive checks (a 1-minute candle can "lie") before actually entering.' };
+    I18N_META.li_cara_2 = { id: '<strong>Exit Trailing Stop</strong> -- stop-loss otomatis nyesuain (ratchet) searah untung seiring harga bergerak, jarak trailing dari lebar channel awal. Cuma bisa bergerak ke arah lebih aman, gak pernah mundur.', en: '<strong>Trailing Stop exit</strong> -- the stop-loss automatically ratchets in the profitable direction as price moves, with the trailing distance based on the initial channel width. It can only move to a safer level, never backward.' };
+    I18N_META.li_cara_3 = { id: '<strong>Eksekusi di BingX</strong> -- exchange terpisah dari Sniper/Ranger (Binance) &amp; Sniper/Ranger Emas (MEXC). 1 API key yang sama dipakai buat Demo (VST, saldo virtual) maupun Real (saldo asli), base URL beda -- bukan 2 kredensial terpisah kayak Binance/MEXC.', en: '<strong>Executed on BingX</strong> -- a separate exchange from Sniper/Ranger (Binance) &amp; Sniper/Ranger Gold (MEXC). The same API key is used for both Demo (VST, virtual balance) and Real (actual balance), just a different base URL -- not 2 separate credentials like Binance/MEXC.' };
+    I18N_META.li_cara_4 = { id: '<strong>Demo + Real berbarengan</strong> -- bukan gantian kayak Sniper/Ranger. Demo selalu jalan, Real jalan tambahan kalau saldo cukup.', en: '<strong>Demo + Real run together</strong> -- not alternating like Sniper/Ranger. Demo always runs, Real runs additionally when there\'s enough balance.' };
+    I18N_META.h_riwayat = { id: '🔬 Riwayat -- dulu 2 varian, sekarang cuma 1 (jujur, apa adanya)', en: '🔬 History -- used to be 2 variants, now just 1 (honest, as-is)' };
+    I18N_META.p_riwayat = { id: 'Sempat dites 2 varian exit sekaligus dari sinyal breakout yang sama: Trailing Stop (yang sekarang) vs TP Tetap (target tetap 1:1 R:R). Backtest 2 tahun (BTCUSDT 5-menit) nunjukin Trailing menang TELAK: Profit Factor 11,67 vs TP Tetap cuma 2,97 -- dan dari 2.411 sinyal yang identik di dua-duanya, Trailing menang lebih besar 1.612 kali berbanding 579 kali buat TP Tetap. Karena kalah jauh (bukan cuma beda gaya), varian TP Tetap DIHENTIKAN (26 September 2026) -- Ninja sekarang cuma jalan Trailing.', en: 'Two exit variants were tested at once from the same breakout signal: Trailing Stop (the current one) vs Fixed-TP (a fixed 1:1 R:R target). A 2-year backtest (BTCUSDT 5-min) showed Trailing winning decisively: Profit Factor 11.67 vs Fixed-TP\'s 2.97 -- and out of 2,411 identical signals shared by both, Trailing won bigger 1,612 times vs Fixed-TP\'s 579. Since it lost by a wide margin (not just a different style), the Fixed-TP variant was DISCONTINUED (September 26, 2026) -- Ninja now runs Trailing only.' };
+    I18N_META.h_saran = { id: 'Saran cara pakai', en: 'Usage recommendations' };
+    I18N_META.li_saran_1 = { id: '<strong>Ini eksekusi Kaela sendiri</strong> (Demo + Real) -- bukan ajakan buat ikut-ikutan buta di akun sendiri. Anggap ini riset/uji coba yang transparan.', en: '<strong>This is Kaela\'s own execution</strong> (Demo + Real) -- not an invitation to blindly copy it on your own account. Treat it as transparent research/testing.' };
+    I18N_META.li_saran_2 = { id: '<strong>Frekuensi trade tinggi</strong> -- fee round-trip (0,10% per sisi) bisa jadi beban signifikan relatif ke pergerakan harga yang kecil, terutama pas leverage lagi tinggi (stop-loss sempit). Selalu lihat PnL Bersih (net, sudah potong fee) di jurnal, bukan cuma PnL Kotor.', en: '<strong>High trade frequency</strong> -- round-trip fees (0.10% per side) can become a significant drag relative to small price moves, especially when leverage is high (tight stop-loss). Always check Net PnL (after fees) in the journal, not just Gross PnL.' };
+    I18N_META.footer_note = { id: 'Ninja (Trailing) aktif sejak 23 September 2026, varian TP Tetap dihentikan 26 September 2026 -- mekanismenya bisa berubah/disempurnakan seiring waktu berdasar hasil nyata di lapangan.', en: 'Ninja (Trailing) has been active since September 23, 2026, the Fixed-TP variant was discontinued September 26, 2026 -- its mechanics may change/be refined over time based on real-world results.' };
+    I18N_META.nav_dashboard = { id: 'Dashboard', en: 'Dashboard' };
+    I18N_META.nav_jurnal = { id: 'Jurnal', en: 'Journal' };
+    I18N_META.nav_analis = { id: 'Analis', en: 'Analyst' };
+    I18N_META.nav_kalkulator = { id: 'Kalkulator', en: 'Calculator' };
+    I18N_META.nav_metodologi = { id: 'Metodologi', en: 'Methodology' };
+    applyMetaLang();
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_jurnal">Jurnal</span></a>
+    <a href="analis.html"><span class="icon">📊</span><span data-i18n="nav_analis">Analis</span></a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span><span data-i18n="nav_kalkulator">Kalkulator</span></a>
+    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_metodologi">Metodologi</span></a>
+  </nav>
+</body>
+</html>

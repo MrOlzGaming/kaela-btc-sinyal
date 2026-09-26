@@ -166,8 +166,8 @@
     ninja_positions_open: { id: 'posisi Ninja lagi terbuka', en: 'Ninja position(s) currently open' },
     no_ninja_open: { id: 'Gak ada posisi Ninja yang lagi terbuka.', en: 'No open Ninja positions right now.' },
     ninja_home_disclaimer: { id: '🥷 Ninja -- deteksi breakout channel candle 5-menit, BingX (Demo VST + Real berbarengan).', en: '🥷 Ninja -- 5-minute channel breakout detection, on BingX (Demo VST + Real running together).' },
-    ninja_jurnal_disclaimer: { id: '🥷 Ninja Market -- breakout dari channel konsolidasi (candle 5-menit BTCUSDT), di BingX. 2 varian dites BARENGAN dari sinyal yang sama: Trailing (utama, dilaporin WA) &amp; TP Tetap (silent, murni buat perbandingan -- statistiknya tetap ditampilin di sini apa adanya).', en: '🥷 Ninja Market -- breakout from a consolidation channel (5-minute BTCUSDT candles), on BingX. 2 variants tested TOGETHER from the same signal: Trailing (main, reported via WA) &amp; Fixed-TP (silent, purely for comparison -- its stats are still shown here as-is).' },
-    ninja_silent_note: { id: '🔇 Varian silent -- trading TERUS jalan tapi gak kirim WA, murni buat bandingin manual vs Trailing.', en: '🔇 Silent variant -- keeps trading but sends no WA messages, purely for manual comparison vs Trailing.' },
+    ninja_jurnal_disclaimer: { id: '🥷 Ninja Market -- breakout dari channel konsolidasi (candle 5-menit BTCUSDT), di BingX. Sekarang cuma jalan 1 varian (Trailing). Statistik TP Tetap di bawah DIBEKUKAN (dihentikan 26 Sep 2026, kalah telak dari Trailing di backtest 2 tahun) -- ditampilin apa adanya sbg arsip, bukan data live.', en: '🥷 Ninja Market -- breakout from a consolidation channel (5-minute BTCUSDT candles), on BingX. Only 1 variant runs now (Trailing). The Fixed-TP stats below are FROZEN (discontinued Sep 26, 2026, after losing decisively to Trailing in a 2-year backtest) -- shown as-is for archival purposes, not live data.' },
+    ninja_discontinued_note: { id: '🗄️ Dihentikan 26 Sep 2026 -- kalah telak dari Trailing di backtest 2 tahun (PF 2,97 vs 11,67). Angka di bawah beku, gak nambah lagi.', en: '🗄️ Discontinued Sep 26, 2026 -- lost decisively to Trailing in a 2-year backtest (PF 2.97 vs 11.67). The numbers below are frozen, no longer updating.' },
     position_open_now: { id: 'Ada posisi lagi terbuka', en: 'Position currently open' },
     no_position_open_now: { id: 'Gak ada posisi lagi terbuka.', en: 'No open position right now.' },
     closed_trades_count: { id: 'Trade selesai', en: 'Closed trades' },
@@ -1266,8 +1266,8 @@
       : rt('no_ninja_open');
     const en = lang() === 'en';
     const introHtml = en
-      ? `<p class="strategy-intro">🥷 Ninja detects <strong>breakouts from consolidation channels</strong> on <strong>5-minute BTCUSDT candles</strong> -- very fast/frequent, on BingX. 2 variants tested in parallel from the same signal: Trailing (main, reported) &amp; Fixed-TP (silent, comparison-only). <a href="metodologi-dark-kaela.html">Read the full methodology →</a></p>`
-      : `<p class="strategy-intro">🥷 Ninja deteksi <strong>breakout dari channel konsolidasi</strong> di <strong>candle 5-menit BTCUSDT</strong> -- super gesit/sering, di BingX. 2 varian dites BARENGAN dari sinyal yang sama: Trailing (utama, dilaporin) &amp; TP Tetap (silent, murni perbandingan). <a href="metodologi-dark-kaela.html">Baca metodologi lengkap →</a></p>`;
+      ? `<p class="strategy-intro">🥷 Ninja detects <strong>breakouts from consolidation channels</strong> on <strong>5-minute BTCUSDT candles</strong> -- very fast/frequent, on BingX. Exit via Trailing Stop. <a href="metodologi-ninja.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🥷 Ninja deteksi <strong>breakout dari channel konsolidasi</strong> di <strong>candle 5-menit BTCUSDT</strong> -- super gesit/sering, di BingX. Exit pakai Trailing Stop. <a href="metodologi-ninja.html">Baca metodologi lengkap →</a></p>`;
     return `<div class="sniper-orders-panel">
       ${introHtml}
       <p class="order-disclaimer">${rt('ninja_home_disclaimer')}</p>
@@ -1288,16 +1288,16 @@
     const nj = ninjaJournal || {};
     const en = lang() === 'en';
     const variantMeta = [
-      { key: 'trailing', label: 'Trailing', silent: false },
-      { key: 'tpFixed', label: en ? 'Fixed-TP' : 'TP Tetap', silent: true },
+      { key: 'trailing', label: 'Trailing', discontinued: false },
+      { key: 'tpFixed', label: en ? 'Fixed-TP' : 'TP Tetap', discontinued: true },
     ];
     const blocks = variantMeta.map((vm) => {
       const v = nj[vm.key] || {};
       const floatingHtml = v.floating
         ? `<div class="empty">📡 ${rt('position_open_now')} (${v.floating.dir === 'long' ? rt('long') : rt('short')})${v.floating.real ? ' + REAL' : ''}</div>`
         : `<div class="empty">${rt('no_position_open_now')}</div>`;
-      return `<div class="journal-section-title">🥷 Ninja -- ${vm.label}${vm.silent ? ' (silent)' : ''}</div>
-        ${vm.silent ? `<p class="order-disclaimer">${rt('ninja_silent_note')}</p>` : ''}
+      return `<div class="journal-section-title">🥷 Ninja -- ${vm.label}${vm.discontinued ? (en ? ' (discontinued)' : ' (dihentikan)') : ''}</div>
+        ${vm.discontinued ? `<p class="order-disclaimer">${rt('ninja_discontinued_note')}</p>` : ''}
         ${floatingHtml}
         <div class="journal-stats-grid">
           ${_ninjaStatsCell(v.stats && v.stats.demo, rt('demo'))}

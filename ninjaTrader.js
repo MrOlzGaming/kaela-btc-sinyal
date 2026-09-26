@@ -273,11 +273,16 @@ async function checkAndClearStrayPosition(exec, idrRate) {
     return 'unsafe';
   }
 
+  // 🐛 FIX 26 Sep 2026 (kritik Olan langsung liat pesan asli: "PnL auto-close: gak kebaca
+  // otomatis" -- padahal ADA) -- BingX positionRisk BENERAN punya `unrealizedProfit` (dites
+  // empiris, dites live "-0.0226"/"0.0102"), SEBELUMNYA hardcode `closePnlUsd: null` gak pernah
+  // dicoba baca. Approksimasi realisasi dari unrealized SESAAT sebelum ditutup (SAMA presisi yang
+  // udah dipakai rangerBtcDualExec.js/sniperBtcDualExec.js buat kasus serupa di Binance).
   const msg = formatManualOpenAutoClosed({
     exchangeBadge: EXCHANGE_BADGE, symbol: EXEC_SYMBOL, direction: closeDirection,
     entryPrice: Number(stray.avgPrice), closePrice: Number(stray.markPrice) || Number(stray.avgPrice),
     leverage: Number(stray.leverage) || 0, marginUsd: Number(stray.margin) || 0,
-    nilaiPosisi: Number(stray.positionValue) || 0, closePnlUsd: null,
+    nilaiPosisi: Number(stray.positionValue) || 0, closePnlUsd: Number(stray.unrealizedProfit) || 0,
   }, idrRate);
   console.log(`[ChannelBreakout] Posisi nyasar (${EXCHANGE_BADGE}, BUKAN order Kaela) ketemu di akun Channel Breakout -- ditutup paksa biar gak numpuk sama entry baru.`);
   await sendWhatsAppToWibowo(msg).catch((e) => console.log('[ChannelBreakout] Gagal kirim WA (posisi nyasar auto-closed):', e.message));

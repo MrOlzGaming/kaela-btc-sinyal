@@ -173,10 +173,14 @@ async function _ensureAccountClear(exec, mode) {
     console.log(`[SniperBtcDual] GAGAL nutup posisi manual (${mode}):`, e.message);
     return 'unsafe';
   }
+  // Field mentah Binance (BEDA dari BingX punya Ninja: avgPrice/margin/positionValue) --
+  // isolatedMargin/notional/unRealizedProfit nama field ASLI /fapi/v2/positionRisk. closePnlUsd
+  // dari unrealized SESAAT SEBELUM ditutup (approksimasi realisasi -- market order nutup di harga
+  // deket markPrice, SAMA presisi yang udah diterima buat kasus serupa di seluruh proyek ini).
   const msg = formatManualOpenAutoClosed({
     exchangeBadge: badge(), symbol: SYMBOL, direction: closeDirection,
     entryPrice: Number(stray.entryPrice), closePrice: Number(stray.markPrice) || Number(stray.entryPrice),
-    leverage: Number(stray.leverage) || 0, marginUsd: 0, nilaiPosisi: Math.abs(Number(stray.notional) || 0), closePnlUsd: null,
+    leverage: Number(stray.leverage) || 0, marginUsd: Math.abs(Number(stray.isolatedMargin) || 0), nilaiPosisi: Math.abs(Number(stray.notional) || 0), closePnlUsd: Number(stray.unRealizedProfit) || 0,
   }, null);
   console.log(`[SniperBtcDual] Posisi MANUAL (${mode}, BUKAN order Kaela) ketemu di akun -- ditutup paksa (kebijakan Olan: "Kaela full kontrol").`);
   await sendWhatsAppToWibowo(msg).catch((e) => console.log('[SniperBtcDual] Gagal kirim WA (posisi manual auto-closed):', e.message));

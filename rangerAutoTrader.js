@@ -59,6 +59,7 @@ const { isLiveTradingEnabled, isTestnet: isTestnetGlobal } = require('./killSwit
 const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
+const goldTwinPositionModule = require('./goldTwinPosition');
 const { fetchBinancePositioning } = require('./marketSentiment');
 const { isBtcBearWindow, isBtcApproachingWindowFlip, daysUntilBtcWindowFlip } = require('./halvingBearWindow');
 const { nextSignalId, countSignalIdsToday } = require('./signalIdGenerator');
@@ -863,6 +864,20 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       return;
     }
 
+    // Twin-position Emas (26 Sep 2026, riset backtest/rangerTwinPositionBacktest.js + filter DXY
+    // -- lihat goldTwinPosition.js header) -- KHUSUS xau, DAN cuma kalau diaktifin eksplisit di
+    // gold-twin-position-config.json (default false, gak nyentuh apapun). BTC TETAP openPosition()
+    // biasa selama-lamanya, modul ini gak pernah disentuh buat BTC.
+    if (assetKey === 'xau' && goldTwinPositionModule.loadConfig().enabled === true) {
+      for (const sig of validSigs) {
+        await goldTwinPositionModule.openGoldTwinPosition({
+          system: 'ranger', assetCfg, sig, livePrice: candles4h[i].close,
+          mexcExec: execFor(assetCfg), notify: sendWA, notifySilent: sendWA, idrRate,
+        });
+      }
+      return;
+    }
+
     for (const sig of validSigs) {
       await openPosition(assetCfg, sig, candles4h[i].close);
     }
@@ -1102,6 +1117,18 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       await processFedDovishGrid(RANGER_ASSETS.btc);
     } catch (e) {
       console.log(`[NyopetAutoTrader][FedGrid] ERROR:`, e.message);
+    }
+    // Monitor twin-position Emas (26 Sep 2026) -- TERPISAH dari processAsset di atas, jalan tiap
+    // siklus TERLEPAS ada sinyal baru atau nggak (ratchet trailing WAJIB dicek tiap harga baru,
+    // bukan cuma pas nyari entry). No-op aman kalau belum enabled/belum ada floating.
+    if (goldTwinPositionModule.loadConfig().enabled === true) {
+      try {
+        const xauCfg = RANGER_ASSETS.xau;
+        const livePrice = await fetchLivePrice(xauCfg.execSymbol, xauCfg.exchange);
+        await goldTwinPositionModule.monitorGoldTwinPosition({ system: 'ranger', livePrice, mexcExec: execFor(xauCfg), notify: sendWA, notifySilent: sendWA, idrRate });
+      } catch (e) {
+        console.log(`[NyopetAutoTrader][GoldTwin] ERROR monitor:`, e.message);
+      }
     }
     await syncBalances();
   }

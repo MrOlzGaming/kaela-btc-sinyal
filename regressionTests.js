@@ -691,6 +691,88 @@ async function main() {
     assert.strictEqual(r.exhausted, false); // BUKAN exhausted -- episode lama dianggap gak pernah ke-track lagi, bukan "ditutup exhausted"
   });
 
+  // ============ goldTwinPosition.js (26 Sep 2026) ============
+  // Modul ini BACA/TULIS file config+journal ASLI proyek (gold-twin-position-config.json/
+  // -journal.json) -- WAJIB backup+restore SETELAH tiap test, biar `enabled:false` default aman
+  // gak ke-timpa/rusak kalau ada test yang crash di tengah (config ini beneran ngontrol trading
+  // real Emas kalau nanti enabled).
+  {
+    const fsGtp = require('fs');
+    const pathGtp = require('path');
+    const GTP_CONFIG = pathGtp.join(__dirname, 'gold-twin-position-config.json');
+    const GTP_JOURNAL = pathGtp.join(__dirname, 'gold-twin-position-journal.json');
+    const origConfig = fsGtp.existsSync(GTP_CONFIG) ? fsGtp.readFileSync(GTP_CONFIG, 'utf8') : null;
+    const origJournal = fsGtp.existsSync(GTP_JOURNAL) ? fsGtp.readFileSync(GTP_JOURNAL, 'utf8') : null;
+    function restoreGtpFiles() {
+      if (origConfig !== null) fsGtp.writeFileSync(GTP_CONFIG, origConfig); else if (fsGtp.existsSync(GTP_CONFIG)) fsGtp.unlinkSync(GTP_CONFIG);
+      if (origJournal !== null) fsGtp.writeFileSync(GTP_JOURNAL, origJournal); else if (fsGtp.existsSync(GTP_JOURNAL)) fsGtp.unlinkSync(GTP_JOURNAL);
+      delete require.cache[require.resolve('./goldTwinPosition')];
+    }
+
+    try {
+      fsGtp.writeFileSync(GTP_CONFIG, JSON.stringify({ enabled: true, allowReal: false }));
+      if (fsGtp.existsSync(GTP_JOURNAL)) fsGtp.unlinkSync(GTP_JOURNAL);
+      delete require.cache[require.resolve('./goldTwinPosition')];
+      const gtp = require('./goldTwinPosition');
+      const assetCfg = { execSymbol: 'XAUT_USDT', label: 'XAUUSDT' };
+      const sig = { direction: 'buy', sl: 3900, patternType: 'flag_bull' };
+      const noopNotify = async () => {};
+      const closeMessages = [];
+      const captureNotify = async (m) => { closeMessages.push(m); };
+
+      await test('goldTwinPosition: buka posisi (paper) -- kedua leg keisi, invalidation awal bener', async () => {
+        await gtp.openGoldTwinPosition({ system: 'ranger', assetCfg, sig, livePrice: 4000, mexcExec: null, notify: noopNotify, notifySilent: noopNotify, idrRate: 17800 });
+        const j = gtp.loadJournal();
+        assert.ok(j.ranger.floating, 'floating harusnya keisi abis open');
+        assert.ok(j.ranger.floating.trailing && j.ranger.floating.fixedTp, 'dua-duanya leg harus keisi (paper mode, gak ada exec yang gagal)');
+        assert.ok(Math.abs(j.ranger.floating.trailing.invalidation - 3896) < 1e-6, `invalidation awal harusnya 3896 (4000*(1-2.6%)), malah ${j.ranger.floating.trailing.invalidation}`);
+      });
+
+      await test('goldTwinPosition: REGRESI ratchet WAJIB persist walau belum ada leg yang exit', async () => {
+        // Bug NYATA ketemu 26 Sep 2026 -- saveJournal() cuma kepanggil di jalur "ada leg exit",
+        // jadi update extreme/invalidation dari harga yang MAJU (belum sampai nyentuh exit) ilang
+        // lagi tiap siklus (baca ulang journal lama dari disk). Test ini GAGAL kalau bug itu balik.
+        await gtp.monitorGoldTwinPosition({ system: 'ranger', livePrice: 4080, mexcExec: null, notify: noopNotify, notifySilent: noopNotify, idrRate: 17800 });
+        const j = gtp.loadJournal();
+        const expected = 4080 * (1 - 2.6 / 100);
+        assert.ok(Math.abs(j.ranger.floating.trailing.invalidation - expected) < 1e-6, `invalidation harusnya ikut naik ke ${expected}, malah ${j.ranger.floating.trailing.invalidation} (kalau ini gagal, ratchet gak ke-persist)`);
+      });
+
+      await test('goldTwinPosition: REGRESI pesan tutup posisi WAJIB label LONG (bukan SHORT) buat direction buy', async () => {
+        // Bug NYATA ketemu 26 Sep 2026 -- formatAutoOpen pakai konvensi direction 'buy'/'sell',
+        // formatAutoClosed pakai 'long'/'short' (BEDA, dua fungsi sama-sama di darkKaelaLog.js).
+        // Sempat ke-lolos manggil formatAutoClosed pakai f.dir ('buy') mentah -- selalu kebaca
+        // SHORT (default fallback) walau posisinya LONG.
+        closeMessages.length = 0;
+        await gtp.monitorGoldTwinPosition({ system: 'ranger', livePrice: 4300, mexcExec: null, notify: captureNotify, notifySilent: captureNotify, idrRate: 17800 }); // TP leg kena (tp=4000+3*100=4300)
+        const closeMsg = closeMessages.find((m) => m.includes('Tutup Posisi'));
+        assert.ok(closeMsg, 'harusnya ada pesan tutup posisi (leg FixedTP kena TP)');
+        assert.ok(closeMsg.includes('🟢 *LONG*'), `pesan tutup harus bilang LONG buat direction buy, isinya malah: ${closeMsg.split('\n')[1]}`);
+        assert.ok(!closeMsg.includes('🔴 *SHORT*'), 'pesan tutup SALAH bilang SHORT padahal posisi LONG');
+      });
+
+      await test('goldTwinPosition: full close (dua leg exit) -> floating null + closedCount naik', async () => {
+        await gtp.monitorGoldTwinPosition({ system: 'ranger', livePrice: 4100, mexcExec: null, notify: noopNotify, notifySilent: noopNotify, idrRate: 17800 }); // trailing ikut kena (invalidation ~4188 > 4100)
+        const j = gtp.loadJournal();
+        assert.strictEqual(j.ranger.floating, null, 'floating harusnya null abis KEDUA leg closed');
+        assert.strictEqual(j.ranger.closedCount, 1);
+        assert.strictEqual(j.ranger.stats.trailing.wins + j.ranger.stats.trailing.losses, 1);
+        assert.strictEqual(j.ranger.stats.fixedTp.wins + j.ranger.stats.fixedTp.losses, 1);
+      });
+
+      await test('goldTwinPosition: config default enabled:false/allowReal:false kalau file gak ada', () => {
+        fsGtp.unlinkSync(GTP_CONFIG);
+        delete require.cache[require.resolve('./goldTwinPosition')];
+        const gtpFresh = require('./goldTwinPosition');
+        const cfg = gtpFresh.loadConfig();
+        assert.strictEqual(cfg.enabled, false);
+        assert.strictEqual(cfg.allowReal, false);
+      });
+    } finally {
+      restoreGtpFiles();
+    }
+  }
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

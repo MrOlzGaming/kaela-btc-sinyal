@@ -2483,5 +2483,10 @@
     "type": "daily-checklist-report",
     "date": "2026-09-26T12:00:53.292Z",
     "content": "🧪 *Vector [QA Tester]* lapor ke Kaela, checklist otomatisasi harian 2026-09-26 udah dicek:\n\n✅ Berita Pagi\n✅ Berita Siang\n✅ Berita Sore\n✅ Anomaly Scanner\n✅ Bloomberg Mini (laporan pribadi Olan)\n✅ Bloomberg Mini (laporan grup WA)\n✅ Sniper Analisa Harian\n✅ Ucapan Ulang Tahun\n✅ Whale Daily Digest\n\nSemua tugas harian beres. 🎉\n\n🔍 Kesehatan Mandor (jalan beneran + gak spam):\n✅ Whale scan up-to-date (ketinggalan 1 blok, wajar).\n✅ Econ-calendar-live jalan (state terakhir 1 menit lalu).\n✅ Gak ada dobel-kirim ke 7 tipe harian + 1 prefix dinamis (cek 7 hari terakhir).\n\n— Kaela"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-09-26T16:01:07.295Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-09-27\n373 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 555.099,92 BTC berpindah (~$46,706,983,943 / ~Rp836.147.273.032.039)\nTerbesar: 20.378,17 BTC dalam 1 transaksi.\n\n🔴 MASUK exchange: 2.518,85 BTC (6 transaksi) -- potensi tekanan JUAL (Kraken).\n🟢 KELUAR exchange: 1.979,49 BTC (4 transaksi) -- potensi akumulasi/BULL (Kraken).\n⚪ Gak teridentifikasi: 363 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

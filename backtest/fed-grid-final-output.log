@@ -1,0 +1,28 @@
+Ambil candle 15m BTCUSDT 2019-2026...
+Total candle: 270981
+Total event dicoba: 155 (NFP=93, FOMC=62)
+Event ada sinyal jelas (>0.1%): 134 dari 155
+
+########## RACIKAN FINAL: {"layerSchedulePct":[40,60,80,100,120],"layerTriggerPct":2,"maxHoldDays":7,"trendSmaPeriod":480,"leverage":13,"slPct":10,"longTpPct":30} ##########
+  FULL PERIOD (LONG only): n=38 winRate=81.6% PF=3.03 return(compound)=163.4% maxDD=27.6% avgHold=6.8hari [TIMEOUT=34 SL=4] || NET biaya: return=143.1% maxDD=29.5%
+    2019: n=5 winRate=100.0% PF=inf return(compound)=16.5% maxDD=0.0% avgHold=7.0hari [TIMEOUT=5]
+    2020: n=9 winRate=88.9% PF=7.23 return(compound)=38.5% maxDD=5.5% avgHold=7.0hari [TIMEOUT=9]
+    2021: n=7 winRate=71.4% PF=2.52 return(compound)=33.7% maxDD=20.0% avgHold=6.4hari [TIMEOUT=5 SL=2]
+    2022: n=4 winRate=50.0% PF=0.26 return(compound)=-15.7% maxDD=20.2% avgHold=6.1hari [TIMEOUT=2 SL=2]
+    2023: n=3 winRate=100.0% PF=inf return(compound)=16.8% maxDD=0.0% avgHold=7.0hari [TIMEOUT=3]
+    2024: n=4 winRate=100.0% PF=inf return(compound)=13.4% maxDD=0.0% avgHold=7.0hari [TIMEOUT=4]
+    2025: n=4 winRate=75.0% PF=61.47 return(compound)=11.6% maxDD=0.2% avgHold=7.0hari [TIMEOUT=4]
+    2026: n=2 winRate=50.0% PF=0.25 return(compound)=-2.0% maxDD=2.7% avgHold=7.0hari [TIMEOUT=2]
+    Era1 <2023: n=25 winRate=80.0% PF=2.38 return(compound)=81.9% maxDD=27.6% avgHold=6.7hari [TIMEOUT=21 SL=4] || NET biaya: return=71.5% maxDD=29.5%
+    Era2 >=2023: n=13 winRate=84.6% PF=14.25 return(compound)=44.8% maxDD=2.7% avgHold=7.0hari [TIMEOUT=13] || NET biaya: return=41.7% maxDD=2.9%
+
+########## SENSITIVITAS PARAMETER (LONG only, semua tanpa biaya) ##########
+  konservatif_total100pct trigger1%: n=38 winRate=84.2% PF=2.58 return(compound)=55.0% maxDD=12.9% avgHold=6.9hari [TIMEOUT=36 SL=2]
+  konservatif_total100pct trigger2%: n=38 winRate=84.2% PF=1.79 return(compound)=20.3% maxDD=14.0% avgHold=7.0hari [TIMEOUT=36 SL=2]
+  konservatif_total100pct trigger3%: n=38 winRate=81.6% PF=1.95 return(compound)=14.5% maxDD=10.3% avgHold=7.0hari [TIMEOUT=37 SL=1]
+  moderat_total200pct trigger1%: n=38 winRate=81.6% PF=2.68 return(compound)=119.0% maxDD=25.3% avgHold=6.8hari [TIMEOUT=34 SL=4]
+  moderat_total200pct trigger2%: n=38 winRate=84.2% PF=2.64 return(compound)=69.3% maxDD=18.7% avgHold=6.9hari [TIMEOUT=36 SL=2]
+  moderat_total200pct trigger3%: n=38 winRate=81.6% PF=2.01 return(compound)=31.3% maxDD=14.7% avgHold=7.0hari [TIMEOUT=36 SL=2]
+  agresif_total400pct trigger1%: n=38 winRate=73.7% PF=2.25 return(compound)=179.3% maxDD=53.0% avgHold=6.4hari [TIMEOUT=28 SL=8 TP=2]
+  agresif_total400pct trigger2%: n=38 winRate=81.6% PF=3.03 return(compound)=163.4% maxDD=27.6% avgHold=6.8hari [TIMEOUT=34 SL=4]
+  agresif_total400pct trigger3%: n=38 winRate=81.6% PF=3.52 return(compound)=120.8% maxDD=12.6% avgHold=6.9hari [TIMEOUT=36 SL=2]

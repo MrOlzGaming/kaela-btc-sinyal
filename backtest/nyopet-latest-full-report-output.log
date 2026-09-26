@@ -1,38 +1,36 @@
-Data BTC 4H: 59735 candle, rentang 2017-08-17 -> 2026-09-23
+Data BTC 4H: 19928 candle, rentang 2017-08-17 -> 2026-09-23
 Config: window-gated (long di luar bear window, short CUMA pas bear window), partial 2R + trail SMA-60 (4H, ~10 hari), modal/5 (cheat exposure), short exposure separuh long -- SEMUA persis parameter live sekarang.
 
 === AGREGAT (semua alasan digabung, window-gated) ===
-n=252 | win rate=44.0% | PF=2.01 | totalR=139.96 | avgR=0.56
-Long: 165 trade (win 43.0%) | Short: 87 trade (win 46.0%)
-Final capital: $7348.37 (modal awal $100, 7248%) | Max Drawdown: 27.8%
-WINDOW_FLIP (dipaksa tutup krn window ganti): 4x, total PnL $56.80
+n=90 | win rate=47.8% | PF=3.71 | totalR=125.26 | avgR=1.39
+Long: 73 trade (win 45.2%) | Short: 17 trade (win 58.8%)
+Final capital: $2319.48 (modal awal $100, 2219%) | Max Drawdown: 39.9%
+WINDOW_FLIP (dipaksa tutup krn window ganti): 4x, total PnL $189.71
 
 === BREAKDOWN PER TAHUN ===
-  2017: n=9, win=66.7%, totalR=+9.5R
-  2018: n=48, win=41.7%, totalR=+15.1R
-  2019: n=47, win=31.9%, totalR=+17.8R
-  2020: n=18, win=66.7%, totalR=+18.6R
-  2021: n=18, win=61.1%, totalR=+12.3R
-  2022: n=18, win=55.6%, totalR=+14.4R
-  2023: n=8, win=62.5%, totalR=+20.8R
-  2024: n=29, win=44.8%, totalR=+13.5R
-  2025: n=37, win=35.1%, totalR=+14.5R
-  2026: n=20, win=30.0%, totalR=+3.4R
+  2018: n=10, win=40.0%, totalR=+7.9R
+  2019: n=19, win=42.1%, totalR=+14.5R
+  2020: n=15, win=40.0%, totalR=+11.3R
+  2021: n=6, win=66.7%, totalR=+48.6R
+  2022: n=12, win=58.3%, totalR=+5.1R
+  2023: n=6, win=66.7%, totalR=+19.0R
+  2024: n=10, win=50.0%, totalR=+14.3R
+  2025: n=12, win=41.7%, totalR=+4.6R
 
 === SPLIT-ERA (2 potongan waktu independen) ===
-  Era 1 (2017-11-12 -> 2021-02-22): n=126, PF=1.97, totalR=67.3
-  Era 2 (2021-02-22 -> 2026-09-04): n=126, PF=2.05, totalR=72.7
+  Era 1 (2018-05-05 -> 2020-12-13): n=45, PF=4.00, totalR=78.1
+  Era 2 (2021-01-11 -> 2025-11-10): n=45, PF=3.34, totalR=47.2
 
 === BREAKDOWN PER ALASAN (pattern type) x ARAH ===
-  fvg_bounce_long (LONG): n=103, win=42.7%, PF=1.72, totalR=41.6
-  fvg_bounce_short (SHORT): n=61, win=44.3%, PF=1.59, totalR=20.1
-  wedge_falling (LONG): n=60, win=45.0%, PF=2.84, totalR=58.9
-  wedge_rising (SHORT): n=25, win=48.0%, PF=2.55, totalR=20.2
-  flag_bull (LONG): n=2, win=0.0%, PF=0.00, totalR=-2.0
-  flag_bear (SHORT): n=1, win=100.0%, PF=inf, totalR=1.2
+  fvg_bounce_long (LONG): n=52, win=40.4%, PF=3.82, totalR=84.9
+  wedge_falling (LONG): n=19, win=57.9%, PF=4.57, totalR=28.6
+  fvg_bounce_short (SHORT): n=14, win=50.0%, PF=1.68, totalR=4.7
+  flag_bull (LONG): n=2, win=50.0%, PF=2.77, totalR=1.8
+  flag_bear (SHORT): n=2, win=100.0%, PF=inf, totalR=4.2
+  wedge_rising (SHORT): n=1, win=100.0%, PF=inf, totalR=1.0
 
 === BREAKDOWN EXIT REASON ===
-  SL: 137x (54.4%)
-  TRAIL_EXIT: 105x (41.7%)
-  SL_BREAKEVEN: 6x (2.4%)
-  WINDOW_FLIP: 4x (1.6%)
+  SL: 46x (51.1%)
+  TRAIL_EXIT: 37x (41.1%)
+  WINDOW_FLIP: 4x (4.4%)
+  SL_BREAKEVEN: 3x (3.3%)

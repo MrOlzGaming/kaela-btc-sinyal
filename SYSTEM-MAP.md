@@ -201,6 +201,12 @@ regression test (kalau ada), diadaptasi dari pola "Bug Registry" `NEXUS-FORGE`
 (`D:\KAELA PROJECT\NEXUS-FORGE\`, kerangka tim-AI Olan). Cek ini kalau mau ubah logic sync
 income/PnL, whale-scan, atau broadcast Wibowo -- kemungkinan ada pelajaran dari insiden sebelumnya.
 
+[`BACKTEST-REGISTRY.md`](BACKTEST-REGISTRY.md) -- (26 Sep 2026) angka backtest TERAKHIR/tervalidasi
+per strategi LIVE (PF/win-rate/return + file sumber + command regenerate), 1 sumber kebenaran biar
+gak ada lagi angka nyasar kayak insiden PF 3,71-vs-2,01 (log stale gak pernah di-generate ulang
+abis bug resample kepatch). Cek ini SEBELUM jawab "berapa backtest strategi X" -- jangan nebak dari
+comment tersebar.
+
 ## 🎭 "Tim Kaela" -- konvensi tag role di commit (13 Sep 2026)
 
 Olan minta konsep `NEXUS-FORGE` diterapin sedikit ke commit: **tiap commit yang cocok sama salah

@@ -285,10 +285,16 @@ function createMexcClient({ apiKey, apiSecret }) {
   // TERBALIK (nutup posisi LONG malah kirim side=2/close-short, yang gak ada posisinya -> ditolak
   // MEXC). Ini bug yang SEBELUMNYA cuma "CATATAN belum diverifikasi" di komentar -- sekarang
   // TERBUKTI salah lewat tes beneran, bukan cuma dugaan.
+  // 🐛 FIX 26 Sep 2026 (audit proaktif, "beresin tanggungan" -- paritas sama binanceExecutor.js
+  // yang UDAH dibenerin sesi ini) -- SEBELUMNYA order penutup di sini GAK PERNAH ditandai
+  // `externalOid` sama sekali (beda dari placeMarketEntry yang UDAH lama nandain). Tanpa tag ini,
+  // wasLastReduceOnlyOrderByKaela() (BARU, di bawah) gak akan PERNAH ketemu order Kaela sendiri --
+  // positionReconciler.js bakal SELALU nyimpulin "gak bisa dipastikan" (null) buat MEXC, beda dari
+  // Binance yang UDAH bisa bedain PASTI. Fix: tag SAMA persis kayak placeMarketEntry.
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
     const vol = await quantityToVol(symbol, quantity);
     const closeSide = closeSideFor(direction);
-    return signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side: closeSide, type: 5, openType: 1, reduceOnly: true });
+    return signedRequest('POST', '/api/v1/private/order/create', { symbol, vol, side: closeSide, type: 5, openType: 1, reduceOnly: true, externalOid: generateKaelaExternalOid() });
   }
 
   // ⚠️ BARU 4 Sep 2026, BELUM PERNAH DITES LIVE (sama peringatan kayak seluruh file ini -- IP
@@ -326,6 +332,20 @@ function createMexcClient({ apiKey, apiSecret }) {
     return String(latest.externalOid || '').startsWith(KAELA_ORDER_PREFIX);
   }
 
+  // (26 Sep 2026, KEBALIKAN wasLastEntryOrderByKaela di atas -- lihat binanceExecutor.js
+  // wasLastReduceOnlyOrderByKaela buat alasan lengkap kenapa dibutuhin: positionReconciler.js
+  // MANUAL CLOSE/REDUCE branch butuh cara PASTI bedain "Kaela sendiri yang nutup (proses lain,
+  // gak masuk touchedSymbols)" vs "beneran manual Olan"). `side===2||4` = order PENUTUP MEXC
+  // (closeSideFor: 4=close long, 2=close short) -- KEBALIKAN filter 1/3 (order pembuka) di atas.
+  async function wasLastReduceOnlyOrderByKaela(symbol, sinceMs = Date.now() - 24 * 3600 * 1000) {
+    const res = await signedRequest('GET', '/api/v1/private/order/list/history_orders', { symbol, start_time: sinceMs, page_size: 50 });
+    const orders = (res && res.data) || [];
+    const closingOrders = orders.filter((o) => o.state === 3 && (o.side === 2 || o.side === 4));
+    if (closingOrders.length === 0) return null; // gak ketemu order penutup sama sekali di jendela ini -- gak bisa disimpulkan
+    const latest = closingOrders.sort((a, b) => b.createTime - a.createTime)[0];
+    return String(latest.externalOid || '').startsWith(KAELA_ORDER_PREFIX);
+  }
+
   // ⚠️ 14 Sep 2026 -- SEMPAT nyoba `getPlanOrders` (tebak endpoint `/api/v1/private/planorder/list`
   // buat verifikasi SL/TP beneran terdaftar) -- TERNYATA 404, tebakan salah. DIHAPUS drpd nyimpen
   // fungsi nebak yang gak jalan (gak ada caller produksi yang butuh ini juga). Verifikasi SL/TP
@@ -334,7 +354,7 @@ function createMexcClient({ apiKey, apiSecret }) {
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, getOrderDeals, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
-    wasLastEntryOrderByKaela,
+    wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela,
   };
 }
 
@@ -373,12 +393,13 @@ async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOp
 async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
 async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
 async function wasLastEntryOrderByKaela(symbol, sinceMs) { return _defaultClient().wasLastEntryOrderByKaela(symbol, sinceMs); }
+async function wasLastReduceOnlyOrderByKaela(symbol, sinceMs) { return _defaultClient().wasLastReduceOnlyOrderByKaela(symbol, sinceMs); }
 
 module.exports = {
   createMexcClient, isMexcConfigured, EXCHANGE_NAME: 'mexc',
   getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
   getPositionRisk, getAllPositions, getOrderDeals, cancelAllOpenOrders, emergencyCloseMarket, getSymbolInfo,
-  wasLastEntryOrderByKaela, KAELA_ORDER_PREFIX,
+  wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela, KAELA_ORDER_PREFIX,
   // Diekspor (14 Sep 2026, konsolidasi) buat caller yang masih perlu positionType eksplisit
   // (setLeverage) -- SATU sumber kebenaran, lihat catatan di deklarasinya.
   positionTypeFor, openSideFor, closeSideFor,

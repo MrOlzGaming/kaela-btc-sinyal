@@ -159,17 +159,22 @@ async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positio
   });
 }
 
-// (26 Sep 2026) Update SEBAGIAN doang -- KHUSUS kolom BingxBalance (dipakai reportOlanBingxStatus.js,
-// SATU-SATUNYA penulis kolom ini, TERPISAH dari penulis balanceUsdt/mexcBalance/dst di atas). SENGAJA
-// gak reuse recordMemberStatus() di atas -- fungsi itu SELALU ngirim positions/mexcBalance/wallet
-// (default 0/[] kalau caller gak tau), yang bakal NIMPA data asli lewat partial-merge GAS (Sheet.gs)
-// kalau field itu KEBETULAN ke-isi 0 di sini padahal caller gak pernah maksud nulis 0. Wrapper ini
-// CUMA kirim {phone, mode, bingxBalance} -- key lain SAMA SEKALI GAK ADA di object (bukan `undefined`
-// sbg value, itu beda -- `URLSearchParams` stringify `undefined` jadi literal teks "undefined"
-// kalau key-nya ADA, makanya key-nya harus BENERAN gak disertain), GAS baca itu sbg field kosong
-// asli -> partial-merge preserve nilai lama, cuma BingxBalance yang keupdate.
-async function recordBingxBalance(phone, mode, bingxBalance) {
-  return callGas('recordMemberStatus', { phone, mode, bingxBalance });
+// (26 Sep 2026, DIPERLUAS 27 Sep) Update SEBAGIAN doang -- KHUSUS kolom BingxBalance+BingxPositions
+// (dipakai reportOlanBingxStatus.js, SATU-SATUNYA penulis kedua kolom ini, TERPISAH dari penulis
+// balanceUsdt/mexcBalance/positions/dst di atas). SENGAJA gak reuse recordMemberStatus() di atas --
+// fungsi itu SELALU ngirim positions/mexcBalance/wallet (default 0/[] kalau caller gak tau), yang
+// bakal NIMPA data asli lewat partial-merge GAS (Sheet.gs) kalau field itu KEBETULAN ke-isi 0 di
+// sini padahal caller gak pernah maksud nulis 0. `positions` (BingX) SENGAJA TERPISAH dari `positions`
+// (Binance+MEXC, kolom lama) -- BUKAN digabung ke array yang sama, itu race 2 penulis independen
+// yang sama persis alasannya kayak kenapa BingxBalance gak numpang ke balanceUsdt. Wrapper ini CUMA
+// kirim {phone, mode, bingxBalance, bingxPositions} -- key lain SAMA SEKALI GAK ADA di object (bukan
+// `undefined` sbg value, itu beda -- `URLSearchParams` stringify `undefined` jadi literal teks
+// "undefined" kalau key-nya ADA, makanya key-nya harus BENERAN gak disertain), GAS baca itu sbg
+// field kosong asli -> partial-merge preserve nilai lama.
+async function recordBingxBalance(phone, mode, bingxBalance, bingxPositions) {
+  const params = { phone, mode, bingxBalance };
+  if (bingxPositions !== undefined) params.bingxPositions = JSON.stringify(bingxPositions);
+  return callGas('recordMemberStatus', params);
 }
 
 // 28 Agu 2026 -- matiin toggle trading member SECARA OTOMATIS (dompet kosong 3 hari beruntun,

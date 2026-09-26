@@ -15,14 +15,18 @@
 //
 // ⚠️ DEFAULT AMAN (gold-twin-position-config.json): enabled:false -- caller (rangerAutoTrader.js)
 // TETAP jalanin openPosition() versi lama 100% gak berubah selama ini false. Begitu enabled:true:
-//   - allowReal:false (default) -> PAPER/SIMULASI MURNI kedua leg, livePrice publik doang, GAK ADA
-//     panggilan exchange sama sekali (baca SALDO pun enggak) -- biar Olan liat performa nyata dulu
-//     SEBELUM exit style Gold yang lagi pegang uang asli beneran diganti. Trading real Gold versi
-//     LAMA otomatis PAUSE selama fase ini (caller berhenti manggil openPosition lama, gantiin
-//     dengan modul ini) -- keputusan sadar Olan lewat kapan dia enable, bukan kecelakaan.
+//   - allowReal:false (default) -> Leg Trailing PAPER murni (MEXC gak punya demo apapun, gak ada
+//     exchange nyata buat ini), Leg FixedTP EKSEKUSI BENERAN ke Bybit Demo Trading (api-demo.
+//     bybit.com, uang virtual asli -- BYBIT_API_KEY_DEMO/SECRET_DEMO, 26 Sep 2026) kalau key udah
+//     ada, fallback paper kalau belum/gagal. Trading real Gold versi LAMA otomatis PAUSE selama
+//     fase ini (caller berhenti manggil openPosition lama, gantiin dengan modul ini) -- keputusan
+//     sadar Olan lewat kapan dia enable, bukan kecelakaan.
 //   - allowReal:true -> Leg Trailing REAL ke MEXC (persis akun/wallet yang udah dipakai gold
 //     sekarang), Leg FixedTP REAL ke Bybit KALAU BYBIT_API_KEY ada (skip aman kalau kosong, sama
 //     pola execFor return-null di seluruh proyek ini).
+// Setiap leg nyimpen `execMode` sendiri ('paper'/'mexc-real'/'bybit-real'/'bybit-demo') di journal
+// pas open -- dipakai monitor buat mutusin exec mana yang dipanggil pas close (SUMBER KEBENARAN
+// dari journal, bukan baca ulang config, biar konsisten walau config keubah pas posisi floating).
 //
 // Journal per SYSTEM (biar Sniper/Ranger gak numpuk data), 1 slot floating per system (assetKey
 // SELALU 'xau' -- modul ini KHUSUS Emas, BTC TETAP pola lama di rangerAutoTrader.js/
@@ -132,7 +136,7 @@ async function openGoldTwinPosition({ system, assetCfg, sig, livePrice, mexcExec
   const effectivePct = nyawaPct + FALLBACK_FEE_PERCENT;
   const tp = sig.direction === 'buy' ? livePrice + riskDistance * 3 : livePrice - riskDistance * 3; // Fixed-TP 3:1
 
-  async function openLeg(exec, symbol) {
+  async function openLeg(exec, symbol, execMode) {
     const balance = await exec.getAccountBalance().catch(() => 0);
     const modal = (balance || 0) * MODAL_ACTIVE_FRACTION / 2; // /2 -- separuh modal per leg (twin), dari akun exchange leg ITU SENDIRI
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
@@ -144,32 +148,43 @@ async function openGoldTwinPosition({ system, assetCfg, sig, livePrice, mexcExec
     await exec.setLeverage(symbol, calc.leverage, mexcExecutorDefault.positionTypeFor(sig.direction)).catch(() => {});
     const placed = await exec.placeMarketEntry({ symbol, direction: sig.direction === 'buy' ? 'buy' : 'sell', notionalUsd: calc.nilaiPosisi, livePrice });
     const quantity = placed.cumExecQty ? parseFloat(placed.cumExecQty) : placed.executedQty ? parseFloat(placed.executedQty) : calc.nilaiPosisi / livePrice;
-    return { entryPrice: livePrice, quantity, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, openedAt: Date.now(), symbol };
+    return { entryPrice: livePrice, quantity, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, openedAt: Date.now(), symbol, execMode };
   }
 
-  // PAPER (allowReal:false ATAU key exchange belum ada) -- livePrice diambil apa adanya, nilai
-  // posisi disimulasikan dari MODAL_ACTIVE_FRACTION/2 x $1000 (angka referensi tetap, BUKAN saldo
-  // real -- paper mode gak boleh baca saldo exchange, itu justru dihindarin biar bener2 gak
-  // nyentuh exchange sama sekali selama fase evaluasi).
+  // Simulasi lokal MURNI -- livePrice diambil apa adanya, nilai posisi dihitung dari
+  // MODAL_ACTIVE_FRACTION/2 x $1000 (angka referensi tetap, BUKAN saldo real), NOL panggilan
+  // exchange. Dipakai buat leg Trailing selama allowReal:false (MEXC gak punya demo sama sekali,
+  // gak ada exchange nyata buat "demo Trailing" beneran) DAN fallback FixedTP kalau Bybit demo
+  // belum/gagal disiapin.
   function paperLeg() {
     const modal = (1000 * MODAL_ACTIVE_FRACTION) / 2;
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
-    return { entryPrice: livePrice, quantity: calc.nilaiPosisi / livePrice, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, openedAt: Date.now(), paper: true };
+    return { entryPrice: livePrice, quantity: calc.nilaiPosisi / livePrice, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, openedAt: Date.now(), execMode: 'paper' };
   }
 
   let trailingResult, fixedTpResult;
   const allowReal = cfg.allowReal === true;
   if (allowReal) {
-    try { trailingResult = await openLeg(mexcExec, assetCfg.execSymbol); }
+    try { trailingResult = await openLeg(mexcExec, assetCfg.execSymbol, 'mexc-real'); }
     catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg Trailing (MEXC real):`, e.message); trailingResult = null; }
     const bybitReal = bybitExecFor(false);
     if (bybitReal) {
-      try { fixedTpResult = await openLeg(bybitReal, BYBIT_SYMBOL); }
+      try { fixedTpResult = await openLeg(bybitReal, BYBIT_SYMBOL, 'bybit-real'); }
       catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg FixedTP (Bybit real):`, e.message); fixedTpResult = null; }
     } else { console.log(`[GoldTwin/${system}] Bybit real belum disiapin -- leg FixedTP skip, Trailing tetap jalan sendiri.`); }
   } else {
+    // 26 Sep 2026 -- Bybit Demo Trading key udah ada, leg FixedTP SEKARANG bener-bener eksekusi
+    // ke api-demo.bybit.com (uang virtual asli, mekanika exchange nyata) selama fase evaluasi,
+    // BUKAN cuma simulasi lokal lagi -- lebih realistis (fill/slippage/rate-limit beneran).
+    // Trailing TETAP paperLeg() -- MEXC gak punya demo apapun, gak ada exchange nyata buat ini.
     trailingResult = paperLeg();
-    fixedTpResult = paperLeg();
+    const bybitDemo = bybitExecFor(true);
+    if (bybitDemo) {
+      try { fixedTpResult = await openLeg(bybitDemo, BYBIT_SYMBOL, 'bybit-demo'); }
+      catch (e) { console.log(`[GoldTwin/${system}] Gagal buka leg FixedTP (Bybit demo), fallback paper:`, e.message); fixedTpResult = paperLeg(); }
+    } else {
+      fixedTpResult = paperLeg();
+    }
   }
 
   if (!trailingResult && !fixedTpResult) { console.log(`[GoldTwin/${system}] Kedua leg gagal dibuka, batal.`); return; }
@@ -177,36 +192,48 @@ async function openGoldTwinPosition({ system, assetCfg, sig, livePrice, mexcExec
   const tradeId = require('crypto').randomUUID();
   const signalId = nextSysSignalId(v, new Date());
   v.floating = {
-    id: tradeId, signalId, dir: sig.direction, sl: sig.sl, tp, effectivePct, patternType: sig.patternType, paper: !allowReal,
+    id: tradeId, signalId, dir: sig.direction, sl: sig.sl, tp, effectivePct, patternType: sig.patternType,
     trailing: trailingResult ? { ...trailingResult, extreme: trailingResult.entryPrice, invalidation: sig.direction === 'buy' ? trailingResult.entryPrice * (1 - effectivePct / 100) : trailingResult.entryPrice * (1 + effectivePct / 100) } : null,
     fixedTp: fixedTpResult || null,
   };
   saveJournal(journal);
 
   const sysLabel = system === 'ranger' ? SYSTEM_LABEL.RANGER : SYSTEM_LABEL.SNIPER;
-  console.log(`[GoldTwin/${system}] Entry ${sig.direction.toUpperCase()} @ ${livePrice} -- Trailing ${trailingResult ? 'OK' : 'skip'}, FixedTP ${fixedTpResult ? 'OK' : 'skip'} (${allowReal ? 'REAL' : 'PAPER'}).`);
+  console.log(`[GoldTwin/${system}] Entry ${sig.direction.toUpperCase()} @ ${livePrice} -- Trailing ${trailingResult ? trailingResult.execMode : 'skip'}, FixedTP ${fixedTpResult ? fixedTpResult.execMode : 'skip'}.`);
 
-  const sendFn = allowReal ? notify : notifySilent;
+  // Demo (paper ATAU bybit-demo) ke Sniper Club, Real (mexc-real/bybit-real) ke Wibowo -- per LEG,
+  // BUKAN per keseluruhan posisi (leg bisa beda execMode kalau salah satu real-nya gagal parsial).
   if (trailingResult) {
-    const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: trailingResult.entryPrice, tp: null, sl: sig.sl, marginUsd: trailingResult.margin, nilaiPosisi: trailingResult.nilaiPosisi, leverage: trailingResult.leverage, mode: 'gold_twin_trailing', assetLabel: 'XAU' }, new Date(), '', !allowReal, idrRate, '', null, MEXC_BADGE, sysLabel);
-    await sendFn(msg).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (open Trailing):`, e.message));
+    const isDemo = trailingResult.execMode !== 'mexc-real';
+    const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: trailingResult.entryPrice, tp: null, sl: sig.sl, marginUsd: trailingResult.margin, nilaiPosisi: trailingResult.nilaiPosisi, leverage: trailingResult.leverage, mode: 'gold_twin_trailing', assetLabel: 'XAU' }, new Date(), '', isDemo, idrRate, '', null, MEXC_BADGE, sysLabel);
+    await (isDemo ? notifySilent : notify)(msg).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (open Trailing):`, e.message));
   }
   if (fixedTpResult) {
-    const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: fixedTpResult.entryPrice, tp, sl: sig.sl, marginUsd: fixedTpResult.margin, nilaiPosisi: fixedTpResult.nilaiPosisi, leverage: fixedTpResult.leverage, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), '', !allowReal, idrRate, '', null, BYBIT_BADGE, sysLabel);
-    await sendFn(msg).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (open FixedTP):`, e.message));
+    const isDemo = fixedTpResult.execMode !== 'bybit-real';
+    const msg = formatAutoOpen({ id: tradeId, signalId, direction: sig.direction, entryPrice: fixedTpResult.entryPrice, tp, sl: sig.sl, marginUsd: fixedTpResult.margin, nilaiPosisi: fixedTpResult.nilaiPosisi, leverage: fixedTpResult.leverage, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), '', isDemo, idrRate, '', null, BYBIT_BADGE, sysLabel);
+    await (isDemo ? notifySilent : notify)(msg).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (open FixedTP):`, e.message));
   }
 }
 
 // ============ Monitor + tutup posisi ============
 async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, notifySilent, idrRate }) {
-  const cfg = loadConfig();
   const journal = loadJournal();
   const v = journal[system];
   const f = v.floating;
   if (!f) return;
-  const allowReal = cfg.allowReal === true && !f.paper;
 
-  async function closeLeg(exec, symbol, quantity) {
+  // execMode nempel di JOURNAL tiap leg (dicatat pas open) -- SUMBER KEBENARAN buat exec mana yang
+  // dipanggil pas close, BUKAN baca ulang config sekarang (config bisa keubah SEMENTARA posisi
+  // masih floating, closing WAJIB konsisten sama exchange yang beneran dipakai buka).
+  function execFor(execMode) {
+    if (execMode === 'mexc-real') return mexcExec;
+    if (execMode === 'bybit-real') return bybitExecFor(false);
+    if (execMode === 'bybit-demo') return bybitExecFor(true);
+    return null; // 'paper' -- gak ada exec, gak pernah dipanggil closeLeg
+  }
+  async function closeLeg(execMode, symbol, quantity) {
+    const exec = execFor(execMode);
+    if (!exec) return;
     return exec.emergencyCloseMarket({ symbol, direction: f.dir, quantity });
   }
 
@@ -228,10 +255,10 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
   const feeFraction = FALLBACK_FEE_PERCENT / 100;
   const pnlSign = f.dir === 'buy' ? 1 : -1;
   const dirLongShort = f.dir === 'buy' ? 'long' : 'short'; // formatAutoClosed pakai konvensi long/short, BEDA dari formatAutoOpen yang buy/sell
-  const sendFn = allowReal ? notify : notifySilent;
 
   if (trailingHit && f.trailing && !f.trailing.closedAt) {
-    if (allowReal) { try { await closeLeg(mexcExec, f.trailing.symbol, f.trailing.quantity); } catch (e) { console.log(`[GoldTwin/${system}] Gagal tutup leg Trailing (MEXC):`, e.message); } }
+    const isDemo = f.trailing.execMode !== 'mexc-real';
+    try { await closeLeg(f.trailing.execMode, f.trailing.symbol, f.trailing.quantity); } catch (e) { console.log(`[GoldTwin/${system}] Gagal tutup leg Trailing (${f.trailing.execMode}):`, e.message); }
     f.trailing.closedAt = Date.now();
     f.trailing.exitPrice = livePrice;
     const gross = (livePrice - f.trailing.entryPrice) * f.trailing.quantity * pnlSign;
@@ -239,16 +266,14 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
     const net = gross - feeUsd;
     v.stats.trailing.totalPnlUsd += net;
     if (net >= 0) v.stats.trailing.wins += 1; else v.stats.trailing.losses += 1;
-    const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: dirLongShort, entryPrice: f.trailing.entryPrice, exitPrice: livePrice, pnlUsd: gross, feeUsd, pnlPct: null, mode: 'gold_twin_trailing', assetLabel: 'XAU' }, new Date(), f.paper, CLOSE_REASON_LABEL.CB_TRAIL, idrRate, null, MEXC_BADGE, sysLabel);
-    const extra = formatWinRateLines(v.stats.trailing, `Gold Trailing (${f.paper ? 'Demo' : 'Real'})`, idrRate);
-    await sendFn(msg.replace(`🔗 ${KAELA_ACCESS_URL}`, extra + `🔗 ${KAELA_ACCESS_URL}`)).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (close Trailing):`, e.message));
+    const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: dirLongShort, entryPrice: f.trailing.entryPrice, exitPrice: livePrice, pnlUsd: gross, feeUsd, pnlPct: null, mode: 'gold_twin_trailing', assetLabel: 'XAU' }, new Date(), isDemo, CLOSE_REASON_LABEL.CB_TRAIL, idrRate, null, MEXC_BADGE, sysLabel);
+    const extra = formatWinRateLines(v.stats.trailing, `Gold Trailing (${isDemo ? 'Demo' : 'Real'})`, idrRate);
+    await (isDemo ? notifySilent : notify)(msg.replace(`🔗 ${KAELA_ACCESS_URL}`, extra + `🔗 ${KAELA_ACCESS_URL}`)).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (close Trailing):`, e.message));
   }
   if (fixedTpHit && f.fixedTp && !f.fixedTp.closedAt) {
+    const isDemo = f.fixedTp.execMode !== 'bybit-real';
     const exitPrice = fixedTpHit === 'TP' ? f.tp : f.sl;
-    if (allowReal) {
-      const bybitReal = bybitExecFor(false);
-      if (bybitReal) { try { await closeLeg(bybitReal, BYBIT_SYMBOL, f.fixedTp.quantity); } catch (e) { console.log(`[GoldTwin/${system}] Gagal tutup leg FixedTP (Bybit):`, e.message); } }
-    }
+    try { await closeLeg(f.fixedTp.execMode, BYBIT_SYMBOL, f.fixedTp.quantity); } catch (e) { console.log(`[GoldTwin/${system}] Gagal tutup leg FixedTP (${f.fixedTp.execMode}):`, e.message); }
     f.fixedTp.closedAt = Date.now();
     f.fixedTp.exitPrice = exitPrice;
     const gross = (exitPrice - f.fixedTp.entryPrice) * f.fixedTp.quantity * pnlSign;
@@ -256,9 +281,9 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
     const net = gross - feeUsd;
     v.stats.fixedTp.totalPnlUsd += net;
     if (net >= 0) v.stats.fixedTp.wins += 1; else v.stats.fixedTp.losses += 1;
-    const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: dirLongShort, entryPrice: f.fixedTp.entryPrice, exitPrice, pnlUsd: gross, feeUsd, pnlPct: null, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), f.paper, fixedTpHit === 'TP' ? 'Target tercapai' : 'Stop loss kena', idrRate, null, BYBIT_BADGE, sysLabel);
-    const extra = formatWinRateLines(v.stats.fixedTp, `Gold TP Tetap (${f.paper ? 'Demo' : 'Real'})`, idrRate);
-    await sendFn(msg.replace(`🔗 ${KAELA_ACCESS_URL}`, extra + `🔗 ${KAELA_ACCESS_URL}`)).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (close FixedTP):`, e.message));
+    const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: dirLongShort, entryPrice: f.fixedTp.entryPrice, exitPrice, pnlUsd: gross, feeUsd, pnlPct: null, mode: 'gold_twin_fixedtp', assetLabel: 'XAU' }, new Date(), isDemo, fixedTpHit === 'TP' ? 'Target tercapai' : 'Stop loss kena', idrRate, null, BYBIT_BADGE, sysLabel);
+    const extra = formatWinRateLines(v.stats.fixedTp, `Gold TP Tetap (${isDemo ? 'Demo' : 'Real'})`, idrRate);
+    await (isDemo ? notifySilent : notify)(msg.replace(`🔗 ${KAELA_ACCESS_URL}`, extra + `🔗 ${KAELA_ACCESS_URL}`)).catch((e) => console.log(`[GoldTwin/${system}] Gagal kirim WA (close FixedTP):`, e.message));
   }
 
   const trailingDone = !f.trailing || !!f.trailing.closedAt;

@@ -49,7 +49,8 @@ const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./ninjaBalanceRecap');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, toSniperClubLink, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed, SYSTEM_LABEL } = require('./darkKaelaLog');
-const { getUsdIdrRate } = require('./kaelaProTraderClient');
+const { getUsdIdrRate, recordJournalEntry, updateJournalEntry } = require('./kaelaProTraderClient');
+const MASTER_NOMOR = '6281299303888';
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
@@ -447,6 +448,16 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
         if (realPnlUsd >= 0) v.stats.real.wins += 1; else v.stats.real.losses += 1;
       }
 
+      // Tutup entry Journal.gs yang dibuka pas entry (lihat komentar recordJournalEntry di atas) --
+      // entryId direkonstruksi dari f.id (SAMA suffix -demo/-real), UNCONDITIONAL (gak digerbang
+      // SILENT_VARIANTS -- itu cuma soal WA, laporan pool tetep butuh angka riil apapun statusnya).
+      updateJournalEntry(`${f.id}-demo`, { status: 'closed', closedAt: new Date().toISOString(), pnlUsd: demoPnlUsd })
+        .catch((e) => console.log(`[ChannelBreakout/${variant}] updateJournalEntry demo gagal:`, e.message));
+      if (f.real) {
+        updateJournalEntry(`${f.id}-real`, { status: 'closed', closedAt: new Date().toISOString(), pnlUsd: realPnlUsd })
+          .catch((e) => console.log(`[ChannelBreakout/${variant}] updateJournalEntry real gagal:`, e.message));
+      }
+
       if (SILENT_VARIANTS.has(variant)) {
         console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA) closed #${v.closedCount}: ${f.dir} ${f.demo.entryPrice} -> ${f.demoExitPrice} (pnl net ${demoPnlUsd.toFixed(2)}, gross ${demoPnlGross.toFixed(2)}, fee ${demoFeeUsd.toFixed(2)})`);
       } else {
@@ -555,6 +566,22 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     };
     v.channel = null;
     saveJournal(journal);
+    // (26 Sep 2026, permintaan Olan "aktivitas Ninja gak muncul di laporan pool Wibowo Hedgefund")
+    // -- Ninja SEBELUM ini gak pernah lapor ke Journal.gs (Kaela Access) sama sekali, beda dari
+    // Sniper/Ranger (lewat multiAccountExecutor.js). `_journalActivitySummary` (Pool.gs) yang
+    // ngisi "AKTIVITAS TRADING" laporan harian filter cuma Phone+Mode+Status, GAK peduli Strategy
+    // -- begitu entry ini nyampe, otomatis ke-hitung, TANPA perlu ubah apapun di sisi Pool.gs.
+    // entryId dikasih suffix -demo/-real (beda dari `tradeId` mentah) biar 2 leg gak numpuk row.
+    recordJournalEntry(MASTER_NOMOR, 'demo', {
+      entryId: `${tradeId}-demo`, strategy: 'ninja', asset: 'btc', direction: dir,
+      entryPrice: demoResult.entryPrice, sl, tp, status: 'open', openedAt: new Date().toISOString(), note: '',
+    }).catch((e) => console.log(`[ChannelBreakout/${variant}] recordJournalEntry demo gagal:`, e.message));
+    if (realResult) {
+      recordJournalEntry(MASTER_NOMOR, 'real', {
+        entryId: `${tradeId}-real`, strategy: 'ninja', asset: 'btc', direction: dir,
+        entryPrice: realResult.entryPrice, sl, tp, status: 'open', openedAt: new Date().toISOString(), note: '',
+      }).catch((e) => console.log(`[ChannelBreakout/${variant}] recordJournalEntry real gagal:`, e.message));
+    }
     console.log(`[ChannelBreakout/${variant}] Entry ${dir.toUpperCase()} demo @ ${demoResult.entryPrice}${realResult ? ` + real @ ${realResult.entryPrice}` : ''}.`);
     if (SILENT_VARIANTS.has(variant)) {
       console.log(`[ChannelBreakout/${variant}] (SILENT, gak kirim WA)`);

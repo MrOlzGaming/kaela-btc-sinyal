@@ -773,6 +773,134 @@ async function main() {
     }
   }
 
+  // ============ rangerBtcDualExec.js (26 Sep 2026) ============
+  // Modul ini BACA/TULIS file config+journal ASLI proyek (ranger-btc-dual-exec-config.json/
+  // -journal.json) -- WAJIB backup+restore, SAMA disiplin kayak section goldTwinPosition di atas.
+  // Scope test SENGAJA dibatasin ke logika MURNI (state machine/bookkeeping/exclusivity) --
+  // BUKAN alur exec/WA penuh (buka posisi/tutup posisi beneran manggil Binance+kirim WA) -- SAMA
+  // precedent kayak ninjaTrader.js di proyek ini (cuma nextVariantSignalId yang ditest, bukan
+  // openSubPositionSafe/processVariant) krn fungsi WA (`sendWhatsAppToSniperClub`/
+  // `sendWhatsAppToWibowo`) di-import LANGSUNG (destructured) di rangerBtcDualExec.js, BUKAN
+  // param yang bisa disuntik mock kayak goldTwinPosition.js -- gak bisa dites tanpa BENERAN
+  // manggil Fonnte/Binance (dilarang keras, lihat [[feedback-no-local-live-script-test]]).
+  // Verifikasi alur exec/WA penuh dilakuin manual via code review + smoke-test read-only di VPS
+  // (getPositionRisk/getAccountBalance doang, NOL order beneran) sebelum enabled:true.
+  {
+    const fsRbd = require('fs');
+    const pathRbd = require('path');
+    const RBD_CONFIG = pathRbd.join(__dirname, 'ranger-btc-dual-exec-config.json');
+    const RBD_JOURNAL = pathRbd.join(__dirname, 'ranger-btc-dual-exec-journal.json');
+    const OLD_NYOPET_JOURNAL = pathRbd.join(__dirname, 'nyopet-journal.json');
+    const origRbdConfig = fsRbd.existsSync(RBD_CONFIG) ? fsRbd.readFileSync(RBD_CONFIG, 'utf8') : null;
+    const origRbdJournal = fsRbd.existsSync(RBD_JOURNAL) ? fsRbd.readFileSync(RBD_JOURNAL, 'utf8') : null;
+    const origNyopetJournal = fsRbd.existsSync(OLD_NYOPET_JOURNAL) ? fsRbd.readFileSync(OLD_NYOPET_JOURNAL, 'utf8') : null;
+    function restoreRbdFiles() {
+      if (origRbdConfig !== null) fsRbd.writeFileSync(RBD_CONFIG, origRbdConfig); else if (fsRbd.existsSync(RBD_CONFIG)) fsRbd.unlinkSync(RBD_CONFIG);
+      if (origRbdJournal !== null) fsRbd.writeFileSync(RBD_JOURNAL, origRbdJournal); else if (fsRbd.existsSync(RBD_JOURNAL)) fsRbd.unlinkSync(RBD_JOURNAL);
+      if (origNyopetJournal !== null) fsRbd.writeFileSync(OLD_NYOPET_JOURNAL, origNyopetJournal); else if (fsRbd.existsSync(OLD_NYOPET_JOURNAL)) fsRbd.unlinkSync(OLD_NYOPET_JOURNAL);
+      delete require.cache[require.resolve('./rangerBtcDualExec')];
+    }
+
+    try {
+      fsRbd.writeFileSync(RBD_CONFIG, JSON.stringify({ enabled: true, allowReal: false }));
+      if (fsRbd.existsSync(RBD_JOURNAL)) fsRbd.unlinkSync(RBD_JOURNAL);
+      if (fsRbd.existsSync(OLD_NYOPET_JOURNAL)) fsRbd.unlinkSync(OLD_NYOPET_JOURNAL);
+      delete require.cache[require.resolve('./rangerBtcDualExec')];
+      const rbd = require('./rangerBtcDualExec');
+
+      await test('rangerBtcDualExec: config default enabled:false/allowReal:false kalau file gak ada', () => {
+        fsRbd.unlinkSync(RBD_CONFIG);
+        delete require.cache[require.resolve('./rangerBtcDualExec')];
+        const rbdFresh = require('./rangerBtcDualExec');
+        const cfg = rbdFresh.loadConfig();
+        assert.strictEqual(cfg.enabled, false);
+        assert.strictEqual(cfg.allowReal, false);
+        fsRbd.writeFileSync(RBD_CONFIG, JSON.stringify({ enabled: true, allowReal: false }));
+        delete require.cache[require.resolve('./rangerBtcDualExec')];
+      });
+
+      await test('rangerBtcDualExec: journal fresh -- 2 slot (pattern/fvg) kosong, stats demo+real nol', () => {
+        delete require.cache[require.resolve('./rangerBtcDualExec')];
+        const rbdFresh = require('./rangerBtcDualExec');
+        const j = rbdFresh.loadJournal();
+        assert.deepStrictEqual(Object.keys(j).sort(), ['fvg', 'pattern']);
+        for (const slotKey of ['pattern', 'fvg']) {
+          assert.strictEqual(j[slotKey].floating, null, `slot ${slotKey} harusnya kosong`);
+          assert.strictEqual(j[slotKey].stats.demo.wins, 0);
+          assert.strictEqual(j[slotKey].stats.real.wins, 0);
+        }
+      });
+
+      await test('rangerBtcDualExec: isSlotFree true selama floating null, false begitu keisi manual', () => {
+        assert.strictEqual(rbd.isSlotFree('pattern'), true);
+        const j = rbd.loadJournal();
+        j.pattern.floating = { id: 'x', direction: 'buy' };
+        fsRbd.writeFileSync(RBD_JOURNAL, JSON.stringify(j));
+        assert.strictEqual(rbd.isSlotFree('pattern'), false);
+        assert.strictEqual(rbd.isSlotFree('fvg'), true, 'slot fvg harusnya TETAP bebas, independen dari pattern');
+        assert.strictEqual(rbd.hasAnyFloatingSlot(), true);
+        // bersihin lagi buat test berikutnya
+        j.pattern.floating = null;
+        fsRbd.writeFileSync(RBD_JOURNAL, JSON.stringify(j));
+      });
+
+      await test('rangerBtcDualExec: hasAnyFloatingSlot false kalau kedua slot kosong', () => {
+        assert.strictEqual(rbd.hasAnyFloatingSlot(), false);
+      });
+
+      await test('rangerBtcDualExec: fedGridCurrentlyFloating false kalau nyopet-journal.json gak ada', () => {
+        assert.strictEqual(fsRbd.existsSync(OLD_NYOPET_JOURNAL), false);
+        assert.strictEqual(rbd.fedGridCurrentlyFloating(), false);
+      });
+
+      await test('rangerBtcDualExec: fedGridCurrentlyFloating TRUE begitu ada order fed_dovish_grid floating di journal LAMA', () => {
+        fsRbd.writeFileSync(OLD_NYOPET_JOURNAL, JSON.stringify({
+          orders: [
+            { asset: 'btc', status: 'floating', patternType: 'fed_dovish_grid' },
+            { asset: 'btc', status: 'closed_tp', patternType: 'fed_dovish_grid' }, // udah closed -- gak boleh keitung
+            { asset: 'xau', status: 'floating', patternType: 'fed_dovish_grid' }, // aset LAIN -- gak boleh keitung
+          ],
+        }));
+        assert.strictEqual(rbd.fedGridCurrentlyFloating(), true);
+        fsRbd.unlinkSync(OLD_NYOPET_JOURNAL);
+      });
+
+      await test('rangerBtcDualExec: openRangerBtcDual SKIP total kalau Fed Grid lagi floating (cegah numpuk BTCUSDC)', async () => {
+        fsRbd.writeFileSync(OLD_NYOPET_JOURNAL, JSON.stringify({ orders: [{ asset: 'btc', status: 'floating', patternType: 'fed_dovish_grid' }] }));
+        await rbd.openRangerBtcDual({ sig: { direction: 'buy', sl: 60000, patternType: 'flag_bull' }, livePrice: 61000 });
+        const j = rbd.loadJournal();
+        assert.strictEqual(j.pattern.floating, null, 'harusnya SKIP total (gak ada network call), floating tetap null');
+        fsRbd.unlinkSync(OLD_NYOPET_JOURNAL);
+      });
+
+      await test('rangerBtcDualExec: openRangerBtcDual SKIP kalau slot udah keisi (gak boleh dobel-entry slot yang sama)', async () => {
+        const j = rbd.loadJournal();
+        j.fvg.floating = { id: 'existing', direction: 'buy' };
+        fsRbd.writeFileSync(RBD_JOURNAL, JSON.stringify(j));
+        await rbd.openRangerBtcDual({ sig: { direction: 'buy', sl: 60000, patternType: 'fvg_bull' }, livePrice: 61000 });
+        const j2 = rbd.loadJournal();
+        assert.strictEqual(j2.fvg.floating.id, 'existing', 'slot fvg harusnya TETAP entry lama, gak ketiban entry baru');
+        j2.fvg.floating = null;
+        fsRbd.writeFileSync(RBD_JOURNAL, JSON.stringify(j2));
+      });
+
+      await test('rangerBtcDualExec: slotKeyFor -- patternType diawali "fvg" masuk slot fvg, selain itu slot pattern', () => {
+        // Diuji tidak langsung lewat openRangerBtcDual (riskDistance 0 -> skip cepat, TANPA network
+        // call) -- cukup buat verifikasi kategorisasi slot murni tanpa exec.
+        return Promise.all([
+          rbd.openRangerBtcDual({ sig: { direction: 'buy', sl: 61000, patternType: 'fvg_bull' }, livePrice: 61000 }),
+          rbd.openRangerBtcDual({ sig: { direction: 'buy', sl: 61000, patternType: 'flag_bull' }, livePrice: 61000 }),
+        ]).then(() => {
+          const j = rbd.loadJournal();
+          assert.strictEqual(j.fvg.floating, null);
+          assert.strictEqual(j.pattern.floating, null);
+        });
+      });
+    } finally {
+      restoreRbdFiles();
+    }
+  }
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

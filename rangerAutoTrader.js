@@ -60,6 +60,7 @@ const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError } = require('./balanceAlert');
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const goldTwinPositionModule = require('./goldTwinPosition');
+const rangerBtcDualExecModule = require('./rangerBtcDualExec');
 const { fetchBinancePositioning } = require('./marketSentiment');
 const { isBtcBearWindow, isBtcApproachingWindowFlip, daysUntilBtcWindowFlip } = require('./halvingBearWindow');
 const { nextSignalId, countSignalIdsToday } = require('./signalIdGenerator');
@@ -704,82 +705,96 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       return;
     }
 
-    // 2 SLOT INDEPENDEN (23 Sep 2026) -- pattern (flag/wedge/pennant) vs FVG BISA floating
-    // BARENGAN buat 1 aset yang sama (maks 2 posisi/aset), PERSIS pola Sniper daily yang udah
-    // live sejak 22 Agu 2026 (hasSniperOpen/hasFvgOpen, sniperAutoAnalysis.js). AMAN dari
-    // "tumpukan posisi" ala BingX (lihat ninjaTrader.js checkAndClearStrayPosition)
-    // krn Binance/MEXC di sini SATU akun net-1-posisi/symbol JUGA (one-way mode, gak ada
-    // positionSide) -- TAPI kedua slot SELALU dipaksa arah SAMA (`inBearWindow` yang SAMA
-    // dipakai buat gerbang allowShort keduanya di bawah), jadi 2 entry cuma NAMBAH quantity
-    // posisi net yang sama arah (BUKAN buka posisi lawan arah yang bisa nge-flip/gabung salah).
-    // Exit per-slot TETAP pakai quantity SENDIRI-SENDIRI (closePosition/closePartial ->
-    // emergencyCloseMarket quantity:order.qty*fraction, BUKAN "tutup semua") -- slot lain gak
-    // ikut kesenggol pas 1 slot ditutup duluan.
-    const patternFloating = getFloatingOrderByCategory(journal, assetKey, 'pattern');
-    const fvgFloating = getFloatingOrderByCategory(journal, assetKey, 'fvg');
+    // Dual-exec demo+real BTC (26 Sep 2026, lihat rangerBtcDualExec.js -- Fase 1/2) -- config
+    // TERPISAH dari flag manapun di atas. Begitu enabled:true buat BTC, journal LAMA
+    // (nyopet-journal.json) BERHENTI dipakai TOTAL buat chart-pattern/FVG BTC (2-slot monitor +
+    // stray-adopt DI BAWAH INI dilewatin) -- modul baru pegang PENUH monitor+entry dia sendiri,
+    // journal SENDIRI. Fed Dovish Grid (bawah file ini) TETAP jalur lama TANPA PERUBAHAN, gak
+    // kena gate ini -- mutual-exclusion 2 arah dicek terpisah (lihat rangerBtcDualExec.js header +
+    // pengecekan di _processFedDovishGridLocked). XAU/Emas TIDAK kena gate ini sama sekali.
+    const btcDualEnabled = assetKey === 'btc' && rangerBtcDualExecModule.loadConfig().enabled === true;
+    let patternFloating = null, fvgFloating = null;
+    if (btcDualEnabled) {
+      await rangerBtcDualExecModule.monitorRangerBtcDual({ idrRate });
+      if (!rangerBtcDualExecModule.isSlotFree('pattern') && !rangerBtcDualExecModule.isSlotFree('fvg')) return;
+    } else {
+      // 2 SLOT INDEPENDEN (23 Sep 2026) -- pattern (flag/wedge/pennant) vs FVG BISA floating
+      // BARENGAN buat 1 aset yang sama (maks 2 posisi/aset), PERSIS pola Sniper daily yang udah
+      // live sejak 22 Agu 2026 (hasSniperOpen/hasFvgOpen, sniperAutoAnalysis.js). AMAN dari
+      // "tumpukan posisi" ala BingX (lihat ninjaTrader.js checkAndClearStrayPosition)
+      // krn Binance/MEXC di sini SATU akun net-1-posisi/symbol JUGA (one-way mode, gak ada
+      // positionSide) -- TAPI kedua slot SELALU dipaksa arah SAMA (`inBearWindow` yang SAMA
+      // dipakai buat gerbang allowShort keduanya di bawah), jadi 2 entry cuma NAMBAH quantity
+      // posisi net yang sama arah (BUKAN buka posisi lawan arah yang bisa nge-flip/gabung salah).
+      // Exit per-slot TETAP pakai quantity SENDIRI-SENDIRI (closePosition/closePartial ->
+      // emergencyCloseMarket quantity:order.qty*fraction, BUKAN "tutup semua") -- slot lain gak
+      // ikut kesenggol pas 1 slot ditutup duluan.
+      patternFloating = getFloatingOrderByCategory(journal, assetKey, 'pattern');
+      fvgFloating = getFloatingOrderByCategory(journal, assetKey, 'fvg');
 
-    if (patternFloating) await manageFloatingOrder(assetCfg, patternFloating);
-    if (fvgFloating) await manageFloatingOrder(assetCfg, fvgFloating);
-    if (patternFloating && fvgFloating) return; // kedua slot penuh -- gak ada ruang buat sinyal baru siklus ini
+      if (patternFloating) await manageFloatingOrder(assetCfg, patternFloating);
+      if (fvgFloating) await manageFloatingOrder(assetCfg, fvgFloating);
+      if (patternFloating && fvgFloating) return; // kedua slot penuh -- gak ada ruang buat sinyal baru siklus ini
 
-    // ⚠️ BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan nyoba buka posisi manual, GAGAL "Leverage
-    // reduction is not supported... with open positions") -- journal LOKAL bilang gak ada floating
-    // (getFloatingOrder null), TAPI Binance BENERAN punya posisi kebuka (leverage beda dari yang
-    // mau dipasang). Root cause: multi-account-state/ SENGAJA gak disinkron git (data PERSONAL,
-    // lihat .gitignore) -- begitu leader pindah mesin (komputer-utama -> vultr-sg, 2 Sep 2026),
-    // journal lokal mesin BARU "lupa total" posisi yang tercatat cuma di mesin LAMA, padahal
-    // posisi ASLINYA di Binance tetap ada. Tanpa cek ini, siklus normal BISA nyoba buka sinyal
-    // baru di atas posisi yang udah ada -- bentrok leverage (gagal, untung SAFE) ATAU labih parah
-    // nambah size gak sengaja kalau kebetulan leverage-nya sama. Fix: SELALU cek live position
-    // Binance/MEXC dulu SEBELUM nyimpulkan "gak ada posisi" -- kalau ternyata ADA (journal lokal
-    // yang salah), SKIP total siklus ini (jangan coba apa-apa) daripada eksekusi ngawur.
-    // 23 Sep 2026 (2-slot split) -- cek ini CUMA relevan kalau journal BUTA TOTAL soal symbol ini
-    // (KEDUA slot kosong). Kalau salah satu slot UDAH ke-track jurnal, mesin ini JELAS udah
-    // "kenal" symbol ini -- skenario "journal lupa total" (leader pindah mesin) gak berlaku lagi.
-    if (!patternFloating && !fvgFloating) {
-      const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
-      if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
-        // ⛔ FIX 12 Sep 2026 (root cause dari bug "posisi ngarang" di closePosition, Olan sengaja
-        // stress-test manual trading buat cari bug) -- SEBELUM adopsi, cek dulu apa positionReconciler.js
-        // UDAH mantau symbol ini secara manual (state file-nya sendiri, `${exchange}:${symbol}`,
-        // cuma keisi kalau BENERAN lagi disentuh manual Olan langsung di exchange). Kalau IYA, jangan
-        // ikut adopsi -- biarin SATU sistem doang yang megang symbol ini di satu waktu (Reconciler,
-        // yang emang didesain akurat per-transaksi). Adopsi+Reconciler jalan bareng tanpa saling tau
-        // itu PERSIS akar masalah kenapa closePosition() dulu bisa ngarang harga/PnL (income history
-        // kecampur 2 sumber kebenaran yang gak saling koordinasi).
-        if (_isReconcilerTrackingManually(reconcilerStatePath, assetCfg.exchange, symbol)) {
-          console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi live ADA tapi lagi ditrack manual (positionReconciler.js) -- SKIP adopsi total, biarin Reconciler yang urus sepenuhnya (cegah dobel-catat/PnL ngarang). Skip cari sinyal baru siklus ini.`);
+      // ⚠️ BUG BAHAYA ketemu+fix 3 Sep 2026 (Olan nyoba buka posisi manual, GAGAL "Leverage
+      // reduction is not supported... with open positions") -- journal LOKAL bilang gak ada floating
+      // (getFloatingOrder null), TAPI Binance BENERAN punya posisi kebuka (leverage beda dari yang
+      // mau dipasang). Root cause: multi-account-state/ SENGAJA gak disinkron git (data PERSONAL,
+      // lihat .gitignore) -- begitu leader pindah mesin (komputer-utama -> vultr-sg, 2 Sep 2026),
+      // journal lokal mesin BARU "lupa total" posisi yang tercatat cuma di mesin LAMA, padahal
+      // posisi ASLINYA di Binance tetap ada. Tanpa cek ini, siklus normal BISA nyoba buka sinyal
+      // baru di atas posisi yang udah ada -- bentrok leverage (gagal, untung SAFE) ATAU labih parah
+      // nambah size gak sengaja kalau kebetulan leverage-nya sama. Fix: SELALU cek live position
+      // Binance/MEXC dulu SEBELUM nyimpulkan "gak ada posisi" -- kalau ternyata ADA (journal lokal
+      // yang salah), SKIP total siklus ini (jangan coba apa-apa) daripada eksekusi ngawur.
+      // 23 Sep 2026 (2-slot split) -- cek ini CUMA relevan kalau journal BUTA TOTAL soal symbol ini
+      // (KEDUA slot kosong). Kalau salah satu slot UDAH ke-track jurnal, mesin ini JELAS udah
+      // "kenal" symbol ini -- skenario "journal lupa total" (leader pindah mesin) gak berlaku lagi.
+      if (!patternFloating && !fvgFloating) {
+        const liveCheckPos = await exec.getPositionRisk(symbol).catch(() => null);
+        if (liveCheckPos && Math.abs(parseFloat(liveCheckPos.positionAmt)) > 0) {
+          // ⛔ FIX 12 Sep 2026 (root cause dari bug "posisi ngarang" di closePosition, Olan sengaja
+          // stress-test manual trading buat cari bug) -- SEBELUM adopsi, cek dulu apa positionReconciler.js
+          // UDAH mantau symbol ini secara manual (state file-nya sendiri, `${exchange}:${symbol}`,
+          // cuma keisi kalau BENERAN lagi disentuh manual Olan langsung di exchange). Kalau IYA, jangan
+          // ikut adopsi -- biarin SATU sistem doang yang megang symbol ini di satu waktu (Reconciler,
+          // yang emang didesain akurat per-transaksi). Adopsi+Reconciler jalan bareng tanpa saling tau
+          // itu PERSIS akar masalah kenapa closePosition() dulu bisa ngarang harga/PnL (income history
+          // kecampur 2 sumber kebenaran yang gak saling koordinasi).
+          if (_isReconcilerTrackingManually(reconcilerStatePath, assetCfg.exchange, symbol)) {
+            console.log(`[NyopetAutoTrader] ${assetCfg.label}: posisi live ADA tapi lagi ditrack manual (positionReconciler.js) -- SKIP adopsi total, biarin Reconciler yang urus sepenuhnya (cegah dobel-catat/PnL ngarang). Skip cari sinyal baru siklus ini.`);
+            return;
+          }
+          // ⛔ FIX 8 Sep 2026 (Olan, ketemu pas Nirwan/member: posisi nyangkut PERMANEN gara2 skip
+          // total di sini -- gak ada auto-heal, journal harus dibenerin manual selamanya). Dulu cuma
+          // SKIP + log warning (aman dari dobel-eksekusi, TAPI bot berhenti nyari sinyal baru
+          // SELAMANYA buat aset ini sampai ada yang benerin journal manual). Sekarang AUTO-ADOPT --
+          // tulis entry `mode:'unknown'` (sl/tp/liqPrice SENGAJA null, PERSIS skema "LEGACY pre-v2"
+          // yang UDAH ADA di manageFloatingOrder -- floating.sl==null -> monitor doang, GAK PERNAH
+          // force-close sendiri, aman) ke journal, SKIP siklus INI doang (gak cari sinyal baru
+          // sekarang), siklus BERIKUTNYA otomatis ketemu entry ini via getFloatingOrder dan mantau
+          // normal. Kategori 'unknown' default masuk slot 'pattern' (_slotCategory), pilihan aman
+          // sewenang-wenang krn asal-usul aslinya emang gak diketahui.
+          const adoptedAmt = parseFloat(liveCheckPos.positionAmt);
+          const adoptedLeverage = Number(liveCheckPos.leverage) || 0;
+          const adoptedNotional = Math.abs(Number(liveCheckPos.notional) || 0);
+          const adoptedNow = new Date();
+          const adopted = {
+            id: 'ranger-adopted-' + Date.now(), signalId: nextSignalId(countSignalIdsToday((journal.orders || []).map((o) => o.signalId), adoptedNow), adoptedNow),
+            asset: assetKey, exchange: assetCfg.exchange,
+            direction: adoptedAmt > 0 ? 'buy' : 'sell', status: 'floating',
+            mode: 'unknown', patternType: 'unknown', entryPrice: parseFloat(liveCheckPos.entryPrice),
+            sl: null, originalSl: null, tp: null, partialTp: null, liqPrice: null,
+            qty: Math.abs(adoptedAmt), leverage: adoptedLeverage,
+            marginUsd: adoptedLeverage > 0 ? adoptedNotional / adoptedLeverage : 0, nilaiPosisi: adoptedNotional,
+            partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
+            triggeredAt: new Date().toISOString(), manualReason: null,
+          };
+          journal.orders.push(adopted);
+          saveJournal(journal);
+          console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- DIADOPSI otomatis ke journal (#${adopted.id}, mode legacy/unknown, sl/tp gak diketahui, monitor doang gak di-force-close) biar gak nyangkut permanen. Skip cari sinyal baru siklus ini.`);
           return;
         }
-        // ⛔ FIX 8 Sep 2026 (Olan, ketemu pas Nirwan/member: posisi nyangkut PERMANEN gara2 skip
-        // total di sini -- gak ada auto-heal, journal harus dibenerin manual selamanya). Dulu cuma
-        // SKIP + log warning (aman dari dobel-eksekusi, TAPI bot berhenti nyari sinyal baru
-        // SELAMANYA buat aset ini sampai ada yang benerin journal manual). Sekarang AUTO-ADOPT --
-        // tulis entry `mode:'unknown'` (sl/tp/liqPrice SENGAJA null, PERSIS skema "LEGACY pre-v2"
-        // yang UDAH ADA di manageFloatingOrder -- floating.sl==null -> monitor doang, GAK PERNAH
-        // force-close sendiri, aman) ke journal, SKIP siklus INI doang (gak cari sinyal baru
-        // sekarang), siklus BERIKUTNYA otomatis ketemu entry ini via getFloatingOrder dan mantau
-        // normal. Kategori 'unknown' default masuk slot 'pattern' (_slotCategory), pilihan aman
-        // sewenang-wenang krn asal-usul aslinya emang gak diketahui.
-        const adoptedAmt = parseFloat(liveCheckPos.positionAmt);
-        const adoptedLeverage = Number(liveCheckPos.leverage) || 0;
-        const adoptedNotional = Math.abs(Number(liveCheckPos.notional) || 0);
-        const adoptedNow = new Date();
-        const adopted = {
-          id: 'ranger-adopted-' + Date.now(), signalId: nextSignalId(countSignalIdsToday((journal.orders || []).map((o) => o.signalId), adoptedNow), adoptedNow),
-          asset: assetKey, exchange: assetCfg.exchange,
-          direction: adoptedAmt > 0 ? 'buy' : 'sell', status: 'floating',
-          mode: 'unknown', patternType: 'unknown', entryPrice: parseFloat(liveCheckPos.entryPrice),
-          sl: null, originalSl: null, tp: null, partialTp: null, liqPrice: null,
-          qty: Math.abs(adoptedAmt), leverage: adoptedLeverage,
-          marginUsd: adoptedLeverage > 0 ? adoptedNotional / adoptedLeverage : 0, nilaiPosisi: adoptedNotional,
-          partialDone: false, remainingFraction: 1, realizedPnlUsd: 0,
-          triggeredAt: new Date().toISOString(), manualReason: null,
-        };
-        journal.orders.push(adopted);
-        saveJournal(journal);
-        console.log(`[NyopetAutoTrader] ${assetCfg.label}: ⚠️ ADA posisi live di exchange (entry ${liveCheckPos.entryPrice}) yang GAK kecatat di journal lokal mesin ini (kemungkinan abis pindah leader) -- DIADOPSI otomatis ke journal (#${adopted.id}, mode legacy/unknown, sl/tp gak diketahui, monitor doang gak di-force-close) biar gak nyangkut permanen. Skip cari sinyal baru siklus ini.`);
-        return;
       }
     }
 
@@ -826,11 +841,11 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // Kedua kandidat (kalau ada) SAMA-SAMA lolos filter arah-vs-window + DXY di bawah sebelum
     // dieksekusi -- SAMA PERSIS syarat lama, cuma sekarang dievaluasi per-kandidat.
     const sigCandidates = [];
-    if (!patternFloating) {
+    if (!patternFloating && (!btcDualEnabled || rangerBtcDualExecModule.isSlotFree('pattern'))) {
       const patternSig = detectPatternSignal(candles4h, i, patternParams);
       if (patternSig) sigCandidates.push(patternSig);
     }
-    if (!fvgFloating) {
+    if (!fvgFloating && (!btcDualEnabled || rangerBtcDualExecModule.isSlotFree('fvg'))) {
       // allowShort dioper SAMA kayak patternParams di atas (13 Sep 2026, permintaan Olan: "sinyal
       // shortnya begitu ketemu FVG, sebut price area yang ditunggu") -- FVG bearish sekarang JUGA
       // dicek buat auto-entry short pas window bear (BTC doang, Emas tetap allowShort:false lewat
@@ -874,6 +889,13 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
           system: 'ranger', assetCfg, sig, livePrice: candles4h[i].close,
           mexcExec: execFor(assetCfg), notify: sendWA, notifySilent: sendWA, idrRate,
         });
+      }
+      return;
+    }
+
+    if (btcDualEnabled) {
+      for (const sig of validSigs) {
+        await rangerBtcDualExecModule.openRangerBtcDual({ sig, livePrice: candles4h[i].close });
       }
       return;
     }
@@ -1093,6 +1115,16 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     }
 
     if (floating) return; // slot lagi kepake method LAIN (chart-pattern/FVG/econ_reaction) -- skip total
+
+    // Mutual-exclusion sama rangerBtcDualExec.js (26 Sep 2026) -- journal LAMA (di atas) gak tau
+    // soal posisi yang dipegang modul dual-exec BARU (journal beda file), tapi keduanya SAMA-SAMA
+    // bisa masuk akun demo yang sama buat symbol BTCUSDC yang sama -- kalau dua-duanya kebuka
+    // bareng, Binance netting per-simbol bakal nge-gabung jadi 1 posisi (salah). Skip buka basket
+    // baru kalau modul dual-exec lagi megang salah satu slotnya.
+    if (rangerBtcDualExecModule.hasAnyFloatingSlot()) {
+      console.log(`[NyopetAutoTrader][FedGrid] ${assetCfg.label}: modul dual-exec (chart-pattern/FVG demo+real) lagi pegang symbol ini -- skip buka basket baru, cegah numpuk posisi.`);
+      return;
+    }
 
     const signal = await detectFedGridSignal(journal).catch((e) => { console.log(`[NyopetAutoTrader][FedGrid] gagal cek sinyal:`, e.message); return null; });
     if (!signal) return;

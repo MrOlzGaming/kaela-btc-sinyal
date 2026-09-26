@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "allowReal": false,
+  "_note": "Saklar KHUSUS demo+real PARALEL buat leg BTC Ranger (chart-pattern+FVG, lihat rangerBtcDualExec.js). enabled=false berarti Ranger BTC TETAP pakai openPosition()/manageFloatingOrder() versi lama (1 mode ikut killSwitch.js testnet), modul ini gak disentuh sama sekali. Begitu enabled=true: demo (BINANCE_API_KEY testnet) SELALU jalan. allowReal=false -> real gak dicoba (demo doang). allowReal=true -> real TAMBAHAN jalan pakai BINANCE_API_KEY_REAL (skip aman kalau kosong/saldo kurang, demo tetap jalan sendiri).",
+  "_status": "26 Sep 2026 -- baru dibangun (Fase 1 dari 2, chart-pattern+FVG doang, Fed Dovish Grid tetap jalur lama). BELUM diaktifin, nunggu Olan review + regression test lolos."
+}

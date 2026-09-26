@@ -284,6 +284,27 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       await sendWhatsAppToWibowo(msg).catch((e) => console.log('[PositionReconciler] Gagal kirim WA (manual open):', e.message));
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId, openedAtMs: nowMs };
     } else if (prevAmt !== 0 && liveAmt === 0) {
+      // (26 Sep 2026, BUG NYATA ketemu audit proaktif -- Olan minta "cari sesuatu yang kurang")
+      // -- SEBELUM branch ini SELALU nganggep "ilang = manual", TANPA cek order penutupnya PASTI
+      // dari siapa (beda dari cabang MANUAL OPEN di atas yang UDAH lama cek wasLastEntryOrderByKaela).
+      // Ini AMAN selama SEMUA trading real jalan di PROSES YANG SAMA kayak reconciler-nya sendiri
+      // (positionCheckFast.js, lewat touchedSymbols) -- TAPI begitu goldTwinPosition.js/
+      // rangerBtcDualExec.js/sniperBtcDualExec.js jalan di PROSES TERPISAH (run-vultr-executor.sh,
+      // journal+cron beda dari positionCheckFast.js), SL/TP/trailing/leg2 exit modul2 itu GAK
+      // PERNAH masuk touchedSymbols -- tanpa cek ini, closingnya bakal salah-lapor "MANUAL CLOSE"
+      // ke Wibowo Hedgefund (ngaku2 Olan padahal Kaela sendiri). Fix: cek wasLastReduceOnlyOrderByKaela
+      // dulu -- `true` = Kaela sendiri, sinkronin snapshot diam2 (SAMA pola re-adopt di MANUAL OPEN),
+      // JANGAN lapor manual. `null`/`false` -- lanjut alur lama (lapor manual, default aman kalau ragu).
+      let closedByKaela = null;
+      if (typeof client.wasLastReduceOnlyOrderByKaela === 'function') {
+        try { closedByKaela = await client.wasLastReduceOnlyOrderByKaela(symbol); }
+        catch (e) { console.log(`[PositionReconciler] Gagal cek asal order penutup ${symbol} (dianggap gak bisa disimpulkan, treat manual):`, e.message); }
+      }
+      if (closedByKaela === true) {
+        console.log(`[PositionReconciler] ${badge} ${symbol}: posisi "ilang" TAPI order penutupnya kekonfirmasi dari Kaela sendiri (modul lain, proses terpisah) -- sinkronin diam2, BUKAN manual close.`);
+        delete state.positions[stateKey];
+        continue;
+      }
       // MANUAL CLOSE (full) -- posisi yang tadinya kecatat sekarang ilang total.
       // ⛔ FIX BUG NYATA 12 Sep 2026 (Olan: "riwayat jurnal kalah semua, padahal aslinya surplus")
       // -- SEBELUMNYA pakai state.lastCheckedAtMs (~siklus TERAKHIR doang, ~15 menit), BUKAN
@@ -319,6 +340,20 @@ async function _reconcileOneExchange({ exchange, phone, client, touchedSymbols, 
       }
       state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
     } else if (prevAmt !== 0 && liveAmt !== 0 && Math.sign(prevAmt) === Math.sign(liveAmt) && Math.abs(liveAmt) < Math.abs(prevAmt)) {
+      // (26 Sep 2026, SAMA fix kayak MANUAL CLOSE di atas -- lihat catatan panjang di situ) --
+      // size berkurang tapi belum nol PERSIS pola partial-TP native Sniper (sniperBtcDualExec.js,
+      // separuh qty) -- tanpa cek ini, partial TP Kaela sendiri (proses terpisah) bakal
+      // kelaporan "MANUAL REDUCE" palsu.
+      let reducedByKaela = null;
+      if (typeof client.wasLastReduceOnlyOrderByKaela === 'function') {
+        try { reducedByKaela = await client.wasLastReduceOnlyOrderByKaela(symbol); }
+        catch (e) { console.log(`[PositionReconciler] Gagal cek asal order pengurang ${symbol} (dianggap gak bisa disimpulkan, treat manual):`, e.message); }
+      }
+      if (reducedByKaela === true) {
+        console.log(`[PositionReconciler] ${badge} ${symbol}: size berkurang TAPI order penutup-sebagiannya kekonfirmasi dari Kaela sendiri -- sinkronin diam2, BUKAN manual reduce.`);
+        state.positions[stateKey] = { positionAmt: liveAmt, entryPrice: Number(live.entryPrice), entryId: prev.entryId, openedAtMs: prev.openedAtMs || nowMs };
+        continue;
+      }
       // MANUAL REDUCE (partial close) -- arah sama, size berkurang tapi belum nol. SENGAJA TETAP
       // state.lastCheckedAtMs (BUKAN prev.openedAtMs kayak CLOSE/FLIP di bawah) -- pnl di sini
       // CUMA buat pesan WA "PnL sebagian" (potongan INI doang), gak pernah ditulis ke Sheet Journal

@@ -256,7 +256,16 @@ async function checkAndClearStrayPosition(exec, idrRate) {
 
   // isKaelaOrder === false -- PASTI manual (dikonfirmasi ke exchange). Kebijakan Olan 19 Sep 2026
   // ("trading 100% ku serahkan ke Kaela... posisi non-Kaela boleh auto-close") berlaku sama di sini.
-  const closeDirection = Number(stray.positionAmt) > 0 ? 'buy' : 'sell';
+  // 🐛 FIX 26 Sep 2026 (BUG NYATA -- Olan tes short manual di BingX, "masih kecolongan", log
+  // nunjukin "No position to close" berulang) -- SEBELUMNYA `Number(stray.positionAmt) > 0 ?
+  // 'buy' : 'sell'` -- itu konvensi BINANCE (sign positionAmt = arah). BingX HEDGE MODE beda
+  // total: `positionAmt` SELALU POSITIF (dites empiris -- posisi SHORT balikin positionAmt
+  // "0.0006", bukan "-0.0006"), arah aslinya ada di field TERPISAH `positionSide` ('LONG'/'SHORT').
+  // Kode lama SELALU nyimpulin 'buy' (krn positionAmt positif APAPUN arahnya) -- buat posisi SHORT,
+  // emergencyCloseMarket({direction:'buy'}) keliru nutup sisi LONG (kosong) -- exchange nolak "No
+  // position to close", posisi manual SHORT TETAP nyangkut nyasar gak ketutup. Fix: baca
+  // `positionSide` LANGSUNG, jangan nebak dari tanda angka.
+  const closeDirection = stray.positionSide === 'SHORT' ? 'sell' : 'buy';
   try {
     await exec.emergencyCloseMarket({ symbol: EXEC_SYMBOL, direction: closeDirection, quantity: Math.abs(Number(stray.positionAmt)) });
   } catch (e) {

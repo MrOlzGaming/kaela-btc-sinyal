@@ -235,6 +235,25 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return String(latest.clientOrderId || '').startsWith(KAELA_ORDER_PREFIX);
   }
 
+  // (26 Sep 2026, BUG NYATA ketemu audit proaktif -- Olan minta "cari sesuatu yang kurang") --
+  // KEBALIKAN wasLastEntryOrderByKaela di atas: dulu CUMA order PEMBUKA yang dicek asalnya,
+  // order PENUTUP (reduceOnly/closePosition) SAMA SEKALI GAK PERNAH dicek di positionReconciler.js
+  // -- selama rangerAutoTrader.js/sniperAutoAnalysis.js jalan di PROSES YANG SAMA persis kayak
+  // reconciler-nya sendiri (positionCheckFast.js, lewat touchedSymbols), itu gak masalah (bot
+  // SENDIRI yang nutup selalu ketauan lewat touchedSymbols). TAPI begitu goldTwinPosition.js/
+  // rangerBtcDualExec.js/sniperBtcDualExec.js jalan di PROSES TERPISAH (run-vultr-executor.sh,
+  // beda cron+beda journal dari positionCheckFast.js) -- SL/TP/trailing/leg2 exit modul2 itu SAMA
+  // SEKALI gak masuk touchedSymbols reconciler, jadi kalau dibiarin closenya bakal DIANGGAP MANUAL
+  // (false alarm ke Wibowo Hedgefund, ngaku2 Olan yang nutup padahal Kaela sendiri). Fix: cek order
+  // PENUTUP paling baru (reduceOnly/closePosition TRUE) -- SAMA logika, arah filter dibalik.
+  async function wasLastReduceOnlyOrderByKaela(symbol, sinceMs = Date.now() - 24 * 3600 * 1000) {
+    const orders = await signedRequest('GET', '/fapi/v1/allOrders', { symbol, startTime: sinceMs, limit: 50 });
+    const closingOrders = (orders || []).filter((o) => o.status === 'FILLED' && (o.reduceOnly || o.closePosition));
+    if (closingOrders.length === 0) return null; // gak ketemu order penutup sama sekali di jendela ini -- gak bisa disimpulkan
+    const latest = closingOrders.sort((a, b) => b.time - a.time)[0];
+    return String(latest.clientOrderId || '').startsWith(KAELA_ORDER_PREFIX);
+  }
+
   // Jaring pengaman TERAKHIR -- kalau SL/TP gagal nempel SETELAH entry berhasil, posisi TIDAK
   // BOLEH dibiarin nganggur tanpa proteksi. Market close LANGSUNG (arah kebalikan entry).
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
@@ -249,7 +268,7 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
-    wasLastEntryOrderByKaela,
+    wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela,
   };
 }
 
@@ -294,10 +313,11 @@ async function cancelAllOpenOrders(symbol) { return _defaultClient().cancelAllOp
 async function getSymbolInfo(symbol) { return _defaultClient().getSymbolInfo(symbol); }
 async function emergencyCloseMarket(args) { return _defaultClient().emergencyCloseMarket(args); }
 async function wasLastEntryOrderByKaela(symbol, sinceMs) { return _defaultClient().wasLastEntryOrderByKaela(symbol, sinceMs); }
+async function wasLastReduceOnlyOrderByKaela(symbol, sinceMs) { return _defaultClient().wasLastReduceOnlyOrderByKaela(symbol, sinceMs); }
 
 module.exports = {
   createBinanceClient, loadSecrets, // loadSecrets diexport 22 Sep 2026 buat ninjaTrader.js -- reuse fallback secrets.js/env yang SAMA, bukan duplikat
   getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
-  getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, wasLastEntryOrderByKaela,
+  getPositionRisk, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela,
   KAELA_ORDER_PREFIX,
 };

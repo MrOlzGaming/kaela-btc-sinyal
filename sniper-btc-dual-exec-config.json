@@ -1,6 +1,6 @@
 {
-  "enabled": false,
-  "allowReal": false,
+  "enabled": true,
+  "allowReal": true,
   "_note": "Saklar KHUSUS demo+real PARALEL buat leg BTC Sniper (Fase 2, lihat sniperBtcDualExec.js). enabled=false berarti Sniper BTC TETAP pakai jalur lama (sniperAutoAnalysis.js execClientFor + sniperLiveMonitor.js/sniperOrderMonitor.js, 1 mode ikut killSwitch.js testnet), modul ini gak disentuh sama sekali. Begitu enabled=true: demo (BINANCE_API_KEY testnet) SELALU jalan. allowReal=false -> real gak dicoba (demo doang). allowReal=true -> real TAMBAHAN jalan pakai BINANCE_API_KEY_REAL (skip aman kalau kosong/saldo kurang, demo tetap jalan sendiri).",
-  "_status": "26 Sep 2026 -- baru dibangun (Fase 2 dari 2, konsolidasi sniperLiveMonitor.js+sniperOrderMonitor.js jadi 1 monitor per order, ngilangin bug dobel-PnL by construction). BELUM diaktifin, nunggu Olan review + regression test lolos."
+  "_status": "26 Sep 2026 -- ENABLED penuh (demo+real) atas instruksi eksplisit Olan ('demo real harus jalan semua, ga ada alasan.. kalo karena ga ada saldo, khusus hedgefund infonya pake demo'). Saldo real Binance $0 -- real leg otomatis skip aman (insufficient balance) sampai ditopup, demo tetap jalan penuh. Mekanisme leg2 breakeven-reopen BELUM pernah kena live-test beneran (baru unit test murni) -- pantau ketat siklus2 pertama."
 }

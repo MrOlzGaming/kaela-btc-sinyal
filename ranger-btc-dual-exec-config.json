@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "allowReal": false,
+  "allowReal": true,
   "_note": "Saklar KHUSUS demo+real PARALEL buat leg BTC Ranger (chart-pattern+FVG, lihat rangerBtcDualExec.js). enabled=false berarti Ranger BTC TETAP pakai openPosition()/manageFloatingOrder() versi lama (1 mode ikut killSwitch.js testnet), modul ini gak disentuh sama sekali. Begitu enabled=true: demo (BINANCE_API_KEY testnet) SELALU jalan. allowReal=false -> real gak dicoba (demo doang). allowReal=true -> real TAMBAHAN jalan pakai BINANCE_API_KEY_REAL (skip aman kalau kosong/saldo kurang, demo tetap jalan sendiri).",
-  "_status": "26 Sep 2026 -- ENABLED (demo doang, allowReal masih false) atas persetujuan Olan ('lanjut') abis Fase 1 lolos 81/81 regressionTests.js + verifikasi VPS. allowReal:true nyusul begitu demo kebukti jalan bersih beberapa siklus."
+  "_status": "26 Sep 2026 -- ENABLED penuh (demo+real) atas instruksi eksplisit Olan ('demo real harus jalan semua, ga ada alasan.. kalo karena ga ada saldo, khusus hedgefund infonya pake demo'). Saldo real Binance $0 -- real leg otomatis skip aman (insufficient balance) sampai ditopup, demo tetap jalan penuh."
 }

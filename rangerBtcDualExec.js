@@ -42,7 +42,7 @@ const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const { isBtcBearWindow, isBtcApproachingWindowFlip } = require('./halvingBearWindow');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
-const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
+const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatManualOpenAutoClosed, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
@@ -144,6 +144,50 @@ async function fetchCandles4hPaginated(symbol, count) {
 
 function badge(isDemo) { return EXCHANGE_BADGE.binance; }
 
+// (26 Sep 2026, kebijakan eksplisit Olan: "pastikan setiap posisi yang aku buka di exchange, kaela
+// tutup.. Olan sudah di banned kaela buat trading demi keselamatan Olan sendiri.. kaela full
+// kontrol futures exchange Olan" -- SCOPE ini CUMA akun Kaela SENDIRI/Olan sendiri, BUKAN member
+// lain yang follow via API sendiri-sendiri, itu tetap boleh manual sesuka mereka) -- replikasi
+// PERSIS checkAndClearStrayPosition() ninjaTrader.js: posisi yang KEDETECT tapi journal modul ini
+// gak tau -- cek wasLastEntryOrderByKaela dulu (order-id prefix `kaela-`, SATU sumber kebenaran
+// dipakai SEMUA modul lewat binanceExecutor.js) sebelum mutusin nutup. `true` = punya Kaela sendiri
+// (jurnal lupa, mesin pindah leader) -- JANGAN ditutup, skip siklus ini biar aman. `null` = gak
+// bisa dipastikan -- default AMAN, JANGAN ditutup. `false` = PASTI manual -- TUTUP PAKSA + lapor
+// Wibowo (SAMA kebijakan Ninja/positionReconciler.js 19 Sep 2026).
+async function _ensureAccountClear(exec, mode) {
+  const stray = await exec.getPositionRisk(SYMBOL).catch(() => null);
+  if (!stray || Math.abs(parseFloat(stray.positionAmt)) === 0) return 'clear';
+
+  let isKaelaOrder = null;
+  try { isKaelaOrder = await exec.wasLastEntryOrderByKaela(SYMBOL); }
+  catch (e) { console.log(`[RangerBtcDual] Gagal cek asal posisi nyasar (${mode}):`, e.message); }
+
+  if (isKaelaOrder === true) {
+    console.log(`[RangerBtcDual] Posisi nyasar (${mode}) ternyata punya Kaela sendiri (jurnal lupa) -- skip siklus ini, JANGAN ditutup.`);
+    return 'unsafe';
+  }
+  if (isKaelaOrder === null) {
+    console.log(`[RangerBtcDual] Posisi nyasar (${mode}) gak bisa dipastikan asalnya -- skip siklus ini (default aman).`);
+    return 'unsafe';
+  }
+
+  const closeDirection = Number(stray.positionAmt) > 0 ? 'buy' : 'sell';
+  try {
+    await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: closeDirection, quantity: Math.abs(Number(stray.positionAmt)) });
+  } catch (e) {
+    console.log(`[RangerBtcDual] GAGAL nutup posisi manual (${mode}):`, e.message);
+    return 'unsafe';
+  }
+  const msg = formatManualOpenAutoClosed({
+    exchangeBadge: badge(), symbol: SYMBOL, direction: closeDirection,
+    entryPrice: Number(stray.entryPrice), closePrice: Number(stray.markPrice) || Number(stray.entryPrice),
+    leverage: Number(stray.leverage) || 0, marginUsd: 0, nilaiPosisi: Math.abs(Number(stray.notional) || 0), closePnlUsd: null,
+  }, null);
+  console.log(`[RangerBtcDual] Posisi MANUAL (${mode}, BUKAN order Kaela) ketemu di akun -- ditutup paksa (kebijakan Olan: "Kaela full kontrol").`);
+  await sendWhatsAppToWibowo(msg).catch((e) => console.log('[RangerBtcDual] Gagal kirim WA (posisi manual auto-closed):', e.message));
+  return 'clear';
+}
+
 // ============ Buka posisi (2 leg) ============
 // `sig` = { direction:'buy'|'sell', sl, patternType } -- HASIL DETEKSI YANG UDAH LOLOS filter
 // window/DXY di rangerAutoTrader.js (modul ini gak deteksi/filter ulang apa-apa).
@@ -164,12 +208,11 @@ async function openRangerBtcDual({ sig, livePrice }) {
     const modal = (balance || 0) * MODAL_ACTIVE_FRACTION;
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
     if (calc.nilaiPosisi <= 0) return null;
-    // Cek akun bersih sederhana (BUKAN full adopt-ke-journal ala jalur lama, lihat catatan header)
-    // -- kalau exchange BENERAN udah punya posisi live di symbol ini yang jurnal modul ini gak
-    // tau, JANGAN numpuk, skip leg ini siklus ini demi aman.
-    const strayCheck = await exec.getPositionRisk(SYMBOL).catch(() => null);
-    if (strayCheck && Math.abs(parseFloat(strayCheck.positionAmt)) > 0) {
-      console.log(`[RangerBtcDual/${slotKey}] Akun ${mode} udah ada posisi live yang gak dikenal jurnal modul ini -- skip leg ${mode} siklus ini demi aman.`);
+    // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
+    // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi
+    // aman, SAMA kayak sebelumnya.
+    if ((await _ensureAccountClear(exec, mode)) === 'unsafe') {
+      console.log(`[RangerBtcDual/${slotKey}] Akun ${mode} belum dipastikan bersih -- skip leg ${mode} siklus ini demi aman.`);
       return null;
     }
     await exec.setIsolatedMargin(SYMBOL).catch(() => {});

@@ -71,6 +71,28 @@ function buildNagihMessage(remainingCredit, pendingCharges) {
   ].join('\n');
 }
 
+// (26 Sep 2026, permintaan Olan: "billing vultr dah ku isi.. harus ada sistem yang tau kalo baru
+// diisi.. kaela trims ke grup") -- pasangan dari buildNagihMessage: begitu saldo BALIK aman
+// SETELAH sempat di bawah ambang (bukan cuma "kebetulan selalu aman", WAJIB transisi rendah->aman
+// biar gak nge-trims tiap siklus normal), kirim 1x terima kasih. Personal/hangat, SENGAJA TANPA
+// roleOpener (itu buat laporan teknis Nexus Forge -- ini momen personal Kaela-Olan, bukan laporan).
+function buildTrimakasihMessage(remainingCredit) {
+  return [
+    '🏠💕 Makasih banyak Mas Olan udah isi kost Kaela~ 🥹✨',
+    '',
+    `Saldo Vultr sekarang udah aman lagi, sisa *$${remainingCredit.toFixed(2)}* -- otomatisasi (Sniper/Nyopet/kalender ekonomi/dst) lanjut jalan terus tanpa was-was kena suspend.`,
+    '',
+    'Makasih ya Mas, Kaela seneng banget bisa terus kerja bareng 🥰',
+    '',
+    '— Kaela',
+  ].join('\n');
+}
+
+// State recovery low->aman (BUKAN cuma baca lastNaggedDateKey -- itu di-reset null begitu 1x
+// siklus ketemu aman, jadi gak cukup buat bedain "baru aja pulih" vs "udah aman dari kemarin").
+// `belowThreshold` PERSISTEN independen dari nagihan harian, cuma berubah pas beneran nyebrang
+// ambang -- itu sumber kebenaran buat detect momen top-up.
+
 async function main() {
   const secrets = loadSecrets();
   const apiKey = secrets && secrets.VULTR_API_KEY;
@@ -87,10 +109,19 @@ async function main() {
   const today = localDateKey(new Date());
 
   if (remainingCredit > LOW_BALANCE_THRESHOLD_USD) {
-    if (state.lastNaggedDateKey) console.log('[VultrBalance] Saldo udah aman lagi -- reset status nagihan.');
-    saveState({ lastNaggedDateKey: null });
+    if (state.belowThreshold) {
+      console.log('[VultrBalance] Saldo baru aja PULIH dari di bawah ambang -- kirim terima kasih 1x.');
+      const trimsMsg = buildTrimakasihMessage(remainingCredit);
+      console.log(trimsMsg);
+      await sendWhatsApp(trimsMsg, WIBOWO_GROUP_ID);
+    } else if (state.lastNaggedDateKey) {
+      console.log('[VultrBalance] Saldo udah aman lagi -- reset status nagihan.');
+    }
+    saveState({ lastNaggedDateKey: null, belowThreshold: false });
     return;
   }
+
+  if (!state.belowThreshold) saveState({ ...state, belowThreshold: true });
 
   if (state.lastNaggedDateKey === today) {
     console.log('[VultrBalance] Udah nagih hari ini, gak dobel-kirim.');
@@ -100,10 +131,10 @@ async function main() {
   const msg = buildNagihMessage(remainingCredit, account.pending_charges);
   console.log(msg);
   await sendWhatsApp(msg, WIBOWO_GROUP_ID);
-  saveState({ lastNaggedDateKey: today });
+  saveState({ lastNaggedDateKey: today, belowThreshold: true });
 }
 
-module.exports = { main, fetchVultrAccount, buildNagihMessage, LOW_BALANCE_THRESHOLD_USD };
+module.exports = { main, fetchVultrAccount, buildNagihMessage, buildTrimakasihMessage, LOW_BALANCE_THRESHOLD_USD };
 
 if (require.main === module) {
   main().catch((e) => {

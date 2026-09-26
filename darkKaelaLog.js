@@ -323,7 +323,7 @@ function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, ex
   const grossSign = trade.pnlUsd >= 0 ? '+' : '';
   const pctLine = trade.pnlPct !== undefined && trade.pnlPct !== null ? ` (${grossSign}${trade.pnlPct.toFixed(1)}%)` : '';
   const pnlBlock = hasFee
-    ? `PnL Kotor: ${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}\nFee (round-trip): -${fmtUsdWithIdr(trade.feeUsd, idrRate)}\nPnL Bersih: *${netPnl >= 0 ? '+' : ''}${fmtUsdWithIdr(netPnl, idrRate)}*`
+    ? `PnL Kotor: ${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}\nFee (round-trip): ${fmtUsdWithIdr(-trade.feeUsd, idrRate)}\nPnL Bersih: *${netPnl >= 0 ? '+' : ''}${fmtUsdWithIdr(netPnl, idrRate)}*`
     : `PnL: *${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*`;
   return `${_rangerBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id, trade.signalId)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}

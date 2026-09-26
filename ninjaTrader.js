@@ -3,12 +3,19 @@
 // per-tahun konsisten, split-era hampir identik, sensitivitas parameter halus/monoton,
 // direction-flip kuat (75% arah asli vs 22% dibalik), tahan fee (PF 2.99->2.70 net TP-tetap).
 //
-// ============ ARSITEKTUR (revisi 23 Sep 2026, permintaan Olan) ============
-// 2 VARIAN jalan BERBARENGAN (bukan bertahap) -- "biar ketemu yang terbaik", entry SAMA PERSIS
-// (channel/breakout SATU sumber deteksi per varian), exit BEDA:
-//   - tpFixed  : SL/TP tetap 1:1 R:R (PF backtest 2.99)
-//   - trailing : trailing stop % dari lebar channel (PF backtest 11.68)
-// Journal 1 file, dipisah per key varian -- lihat DEFAULT_JOURNAL().
+// ============ ARSITEKTUR (revisi 26 Sep 2026, keputusan final Olan) ============
+// SEBELUMNYA (23 Sep 2026) 2 varian jalan berbarengan buat dibandingin ("biar ketemu yang
+// terbaik") -- tpFixed (SL/TP tetap 1:1) vs trailing (trailing stop % lebar channel). tpFixed
+// SELALU skip otomatis dari awal (nunggu akun eksekusi kedua yang gak pernah kelar disiapin --
+// closedCount 0 selamanya, gak pernah dapet kesempatan jalan beneran). Pas Olan lihat ulang
+// backtest 2 tahun buat mutusin worth gak invest akun ke-2 (Bybit): tpFixed PF 2,97 vs trailing
+// PF 11,67 di SINYAL SAMA PERSIS, dan head-to-head per-sinyal trailing menang 1.612x vs tpFixed
+// cuma 579x dari 2.411 sinyal yang match. Kalah TELAK, bukan cuma beda gaya -- Olan putusin
+// LANGSUNG: "yaudah pake trailing full aja ninja" (26 Sep 2026). tpFixed DIHENTIKAN (dikeluarin
+// dari VARIANTS aktif), BUKAN dihapus -- kode+journal historisnya dibiarin utuh sbg referensi,
+// cuma gak diproses lagi. Ninja SEKARANG = trailing DOANG.
+// Journal 1 file, dipisah per key varian -- lihat DEFAULT_JOURNAL() (tpFixed tetap ada di
+// journal, cuma beku/gak nambah data baru).
 //
 // DEMO + REAL BERBARENGAN (bukan gantian kayak killSwitch.js/Sniper/Nyopet lama) -- demo SELALU
 // jalan (testnet, key BINANCE_API_KEY di secrets.js), real cuma jalan TAMBAHAN kalau
@@ -52,7 +59,11 @@ const EXEC_SYMBOL = 'BTC-USDT'; // format BingX (hyphen) -- dipakai SEMUA panggi
 const CHANNEL_OPTS = { maxWidthAtrMultiple: 1.5 }; // SAMA PERSIS parameter tervalidasi backtest
 const TRADE_EXPIRY_MS = 100 * 5 * 60 * 1000; // 100 candle 5m -- SAMA `tradeExpiryBars` backtest
 const MODAL_ACTIVE_FRACTION = 1 / 5; // SAMA konvensi "cheat exposure" Nyopet
-const VARIANTS = ['tpFixed', 'trailing'];
+// 26 Sep 2026: tpFixed DIKELUARIN dari daftar aktif (lihat komentar arsitektur di atas) -- Ninja
+// sekarang cuma proses trailing. Key 'tpFixed' TETAP ada di defaultJournal()/journal file (data
+// historis dibiarin), cuma gak ke-loop lagi di process() jadi gak nambah data baru maupun kirim
+// order apapun.
+const VARIANTS = ['trailing'];
 // Badge exchange (23 Sep 2026, permintaan Olan: "badge exchange juga dipake di pesan buka tutup"
 // -- setelah migrasi ke BingX) -- gaya SAMA kayak EXCHANGE_BADGE positionReconciler.js (Binance
 // 🟨/MEXC 🔷), warna beda biar gampang dibedain sekilas.
@@ -163,8 +174,9 @@ function channelLinesAtTime(channel, startCandleOpenTime, nowOpenTime) {
 // Breakout) -- lihat memori project-kaela-channel-breakout.md. Trailing (varian utama, DILAPORIN)
 // pakai BINGX_API_KEY ("Kaela Access Real", akun Olan sendiri) -- SATU key ini dipakai demo (VST)
 // MAUPUN real, tinggal testnet true/false yang nentuin base URL-nya.
-// TP Tetap (SILENT) masih nunggu akun BingX KEDUA (belum ada) -- tetap skip otomatis, dan begitu
-// ada nanti CUKUP 1 key pair juga (BINGX_API_KEY_TPFIXED/BINGX_API_SECRET_TPFIXED), bukan 4.
+// TP Tetap DIHENTIKAN 26 Sep 2026 (lihat komentar arsitektur di atas file) -- entry di bawah
+// dibiarin nganggur (VARIANTS gak lagi include 'tpFixed', execFor/SILENT_VARIANTS gak pernah
+// kepanggil buat dia lagi), BUKAN dihapus, biar gampang diaktifin lagi kalau Olan berubah pikiran.
 const VARIANT_SECRET_FIELDS = {
   trailing: { demo: ['BINGX_API_KEY', 'BINGX_API_SECRET'], real: ['BINGX_API_KEY', 'BINGX_API_SECRET'] },
   tpFixed: { demo: ['BINGX_API_KEY_TPFIXED', 'BINGX_API_SECRET_TPFIXED'], real: ['BINGX_API_KEY_TPFIXED', 'BINGX_API_SECRET_TPFIXED'] },

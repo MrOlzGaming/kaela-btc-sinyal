@@ -901,6 +901,97 @@ async function main() {
     }
   }
 
+  // ============ sniperBtcDualExec.js (26 Sep 2026, Fase 2) ============
+  // SAMA disiplin backup+restore kayak section rangerBtcDualExec di atas. Scope test SAMA JUGA
+  // dibatasin ke logika MURNI (config/journal/no-op-safe) -- alur exec/WA/leg2-reopen penuh gak
+  // bisa dites tanpa BENERAN manggil Binance/Fonnte (SAMA alasan persis rangerBtcDualExec.js,
+  // fungsi WA di-import LANGSUNG bukan param yang bisa disuntik mock).
+  {
+    const fsSbd = require('fs');
+    const pathSbd = require('path');
+    const SBD_CONFIG = pathSbd.join(__dirname, 'sniper-btc-dual-exec-config.json');
+    const SBD_JOURNAL = pathSbd.join(__dirname, 'sniper-btc-dual-exec-journal.json');
+    const origSbdConfig = fsSbd.existsSync(SBD_CONFIG) ? fsSbd.readFileSync(SBD_CONFIG, 'utf8') : null;
+    const origSbdJournal = fsSbd.existsSync(SBD_JOURNAL) ? fsSbd.readFileSync(SBD_JOURNAL, 'utf8') : null;
+    function restoreSbdFiles() {
+      if (origSbdConfig !== null) fsSbd.writeFileSync(SBD_CONFIG, origSbdConfig); else if (fsSbd.existsSync(SBD_CONFIG)) fsSbd.unlinkSync(SBD_CONFIG);
+      if (origSbdJournal !== null) fsSbd.writeFileSync(SBD_JOURNAL, origSbdJournal); else if (fsSbd.existsSync(SBD_JOURNAL)) fsSbd.unlinkSync(SBD_JOURNAL);
+      delete require.cache[require.resolve('./sniperBtcDualExec')];
+    }
+
+    try {
+      if (fsSbd.existsSync(SBD_JOURNAL)) fsSbd.unlinkSync(SBD_JOURNAL);
+      delete require.cache[require.resolve('./sniperBtcDualExec')];
+      const sbd = require('./sniperBtcDualExec');
+
+      await test('sniperBtcDualExec: config default enabled:false/allowReal:false kalau file gak ada', () => {
+        if (fsSbd.existsSync(SBD_CONFIG)) fsSbd.unlinkSync(SBD_CONFIG);
+        delete require.cache[require.resolve('./sniperBtcDualExec')];
+        const sbdFresh = require('./sniperBtcDualExec');
+        const cfg = sbdFresh.loadConfig();
+        assert.strictEqual(cfg.enabled, false);
+        assert.strictEqual(cfg.allowReal, false);
+      });
+
+      await test('sniperBtcDualExec: journal fresh -- orders kosong, stats demo+real nol', () => {
+        delete require.cache[require.resolve('./sniperBtcDualExec')];
+        const sbdFresh = require('./sniperBtcDualExec');
+        const j = sbdFresh.loadJournal();
+        assert.deepStrictEqual(j.orders, {});
+        assert.strictEqual(j.stats.demo.wins, 0);
+        assert.strictEqual(j.stats.real.wins, 0);
+        assert.strictEqual(j.stats.demo.totalPnlUsd, 0);
+      });
+
+      await test('sniperBtcDualExec: journal merge -- order LAMA yang udah ada TETAP kebaca (gak ke-reset)', () => {
+        fsSbd.writeFileSync(SBD_JOURNAL, JSON.stringify({
+          orders: { 'abc123': { direction: 'buy', sl: 60000, tp: 64000, wibowoRoute: 'demo', demo: { entryPrice: 62000, qty: 0.01, closedAt: null }, real: null } },
+          stats: { demo: { wins: 3, losses: 1, totalPnlUsd: 42.5 }, real: { wins: 0, losses: 0, totalPnlUsd: 0 } },
+        }));
+        delete require.cache[require.resolve('./sniperBtcDualExec')];
+        const sbdFresh = require('./sniperBtcDualExec');
+        const j = sbdFresh.loadJournal();
+        assert.ok(j.orders['abc123'], 'order lama harusnya tetep ada');
+        assert.strictEqual(j.orders['abc123'].demo.entryPrice, 62000);
+        assert.strictEqual(j.stats.demo.wins, 3);
+        assert.strictEqual(j.stats.demo.totalPnlUsd, 42.5);
+      });
+
+      // Regresi LANGSUNG buat permintaan Olan "benerin bug dobel-PnL sekalian" -- order BTC yang
+      // lewat modul dual-exec ini TIDAK PERNAH nyentuh kaelaBankroll.js (beda dari jalur LAMA
+      // sniperOrderMonitor.js/sniperLiveMonitor.js yang DUA-DUANYA applyRealizedPnl ke situ, akar
+      // bug dobel-catat). monitorSniperBtcDual() journal KOSONG -> for-loop 0 iterasi -> NOL
+      // panggilan exec/network -- aman dipanggil beneran di sini (bukan pelanggaran
+      // no-local-live-script-test, murni no-op).
+      await test('sniperBtcDualExec: monitorSniperBtcDual (journal kosong) TIDAK PERNAH nyentuh kaelaBankroll.js', async () => {
+        const kaelaBankroll = require('./kaelaBankroll');
+        const before = kaelaBankroll.getBalance();
+        if (fsSbd.existsSync(SBD_JOURNAL)) fsSbd.unlinkSync(SBD_JOURNAL);
+        delete require.cache[require.resolve('./sniperBtcDualExec')];
+        const sbdFresh = require('./sniperBtcDualExec');
+        await sbdFresh.monitorSniperBtcDual({ idrRate: 17800 });
+        const after = kaelaBankroll.getBalance();
+        assert.strictEqual(before, after, 'kaelaBankroll balance HARUS gak berubah -- modul dual-exec sizing dari saldo exchange langsung, bukan shadow ledger global');
+      });
+
+      await test('sniperBtcDualExec: openSniperBtcDual SKIP total kalau order.id udah ada di journal (gak boleh dobel-eksekusi order yang sama)', async () => {
+        const j = sbd.loadJournal();
+        j.orders['existing-order'] = { direction: 'buy', sl: 60000, tp: 64000, wibowoRoute: 'demo', demo: { entryPrice: 62000, qty: 0.01, closedAt: null }, real: null };
+        fsSbd.writeFileSync(SBD_JOURNAL, JSON.stringify(j));
+        delete require.cache[require.resolve('./sniperBtcDualExec')];
+        const sbdFresh = require('./sniperBtcDualExec');
+        // order.id SAMA -- kalau fungsi ini nembus ke jalur exec (bukan early-return), test bakal
+        // gantung/gagal krn network call beneran ke Binance tanpa mock. Early-return yang bener
+        // artinya function selesai CEPAT tanpa exception.
+        await sbdFresh.openSniperBtcDual({ order: { id: 'existing-order', direction: 'buy', sl: 60000, tp: 64000 }, livePrice: 62500 });
+        const j2 = sbdFresh.loadJournal();
+        assert.strictEqual(j2.orders['existing-order'].demo.entryPrice, 62000, 'entry lama harusnya TETAP, gak ketiban entry baru');
+      });
+    } finally {
+      restoreSbdFiles();
+    }
+  }
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

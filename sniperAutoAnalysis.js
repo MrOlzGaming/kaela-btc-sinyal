@@ -60,6 +60,7 @@ const { detectWatchingPattern, detectWatchingFvg } = require('./patternWatchlist
 const { fetchCandles4hPaginated, PATTERN_PARAMS_4H, FVG_TREND_SMA_LEN_4H } = require('./rangerAutoTrader');
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const binanceEx = require('./binanceExecutor');
+const sniperBtcDualExecModule = require('./sniperBtcDualExec');
 const mexcEx = require('./mexcExecutor');
 // 30 Agu 2026 -- migrasi eksekusi Emas ke MEXC (lihat memori project-kaela-multi-exchange).
 // `execClientFor(assetCfg)` balikin SET FUNGSI yang bener (Binance/MEXC) berdasarkan
@@ -352,59 +353,79 @@ async function main() {
                 }, now);
                 const opened = updateOrder(created.id, { status: 'floating', entryPrice: bearLivePrice, triggeredAt: now.toISOString() });
                 usedMargin += calc.margin;
-                const exec = execClientFor(assetCfg);
-                const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
-                let liveExecution = null;
-                try {
-                  // `positionType` (14 Sep 2026, audit "Marcus" -- BUG ketemu: parameter ini
-                  // SEBELUMNYA gak pernah dioper, defaultnya di mexcExecutor.js LONG (1) walau
-                  // yang dibuka di sini SHORT -- leverage kesetel ke sisi yang SALAH di MEXC
-                  // (Binance gak kepengaruh, gak pakai param ini sama sekali, aman diabaikan).
-                  // `mexcEx.positionTypeFor` (BUKAN `exec.`) -- fungsi arah itu di-ekspor level
-                  // MODUL, bukan per-instance client, satu sumber kebenaran (lihat mexcExecutor.js).
-                  await exec.setLeverage(execSymbol, calc.leverage, mexcEx.positionTypeFor('sell'));
-                  const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: 'sell', notionalUsd: calc.nilaiPosisi, livePrice: bearLivePrice });
-                  const entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
-                  try {
-                    await exec.placeStopLoss({ symbol: execSymbol, direction: 'sell', stopPrice: shortSig.sl, quantity: entryFilledQty });
-                  } catch (slError) {
-                    console.log(`[SniperAutoAnalysis] SHORT SL GAGAL nempel (${slError.message}) -- tutup PAKSA demi keamanan.`);
-                    await exec.emergencyCloseMarket({ symbol: execSymbol, direction: 'sell', quantity: entryFilledQty });
-                    throw new Error(`Entry short masuk tapi SL gagal nempel (${slError.message}) -- UDAH DITUTUP PAKSA otomatis.`);
+                // Dual-exec demo+real (26 Sep 2026, lihat sniperBtcDualExec.js -- Fase 2) -- begitu
+                // enabled, jalur LAMA di bawah (execClientFor tunggal, ikut killSwitch.js testnet)
+                // DILEWATIN TOTAL buat cabang SHORT ini -- modul baru pegang eksekusi (2 leg
+                // independen), journal SENDIRI (sniper-btc-dual-exec-journal.json). Byproduct fix:
+                // cabang SHORT ini SEBELUMNYA gak pernah digerbang isLiveTradingEnabled() sama
+                // sekali (beda dari cabang LONG di bawah, asimetri lama) -- jalur dual-exec baru
+                // EKSPLISIT ngecek itu, asimetrinya ilang sendirinya begitu diaktifin.
+                if (sniperBtcDualExecModule.loadConfig().enabled === true) {
+                  if (isLiveTradingEnabled()) {
+                    await sniperBtcDualExecModule.openSniperBtcDual({ order: opened, livePrice: bearLivePrice });
+                  } else {
+                    console.log('[SniperAutoAnalysis] Dual-exec enabled tapi kill switch OFF -- shadow tracking doang, gak eksekusi.');
                   }
-                  // 🐛 FIX 26 Sep 2026 (Olan, audit proaktif) -- SEBELUMNYA `quantity: entryFilledQty`
-                  // (FULL, bukan separuh) -- kontradiksi sama `tpReasoning` sendiri ("Target tahap 1
-                  // (beli-balik separuh)"). TP native FULL-qty berarti begitu 2R kesentuh, SELURUH
-                  // posisi langsung tertutup di exchange (bukan cuma separuh) -- mekanisme "sisa
-                  // di-trail SMA" gak pernah beneran kesempatan jalan. Fix: separuh qty (dibulatkan
-                  // stepSize), SAMA pola persis `sniperMultiAccount.js` (`halfQty > 0 ? halfQty :
-                  // filledQty`, fallback full kalau posisi kekecilan buat dibagi 2).
-                  const { stepSize: slotStepSize, quantityPrecision: slotQtyPrecision } = await exec.getSymbolInfo(execSymbol);
-                  const shortHalfQty = binanceEx.roundToStepSize(entryFilledQty / 2, slotStepSize, slotQtyPrecision);
-                  await exec.placeTakeProfit({ symbol: execSymbol, direction: 'sell', tpPrice: partialTp, quantity: shortHalfQty > 0 ? shortHalfQty : entryFilledQty });
-                  // `testnet` (14 Sep 2026) -- SEBELUMNYA hardcode `true` (waktu itu emang CUMA
-                  // bisa demo). SEKARANG ikutin `isTestnet()` ASLI biar pesan WA jujur nyebut
-                  // Demo/Real yang beneran kejadian (lihat liveExecutionLines, sniperOrderLog.js).
-                  liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet(), exchange: assetCfg.exchange };
-                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT sukses (window bear, ${isTestnet() ? 'demo' : 'REAL'}) -- qty ${entryFilledQty}.`);
-                } catch (e) {
-                  liveExecution = { ok: false, error: e.message, testnet: isTestnet(), exchange: assetCfg.exchange };
-                  console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT gagal (${isTestnet() ? 'demo' : 'REAL'}, shadow tracking tetap jalan): ${e.message}`);
+                  const dualMsg = `[SniperBtcDual] SHORT window bear ${shortSig.patternType} @ ${bearLivePrice}, SL ${shortSig.sl}, TP1 ${partialTp} -- eksekusi demo+real via sniperBtcDualExec.js (detail lengkap di WA Sniper Club/Wibowo Hedgefund).`;
+                  console.log(dualMsg + '\n');
+                  addEntry('sniper', dualMsg, now);
+                  shortSignalSent = true;
+                  anyMessageSentToday = true;
+                } else {
+                  const exec = execClientFor(assetCfg);
+                  const execSymbol = assetCfg.execSymbol || assetCfg.symbol;
+                  let liveExecution = null;
+                  try {
+                    // `positionType` (14 Sep 2026, audit "Marcus" -- BUG ketemu: parameter ini
+                    // SEBELUMNYA gak pernah dioper, defaultnya di mexcExecutor.js LONG (1) walau
+                    // yang dibuka di sini SHORT -- leverage kesetel ke sisi yang SALAH di MEXC
+                    // (Binance gak kepengaruh, gak pakai param ini sama sekali, aman diabaikan).
+                    // `mexcEx.positionTypeFor` (BUKAN `exec.`) -- fungsi arah itu di-ekspor level
+                    // MODUL, bukan per-instance client, satu sumber kebenaran (lihat mexcExecutor.js).
+                    await exec.setLeverage(execSymbol, calc.leverage, mexcEx.positionTypeFor('sell'));
+                    const entryOrder = await exec.placeMarketEntry({ symbol: execSymbol, direction: 'sell', notionalUsd: calc.nilaiPosisi, livePrice: bearLivePrice });
+                    const entryFilledQty = parseFloat(entryOrder.executedQty || entryOrder.origQty);
+                    try {
+                      await exec.placeStopLoss({ symbol: execSymbol, direction: 'sell', stopPrice: shortSig.sl, quantity: entryFilledQty });
+                    } catch (slError) {
+                      console.log(`[SniperAutoAnalysis] SHORT SL GAGAL nempel (${slError.message}) -- tutup PAKSA demi keamanan.`);
+                      await exec.emergencyCloseMarket({ symbol: execSymbol, direction: 'sell', quantity: entryFilledQty });
+                      throw new Error(`Entry short masuk tapi SL gagal nempel (${slError.message}) -- UDAH DITUTUP PAKSA otomatis.`);
+                    }
+                    // 🐛 FIX 26 Sep 2026 (Olan, audit proaktif) -- SEBELUMNYA `quantity: entryFilledQty`
+                    // (FULL, bukan separuh) -- kontradiksi sama `tpReasoning` sendiri ("Target tahap 1
+                    // (beli-balik separuh)"). TP native FULL-qty berarti begitu 2R kesentuh, SELURUH
+                    // posisi langsung tertutup di exchange (bukan cuma separuh) -- mekanisme "sisa
+                    // di-trail SMA" gak pernah beneran kesempatan jalan. Fix: separuh qty (dibulatkan
+                    // stepSize), SAMA pola persis `sniperMultiAccount.js` (`halfQty > 0 ? halfQty :
+                    // filledQty`, fallback full kalau posisi kekecilan buat dibagi 2).
+                    const { stepSize: slotStepSize, quantityPrecision: slotQtyPrecision } = await exec.getSymbolInfo(execSymbol);
+                    const shortHalfQty = binanceEx.roundToStepSize(entryFilledQty / 2, slotStepSize, slotQtyPrecision);
+                    await exec.placeTakeProfit({ symbol: execSymbol, direction: 'sell', tpPrice: partialTp, quantity: shortHalfQty > 0 ? shortHalfQty : entryFilledQty });
+                    // `testnet` (14 Sep 2026) -- SEBELUMNYA hardcode `true` (waktu itu emang CUMA
+                    // bisa demo). SEKARANG ikutin `isTestnet()` ASLI biar pesan WA jujur nyebut
+                    // Demo/Real yang beneran kejadian (lihat liveExecutionLines, sniperOrderLog.js).
+                    liveExecution = { ok: true, filledQty: entryFilledQty, testnet: isTestnet(), exchange: assetCfg.exchange };
+                    console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT sukses (window bear, ${isTestnet() ? 'demo' : 'REAL'}) -- qty ${entryFilledQty}.`);
+                  } catch (e) {
+                    liveExecution = { ok: false, error: e.message, testnet: isTestnet(), exchange: assetCfg.exchange };
+                    console.log(`[SniperAutoAnalysis] EKSEKUSI SHORT gagal (${isTestnet() ? 'demo' : 'REAL'}, shadow tracking tetap jalan): ${e.message}`);
+                  }
+                  // 🐛 FIX 14 Sep 2026 -- SAMA bug persis kayak candidate LONG di atas (lihat catatan
+                  // panjang di situ): tanpa `liveExecutedAt` di sini, `localLiveExecutor.js` nyoba
+                  // eksekusi KEDUA KALINYA siklus berikutnya, gagal (SL/TP udah nempel), order
+                  // ke-mark 'cancelled' walau posisi ASLI dari eksekusi PERTAMA ini tetap idup.
+                  updateOrder(created.id, { liveExecutedAt: now.toISOString(), liveExecution });
+                  const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
+                  console.log(msg + '\n');
+                  // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA jalur short window-bear ini gak pernah addEntry,
+                  // jadi sinyal SHORT beneran kekirim ke WA tapi HILANG dari archive.json (gap audit).
+                  addEntry('sniper', msg, now);
+                  // `alsoWibowo` (14 Sep 2026) -- SAMA aturan kayak di atas, demo gak masuk Wibowo.
+                  await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, !isTestnet());
+                  shortSignalSent = true;
+                  anyMessageSentToday = true;
                 }
-                // 🐛 FIX 14 Sep 2026 -- SAMA bug persis kayak candidate LONG di atas (lihat catatan
-                // panjang di situ): tanpa `liveExecutedAt` di sini, `localLiveExecutor.js` nyoba
-                // eksekusi KEDUA KALINYA siklus berikutnya, gagal (SL/TP udah nempel), order
-                // ke-mark 'cancelled' walau posisi ASLI dari eksekusi PERTAMA ini tetap idup.
-                updateOrder(created.id, { liveExecutedAt: now.toISOString(), liveExecution });
-                const msg = formatAutoValid({ order: opened, ta: null, sentiment: null, onchain: null, assetCfg, liveExecution, idrRate });
-                console.log(msg + '\n');
-                // 🐛 FIX 19 Sep 2026 -- SEBELUMNYA jalur short window-bear ini gak pernah addEntry,
-                // jadi sinyal SHORT beneran kekirim ke WA tapi HILANG dari archive.json (gap audit).
-                addEntry('sniper', msg, now);
-                // `alsoWibowo` (14 Sep 2026) -- SAMA aturan kayak di atas, demo gak masuk Wibowo.
-                await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, !isTestnet());
-                shortSignalSent = true;
-                anyMessageSentToday = true;
             } else {
               // 🆕 FIX 19 Sep 2026 -- jatuh ke sinyal informasional (bukan diam) begitu auto-exec
               // gak bisa aman dilakukan. `convergenceNote` dipakai buat sisipin ALASAN eksplisit,
@@ -655,7 +676,18 @@ async function main() {
       // live TIDAK BOLEH gugurin shadow tracking (itu tetap "source of truth" buat backtest) --
       // ditangkep di sini, dilaporin, run tetep lanjut normal.
       let liveExecution = null;
-      if (isLiveTradingEnabled()) {
+      // Dual-exec demo+real (26 Sep 2026, lihat sniperBtcDualExec.js -- Fase 2) -- BTC-only, config
+      // TERPISAH. Begitu enabled, jalur LAMA di bawah (execClientFor tunggal) DILEWATIN TOTAL buat
+      // BTC -- modul baru pegang eksekusi (2 leg independen), journal SENDIRI. XAU/Emas TIDAK kena
+      // gate ini sama sekali (masih lewat jalur lama execClientFor->mexcEx apa adanya).
+      const handledByDualExec = assetKey === 'btc' && sniperBtcDualExecModule.loadConfig().enabled === true;
+      if (handledByDualExec) {
+        if (isLiveTradingEnabled()) {
+          await sniperBtcDualExecModule.openSniperBtcDual({ order: opened, livePrice });
+        } else {
+          console.log('[SniperAutoAnalysis] Dual-exec enabled tapi kill switch OFF -- shadow tracking doang, gak eksekusi.');
+        }
+      } else if (isLiveTradingEnabled()) {
         // execSymbol+exec (30 Agu 2026) -- BTC tetap Binance/assetCfg.symbol (ZERO perubahan
         // perilaku), Emas sekarang eksekusi ke MEXC/assetCfg.execSymbol. Kalau MEXC_API_KEY belum
         // disetup, mexcEx.setLeverage bakal throw -- ketangkep catch di bawah SAMA PERSIS kayak
@@ -711,8 +743,12 @@ async function main() {
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
       anyMessageSentToday = true;
-      // `alsoWibowo` (14 Sep 2026, permintaan Olan) -- demo gak masuk Wibowo, cuma Sniper Club.
-      await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, !isTestnet());
+      // Dual-exec (BTC) UDAH kirim pesan buka posisi sendiri (demo->Sniper Club, real/pengganti
+      // ->Wibowo) lewat sniperBtcDualExec.js -- JANGAN kirim lagi di sini, bakal dobel.
+      if (!handledByDualExec) {
+        // `alsoWibowo` (14 Sep 2026, permintaan Olan) -- demo gak masuk Wibowo, cuma Sniper Club.
+        await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, !isTestnet());
+      }
       console.log('[SniperAutoAnalysis] VALID --', assetCfg.label, cand.mode, patternLabel, 'posisi bayangan dibuka @', livePrice);
     }
   }

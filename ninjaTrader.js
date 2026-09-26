@@ -450,6 +450,21 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     return;
   }
 
+  // (26 Sep 2026, kejadian NYATA -- Olan buka posisi manual di BingX pas gak ada floating/channel
+  // aktif, GAK ADA yang nutup krn checkAndClearStrayPosition SEBELUMNYA cuma kepanggil pas
+  // breakout KECONFIRM (di bawah) -- kalau kebetulan gak lagi ada sinyal, akun bisa nyangkut
+  // posisi manual BERJAM-JAM tanpa kedeteksi. Kebijakan Olan: "pastikan setiap posisi yang aku buka
+  // di exchange, kaela tutup.. kaela full kontrol futures exchange Olan." Fix: cek TIAP siklus
+  // (1 menit, cadence file ini) begitu `!v.floating`, TERLEPAS ada channel/breakout apa nggak --
+  // 'unsafe' (gak bisa dipastikan aman ATAU emang ternyata punya Kaela sendiri) di sini CUMA log,
+  // gak nge-block apapun (return di bawah bukan krn ini) -- entry beneran tetap kena cek ULANG di
+  // titik breakout-konfirmasi (idempoten, aman dipanggil dobel).
+  {
+    const idrRateForPatrol = await getUsdIdrRate().catch(() => null);
+    await checkAndClearStrayPosition(demoExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli demo error:`, e.message));
+    if (realExec) await checkAndClearStrayPosition(realExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli real error:`, e.message));
+  }
+
   // === GAK ADA FLOATING -- channel aktif? cek breakout ===
   if (v.channel) {
     const ch = v.channel;

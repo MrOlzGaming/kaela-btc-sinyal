@@ -424,12 +424,19 @@ Alasan: ${MANUAL_ALASAN}
 // `closePnlUsd` NULL (bukan 0) kalau gagal kebaca (mis. MEXC, `realizedPnlSince` cuma dukung
 // Binance) -- jujur bilang "cek riwayat exchange langsung", JANGAN pura-pura $0 (kesannya
 // beneran impas, padahal cuma gak kebaca -- prinsip sama kayak `_todaysPnlLine` di file ini).
+// (26 Sep 2026, permintaan Olan: "petugas yang keliling exchange siapa? cocok Markus?.. Markus
+// lapor ke kaela ada posisi ilegal di exchange Bingx, Markus sudah tutup posisi itu demi
+// keamanan") -- role MARCUS (Security Specialist, teamRoles.js) jadi "petugas" yang lapor tiap
+// kali posisi manual/ilegal kedeteksi+ditutup paksa, SAMA pola roleOpener yang udah dipakai
+// formatAutoClosedUntracked (DRAKE)/checkExecutorStuck.js (RAVEN) dst.
 function formatManualOpenAutoClosed({ exchangeBadge, symbol, direction, entryPrice, closePrice, leverage, marginUsd, nilaiPosisi, closePnlUsd }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const pnlLine = closePnlUsd == null
     ? 'PnL auto-close: gak kebaca otomatis -- cek riwayat exchange langsung.'
     : `PnL auto-close: *${closePnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(closePnlUsd, idrRate)}*`;
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi TERDETEKSI, LANGSUNG DITUTUP OTOMATIS*
+  return `${roleOpener('MARCUS', `ada posisi ilegal kedeteksi di ${exchangeBadge}, udah ditutup paksa demi keamanan Olan`)}
+
+${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi TERDETEKSI, LANGSUNG DITUTUP OTOMATIS*
 ${dirLabel} @ ${fmtUsd(entryPrice)} → ditutup @ ${fmtUsd(closePrice)}
 
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)

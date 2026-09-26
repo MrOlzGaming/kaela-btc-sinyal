@@ -44,8 +44,9 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
-const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL, formatWinRateLines, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
-const { sendWhatsApp } = require('./fonnte');
+const { formatAutoOpen, formatAutoClosed, formatAutoClosedUntracked, formatAutoPartial, formatAutoAddLayer, CLOSE_REASON_LABEL, formatWinRateLines, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, toSniperClubLink } = require('./darkKaelaLog');
+const { sendWhatsApp, sendWhatsAppToSniperClub } = require('./fonnte');
+const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 // (5 Sep 2026, metode Nyopet BARU "Fed Dovish Grid" -- lihat backtest/fedSignalGridBacktest.js
 // buat riset lengkapnya) -- fetchKlines/computeSignals/computeSMA/FINAL_RECIPE di-REUSE LANGSUNG
 // dari file backtest (SATU sumber kebenaran, sinyal live WAJIB persis sama logic yang di-backtest,
@@ -220,6 +221,28 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     return assetCfg && assetCfg.exchange === 'mexc' ? false : isDemo;
   }
 
+  // (26 Sep 2026, kebijakan eksplisit Olan: "kalo grup sniper ga ada info trading real.. link
+  // yang di share cuma link btc sinyal bukan kaela akses.. kalo pesan tradingan hedge fund baru
+  // kaela akses boleh") -- jalur LAMA (Emas/XAU + Fed Dovish Grid, gak lewat rangerBtcDualExec.js)
+  // SEBELUMNYA broadcast 1 pesan IDENTIK ke SEMUA grup (`notify`=`sendWhatsApp` polos) -- Sniper
+  // Club ikut keliatan info REAL (Emas SELALU real, Fed Grid ikut killSwitch testnet global) +
+  // link Kaela Akses bocor ke situ. Fix: demo -> Sniper Club (link BTC Sinyal) DAN Wibowo
+  // Hedgefund (link Kaela Akses asli) -- real -> Wibowo Hedgefund DOANG, Sniper Club GAK DAPET
+  // APA-APA (SAMA prinsip wibowoRoute yang udah dipakai Ninja/rangerBtcDualExec.js/
+  // sniperBtcDualExec.js, cuma disederhanain krn di sini CUMA ADA 1 mode aktif per sinyal, gak
+  // pernah demo+real BARENGAN kayak dual-exec). CUMA berlaku akun DEFAULT Olan sendiri (`!apiCreds`,
+  // pola yang UDAH established buat bedain akun Olan vs member lain) -- member LAIN (apiCreds
+  // keisi) TETAP pakai `notify` asli mereka (routing per-member sendiri), TIDAK disentuh sama
+  // sekali biar ZERO resiko regresi ke sistem multi-akun.
+  async function routedNotify(msg, assetCfg) {
+    if (apiCreds) { await notify(msg); return; } // member lain -- jalur lama APA ADANYA
+    const demo = isDemoFor(assetCfg);
+    if (demo) {
+      await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch((e) => console.log('[NyopetAutoTrader] Gagal kirim Sniper Club:', e.message));
+    }
+    await sendWhatsAppToWibowo(msg).catch((e) => console.log('[NyopetAutoTrader] Gagal kirim Wibowo:', e.message));
+  }
+
   // 12 Sep 2026, permintaan Olan ("sertakan PnL hari ini" di redesign pesan) -- SAMA konsep kayak
   // positionReconciler.js buat trading manual, sekarang Nyopet AUTO (close/partial) juga dikasih
   // konteks total PnL BTCUSDC hari ini, bukan cuma angka 1 transaksi. Cuma jalan kalau `phone`
@@ -382,7 +405,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(journalPath, '.json')}-nyopet-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
-          await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }));
+          await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }), assetCfg);
         }
       }
       throw e;
@@ -421,7 +444,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const todaysPnlOpen = await _todaysBtcPnl(assetCfg, new Date());
     const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), dxyLine, isDemoFor(assetCfg), idrRate, smartMoney.line, todaysPnlOpen, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
-    await notify(msg);
+    await routedNotify(msg, assetCfg);
     // 6 Sep 2026, permintaan Olan (jurnal member: "beda dia trade sendiri atau karena kaela") --
     // BUG ketemu: `note` SEBELUMNYA selalu nulis "Chart Pattern/FVG (${sig.patternType})" apa
     // adanya, walau `sig.patternType==='manual'` -- Note Journal Sheet member jadi salah bunyi
@@ -452,7 +475,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const todaysPnl = await _todaysBtcPnl(assetCfg, new Date());
     const msg = formatAutoPartial({ ...target, assetLabel: assetCfg.label }, new Date(), isDemoFor(assetCfg), idrRate, todaysPnl, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
-    await notify(msg);
+    await routedNotify(msg, assetCfg);
     emit({ entryId: order.id, type: 'partial', realizedPnlUsd, sl: order.entryPrice, exchange: assetCfg.exchange });
     return target;
   }
@@ -495,7 +518,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
         assetLabel: assetCfg.label, entryPrice: order.entryPrice,
       }, isDemoFor(assetCfg), SYSTEM_LABEL.RANGER);
       console.log(msg + '\n');
-      await notify(msg);
+      await routedNotify(msg, assetCfg);
       emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: null, closedAt: target.closedAt, exchange: assetCfg.exchange });
       return target;
     }
@@ -565,7 +588,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const winRateLines = formatWinRateLines(stats, `Ranger ${assetCfg.label} (${isDemoFor(assetCfg) ? 'Demo' : 'Real'})`, idrRate);
     msg = msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
     console.log(msg + '\n');
-    await notify(msg);
+    await routedNotify(msg, assetCfg);
     emit({ entryId: order.id, type: 'close', status: 'closed', pnlUsd: target.pnlUsd, closedAt: target.closedAt, exchange: assetCfg.exchange });
     return target;
   }
@@ -972,7 +995,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(journalPath, '.json')}-nyopet-fedgrid-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
-          await notify(formatInsufficientBalanceAlert({ strategy: 'Nyopet (Fed Dovish Grid)', assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }));
+          await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Nyopet (Fed Dovish Grid)', assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }), assetCfg);
         }
       }
       throw e;
@@ -1002,7 +1025,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const todaysPnlGridOpen = await _todaysBtcPnl(assetCfg, new Date());
     const msg = formatAutoOpen({ ...order, assetLabel: assetCfg.label }, new Date(), '', isDemo, idrRate, smartMoney.line, todaysPnlGridOpen, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
-    await notify(msg);
+    await routedNotify(msg, assetCfg);
     emit({ entryId: order.id, type: 'open', strategy: 'nyopet', asset: assetKey, exchange: assetCfg.exchange, direction: 'buy', entryPrice, sl, tp, leverage: FINAL_RECIPE.leverage, marginUsd: order.marginUsd, status: 'open', openedAt: order.triggeredAt, note: `Fed Dovish Grid (${signal.label})` });
     return order;
   }
@@ -1038,7 +1061,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const todaysPnlLayer = await _todaysBtcPnl(assetCfg, new Date());
     const msg = formatAutoAddLayer({ ...target, assetLabel: assetCfg.label }, new Date(), isDemo, idrRate, todaysPnlLayer, EXCHANGE_BADGE[assetCfg.exchange], SYSTEM_LABEL.RANGER);
     console.log(msg + '\n');
-    await notify(msg);
+    await routedNotify(msg, assetCfg);
     emit({ entryId: target.id, type: 'addLayer', layers: target.layers, entryPrice: newEntryPrice, exchange: assetCfg.exchange });
   }
 

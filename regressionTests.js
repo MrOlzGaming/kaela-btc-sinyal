@@ -23,7 +23,7 @@ const { detectStuck, parseTimestamp } = require('./checkExecutorStuck');
 const { getExposure, hitung } = require('./calculator');
 const { positionTypeFor, openSideFor, closeSideFor } = require('./mexcExecutor');
 const { createLedgerState, totalWealth, computeBetSizing, applyTradeResult, checkAndRolloverCycle } = require('./secureCompoundLedger');
-const { formatManualOpenAutoClosed, formatAutoOpen, shortId, liquidationPrice, SYSTEM_LABEL, EXCHANGE_BADGE } = require('./darkKaelaLog');
+const { formatManualOpenAutoClosed, formatAutoOpen, shortId, liquidationPrice, SYSTEM_LABEL, EXCHANGE_BADGE, KAELA_ACCESS_URL, SNIPER_WEB_URL, toSniperClubLink } = require('./darkKaelaLog');
 const { formatTriggered: sniperFormatTriggered, formatClosed: sniperFormatClosed, formatPartialClosed: sniperFormatPartialClosed, isDemoFor: sniperIsDemoFor } = require('./sniperOrderLog');
 const { nextVariantSignalId } = require('./ninjaTrader');
 const { computeSplit, WALLETS, CAP_PER_WALLET } = require('./monthlyFundingReminder');
@@ -772,6 +772,18 @@ async function main() {
       restoreGtpFiles();
     }
   }
+
+  // (26 Sep 2026, kebijakan Olan: "grup sniper ga ada info trading real.. link yang di share cuma
+  // link btc sinyal bukan kaela akses") -- toSniperClubLink() swap KAELA_ACCESS_URL->SNIPER_WEB_URL
+  // di pesan yang dikirim ke Sniper Club (ninjaTrader.js/rangerBtcDualExec.js/sniperBtcDualExec.js),
+  // pesan ke Wibowo TETAP pakai KAELA_ACCESS_URL apa adanya (msg asli gak boleh ke-mutasi).
+  await test('darkKaelaLog: toSniperClubLink swap ke SNIPER_WEB_URL, gak mutasi string asli', () => {
+    const original = `Contoh pesan\n\n🔗 ${KAELA_ACCESS_URL}`;
+    const swapped = toSniperClubLink(original);
+    assert.ok(swapped.includes(SNIPER_WEB_URL), 'harusnya kepasang SNIPER_WEB_URL');
+    assert.ok(!swapped.includes(KAELA_ACCESS_URL), 'harusnya KAELA_ACCESS_URL udah ke-swap total');
+    assert.ok(original.includes(KAELA_ACCESS_URL), 'string ASLI harusnya TETAP KAELA_ACCESS_URL (gak boleh kemutasi -- pesan Wibowo pakai variabel yang sama)');
+  });
 
   // ============ rangerBtcDualExec.js (26 Sep 2026) ============
   // Modul ini BACA/TULIS file config+journal ASLI proyek (ranger-btc-dual-exec-config.json/

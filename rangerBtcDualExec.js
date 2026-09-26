@@ -42,7 +42,7 @@ const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const { isBtcBearWindow, isBtcApproachingWindowFlip } = require('./halvingBearWindow');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
-const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatWinRateLines } = require('./darkKaelaLog');
+const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
@@ -225,7 +225,7 @@ async function openRangerBtcDual({ sig, livePrice }) {
 
   const posBase = { id: tradeId, signalId, direction: sig.direction, sl: sig.sl, tp: partialTp, patternType: sig.patternType, mode: sig.patternType, manualReason: sig.manualReason, assetLabel: ASSET_LABEL };
   const demoMsg = formatAutoOpen({ ...posBase, entryPrice: demoResult.entryPrice, marginUsd: demoResult.margin, leverage: demoResult.leverage, nilaiPosisi: demoResult.nilaiPosisi }, new Date(), '', true, null, '', null, badge(true), SYSTEM_LABEL.RANGER);
-  await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club:`, e.message));
+  await sendWhatsAppToSniperClub(toSniperClubLink(demoMsg)).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club:`, e.message));
   if (wibowoRoute === 'real') {
     const realMsg = formatAutoOpen({ ...posBase, entryPrice: realResult.entryPrice, marginUsd: realResult.margin, leverage: realResult.leverage, nilaiPosisi: realResult.nilaiPosisi }, new Date(), '', false, null, '', null, badge(false), SYSTEM_LABEL.RANGER);
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Wibowo (real):`, e.message));
@@ -344,7 +344,7 @@ async function reportPartial(slotKey, f, mode, idrRate) {
   const isDemo = mode !== 'real';
   const msg = formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: leg.realizedPnlUsd, entryPrice: leg.entryPrice, assetLabel: ASSET_LABEL, patternType: f.patternType, mode: f.patternType }, new Date(), isDemo, idrRate, null, badge(isDemo), SYSTEM_LABEL.RANGER);
   const wantsThisMode = (mode === 'real') === (f.wibowoRoute === 'real');
-  await sendWhatsAppToSniperClub(msg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club (partial):`, e.message));
+  await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club (partial):`, e.message));
   if (mode === 'demo' && f.wibowoRoute === 'demo') await sendWhatsAppToWibowo(msg).catch(() => {});
   if (mode === 'real' && f.wibowoRoute === 'real') await sendWhatsAppToWibowo(msg).catch(() => {});
 }
@@ -356,7 +356,7 @@ async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
 
   if (leg.untracked) {
     const msg = formatAutoClosedUntracked({ id: f.id, direction: f.direction === 'buy' ? 'long' : 'short', assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice }, isDemo, SYSTEM_LABEL.RANGER);
-    if (mode === 'demo') await sendWhatsAppToSniperClub(msg).catch(() => {});
+    if (mode === 'demo') await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch(() => {});
     if ((mode === 'real') === (f.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch(() => {});
     return;
   }
@@ -372,7 +372,7 @@ async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
   const winRateLines = formatWinRateLines(stats, `Ranger ${ASSET_LABEL} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
   msg = msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
 
-  if (mode === 'demo') await sendWhatsAppToSniperClub(msg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club (close):`, e.message));
+  if (mode === 'demo') await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club (close):`, e.message));
   if ((mode === 'real') === (f.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Wibowo (close):`, e.message));
 }
 

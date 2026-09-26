@@ -50,7 +50,7 @@ const { fetchCandles } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
-const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatWinRateLines } = require('./darkKaelaLog');
+const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { updateOrder } = require('./sniperOrders');
@@ -228,7 +228,7 @@ async function openSniperBtcDual({ order, livePrice }) {
 
   const posBase = { id: order.id, signalId: order.signalId, direction: order.direction, sl: order.sl, tp: order.tp, patternType: order.patternType, mode: order.mode, assetLabel: ASSET_LABEL };
   const demoMsg = formatAutoOpen({ ...posBase, entryPrice: demoResult.entryPrice, marginUsd: demoResult.marginUsd, leverage: demoResult.leverage, nilaiPosisi: demoResult.nilaiPosisi }, new Date(), '', true, null, '', null, badge(), SYSTEM_LABEL.SNIPER);
-  await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club:', e.message));
+  await sendWhatsAppToSniperClub(toSniperClubLink(demoMsg)).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club:', e.message));
   if (wibowoRoute === 'real') {
     const realMsg = formatAutoOpen({ ...posBase, entryPrice: realResult.entryPrice, marginUsd: realResult.marginUsd, leverage: realResult.leverage, nilaiPosisi: realResult.nilaiPosisi }, new Date(), '', false, null, '', null, badge(), SYSTEM_LABEL.SNIPER);
     await sendWhatsAppToWibowo(realMsg).catch((e) => console.log('[SniperBtcDual] Gagal kirim Wibowo (real):', e.message));
@@ -264,7 +264,7 @@ async function _doPartialAndReopen(o, mode, exec, posQtyBeforeClose, idrRate) {
 
   const isDemo = mode !== 'real';
   const msg = formatAutoPartial({ id: o.id, signalId: o.signalId, realizedPnlUsd: leg.partialPnlUsd, entryPrice: leg.entryPrice, assetLabel: ASSET_LABEL, trailSmaLen: TRAIL_SMA_LEN }, new Date(), isDemo, idrRate, null, badge(), SYSTEM_LABEL.SNIPER);
-  await sendWhatsAppToSniperClub(msg).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club (partial):', e.message));
+  await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club (partial):', e.message));
   if ((mode === 'real') === (o.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch(() => {});
 }
 
@@ -276,7 +276,7 @@ async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
 
   if (leg.untracked) {
     const msg = formatAutoClosedUntracked({ id: o.id, direction: o.direction === 'buy' ? 'long' : 'short', assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice }, isDemo, SYSTEM_LABEL.SNIPER);
-    if (mode === 'demo') await sendWhatsAppToSniperClub(msg).catch(() => {});
+    if (mode === 'demo') await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch(() => {});
     if ((mode === 'real') === (o.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch(() => {});
     return stats;
   }
@@ -290,7 +290,7 @@ async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
   const winRateLines = formatWinRateLines(stats, `Sniper ${ASSET_LABEL} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
   msg = msg.replace(`🔗 ${KAELA_ACCESS_URL}`, winRateLines + `🔗 ${KAELA_ACCESS_URL}`);
 
-  if (mode === 'demo') await sendWhatsAppToSniperClub(msg).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club (close):', e.message));
+  if (mode === 'demo') await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club (close):', e.message));
   if ((mode === 'real') === (o.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch((e) => console.log('[SniperBtcDual] Gagal kirim Wibowo (close):', e.message));
   return stats;
 }

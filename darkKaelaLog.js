@@ -11,6 +11,16 @@ const { roleOpener } = require('./teamRoles');
 
 const COINGLASS_LINK = 'https://www.coinglass.com/pro/futures/LiquidationHeatMap';
 const KALKULATOR_LINK = 'https://kaela-btc-sinyal.netlify.app/kalkulator.html';
+// (26 Sep 2026, kebijakan eksplisit Olan: "kalo grup sniper ga ada info trading real.. link yang
+// di share cuma link btc sinyal bukan kaela akses.. kalo pesan tradingan hedge fund baru kaela
+// akses boleh") -- SEMUA template formatAuto* di bawah hardcode KAELA_ACCESS_URL (link member
+// portal, buat Wibowo Hedgefund) -- caller yang ngirim ke Sniper Club WAJIB swap link itu ke
+// WEB_URL (situs publik BTC Sinyal) SEBELUM kirim. Helper string-replace (bukan parameter baru di
+// tiap fungsi format -- itu bakal ubah signature belasan fungsi buat 1 kebutuhan simpel) dipakai
+// PERSIS di titik `sendWhatsAppToSniperClub(...)` (ninjaTrader.js/rangerBtcDualExec.js/
+// sniperBtcDualExec.js, pola wibowoRoute yang UDAH misahin pesan demo vs real).
+const SNIPER_WEB_URL = 'https://kaela-btc-sinyal.netlify.app';
+function toSniperClubLink(msg) { return msg.split(KAELA_ACCESS_URL).join(SNIPER_WEB_URL); }
 
 function fmtUsd(n) {
   // ⚠️ BUG ketemu 3 Sep 2026 (test-render pesan close): angka negatif (PnL rugi) kepotong jadi
@@ -532,7 +542,7 @@ Alasan: ${MANUAL_ALASAN}
 module.exports = {
   formatSignal, formatBroken, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatAutoAddLayer,
   formatManualOpen, formatManualOpenAutoClosed, formatManualClose, formatManualAdd, formatManualReduce, formatManualFlip, formatHiddenActivity,
-  COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, CLOSE_REASON_LABEL,
+  COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, SNIPER_WEB_URL, toSniperClubLink, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
   fmtUsd, shortId, fmtUsdWithIdr, formatWinRateLines, liquidationPrice,

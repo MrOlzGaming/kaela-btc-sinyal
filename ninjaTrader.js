@@ -48,7 +48,7 @@ const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
 const { recordSkippedInsufficientBalance } = require('./ninjaBalanceRecap');
-const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed, SYSTEM_LABEL } = require('./darkKaelaLog');
+const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, toSniperClubLink, formatAutoOpen, formatAutoClosed, formatWinRateLines, formatManualOpenAutoClosed, SYSTEM_LABEL } = require('./darkKaelaLog');
 const { getUsdIdrRate } = require('./kaelaProTraderClient');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -307,7 +307,7 @@ async function reportOpen({ id, signalId, dir, wibowoRoute, demo, real, sl, tp }
   const idrRate = await getUsdIdrRate().catch(() => null);
 
   const demoMsg = buildOpenMsg({ id, signalId, dir, entryPrice: demo.entryPrice, sl, tp, margin: demo.margin, leverage: demo.leverage, nilaiPosisi: demo.nilaiPosisi, idrRate, isDemo: true });
-  await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
+  await sendWhatsAppToSniperClub(toSniperClubLink(demoMsg)).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && real) {
     const realMsg = buildOpenMsg({ id, signalId, dir, entryPrice: real.entryPrice, sl, tp, margin: real.margin, leverage: real.leverage, nilaiPosisi: real.nilaiPosisi, idrRate, isDemo: false });
@@ -328,7 +328,7 @@ async function reportClose({ id, signalId, variant, dir, wibowoRoute, outcome, d
   const outcomeCode = outcomeCodeFor(outcome);
 
   const demoMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceDemo, exitPrice: demoExit, pnlUsd: demoPnlUsd, feeUsd: demoFeeUsd, stats: demoStats, outcomeCode, idrRate, isDemo: true });
-  await sendWhatsAppToSniperClub(demoMsg).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
+  await sendWhatsAppToSniperClub(toSniperClubLink(demoMsg)).catch((e) => console.log('[ChannelBreakout] Gagal kirim Sniper Club:', e.message));
 
   if (wibowoRoute === 'real' && realExit != null) {
     const realMsg = buildCloseMsg({ id, signalId, variant, dir, entryPrice: entryPriceReal, exitPrice: realExit, pnlUsd: realPnlUsd, feeUsd: realFeeUsd, stats: realStats, outcomeCode, idrRate, isDemo: false });

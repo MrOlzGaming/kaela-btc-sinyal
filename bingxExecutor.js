@@ -170,10 +170,18 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   // mode, the 'ReduceOnly' field can not be filled", ketemu 23 Sep 2026 tes empiris). Beda dari
   // Binance yang WAJIB reduceOnly:true. Di hedge mode, side+positionSide kebalik SUDAH CUKUP
   // nandain ini order penutup (exchange yang nentuin otomatis, bukan flag eksplisit).
+  // clientOrderId ditag SAMA kayak placeMarketEntry (26 Sep 2026 -- audit paritas, sebelumnya
+  // fungsi ini SATU-SATUNYA titik di 3 exchange yang gak nandain order-nya sendiri, beda dari
+  // binanceExecutor.js/mexcExecutor.js emergencyCloseMarket yang udah ditag). SENGAJA belum bikin
+  // wasLastReduceOnlyOrderByKaela buat BingX (beda dari Binance/MEXC yang punya) -- ninjaTrader.js
+  // belum ada code path yang butuh "was this CLOSE mine" (cuma deteksi STRAY OPEN via
+  // wasLastEntryOrderByKaela, gak ada manual-reduce-of-tracked-position detector kayak
+  // positionReconciler.js), jadi fungsi itu bakal jadi dead code tanpa consumer. Tag ini doang
+  // yang ditambah -- observability murah, siap kepake kalau nanti ada consumer beneran.
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
     const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
     const positionSide = direction === 'buy' ? 'LONG' : 'SHORT';
-    return signedRequest('POST', '/openApi/swap/v2/trade/order', { symbol, side: closeSide, positionSide, type: 'MARKET', quantity });
+    return signedRequest('POST', '/openApi/swap/v2/trade/order', { symbol, side: closeSide, positionSide, type: 'MARKET', quantity, clientOrderId: generateKaelaClientOrderId() });
   }
 
   async function cancelAllOpenOrders(symbol) {

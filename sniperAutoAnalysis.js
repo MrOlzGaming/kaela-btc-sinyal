@@ -61,6 +61,7 @@ const { fetchCandles4hPaginated, PATTERN_PARAMS_4H, FVG_TREND_SMA_LEN_4H } = req
 const { isLiveTradingEnabled, isTestnet } = require('./killSwitch');
 const binanceEx = require('./binanceExecutor');
 const sniperBtcDualExecModule = require('./sniperBtcDualExec');
+const rangerBtcDualExecModule = require('./rangerBtcDualExec');
 const mexcEx = require('./mexcExecutor');
 // 30 Agu 2026 -- migrasi eksekusi Emas ke MEXC (lihat memori project-kaela-multi-exchange).
 // `execClientFor(assetCfg)` balikin SET FUNGSI yang bener (Binance/MEXC) berdasarkan
@@ -472,6 +473,21 @@ async function main() {
       // "🥷 NYOPET · Kaela" bikin kesan ini bagian dari sistem trading Nyopet asli, padahal murni
       // scan tambahan Sniper timeframe lebih rendah. Diganti "🎯 SNIPER · Kaela (4H)" biar jujur
       // ini scan Sniper (akun/script yang sama kayak sinyal harian di atas), cuma timeframe beda.
+      // ⛔ FIX 27 Sep 2026 (Olan: "benerin biar ranger demo langsung jadi sinyal, dan hedgefund
+      // jalan real, kalo real ga cukup, demo info ke hedgefund") -- BTC-4H scan info-only ini
+      // SEKARANG duplikat PERSIS sama sinyal yang rangerBtcDualExec.js udah tangani BENERAN (demo
+      // SELALU jalan + auto ke Sniper Club, real jalan kalau saldo cukup -> Wibowo, fallback demo
+      // ke Wibowo kalau real gak cukup -- itu POLICY YANG BENAR yang diminta di sini). Kalau block
+      // ini TETAP jalan bareng, jadinya DOBEL PESAN buat sinyal BTC yang SAMA -- satu dari sini
+      // (flat broadcast, gak bedain real/demo sama sekali, MELANGGAR aturan "Sniper Club gak boleh
+      // liat info real"), satu lagi dari rangerBtcDualExec.js (udah bener routing-nya). Skip TOTAL
+      // block ini buat BTC begitu rangerBtcDualExec.js enabled -- BUKAN ganti behavior-nya, cuma
+      // cegah gema duplikat nabrak sinyal ASLI yang udah jalan bener. Emas TETAP jalan seperti
+      // biasa (Ranger Emas gak punya dual-exec, gak ada resiko dobel).
+      const handledByRangerDualExec = assetKey === 'btc' && rangerBtcDualExecModule.loadConfig().enabled === true;
+      if (handledByRangerDualExec) {
+        console.log(`[SniperAutoAnalysis] ${assetCfg.label}: skip echo Sniper-4H -- sinyal BTC 4H udah ditangani langsung sama rangerBtcDualExec.js (demo->Sniper Club, real/demo->Wibowo).`);
+      } else {
       try {
         const nyopetCandles = await fetchCandles4hPaginated(assetCfg.symbol, 300);
         // FVG bearish dicek juga di sini (13 Sep 2026, sama alasan kayak versi daily Sniper di atas).
@@ -507,6 +523,7 @@ async function main() {
         }
       } catch (e) {
         console.log(`[SniperAutoAnalysis] ${assetCfg.label}: gagal scan sinyal short Sniper-4H window bear (${e.message}), skip.`);
+      }
       }
       // 🐛 FIX 14 Sep 2026 (Olan: "boleh perbaiki" -- kritik pagi ini, pesan "❌ BELUM ADA
       // SINYAL" nampol BARENG pesan SHORT window-bear yang beneran ketemu+kekirim, kebaca

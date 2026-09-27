@@ -23,12 +23,12 @@
   "trailing": {
     "channel": null,
     "floating": null,
-    "closedCount": 25,
+    "closedCount": 26,
     "stats": {
       "demo": {
         "wins": 9,
-        "losses": 16,
-        "totalPnlUsd": -95.05040616999898
+        "losses": 17,
+        "totalPnlUsd": -111.19670768999897
       },
       "real": {
         "wins": 0,
@@ -38,7 +38,7 @@
     },
     "dailySignalSeq": {
       "dayKey": "20260928",
-      "count": 2
+      "count": 3
     }
   }
 }

@@ -21,29 +21,27 @@
     }
   },
   "trailing": {
-    "channel": {
-      "data": {
-        "highReg": {
-          "slope": -12.637580645150475,
-          "intercept": 84661.03629032252
-        },
-        "lowReg": {
-          "slope": -11.8366666666439,
-          "intercept": 84589.50999999983
-        },
-        "len": 12,
-        "spreadStart": 71.52629032268305,
-        "spreadEnd": 61.91532258060761,
-        "startIndex": 186
+    "channel": null,
+    "floating": {
+      "id": "d3741226-c8fc-413c-9655-0e7a9c0ca4f2",
+      "signalId": "2026092701",
+      "dir": "long",
+      "sl": 84471.47258064526,
+      "tp": null,
+      "trailDistancePct": 0.03521403264794903,
+      "wibowoRoute": "demo",
+      "demo": {
+        "entryPrice": 84532.2,
+        "quantity": 0.177,
+        "leverage": 50,
+        "margin": 299.3229099,
+        "nilaiPosisi": 14966.145495,
+        "openedAt": 1790494448086,
+        "extreme": 84588.4,
+        "sl": 84558.61301320762
       },
-      "startCandleOpenTime": 1790489400000,
-      "foundAtTime": 1790493305997,
-      "pendingBreakout": {
-        "dir": "long",
-        "entryPriceTheoretical": 84501.22887096781
-      }
+      "real": null
     },
-    "floating": null,
     "closedCount": 19,
     "stats": {
       "demo": {
@@ -58,8 +56,8 @@
       }
     },
     "dailySignalSeq": {
-      "dayKey": "20260926",
-      "count": 2
+      "dayKey": "20260927",
+      "count": 1
     }
   }
 }

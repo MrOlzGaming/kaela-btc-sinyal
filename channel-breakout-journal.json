@@ -37,7 +37,11 @@
         "startIndex": 186
       },
       "startCandleOpenTime": 1790489400000,
-      "foundAtTime": 1790493305997
+      "foundAtTime": 1790493305997,
+      "pendingBreakout": {
+        "dir": "long",
+        "entryPriceTheoretical": 84501.22887096781
+      }
     },
     "floating": null,
     "closedCount": 19,

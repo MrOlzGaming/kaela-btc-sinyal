@@ -105,7 +105,17 @@ fi
 # file untracked (cuma revert file TRACKED yang berubah). Peringatan ini jadi "false alarm permanen"
 # sejak ditulis 19 Sep -- nyala TERUS gara-gara file untracked yang emang selalu ada, nutupin sinyal
 # asli (tracked file beneran kotor, yang WAJIB diwaspadai). Fix: filter buang baris `??` dulu.
-DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null | grep -v '^??' || true)
+# ⛔ SUSULAN 27 Sep 2026 (Drake TETAP lapor lagi abis fix di atas, kali ini `usd-idr-rate-cache.json`
+# TRACKED beneran kotor) -- akar masalah: `getUsdIdrRate()` (kaelaProTraderClient.js) nulis file ini
+# ke disk SETIAP KALI dipanggil (cache fallback kalau fetch live gagal), dipanggil SEMUA cron
+# termasuk yang cadence 1 MENIT (run-channel-breakout-vultr.sh/run-manual-open-check-vultr.sh) --
+# 15x lebih sering dari siklus 15-menit ini, jadi file ini HAMPIR SELALU baru ke-tulis (dirty) pas
+# dicek di sini, padahal ISINYA cuma cache kurs (kalau ke-reset --hard, paling numpang balik ke
+# angka SEBELUMNYA, bukan hilang data beneran -- fetch berikutnya nulis ulang otomatis). Beda kelas
+# sama `??` di atas (itu SELALU aman diabaikan), file ini SEKALI-SEKALI beneran kotor krn alasan
+# valid TAPI gak pernah beresiko -- exclude eksplisit drpd nutupin sinyal tracked file LAIN yang
+# beneran perlu diwaspadai.
+DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null | grep -v '^??' | grep -v ' usd-idr-rate-cache.json$' || true)
 UNPUSHED_COMMITS=$(git rev-list --count origin-new/master..HEAD 2>/dev/null || echo 0)
 if [ -n "$DIRTY_BEFORE_RESET" ] || [ "$UNPUSHED_COMMITS" -gt 0 ]; then
   log "PERINGATAN: git reset --hard AKAN MEMBUANG state -- working tree kotor: $([ -n "$DIRTY_BEFORE_RESET" ] && echo yes || echo no), commit lokal belum ke-push: $UNPUSHED_COMMITS. Kemungkinan besar sisa push GAGAL siklus sebelumnya -- cek log."

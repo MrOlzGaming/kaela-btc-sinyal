@@ -337,6 +337,19 @@ async function main() {
     assert.ok(msg.includes('Bull Flag'), `Alasan harus dari patternType (flag_bull), bukan mode ('sniper'):\n${msg}`);
   });
 
+  // 27 Sep 2026, koreksi Olan: trailing murni (tp null) labelnya "TP", BUKAN "TP1" -- gak ada
+  // tahap 1, posisi ditutup sekali di invalidasi yang ikut gerak. "TP1" tetap buat exit 2-tahap.
+  await test('formatAutoOpen: trailing murni (tp null) label "TP" bukan "TP1", exit 2-tahap tetap "TP1"', () => {
+    const base = { id: 'x', entryPrice: 100, sl: 90, leverage: 10, marginUsd: 10, nilaiPosisi: 100, mode: 'channel_breakout', assetLabel: 'BTC' };
+    const trailLong = formatAutoOpen({ ...base, direction: 'buy', tp: null }, new Date(), '', true, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.NINJA);
+    assert.ok(!trailLong.includes('TP1'), `Trailing gak boleh ada "TP1":\n${trailLong}`);
+    assert.ok(trailLong.includes('TP: trailing') && trailLong.includes('ikut naik'), `Trailing LONG harus "TP: trailing ... ikut naik":\n${trailLong}`);
+    const trailShort = formatAutoOpen({ ...base, direction: 'sell', tp: null, sl: 110 }, new Date(), '', true, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.NINJA);
+    assert.ok(trailShort.includes('ikut turun'), `Trailing SHORT harus "ikut turun":\n${trailShort}`);
+    const twoStage = formatAutoOpen({ ...base, direction: 'buy', tp: 110 }, new Date(), '', true, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.SNIPER);
+    assert.ok(twoStage.includes('TP1: $110'), `Exit 2-tahap tetap "TP1":\n${twoStage}`);
+  });
+
   // Fee round-trip (26 Sep 2026, permintaan Olan "aku mau fee trading tampil juga, biar ketemu net
   // trading" -- MASTER_RULE_DYNAMIC_CANDLE_INVALIDATION Bagian 3-5+22). Ground-truth: status
   // ✅/❌ HARUS ikutin PnL BERSIH (net), bukan gross -- trade gross untung tapi abis fee jadi rugi

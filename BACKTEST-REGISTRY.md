@@ -89,8 +89,21 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
 
 - **Divalidasi**: 23 Sep 2026 (live mulai), keputusan final "Trailing-only" dikunci 26 Sep 2026
   (versi TP-Tetap DIHENTIKAN, kalah head-to-head).
+- ⛔ **KOREKSI FEE 27 Sep 2026 (BUG-KAELATRADE-0045)** -- angka "net-of-fee" lama (Trailing PF 10,82,
+  TP-Tetap PF 2,70) SALAH: rumus fee pakai leverage x fee% ("1R = margin penuh"), padahal leverage
+  kena cap 50x di 100% trade, jadi 1R cuma ~0,10% harga dan fee round-trip ~**1,15R per trade** (bukan
+  0,05R). Angka net yang BENER (`fee-check-output.log`, n=2.696):
+  | Fee round-trip | Trailing PF / win (net) | TP-Tetap PF / win (net) |
+  |---|---|---|
+  | 0 (gross) | 11,70 / 71,4% | 2,98 / 74,9% |
+  | 0,04% (~maker+maker) | 6,17 / 64,5% | 1,09 / 69,9% |
+  | 0,10% (~taker+taker) | 2,82 / 54,6% | 0,16 / 38,6% |
+  | 0,20% (fallback live `FALLBACK_FEE_PERCENT` x2 sisi) | **1,06 / 41,5%** | 0,01 / 9,1% |
+  Keputusan Trailing > TP-Tetap TETAP bener (menang di semua level fee), tapi edge-nya SANGAT
+  sensitif ke fee asli. Demo live s/d 27 Sep: win 9/20 (45%) -- nyambung ke skenario fee tinggi,
+  BUKAN ke 71% gross. Angka gross per-tahun di bawah masih valid SEBAGAI GROSS.
 - **Angka** (Trailing, YANG LIVE SEKARANG): n=2.694 trade, win rate **71,4%**, PF **11,68** gross,
-  PF **10,82** net-of-fee. Data BTCUSDT 5-menit 2 tahun (2024-09-22 s/d 2026-09-22). Konsisten per
+  ~~PF 10,82 net-of-fee~~ (salah, lihat koreksi di atas). Data BTCUSDT 5-menit 2 tahun (2024-09-22 s/d 2026-09-22). Konsisten per
   tahun: 2024 PF 11,77 (n=393), 2025 PF 11,15 (n=1.317), 2026 PF 12,39 (n=984).
   Head-to-head vs TP-Tetap (PF 2,99) di 2.411 sinyal yang match persis: Trailing menang 1.612 kali
   vs 579 -> TP-Tetap dihentikan.

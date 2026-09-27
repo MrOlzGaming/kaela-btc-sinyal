@@ -1,7 +1,10 @@
 // ninjaTrader.js (22-23 Sep 2026) -- eksekutor LIVE strategi "Ninja" (dulu "Channel Breakout")
 // (BTCUSDT candle 5-menit), divalidasi backtest 2-tahun (lihat backtestNyopetChannelBreakout*.js):
 // per-tahun konsisten, split-era hampir identik, sensitivitas parameter halus/monoton,
-// direction-flip kuat (75% arah asli vs 22% dibalik), tahan fee (PF 2.99->2.70 net TP-tetap).
+// direction-flip kuat (75% arah asli vs 22% dibalik). ⛔ Klaim lama "tahan fee (PF 2.99->2.70 net
+// TP-tetap)" SALAH (BUG-KAELATRADE-0045, 27 Sep 2026): fee ~1,15R/trade, bukan 0,05R -- trailing net
+// PF 2,82 @0,10% round-trip, 1,06 @0,20% (fallback yg dipakai stats live di bawah). Lihat
+// BACKTEST-REGISTRY.md bagian Ninja.
 //
 // ============ ARSITEKTUR (revisi 26 Sep 2026, keputusan final Olan) ============
 // SEBELUMNYA (23 Sep 2026) 2 varian jalan berbarengan buat dibandingin ("biar ketemu yang

@@ -846,15 +846,15 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // bawah) -- konsisten sama keputusan Sniper malam ini. Exposure short (SEMUA akun, real
     // maupun demo) SEKARANG separuh dari long -- lihat `direction: sig.direction` di
     // `openPosition()`/calculator.js `hitung()`.
-    // "Kabur" blackout (13 Sep 2026, permintaan Olan: "kita akan kabur 1 bulan buat tidak trading
-    // sebelum saat window mendekati habis") -- BERLAKU REAL MAUPUN DEMO (beda dari pembatasan
-    // short yang demo-only -- ini soal ENTRY BARU mepet transisi, real JUGA auto-long biasa kena
-    // risiko sama). Posisi yang UDAH floating TETAP dikelola normal (SL/TP/trail/WINDOW_FLIP di
-    // bagian atas function ini gak kesentuh, cuma entry BARU yang dijedain).
-    if (assetKey === 'btc' && isBtcApproachingWindowFlip(new Date())) {
-      console.log(`[NyopetAutoTrader] ${assetCfg.label}: window bakal ganti ~${daysUntilBtcWindowFlip(new Date()).toFixed(0)} hari lagi -- entry baru DIJEDAKAN ("kabur" 1 bulan sebelum transisi).`);
-      return;
-    }
+    // ⛔ "Kabur" blackout DICABUT 27 Sep 2026 (permintaan eksplisit Olan, "gpp jalankan otomatis
+    // aja, karena aku merasa aman dengan take profit trailing stop") -- SEBELUMNYA (13 Sep 2026)
+    // entry baru BTC dijedain ~1 bulan sebelum window bear/bull ganti, biar gak kebuka trus
+    // ke-force-close mepet abis transisi. Olan sadar trade-off-nya (dikasih tau eksplisit sebelum
+    // mutusin) dan pilih percaya mekanisme trailing-stop udah cukup ngelola resiko itu -- gak perlu
+    // pause tambahan lagi. `isBtcApproachingWindowFlip`/`daysUntilBtcWindowFlip` DIPERTAHANKAN
+    // (dipakai fungsi lain / jaga-jaga kalau kebijakan ini direvisi lagi), cuma GERBANG return-nya
+    // yang dicabut -- posisi yang lagi floating pas window BENERAN ganti TETAP kena WINDOW_FLIP
+    // force-close SEPERTI BIASA (safety net itu TIDAK ikut tercabut, cuma pause pre-entry ini doang).
 
     const inBearWindow = assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;

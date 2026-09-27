@@ -1,0 +1,33 @@
+{
+  "updatedAt": "2026-09-27T01:30:55.083Z",
+  "wallets": [
+    {
+      "key": "sniperBtc",
+      "label": "🎯 Sniper BTC",
+      "balance": 0,
+      "cap": 1000,
+      "pct": 0
+    },
+    {
+      "key": "nyopetBtc",
+      "label": "🏹 Ranger BTC",
+      "balance": 0,
+      "cap": 1000,
+      "pct": 0
+    },
+    {
+      "key": "sniperEmas",
+      "label": "🎯 Sniper Emas",
+      "balance": 0,
+      "cap": 1000,
+      "pct": 0
+    },
+    {
+      "key": "nyopetEmas",
+      "label": "🏹 Ranger Emas",
+      "balance": 0,
+      "cap": 1000,
+      "pct": 0
+    }
+  ]
+}

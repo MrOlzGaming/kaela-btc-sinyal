@@ -22,32 +22,13 @@
   },
   "trailing": {
     "channel": null,
-    "floating": {
-      "id": "00bc1d8e-5e49-4c9f-9b90-f9730e9ad70a",
-      "signalId": "2026092704",
-      "dir": "short",
-      "sl": 85044.35587112175,
-      "tp": null,
-      "trailDistancePct": 0.052090663697241635,
-      "wibowoRoute": "demo",
-      "demo": {
-        "entryPrice": 84922.3,
-        "quantity": 0.0881,
-        "leverage": 50,
-        "margin": 149.6341359,
-        "nilaiPosisi": 7481.706795,
-        "openedAt": 1790515810023,
-        "extreme": 84922.3,
-        "sl": 84966.57710517236
-      },
-      "real": null
-    },
-    "closedCount": 22,
+    "floating": null,
+    "closedCount": 23,
     "stats": {
       "demo": {
         "wins": 9,
-        "losses": 13,
-        "totalPnlUsd": -37.88759471249923
+        "losses": 14,
+        "totalPnlUsd": -61.96960567749872
       },
       "real": {
         "wins": 0,

@@ -21,7 +21,24 @@
     }
   },
   "trailing": {
-    "channel": null,
+    "channel": {
+      "data": {
+        "highReg": {
+          "slope": -12.637580645150475,
+          "intercept": 84661.03629032252
+        },
+        "lowReg": {
+          "slope": -11.8366666666439,
+          "intercept": 84589.50999999983
+        },
+        "len": 12,
+        "spreadStart": 71.52629032268305,
+        "spreadEnd": 61.91532258060761,
+        "startIndex": 186
+      },
+      "startCandleOpenTime": 1790489400000,
+      "foundAtTime": 1790493305997
+    },
     "floating": null,
     "closedCount": 19,
     "stats": {

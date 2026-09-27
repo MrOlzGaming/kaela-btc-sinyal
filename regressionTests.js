@@ -74,7 +74,15 @@ async function main() {
   // ngasih `tranId` yang SAMA buat REALIZED_PNL + COMMISSION dari 1 fill (dikonfirmasi via raw
   // API waktu itu). Totalnya (+12.96136192) SAMA PERSIS sama angka yang Olan konfirmasi cocok ke
   // kalender PnL app Binance-nya sendiri hari itu -- ini "ground truth" beneran, bukan direka.
-  const now = new Date();
+  // ⛔ BUG NYATA ketemu+fix 27 Sep 2026 (regressionTests.js gagal sendiri pas dijalanin 01:24 UTC --
+  // `todaysPnlForSymbol` day-boundary SENGAJA pakai UTC (lihat komentar di tradeHistoryStore.js),
+  // TAPI fixture di bawah pakai `new Date()` mentah lalu dikurangin sampai 3 jam -- begitu tes
+  // kebetulan jalan dalam 3 jam pertama abis tengah malam UTC, entry tertua (now-3h) "kebawa" ke
+  // HARI SEBELUMNYA, ke-exclude dari PnL "hari ini" -> hasil salah $12,50 lebih kecil dari
+  // EXPECTED_PNL, PADAHAL kode produksinya BENAR (bukan bug beneran, murni fixture rapuh). Fix:
+  // jangkar `now` di tengah hari UTC (12:00), kasih buffer 12 jam ke DUA arah -- offset fixture
+  // terbesar di bawah (6 jam) gak akan pernah nyebrang hari apapun jam berapa tes ini dijalanin.
+  const now = new Date(new Date().toISOString().slice(0, 10) + 'T12:00:00.000Z');
   const todayIso = now.toISOString();
   const FIXTURE_RAW = [
     { tranId: 555001, incomeType: 'REALIZED_PNL', symbol: 'BTCUSDC', income: '15.00000000', time: now.getTime() - 3 * 3600000 },

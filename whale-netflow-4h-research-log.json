@@ -898,5 +898,15 @@
     "netFlowBtc": 0,
     "btcPriceUsd": 83130,
     "updatedAt": "2026-09-28T06:32:02.855Z"
+  },
+  {
+    "bucketKey": "2026-09-29T04",
+    "totalBtc": 13695.563177890002,
+    "count": 17,
+    "toExchangeBtc": 0,
+    "fromExchangeBtc": 0,
+    "netFlowBtc": 0,
+    "btcPriceUsd": 83634.01,
+    "updatedAt": "2026-09-28T21:03:49.789Z"
   }
 ]

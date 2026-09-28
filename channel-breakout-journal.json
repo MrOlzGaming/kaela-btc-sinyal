@@ -21,35 +21,14 @@
     }
   },
   "trailing": {
-    "channel": {
-      "data": {
-        "highReg": {
-          "slope": -5.381666666672875,
-          "intercept": 83624.56333333337
-        },
-        "lowReg": {
-          "slope": -1.6433333333116025,
-          "intercept": 83477.8599999999
-        },
-        "len": 11,
-        "spreadStart": 146.70333333346935,
-        "spreadEnd": 105.58166666649049,
-        "startIndex": 187
-      },
-      "startCandleOpenTime": 1790625600000,
-      "foundAtTime": 1790629219908,
-      "pendingBreakout": {
-        "dir": "short",
-        "entryPriceTheoretical": 83408.34750000044
-      }
-    },
+    "channel": null,
     "floating": null,
-    "closedCount": 34,
+    "closedCount": 35,
     "stats": {
       "demo": {
         "wins": 12,
-        "losses": 22,
-        "totalPnlUsd": -187.34135412250055
+        "losses": 23,
+        "totalPnlUsd": -206.46913941750108
       },
       "real": {
         "wins": 0,
@@ -59,7 +38,7 @@
     },
     "dailySignalSeq": {
       "dayKey": "20260929",
-      "count": 1
+      "count": 2
     }
   }
 }

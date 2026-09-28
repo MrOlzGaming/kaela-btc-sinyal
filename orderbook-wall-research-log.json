@@ -47338,5 +47338,50 @@
     "qty": 6.087,
     "notionalUsd": 507107.97,
     "distPct": -0.06699385899622666
+  },
+  {
+    "timestamp": "2026-09-28T22:02:15.035Z",
+    "midPrice": 83120.05,
+    "side": "BID",
+    "price": 83088,
+    "qty": 7.124,
+    "notionalUsd": 591918.912,
+    "distPct": -0.0385586871037769
+  },
+  {
+    "timestamp": "2026-09-28T22:02:15.035Z",
+    "midPrice": 83120.05,
+    "side": "BID",
+    "price": 83066.1,
+    "qty": 10.796,
+    "notionalUsd": 896781.6156,
+    "distPct": -0.06490612072538104
+  },
+  {
+    "timestamp": "2026-09-28T22:02:15.035Z",
+    "midPrice": 83120.05,
+    "side": "BID",
+    "price": 83066,
+    "qty": 73.238,
+    "notionalUsd": 6083587.708,
+    "distPct": -0.06502642864146846
+  },
+  {
+    "timestamp": "2026-09-28T22:02:15.035Z",
+    "midPrice": 83120.05,
+    "side": "ASK",
+    "price": 83120.1,
+    "qty": 14.633,
+    "notionalUsd": 1216296.4233,
+    "distPct": 0.00006015395804370952
+  },
+  {
+    "timestamp": "2026-09-28T22:02:15.035Z",
+    "midPrice": 83120.05,
+    "side": "ASK",
+    "price": 83172.5,
+    "qty": 7.203,
+    "notionalUsd": 599091.5175000001,
+    "distPct": 0.0631015019841748
   }
 ]

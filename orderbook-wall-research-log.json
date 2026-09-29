@@ -49498,5 +49498,86 @@
     "qty": 7.289,
     "notionalUsd": 609360.4,
     "distPct": -0.0338999872650911
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "BID",
+    "price": 83251.5,
+    "qty": 12.504,
+    "notionalUsd": 1040976.7559999999,
+    "distPct": -0.0006005861721039735
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "BID",
+    "price": 83188.9,
+    "qty": 9.03,
+    "notionalUsd": 751195.7669999999,
+    "distPct": -0.07579397491952845
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "BID",
+    "price": 83188,
+    "qty": 52.969,
+    "notionalUsd": 4406385.172,
+    "distPct": -0.07687503002930861
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "ASK",
+    "price": 83269.1,
+    "qty": 6.178,
+    "notionalUsd": 514436.49980000005,
+    "distPct": 0.020540047085962885
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "ASK",
+    "price": 83273.3,
+    "qty": 6.193,
+    "notionalUsd": 515711.54689999996,
+    "distPct": 0.025584970931632766
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "ASK",
+    "price": 83295.3,
+    "qty": 14.395,
+    "notionalUsd": 1199035.8435,
+    "distPct": 0.052010762504207594
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "ASK",
+    "price": 83297.9,
+    "qty": 7.389,
+    "notionalUsd": 615488.1831,
+    "distPct": 0.05513381059913777
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "ASK",
+    "price": 83315,
+    "qty": 17.578,
+    "notionalUsd": 1464511.07,
+    "distPct": 0.07567385768510065
+  },
+  {
+    "timestamp": "2026-09-29T15:20:39.194Z",
+    "midPrice": 83252,
+    "side": "ASK",
+    "price": 83316.9,
+    "qty": 6.436,
+    "notionalUsd": 536227.5684,
+    "distPct": 0.07795608513908876
   }
 ]

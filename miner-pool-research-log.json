@@ -219,11 +219,12 @@
     "dateKey": "2026-09-29",
     "poolCounts": {
       "Foundry USA": 9,
-      "AntPool": 7,
-      "unidentified": 2,
-      "OCEAN": 1,
-      "F2Pool": 6,
-      "ViaBTC": 6
+      "AntPool": 9,
+      "unidentified": 3,
+      "OCEAN": 2,
+      "F2Pool": 8,
+      "ViaBTC": 7,
+      "SpiderPool": 1
     }
   }
 ]

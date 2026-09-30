@@ -14,7 +14,7 @@ const { execFileSync } = require('child_process');
 const REF = process.argv[2] || 'origin/master';
 const SINCE = process.argv[3] || '2026-09-27T07:40:00Z'; // snapshot pertama yg PnL-nya udah net-of-fee semua
 const FILE = 'channel-breakout-journal.json';
-const FEE_PER_SIDE = 0.001; // FALLBACK_FEE_PERCENT live (0,10%/sisi)
+const FEE_PER_SIDE = 0.001; // yang DIPAKAI live saat histori ini terbentuk (0,10%/sisi, dobel -- BUG-0046, fix 30 Sep 2026); tetap 0,10% di sini biar rekonstruksi gross dari net journal tetap benar
 
 function git(args) { return execFileSync('git', args, { cwd: __dirname, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }); }
 

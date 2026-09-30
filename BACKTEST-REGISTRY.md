@@ -157,6 +157,10 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   net (2021 -25,2%, 2022 -45,6%, maxDD 89%). Sensitivitas 27 varian: positif **23/27 in-sample tapi
   cuma 3/27 out-of-sample** = pola yang cuma cocok sama rezim 2024-2026 (overfit/rezim), bukan edge.
   ETH 1H periode 2024-2026 juga negatif (-28/-31%). -> TIDAK dipasang.
+- **CB "dikasih napas" (`backtestNinjaCbWide.js`, `ninja-cb-wide-output.log`, PARSIAL 5M)**: sinyal CB
+  sama persis, entry realistis, trailing 1x/2x/4x/8x lebar channel, +/- cooldown. Trailing lebar
+  berhasil ngilangin "kabur pas ditekan dikit" (ditutup <=15 menit: 89% -> 2%) TAPI PF GROSS
+  out-of-sample 2019-2024 cuma 0,85-0,91 di SEMUA lebar -> rugi bahkan TANPA fee. CB 5M gak punya edge.
 - **Venue fee 0 + biaya inap (info Olan 30 Sep 2026)** -- `backtestNinjaZeroFee.js`,
   `ninja-zerofee-output.log`: 171 kombinasi (kumulatif 433) diuji ulang dgn 3 skenario biaya inap +
   slippage. H1 (0,5% NOTIONAL tiap lewat 00/08/16 UTC) & H2 (pro-rata): **0/171** positif. H3 (0,5%

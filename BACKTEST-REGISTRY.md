@@ -116,6 +116,32 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
 - **Sumber**: `backtestNyopetChannelBreakoutFixed2PctCompare.js:1-6`, `fee-check-output.log`, `long-range-output.log`, `direction-flip-longrange-output.log`, `rigor-check-output.log` (semua di root folder).
 - **Regenerate**: `node backtestNyopetChannelBreakoutFinalCheck.js` (dan varian lain sesuai nama file, cek comment header masing-masing).
 
+## Ninja FVG + kandidat pengganti Channel Breakout (30 Sep 2026) — `ninjaFvg.js`, `backtestNinjaFvg.js`, `backtestNinjaCandidates.js`
+
+- ⛔ **Backtest Channel Breakout lama TIDAK VALID** (temuan peninjau skeptis 30 Sep 2026): entry diisi
+  tepat di level breakout (`top+halfWidth`) walau candle udah kebuka/lari di atasnya. Entry realistis
+  -> PF net @0,10% RT: entry=max(open,level) **0,53** (win 29,3%), entry di close candle breakout
+  (≈ live) **0,36** (win 21,8%). PF 3,71/11 = artefak fill, BUKAN edge -- cocok sama bar-permutation
+  p=1,000 dan histori live. Uji trailing 1m (PF 2,99) juga masih pakai entry teoretis, gak ngebuktiin apa-apa.
+- **Histori live demo** (`node ninjaLiveHistoryAudit.js`, 27-30 Sep): 23 trade, 4 menang/19 kalah,
+  net -$376,81 (fee 0,10%/sisi), estimasi fee $421 vs gross ~+$44. Entry 10/hari di 28 Sep.
+  -> `channel-breakout-config.json` `entryEnabled:false` (30 Sep 2026).
+- **FVG-touch sesuai spesifikasi Olan** (1 FVG = 1 entry, 1 posisi aktif, SL = 2x lebar FVG,
+  trailing ratchet): **GAGAL** di 5M/15M/1H. 30 kombinasi (minWidth 0,02-0,3% x maxAge) SEMUA net
+  negatif @0,10% RT; terbaik 1H w>=0,3% PF net 0,98. PF gross cuma ~1,0-1,2. Sensitivitas SL 1x/3x/4x
+  juga gak nolong. Buka-tutup BERHASIL dikurangin (1H: 0% trade <=15 menit, 0,7 trade/hari) tapi
+  edge-nya gak ada. `ninja-fvg-output.log`.
+- **Kandidat berbukti publik** (entry di OPEN candle berikutnya, SL/trailing k x ATR14, 1 posisi
+  aktif): Donchian breakout (Zarattini dkk. 2025) + liquidity sweep/"Turtle Soup" (komponen SMC),
+  n=20/50/100, k=2/3/4, filter EMA200 on/off, 5M/15M/1H = 108 trial. Cuma 6 yang net positif
+  @0,10% RT, **5M nol**. Terbaik: 1H Donchian-50 ATRx4 PF net 1,13 (tapi 2026 negatif, split
+  +39,8/-8,6, perm p=0,23, DSR 0%); 15M sweep-100 ATRx4+EMA200 PF net 1,62 tapi CUMA 35 trade/2
+  tahun (1 dari 108 trial, perm p=0,033 wajar muncul kebetulan). **TIDAK ADA yang lolos** rigor.
+  `ninja-candidates-output.log`.
+- **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
+  belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
+  tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.
+
 ## 🔄 Cara Update File Ini
 
 Sama ritual kayak `BUG_REGISTRY.md`/`SYSTEM-MAP.md` -- update SETELAH approve perubahan besar

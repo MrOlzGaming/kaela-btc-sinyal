@@ -191,4 +191,4 @@ async function main() {
 
 if (require.main === module) main().catch((e) => { console.error('ERROR:', e.stack); process.exit(1); });
 
-module.exports = { runChannelBreakout, fvgTrades, summarize };
+module.exports = { runChannelBreakout, fvgTrades, summarize, fetchCandles };

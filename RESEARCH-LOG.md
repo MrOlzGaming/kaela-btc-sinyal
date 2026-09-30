@@ -47,6 +47,25 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-30 — Ninja: ganti Channel Breakout 5M dengan FVG-touch / Donchian / liquidity sweep: SEMUA TIDAK CUKUP KUAT
+**Ide:** spesifikasi Olan -- CB 5M "plin-plan" (entry, retrace dikit, close, entry lagi), ganti FVG
+sbg zona entry (1 FVG = 1 entry, 1 posisi aktif, SL 2x lebar FVG, trailing). Lanjutan: cari sistem
+timeframe rendah berbukti publik (Donchian ala Zarattini dkk. 2025, liquidity sweep SMC/Turtle Soup).
+**Metode:** BTCUSDT 2 tahun 5M/15M/1H, % notional per trade, fee RT 0,04/0,10/0,20%, 1 posisi aktif.
+FVG: `backtestNinjaFvg.js`; kandidat: `backtestNinjaCandidates.js` (entry di open candle berikutnya).
+Histori live: `ninjaLiveHistoryAudit.js`.
+**Hasil breakdown per tahun:** FVG pemenang 5M/15M negatif 2025 & 2026; 1H +13,5/-16,7/-2,5.
+Donchian 1H terbaik +20,6/+11,2/-0,6. Sweep 15M +2,1/+3,4/+3,6 tapi n=35 total.
+**Split-era:** GAGAL (FVG 1H +8,7/-14,6; Donchian 1H +39,8/-8,6).
+**Sensitivitas parameter:** GAGAL (FVG semua grid negatif; kandidat cuma 6/108 positif, tetangga
+parameter sel terbaik jauh lebih lemah).
+**Review skeptis (aturan #7):** setuju TIDAK CUKUP KUAT + nemu backtest CB lama gak valid (fill di
+level breakout teoretis; entry realistis -> PF 0,36-0,53, cocok sama live 4/23 menang). p-value
+bar-permutation pakai SUM net gak bermakna (jumlah trade data acak beda -> fee beda).
+**Kesimpulan:** TIDAK CUKUP KUAT -- jangan diterapkan. CB 5M entry dimatiin (`entryEnabled:false`)
+atas instruksi eksplisit Olan + bukti live.
+**Status implementasi:** `ninjaFvg.js` dibangun+dites tapi TIDAK dipasang live. Nunggu keputusan Olan.
+
 ### 2026-09-19 — Short Emas berbasis posisi COT Commercial (pengganti SMA200): TIDAK ROBUST, DITOLAK
 **Ide:** setelah bear-window Emas berbasis SMA200 (harga sendiri) terbukti gagal total (semua
 variasi SMA150/200/250 + forceCloseOnFlip on/off kalah jauh dari baseline buy-only $11.469,22 --

@@ -5,6 +5,9 @@
 // TP-tetap)" SALAH (BUG-KAELATRADE-0045, 27 Sep 2026): fee ~1,15R/trade, bukan 0,05R -- trailing net
 // PF 2,82 @0,10% round-trip, 1,06 @0,20% (fallback yg dipakai stats live di bawah). Lihat
 // BACKTEST-REGISTRY.md bagian Ninja.
+// ⛔ 30 Sep 2026: backtest CB lama TIDAK VALID -- entry diisi di level breakout teoretis; entry
+// realistis -> PF net 0,36-0,53 (cocok live 4/23 menang). Entry dimatiin (`entryEnabled:false`),
+// lihat BACKTEST-REGISTRY.md bagian "Ninja FVG + kandidat".
 //
 // ============ ARSITEKTUR (revisi 26 Sep 2026, keputusan final Olan) ============
 // SEBELUMNYA (23 Sep 2026) 2 varian jalan berbarengan buat dibandingin ("biar ketemu yang

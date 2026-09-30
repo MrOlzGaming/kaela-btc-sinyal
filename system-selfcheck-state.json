@@ -1,0 +1,16 @@
+{
+  "regression": null,
+  "bingxApi": {
+    "lastRunDateKey": "2026-10-01",
+    "at": "2026-09-30T16:46:03.251Z",
+    "ok": false,
+    "executorHash": "0a91bb3bac94a30a",
+    "verifiedAt": null,
+    "okCount": null,
+    "total": null,
+    "failedNames": null,
+    "aborted": false,
+    "exitCode": 4,
+    "tail": "DEMO VST -- harga 84325.4, saldo 98590.8348 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\nqty kehitung 0 -- stepSize/minNotional aneh: {\n  stepSize: 0.0001,\n  quantityPrecision: 4,\n  pricePrecision: 1,\n  minNotionalUsd: 2\n}\n"
+  }
+}

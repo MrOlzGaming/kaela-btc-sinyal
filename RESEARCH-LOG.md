@@ -47,6 +47,19 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-30 — Ninja ronde 3: mean reversion, breakout+volume, squeeze breakout: TIDAK CUKUP KUAT (squeeze 1H gagal out-of-sample)
+**Ide:** kelas pola yang belum kesentuh: fade Bollinger (kebalikan breakout), breakout konfirmasi
+volume + jam ramai, squeeze (kompresi volatilitas lalu tembus band).
+**Metode:** `backtestNinjaResearch3.js` (57 kombinasi, kumulatif 235), lalu kandidat terbaik diuji
+`backtestNinjaSqueezeOos.js`: out-of-sample BTC Sep 2019 - Sep 2024, 27 varian sensitivitas, ETH.
+**Hasil breakdown per tahun:** squeeze 1H k=4 in-sample +3,7/+16,4/+21,7; out-of-sample 2019 +1,7,
+2020 +10,3, 2021 -25,2, 2022 -45,6, 2023 +46,9, 2024 -5,9.
+**Split-era:** GAGAL (in-sample bagus, out-of-sample net -17,9%).
+**Sensitivitas parameter:** GAGAL (positif 23/27 in-sample vs 3/27 out-of-sample; ETH negatif).
+**Kesimpulan:** TIDAK CUKUP KUAT -- pelajaran: kandidat yang lolos per-tahun+split+permutasi di 2
+tahun data tetap bisa cuma "rezim". Uji out-of-sample 5 tahun WAJIB buat riset timeframe rendah.
+**Status implementasi:** gak diterapkan. Ninja tetap `entryEnabled:false`.
+
 ### 2026-09-30 — Ninja lanjutan: multi-timeframe (arah 4H/Daily, entry 15M/1H) + momentum intraday BTC: TIDAK CUKUP KUAT
 **Ide:** 2 arah yang disetujui Olan setelah FVG/Donchian/sweep gagal: (1) entry timeframe Ninja cuma
 searah tren timeframe besar (QuantPedia multi-TF BTC); (2) momentum intraday (Shen dkk. 2022,

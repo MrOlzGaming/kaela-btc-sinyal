@@ -147,6 +147,16 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   (rata2 gross -0,012 s/d +0,014%/trade, sign-shuffle p>=0,28) -> GAGAL.
   Catatan: di fee maker 0,04% beberapa sel 1H jadi +15-24% net/2 tahun -- lemah, tapi satu-satunya
   arah yang layak kalau riset dilanjut (butuh model fill limit order).
+- **Ronde 3 (30 Sep 2026, `backtestNinjaResearch3.js`, `ninja-research3-output.log`)**: mean
+  reversion Bollinger 2,5 (fade, +/- filter tren, exit trailing / balik ke SMA20), breakout Donchian
+  + konfirmasi volume (+/- jam 13-20 UTC), squeeze breakout (lebar BB di titik terendah). 57 kombinasi
+  (kumulatif 235), 4 net positif @0,10% RT. 5M & 15M semua gagal. Satu-satunya yang kelihatan kuat:
+  **1H squeeze k=4** PF net 1,74, n=97, positif 2024/2025/2026, perm p=0,02 -- TAPI:
+- ⛔ **Uji out-of-sample squeeze 1H GAGAL** (`backtestNinjaSqueezeOos.js`, `ninja-squeeze-oos-output.log`):
+  data Sep 2019 - Sep 2024 yang gak dipakai milih parameter -> parameter pemenang PERSIS **-17,9%**
+  net (2021 -25,2%, 2022 -45,6%, maxDD 89%). Sensitivitas 27 varian: positif **23/27 in-sample tapi
+  cuma 3/27 out-of-sample** = pola yang cuma cocok sama rezim 2024-2026 (overfit/rezim), bukan edge.
+  ETH 1H periode 2024-2026 juga negatif (-28/-31%). -> TIDAK dipasang.
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
   belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
   tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.

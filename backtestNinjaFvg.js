@@ -31,7 +31,7 @@ const REENTRY_WINDOW_MIN = 60; // "re-entry" = entry searah <= 60 menit setelah 
 const BASE_URL = 'https://data-api.binance.vision/api/v3/klines';
 async function fetchCandles(interval, startTime, endTime) {
   const cacheDir = process.env.NINJA_CANDLE_CACHE;
-  const cacheFile = cacheDir ? path.join(cacheDir, `BTCUSDT-${interval}-${startTime}-${endTime}.json`) : null;
+  const cacheFile = cacheDir ? path.join(cacheDir, `BTCUSDT-${interval}-${startTime}-${endTime}-v.json`) : null; // -v = ada volume
   if (cacheFile && fs.existsSync(cacheFile)) return JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
   let all = [];
   let cursor = startTime;
@@ -40,7 +40,7 @@ async function fetchCandles(interval, startTime, endTime) {
     if (!res.ok) throw new Error(`Binance ${res.status}`);
     const raw = await res.json();
     if (!raw.length) break;
-    all = all.concat(raw.map((r) => ({ openTime: r[0], open: +r[1], high: +r[2], low: +r[3], close: +r[4], closeTime: r[6] })));
+    all = all.concat(raw.map((r) => ({ openTime: r[0], open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5], closeTime: r[6] })));
     cursor = raw[raw.length - 1][0] + 1;
   }
   all = all.filter((c) => c.closeTime < endTime); // cuma candle yang udah CLOSED

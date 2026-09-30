@@ -178,7 +178,9 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   spesifik BTC; (4) exit trailing MURNI lebih jelek (DD besar, 2025 rugi), TAPI hybrid "TP trailing" (SL diam sampai
   balik ke SMA20, lalu trailing 1x ATR) setara/lebih baik: 15M k=3 IS +27,0% / OOS +99,8% DD 14,9% --
   semua trailK 0,5-2 x k 2-4 x 15M/5M positif IS+OOS (`backtest/ninja/mrTrailingCompare.js`,
-  `ninja-mr-trailing-output.log`) -> dipakai di paper (exit 'meanTrail', trailK 1); (5) spread/
+  `ninja-mr-trailing-output.log`) -> dipakai di paper (exit 'meanTrail', trailK 1). **Config AKTIF 30 Sep 2026: 5M k=4 trailK=1**
+  tanpa fee -- IS +48,5% DD 4,4% [2024 +6, 2025 +26, 2026 +16], OOS +159,4% DD 10,0% [2019 +7, 2020 +27,
+  2021 +55, 2022 +31, 2023 +22, 2024 +16] -- satu-satunya varian yang positif di SETIAP tahun dua periode; (5) spread/
   feed harga venue manual belum diketahui. Status: PAPER (`ninjaMrSignal.js`, 30 Sep 2026) -- hitungan
   kertas TANPA fee (keputusan Olan), hasil nyata bakal lebih rendah kalau venue ada spread/biaya inap.
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --

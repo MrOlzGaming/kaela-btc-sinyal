@@ -1,4 +1,4 @@
-// ninjaMrSignal.js (30 Sep 2026) -- NINJA "Mean Reversion Searah Tren" BTC 15M, mode PAPER (sinyal +
+// ninjaMrSignal.js (30 Sep 2026) -- NINJA "Mean Reversion Searah Tren" BTC (5M/15M, `tf` di config), mode PAPER (sinyal +
 // perhitungan lengkap, TANPA order ke exchange manapun). Permintaan Olan: "Sinyalnya jalan langsung
 // bisa? Walau ga jalan di exchange atau demo tapi ada perhitungan jelas?" -- eksekusi MANUAL oleh Olan
 // dari WA di venue tanpa fee. Keputusan Olan (30 Sep 2026): hitungan kertas TANPA fee ("oke tapi tanpa
@@ -24,7 +24,11 @@
 // perhitungan fee ke modul ini tanpa izin eksplisit Olan.
 //
 // Pakai: node ninjaMrSignal.js   (dipanggil tiap menit dari run-channel-breakout-vultr.sh; murah --
-// kerja cuma pas ada candle 15M baru yang closed)
+// kerja cuma pas ada candle baru yang closed).
+//
+// Konfigurasi aktif (30 Sep 2026, Olan: "ambil yang terbaik dan aktifkan sekarang"): tf 5m, k 4,
+// trailK 1 -- terbaik dari backtest/ninja/mrTrailingCompare.js tanpa fee: IS +48,5% (DD 4,4%), OOS
+// 2019-2024 +159,4% (DD 10,0%), SETIAP tahun positif di dua periode; tetangga (k 3-4, trailK 0,5-2) kuat.
 
 const fs = require('fs');
 const path = require('path');
@@ -33,11 +37,12 @@ const { hitung } = require('./calculator');
 
 const CONFIG_PATH = path.join(__dirname, 'ninja-mr-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'ninja-mr-journal.json');
-const TF_MS = 15 * 60e3;
-const STALE_MS = 20 * 60e3; // candle yang ketutup > 20 menit lalu -> tetap dicatat, tapi GAK dikirim WA
+const TF_MS = { '5m': 5 * 60e3, '15m': 15 * 60e3 };
+// candle yang ketutup > 1 candle + 5 menit lalu -> tetap dicatat, tapi GAK dikirim WA (sinyal basi)
+const staleMs = (tf) => (TF_MS[tf] || TF_MS['15m']) + 5 * 60e3;
 
 function loadConfig() {
-  const def = { enabled: false, paperModalUsd: 100, k: 3, exit: 'meanTrail', trailK: 1 };
+  const def = { enabled: false, tf: '15m', paperModalUsd: 100, k: 3, exit: 'meanTrail', trailK: 1 };
   if (!fs.existsSync(CONFIG_PATH)) return def;
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
@@ -61,7 +66,7 @@ function stepCandle(j, c, ind, i, cfg) {
   let closedNow = false;
   if (!j.position && j.pending) {
     const f = j.pending.distPct / 100, e = x.open;
-    j.position = { id: j.pending.id, dir: j.pending.dir, entryPrice: e, entryTime: x.openTime, slDistPct: j.pending.distPct, sl: j.pending.dir === 'long' ? e * (1 - f) : e * (1 + f), sizing: j.pending.sizing };
+    j.position = { id: j.pending.id, tf: j.pending.tf, dir: j.pending.dir, entryPrice: e, entryTime: x.openTime, slDistPct: j.pending.distPct, sl: j.pending.dir === 'long' ? e * (1 - f) : e * (1 + f), sizing: j.pending.sizing };
     j.pending = null;
     events.push({ type: 'OPEN', position: { ...j.position } });
   }
@@ -108,7 +113,7 @@ function stepCandle(j, c, ind, i, cfg) {
     if (dir) {
       const distPct = (cfg.k * ind.atr[i] / x.close) * 100;
       const sizing = hitung({ modal: cfg.paperModalUsd, nyawa: distPct, direction: dir === 'long' ? 'buy' : 'sell' });
-      j.pending = { id: `NMR-${x.closeTime}`, dir, distPct, refPrice: x.close, signalTime: x.closeTime, sma20: ind.sma20[i], ema200: ind.ema200[i], sizing };
+      j.pending = { id: `NMR-${x.closeTime}`, tf: cfg.tf, dir, distPct, refPrice: x.close, signalTime: x.closeTime, sma20: ind.sma20[i], ema200: ind.ema200[i], sizing };
       events.push({ type: 'SIGNAL', pending: { ...j.pending } });
     }
   }
@@ -133,16 +138,16 @@ function processCandles(j, candles, cfg) {
 // ================= Format pesan WA =================
 const usd = (n, d = 2) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
 const pct = (n, d = 3) => `${n >= 0 ? '+' : ''}${n.toFixed(d)}%`;
-const HEADER = '🥷 NINJA · Mean Reversion 15M · 📝 PAPER (eksekusi manual)';
+const HEADER = (tf) => `🥷 NINJA · Mean Reversion ${String(tf || '15m').toUpperCase()} · 📝 PAPER (eksekusi manual)`;
 
 function formatSignal(p, cfg) {
   const f = p.distPct / 100;
   const slRef = p.dir === 'long' ? p.refPrice * (1 - f) : p.refPrice * (1 + f);
   const s = p.sizing;
-  return `${HEADER}
+  return `${HEADER(cfg.tf)}
 *SINYAL ${p.dir === 'long' ? '🟢 BUY' : '🔴 SELL'}* BTC -- #${p.id}
 
-Harga sekarang: ${usd(p.refPrice)} (entry kertas = open candle 15M berikutnya)
+Harga sekarang: ${usd(p.refPrice)} (entry kertas = open candle ${String(cfg.tf || '15m').toUpperCase()} berikutnya)
 SL: ~${usd(slRef)} (${p.distPct.toFixed(2)}% = ${cfg.k}x ATR14)
 ${cfg.exit === 'meanTrail' ? `TP: trailing -- aktif begitu harga balik ke rata-rata SMA20 (~${usd(p.sma20)}), lalu SL ikut ngunci untung (jarak ${cfg.trailK}x ATR)` : `Target: balik ke rata-rata SMA20 ~${usd(p.sma20)} (bergerak tiap candle)`}
 Alasan: ${p.dir === 'long' ? 'tren naik (di atas EMA200) tapi harga jatuh keluar Bollinger bawah' : 'tren turun (di bawah EMA200) tapi harga naik keluar Bollinger atas'} -- ${p.dir === 'long' ? 'beli saat turun' : 'jual saat naik'}
@@ -155,7 +160,7 @@ Nilai posisi ${usd(s.nilaiPosisi)} · Leverage ${s.leverage}x · Margin ${usd(s.
 
 function formatClose(t, stats, cfg) {
   const wr = stats.n ? (stats.wins / stats.n) * 100 : 0;
-  return `${HEADER}
+  return `${HEADER(cfg && cfg.tf)}
 *TUTUP ${t.netPct > 0 ? '✅' : '❌'}* ${t.dir === 'long' ? '🟢 BUY' : '🔴 SELL'} BTC -- #${t.id}
 
 Entry ${usd(t.entryPrice)} → Exit ${usd(t.exitPrice)} (${t.reason === 'SL' ? 'kena SL' : t.reason === 'TRAIL' ? 'TP trailing kena' : 'balik ke rata-rata SMA20'}, ${t.holdMin} menit)
@@ -168,15 +173,15 @@ Rekap paper: ${stats.wins}/${stats.n} menang (${wr.toFixed(1)}%) · akumulasi ${
 
 function formatTrailOn(p) {
   const lockedPct = ((p.sl - p.entryPrice) / p.entryPrice) * 100 * (p.dir === 'long' ? 1 : -1);
-  return `${HEADER}
+  return `${HEADER(p.tf)}
 *TP TRAILING AKTIF* ${p.dir === 'long' ? '🟢 BUY' : '🔴 SELL'} BTC -- #${p.id}
 
-Harga udah balik ke rata-rata SMA20. Posisi DIBIARIN jalan, SL digeser ke ${usd(p.sl)} (${lockedPct >= 0 ? 'ngunci untung ' + pct(lockedPct) : 'rugi maks ' + pct(lockedPct)} dari entry ${usd(p.entryPrice)}) dan ikut naik${p.dir === 'long' ? '' : '/turun'} ngikutin harga terbaik.`;
+Harga udah balik ke rata-rata SMA20. Posisi DIBIARIN jalan, SL digeser ke ${usd(p.sl)} (${lockedPct >= 0 ? 'ngunci untung ' + pct(lockedPct) : 'rugi maks ' + pct(lockedPct)} dari entry ${usd(p.entryPrice)}) dan ikut ${p.dir === 'long' ? 'naik' : 'turun'} ngikutin harga terbaik.`;
 }
 
-async function fetchClosedCandles15m() {
+async function fetchClosedCandles(tf) {
   const { fetchWithRetry } = require('./httpRetry');
-  const res = await fetchWithRetry('https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=1000');
+  const res = await fetchWithRetry(`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${tf}&limit=1000`);
   const raw = await res.json();
   const now = Date.now();
   return raw.map((x) => ({ openTime: x[0], open: +x[1], high: +x[2], low: +x[3], close: +x[4], volume: +x[5], closeTime: x[6] })).filter((x) => x.closeTime <= now);
@@ -185,17 +190,18 @@ async function fetchClosedCandles15m() {
 async function main() {
   const cfg = loadConfig();
   if (!cfg.enabled) { console.log('[NinjaMR] enabled:false -- gak ngapa-ngapain.'); return; }
-  const candles = await fetchClosedCandles15m();
+  if (!TF_MS[cfg.tf]) { console.log(`[NinjaMR] tf '${cfg.tf}' gak didukung (5m/15m), skip.`); return; }
+  const candles = await fetchClosedCandles(cfg.tf);
   if (candles.length < 300) { console.log(`[NinjaMR] Candle kurang (${candles.length}), skip.`); return; }
   const j = loadJournal();
   const before = j.lastProcessedCloseTime;
   const events = processCandles(j, candles, cfg);
   saveJournal(j);
-  if (j.lastProcessedCloseTime === before) return; // belum ada candle 15M baru -- diam
+  if (j.lastProcessedCloseTime === before) return; // belum ada candle baru -- diam
   const { sendWhatsApp } = require('./fonnte');
   const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
   for (const ev of events) {
-    const fresh = Date.now() - ev.candleCloseTime <= STALE_MS;
+    const fresh = Date.now() - ev.candleCloseTime <= staleMs(cfg.tf);
     let msg = null;
     if (ev.type === 'SIGNAL') msg = formatSignal(ev.pending, cfg);
     if (ev.type === 'CLOSE') msg = formatClose(ev.trade, j.stats, cfg);

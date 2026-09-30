@@ -64,7 +64,7 @@ function signalAt(kind, c, i, n) {
 }
 
 // `dirFilter(dir, i)` opsional -- filter arah dari luar (riset multi-timeframe, backtestNinjaResearch2.js).
-function run(c, { kind, n, k, trend, dirFilter }) {
+function run(c, { kind, n, k, trend, dirFilter, maxHoldBars }) {
   const atr = atrSeries(c);
   const ema = trend ? emaSeries(c, 200) : null;
   const trades = [];
@@ -82,8 +82,9 @@ function run(c, { kind, n, k, trend, dirFilter }) {
     if (pos) {
       const f = pos.slDistPct / 100;
       const hit = pos.dir === 'long' ? x.low <= pos.sl : x.high >= pos.sl;
-      if (hit) {
-        const exitPrice = pos.dir === 'long' ? Math.min(x.open, pos.sl) : Math.max(x.open, pos.sl);
+      const timeUp = maxHoldBars && i - pos.entryIdx + 1 >= maxHoldBars; // time-stop (riset biaya inap BC.Game)
+      if (hit || timeUp) {
+        const exitPrice = hit ? (pos.dir === 'long' ? Math.min(x.open, pos.sl) : Math.max(x.open, pos.sl)) : x.close;
         const grossPct = ((exitPrice - pos.entryPrice) / pos.entryPrice) * 100 * (pos.dir === 'long' ? 1 : -1);
         trades.push({ ...pos, exitPrice, exitIdx: i, grossPct });
         pos = null;

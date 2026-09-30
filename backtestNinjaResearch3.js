@@ -102,6 +102,7 @@ function run(c, p) {
       let exitPrice = null;
       if (hit) exitPrice = pos.dir === 'long' ? Math.min(x.open, pos.sl) : Math.max(x.open, pos.sl);
       else if (p.exit === 'mean' && ind.sma20[i] !== null && (pos.dir === 'long' ? x.close >= ind.sma20[i] : x.close <= ind.sma20[i])) exitPrice = x.close;
+      else if (p.maxHoldBars && i - pos.entryIdx + 1 >= p.maxHoldBars) exitPrice = x.close; // time-stop (riset biaya inap BC.Game)
       if (exitPrice !== null) {
         trades.push({ ...pos, exitPrice, exitIdx: i, grossPct: ((exitPrice - pos.entryPrice) / pos.entryPrice) * 100 * (pos.dir === 'long' ? 1 : -1) });
         pos = null; closedNow = true;

@@ -5,6 +5,6 @@
   "k": 4,
   "exit": "meanTrail",
   "trailK": 1,
-  "_note": "NINJA Mean Reversion (tf 5m/15m) -- mode PAPER (ninjaMrSignal.js): sinyal + perhitungan lengkap ke WA Wibowo Hedgefund, TANPA order ke exchange, eksekusi manual Olan. paperModalUsd = modal kertas buat Kalkulator Exposure. exit meanTrail = SL diam sampai harga balik ke SMA20, lalu TP trailing trailK x ATR. TANPA FEE -- dikunci di kode (keputusan Olan 30 Sep 2026), gak ada setting fee. enabled=false = diam total.",
+  "_note": "NINJA Mean Reversion (tf 5m/15m) -- mode PAPER (ninjaMrSignal.js): sinyal + perhitungan lengkap ke WA Sniper Club + Wibowo Hedgefund (broadcast), TANPA order ke exchange, eksekusi manual Olan. paperModalUsd = modal kertas buat Kalkulator Exposure. exit meanTrail = SL diam sampai harga balik ke SMA20, lalu TP trailing trailK x ATR. TANPA FEE -- dikunci di kode (keputusan Olan 30 Sep 2026), gak ada setting fee. enabled=false = diam total.",
   "_status": "30 Sep 2026 -- AKTIF atas permintaan Olan (\"ambil yang terbaik dan aktifkan sekarang\"): tf 5m, k 4, TP trailing 1x ATR, tanpa fee. Terbaik dari backtest/ninja/mrTrailingCompare.js: IS +48,5% DD 4,4%, OOS 2019-2024 +159,4% DD 10,0%, tiap tahun positif."
 }

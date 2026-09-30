@@ -84,3 +84,6 @@ walletexplorer-cache.json
 # econ-reaction-research-log.json, liquidation-heatmap.json, liquidation-events.jsonl
 # -- SENGAJA GAK ditaro di sini (list di atas cuma dokumentasi kenapa gak ada), lihat pathspec
 # CHANGED di run-vultr-executor.sh buat daftar aktualnya.
+
+# cache candle 1 jam multi-koin (rangerMultiCoin.js) -- bisa di-download ulang, ~30 file besar
+backtest/multicoin-cache/

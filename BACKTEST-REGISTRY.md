@@ -228,6 +228,30 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
   akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
 
+## 🌐 Ranger 4H MULTI-KOIN (riset 1 Okt 2026, BELUM LIVE) — `backtest/rangerMultiCoin.js`
+
+- **Latar**: Olan minta "sehari minimal 1 momen culik". Timeframe rendah terbukti kalah fee (bagian atas),
+  jadi frekuensi dinaikin lewat LEBAR (banyak koin), bukan lewat timeframe rendah.
+- **Metode**: engine Ranger live PERSIS (`runNyopetV2BacktestWindowGated` + `RESCALED_4H`, modal/5,
+  window halving BTC berbasis tanggal) di 30 koin, candle 1j spot Binance 2019-01 -> 2026-10 diresample
+  4H. Engine asli GAK ngitung fee -> tiap trade dipotong 0,12% notional (taker+selip). Metrik = % notional
+  net fee per trade. Posisi per koin independen (BELUM simulasi portofolio/korelasi/modal bareng).
+- **Sanity**: BTC n=76 PF 2,46 net (<2023 2,62 | >=2023 2,21) -- sejalan registry Ranger (PF 3,71 itu satuan R, tanpa fee).
+- **Gabungan 30 koin**: n=2.924, win 38%, PF 1,46 | <2023 PF 1,76 (n=1.190) | >=2023 PF 1,26 (n=1.734) ->
+  **1,27 sinyal/hari sejak 2023**.
+- **Seleksi JUJUR (pilih pakai <2023 doang: PF>1,2 & n>=8)** = 22 koin (BTC ETH BNB SOL XRP DOGE ADA AVAX
+  LINK DOT LTC BCH TRX ATOM NEAR UNI ETC FIL INJ AAVE XLM HBAR) -> hasil >=2023 (gak dipakai milih):
+  n=1.242 (~0,9/hari), total +2.246% notional (~+1,8%/trade), 19/22 koin positif (rugi: NEAR -28%,
+  UNI -26%, FIL -62%).
+- **Koin baru (listing >=2023) jelek**: OP PF 0,90, SUI 0,90, WIF 0,83, ARB/TIA ~1,0 (PEPE 1,82 pengecualian)
+  -> aturan kandidat: cuma koin yang punya histori >= 3 thn.
+- **⚠️ Belum dicek**: drawdown PORTOFOLIO (alt korelasi tinggi ke BTC -> rugi barengan), jumlah posisi
+  bareng maksimum & kebutuhan modal, ketersediaan pair + min notional di BingX. Hold per trade berhari-hari
+  (trail SMA60 4H) -- "1 sinyal/hari" = frekuensi ENTRY, bukan profit tiap hari. Win rate ~38% (banyak rugi
+  kecil, sedikit untung besar).
+- **Regenerate**: `node backtest/rangerMultiCoin.js [cacheDir]` (download ~30 koin 1j, total ~20-30 menit),
+  output tersimpan `backtest/ranger-multicoin-output.log`.
+
 ## 🔄 Cara Update File Ini
 
 Sama ritual kayak `BUG_REGISTRY.md`/`SYSTEM-MAP.md` -- update SETELAH approve perubahan besar

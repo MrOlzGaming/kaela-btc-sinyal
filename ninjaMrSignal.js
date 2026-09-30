@@ -19,9 +19,9 @@
 //     backtest/ninja/mrTrailingCompare.js: 15M k=3 trailK=1 IS +27,0% / OOS +99,8% (DD 14,9%), setara/lebih
 //     baik dari tutup-di-rata2 (exit 'mean'). 1 posisi aktif; candle yang nutup posisi gak boleh buka baru.
 // Ukuran posisi: Kalkulator Exposure (calculator.js hitung) pakai modal KERTAS `paperModalUsd`.
-// Biaya: default 0 (keputusan Olan). Parameter slippage per sisi + biaya inap per lewat 00/08/16 UTC
-// tetap ada di config kalau suatu saat mau disimulasikan -- riset nunjukin kalau biaya inap 0,5% dari
-// NOTIONAL, edge-nya MATI (BACKTEST-REGISTRY.md), jadi hasil kertas = batas atas, bukan jaminan.
+// ⛔ TANPA FEE -- DIKUNCI di kode (Olan 30 Sep 2026: "Ingat, tanpa fee!!"). Untung/rugi bersih = gerak
+// harga murni, gak ada parameter fee/slippage/biaya inap yang bisa nyelip lewat config. JANGAN tambahin
+// perhitungan fee ke modul ini tanpa izin eksplisit Olan.
 //
 // Pakai: node ninjaMrSignal.js   (dipanggil tiap menit dari run-channel-breakout-vultr.sh; murah --
 // kerja cuma pas ada candle 15M baru yang closed)
@@ -33,12 +33,11 @@ const { hitung } = require('./calculator');
 
 const CONFIG_PATH = path.join(__dirname, 'ninja-mr-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'ninja-mr-journal.json');
-const H8 = 8 * 3600e3;
 const TF_MS = 15 * 60e3;
 const STALE_MS = 20 * 60e3; // candle yang ketutup > 20 menit lalu -> tetap dicatat, tapi GAK dikirim WA
 
 function loadConfig() {
-  const def = { enabled: false, paperModalUsd: 100, k: 3, exit: 'meanTrail', trailK: 1, slipPctPerSide: 0, holdFeePctPerBoundary: 0 };
+  const def = { enabled: false, paperModalUsd: 100, k: 3, exit: 'meanTrail', trailK: 1 };
   if (!fs.existsSync(CONFIG_PATH)) return def;
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
@@ -51,8 +50,6 @@ function loadJournal() {
   try { return { ...freshJournal(), ...JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8')) }; } catch { return freshJournal(); }
 }
 function saveJournal(j) { fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null, 2)); }
-
-function boundariesCrossed(entryT, exitT) { return Math.max(0, Math.floor(exitT / H8) - Math.floor(entryT / H8)); }
 
 const P_MR = (cfg) => ({ kind: 'mr', trend: true, k: cfg.k, exit: cfg.exit, trailK: cfg.trailK });
 
@@ -76,12 +73,9 @@ function stepCandle(j, c, ind, i, cfg) {
     else if (cfg.exit === 'mean' && ind.sma20[i] !== null && (p.dir === 'long' ? x.close >= ind.sma20[i] : x.close <= ind.sma20[i])) { exitPrice = x.close; reason = 'MEAN'; }
     if (exitPrice !== null) {
       const grossPct = ((exitPrice - p.entryPrice) / p.entryPrice) * 100 * (p.dir === 'long' ? 1 : -1);
-      const slipPct = 2 * cfg.slipPctPerSide;
-      const boundaries = boundariesCrossed(p.entryTime, x.closeTime);
-      const holdPct = boundaries * cfg.holdFeePctPerBoundary;
-      const netPct = grossPct - slipPct - holdPct;
+      const netPct = grossPct; // TANPA FEE (dikunci, lihat header)
       const notional = p.sizing ? p.sizing.nilaiPosisi : 0;
-      const trade = { ...p, exitPrice, exitTime: x.closeTime, reason, grossPct, slipPct, boundaries, holdPct, netPct, netUsd: (netPct / 100) * notional, holdMin: Math.round((x.closeTime + 1 - p.entryTime) / 60e3) };
+      const trade = { ...p, exitPrice, exitTime: x.closeTime, reason, grossPct, netPct, netUsd: (netPct / 100) * notional, holdMin: Math.round((x.closeTime + 1 - p.entryTime) / 60e3) };
       j.closed.push(trade);
       if (j.closed.length > 500) j.closed = j.closed.slice(-500);
       j.stats.n += 1;
@@ -166,7 +160,7 @@ function formatClose(t, stats, cfg) {
 
 Entry ${usd(t.entryPrice)} → Exit ${usd(t.exitPrice)} (${t.reason === 'SL' ? 'kena SL' : t.reason === 'TRAIL' ? 'TP trailing kena' : 'balik ke rata-rata SMA20'}, ${t.holdMin} menit)
 Gerak harga: ${pct(t.grossPct)}
-${t.slipPct === 0 && t.holdPct === 0 ? 'Fee: $0 (tanpa fee)' : `Slippage (2 sisi @${cfg.slipPctPerSide}%): -${t.slipPct.toFixed(3)}%\nBiaya inap: ${t.boundaries}x lewat 00/08/16 UTC @${cfg.holdFeePctPerBoundary}% = -${t.holdPct.toFixed(3)}%`}
+Fee: $0 (tanpa fee)
 *Bersih: ${pct(t.netPct)} = ${t.netUsd >= 0 ? '+' : '-'}${usd(Math.abs(t.netUsd))}* (nilai posisi ${usd(t.sizing ? t.sizing.nilaiPosisi : 0)})
 
 Rekap paper: ${stats.wins}/${stats.n} menang (${wr.toFixed(1)}%) · akumulasi ${pct(stats.sumNetPct, 2)} notional = ${stats.sumNetUsd >= 0 ? '+' : '-'}${usd(Math.abs(stats.sumNetUsd))}`;
@@ -217,4 +211,4 @@ async function main() {
 
 if (require.main === module) main().catch((e) => { console.error('[NinjaMR] ERROR:', e.message); process.exit(1); });
 
-module.exports = { stepCandle, processCandles, formatSignal, formatClose, formatTrailOn, freshJournal, loadConfig, boundariesCrossed };
+module.exports = { stepCandle, processCandles, formatSignal, formatClose, formatTrailOn, freshJournal, loadConfig };

@@ -199,7 +199,6 @@ async function main() {
   saveJournal(j);
   if (j.lastProcessedCloseTime === before) return; // belum ada candle baru -- diam
   const { sendWhatsApp } = require('./fonnte');
-  const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
   for (const ev of events) {
     const fresh = Date.now() - ev.candleCloseTime <= staleMs(cfg.tf);
     let msg = null;
@@ -209,9 +208,9 @@ async function main() {
     if (ev.type === 'OPEN') console.log(`[NinjaMR] OPEN kertas ${ev.position.dir} @ ${ev.position.entryPrice} (#${ev.position.id})`);
     if (!msg) continue;
     console.log(`[NinjaMR] ${ev.type}${fresh ? '' : ' (basi, gak dikirim WA)'}:\n${msg}`);
-    // Eksperimen pribadi Olan (eksekusi manual) -> CUMA grup Wibowo Hedgefund, pola sama Jalur C
-    // actionableLiquidityRadar.js (bukan broadcast Sniper Club).
-    if (fresh) await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[NinjaMR] Kirim WA GAGAL:', e.message));
+    // Broadcast ke SEMUA grup (Sniper Club + Wibowo Hedgefund) -- permintaan Olan 30 Sep 2026 ("jalankan
+    // sinyal di kedua grup, hedgefund dan sniper club"), sesuai Aturan Besi #4 SYSTEM-MAP.md.
+    if (fresh) await sendWhatsApp(msg).catch((e) => console.log('[NinjaMR] Kirim WA GAGAL:', e.message));
   }
 }
 

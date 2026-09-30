@@ -49,7 +49,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { detectChannel, channelLinesAt } = require('./chartPatterns');
 const { hitung: hitungExposure } = require('./calculator');
-const { FALLBACK_FEE_PERCENT } = require('./masterRuleTrailingInvalidation');
+const { FALLBACK_FEE_PERCENT, FALLBACK_FEE_PER_SIDE_PERCENT } = require('./masterRuleTrailingInvalidation');
 const bingxExecutorDefault = require('./bingxExecutor');
 const { localDateKey } = require('./config');
 const { isInsufficientBalanceError } = require('./balanceAlert');
@@ -438,7 +438,7 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
       // -- dihitung dari nilai posisi ENTRY+EXIT (fee dipungut 2x per round-trip, bukan cuma
       // sekali). Stats/akumulasi SEKARANG pakai PnL BERSIH (net, abis fee) -- bukan gross lagi --
       // biar win-rate/total profit jangka panjang jujur nyerminin hasil BENERAN, gak dilebih-lebihin.
-      const feeFraction = FALLBACK_FEE_PERCENT / 100;
+      const feeFraction = FALLBACK_FEE_PER_SIDE_PERCENT / 100; // per SISI (dikali notional entry + exit) -- fix BUG-0046, dulu 0,10%/sisi = dobel
       const pnlSign = f.dir === 'long' ? 1 : -1;
       const demoPnlGross = (f.demoExitPrice - f.demo.entryPrice) * f.demo.quantity * pnlSign;
       const demoFeeUsd = (f.demo.nilaiPosisi + f.demoExitPrice * f.demo.quantity) * feeFraction;

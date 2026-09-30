@@ -232,6 +232,32 @@ function checkNoDuplicateSpam(now) {
   return { ok: false, line: `⚠️ KETEMU DOBEL-KIRIM: ${detail} -- dedup internal script itu kemungkinan jebol, cek segera.` };
 }
 
+// Ninja Mean Reversion (30 Sep 2026) -- 2 modul cadence 1 menit di run-channel-breakout-vultr.sh yang
+// SAMA-SAMA nulis `lastProcessedCloseTime` tiap ada candle baru closed (paper 5M: ninja-mr-journal.json,
+// eksekutor BingX 15M: ninja-mr-exec-journal.json). Pola SAMA checkEconCalendarFreshness: umur candle
+// terakhir yang diproses = sinyal jujur "cron beneran jalan". Ambang 3x panjang candle + 5 menit.
+// Kalau config `enabled:false` -> dianggap sengaja dimatikan (bukan masalah).
+const NINJA_MR_MODULES = [
+  { label: 'Ninja MR paper 5M', journal: 'ninja-mr-journal.json', config: 'ninja-mr-config.json', tfMin: 5 },
+  { label: 'Ninja MR eksekutor BingX 15M', journal: 'ninja-mr-exec-journal.json', config: 'ninja-mr-exec-config.json', tfMin: 15 },
+];
+function checkNinjaMrFreshness(now) {
+  const lines = [];
+  let ok = true;
+  for (const m of NINJA_MR_MODULES) {
+    let cfg = null, j = null;
+    try { cfg = JSON.parse(fs.readFileSync(path.join(__dirname, m.config), 'utf8')); } catch { /* gak ada = default mati */ }
+    if (!cfg || cfg.enabled !== true) { lines.push(`⏸️ ${m.label}: dimatikan lewat config (sengaja).`); continue; }
+    try { j = JSON.parse(fs.readFileSync(path.join(__dirname, m.journal), 'utf8')); } catch { /* belum ada */ }
+    if (!j || !j.lastProcessedCloseTime) { ok = false; lines.push(`⚠️ ${m.label}: journal belum pernah ditulis -- cron run-channel-breakout-vultr.sh kemungkinan belum jalan/error.`); continue; }
+    const ageMin = (now.getTime() - j.lastProcessedCloseTime) / 60000;
+    const limit = 3 * m.tfMin + 5;
+    if (ageMin > limit) { ok = false; lines.push(`⚠️ ${m.label} KETINGGALAN -- candle terakhir diproses ${ageMin.toFixed(0)} menit lalu (harusnya <= ${m.tfMin} menit) -- cek channel-breakout.log di VPS.`); }
+    else lines.push(`✅ ${m.label} jalan (candle terakhir ${ageMin.toFixed(0)} menit lalu${j.floating || j.position ? ', ada posisi aktif' : ''}).`);
+  }
+  return { ok, lines };
+}
+
 function minutesSinceMidnight(now) {
   const local = toLocal(now);
   return local.getUTCHours() * 60 + local.getUTCMinutes();
@@ -246,8 +272,9 @@ async function sendChecklistReport(now) {
   const freshness = await checkWhaleScanFreshness();
   const econFreshness = checkEconCalendarFreshness();
   const spamCheck = checkNoDuplicateSpam(now);
-  const healthLines = [freshness.line, econFreshness.line, spamCheck.line];
-  const anyHealthIssue = !freshness.ok || !econFreshness.ok || !spamCheck.ok;
+  const ninjaMr = checkNinjaMrFreshness(now);
+  const healthLines = [freshness.line, econFreshness.line, ...ninjaMr.lines, spamCheck.line];
+  const anyHealthIssue = !freshness.ok || !econFreshness.ok || !ninjaMr.ok || !spamCheck.ok;
 
   const msg = [
     // VECTOR (QA Tester) -- "petugas" yang bener buat checklist verifikasi tugas jalan/nggak,

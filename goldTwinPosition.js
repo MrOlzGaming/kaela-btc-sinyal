@@ -45,7 +45,7 @@
 const fs = require('fs');
 const path = require('path');
 const { hitung: hitungExposure } = require('./calculator');
-const { FALLBACK_FEE_PERCENT } = require('./masterRuleTrailingInvalidation');
+const { FALLBACK_FEE_PERCENT, FALLBACK_FEE_PER_SIDE_PERCENT } = require('./masterRuleTrailingInvalidation');
 const bitgetExecutorDefault = require('./bitgetExecutor');
 const mexcExecutorDefault = require('./mexcExecutor');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, formatAutoOpen, formatAutoClosed, formatWinRateLines, SYSTEM_LABEL } = require('./darkKaelaLog');
@@ -254,7 +254,7 @@ async function monitorGoldTwinPosition({ system, livePrice, mexcExec, notify, no
   if (!trailingHit && !fixedTpHit) { saveJournal(journal); return; } // simpen update ratchet walau belum ada yang exit
 
   const sysLabel = system === 'ranger' ? SYSTEM_LABEL.RANGER : SYSTEM_LABEL.SNIPER;
-  const feeFraction = FALLBACK_FEE_PERCENT / 100;
+  const feeFraction = FALLBACK_FEE_PER_SIDE_PERCENT / 100; // per SISI (dikali notional entry + exit) -- fix BUG-0046, dulu 0,10%/sisi = dobel
   const pnlSign = f.dir === 'buy' ? 1 : -1;
   const dirLongShort = f.dir === 'buy' ? 'long' : 'short'; // formatAutoClosed pakai konvensi long/short, BEDA dari formatAutoOpen yang buy/sell
 

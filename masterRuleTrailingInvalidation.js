@@ -15,6 +15,11 @@
 // ketemu.
 
 const FALLBACK_FEE_PERCENT = 0.10;
+// (30 Sep 2026, BUG-KAELATRADE-0046) FALLBACK_FEE_PERCENT di atas = fee ROUND-TRIP terburuk (aturan Olan
+// "0,1 sebagai fee terburuk") dan dipakai sbg BUFFER trailing (Bagian 4). Buat AKUNTANSI PnL per SISI
+// (entry & exit dipotong terpisah) pakai konstanta ini: 0,05% = taker Binance/BingX VIP0 -- sebelumnya
+// goldTwinPosition.js & ninjaTrader.js pakai 0,10% PER SISI (= 0,20% round-trip, dobel).
+const FALLBACK_FEE_PER_SIDE_PERCENT = 0.05;
 
 // `candles`: array {high, low, close, closeTime}, urut lama->baru. `entryIndex`: index candle
 // TEMPAT sinyal dideteksi (posisi mulai dipantau dari candle SETELAHNYA -- Bagian 9 "Candle pada
@@ -54,4 +59,4 @@ function simulateTrailingInvalidation({ candles, entryIndex, entryPrice, directi
   return { exitPrice: null, exitIndex: candles.length - 1, exitTime: last ? last.closeTime : null, reason: 'STILL_OPEN', extreme, initialInvalidation, finalInvalidation: invalidation, effectivePct };
 }
 
-module.exports = { simulateTrailingInvalidation, FALLBACK_FEE_PERCENT };
+module.exports = { simulateTrailingInvalidation, FALLBACK_FEE_PERCENT, FALLBACK_FEE_PER_SIDE_PERCENT };

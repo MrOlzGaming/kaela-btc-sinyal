@@ -1102,7 +1102,7 @@ async function main() {
       cs.push({ openTime: i * 900000, closeTime: i * 900000 + 899999, open: o, high: hi, low: lo, close: cl, volume: 1 });
       px = cl;
     }
-    const cfg = { enabled: true, paperModalUsd: 100, k: 3, slipPctPerSide: 0.01, holdFeePctPerBoundary: 0.01 };
+    const cfg = { enabled: true, paperModalUsd: 100, k: 3, exit: 'mean', slipPctPerSide: 0.01, holdFeePctPerBoundary: 0.01 };
     const cfgNoFee = { ...cfg, slipPctPerSide: 0, holdFeePctPerBoundary: 0 };
 
     await test('ninjaMrSignal: replay live (processCandles) IDENTIK backtest run() trade-per-trade', () => {
@@ -1117,6 +1117,23 @@ async function main() {
         assert.ok(Math.abs(j.closed[k].entryPrice - bt[k].entryPrice) < 1e-9 && Math.abs(j.closed[k].exitPrice - bt[k].exitPrice) < 1e-9, `harga trade #${k} beda`);
         assert.ok(Math.abs(j.closed[k].grossPct - bt[k].grossPct) < 1e-9, `gross trade #${k} beda`);
       }
+    });
+
+    await test('ninjaMrSignal: exit TP trailing (meanTrail, default live) IDENTIK backtest run() trade-per-trade', () => {
+      const cfgT = { ...cfg, exit: 'meanTrail', trailK: 1 };
+      const bt = runR3(cs, { kind: 'mr', trend: true, k: 3, exit: 'meanTrail', trailK: 1 });
+      const j = mr.freshJournal();
+      j.lastProcessedCloseTime = cs[0].closeTime - 1;
+      const evs = mr.processCandles(j, cs, cfgT);
+      assert.ok(bt.length >= 10, `data sintetis harus ngasih cukup trade, dapet ${bt.length}`);
+      assert.strictEqual(j.closed.length, bt.length, `jumlah trade beda: live ${j.closed.length} vs backtest ${bt.length}`);
+      for (let k = 0; k < bt.length; k++) {
+        assert.ok(j.closed[k].dir === bt[k].dir && Math.abs(j.closed[k].exitPrice - bt[k].exitPrice) < 1e-9, `trade #${k} beda`);
+      }
+      assert.ok(evs.some((e) => e.type === 'TRAIL_ON'), 'harus ada event TP trailing aktif');
+      assert.ok(j.closed.some((t) => t.reason === 'TRAIL'), 'harus ada trade yang ditutup TP trailing');
+      const on = evs.find((e) => e.type === 'TRAIL_ON');
+      assert.ok(mr.formatTrailOn(on.position).includes('TP TRAILING AKTIF'));
     });
 
     await test('ninjaMrSignal: diproses per-candle (kayak cron tiap menit) hasilnya SAMA dgn sekali jalan', () => {

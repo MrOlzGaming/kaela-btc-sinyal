@@ -13,8 +13,11 @@
 // indikator DI-IMPORT dari situ biar gak ada 2 versi; kesamaan trade-per-trade dikunci regressionTests.js):
 //   - tren naik (close > EMA200) + close < Bollinger bawah (SMA20 - 2,5 SD) -> BUY
 //   - tren turun (close < EMA200) + close > Bollinger atas (SMA20 + 2,5 SD) -> SELL
-//   - entry di OPEN candle berikutnya; SL = k x ATR14 dari harga entry; exit pas CLOSE balik ke SMA20
-//     (atau SL kena duluan). 1 posisi aktif; candle yang nutup posisi gak boleh buka baru.
+//   - entry di OPEN candle berikutnya; SL = k x ATR14 dari harga entry.
+//   - exit default 'meanTrail' (30 Sep 2026, Olan: "pake trailing jg yaaa"): SL DIAM sampai close balik ke
+//     SMA20, lalu TP TRAILING aktif (jarak trailK x ATR14, ratchet satu arah) -- riset
+//     backtest/ninja/mrTrailingCompare.js: 15M k=3 trailK=1 IS +27,0% / OOS +99,8% (DD 14,9%), setara/lebih
+//     baik dari tutup-di-rata2 (exit 'mean'). 1 posisi aktif; candle yang nutup posisi gak boleh buka baru.
 // Ukuran posisi: Kalkulator Exposure (calculator.js hitung) pakai modal KERTAS `paperModalUsd`.
 // Biaya: default 0 (keputusan Olan). Parameter slippage per sisi + biaya inap per lewat 00/08/16 UTC
 // tetap ada di config kalau suatu saat mau disimulasikan -- riset nunjukin kalau biaya inap 0,5% dari
@@ -35,7 +38,7 @@ const TF_MS = 15 * 60e3;
 const STALE_MS = 20 * 60e3; // candle yang ketutup > 20 menit lalu -> tetap dicatat, tapi GAK dikirim WA
 
 function loadConfig() {
-  const def = { enabled: false, paperModalUsd: 100, k: 3, slipPctPerSide: 0, holdFeePctPerBoundary: 0 };
+  const def = { enabled: false, paperModalUsd: 100, k: 3, exit: 'meanTrail', trailK: 1, slipPctPerSide: 0, holdFeePctPerBoundary: 0 };
   if (!fs.existsSync(CONFIG_PATH)) return def;
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
@@ -51,7 +54,7 @@ function saveJournal(j) { fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null,
 
 function boundariesCrossed(entryT, exitT) { return Math.max(0, Math.floor(exitT / H8) - Math.floor(entryT / H8)); }
 
-const P_MR = (k) => ({ kind: 'mr', trend: true, k, exit: 'mean' });
+const P_MR = (cfg) => ({ kind: 'mr', trend: true, k: cfg.k, exit: cfg.exit, trailK: cfg.trailK });
 
 // Proses candle CLOSED index i (logika PERSIS loop run() di backtestNinjaResearch3.js). Mutasi `j`,
 // return daftar event {type:'SIGNAL'|'OPEN'|'CLOSE', ...}.
@@ -69,8 +72,8 @@ function stepCandle(j, c, ind, i, cfg) {
     const p = j.position;
     const hit = p.dir === 'long' ? x.low <= p.sl : x.high >= p.sl;
     let exitPrice = null, reason = null;
-    if (hit) { exitPrice = p.dir === 'long' ? Math.min(x.open, p.sl) : Math.max(x.open, p.sl); reason = 'SL'; }
-    else if (ind.sma20[i] !== null && (p.dir === 'long' ? x.close >= ind.sma20[i] : x.close <= ind.sma20[i])) { exitPrice = x.close; reason = 'MEAN'; }
+    if (hit) { exitPrice = p.dir === 'long' ? Math.min(x.open, p.sl) : Math.max(x.open, p.sl); reason = p.trailPct ? 'TRAIL' : 'SL'; }
+    else if (cfg.exit === 'mean' && ind.sma20[i] !== null && (p.dir === 'long' ? x.close >= ind.sma20[i] : x.close <= ind.sma20[i])) { exitPrice = x.close; reason = 'MEAN'; }
     if (exitPrice !== null) {
       const grossPct = ((exitPrice - p.entryPrice) / p.entryPrice) * 100 * (p.dir === 'long' ? 1 : -1);
       const slipPct = 2 * cfg.slipPctPerSide;
@@ -88,10 +91,26 @@ function stepCandle(j, c, ind, i, cfg) {
       j.position = null;
       closedNow = true;
       events.push({ type: 'CLOSE', trade });
+    } else if (cfg.exit === 'meanTrail') {
+      // PERSIS blok 'meanTrail' di backtestNinjaResearch3.js run()
+      const long = p.dir === 'long';
+      if (!p.trailPct) {
+        if (ind.sma20[i] !== null && ind.atr[i] !== null && (long ? x.close >= ind.sma20[i] : x.close <= ind.sma20[i])) {
+          p.trailPct = (cfg.trailK * ind.atr[i] / x.close) * 100;
+          const g = p.trailPct / 100;
+          p.extreme = x.close;
+          p.sl = long ? Math.max(p.sl, x.close * (1 - g)) : Math.min(p.sl, x.close * (1 + g));
+          events.push({ type: 'TRAIL_ON', position: { ...p } });
+        }
+      } else {
+        const g = p.trailPct / 100;
+        if (long && x.high > p.extreme) { p.extreme = x.high; p.sl = Math.max(p.sl, p.extreme * (1 - g)); }
+        if (!long && x.low < p.extreme) { p.extreme = x.low; p.sl = Math.min(p.sl, p.extreme * (1 + g)); }
+      }
     }
   }
   if (!j.position && !closedNow && ind.atr[i] !== null) {
-    const dir = signal(P_MR(cfg.k), c, ind, i);
+    const dir = signal(P_MR(cfg), c, ind, i);
     if (dir) {
       const distPct = (cfg.k * ind.atr[i] / x.close) * 100;
       const sizing = hitung({ modal: cfg.paperModalUsd, nyawa: distPct, direction: dir === 'long' ? 'buy' : 'sell' });
@@ -131,7 +150,7 @@ function formatSignal(p, cfg) {
 
 Harga sekarang: ${usd(p.refPrice)} (entry kertas = open candle 15M berikutnya)
 SL: ~${usd(slRef)} (${p.distPct.toFixed(2)}% = ${cfg.k}x ATR14)
-Target: balik ke rata-rata SMA20 ~${usd(p.sma20)} (bergerak tiap candle, bukan TP tetap)
+${cfg.exit === 'meanTrail' ? `TP: trailing -- aktif begitu harga balik ke rata-rata SMA20 (~${usd(p.sma20)}), lalu SL ikut ngunci untung (jarak ${cfg.trailK}x ATR)` : `Target: balik ke rata-rata SMA20 ~${usd(p.sma20)} (bergerak tiap candle)`}
 Alasan: ${p.dir === 'long' ? 'tren naik (di atas EMA200) tapi harga jatuh keluar Bollinger bawah' : 'tren turun (di bawah EMA200) tapi harga naik keluar Bollinger atas'} -- ${p.dir === 'long' ? 'beli saat turun' : 'jual saat naik'}
 
 Kalkulator Exposure (modal kertas ${usd(cfg.paperModalUsd, 0)}):
@@ -145,12 +164,20 @@ function formatClose(t, stats, cfg) {
   return `${HEADER}
 *TUTUP ${t.netPct > 0 ? '✅' : '❌'}* ${t.dir === 'long' ? '🟢 BUY' : '🔴 SELL'} BTC -- #${t.id}
 
-Entry ${usd(t.entryPrice)} → Exit ${usd(t.exitPrice)} (${t.reason === 'SL' ? 'kena SL' : 'balik ke rata-rata SMA20'}, ${t.holdMin} menit)
+Entry ${usd(t.entryPrice)} → Exit ${usd(t.exitPrice)} (${t.reason === 'SL' ? 'kena SL' : t.reason === 'TRAIL' ? 'TP trailing kena' : 'balik ke rata-rata SMA20'}, ${t.holdMin} menit)
 Gerak harga: ${pct(t.grossPct)}
 ${t.slipPct === 0 && t.holdPct === 0 ? 'Fee: $0 (tanpa fee)' : `Slippage (2 sisi @${cfg.slipPctPerSide}%): -${t.slipPct.toFixed(3)}%\nBiaya inap: ${t.boundaries}x lewat 00/08/16 UTC @${cfg.holdFeePctPerBoundary}% = -${t.holdPct.toFixed(3)}%`}
 *Bersih: ${pct(t.netPct)} = ${t.netUsd >= 0 ? '+' : '-'}${usd(Math.abs(t.netUsd))}* (nilai posisi ${usd(t.sizing ? t.sizing.nilaiPosisi : 0)})
 
 Rekap paper: ${stats.wins}/${stats.n} menang (${wr.toFixed(1)}%) · akumulasi ${pct(stats.sumNetPct, 2)} notional = ${stats.sumNetUsd >= 0 ? '+' : '-'}${usd(Math.abs(stats.sumNetUsd))}`;
+}
+
+function formatTrailOn(p) {
+  const lockedPct = ((p.sl - p.entryPrice) / p.entryPrice) * 100 * (p.dir === 'long' ? 1 : -1);
+  return `${HEADER}
+*TP TRAILING AKTIF* ${p.dir === 'long' ? '🟢 BUY' : '🔴 SELL'} BTC -- #${p.id}
+
+Harga udah balik ke rata-rata SMA20. Posisi DIBIARIN jalan, SL digeser ke ${usd(p.sl)} (${lockedPct >= 0 ? 'ngunci untung ' + pct(lockedPct) : 'rugi maks ' + pct(lockedPct)} dari entry ${usd(p.entryPrice)}) dan ikut naik${p.dir === 'long' ? '' : '/turun'} ngikutin harga terbaik.`;
 }
 
 async function fetchClosedCandles15m() {
@@ -178,6 +205,7 @@ async function main() {
     let msg = null;
     if (ev.type === 'SIGNAL') msg = formatSignal(ev.pending, cfg);
     if (ev.type === 'CLOSE') msg = formatClose(ev.trade, j.stats, cfg);
+    if (ev.type === 'TRAIL_ON') msg = formatTrailOn(ev.position);
     if (ev.type === 'OPEN') console.log(`[NinjaMR] OPEN kertas ${ev.position.dir} @ ${ev.position.entryPrice} (#${ev.position.id})`);
     if (!msg) continue;
     console.log(`[NinjaMR] ${ev.type}${fresh ? '' : ' (basi, gak dikirim WA)'}:\n${msg}`);
@@ -189,4 +217,4 @@ async function main() {
 
 if (require.main === module) main().catch((e) => { console.error('[NinjaMR] ERROR:', e.message); process.exit(1); });
 
-module.exports = { stepCandle, processCandles, formatSignal, formatClose, freshJournal, loadConfig, boundariesCrossed };
+module.exports = { stepCandle, processCandles, formatSignal, formatClose, formatTrailOn, freshJournal, loadConfig, boundariesCrossed };

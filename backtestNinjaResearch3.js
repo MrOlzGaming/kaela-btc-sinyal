@@ -109,6 +109,23 @@ function run(c, p) {
       } else if (p.exit === 'trail') {
         if (pos.dir === 'long' && x.high > pos.extreme) { pos.extreme = x.high; pos.sl = Math.max(pos.sl, pos.extreme * (1 - f)); }
         if (pos.dir === 'short' && x.low < pos.extreme) { pos.extreme = x.low; pos.sl = Math.min(pos.sl, pos.extreme * (1 + f)); }
+      } else if (p.exit === 'meanTrail') {
+        // (30 Sep 2026, Olan: "pake trailing jg yaaa") -- hybrid "TP trailing": SL awal DIAM sampai close
+        // balik ke SMA20; di titik itu posisi GAK ditutup, tapi trailing aktif dgn jarak trailK x ATR14
+        // (dikunci pas aktivasi) dari harga terbaik -- ratchet satu arah. Candle aktivasi cuma pakai close.
+        const long = pos.dir === 'long';
+        if (!pos.trailPct) {
+          if (ind.sma20[i] !== null && ind.atr[i] !== null && (long ? x.close >= ind.sma20[i] : x.close <= ind.sma20[i])) {
+            pos.trailPct = (p.trailK * ind.atr[i] / x.close) * 100;
+            const g = pos.trailPct / 100;
+            pos.extreme = x.close;
+            pos.sl = long ? Math.max(pos.sl, x.close * (1 - g)) : Math.min(pos.sl, x.close * (1 + g));
+          }
+        } else {
+          const g = pos.trailPct / 100;
+          if (long && x.high > pos.extreme) { pos.extreme = x.high; pos.sl = Math.max(pos.sl, pos.extreme * (1 - g)); }
+          if (!long && x.low < pos.extreme) { pos.extreme = x.low; pos.sl = Math.min(pos.sl, pos.extreme * (1 + g)); }
+        }
       }
     }
     if (!pos && !closedNow && ind.atr[i] !== null) {

@@ -175,7 +175,10 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   98,5% (15M) / 99,7% (5M); exit di open candle berikutnya hasilnya sama (`ninja-mr-trend-final-output.log`).
   ⚠️ Kelemahan: (1) edge ~0,07-0,1%/trade -- MATI di fee taker exchange biasa (@0,10% RT: -0,9%);
   (2) melemah akhir-akhir ini (15M OOS 2024 -10%, IS 2025 +2%); (3) **ETH gagal** (IS negatif) --
-  spesifik BTC; (4) exit = balik ke rata2, BUKAN trailing (versi trailing lebih jelek); (5) spread/
+  spesifik BTC; (4) exit trailing MURNI lebih jelek (DD besar, 2025 rugi), TAPI hybrid "TP trailing" (SL diam sampai
+  balik ke SMA20, lalu trailing 1x ATR) setara/lebih baik: 15M k=3 IS +27,0% / OOS +99,8% DD 14,9% --
+  semua trailK 0,5-2 x k 2-4 x 15M/5M positif IS+OOS (`backtest/ninja/mrTrailingCompare.js`,
+  `ninja-mr-trailing-output.log`) -> dipakai di paper (exit 'meanTrail', trailK 1); (5) spread/
   feed harga venue manual belum diketahui. Status: PAPER (`ninjaMrSignal.js`, 30 Sep 2026) -- hitungan
   kertas TANPA fee (keputusan Olan), hasil nyata bakal lebih rendah kalau venue ada spread/biaya inap.
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --

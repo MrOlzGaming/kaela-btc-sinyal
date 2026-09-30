@@ -2738,5 +2738,25 @@
     "type": "anomaly",
     "date": "2026-09-30T22:46:01.273Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n🔗 Korelasi BTC-Nasdaq (90 hari): 0.43 -- JAUH DI ATAS kebiasaan historis kita (median 0.37, z-score 4.0)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n🔗 Korelasi BTC-Nasdaq (90 hari)\nIni ngukur seberapa MIRIP gerakan harga BTC sama indeks saham teknologi Nasdaq belakangan ini. Lagi TINGGI banget dari biasanya -- BTC lagi \"nempel\" ke saham teknologi, berita ekonomi Amerika/suku bunga jadi LEBIH RELEVAN buat BTC drpd berita crypto sendiri."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-09-30T23:15:58.008Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-10-01\nHarga sekarang: $83,682.01 (📈 +0.2% dari kemarin)\n⏳ Halving berikutnya: 561 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.59 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.96 (Normal)\n\n💵 DXY: 101.5 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.41 (normal)\n🛢️ Minyak WTI: $96.2/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Whale netflow (24 jam): 🔴 580 BTC masuk exchange\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 10.5 poin) -- top 68% long vs global 57% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-monthly",
+    "date": "2026-09-30T23:15:58.008Z",
+    "content": "🟪 📊 Bloomberg Mini — 🗓️ Laporan Bulanan BTC — 2026-10\nHarga: $83,682.01 (📈 +7.7% dari bulan lalu)\n⏳ Halving berikutnya: 561 hari lagi (~2028-04-13)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-09-30T23:15:58.008Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-10-01\nHarga sekarang: $4,162.38/oz (≈Rp74.711.785) atau $133.82/gram (≈Rp2.402.040) (📈 +0.6% dari kemarin)\n💵 DXY: 101.5 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.91% (STABIL)\n📊 Yield Curve 10Y-2Y: 0.41 (normal)\n🛢️ Minyak WTI: $96.2/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-monthly-gold",
+    "date": "2026-09-30T23:15:58.008Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 🗓️ Laporan Bulanan Emas — 2026-10\nHarga: $4,162.38/oz (≈Rp74.711.785) atau $133.82/gram (≈Rp2.402.040) (📉 -6.6% dari bulan lalu)\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

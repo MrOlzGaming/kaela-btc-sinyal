@@ -157,8 +157,8 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   net (2021 -25,2%, 2022 -45,6%, maxDD 89%). Sensitivitas 27 varian: positif **23/27 in-sample tapi
   cuma 3/27 out-of-sample** = pola yang cuma cocok sama rezim 2024-2026 (overfit/rezim), bukan edge.
   ETH 1H periode 2024-2026 juga negatif (-28/-31%). -> TIDAK dipasang.
-- **Venue fee 0 + biaya inap (BC.Game, info Olan 30 Sep 2026)** -- `backtestNinjaBcGame.js`,
-  `ninja-bcgame-output.log`: 171 kombinasi (kumulatif 433) diuji ulang dgn 3 skenario biaya inap +
+- **Venue fee 0 + biaya inap (info Olan 30 Sep 2026)** -- `backtestNinjaZeroFee.js`,
+  `ninja-zerofee-output.log`: 171 kombinasi (kumulatif 433) diuji ulang dgn 3 skenario biaya inap +
   slippage. H1 (0,5% NOTIONAL tiap lewat 00/08/16 UTC) & H2 (pro-rata): **0/171** positif. H3 (0,5%
   dari MARGIN @50x = 0,01% notional per lewat): 46/171 positif, 7/10 lolos OOS.
 - ✅ **KANDIDAT PERTAMA YANG LOLOS: mean reversion searah tren** (`backtestNinjaResearch3.js`
@@ -172,8 +172,8 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   ⚠️ Kelemahan: (1) edge ~0,07-0,1%/trade -- MATI di fee taker exchange biasa (@0,10% RT: -0,9%);
   (2) melemah akhir-akhir ini (15M OOS 2024 -10%, IS 2025 +2%); (3) **ETH gagal** (IS negatif) --
   spesifik BTC; (4) exit = balik ke rata2, BUKAN trailing (versi trailing lebih jelek); (5) spread/
-  feed harga BC.Game belum diketahui. Status: BELUM dipasang -- nunggu konfirmasi Olan soal struktur
-  biaya inap BC.Game (notional vs margin) + keputusan venue.
+  feed harga venue manual belum diketahui. Status: PAPER (`ninjaMrSignal.js`, 30 Sep 2026) -- hitungan
+  kertas TANPA fee (keputusan Olan), hasil nyata bakal lebih rendah kalau venue ada spread/biaya inap.
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
   belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
   tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.

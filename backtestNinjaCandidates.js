@@ -82,7 +82,7 @@ function run(c, { kind, n, k, trend, dirFilter, maxHoldBars }) {
     if (pos) {
       const f = pos.slDistPct / 100;
       const hit = pos.dir === 'long' ? x.low <= pos.sl : x.high >= pos.sl;
-      const timeUp = maxHoldBars && i - pos.entryIdx + 1 >= maxHoldBars; // time-stop (riset biaya inap BC.Game)
+      const timeUp = maxHoldBars && i - pos.entryIdx + 1 >= maxHoldBars; // time-stop (riset venue fee 0 + biaya inap)
       if (hit || timeUp) {
         const exitPrice = hit ? (pos.dir === 'long' ? Math.min(x.open, pos.sl) : Math.max(x.open, pos.sl)) : x.close;
         const grossPct = ((exitPrice - pos.entryPrice) / pos.entryPrice) * 100 * (pos.dir === 'long' ? 1 : -1);

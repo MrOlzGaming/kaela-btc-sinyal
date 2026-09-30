@@ -2,8 +2,8 @@
   "enabled": true,
   "paperModalUsd": 100,
   "k": 3,
-  "slipPctPerSide": 0.01,
-  "holdFeePctPerBoundary": 0.01,
-  "_note": "NINJA Mean Reversion 15M -- mode PAPER (ninjaMrSignal.js): sinyal + perhitungan lengkap ke WA Wibowo Hedgefund, TANPA order ke exchange. paperModalUsd = modal kertas buat Kalkulator Exposure. holdFeePctPerBoundary = biaya inap per lewat 00/08/16 UTC dalam % NOTIONAL -- 0,01 = asumsi BC.Game 0,5% dari MARGIN @50x (BELUM dikonfirmasi Olan; kalau ternyata 0,5% dari NOTIONAL, ganti 0.5 -- dan edge-nya mati, lihat BACKTEST-REGISTRY.md). enabled=false = diam total.",
+  "slipPctPerSide": 0,
+  "holdFeePctPerBoundary": 0,
+  "_note": "NINJA Mean Reversion 15M -- mode PAPER (ninjaMrSignal.js): sinyal + perhitungan lengkap ke WA Wibowo Hedgefund, TANPA order ke exchange, eksekusi manual Olan. paperModalUsd = modal kertas buat Kalkulator Exposure. Hitungan TANPA fee (keputusan Olan 30 Sep 2026: slipPctPerSide & holdFeePctPerBoundary = 0) -- hasil kertas = batas atas; kalau venue ada spread/biaya inap, hasil nyata lebih rendah (lihat BACKTEST-REGISTRY.md bagian Ninja). enabled=false = diam total.",
   "_status": "30 Sep 2026 -- dinyalain atas permintaan Olan (\"sinyalnya jalan langsung bisa? walau ga jalan di exchange atau demo tapi ada perhitungan jelas\")."
 }

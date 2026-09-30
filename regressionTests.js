@@ -1103,6 +1103,7 @@ async function main() {
       px = cl;
     }
     const cfg = { enabled: true, paperModalUsd: 100, k: 3, slipPctPerSide: 0.01, holdFeePctPerBoundary: 0.01 };
+    const cfgNoFee = { ...cfg, slipPctPerSide: 0, holdFeePctPerBoundary: 0 };
 
     await test('ninjaMrSignal: replay live (processCandles) IDENTIK backtest run() trade-per-trade', () => {
       const bt = runR3(cs, { kind: 'mr', trend: true, k: 3, exit: 'mean' });
@@ -1140,6 +1141,11 @@ async function main() {
       assert.strictEqual(mr.boundariesCrossed(Date.UTC(2026, 0, 1, 1, 0), Date.UTC(2026, 0, 1, 7, 59)), 0, 'gak lewat batas = 0');
       const last = j.closed[j.closed.length - 1];
       assert.ok(mr.formatClose(last, j.stats, cfg).includes('Bersih:'), 'pesan tutup harus ada baris Bersih');
+      const j0 = mr.freshJournal(); j0.lastProcessedCloseTime = cs[0].closeTime - 1; mr.processCandles(j0, cs, cfgNoFee);
+      const t0 = j0.closed[j0.closed.length - 1];
+      assert.ok(Math.abs(t0.netPct - t0.grossPct) < 1e-12, 'tanpa fee (keputusan Olan): net = gross');
+      const msg0 = mr.formatClose(t0, j0.stats, cfgNoFee);
+      assert.ok(msg0.includes('Fee: $0 (tanpa fee)') && !/bc.?game/i.test(msg0), `pesan tanpa fee + tanpa nama venue:\n${msg0}`);
     });
 
     await test('ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)', () => {

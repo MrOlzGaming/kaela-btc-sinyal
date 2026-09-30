@@ -1,10 +1,10 @@
-// backtestNinjaBcGame.js (30 Sep 2026) -- riset NINJA untuk venue TANPA fee buka/tutup (info Olan:
-// "tempat nyopet gratis fee tapi di bc game.. fee buka tutup gratis. Tapi biaya inap per 8 jam 0.5%").
+// backtestNinjaZeroFee.js (30 Sep 2026) -- riset NINJA untuk venue TANPA fee buka/tutup (info Olan:
+// fee buka tutup gratis, tapi ada biaya inap per 8 jam 0,5%).
 // Latar: riset Ninja 30 Sep 2026 nunjukin banyak pola timeframe rendah punya PF GROSS ~1,1-1,3 tapi
 // habis dimakan fee taker ~0,10%. Kalau fee 0, apa ada yang lolos -- dengan biaya inap sebagai
 // gantinya?
 //
-// Biaya inap BC.Game GAK ketemu di dokumentasi publik -> 3 skenario (terburuk dulu):
+// Struktur biaya inap belum dikonfirmasi -> 3 skenario (terburuk dulu):
 //   H1 -- 0,5% NOTIONAL dipotong tiap posisi LEWAT jam 00/08/16 UTC (model funding exchange umum)
 //   H2 -- 0,5% notional per 8 jam, pro-rata per jam (0,0625%/jam)
 //   H3 -- 0,5% dari MARGIN per 8 jam di leverage 50x = 0,01% notional per lewat 00/08/16 UTC
@@ -17,7 +17,7 @@
 // OUT-OF-SAMPLE (Sep 2019 - Sep 2024, gak dipakai milih) -- pelajaran dari squeeze 1H yang lolos
 // in-sample tapi gagal OOS.
 //
-// Pakai: NINJA_CANDLE_CACHE=/dir node backtestNinjaBcGame.js
+// Pakai: NINJA_CANDLE_CACHE=/dir node backtestNinjaZeroFee.js
 
 const fs = require('fs');
 const path = require('path');

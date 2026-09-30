@@ -47,10 +47,10 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
-### 2026-09-30 — Ninja venue fee 0 (BC.Game): mean reversion searah tren 15M/5M BTC — LOLOS OUT-OF-SAMPLE (bersyarat biaya ~0)
+### 2026-09-30 — Ninja venue fee 0: mean reversion searah tren 15M/5M BTC — LOLOS OUT-OF-SAMPLE (bersyarat biaya ~0)
 **Ide:** Olan punya venue tanpa fee buka/tutup (biaya inap 0,5%/8 jam). Semua pola Ninja diuji
 ulang tanpa fee, pakai 3 model biaya inap (notional per batas 8 jam / pro-rata / 0,5% margin).
-**Metode:** `backtestNinjaBcGame.js` (171 kombinasi, kumulatif 433), in-sample Sep 2024-Sep 2026,
+**Metode:** `backtestNinjaZeroFee.js` (171 kombinasi, kumulatif 433), in-sample Sep 2024-Sep 2026,
 10 terbaik diuji OOS Sep 2019-Sep 2024; kandidat diperiksa `backtest/ninja/mrTrendSensitivity.js` +
 `backtest/ninja/mrTrendFinalChecks.js` (permutasi, exit next-open, ETH).
 **Hasil breakdown per tahun:** 15M k=3 slip 0,01%: 2019 +1, 2020 +25, 2021 +27, 2022 +21, 2023 +5,
@@ -59,7 +59,7 @@ ulang tanpa fee, pakai 3 model biaya inap (notional per batas 8 jam / pro-rata /
 **Sensitivitas parameter:** LULUS (k 1,5-4 x 5M/15M semua positif IS+OOS @slip 0,01%; mulai rontok
 di slip 0,03%). ETH GAGAL -> spesifik BTC.
 **Kesimpulan:** EDGE ASLI tapi TIPIS (~0,07-0,1%/trade) -- cuma hidup kalau biaya per trade ~0.
-Skenario biaya inap dari NOTIONAL: 0/171 lolos. Rekomendasi: konfirmasi struktur biaya BC.Game dulu.
+Skenario biaya inap dari NOTIONAL: 0/171 lolos. Rekomendasi: konfirmasi struktur biaya venue dulu.
 **Status implementasi:** belum diterapkan -- nunggu approval Olan.
 
 ### 2026-09-30 — Ninja ronde 3: mean reversion, breakout+volume, squeeze breakout: TIDAK CUKUP KUAT (squeeze 1H gagal out-of-sample)

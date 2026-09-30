@@ -1,7 +1,8 @@
 // ninjaMrSignal.js (30 Sep 2026) -- NINJA "Mean Reversion Searah Tren" BTC 15M, mode PAPER (sinyal +
 // perhitungan lengkap, TANPA order ke exchange manapun). Permintaan Olan: "Sinyalnya jalan langsung
-// bisa? Walau ga jalan di exchange atau demo tapi ada perhitungan jelas?" -- target venue BC.Game
-// (fee buka/tutup 0, biaya inap per 8 jam), eksekusi MANUAL oleh Olan dari WA (BC.Game gak punya API).
+// bisa? Walau ga jalan di exchange atau demo tapi ada perhitungan jelas?" -- eksekusi MANUAL oleh Olan
+// dari WA di venue tanpa fee. Keputusan Olan (30 Sep 2026): hitungan kertas TANPA fee ("oke tapi tanpa
+// fee ya"), dan JANGAN sebut nama venue di pesan/kode.
 //
 // Dasar riset (BACKTEST-REGISTRY.md bagian Ninja, RESEARCH-LOG.md 30 Sep 2026): satu-satunya pola
 // timeframe rendah yang lolos in-sample (Sep 2024-Sep 2026, PF 1,28) DAN out-of-sample (Sep 2019-
@@ -15,8 +16,9 @@
 //   - entry di OPEN candle berikutnya; SL = k x ATR14 dari harga entry; exit pas CLOSE balik ke SMA20
 //     (atau SL kena duluan). 1 posisi aktif; candle yang nutup posisi gak boleh buka baru.
 // Ukuran posisi: Kalkulator Exposure (calculator.js hitung) pakai modal KERTAS `paperModalUsd`.
-// Biaya: slippage per sisi + biaya inap per lewat 00/08/16 UTC (default 0,01% notional = asumsi 0,5%
-// dari MARGIN @50x -- BELUM dikonfirmasi Olan; kalau ternyata 0,5% dari NOTIONAL, edge-nya MATI).
+// Biaya: default 0 (keputusan Olan). Parameter slippage per sisi + biaya inap per lewat 00/08/16 UTC
+// tetap ada di config kalau suatu saat mau disimulasikan -- riset nunjukin kalau biaya inap 0,5% dari
+// NOTIONAL, edge-nya MATI (BACKTEST-REGISTRY.md), jadi hasil kertas = batas atas, bukan jaminan.
 //
 // Pakai: node ninjaMrSignal.js   (dipanggil tiap menit dari run-channel-breakout-vultr.sh; murah --
 // kerja cuma pas ada candle 15M baru yang closed)
@@ -33,7 +35,7 @@ const TF_MS = 15 * 60e3;
 const STALE_MS = 20 * 60e3; // candle yang ketutup > 20 menit lalu -> tetap dicatat, tapi GAK dikirim WA
 
 function loadConfig() {
-  const def = { enabled: false, paperModalUsd: 100, k: 3, slipPctPerSide: 0.01, holdFeePctPerBoundary: 0.01 };
+  const def = { enabled: false, paperModalUsd: 100, k: 3, slipPctPerSide: 0, holdFeePctPerBoundary: 0 };
   if (!fs.existsSync(CONFIG_PATH)) return def;
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
@@ -118,7 +120,7 @@ function processCandles(j, candles, cfg) {
 // ================= Format pesan WA =================
 const usd = (n, d = 2) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
 const pct = (n, d = 3) => `${n >= 0 ? '+' : ''}${n.toFixed(d)}%`;
-const HEADER = '🥷 NINJA · Mean Reversion 15M · 📝 PAPER (BC.Game manual)';
+const HEADER = '🥷 NINJA · Mean Reversion 15M · 📝 PAPER (eksekusi manual)';
 
 function formatSignal(p, cfg) {
   const f = p.distPct / 100;
@@ -135,7 +137,7 @@ Alasan: ${p.dir === 'long' ? 'tren naik (di atas EMA200) tapi harga jatuh keluar
 Kalkulator Exposure (modal kertas ${usd(cfg.paperModalUsd, 0)}):
 Nilai posisi ${usd(s.nilaiPosisi)} · Leverage ${s.leverage}x · Margin ${usd(s.margin)}
 
-⚠️ Paper trading -- belum pakai uang. Edge tipis, cuma hidup kalau biaya ~0.`;
+⚠️ Paper trading -- belum pakai uang, hitungan tanpa fee.`;
 }
 
 function formatClose(t, stats, cfg) {
@@ -144,9 +146,8 @@ function formatClose(t, stats, cfg) {
 *TUTUP ${t.netPct > 0 ? '✅' : '❌'}* ${t.dir === 'long' ? '🟢 BUY' : '🔴 SELL'} BTC -- #${t.id}
 
 Entry ${usd(t.entryPrice)} → Exit ${usd(t.exitPrice)} (${t.reason === 'SL' ? 'kena SL' : 'balik ke rata-rata SMA20'}, ${t.holdMin} menit)
-Gerak harga (gross): ${pct(t.grossPct)}
-Slippage (2 sisi @${cfg.slipPctPerSide}%): -${t.slipPct.toFixed(3)}%
-Biaya inap: ${t.boundaries}x lewat 00/08/16 UTC @${cfg.holdFeePctPerBoundary}% = -${t.holdPct.toFixed(3)}%
+Gerak harga: ${pct(t.grossPct)}
+${t.slipPct === 0 && t.holdPct === 0 ? 'Fee: $0 (tanpa fee)' : `Slippage (2 sisi @${cfg.slipPctPerSide}%): -${t.slipPct.toFixed(3)}%\nBiaya inap: ${t.boundaries}x lewat 00/08/16 UTC @${cfg.holdFeePctPerBoundary}% = -${t.holdPct.toFixed(3)}%`}
 *Bersih: ${pct(t.netPct)} = ${t.netUsd >= 0 ? '+' : '-'}${usd(Math.abs(t.netUsd))}* (nilai posisi ${usd(t.sizing ? t.sizing.nilaiPosisi : 0)})
 
 Rekap paper: ${stats.wins}/${stats.n} menang (${wr.toFixed(1)}%) · akumulasi ${pct(stats.sumNetPct, 2)} notional = ${stats.sumNetUsd >= 0 ? '+' : '-'}${usd(Math.abs(stats.sumNetUsd))}`;
@@ -180,7 +181,7 @@ async function main() {
     if (ev.type === 'OPEN') console.log(`[NinjaMR] OPEN kertas ${ev.position.dir} @ ${ev.position.entryPrice} (#${ev.position.id})`);
     if (!msg) continue;
     console.log(`[NinjaMR] ${ev.type}${fresh ? '' : ' (basi, gak dikirim WA)'}:\n${msg}`);
-    // Eksperimen pribadi Olan (venue BC.Game) -> CUMA grup Wibowo Hedgefund, pola sama Jalur C
+    // Eksperimen pribadi Olan (eksekusi manual) -> CUMA grup Wibowo Hedgefund, pola sama Jalur C
     // actionableLiquidityRadar.js (bukan broadcast Sniper Club).
     if (fresh) await sendWhatsApp(msg, WIBOWO_GROUP_ID).catch((e) => console.log('[NinjaMR] Kirim WA GAGAL:', e.message));
   }

@@ -27,7 +27,7 @@ output=$(node ninjaTrader.js 2>&1)
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
 
 # NINJA Mean Reversion 15M PAPER (30 Sep 2026, ninjaMrSignal.js) -- sinyal + hitungan kertas buat
-# eksekusi manual BC.Game, TANPA order exchange. Journal sendiri (ninja-mr-journal.json), murah:
+# eksekusi manual Olan, TANPA order exchange. Journal sendiri (ninja-mr-journal.json), murah:
 # cuma kerja pas ada candle 15M baru closed. Saklar: ninja-mr-config.json enabled.
 mr_output=$(timeout -k 5 45 node ninjaMrSignal.js 2>&1)
 [ -n "$mr_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $mr_output" >> "$LOG_FILE"

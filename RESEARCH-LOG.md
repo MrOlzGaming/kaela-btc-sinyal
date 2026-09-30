@@ -47,6 +47,21 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-30 — Ninja lanjutan: multi-timeframe (arah 4H/Daily, entry 15M/1H) + momentum intraday BTC: TIDAK CUKUP KUAT
+**Ide:** 2 arah yang disetujui Olan setelah FVG/Donchian/sweep gagal: (1) entry timeframe Ninja cuma
+searah tren timeframe besar (QuantPedia multi-TF BTC); (2) momentum intraday (Shen dkk. 2022,
+Financial Review: setengah jam pertama memprediksi setengah jam terakhir).
+**Metode:** `backtestNinjaResearch2.js`, BTCUSDT 2 tahun, 40 kombinasi MTF + 9 varian intraday, fee RT
+0/0,04/0,10/0,20%. Tren besar dihitung dari candle kecil yang digabung (permutation test konsisten).
+**Hasil breakdown per tahun:** MTF: 2025 negatif di hampir semua sel; 1H Daily-SMA50 Donchian-50
+ATRx4: +6,7/-24,2/+23,6. Intraday: gross per tahun ~0 (±3%) di semua varian.
+**Split-era:** GAGAL (MTF terbaik -17,5/+23,6; intraday gross paruh gak konsisten).
+**Sensitivitas parameter:** GAGAL (MTF 5/40 positif, PF net maks 1,04; 15M semua negatif).
+**Kesimpulan:** TIDAK CUKUP KUAT. Momentum intraday BTC dari paper gak muncul lagi di 2024-2026
+bahkan sebelum fee (sign-shuffle p>=0,28). Total riset Ninja hari ini: 178+ kombinasi, belum ada
+yang lolos. Satu-satunya arah sisa: eksekusi maker (fee 0,04%) di 1H -- butuh model fill limit.
+**Status implementasi:** gak diterapkan. Ninja tetap `entryEnabled:false`.
+
 ### 2026-09-30 — Ninja: ganti Channel Breakout 5M dengan FVG-touch / Donchian / liquidity sweep: SEMUA TIDAK CUKUP KUAT
 **Ide:** spesifikasi Olan -- CB 5M "plin-plan" (entry, retrace dikit, close, entry lagi), ganti FVG
 sbg zona entry (1 FVG = 1 entry, 1 posisi aktif, SL 2x lebar FVG, trailing). Lanjutan: cari sistem

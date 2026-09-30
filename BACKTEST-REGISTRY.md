@@ -138,6 +138,15 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   +39,8/-8,6, perm p=0,23, DSR 0%); 15M sweep-100 ATRx4+EMA200 PF net 1,62 tapi CUMA 35 trade/2
   tahun (1 dari 108 trial, perm p=0,033 wajar muncul kebetulan). **TIDAK ADA yang lolos** rigor.
   `ninja-candidates-output.log`.
+- **Riset lanjutan (30 Sep 2026, `backtestNinjaResearch2.js`, `ninja-research2-output.log`)**:
+  (1) MULTI-TIMEFRAME (arah 4H EMA50 / Daily SMA50 dari candle yang digabung, entry 15M/1H
+  Donchian/sweep/FVG searah) -- 5/40 net positif @0,10% RT, terbaik 1H Daily-SMA50 Donchian-50
+  ATRx4 PF net 1,04 (n=148), 2025 negatif hampir di semua sel, 15M SEMUA negatif, DSR 0%, perm
+  p=0,12-0,24 -> GAGAL. (2) MOMENTUM INTRADAY (Shen dkk. 2022, prediktor 00:00-00:30 / 13:30-14:00
+  / 00:00-23:30 UTC -> posisi 23:30-24:00) -- efeknya GAK ADA di 2024-2026 bahkan SEBELUM fee
+  (rata2 gross -0,012 s/d +0,014%/trade, sign-shuffle p>=0,28) -> GAGAL.
+  Catatan: di fee maker 0,04% beberapa sel 1H jadi +15-24% net/2 tahun -- lemah, tapi satu-satunya
+  arah yang layak kalau riset dilanjut (butuh model fill limit order).
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
   belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
   tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.

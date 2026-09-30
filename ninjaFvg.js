@@ -116,8 +116,9 @@ function updateFvgs(state, candles, i, tf, opts = {}) {
 }
 
 // Pilih FVG kandidat yang kesentuh di range [low, high]. Prioritas: FVG paling BARU.
-function pickTouchedFvg(state, low, high, usedIds) {
-  const cands = state.fvgs.filter((g) => g.status === 'ACTIVE' && g.left && !(usedIds && usedIds.has(g.id)) && touches(g, low, high));
+// `dirFilter(dir)` opsional (riset multi-timeframe 30 Sep 2026) -- cuma FVG yang arahnya lolos filter.
+function pickTouchedFvg(state, low, high, usedIds, dirFilter) {
+  const cands = state.fvgs.filter((g) => g.status === 'ACTIVE' && g.left && !(usedIds && usedIds.has(g.id)) && touches(g, low, high) && (!dirFilter || dirFilter(g.dir)));
   if (!cands.length) return null;
   return cands.reduce((a, b) => (b.createdTime > a.createdTime ? b : a));
 }
@@ -146,7 +147,7 @@ function stepBacktest(state, candles, i, tf, opts = {}) {
   // Entry dievaluasi SEBELUM FVG di-update candle ini (zona harus udah ada & "ditinggalin" di
   // candle SEBELUMNYA -- gak ada look-ahead).
   if (!state.position && !closedThisBar) {
-    const g = pickTouchedFvg(state, c.low, c.high, null);
+    const g = pickTouchedFvg(state, c.low, c.high, null, opts.dirFilter ? (dir) => opts.dirFilter(dir, i) : null);
     if (g) {
       const edge = g.dir === 'long' ? g.top : g.bottom;
       const far = g.dir === 'long' ? g.bottom : g.top;

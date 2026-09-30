@@ -1,0 +1,60 @@
+=== (1) MULTI-TIMEFRAME: 40 kombinasi, fee 0.10% RT (kolom akhir = NET @0.04/0.20) ===
+15m 4h-ema50 donchian-20 k=3       trade=1245 (1.71/hr) win=31.6% PFg=0.92 PFnet=0.70 NET=-159.9% maxDD=169.4% hold=180m cepat=0.9% | paruh -64.1/-95.8 | thn 2024:-9.1 2025:-88.7 2026:-62.2 | @0.04 -85.2 @0.20 -284.4
+15m 4h-ema50 donchian-20 k=4       trade= 956 (1.31/hr) win=34.0% PFg=0.95 PFnet=0.77 NET=-116.8% maxDD=137.3% hold=345m cepat=0.3% | paruh -53.8/-63.0 | thn 2024:0.9 2025:-83.9 2026:-33.9 | @0.04 -59.4 @0.20 -212.4
+15m 4h-ema50 donchian-50 k=3       trade= 875 (1.20/hr) win=31.0% PFg=0.89 PFnet=0.68 NET=-123.1% maxDD=133.7% hold=165m cepat=1.3% | paruh -70.4/-52.7 | thn 2024:-16.9 2025:-81.7 2026:-24.6 | @0.04 -70.6 @0.20 -210.6
+15m 4h-ema50 donchian-50 k=4       trade= 729 (1.00/hr) win=31.0% PFg=0.85 PFnet=0.70 NET=-127.0% maxDD=145.9% hold=315m cepat=0.1% | paruh -84.9/-42.1 | thn 2024:-18.6 2025:-95.4 2026:-13.0 | @0.04 -83.3 @0.20 -199.9
+15m 4h-ema50 sweep-20 k=3          trade=1345 (1.84/hr) win=32.5% PFg=1.06 PFnet=0.82 NET=-104.9% maxDD=119.7% hold=255m cepat=0.4% | paruh -42.6/-62.4 | thn 2024:3.2 2025:-85.8 2026:-22.3 | @0.04 -24.2 @0.20 -239.4
+15m 4h-ema50 sweep-20 k=4          trade= 964 (1.32/hr) win=35.1% PFg=1.11 PFnet=0.92 NET=-44.7% maxDD=73.7% hold=465m cepat=0.0% | paruh -7.2/-37.5 | thn 2024:20.5 2025:-56.3 2026:-8.9 | @0.04 13.2 @0.20 -141.1
+15m 4h-ema50 sweep-50 k=3          trade= 827 (1.13/hr) win=31.6% PFg=1.02 PFnet=0.79 NET=-75.1% maxDD=75.1% hold=240m cepat=0.7% | paruh -35.6/-39.5 | thn 2024:-12.7 2025:-48.2 2026:-14.2 | @0.04 -25.5 @0.20 -157.8
+15m 4h-ema50 sweep-50 k=4          trade= 656 (0.90/hr) win=34.0% PFg=0.98 PFnet=0.81 NET=-71.2% maxDD=73.4% hold=435m cepat=0.2% | paruh -17.9/-53.4 | thn 2024:-5.4 2025:-45.5 2026:-20.3 | @0.04 -31.9 @0.20 -136.8
+15m 4h-ema50 fvg w>=0.1            trade=1930 (2.64/hr) win=31.8% PFg=1.20 PFnet=0.81 NET=-105.5% maxDD=122.3% hold=75m cepat=11.1% | paruh -27.5/-78.0 | thn 2024:6.9 2025:-59.0 2026:-53.5 | @0.04 10.3 @0.20 -298.5
+15m 4h-ema50 fvg w>=0.3            trade= 574 (0.79/hr) win=37.3% PFg=1.23 PFnet=0.99 NET=-2.6% maxDD=37.8% hold=180m cepat=2.4% | paruh 7.0/-9.6 | thn 2024:15.9 2025:-22.2 2026:3.8 | @0.04 31.9 @0.20 -60.0
+15m 1d-sma50 donchian-20 k=3       trade=1083 (1.48/hr) win=31.9% PFg=1.00 PFnet=0.76 NET=-107.2% maxDD=111.9% hold=195m cepat=0.8% | paruh -64.2/-43.1 | thn 2024:-5.8 2025:-62.6 2026:-38.8 | @0.04 -42.3 @0.20 -215.5
+15m 1d-sma50 donchian-20 k=4       trade= 826 (1.13/hr) win=34.6% PFg=1.00 PFnet=0.81 NET=-82.0% maxDD=92.0% hold=375m cepat=0.4% | paruh -49.3/-32.8 | thn 2024:-7.3 2025:-51.9 2026:-22.8 | @0.04 -32.5 @0.20 -164.6
+15m 1d-sma50 donchian-50 k=3       trade= 716 (0.98/hr) win=30.3% PFg=1.00 PFnet=0.76 NET=-72.8% maxDD=74.7% hold=165m cepat=1.0% | paruh -53.4/-19.5 | thn 2024:-4.8 2025:-57.2 2026:-10.9 | @0.04 -29.9 @0.20 -144.4
+15m 1d-sma50 donchian-50 k=4       trade= 591 (0.81/hr) win=31.1% PFg=0.92 PFnet=0.75 NET=-82.8% maxDD=95.3% hold=300m cepat=0.2% | paruh -66.5/-16.2 | thn 2024:-3.1 2025:-76.5 2026:-3.1 | @0.04 -47.3 @0.20 -141.9
+15m 1d-sma50 sweep-20 k=3          trade=1322 (1.81/hr) win=33.1% PFg=1.10 PFnet=0.84 NET=-87.6% maxDD=99.8% hold=255m cepat=0.5% | paruh -61.9/-25.7 | thn 2024:0.8 2025:-73.3 2026:-15.1 | @0.04 -8.3 @0.20 -219.8
+15m 1d-sma50 sweep-20 k=4          trade= 907 (1.24/hr) win=36.6% PFg=1.20 PFnet=0.99 NET=-4.4% maxDD=69.7% hold=465m cepat=0.1% | paruh -42.5/38.0 | thn 2024:10.4 2025:-56.5 2026:41.6 | @0.04 50.0 @0.20 -95.1
+15m 1d-sma50 sweep-50 k=3          trade= 903 (1.24/hr) win=30.8% PFg=1.02 PFnet=0.79 NET=-84.1% maxDD=90.1% hold=240m cepat=0.8% | paruh -51.8/-32.3 | thn 2024:-2.8 2025:-63.4 2026:-17.9 | @0.04 -29.9 @0.20 -174.4
+15m 1d-sma50 sweep-50 k=4          trade= 689 (0.94/hr) win=35.8% PFg=1.11 PFnet=0.92 NET=-31.5% maxDD=72.6% hold=465m cepat=0.1% | paruh -37.1/5.6 | thn 2024:11.0 2025:-62.6 2026:20.1 | @0.04 9.8 @0.20 -100.4
+15m 1d-sma50 fvg w>=0.1            trade=1814 (2.48/hr) win=32.2% PFg=1.12 PFnet=0.73 NET=-136.3% maxDD=140.0% hold=75m cepat=10.0% | paruh -71.6/-64.7 | thn 2024:-16.5 2025:-70.1 2026:-49.8 | @0.04 -27.5 @0.20 -317.7
+15m 1d-sma50 fvg w>=0.3            trade= 506 (0.69/hr) win=38.1% PFg=1.08 PFnet=0.85 NET=-35.5% maxDD=56.3% hold=180m cepat=2.2% | paruh -15.7/-19.8 | thn 2024:-2.6 2025:-24.3 2026:-8.6 | @0.04 -5.2 @0.20 -86.1
+1h 4h-ema50 donchian-20 k=3        trade= 344 (0.47/hr) win=36.3% PFg=1.14 PFnet=0.99 NET=-1.6% maxDD=38.4% hold=900m cepat=0.0% | paruh -0.1/-1.5 | thn 2024:4.3 2025:-18.3 2026:12.4 | @0.04 19.0 @0.20 -36.0
+1h 4h-ema50 donchian-20 k=4        trade= 270 (0.37/hr) win=36.7% PFg=1.11 PFnet=1.00 NET=1.3% maxDD=46.6% hold=1380m cepat=0.0% | paruh 11.4/-10.1 | thn 2024:23.4 2025:-32.2 2026:10.0 | @0.04 17.5 @0.20 -25.7
+1h 4h-ema50 donchian-50 k=3        trade= 273 (0.37/hr) win=36.3% PFg=1.05 PFnet=0.92 NET=-17.5% maxDD=56.3% hold=840m cepat=0.0% | paruh -23.7/6.2 | thn 2024:-4.7 2025:-20.4 2026:7.7 | @0.04 -1.1 @0.20 -44.8
+1h 4h-ema50 donchian-50 k=4        trade= 214 (0.29/hr) win=37.9% PFg=1.13 PFnet=1.02 NET=5.4% maxDD=48.2% hold=1320m cepat=0.0% | paruh 22.2/-16.8 | thn 2024:26.6 2025:-17.2 2026:-4.1 | @0.04 18.2 @0.20 -16.0
+1h 4h-ema50 sweep-20 k=3           trade= 292 (0.40/hr) win=38.7% PFg=1.12 PFnet=0.97 NET=-6.0% maxDD=21.9% hold=1020m cepat=0.0% | paruh 5.1/-11.1 | thn 2024:6.0 2025:-8.5 2026:-3.5 | @0.04 11.5 @0.20 -35.2
+1h 4h-ema50 sweep-20 k=4           trade= 225 (0.31/hr) win=38.7% PFg=1.11 PFnet=1.00 NET=-0.2% maxDD=31.1% hold=1800m cepat=0.0% | paruh -4.6/4.4 | thn 2024:14.2 2025:-16.4 2026:2.0 | @0.04 13.3 @0.20 -22.7
+1h 4h-ema50 sweep-50 k=3           trade= 117 (0.16/hr) win=37.6% PFg=1.11 PFnet=0.96 NET=-3.3% maxDD=17.7% hold=1080m cepat=0.0% | paruh -1.0/-2.3 | thn 2024:-5.5 2025:-0.7 2026:2.9 | @0.04 3.7 @0.20 -15.0
+1h 4h-ema50 sweep-50 k=4           trade= 102 (0.14/hr) win=34.3% PFg=0.85 PFnet=0.75 NET=-23.8% maxDD=24.9% hold=1740m cepat=0.0% | paruh -8.8/-15.0 | thn 2024:-12.3 2025:-10.4 2026:-1.1 | @0.04 -17.7 @0.20 -34.0
+1h 4h-ema50 fvg w>=0.1             trade= 734 (1.01/hr) win=34.7% PFg=1.19 PFnet=0.93 NET=-21.2% maxDD=46.9% hold=240m cepat=0.0% | paruh -15.2/-6.0 | thn 2024:11.6 2025:-36.7 2026:4.0 | @0.04 22.9 @0.20 -94.6
+1h 4h-ema50 fvg w>=0.3             trade= 384 (0.53/hr) win=38.0% PFg=1.17 PFnet=1.00 NET=-1.1% maxDD=38.4% hold=420m cepat=0.0% | paruh 9.0/-10.1 | thn 2024:16.7 2025:-23.6 2026:5.8 | @0.04 21.9 @0.20 -39.5
+1h 1d-sma50 donchian-20 k=3        trade= 281 (0.38/hr) win=36.3% PFg=1.09 PFnet=0.95 NET=-10.1% maxDD=42.3% hold=840m cepat=0.0% | paruh -30.9/20.8 | thn 2024:-2.8 2025:-35.6 2026:28.4 | @0.04 6.8 @0.20 -38.2
+1h 1d-sma50 donchian-20 k=4        trade= 220 (0.30/hr) win=35.0% PFg=1.09 PFnet=0.99 NET=-2.1% maxDD=40.3% hold=1380m cepat=0.0% | paruh -26.7/24.7 | thn 2024:-0.9 2025:-32.4 2026:31.2 | @0.04 11.1 @0.20 -24.1
+1h 1d-sma50 donchian-50 k=3        trade= 184 (0.25/hr) win=37.0% PFg=1.16 PFnet=1.02 NET=3.2% maxDD=32.9% hold=780m cepat=0.0% | paruh -23.1/26.3 | thn 2024:-0.0 2025:-26.8 2026:30.1 | @0.04 14.3 @0.20 -15.2
+1h 1d-sma50 donchian-50 k=4        trade= 148 (0.20/hr) win=39.9% PFg=1.14 PFnet=1.04 NET=6.1% maxDD=33.7% hold=1320m cepat=0.0% | paruh -17.5/23.6 | thn 2024:6.7 2025:-24.2 2026:23.6 | @0.04 15.0 @0.20 -8.7
+1h 1d-sma50 sweep-20 k=3           trade= 342 (0.47/hr) win=36.5% PFg=1.03 PFnet=0.89 NET=-26.8% maxDD=53.0% hold=1080m cepat=0.0% | paruh -43.0/16.2 | thn 2024:-8.2 2025:-37.1 2026:18.6 | @0.04 -6.2 @0.20 -61.0
+1h 1d-sma50 sweep-20 k=4           trade= 240 (0.33/hr) win=31.7% PFg=1.00 PFnet=0.90 NET=-24.0% maxDD=48.1% hold=1800m cepat=0.0% | paruh -32.5/8.5 | thn 2024:-13.1 2025:-19.8 2026:8.9 | @0.04 -9.6 @0.20 -48.0
+1h 1d-sma50 sweep-50 k=3           trade= 207 (0.28/hr) win=37.7% PFg=1.01 PFnet=0.86 NET=-19.9% maxDD=32.9% hold=1200m cepat=0.0% | paruh -21.1/1.2 | thn 2024:-11.1 2025:-16.7 2026:7.9 | @0.04 -7.5 @0.20 -40.6
+1h 1d-sma50 sweep-50 k=4           trade= 167 (0.23/hr) win=34.1% PFg=0.97 PFnet=0.87 NET=-20.5% maxDD=32.1% hold=1800m cepat=0.0% | paruh -15.7/-4.8 | thn 2024:-12.3 2025:-13.9 2026:5.7 | @0.04 -10.4 @0.20 -37.2
+1h 1d-sma50 fvg w>=0.1             trade= 657 (0.90/hr) win=36.1% PFg=1.22 PFnet=0.94 NET=-15.2% maxDD=32.1% hold=180m cepat=0.0% | paruh -18.7/3.5 | thn 2024:-11.3 2025:-12.0 2026:8.1 | @0.04 24.2 @0.20 -80.9
+1h 1d-sma50 fvg w>=0.3             trade= 330 (0.45/hr) win=41.2% PFg=1.21 PFnet=1.02 NET=3.4% maxDD=24.9% hold=420m cepat=0.0% | paruh 3.0/0.4 | thn 2024:-11.9 2025:6.4 2026:8.9 | @0.04 23.2 @0.20 -29.6
+-> net positif @0.10%: 5/40
+
+--- validasi 5 terbaik (trials=178, termasuk riset sebelumnya; perm iter=50, metrik = rata2 net/trade) ---
+1h 1d-sma50 donchian-50 k=4        NET=6.1% PFnet=1.04 n=148 | DSR=0.0% | perm p=0.240 (acak -0.159 vs asli 0.041 %/trade, n acak ~151)
+1h 4h-ema50 donchian-50 k=4        NET=5.4% PFnet=1.02 n=214 | DSR=0.0% | perm p=0.180 (acak -0.143 vs asli 0.025 %/trade, n acak ~227)
+1h 1d-sma50 fvg w>=0.3             NET=3.4% PFnet=1.02 n=330 | DSR=0.0% | perm p=0.140 (acak -0.113 vs asli 0.010 %/trade, n acak ~430)
+1h 1d-sma50 donchian-50 k=3        NET=3.2% PFnet=1.02 n=184 | DSR=0.0% | perm p=0.120 (acak -0.126 vs asli 0.018 %/trade, n acak ~185)
+1h 4h-ema50 donchian-20 k=4        NET=1.3% PFnet=1.00 n=270 | DSR=0.0% | perm p=0.140 (acak -0.111 vs asli 0.005 %/trade, n acak ~291)
+
+=== (2) MOMENTUM INTRADAY (Shen dkk. 2022): 729 hari, posisi 23:30-24:00 UTC ===
+first30 |r|>0% n=728 win(gross)=50.1% rata2 GROSS=-0.0123%/trade | @0: NET=-9.0% PF=0.87 | @0.04: NET=-38.1% PF=0.55 | @0.1: NET=-81.8% PF=0.29 | @0.2: NET=-154.6% PF=0.10 | sign-shuffle p=0.891 | paruh gross 0.6/-9.5 | thn gross 2024:0.1 2025:1.2 2026:-10.2
+first30 |r|>0.3% n=154 win(gross)=51.3% rata2 GROSS=0.0094%/trade | @0: NET=1.4% PF=1.11 | @0.04: NET=-4.7% PF=0.72 | @0.1: NET=-14.0% PF=0.38 | @0.2: NET=-29.4% PF=0.13 | sign-shuffle p=0.304 | paruh gross 1.6/-0.2 | thn gross 2024:0.2 2025:1.7 2026:-0.5
+first30 |r|>0.6% n= 44 win(gross)=50.0% rata2 GROSS=0.0142%/trade | @0: NET=0.6% PF=1.15 | @0.04: NET=-1.1% PF=0.78 | @0.1: NET=-3.8% PF=0.43 | @0.2: NET=-8.2% PF=0.14 | sign-shuffle p=0.394 | paruh gross 0.3/0.4 | thn gross 2024:0.2 2025:0.5 2026:-0.0
+us30    |r|>0% n=728 win(gross)=49.3% rata2 GROSS=-0.0028%/trade | @0: NET=-2.1% PF=0.97 | @0.04: NET=-31.2% PF=0.62 | @0.1: NET=-74.9% PF=0.32 | @0.2: NET=-147.7% PF=0.12 | sign-shuffle p=0.615 | paruh gross -4.0/2.0 | thn gross 2024:2.8 2025:-2.8 2026:-2.0
+us30    |r|>0.3% n=286 win(gross)=47.9% rata2 GROSS=-0.0108%/trade | @0: NET=-3.1% PF=0.90 | @0.04: NET=-14.5% PF=0.60 | @0.1: NET=-31.7% PF=0.33 | @0.2: NET=-60.3% PF=0.13 | sign-shuffle p=0.720 | paruh gross -2.6/-0.5 | thn gross 2024:2.0 2025:-4.5 2026:-0.6
+us30    |r|>0.6% n=127 win(gross)=52.8% rata2 GROSS=0.0102%/trade | @0: NET=1.3% PF=1.12 | @0.04: NET=-3.8% PF=0.72 | @0.1: NET=-11.4% PF=0.37 | @0.2: NET=-24.1% PF=0.12 | sign-shuffle p=0.324 | paruh gross 1.0/0.3 | thn gross 2024:0.6 2025:-0.4 2026:1.1
+rest    |r|>0% n=729 win(gross)=47.6% rata2 GROSS=0.0058%/trade | @0: NET=4.3% PF=1.07 | @0.04: NET=-24.9% PF=0.69 | @0.1: NET=-68.6% PF=0.36 | @0.2: NET=-141.5% PF=0.14 | sign-shuffle p=0.282 | paruh gross -3.5/7.8 | thn gross 2024:1.3 2025:-2.5 2026:5.5
+rest    |r|>0.3% n=605 win(gross)=47.9% rata2 GROSS=0.0068%/trade | @0: NET=4.1% PF=1.07 | @0.04: NET=-20.1% PF=0.71 | @0.1: NET=-56.4% PF=0.39 | @0.2: NET=-116.9% PF=0.16 | sign-shuffle p=0.290 | paruh gross -3.2/7.3 | thn gross 2024:1.4 2025:-3.2 2026:5.9
+rest    |r|>0.6% n=500 win(gross)=46.6% rata2 GROSS=-0.0034%/trade | @0: NET=-1.7% PF=0.97 | @0.04: NET=-21.7% PF=0.64 | @0.1: NET=-51.7% PF=0.36 | @0.2: NET=-101.7% PF=0.14 | sign-shuffle p=0.608 | paruh gross -5.0/3.3 | thn gross 2024:-0.3 2025:-3.5 2026:2.1

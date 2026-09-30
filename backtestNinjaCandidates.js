@@ -63,7 +63,8 @@ function signalAt(kind, c, i, n) {
   return null;
 }
 
-function run(c, { kind, n, k, trend }) {
+// `dirFilter(dir, i)` opsional -- filter arah dari luar (riset multi-timeframe, backtestNinjaResearch2.js).
+function run(c, { kind, n, k, trend, dirFilter }) {
   const atr = atrSeries(c);
   const ema = trend ? emaSeries(c, 200) : null;
   const trades = [];
@@ -95,7 +96,7 @@ function run(c, { kind, n, k, trend }) {
     }
     if (!pos && !closedNow && atr[i] !== null) {
       const dir = signalAt(kind, c, i, n);
-      if (dir && (!trend || (ema[i] !== null && (dir === 'long' ? x.close > ema[i] : x.close < ema[i])))) {
+      if (dir && (!trend || (ema[i] !== null && (dir === 'long' ? x.close > ema[i] : x.close < ema[i]))) && (!dirFilter || dirFilter(dir, i))) {
         pending = { dir, distPct: (k * atr[i] / x.close) * 100 };
       }
     }

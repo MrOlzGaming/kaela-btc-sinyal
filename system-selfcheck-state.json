@@ -1,5 +1,15 @@
 {
-  "regression": null,
+  "regression": {
+    "dateKey": "2026-10-01",
+    "at": "2026-09-30T19:01:04.189Z",
+    "passed": 98,
+    "failed": 0,
+    "ok": true,
+    "summary": "98 lolos, 0 gagal",
+    "exitCode": 0,
+    "durationSec": 4,
+    "tail": "  OK   ninjaMrSignal: TANPA FEE dikunci -- net = gerak harga murni, $ = net% x nilai posisi, pesan \"Fee: $0\"\n  OK   ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)\n  OK   ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua\n\n98 lolos, 0 gagal (dari 2026-09-30 test run)\n"
+  },
   "bingxApi": {
     "lastRunDateKey": "2026-10-01",
     "at": "2026-09-30T16:46:03.251Z",

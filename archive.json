@@ -2723,5 +2723,15 @@
     "type": "econ-calendar",
     "date": "2026-09-30T13:01:36.246Z",
     "content": "⬜ 📅 JADWAL EKONOMI MENDATANG (peringatan dini)\n(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 2026-10-02, 20:30 WITA — Pertumbuhan Upah per Jam (Bulanan)\n   Forecast: 0.3% | Sebelumnya: 0.3%\n   (belum ada peta sebab-akibat buat event ini -- gak dipaksa nebak)\n\n🕐 2026-10-02, 20:30 WITA — Perubahan Lapangan Kerja Non-Pertanian (NFP)\n   Forecast: 90K | Sebelumnya: 162K\n   📐 Data lapangan kerja (keyakinan: sedang):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\n🕐 2026-10-02, 20:30 WITA — Tingkat Pengangguran\n   Forecast: 4.1% | Sebelumnya: 4.1%\n   📐 Tingkat pengangguran (keyakinan: sedang):\n      • Kalau ACTUAL > forecast -> 📈 BTC cenderung MENGUAT\n      • Kalau ACTUAL < forecast -> 📉 BTC cenderung TERTEKAN\n\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "channel-breakout-balance-recap",
+    "date": "2026-09-30T00:00:00.000Z",
+    "content": "📋 *Ninja REAL* -- rekap 2026-09-30\n\nTotal *1 trade tidak tereksekusi* kemarin karena saldo Real tidak cukup.\n\nIni murni sinyal yang kelewat, BUKAN error sistem -- begitu saldo cukup, entry otomatis jalan normal lagi.\n\n— Kaela"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-09-30T16:01:15.485Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-10-01\n4 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 2.030,86 BTC berpindah (~$170,913,893 / ~Rp3.067.783.818.771)\nTerbesar: 579,64 BTC dalam 1 transaksi.\n\n🔴 MASUK exchange: 579,64 BTC (1 transaksi) -- potensi tekanan JUAL (Kraken).\n⚪ Gak teridentifikasi: 3 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

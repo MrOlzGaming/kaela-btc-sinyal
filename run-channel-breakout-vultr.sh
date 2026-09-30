@@ -26,6 +26,12 @@ fi
 output=$(node ninjaTrader.js 2>&1)
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
 
+# NINJA Mean Reversion 15M PAPER (30 Sep 2026, ninjaMrSignal.js) -- sinyal + hitungan kertas buat
+# eksekusi manual Olan, TANPA order exchange. Journal sendiri (ninja-mr-journal.json), murah:
+# cuma kerja pas ada candle 15M baru closed. Saklar: ninja-mr-config.json enabled.
+mr_output=$(timeout -k 5 45 node ninjaMrSignal.js 2>&1)
+[ -n "$mr_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $mr_output" >> "$LOG_FILE"
+
 # Cek rekap saldo-kurang harian TIAP SIKLUS (murah -- cuma baca state lokal, kirim WA 0x atau 1x
 # aja per hari begitu tanggalnya kepotong, lihat ninjaBalanceRecap.js).
 node -e "require('./ninjaBalanceRecap').reportYesterdayRecapIfPending().then(r=>console.log(JSON.stringify(r)))" >> "$LOG_FILE" 2>&1

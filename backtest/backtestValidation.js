@@ -254,6 +254,7 @@ function permuteBarSeries(candles) {
     shapes.push({
       logReturn: Math.log(c.close / prevClose),
       openRatio: c.open / prevClose, highRatio: c.high / prevClose, lowRatio: c.low / prevClose,
+      volume: c.volume, // (30 Sep 2026) ikut diacak BARENG bentuk bar-nya, biar strategi berbasis volume tetap bisa diuji
     });
   }
   const shuffled = shuffle(shapes);
@@ -268,6 +269,7 @@ function permuteBarSeries(candles) {
     result.push({
       openTime: candles[i + 1].openTime, closeTime: candles[i + 1].closeTime,
       open: close * s.openRatio, high: close * s.highRatio, low: close * s.lowRatio, close: newClose,
+      ...(s.volume !== undefined ? { volume: s.volume } : {}),
     });
     close = newClose;
   }

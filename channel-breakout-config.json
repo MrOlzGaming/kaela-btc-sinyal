@@ -1,6 +1,8 @@
 {
   "enabled": true,
+  "entryEnabled": false,
   "allowReal": true,
   "_note": "Saklar KHUSUS strategi Ninja (dulu Channel Breakout) -- TERPISAH dari live-trading-config.json (killSwitch.js) Sniper/Ranger. enabled=false berarti gak ngapa-ngapain sama sekali. Demo (VST) SELALU jalan selama enabled:true -- allowReal cuma nambah eksekusi REAL BERBARENGAN (bukan gantian). Per-varian: real cuma AKTIF kalau key BingX varian itu keisi di secrets.js (execFor return null kalau kosong, caller auto-skip) -- Trailing UDAH keisi (BINGX_API_KEY, SATU key dipakai demo+real, lihat komentar VARIANT_SECRET_FIELDS di ninjaTrader.js), TP Tetap MASIH kosong (nunggu akun BingX kedua), otomatis tetap demo-only walau allowReal:true.",
-  "_status": "26 Sep 2026 -- REAL Trailing AKTIF (saldo real BingX dicek $14,05 USDT, cukup buat notional minimum $2 tapi KECIL -- posisi real bakal mini banget selama saldo segini). TP Tetap tetap demo-only (SILENT) sampai akun BingX kedua ada. Laporan real -> Wibowo Hedgefund, demo tetap ke Sniper Club (selalu)."
+  "_status": "26 Sep 2026 -- REAL Trailing AKTIF (saldo real BingX dicek $14,05 USDT, cukup buat notional minimum $2 tapi KECIL -- posisi real bakal mini banget selama saldo segini). TP Tetap tetap demo-only (SILENT) sampai akun BingX kedua ada. Laporan real -> Wibowo Hedgefund, demo tetap ke Sniper Club (selalu).",
+  "_entryStatus": "30 Sep 2026 -- ENTRY Channel Breakout 5M DIMATIKAN (spesifikasi Olan). Bukti histori demo 27-30 Sep: 23 trade, 4 menang/19 kalah, net -$376,81 setelah fee, estimasi gross cuma ~+$44 (fee ~$421 makan semuanya) -- jalanin `node ninjaLiveHistoryAudit.js`. Posisi floating (kalau ada) + patroli posisi ilegal TETAP jalan. Pengganti FVG-touch (ninjaFvg.js) BELUM dipasang: backtest 5M/15M/1H GAGAL net-of-fee (lihat BACKTEST-REGISTRY.md bagian Ninja FVG) -- nunggu keputusan Olan."
 }

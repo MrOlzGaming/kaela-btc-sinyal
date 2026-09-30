@@ -337,6 +337,19 @@ async function main() {
     assert.ok(msg.includes('Bull Flag'), `Alasan harus dari patternType (flag_bull), bukan mode ('sniper'):\n${msg}`);
   });
 
+  // 27 Sep 2026, koreksi Olan: trailing murni (tp null) labelnya "TP", BUKAN "TP1" -- gak ada
+  // tahap 1, posisi ditutup sekali di invalidasi yang ikut gerak. "TP1" tetap buat exit 2-tahap.
+  await test('formatAutoOpen: trailing murni (tp null) label "TP" bukan "TP1", exit 2-tahap tetap "TP1"', () => {
+    const base = { id: 'x', entryPrice: 100, sl: 90, leverage: 10, marginUsd: 10, nilaiPosisi: 100, mode: 'channel_breakout', assetLabel: 'BTC' };
+    const trailLong = formatAutoOpen({ ...base, direction: 'buy', tp: null }, new Date(), '', true, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.NINJA);
+    assert.ok(!trailLong.includes('TP1'), `Trailing gak boleh ada "TP1":\n${trailLong}`);
+    assert.ok(trailLong.includes('TP: trailing') && trailLong.includes('ikut naik'), `Trailing LONG harus "TP: trailing ... ikut naik":\n${trailLong}`);
+    const trailShort = formatAutoOpen({ ...base, direction: 'sell', tp: null, sl: 110 }, new Date(), '', true, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.NINJA);
+    assert.ok(trailShort.includes('ikut turun'), `Trailing SHORT harus "ikut turun":\n${trailShort}`);
+    const twoStage = formatAutoOpen({ ...base, direction: 'buy', tp: 110 }, new Date(), '', true, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.SNIPER);
+    assert.ok(twoStage.includes('TP1: $110'), `Exit 2-tahap tetap "TP1":\n${twoStage}`);
+  });
+
   // Fee round-trip (26 Sep 2026, permintaan Olan "aku mau fee trading tampil juga, biar ketemu net
   // trading" -- MASTER_RULE_DYNAMIC_CANDLE_INVALIDATION Bagian 3-5+22). Ground-truth: status
   // ✅/❌ HARUS ikutin PnL BERSIH (net), bukan gross -- trade gross untung tapi abis fee jadi rugi
@@ -1024,6 +1037,132 @@ async function main() {
     } finally {
       restoreSbdFiles();
     }
+  }
+
+  // ============ ninjaFvg.js -- aturan inti NINJA FVG (spesifikasi Olan 30 Sep 2026) ============
+  {
+    const nf = require('./ninjaFvg');
+    const mk = (open, high, low, close, t) => ({ open, high, low, close, openTime: t * 300000, closeTime: t * 300000 + 299999 });
+    // idx2 bentuk FVG bullish [101,102] (high idx0=101 < low idx2=102), idx3 ninggalin zona, idx4 balik nyentuh.
+    const base = [mk(100, 101, 99, 100, 0), mk(100, 103, 100, 103, 1), mk(103, 105, 102, 104, 2), mk(104, 106, 103, 105, 3), mk(105, 105, 101.5, 104, 4)];
+
+    await test('ninjaFvg: FVG kedeteksi + ID unik deterministik + lebar % dari ukuran aktual', () => {
+      const g = nf.detectFvgAt(base, 2, '5m', { minWidthPct: 0.05 });
+      assert.ok(g && g.dir === 'long' && g.top === 102 && g.bottom === 101, `FVG bullish [101,102] harusnya kedeteksi, dapet ${JSON.stringify(g)}`);
+      assert.strictEqual(g.id, nf.detectFvgAt(base, 2, '5m', { minWidthPct: 0.05 }).id, 'ID harus sama tiap deteksi ulang');
+      assert.ok(Math.abs(g.widthPct - (1 / 101.5) * 100) < 1e-9, 'lebar = (top-bottom)/mid');
+      assert.strictEqual(nf.detectFvgAt(base, 2, '5m', { minWidthPct: 2 }), null, 'filter % harus nolak FVG di bawah minWidthPct');
+    });
+
+    await test('ninjaFvg: entry pas harga balik nyentuh FVG, SL awal = 2x lebar FVG, FVG jadi USED', () => {
+      const st = nf.newState();
+      for (let i = 0; i < base.length; i++) nf.stepBacktest(st, base, i, '5m', { minWidthPct: 0.05 });
+      const p = st.position;
+      assert.ok(p, 'harusnya ada posisi kebuka di idx4');
+      assert.strictEqual(p.entryPrice, 102, 'entry di batas atas zona (sentuhan pertama)');
+      assert.ok(Math.abs(p.slDistPct - 2 * p.fvgWidthPct) < 1e-9, 'SL awal = 2x lebar FVG');
+      assert.ok(Math.abs(p.initialSl - 102 * (1 - p.slDistPct / 100)) < 1e-9, 'SL awal dihitung dari harga entry');
+      assert.ok(!st.fvgs.some((g) => g.id === p.fvgId && g.status === 'ACTIVE'), 'FVG yang dipakai gak boleh ACTIVE lagi (USED)');
+    });
+
+    await test('ninjaFvg: trailing ratchet satu arah, 1 posisi aktif doang, FVG USED gak pernah dipakai lagi', () => {
+      const cs = [...base, mk(104, 110, 103, 109, 5), mk(109, 109.5, 108.5, 109, 6), mk(109, 109, 100, 101, 7), mk(101, 101.5, 101.2, 101.4, 8)];
+      const st = nf.newState();
+      for (let i = 0; i <= 4; i++) nf.stepBacktest(st, cs, i, '5m', { minWidthPct: 0.05 });
+      const firstId = st.position.fvgId;
+      nf.stepBacktest(st, cs, 5, '5m', { minWidthPct: 0.05 });
+      const slAfterRally = st.position.sl;
+      assert.ok(slAfterRally > st.position.initialSl, 'harga naik -> SL ikut naik');
+      // FVG B valid & kesentuh SELAMA posisi A aktif -> gak boleh entry.
+      st.fvgs.push({ id: 'B', dir: 'long', top: 109, bottom: 108.6, widthPct: 0.37, createdTime: cs[5].closeTime, createdIdx: 5, left: true, status: 'ACTIVE' });
+      nf.stepBacktest(st, cs, 6, '5m', { minWidthPct: 0.05 });
+      assert.strictEqual(st.position.fvgId, firstId, 'posisi aktif tetap posisi A, FVG B gak boleh buka posisi kedua');
+      assert.strictEqual(st.position.sl, slAfterRally, 'harga turun dikit -> SL GAK boleh melebar balik');
+      nf.stepBacktest(st, cs, 7, '5m', { minWidthPct: 0.05 });
+      assert.strictEqual(st.closed.length, 1, 'trailing kena -> posisi A ditutup');
+      assert.strictEqual(st.position, null, 'candle yang nutup posisi gak boleh sekaligus buka posisi baru');
+      nf.stepBacktest(st, cs, 8, '5m', { minWidthPct: 0.05 });
+      assert.strictEqual(st.position, null, 'harga nyentuh FVG A lagi -> ABAIKAN (USED, no re-entry)');
+    });
+  }
+
+  // ============ ninjaMrSignal.js -- paper live WAJIB identik backtest (30 Sep 2026) ============
+  {
+    const mr = require('./ninjaMrSignal');
+    const { run: runR3 } = require('./backtestNinjaResearch3');
+    // Random walk deterministik (PRNG sederhana) biar test stabil, cukup panjang buat EMA200 + banyak sinyal.
+    let seed = 42;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    const cs = [];
+    let px = 60000;
+    for (let i = 0; i < 4000; i++) {
+      const drift = Math.sin(i / 400) * 0.0006;
+      const o = px, cl = px * (1 + drift + (rnd() - 0.5) * 0.008);
+      const hi = Math.max(o, cl) * (1 + rnd() * 0.003), lo = Math.min(o, cl) * (1 - rnd() * 0.003);
+      cs.push({ openTime: i * 900000, closeTime: i * 900000 + 899999, open: o, high: hi, low: lo, close: cl, volume: 1 });
+      px = cl;
+    }
+    const cfg = { enabled: true, paperModalUsd: 100, k: 3, exit: 'mean' };
+
+    await test('ninjaMrSignal: replay live (processCandles) IDENTIK backtest run() trade-per-trade', () => {
+      const bt = runR3(cs, { kind: 'mr', trend: true, k: 3, exit: 'mean' });
+      const j = mr.freshJournal();
+      j.lastProcessedCloseTime = cs[0].closeTime - 1; // proses dari candle pertama
+      mr.processCandles(j, cs, cfg);
+      assert.ok(bt.length >= 10, `data sintetis harus ngasih cukup trade, dapet ${bt.length}`);
+      assert.strictEqual(j.closed.length, bt.length, `jumlah trade beda: live ${j.closed.length} vs backtest ${bt.length}`);
+      for (let k = 0; k < bt.length; k++) {
+        assert.strictEqual(j.closed[k].dir, bt[k].dir, `arah trade #${k} beda`);
+        assert.ok(Math.abs(j.closed[k].entryPrice - bt[k].entryPrice) < 1e-9 && Math.abs(j.closed[k].exitPrice - bt[k].exitPrice) < 1e-9, `harga trade #${k} beda`);
+        assert.ok(Math.abs(j.closed[k].grossPct - bt[k].grossPct) < 1e-9, `gross trade #${k} beda`);
+      }
+    });
+
+    await test('ninjaMrSignal: exit TP trailing (meanTrail, default live) IDENTIK backtest run() trade-per-trade', () => {
+      const cfgT = { ...cfg, exit: 'meanTrail', trailK: 1 };
+      const bt = runR3(cs, { kind: 'mr', trend: true, k: 3, exit: 'meanTrail', trailK: 1 });
+      const j = mr.freshJournal();
+      j.lastProcessedCloseTime = cs[0].closeTime - 1;
+      const evs = mr.processCandles(j, cs, cfgT);
+      assert.ok(bt.length >= 10, `data sintetis harus ngasih cukup trade, dapet ${bt.length}`);
+      assert.strictEqual(j.closed.length, bt.length, `jumlah trade beda: live ${j.closed.length} vs backtest ${bt.length}`);
+      for (let k = 0; k < bt.length; k++) {
+        assert.ok(j.closed[k].dir === bt[k].dir && Math.abs(j.closed[k].exitPrice - bt[k].exitPrice) < 1e-9, `trade #${k} beda`);
+      }
+      assert.ok(evs.some((e) => e.type === 'TRAIL_ON'), 'harus ada event TP trailing aktif');
+      assert.ok(j.closed.some((t) => t.reason === 'TRAIL'), 'harus ada trade yang ditutup TP trailing');
+      const on = evs.find((e) => e.type === 'TRAIL_ON');
+      assert.ok(mr.formatTrailOn(on.position).includes('TP TRAILING AKTIF'));
+    });
+
+    await test('ninjaMrSignal: diproses per-candle (kayak cron tiap menit) hasilnya SAMA dgn sekali jalan', () => {
+      const a = mr.freshJournal(); a.lastProcessedCloseTime = cs[0].closeTime - 1; mr.processCandles(a, cs, cfg);
+      const b = mr.freshJournal(); b.lastProcessedCloseTime = cs[0].closeTime - 1;
+      for (let n = 1000; n <= cs.length; n += 1) mr.processCandles(b, cs.slice(0, n), cfg);
+      // b mulai proses penuh baru dari candle ke-1000 (window awal diproses sekaligus) -- bandingin trade SETELAH itu
+      const cut = cs[1100].closeTime;
+      const ta = a.closed.filter((t) => t.entryTime > cut), tb = b.closed.filter((t) => t.entryTime > cut);
+      assert.ok(ta.length > 0, 'harus ada trade buat dibandingin');
+      assert.deepStrictEqual(tb.map((t) => [t.dir, t.entryPrice, t.exitPrice]), ta.map((t) => [t.dir, t.entryPrice, t.exitPrice]));
+    });
+
+    await test('ninjaMrSignal: TANPA FEE dikunci -- net = gerak harga murni, $ = net% x nilai posisi, pesan "Fee: $0"', () => {
+      const j = mr.freshJournal(); j.lastProcessedCloseTime = cs[0].closeTime - 1;
+      mr.processCandles(j, cs, { ...cfg, slipPctPerSide: 0.05, holdFeePctPerBoundary: 0.5 }); // setting fee NYASAR di config harus DIABAIKAN
+      for (const t of j.closed) {
+        assert.strictEqual(t.netPct, t.grossPct, 'tanpa fee: net = gross, apapun isi config');
+        assert.ok(Math.abs(t.netUsd - (t.netPct / 100) * t.sizing.nilaiPosisi) < 1e-9, 'net $ = net% x nilai posisi kalkulator');
+      }
+      const msg = mr.formatClose(j.closed[j.closed.length - 1], j.stats, cfg);
+      assert.ok(msg.includes('Fee: $0 (tanpa fee)') && msg.includes('Bersih:') && !/bc.?game|slippage|biaya inap/i.test(msg), `pesan harus tanpa fee & tanpa nama venue:\n${msg}`);
+    });
+
+    await test('ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)', () => {
+      const j = mr.freshJournal();
+      mr.processCandles(j, cs, cfg);
+      assert.strictEqual(j.lastProcessedCloseTime, cs[cs.length - 1].closeTime);
+      assert.strictEqual(j.closed.length, 0);
+    });
   }
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

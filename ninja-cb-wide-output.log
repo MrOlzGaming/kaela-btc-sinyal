@@ -1,0 +1,11 @@
+
+=== 5M -- fee 0.10% RT, entry di open candle setelah breakout close ===
+5m hwx1 cd0       IS 2024-26: n=2744 win=19.5% PFg=1.08 PFnet=0.28 NET=-261.3% hold=10m cepat=89% || OOS 2019-24: n=8266 win=19.6% PFg=0.91 PFnet=0.32 NET=-888.9% hold=10m cepat=90%
+5m hwx1 cd12      IS 2024-26: n=1953 win=19.2% PFg=1.09 PFnet=0.27 NET=-185.4% hold=10m cepat=88% || OOS 2019-24: n=5843 win=19.0% PFg=0.88 PFnet=0.31 NET=-644.4% hold=10m cepat=90%
+5m hwx2 cd0       IS 2024-26: n=2509 win=24.5% PFg=1.07 PFnet=0.44 NET=-233.6% hold=15m cepat=55% || OOS 2019-24: n=7502 win=24.0% PFg=0.88 PFnet=0.44 NET=-877.5% hold=15m cepat=53%
+5m hwx2 cd12      IS 2024-26: n=1896 win=24.4% PFg=1.11 PFnet=0.45 NET=-169.4% hold=15m cepat=54% || OOS 2019-24: n=5649 win=23.9% PFg=0.87 PFnet=0.44 NET=-665.5% hold=15m cepat=53%
+5m hwx4 cd0       IS 2024-26: n=2054 win=28.5% PFg=0.92 PFnet=0.55 NET=-235.0% hold=50m cepat=15% || OOS 2019-24: n=5879 win=28.5% PFg=0.87 PFnet=0.60 NET=-797.1% hold=55m cepat=13%
+5m hwx4 cd12      IS 2024-26: n=1685 win=28.5% PFg=0.91 PFnet=0.54 NET=-195.6% hold=45m cepat=15% || OOS 2019-24: n=4809 win=29.0% PFg=0.90 PFnet=0.62 NET=-610.3% hold=55m cepat=13%
+5m hwx8 cd0       IS 2024-26: n=1245 win=30.9% PFg=0.88 PFnet=0.69 NET=-182.7% hold=185m cepat=2% || OOS 2019-24: n=3386 win=31.4% PFg=0.85 PFnet=0.71 NET=-632.0% hold=220m cepat=2%
+5m hwx8 cd12      IS 2024-26: n=1100 win=30.3% PFg=0.88 PFnet=0.68 NET=-164.0% hold=185m cepat=2% || OOS 2019-24: n=3004 win=31.8% PFg=0.87 PFnet=0.72 NET=-520.2% hold=215m cepat=2%
+(PARSIAL -- proses dihentikan batas waktu background sebelum varian ATR & 15M/1H selesai, 30 Sep 2026)

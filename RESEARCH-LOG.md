@@ -47,6 +47,68 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-30 — Ninja venue fee 0: mean reversion searah tren 15M/5M BTC — LOLOS OUT-OF-SAMPLE (bersyarat biaya ~0)
+**Ide:** Olan punya venue tanpa fee buka/tutup (biaya inap 0,5%/8 jam). Semua pola Ninja diuji
+ulang tanpa fee, pakai 3 model biaya inap (notional per batas 8 jam / pro-rata / 0,5% margin).
+**Metode:** `backtestNinjaZeroFee.js` (171 kombinasi, kumulatif 433), in-sample Sep 2024-Sep 2026,
+10 terbaik diuji OOS Sep 2019-Sep 2024; kandidat diperiksa `backtest/ninja/mrTrendSensitivity.js` +
+`backtest/ninja/mrTrendFinalChecks.js` (permutasi, exit next-open, ETH).
+**Hasil breakdown per tahun:** 15M k=3 slip 0,01%: 2019 +1, 2020 +25, 2021 +27, 2022 +21, 2023 +5,
+2024 -10 (OOS) | 2024 +6, 2025 +2, 2026 +19 (IS).
+**Split-era:** LULUS (IS +26,7% dan OOS +68,7%, parameter sama).
+**Sensitivitas parameter:** LULUS (k 1,5-4 x 5M/15M semua positif IS+OOS @slip 0,01%; mulai rontok
+di slip 0,03%). ETH GAGAL -> spesifik BTC.
+**Kesimpulan:** EDGE ASLI tapi TIPIS (~0,07-0,1%/trade) -- cuma hidup kalau biaya per trade ~0.
+Skenario biaya inap dari NOTIONAL: 0/171 lolos. Rekomendasi: konfirmasi struktur biaya venue dulu.
+**Status implementasi:** belum diterapkan -- nunggu approval Olan.
+
+### 2026-09-30 — Ninja ronde 3: mean reversion, breakout+volume, squeeze breakout: TIDAK CUKUP KUAT (squeeze 1H gagal out-of-sample)
+**Ide:** kelas pola yang belum kesentuh: fade Bollinger (kebalikan breakout), breakout konfirmasi
+volume + jam ramai, squeeze (kompresi volatilitas lalu tembus band).
+**Metode:** `backtestNinjaResearch3.js` (57 kombinasi, kumulatif 235), lalu kandidat terbaik diuji
+`backtestNinjaSqueezeOos.js`: out-of-sample BTC Sep 2019 - Sep 2024, 27 varian sensitivitas, ETH.
+**Hasil breakdown per tahun:** squeeze 1H k=4 in-sample +3,7/+16,4/+21,7; out-of-sample 2019 +1,7,
+2020 +10,3, 2021 -25,2, 2022 -45,6, 2023 +46,9, 2024 -5,9.
+**Split-era:** GAGAL (in-sample bagus, out-of-sample net -17,9%).
+**Sensitivitas parameter:** GAGAL (positif 23/27 in-sample vs 3/27 out-of-sample; ETH negatif).
+**Kesimpulan:** TIDAK CUKUP KUAT -- pelajaran: kandidat yang lolos per-tahun+split+permutasi di 2
+tahun data tetap bisa cuma "rezim". Uji out-of-sample 5 tahun WAJIB buat riset timeframe rendah.
+**Status implementasi:** gak diterapkan. Ninja tetap `entryEnabled:false`.
+
+### 2026-09-30 — Ninja lanjutan: multi-timeframe (arah 4H/Daily, entry 15M/1H) + momentum intraday BTC: TIDAK CUKUP KUAT
+**Ide:** 2 arah yang disetujui Olan setelah FVG/Donchian/sweep gagal: (1) entry timeframe Ninja cuma
+searah tren timeframe besar (QuantPedia multi-TF BTC); (2) momentum intraday (Shen dkk. 2022,
+Financial Review: setengah jam pertama memprediksi setengah jam terakhir).
+**Metode:** `backtestNinjaResearch2.js`, BTCUSDT 2 tahun, 40 kombinasi MTF + 9 varian intraday, fee RT
+0/0,04/0,10/0,20%. Tren besar dihitung dari candle kecil yang digabung (permutation test konsisten).
+**Hasil breakdown per tahun:** MTF: 2025 negatif di hampir semua sel; 1H Daily-SMA50 Donchian-50
+ATRx4: +6,7/-24,2/+23,6. Intraday: gross per tahun ~0 (±3%) di semua varian.
+**Split-era:** GAGAL (MTF terbaik -17,5/+23,6; intraday gross paruh gak konsisten).
+**Sensitivitas parameter:** GAGAL (MTF 5/40 positif, PF net maks 1,04; 15M semua negatif).
+**Kesimpulan:** TIDAK CUKUP KUAT. Momentum intraday BTC dari paper gak muncul lagi di 2024-2026
+bahkan sebelum fee (sign-shuffle p>=0,28). Total riset Ninja hari ini: 178+ kombinasi, belum ada
+yang lolos. Satu-satunya arah sisa: eksekusi maker (fee 0,04%) di 1H -- butuh model fill limit.
+**Status implementasi:** gak diterapkan. Ninja tetap `entryEnabled:false`.
+
+### 2026-09-30 — Ninja: ganti Channel Breakout 5M dengan FVG-touch / Donchian / liquidity sweep: SEMUA TIDAK CUKUP KUAT
+**Ide:** spesifikasi Olan -- CB 5M "plin-plan" (entry, retrace dikit, close, entry lagi), ganti FVG
+sbg zona entry (1 FVG = 1 entry, 1 posisi aktif, SL 2x lebar FVG, trailing). Lanjutan: cari sistem
+timeframe rendah berbukti publik (Donchian ala Zarattini dkk. 2025, liquidity sweep SMC/Turtle Soup).
+**Metode:** BTCUSDT 2 tahun 5M/15M/1H, % notional per trade, fee RT 0,04/0,10/0,20%, 1 posisi aktif.
+FVG: `backtestNinjaFvg.js`; kandidat: `backtestNinjaCandidates.js` (entry di open candle berikutnya).
+Histori live: `ninjaLiveHistoryAudit.js`.
+**Hasil breakdown per tahun:** FVG pemenang 5M/15M negatif 2025 & 2026; 1H +13,5/-16,7/-2,5.
+Donchian 1H terbaik +20,6/+11,2/-0,6. Sweep 15M +2,1/+3,4/+3,6 tapi n=35 total.
+**Split-era:** GAGAL (FVG 1H +8,7/-14,6; Donchian 1H +39,8/-8,6).
+**Sensitivitas parameter:** GAGAL (FVG semua grid negatif; kandidat cuma 6/108 positif, tetangga
+parameter sel terbaik jauh lebih lemah).
+**Review skeptis (aturan #7):** setuju TIDAK CUKUP KUAT + nemu backtest CB lama gak valid (fill di
+level breakout teoretis; entry realistis -> PF 0,36-0,53, cocok sama live 4/23 menang). p-value
+bar-permutation pakai SUM net gak bermakna (jumlah trade data acak beda -> fee beda).
+**Kesimpulan:** TIDAK CUKUP KUAT -- jangan diterapkan. CB 5M entry dimatiin (`entryEnabled:false`)
+atas instruksi eksplisit Olan + bukti live.
+**Status implementasi:** `ninjaFvg.js` dibangun+dites tapi TIDAK dipasang live. Nunggu keputusan Olan.
+
 ### 2026-09-19 — Short Emas berbasis posisi COT Commercial (pengganti SMA200): TIDAK ROBUST, DITOLAK
 **Ide:** setelah bear-window Emas berbasis SMA200 (harga sendiri) terbukti gagal total (semua
 variasi SMA150/200/250 + forceCloseOnFlip on/off kalah jauh dari baseline buy-only $11.469,22 --

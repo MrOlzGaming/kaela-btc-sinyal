@@ -255,6 +255,16 @@ function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name
 // SAMA PERSIS dengan patternType (lihat rangerAutoTrader.js), tapi Sniper punya `mode` yang artinya
 // BEDA (kategori kasar 'sniper'/'fvg', bukan patternType) -- patternType ASLI-nya field terpisah.
 // Prioritasin patternType kalau ada, biar caller manapun (Sniper termasuk) dapet alasan yang BENER.
+// Baris TP (27 Sep 2026, koreksi Olan: "Untuk TP trailing stop bukan disebut TP1 ya, tapi TP aja.
+// Kan kita trail dan tutup di invalidasinya yang ikut naik") -- "TP1" cuma bener buat exit 2-tahap
+// (pos.tp = target partial, sisanya di-trail). Trailing murni (pos.tp null) gak punya tahap 1:
+// posisi ditutup SEKALI di level invalidasi yang ratchet ngikutin harga.
+function _tpLine(pos) {
+  if (pos.tp != null) return `TP1: ${fmtUsd(pos.tp)}`;
+  const arah = (pos.direction === 'sell' || pos.direction === 'short') ? 'turun' : 'naik';
+  return `TP: trailing -- invalidasi ikut ${arah} ngikutin harga terbaik, posisi ditutup pas level itu kesentuh`;
+}
+
 function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge, system) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.patternType || pos.mode);
@@ -262,7 +272,7 @@ function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, toda
   return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
-TP1: ${pos.tp != null ? fmtUsd(pos.tp) : '(trailing, ngikutin harga terbaik yang dicapai)'}
+${_tpLine(pos)}
 SL: ${fmtUsd(pos.sl)}${liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}

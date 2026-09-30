@@ -4,15 +4,19 @@
 Asumsi fee round-trip: 0.1% dari notional (taker+taker kasar), leverage cap 50x.
 
 === TP TETAP (breakout-only) ===
-GROSS: n=2961, win=74.9%, totalR=1475.0, PF=2.99
-NET (fee-adjusted): totalR=1327.0, PF=2.70, winRate(net>0)=74.9%
+GROSS: n=2963, win=74.9%, totalR=1475.0, PF=2.98
+NET @0.04% round-trip: totalR=104.7, PF=1.09, winRate(net>0)=69.9%
+NET @0.1% round-trip: totalR=-1950.8, PF=0.16, winRate(net>0)=38.6%
+NET @0.2% round-trip: totalR=-5376.5, PF=0.01, winRate(net>0)=9.1%
 nyawa% (SL distance): median=0.103%, mean=0.121%
 leverage terpakai: median=50x, mean=50.0x, %trade kena cap 50x=100.0%
-Fee rata-rata per trade: 0.050R
+Fee rata-rata per trade (@0.1%): 1.156R
 
 === TRAILING % ===
-GROSS: n=2694, win=71.4%, totalR=6419.4, PF=11.68
-NET (fee-adjusted): totalR=6284.7, PF=10.82, winRate(net>0)=70.9%
-nyawa% (SL distance): median=0.104%, mean=0.121%
+GROSS: n=2696, win=71.4%, totalR=6445.5, PF=11.70
+NET @0.04% round-trip: totalR=5201.3, PF=6.17, winRate(net>0)=64.5%
+NET @0.1% round-trip: totalR=3335.0, PF=2.82, winRate(net>0)=54.6%
+NET @0.2% round-trip: totalR=224.5, PF=1.06, winRate(net>0)=41.5%
+nyawa% (SL distance): median=0.103%, mean=0.121%
 leverage terpakai: median=50x, mean=50.0x, %trade kena cap 50x=100.0%
-Fee rata-rata per trade: 0.050R
+Fee rata-rata per trade (@0.1%): 1.154R

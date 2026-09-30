@@ -89,8 +89,21 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
 
 - **Divalidasi**: 23 Sep 2026 (live mulai), keputusan final "Trailing-only" dikunci 26 Sep 2026
   (versi TP-Tetap DIHENTIKAN, kalah head-to-head).
+- ⛔ **KOREKSI FEE 27 Sep 2026 (BUG-KAELATRADE-0045)** -- angka "net-of-fee" lama (Trailing PF 10,82,
+  TP-Tetap PF 2,70) SALAH: rumus fee pakai leverage x fee% ("1R = margin penuh"), padahal leverage
+  kena cap 50x di 100% trade, jadi 1R cuma ~0,10% harga dan fee round-trip ~**1,15R per trade** (bukan
+  0,05R). Angka net yang BENER (`fee-check-output.log`, n=2.696):
+  | Fee round-trip | Trailing PF / win (net) | TP-Tetap PF / win (net) |
+  |---|---|---|
+  | 0 (gross) | 11,70 / 71,4% | 2,98 / 74,9% |
+  | 0,04% (~maker+maker) | 6,17 / 64,5% | 1,09 / 69,9% |
+  | 0,10% (~taker+taker) | 2,82 / 54,6% | 0,16 / 38,6% |
+  | 0,20% (fallback live `FALLBACK_FEE_PERCENT` x2 sisi) | **1,06 / 41,5%** | 0,01 / 9,1% |
+  Keputusan Trailing > TP-Tetap TETAP bener (menang di semua level fee), tapi edge-nya SANGAT
+  sensitif ke fee asli. Demo live s/d 27 Sep: win 9/20 (45%) -- nyambung ke skenario fee tinggi,
+  BUKAN ke 71% gross. Angka gross per-tahun di bawah masih valid SEBAGAI GROSS.
 - **Angka** (Trailing, YANG LIVE SEKARANG): n=2.694 trade, win rate **71,4%**, PF **11,68** gross,
-  PF **10,82** net-of-fee. Data BTCUSDT 5-menit 2 tahun (2024-09-22 s/d 2026-09-22). Konsisten per
+  ~~PF 10,82 net-of-fee~~ (salah, lihat koreksi di atas). Data BTCUSDT 5-menit 2 tahun (2024-09-22 s/d 2026-09-22). Konsisten per
   tahun: 2024 PF 11,77 (n=393), 2025 PF 11,15 (n=1.317), 2026 PF 12,39 (n=984).
   Head-to-head vs TP-Tetap (PF 2,99) di 2.411 sinyal yang match persis: Trailing menang 1.612 kali
   vs 579 -> TP-Tetap dihentikan.
@@ -102,6 +115,77 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   dianggap varians normal.
 - **Sumber**: `backtestNyopetChannelBreakoutFixed2PctCompare.js:1-6`, `fee-check-output.log`, `long-range-output.log`, `direction-flip-longrange-output.log`, `rigor-check-output.log` (semua di root folder).
 - **Regenerate**: `node backtestNyopetChannelBreakoutFinalCheck.js` (dan varian lain sesuai nama file, cek comment header masing-masing).
+
+## Ninja FVG + kandidat pengganti Channel Breakout (30 Sep 2026) — `ninjaFvg.js`, `backtestNinjaFvg.js`, `backtestNinjaCandidates.js`
+
+- ⛔ **Backtest Channel Breakout lama TIDAK VALID** (temuan peninjau skeptis 30 Sep 2026): entry diisi
+  tepat di level breakout (`top+halfWidth`) walau candle udah kebuka/lari di atasnya. Entry realistis
+  -> PF net @0,10% RT: entry=max(open,level) **0,53** (win 29,3%), entry di close candle breakout
+  (≈ live) **0,36** (win 21,8%). PF 3,71/11 = artefak fill, BUKAN edge -- cocok sama bar-permutation
+  p=1,000 dan histori live. Uji trailing 1m (PF 2,99) juga masih pakai entry teoretis, gak ngebuktiin apa-apa.
+- **Histori live demo** (`node ninjaLiveHistoryAudit.js`, 27-30 Sep): 23 trade, 4 menang/19 kalah,
+  net -$376,81 (fee 0,10%/sisi), estimasi fee $421 vs gross ~+$44. Entry 10/hari di 28 Sep.
+  -> `channel-breakout-config.json` `entryEnabled:false` (30 Sep 2026).
+- **FVG-touch sesuai spesifikasi Olan** (1 FVG = 1 entry, 1 posisi aktif, SL = 2x lebar FVG,
+  trailing ratchet): **GAGAL** di 5M/15M/1H. 30 kombinasi (minWidth 0,02-0,3% x maxAge) SEMUA net
+  negatif @0,10% RT; terbaik 1H w>=0,3% PF net 0,98. PF gross cuma ~1,0-1,2. Sensitivitas SL 1x/3x/4x
+  juga gak nolong. Buka-tutup BERHASIL dikurangin (1H: 0% trade <=15 menit, 0,7 trade/hari) tapi
+  edge-nya gak ada. `ninja-fvg-output.log`.
+- **Kandidat berbukti publik** (entry di OPEN candle berikutnya, SL/trailing k x ATR14, 1 posisi
+  aktif): Donchian breakout (Zarattini dkk. 2025) + liquidity sweep/"Turtle Soup" (komponen SMC),
+  n=20/50/100, k=2/3/4, filter EMA200 on/off, 5M/15M/1H = 108 trial. Cuma 6 yang net positif
+  @0,10% RT, **5M nol**. Terbaik: 1H Donchian-50 ATRx4 PF net 1,13 (tapi 2026 negatif, split
+  +39,8/-8,6, perm p=0,23, DSR 0%); 15M sweep-100 ATRx4+EMA200 PF net 1,62 tapi CUMA 35 trade/2
+  tahun (1 dari 108 trial, perm p=0,033 wajar muncul kebetulan). **TIDAK ADA yang lolos** rigor.
+  `ninja-candidates-output.log`.
+- **Riset lanjutan (30 Sep 2026, `backtestNinjaResearch2.js`, `ninja-research2-output.log`)**:
+  (1) MULTI-TIMEFRAME (arah 4H EMA50 / Daily SMA50 dari candle yang digabung, entry 15M/1H
+  Donchian/sweep/FVG searah) -- 5/40 net positif @0,10% RT, terbaik 1H Daily-SMA50 Donchian-50
+  ATRx4 PF net 1,04 (n=148), 2025 negatif hampir di semua sel, 15M SEMUA negatif, DSR 0%, perm
+  p=0,12-0,24 -> GAGAL. (2) MOMENTUM INTRADAY (Shen dkk. 2022, prediktor 00:00-00:30 / 13:30-14:00
+  / 00:00-23:30 UTC -> posisi 23:30-24:00) -- efeknya GAK ADA di 2024-2026 bahkan SEBELUM fee
+  (rata2 gross -0,012 s/d +0,014%/trade, sign-shuffle p>=0,28) -> GAGAL.
+  Catatan: di fee maker 0,04% beberapa sel 1H jadi +15-24% net/2 tahun -- lemah, tapi satu-satunya
+  arah yang layak kalau riset dilanjut (butuh model fill limit order).
+- **Ronde 3 (30 Sep 2026, `backtestNinjaResearch3.js`, `ninja-research3-output.log`)**: mean
+  reversion Bollinger 2,5 (fade, +/- filter tren, exit trailing / balik ke SMA20), breakout Donchian
+  + konfirmasi volume (+/- jam 13-20 UTC), squeeze breakout (lebar BB di titik terendah). 57 kombinasi
+  (kumulatif 235), 4 net positif @0,10% RT. 5M & 15M semua gagal. Satu-satunya yang kelihatan kuat:
+  **1H squeeze k=4** PF net 1,74, n=97, positif 2024/2025/2026, perm p=0,02 -- TAPI:
+- ⛔ **Uji out-of-sample squeeze 1H GAGAL** (`backtestNinjaSqueezeOos.js`, `ninja-squeeze-oos-output.log`):
+  data Sep 2019 - Sep 2024 yang gak dipakai milih parameter -> parameter pemenang PERSIS **-17,9%**
+  net (2021 -25,2%, 2022 -45,6%, maxDD 89%). Sensitivitas 27 varian: positif **23/27 in-sample tapi
+  cuma 3/27 out-of-sample** = pola yang cuma cocok sama rezim 2024-2026 (overfit/rezim), bukan edge.
+  ETH 1H periode 2024-2026 juga negatif (-28/-31%). -> TIDAK dipasang.
+- **CB "dikasih napas" (`backtestNinjaCbWide.js`, `ninja-cb-wide-output.log`, PARSIAL 5M)**: sinyal CB
+  sama persis, entry realistis, trailing 1x/2x/4x/8x lebar channel, +/- cooldown. Trailing lebar
+  berhasil ngilangin "kabur pas ditekan dikit" (ditutup <=15 menit: 89% -> 2%) TAPI PF GROSS
+  out-of-sample 2019-2024 cuma 0,85-0,91 di SEMUA lebar -> rugi bahkan TANPA fee. CB 5M gak punya edge.
+- **Venue fee 0 + biaya inap (info Olan 30 Sep 2026)** -- `backtestNinjaZeroFee.js`,
+  `ninja-zerofee-output.log`: 171 kombinasi (kumulatif 433) diuji ulang dgn 3 skenario biaya inap +
+  slippage. H1 (0,5% NOTIONAL tiap lewat 00/08/16 UTC) & H2 (pro-rata): **0/171** positif. H3 (0,5%
+  dari MARGIN @50x = 0,01% notional per lewat): 46/171 positif, 7/10 lolos OOS.
+- ✅ **KANDIDAT PERTAMA YANG LOLOS: mean reversion searah tren** (`backtestNinjaResearch3.js`
+  kind 'mr' trend:true exit 'mean'): close tembus Bollinger(20; 2,5) BERLAWANAN tren EMA200 ->
+  masuk balik ke arah tren (buy the dip di atas EMA200 / sell the rip di bawahnya), exit pas close
+  balik ke SMA20, SL k x ATR14. Syarat biaya: slippage <=0,01-0,02%/sisi + biaya inap ala H3.
+  BTC 15M k=3 @slip 0,01%: in-sample PF 1,28 (+26,7%, n=358, DD 7,2%), **out-of-sample 2019-2024
+  PF 1,20 (+68,7%, n=1013, DD 17,5%)**; SEMUA k 1,5/2/2,5/3/4 positif di IS DAN OOS, di 15M DAN 5M
+  (`ninja-mr-trend-sensitivity-output.log`); bar-permutation IS p=0,01 (15M) / 0,00 (5M); PSR OOS
+  98,5% (15M) / 99,7% (5M); exit di open candle berikutnya hasilnya sama (`ninja-mr-trend-final-output.log`).
+  ⚠️ Kelemahan: (1) edge ~0,07-0,1%/trade -- MATI di fee taker exchange biasa (@0,10% RT: -0,9%);
+  (2) melemah akhir-akhir ini (15M OOS 2024 -10%, IS 2025 +2%); (3) **ETH gagal** (IS negatif) --
+  spesifik BTC; (4) exit trailing MURNI lebih jelek (DD besar, 2025 rugi), TAPI hybrid "TP trailing" (SL diam sampai
+  balik ke SMA20, lalu trailing 1x ATR) setara/lebih baik: 15M k=3 IS +27,0% / OOS +99,8% DD 14,9% --
+  semua trailK 0,5-2 x k 2-4 x 15M/5M positif IS+OOS (`backtest/ninja/mrTrailingCompare.js`,
+  `ninja-mr-trailing-output.log`) -> dipakai di paper (exit 'meanTrail', trailK 1). **Config AKTIF 30 Sep 2026: 5M k=4 trailK=1**
+  tanpa fee -- IS +48,5% DD 4,4% [2024 +6, 2025 +26, 2026 +16], OOS +159,4% DD 10,0% [2019 +7, 2020 +27,
+  2021 +55, 2022 +31, 2023 +22, 2024 +16] -- satu-satunya varian yang positif di SETIAP tahun dua periode; (5) spread/
+  feed harga venue manual belum diketahui. Status: PAPER (`ninjaMrSignal.js`, 30 Sep 2026) -- hitungan
+  kertas TANPA fee (keputusan Olan), hasil nyata bakal lebih rendah kalau venue ada spread/biaya inap.
+- **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
+  belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
+  tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.
 
 ## 🔄 Cara Update File Ini
 

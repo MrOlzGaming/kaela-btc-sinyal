@@ -1,7 +1,13 @@
 // ninjaTrader.js (22-23 Sep 2026) -- eksekutor LIVE strategi "Ninja" (dulu "Channel Breakout")
 // (BTCUSDT candle 5-menit), divalidasi backtest 2-tahun (lihat backtestNyopetChannelBreakout*.js):
 // per-tahun konsisten, split-era hampir identik, sensitivitas parameter halus/monoton,
-// direction-flip kuat (75% arah asli vs 22% dibalik), tahan fee (PF 2.99->2.70 net TP-tetap).
+// direction-flip kuat (75% arah asli vs 22% dibalik). ⛔ Klaim lama "tahan fee (PF 2.99->2.70 net
+// TP-tetap)" SALAH (BUG-KAELATRADE-0045, 27 Sep 2026): fee ~1,15R/trade, bukan 0,05R -- trailing net
+// PF 2,82 @0,10% round-trip, 1,06 @0,20% (fallback yg dipakai stats live di bawah). Lihat
+// BACKTEST-REGISTRY.md bagian Ninja.
+// ⛔ 30 Sep 2026: backtest CB lama TIDAK VALID -- entry diisi di level breakout teoretis; entry
+// realistis -> PF net 0,36-0,53 (cocok live 4/23 menang). Entry dimatiin (`entryEnabled:false`),
+// lihat BACKTEST-REGISTRY.md bagian "Ninja FVG + kandidat".
 //
 // ============ ARSITEKTUR (revisi 26 Sep 2026, keputusan final Olan) ============
 // SEBELUMNYA (23 Sep 2026) 2 varian jalan berbarengan buat dibandingin ("biar ketemu yang
@@ -489,6 +495,13 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     await checkAndClearStrayPosition(demoExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli demo error:`, e.message));
     if (realExec) await checkAndClearStrayPosition(realExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli real error:`, e.message));
   }
+
+  // Saklar entry (30 Sep 2026, spesifikasi Olan: "CHANNEL BREAKOUT 5M TIDAK LAGI MENJADI TRIGGER
+  // ENTRY") -- `entryEnabled:false` = gak buka posisi baru SAMA SEKALI, tapi posisi floating tetap
+  // dikelola sampai ketutup (blok di atas) + patroli posisi ilegal tetap jalan. BEDA dari
+  // `enabled:false` yang berhenti total (posisi floating gak dipantau lagi -- bahaya). Bukti:
+  // `node ninjaLiveHistoryAudit.js` (demo 27-30 Sep: 23 trade, 4 menang, net -$376,81).
+  if (cfg.entryEnabled === false) { v.channel = null; return; }
 
   // === GAK ADA FLOATING -- channel aktif? cek breakout ===
   if (v.channel) {

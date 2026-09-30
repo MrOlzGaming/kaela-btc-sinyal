@@ -273,8 +273,12 @@ async function sendChecklistReport(now) {
   const econFreshness = checkEconCalendarFreshness();
   const spamCheck = checkNoDuplicateSpam(now);
   const ninjaMr = checkNinjaMrFreshness(now);
-  const healthLines = [freshness.line, econFreshness.line, ...ninjaMr.lines, spamCheck.line];
-  const anyHealthIssue = !freshness.ok || !econFreshness.ok || !ninjaMr.ok || !spamCheck.ok;
+  // Self-check mandiri (1 Okt 2026, systemSelfCheck.js): regression test harian + verifikasi endpoint BingX
+  // -- murni baca state, yang jalanin ada di pipeline run-vultr-executor.sh.
+  let selfCheck = { ok: true, lines: [] };
+  try { selfCheck = require('./systemSelfCheck').reportLines(now); } catch (e) { selfCheck = { ok: false, lines: [`⚠️ SelfCheck: gagal baca state (${e.message.slice(0, 60)})`] }; }
+  const healthLines = [freshness.line, econFreshness.line, ...ninjaMr.lines, ...selfCheck.lines, spamCheck.line];
+  const anyHealthIssue = !freshness.ok || !econFreshness.ok || !ninjaMr.ok || !selfCheck.ok || !spamCheck.ok;
 
   const msg = [
     // VECTOR (QA Tester) -- "petugas" yang bener buat checklist verifikasi tugas jalan/nggak,

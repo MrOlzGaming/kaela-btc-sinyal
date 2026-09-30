@@ -1,0 +1,23 @@
+{
+  "lastProcessedCloseTime": 1790783999999,
+  "pendingEntry": null,
+  "floating": null,
+  "closedCount": 0,
+  "missedEntries": 0,
+  "stats": {
+    "demo": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0
+    },
+    "real": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0
+    }
+  },
+  "dailySignalSeq": {
+    "dayKey": null,
+    "count": 0
+  }
+}

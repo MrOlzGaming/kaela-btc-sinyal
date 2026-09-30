@@ -59,7 +59,12 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   // beda dari Binance yang semua field termasuk timestamp ikut ke query builder biasa), signature
   // ditempel sbg query param TAMBAHAN (bukan header). Dipakai SAMA persis buat GET/POST/DELETE --
   // BingX gak bedain method buat cara sign, cuma method HTTP request-nya yang beda.
-  async function signedRequest(method, path, params = {}) {
+  // Retry 1x KHUSUS GET yang ditolak "timestamp is invalid" (code 109400) -- 1 Okt 2026: kejadian
+  // nyata 30 Sep 13:34 WITA padahal jam VPS sinkron NTP (offset <1ms, selisih BingX ~50ms), jadi
+  // penyebabnya request nyangkut di jaringan > recvWindow default 5 dtk. GET = baca doang (aman
+  // diulang dgn timestamp baru); POST/DELETE SENGAJA gak diulang (risiko order dobel/eksekusi ganda).
+  const TIMESTAMP_INVALID_CODE = 109400;
+  async function signedRequest(method, path, params = {}, attempt = 1) {
     const sortedKeys = Object.keys(params).sort();
     const base = sortedKeys.map((k) => `${k}=${params[k]}`).join('&');
     const paramsStr = (base ? base + '&' : '') + `timestamp=${Date.now()}`;
@@ -67,6 +72,9 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     const url = `${baseUrl}${path}?${paramsStr}&signature=${signature}`;
     const res = await fetch(url, { method, headers: { 'X-BX-APIKEY': apiKey } });
     const data = await res.json();
+    if (data.code === TIMESTAMP_INVALID_CODE && method === 'GET' && attempt === 1) {
+      return signedRequest(method, path, params, 2);
+    }
     if (data.code !== 0) {
       const err = new Error(`BingX API error (code ${data.code}): ${data.msg}`);
       err.bingxCode = data.code;

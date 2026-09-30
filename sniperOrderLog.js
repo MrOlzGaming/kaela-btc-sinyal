@@ -86,8 +86,11 @@ function formatBearShortSignal({ assetLabel, assetEmoji, entryPrice, sl, pattern
   ];
   if (isFvgZone) {
     lines.push(
-      `🔴 Zona short yang DITUNGGU: ${fmt(gapBottom)} -- ${fmt(gapTop)} (harga sekarang ${fmt(entryPrice)})`,
-      `📌 Bukan entry sekarang -- tunggu harga NAIK balik ke zona ini dulu, BARU short kalau ada tanda ditolak turun lagi (jangan asal short pas nyentuh doang).`,
+      `🔴 Zona FVG (resistance): ${fmt(gapBottom)} -- ${fmt(gapTop)} (harga sekarang ${fmt(entryPrice)})`,
+      // (1 Okt 2026, koreksi -- teks lama "tunggu harga NAIK balik dulu" SALAH: detectFvgSignal
+      // (fvgDetector.js) baru ngeluarin sinyal bear SETELAH harga nyentuh zona DAN nutup di bawah
+      // gapBottom, jadi penolakannya UDAH kejadian pas pesan ini dikirim.)
+      `📌 Harga udah nyentuh zona ini dan DITOLAK turun (candle nutup di bawah zona) -- konfirmasi udah ada, short valid di sekitar harga sekarang. Batal kalau harga balik nutup di atas SL.`,
     );
   } else {
     lines.push(`🔴 Potensi entry short @ ${fmt(entryPrice)}`);

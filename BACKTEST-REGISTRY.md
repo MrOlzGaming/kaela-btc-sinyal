@@ -193,7 +193,16 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   rugi -- TIDAK lolos Aturan Besi #5 versi ketat; Olan tetap minta jalan demo+real (saldo real kecil).
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
   belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
-  tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.
+  tinggi (wilayah Ranger 4H / Sniper Daily). ~~Ninja tetap `entryEnabled:false` sampai Olan mutusin.~~
+  **Update 1 Okt 2026**: Channel Breakout (`ninjaTrader.js`) entry MATI; yang LIVE = Mean Reversion 15M k=4
+  exit SMA20 (`ninjaMrTrader.js`, `ninja-mr-exec-config.json` enabled+allowReal+entryEnabled true) sejak
+  30 Sep ~20:45 WITA. Frekuensi sinyal nyata ~4x/10 hari (dicek 1 Okt: 24 Sep, 26 Sep, 27 Sep, 28 Sep).
+- **Konfirmasi independen (sesi lain, 1 Okt 2026)**: backtest FVG-touch terpisah (data 5m 2 thn, 15 config
+  spec + 48 varian, split paruh) -> semua config spec RUGI (PF net 0,43-0,93); cuma 2/48 varian lolos
+  kedua paruh, marjinal (1H, konfirmasi, trail 4x; paruh-2 PF 1,00-1,07) -- sejalan kesimpulan di atas.
+  File-nya (`backtest/ninjaFvgBacktest.js`, duplikat `backtestNinjaFvg.js`) dipindah ke
+  `.KAELA-TRASH/2026-10-01/`. Catatan: pesan commit `c42d8d5b` nyebut "+ label TP trailing" -- SALAH,
+  diff-nya cuma file backtest itu; label TP beneran dikerjain di `darkKaelaLog.js` `_tpLine` (sesi lain).
 
 ## 🔄 Cara Update File Ini
 

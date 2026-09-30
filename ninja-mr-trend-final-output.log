@@ -1,0 +1,14 @@
+15m IS exit close: NET 26.7% | exit next-open: NET 26.6% PF 1.28 n 358
+15m OOS exit close: NET 68.7% | exit next-open: NET 68.6% PF 1.20 n 1013
+15m IS bar-permutation p= 0 acak -0.0152 vs asli 0.0745 %/trade, n acak 414
+15m OOS PSR (1 trial, gak dipilih di OOS)= 98.5%
+5m IS exit close: NET 14.6% | exit next-open: NET 14.6% PF 1.11 n 879
+5m OOS exit close: NET 86.7% | exit next-open: NET 86.5% PF 1.18 n 2342
+5m IS bar-permutation p= 0.05 acak -0.0147 vs asli 0.0166 %/trade, n acak 1254
+5m OOS PSR (1 trial, gak dipilih di OOS)= 99.7%
+ETH 15m k=2 IS n 403 NET -4.8% PF 0.97 {"2024":5.6,"2025":-17.4,"2026":7}
+ETH 15m k=2 OOS n 1100 NET -30.8% PF 0.94 {"2019":-10,"2020":-2.9,"2021":23.3,"2022":-25.2,"2023":-7.3,"2024":-8.6}
+ETH 15m k=3 IS n 396 NET -8.6% PF 0.95 {"2024":9.5,"2025":-24.2,"2026":6.1}
+ETH 15m k=3 OOS n 1079 NET 2.5% PF 1.00 {"2019":-14.9,"2020":4.9,"2021":43.3,"2022":-24,"2023":-5.8,"2024":-1}
+ETH 15m k=4 IS n 394 NET -14.2% PF 0.92 {"2024":4.9,"2025":-22.8,"2026":3.7}
+ETH 15m k=4 OOS n 1076 NET 23.6% PF 1.05 {"2019":-10,"2020":22.1,"2021":28.1,"2022":-21.3,"2023":-1.2,"2024":6}

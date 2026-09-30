@@ -28,6 +28,9 @@ const { deflatedSharpeRatio, metricProfitFactor } = require('./backtest/backtest
 
 const TF_MIN = { '5m': 5, '15m': 15, '1h': 60 };
 const PRIOR_TRIALS = 235 + 27; // ronde 1-3 + sensitivitas squeeze OOS
+// Skenario yang dipakai MILIH & menilai (default H1 terburuk). NINJA_BC_SCEN='H3 slip.01' kalau biaya
+// inap ternyata dari margin, bukan notional.
+const SEL = process.env.NINJA_BC_SCEN || 'H1 slip.01';
 const T_OOS_START = Date.UTC(2019, 8, 30), T_SPLIT = Date.UTC(2024, 8, 30), T_END = Date.UTC(2026, 8, 30);
 const H8 = 8 * 3600e3;
 
@@ -106,7 +109,7 @@ async function main() {
   const isDays = (T_END - T_SPLIT) / 864e5, oosDays = (T_SPLIT - T_OOS_START) / 864e5;
 
   console.log(`=== IN-SAMPLE Sep 2024 - Sep 2026: ${grid.length} kombinasi (kumulatif ${totalTrials}) ===`);
-  console.log('Kolom: skenario H1 slip 0,01% (utama) | NET skenario lain | gross tanpa biaya');
+  console.log(`Kolom: skenario ${SEL} (utama) | NET skenario lain | gross tanpa biaya`);
   const res = [];
   const isC = {};
   for (const tf of Object.keys(TF_MIN)) isC[tf] = await fetchSym(tf, T_SPLIT, T_END);
@@ -114,16 +117,16 @@ async function main() {
     const c = isC[p.tf];
     const raw = runFamily(c, p.tf, p);
     if (raw.length < 30) continue;
-    const main = applyCost(raw, c, SCEN['H1 slip.01']);
+    const main = applyCost(raw, c, SCEN[SEL]);
     const { s, txt } = line(main, c, TF_MIN[p.tf], isDays);
-    const others = Object.entries(SCEN).filter(([k]) => k !== 'H1 slip.01').map(([k, sc]) => `${k.split(' ')[0]}${k.includes('.03') ? '/s.03' : ''}:${f2(sum(applyCost(raw, c, sc).map((t) => t.grossPct)), 1)}`).join(' ');
+    const others = Object.entries(SCEN).filter(([k]) => k !== SEL).map(([k, sc]) => `${k.split(' ')[0]}${k.includes('.03') ? '/s.03' : ''}:${f2(sum(applyCost(raw, c, sc).map((t) => t.grossPct)), 1)}`).join(' ');
     const grossPf = metricProfitFactor(raw.map((t) => t.grossPct));
     res.push({ p, s, raw });
     console.log(`${p.tf.padEnd(3)} ${labelOf(p).padEnd(30)} ${txt} | ${others} | PFgross0=${f2(grossPf)}`);
   }
-  console.log(`-> NET positif (H1 slip.01): ${res.filter((r) => r.s.netSumPct > 0).length}/${res.length}`);
+  console.log(`-> NET positif (${SEL}): ${res.filter((r) => r.s.netSumPct > 0).length}/${res.length}`);
 
-  console.log('\n=== OUT-OF-SAMPLE Sep 2019 - Sep 2024: 10 terbaik in-sample (H1 slip.01), parameter PERSIS ===');
+  console.log(`\n=== OUT-OF-SAMPLE Sep 2019 - Sep 2024: 10 terbaik in-sample (${SEL}), parameter PERSIS ===`);
   const oosC = {};
   const top = [...res].sort((a, b) => b.s.netSumPct - a.s.netSumPct).slice(0, 10);
   let passed = 0;
@@ -131,12 +134,13 @@ async function main() {
     if (!oosC[r.p.tf]) oosC[r.p.tf] = await fetchSym(r.p.tf, T_OOS_START, T_SPLIT);
     const c = oosC[r.p.tf];
     const raw = runFamily(c, r.p.tf, r.p);
-    const tr = applyCost(raw, c, SCEN['H1 slip.01']);
+    const tr = applyCost(raw, c, SCEN[SEL]);
+    const trS3 = applyCost(raw, c, { ...SCEN[SEL], slip: 0.03 });
     const { s, txt } = line(tr, c, TF_MIN[r.p.tf], oosDays);
     const dsr = deflatedSharpeRatio(r.raw.map((t) => t.grossPct), totalTrials);
-    const h3 = sum(applyCost(raw, c, SCEN['H3 slip.01']).map((t) => t.grossPct));
+    const h3 = sum(trS3.map((t) => t.grossPct)); // skenario sama, slippage 0,03%/sisi
     if (s.netSumPct > 0) passed++;
-    console.log(`${r.p.tf.padEnd(3)} ${labelOf(r.p).padEnd(30)} IS NET=${f2(r.s.netSumPct, 1)}% PF=${f2(r.s.pfNet)} || OOS ${txt} | OOS H3 NET=${f2(h3, 1)}% | DSR(IS)=${dsr.ok ? f2(dsr.dsr * 100, 1) + '%' : dsr.error}`);
+    console.log(`${r.p.tf.padEnd(3)} ${labelOf(r.p).padEnd(30)} IS NET=${f2(r.s.netSumPct, 1)}% PF=${f2(r.s.pfNet)} || OOS ${txt} | OOS slip.03 NET=${f2(h3, 1)}% | DSR(IS)=${dsr.ok ? f2(dsr.dsr * 100, 1) + '%' : dsr.error}`);
   }
   console.log(`-> lolos OOS (NET > 0): ${passed}/${top.length}`);
 }

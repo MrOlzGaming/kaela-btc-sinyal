@@ -157,6 +157,23 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   net (2021 -25,2%, 2022 -45,6%, maxDD 89%). Sensitivitas 27 varian: positif **23/27 in-sample tapi
   cuma 3/27 out-of-sample** = pola yang cuma cocok sama rezim 2024-2026 (overfit/rezim), bukan edge.
   ETH 1H periode 2024-2026 juga negatif (-28/-31%). -> TIDAK dipasang.
+- **Venue fee 0 + biaya inap (BC.Game, info Olan 30 Sep 2026)** -- `backtestNinjaBcGame.js`,
+  `ninja-bcgame-output.log`: 171 kombinasi (kumulatif 433) diuji ulang dgn 3 skenario biaya inap +
+  slippage. H1 (0,5% NOTIONAL tiap lewat 00/08/16 UTC) & H2 (pro-rata): **0/171** positif. H3 (0,5%
+  dari MARGIN @50x = 0,01% notional per lewat): 46/171 positif, 7/10 lolos OOS.
+- ✅ **KANDIDAT PERTAMA YANG LOLOS: mean reversion searah tren** (`backtestNinjaResearch3.js`
+  kind 'mr' trend:true exit 'mean'): close tembus Bollinger(20; 2,5) BERLAWANAN tren EMA200 ->
+  masuk balik ke arah tren (buy the dip di atas EMA200 / sell the rip di bawahnya), exit pas close
+  balik ke SMA20, SL k x ATR14. Syarat biaya: slippage <=0,01-0,02%/sisi + biaya inap ala H3.
+  BTC 15M k=3 @slip 0,01%: in-sample PF 1,28 (+26,7%, n=358, DD 7,2%), **out-of-sample 2019-2024
+  PF 1,20 (+68,7%, n=1013, DD 17,5%)**; SEMUA k 1,5/2/2,5/3/4 positif di IS DAN OOS, di 15M DAN 5M
+  (`ninja-mr-trend-sensitivity-output.log`); bar-permutation IS p=0,01 (15M) / 0,00 (5M); PSR OOS
+  98,5% (15M) / 99,7% (5M); exit di open candle berikutnya hasilnya sama (`ninja-mr-trend-final-output.log`).
+  ⚠️ Kelemahan: (1) edge ~0,07-0,1%/trade -- MATI di fee taker exchange biasa (@0,10% RT: -0,9%);
+  (2) melemah akhir-akhir ini (15M OOS 2024 -10%, IS 2025 +2%); (3) **ETH gagal** (IS negatif) --
+  spesifik BTC; (4) exit = balik ke rata2, BUKAN trailing (versi trailing lebih jelek); (5) spread/
+  feed harga BC.Game belum diketahui. Status: BELUM dipasang -- nunggu konfirmasi Olan soal struktur
+  biaya inap BC.Game (notional vs margin) + keputusan venue.
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
   belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
   tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.

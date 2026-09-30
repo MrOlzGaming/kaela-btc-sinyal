@@ -47,6 +47,23 @@ lengkapnya di satu tempat.
 
 ## Temuan Terbaru (paling baru di atas)
 
+### 2026-09-30 — Ninja Mean Reversion di BingX dengan fee realistis: exit SMA20 (maker) > TP trailing (taker); dipasang demo+real atas instruksi Olan
+**Ide:** otomatisasi Ninja MR di BingX (Olan: "kalo aku tidur ga ada eksekusi"). Fee BingX VIP0 maker
+0,02% / taker 0,05% (dicek 30 Sep 2026). Model per-trade: entry limit post-only maker (lewat kalau gak
+kesentuh), exit stop = taker, exit SMA20 via limit ngendap = maker.
+**Metode:** `backtestNinjaResearch3.js` run() + model fee realistis (inline, hasil dicatat di
+BACKTEST-REGISTRY.md), BTC 5M/15M, IS Sep 2024-Sep 2026 & OOS Sep 2019-Sep 2024, k 3/4, trailK 1/2.
+**Hasil breakdown per tahun:** 15M k=4 exit SMA20: 2019 -3, 2020 +18, 2021 +12, 2022 +16, 2023 -4,
+2024 -20 (OOS) | 2024 +6, 2025 -4, 2026 +14 (IS).
+**Split-era:** LULUS tipis (IS +16%, OOS +21%).
+**Sensitivitas parameter:** LULUS tipis di 15M (k 3/4 dua-duanya positif IS+OOS), GAGAL di 5M (semua negatif).
+TP trailing: IS 0%, OOS +20% -> lebih lemah dari exit SMA20 karena exit trailing selalu taker.
+**Kesimpulan:** EDGE TIPIS, bukan kuat (PF 1,07-1,16, 3/8 tahun rugi, DD OOS 30% notional). Secara
+Aturan Besi #5 ketat: TIDAK CUKUP KUAT. Dipasang karena instruksi eksplisit Olan (demo + real, saldo real
+kecil) -- dicatat jujur sebagai pengecualian.
+**Status implementasi:** LIVE 30 Sep 2026 (`ninjaMrTrader.js`, demo+real BingX, 15M k=4 exit SMA20).
+Evaluasi ulang setelah >=100 trade real/demo: bandingkan fee & fill rate asli vs asumsi model.
+
 ### 2026-09-30 — Ninja venue fee 0: mean reversion searah tren 15M/5M BTC — LOLOS OUT-OF-SAMPLE (bersyarat biaya ~0)
 **Ide:** Olan punya venue tanpa fee buka/tutup (biaya inap 0,5%/8 jam). Semua pola Ninja diuji
 ulang tanpa fee, pakai 3 model biaya inap (notional per batas 8 jam / pro-rata / 0,5% margin).

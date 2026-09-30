@@ -183,6 +183,14 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   2021 +55, 2022 +31, 2023 +22, 2024 +16] -- satu-satunya varian yang positif di SETIAP tahun dua periode; (5) spread/
   feed harga venue manual belum diketahui. Status: PAPER (`ninjaMrSignal.js`, 30 Sep 2026) -- hitungan
   kertas TANPA fee (keputusan Olan), hasil nyata bakal lebih rendah kalau venue ada spread/biaya inap.
+- **Model fee BingX REALISTIS (30 Sep 2026, dasar `ninjaMrTrader.js`)**: entry LIMIT post-only 1 tick di sisi
+  baik close (maker 0,02%; sinyal lewat kalau candle berikutnya gak nyentuh -- 7-16% di 15M, ~20% di 5M),
+  exit stop/trailing = taker 0,05% (dikejar harga), exit SMA20 via limit ngendap = maker 0,02% (75-83% exit).
+  Hasil: **15M k=4 exit SMA20: IS +16% PF 1,16 DD 11% | OOS 2019-2024 +21% PF 1,07 DD 30%** (tahun rugi:
+  2019 -3, 2023 -4, 2024 -18/-20, 2025 -4). 15M TP-trailing k=4 trailK=1: IS 0% PF 1,00 | OOS +20% PF 1,06
+  -> keunggulan trailing HILANG begitu exit kena taker. 5M semua varian NEGATIF. Jadi eksekutor BingX
+  pakai 15M k=4 exit SMA20; paper 5M tanpa fee (`ninjaMrSignal.js`) tetap trailing. Edge TIPIS & 3/8 tahun
+  rugi -- TIDAK lolos Aturan Besi #5 versi ketat; Olan tetap minta jalan demo+real (saldo real kecil).
 - **Kesimpulan**: di timeframe Ninja (5M-1H) BTC, fee ~0,1% per trade sebanding sama gerak normal --
   belum ada sistem yang lolos. Edge trend-following yang terdokumentasi muncul di timeframe lebih
   tinggi (wilayah Ranger 4H / Sniper Daily). Ninja tetap `entryEnabled:false` sampai Olan mutusin.

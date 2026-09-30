@@ -47,7 +47,7 @@ async function reportYesterdayRecapIfPending() {
   if (hasEntryToday(ARCHIVE_TYPE, new Date(state.dateKey))) return { sent: false, reason: 'udah pernah dilaporin' };
 
   const { sendWhatsAppToWibowo } = require('./wibowoNotify');
-  const msg = `📋 *Channel Breakout REAL* -- rekap ${state.dateKey}\n\n`
+  const msg = `📋 *Ninja REAL* -- rekap ${state.dateKey}\n\n`
     + `Total *${state.count} trade tidak tereksekusi* kemarin karena saldo Real tidak cukup.\n\n`
     + `Ini murni sinyal yang kelewat, BUKAN error sistem -- begitu saldo cukup, entry otomatis jalan normal lagi.\n\n— Kaela`;
   const r = await sendWhatsAppToWibowo(msg);

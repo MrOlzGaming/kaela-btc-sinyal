@@ -32,6 +32,12 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
 mr_output=$(timeout -k 5 45 node ninjaMrSignal.js 2>&1)
 [ -n "$mr_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $mr_output" >> "$LOG_FILE"
 
+# NINJA Mean Reversion EKSEKUTOR BingX demo+real (30 Sep 2026, ninjaMrTrader.js) -- akun BingX SAMA
+# ninjaTrader.js (entry CB udah dimatikan, tapi keduanya saling cek floating). Journal sendiri
+# (ninja-mr-exec-journal.json). Saklar: ninja-mr-exec-config.json.
+mrx_output=$(timeout -k 5 55 node ninjaMrTrader.js 2>&1)
+[ -n "$mrx_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $mrx_output" >> "$LOG_FILE"
+
 # Cek rekap saldo-kurang harian TIAP SIKLUS (murah -- cuma baca state lokal, kirim WA 0x atau 1x
 # aja per hari begitu tanggalnya kepotong, lihat ninjaBalanceRecap.js).
 node -e "require('./ninjaBalanceRecap').reportYesterdayRecapIfPending().then(r=>console.log(JSON.stringify(r)))" >> "$LOG_FILE" 2>&1

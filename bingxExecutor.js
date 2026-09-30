@@ -188,10 +188,72 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     return signedRequest('DELETE', '/openApi/swap/v2/trade/allOpenOrders', { symbol });
   }
 
+  // ============ Order LIMIT / STOP (30 Sep 2026, Ninja Mean Reversion -- ninjaMrTrader.js) ============
+  // ⚠️ BELUM diverifikasi empiris dari VPS (sesi cloud diblokir ke open-api.bingx.com) -- param sesuai
+  // dokumentasi BingX Swap V2 (`type` LIMIT/STOP_MARKET, `price`, `stopPrice`, `timeInForce` PostOnly/GTC).
+  // Caller WAJIB fail-safe: error di sini = skip/log, JANGAN asumsi order ada. Semua order ditag
+  // clientOrderId kaela- (sama kayak MARKET) biar wasLastEntryOrderByKaela tetap kenal.
+  function roundPrice(price, pricePrecision) { return Number(Number(price).toFixed(pricePrecision)); }
+
+  // Entry LIMIT. `postOnly:true` = maker doang (ditolak exchange kalau langsung match, bukan jadi taker).
+  async function placeLimitEntry({ symbol, direction, quantity, price, postOnly = true }) {
+    const { pricePrecision } = await getSymbolInfo(symbol);
+    const side = direction === 'buy' ? 'BUY' : 'SELL';
+    const positionSide = direction === 'buy' ? 'LONG' : 'SHORT';
+    const clientOrderId = generateKaelaClientOrderId();
+    const placed = await signedRequest('POST', '/openApi/swap/v2/trade/order', {
+      symbol, side, positionSide, type: 'LIMIT', quantity, price: roundPrice(price, pricePrecision),
+      timeInForce: postOnly ? 'PostOnly' : 'GTC', clientOrderId,
+    });
+    return { ...placed.order, clientOrderId: placed.order.clientOrderId || clientOrderId };
+  }
+
+  // Tutup posisi via LIMIT ngendap (maker) -- `direction` = ARAH POSISI ASLI (side dibalik, positionSide tetap,
+  // konvensi SAMA emergencyCloseMarket).
+  async function placeLimitClose({ symbol, direction, quantity, price }) {
+    const { pricePrecision } = await getSymbolInfo(symbol);
+    const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+    const positionSide = direction === 'buy' ? 'LONG' : 'SHORT';
+    const placed = await signedRequest('POST', '/openApi/swap/v2/trade/order', {
+      symbol, side: closeSide, positionSide, type: 'LIMIT', quantity, price: roundPrice(price, pricePrecision),
+      timeInForce: 'GTC', clientOrderId: generateKaelaClientOrderId(),
+    });
+    return placed.order;
+  }
+
+  // Stop loss exchange-native (STOP_MARKET) -- proteksi kalau VPS/cron mati. `direction` = arah posisi asli.
+  async function placeStopMarketClose({ symbol, direction, quantity, stopPrice }) {
+    const { pricePrecision } = await getSymbolInfo(symbol);
+    const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+    const positionSide = direction === 'buy' ? 'LONG' : 'SHORT';
+    const placed = await signedRequest('POST', '/openApi/swap/v2/trade/order', {
+      symbol, side: closeSide, positionSide, type: 'STOP_MARKET', quantity, stopPrice: roundPrice(stopPrice, pricePrecision),
+      clientOrderId: generateKaelaClientOrderId(),
+    });
+    return placed.order;
+  }
+
+  // Detail 1 order -- status NEW/PARTIALLY_FILLED/FILLED/CANCELED/EXPIRED, avgPrice, executedQty, commission.
+  async function getOrder(symbol, orderId) {
+    const result = await signedRequest('GET', '/openApi/swap/v2/trade/order', { symbol, orderId });
+    return result && result.order ? result.order : null;
+  }
+
+  async function cancelOrder(symbol, orderId) {
+    return signedRequest('DELETE', '/openApi/swap/v2/trade/order', { symbol, orderId });
+  }
+
+  // Hedge mode bisa pegang LONG dan SHORT sekaligus -- getPositionRisk cuma ambil [0], ambigu. Ini ambil sisi spesifik.
+  async function getPositionBySide(symbol, positionSide) {
+    const positions = await signedRequest('GET', '/openApi/swap/v2/user/positions', { symbol });
+    return (positions || []).find((p) => p.positionSide === positionSide && Math.abs(parseFloat(p.positionAmt)) > 0) || null;
+  }
+
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
     emergencyCloseMarket, wasLastEntryOrderByKaela,
+    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide,
   };
 }
 

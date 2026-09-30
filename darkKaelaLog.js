@@ -154,6 +154,8 @@ const PATTERN_REASON_LABEL = {
   // -- detail MEKANISME EXIT (yang beda antar varian) itu tugas CLOSE_REASON_LABEL (CB_TRAIL/CB_TP/
   // CB_SL di bawah), bukan diulang di sini.
   channel_breakout: 'Channel Breakout -- harga breakout terkonfirmasi dari channel konsolidasi candle 5-menit',
+  // (30 Sep 2026, Ninja Mean Reversion -- ninjaMrTrader.js/ninjaMrSignal.js)
+  mean_reversion: 'Mean Reversion searah tren -- harga keluar Bollinger Band lawan arah tren EMA200, masuk balik ke arah tren (beli saat turun / jual saat naik)',
   // Varian BEARISH (25 Sep 2026, unifikasi desain pesan Sniper+Ranger+Ninja -- Sniper punya sinyal
   // short window-bear yang sebelumnya pakai teks lokal sendiri di sniperOrderLog.js PATTERN_EXPLAIN,
   // dipindah ke sini biar 1 sumber dipakai semua caller, bukan duplikat).
@@ -202,6 +204,10 @@ const CLOSE_REASON_LABEL = {
   // jadi salah/menyesatkan buat kasus itu. Sekarang netral -- gak nebak status untung/rugi (✅/❌
   // + angka PnL di baris atasnya udah cukup buat itu), cuma jelasin MEKANISME apa yang kena.
   CB_TRAIL: 'Trailing stop kena -- harga nyentuh level yang otomatis nyesuain sejak entry (ratchet cuma ke arah untung)',
+  // Ninja Mean Reversion (30 Sep 2026, ninjaMrTrader.js)
+  MR_SL: 'Stop Loss kena -- harga lanjut lawan tren, bukan cuma koreksi sesaat',
+  MR_MEAN: 'Target tercapai -- harga balik ke rata-rata SMA20',
+  MR_MANUAL: 'Posisi ditutup di luar sistem (manual/exchange) -- dicatat apa adanya dari harga terakhir',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }
@@ -260,6 +266,8 @@ function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name
 // (pos.tp = target partial, sisanya di-trail). Trailing murni (pos.tp null) gak punya tahap 1:
 // posisi ditutup SEKALI di level invalidasi yang ratchet ngikutin harga.
 function _tpLine(pos) {
+  // `tpFull` (30 Sep 2026, Ninja Mean Reversion) -- target PENUH (bukan tahap 1), levelnya rata-rata SMA20 yang geser tiap candle.
+  if (pos.tp != null && pos.tpFull) return `TP: ${fmtUsd(pos.tp)} (target penuh -- rata-rata SMA20, bergerak tiap candle)`;
   if (pos.tp != null) return `TP1: ${fmtUsd(pos.tp)}`;
   const arah = (pos.direction === 'sell' || pos.direction === 'short') ? 'turun' : 'naik';
   return `TP: trailing -- invalidasi ikut ${arah} ngikutin harga terbaik, posisi ditutup pas level itu kesentuh`;

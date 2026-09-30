@@ -1165,6 +1165,13 @@ async function main() {
     });
   }
 
+  // ============ ninjaMrTrader.js -- eksekutor BingX, alur penuh dgn exchange palsu (30 Sep 2026) ============
+  await test('ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua', () => {
+    const { execFileSync } = require('child_process');
+    const out = execFileSync('node', [require('path').join(__dirname, 'ninjaMrTrader.selftest.js')], { encoding: 'utf8', timeout: 120000 });
+    assert.ok(/\n\d+ lolos, 0 gagal/.test(out), `selftest ada yang gagal:\n${out.split('\n').filter((l) => /GAGAL|lolos,/.test(l)).join('\n')}`);
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

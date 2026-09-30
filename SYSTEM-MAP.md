@@ -113,7 +113,9 @@ numpuk 211 blok), SEKARANG juga cek "beneran ngejar apa nggak" (freshness whale-
 blockchain, `checkWhaleScanFreshness`) + "beneran cuma sekali apa nggak" (`checkNoDuplicateSpam`,
 scan archive.json 7 hari terakhir buat 7 tipe yang harusnya 1x/hari) -- masuk laporan 20:00 WITA
 yang sama, bagian "🔍 Kesehatan Mandor". 30 Sep 2026: + `checkNinjaMrFreshness` (paper 5M & eksekutor
-BingX 15M -- umur candle terakhir yang diproses, ⏸️ kalau config dimatikan). `monthlyFundingReminder.js` (WA tanggal 5, saran setoran
+BingX 15M -- umur candle terakhir yang diproses, ⏸️ kalau config dimatikan). 1 Okt 2026: + `systemSelfCheck.js`
+(MANDIRI, 1x/hari setelah 03:00 WITA: `regressionTests.js` di salinan bersih repo + `tools/bingxOrderApiCheck.js`
+demo sampai lolos sekali/kode berubah -- state `system-selfcheck-state.json`, hasil ikut laporan mandor). `monthlyFundingReminder.js` (WA tanggal 5, saran setoran
 + proyeksi bulan ke cap) + `walletCapProgress.js`/`walletCapHistory.js` (snapshot+histori harian
 Modal Futures Pool, TANPA gating tanggal, buat widget dashboard) + `walletCapAnomalyWatch.js`
 (tripwire keamanan turun drastis) -- lihat baris "Kebijakan setoran bulanan" di tabel status atas.

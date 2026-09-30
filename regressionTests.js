@@ -1086,6 +1086,70 @@ async function main() {
     });
   }
 
+  // ============ ninjaMrSignal.js -- paper live WAJIB identik backtest (30 Sep 2026) ============
+  {
+    const mr = require('./ninjaMrSignal');
+    const { run: runR3 } = require('./backtestNinjaResearch3');
+    // Random walk deterministik (PRNG sederhana) biar test stabil, cukup panjang buat EMA200 + banyak sinyal.
+    let seed = 42;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    const cs = [];
+    let px = 60000;
+    for (let i = 0; i < 4000; i++) {
+      const drift = Math.sin(i / 400) * 0.0006;
+      const o = px, cl = px * (1 + drift + (rnd() - 0.5) * 0.008);
+      const hi = Math.max(o, cl) * (1 + rnd() * 0.003), lo = Math.min(o, cl) * (1 - rnd() * 0.003);
+      cs.push({ openTime: i * 900000, closeTime: i * 900000 + 899999, open: o, high: hi, low: lo, close: cl, volume: 1 });
+      px = cl;
+    }
+    const cfg = { enabled: true, paperModalUsd: 100, k: 3, slipPctPerSide: 0.01, holdFeePctPerBoundary: 0.01 };
+
+    await test('ninjaMrSignal: replay live (processCandles) IDENTIK backtest run() trade-per-trade', () => {
+      const bt = runR3(cs, { kind: 'mr', trend: true, k: 3, exit: 'mean' });
+      const j = mr.freshJournal();
+      j.lastProcessedCloseTime = cs[0].closeTime - 1; // proses dari candle pertama
+      mr.processCandles(j, cs, cfg);
+      assert.ok(bt.length >= 10, `data sintetis harus ngasih cukup trade, dapet ${bt.length}`);
+      assert.strictEqual(j.closed.length, bt.length, `jumlah trade beda: live ${j.closed.length} vs backtest ${bt.length}`);
+      for (let k = 0; k < bt.length; k++) {
+        assert.strictEqual(j.closed[k].dir, bt[k].dir, `arah trade #${k} beda`);
+        assert.ok(Math.abs(j.closed[k].entryPrice - bt[k].entryPrice) < 1e-9 && Math.abs(j.closed[k].exitPrice - bt[k].exitPrice) < 1e-9, `harga trade #${k} beda`);
+        assert.ok(Math.abs(j.closed[k].grossPct - bt[k].grossPct) < 1e-9, `gross trade #${k} beda`);
+      }
+    });
+
+    await test('ninjaMrSignal: diproses per-candle (kayak cron tiap menit) hasilnya SAMA dgn sekali jalan', () => {
+      const a = mr.freshJournal(); a.lastProcessedCloseTime = cs[0].closeTime - 1; mr.processCandles(a, cs, cfg);
+      const b = mr.freshJournal(); b.lastProcessedCloseTime = cs[0].closeTime - 1;
+      for (let n = 1000; n <= cs.length; n += 1) mr.processCandles(b, cs.slice(0, n), cfg);
+      // b mulai proses penuh baru dari candle ke-1000 (window awal diproses sekaligus) -- bandingin trade SETELAH itu
+      const cut = cs[1100].closeTime;
+      const ta = a.closed.filter((t) => t.entryTime > cut), tb = b.closed.filter((t) => t.entryTime > cut);
+      assert.ok(ta.length > 0, 'harus ada trade buat dibandingin');
+      assert.deepStrictEqual(tb.map((t) => [t.dir, t.entryPrice, t.exitPrice]), ta.map((t) => [t.dir, t.entryPrice, t.exitPrice]));
+    });
+
+    await test('ninjaMrSignal: biaya -- slippage 2 sisi + biaya inap per lewat 00/08/16 UTC, net & $ konsisten', () => {
+      const j = mr.freshJournal(); j.lastProcessedCloseTime = cs[0].closeTime - 1; mr.processCandles(j, cs, cfg);
+      for (const t of j.closed) {
+        assert.ok(Math.abs(t.netPct - (t.grossPct - 0.02 - t.boundaries * 0.01)) < 1e-9, 'net = gross - slip - inap');
+        assert.ok(Math.abs(t.netUsd - (t.netPct / 100) * t.sizing.nilaiPosisi) < 1e-9, 'net $ = net% x nilai posisi kalkulator');
+        assert.strictEqual(t.boundaries, mr.boundariesCrossed(t.entryTime, t.exitTime));
+      }
+      assert.strictEqual(mr.boundariesCrossed(Date.UTC(2026, 0, 1, 7, 0), Date.UTC(2026, 0, 1, 8, 30)), 1, 'lewat 08:00 UTC = 1x');
+      assert.strictEqual(mr.boundariesCrossed(Date.UTC(2026, 0, 1, 1, 0), Date.UTC(2026, 0, 1, 7, 59)), 0, 'gak lewat batas = 0');
+      const last = j.closed[j.closed.length - 1];
+      assert.ok(mr.formatClose(last, j.stats, cfg).includes('Bersih:'), 'pesan tutup harus ada baris Bersih');
+    });
+
+    await test('ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)', () => {
+      const j = mr.freshJournal();
+      mr.processCandles(j, cs, cfg);
+      assert.strictEqual(j.lastProcessedCloseTime, cs[cs.length - 1].closeTime);
+      assert.strictEqual(j.closed.length, 0);
+    });
+  }
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

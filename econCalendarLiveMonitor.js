@@ -270,7 +270,7 @@ async function main() {
 
     // ── 2) HASIL -- event 5..15 menit LALU -- EKSEKUSI scalp (reaksi BTC) ──
     // ⛔ PESAN KESIMPULAN HAWKISH/DOVISH/NETRAL DIHAPUS TOTAL (19 Sep 2026, INSIDEN NYATA) --
-    // Olan ambil keputusan trading MANUAL di platform lain (BC.Game) berdasar pesan "hasil" ini
+    // Olan ambil keputusan trading MANUAL di platform lain (eksekusi manual) berdasar pesan "hasil" ini
     // yang bilang FOMC "NETRAL", padahal The Fed BENERAN naikkan suku bunga 25bps -- duitnya
     // abis. Root cause: `concludeHawkishDovish()` (econCalendarLog.js) label "NETRAL" artinya
     // "actual PERSIS SAMA forecast" (gak ada KEJUTAN), BUKAN "gak ada perubahan" -- pembaca

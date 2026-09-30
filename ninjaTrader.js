@@ -645,7 +645,7 @@ async function process() {
   saveJournal(journal);
 }
 
-module.exports = { process, loadConfig, nextVariantSignalId };
+module.exports = { process, loadConfig, nextVariantSignalId, checkAndClearStrayPosition, execFor, baseUrlFor, balanceAssetFor, fetchLivePrice, loadJournal, EXEC_SYMBOL, EXCHANGE_BADGE, MODAL_ACTIVE_FRACTION };
 
 if (require.main === module) {
   process().catch((e) => { console.error('[ChannelBreakout] ERROR:', e.message, e.stack); process.exitCode = 1; });

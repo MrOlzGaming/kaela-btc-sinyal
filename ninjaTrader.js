@@ -493,6 +493,13 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
     if (realExec) await checkAndClearStrayPosition(realExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli real error:`, e.message));
   }
 
+  // Saklar entry (30 Sep 2026, spesifikasi Olan: "CHANNEL BREAKOUT 5M TIDAK LAGI MENJADI TRIGGER
+  // ENTRY") -- `entryEnabled:false` = gak buka posisi baru SAMA SEKALI, tapi posisi floating tetap
+  // dikelola sampai ketutup (blok di atas) + patroli posisi ilegal tetap jalan. BEDA dari
+  // `enabled:false` yang berhenti total (posisi floating gak dipantau lagi -- bahaya). Bukti:
+  // `node ninjaLiveHistoryAudit.js` (demo 27-30 Sep: 23 trade, 4 menang, net -$376,81).
+  if (cfg.entryEnabled === false) { v.channel = null; return; }
+
   // === GAK ADA FLOATING -- channel aktif? cek breakout ===
   if (v.channel) {
     const ch = v.channel;

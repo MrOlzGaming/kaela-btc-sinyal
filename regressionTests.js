@@ -1039,6 +1039,53 @@ async function main() {
     }
   }
 
+  // ============ ninjaFvg.js -- aturan inti NINJA FVG (spesifikasi Olan 30 Sep 2026) ============
+  {
+    const nf = require('./ninjaFvg');
+    const mk = (open, high, low, close, t) => ({ open, high, low, close, openTime: t * 300000, closeTime: t * 300000 + 299999 });
+    // idx2 bentuk FVG bullish [101,102] (high idx0=101 < low idx2=102), idx3 ninggalin zona, idx4 balik nyentuh.
+    const base = [mk(100, 101, 99, 100, 0), mk(100, 103, 100, 103, 1), mk(103, 105, 102, 104, 2), mk(104, 106, 103, 105, 3), mk(105, 105, 101.5, 104, 4)];
+
+    await test('ninjaFvg: FVG kedeteksi + ID unik deterministik + lebar % dari ukuran aktual', () => {
+      const g = nf.detectFvgAt(base, 2, '5m', { minWidthPct: 0.05 });
+      assert.ok(g && g.dir === 'long' && g.top === 102 && g.bottom === 101, `FVG bullish [101,102] harusnya kedeteksi, dapet ${JSON.stringify(g)}`);
+      assert.strictEqual(g.id, nf.detectFvgAt(base, 2, '5m', { minWidthPct: 0.05 }).id, 'ID harus sama tiap deteksi ulang');
+      assert.ok(Math.abs(g.widthPct - (1 / 101.5) * 100) < 1e-9, 'lebar = (top-bottom)/mid');
+      assert.strictEqual(nf.detectFvgAt(base, 2, '5m', { minWidthPct: 2 }), null, 'filter % harus nolak FVG di bawah minWidthPct');
+    });
+
+    await test('ninjaFvg: entry pas harga balik nyentuh FVG, SL awal = 2x lebar FVG, FVG jadi USED', () => {
+      const st = nf.newState();
+      for (let i = 0; i < base.length; i++) nf.stepBacktest(st, base, i, '5m', { minWidthPct: 0.05 });
+      const p = st.position;
+      assert.ok(p, 'harusnya ada posisi kebuka di idx4');
+      assert.strictEqual(p.entryPrice, 102, 'entry di batas atas zona (sentuhan pertama)');
+      assert.ok(Math.abs(p.slDistPct - 2 * p.fvgWidthPct) < 1e-9, 'SL awal = 2x lebar FVG');
+      assert.ok(Math.abs(p.initialSl - 102 * (1 - p.slDistPct / 100)) < 1e-9, 'SL awal dihitung dari harga entry');
+      assert.ok(!st.fvgs.some((g) => g.id === p.fvgId && g.status === 'ACTIVE'), 'FVG yang dipakai gak boleh ACTIVE lagi (USED)');
+    });
+
+    await test('ninjaFvg: trailing ratchet satu arah, 1 posisi aktif doang, FVG USED gak pernah dipakai lagi', () => {
+      const cs = [...base, mk(104, 110, 103, 109, 5), mk(109, 109.5, 108.5, 109, 6), mk(109, 109, 100, 101, 7), mk(101, 101.5, 101.2, 101.4, 8)];
+      const st = nf.newState();
+      for (let i = 0; i <= 4; i++) nf.stepBacktest(st, cs, i, '5m', { minWidthPct: 0.05 });
+      const firstId = st.position.fvgId;
+      nf.stepBacktest(st, cs, 5, '5m', { minWidthPct: 0.05 });
+      const slAfterRally = st.position.sl;
+      assert.ok(slAfterRally > st.position.initialSl, 'harga naik -> SL ikut naik');
+      // FVG B valid & kesentuh SELAMA posisi A aktif -> gak boleh entry.
+      st.fvgs.push({ id: 'B', dir: 'long', top: 109, bottom: 108.6, widthPct: 0.37, createdTime: cs[5].closeTime, createdIdx: 5, left: true, status: 'ACTIVE' });
+      nf.stepBacktest(st, cs, 6, '5m', { minWidthPct: 0.05 });
+      assert.strictEqual(st.position.fvgId, firstId, 'posisi aktif tetap posisi A, FVG B gak boleh buka posisi kedua');
+      assert.strictEqual(st.position.sl, slAfterRally, 'harga turun dikit -> SL GAK boleh melebar balik');
+      nf.stepBacktest(st, cs, 7, '5m', { minWidthPct: 0.05 });
+      assert.strictEqual(st.closed.length, 1, 'trailing kena -> posisi A ditutup');
+      assert.strictEqual(st.position, null, 'candle yang nutup posisi gak boleh sekaligus buka posisi baru');
+      nf.stepBacktest(st, cs, 8, '5m', { minWidthPct: 0.05 });
+      assert.strictEqual(st.position, null, 'harga nyentuh FVG A lagi -> ABAIKAN (USED, no re-entry)');
+    });
+  }
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

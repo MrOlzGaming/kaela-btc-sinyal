@@ -12751,5 +12751,2633 @@
     "gap": -7.690000000000012,
     "type": "normal",
     "btcPrice": 84566.4
+  },
+  {
+    "timestamp": "2026-09-27T08:01:06.217Z",
+    "countLongPct": 57.86,
+    "dollarLongPct": 65.7,
+    "globalLongPct": 56.06,
+    "gap": -7.840000000000003,
+    "type": "normal",
+    "btcPrice": 84693.2
+  },
+  {
+    "timestamp": "2026-09-27T08:16:27.246Z",
+    "countLongPct": 57.85,
+    "dollarLongPct": 65.71000000000001,
+    "globalLongPct": 56.07,
+    "gap": -7.8600000000000065,
+    "type": "normal",
+    "btcPrice": 84808
+  },
+  {
+    "timestamp": "2026-09-27T08:31:06.187Z",
+    "countLongPct": 57.78,
+    "dollarLongPct": 65.71000000000001,
+    "globalLongPct": 55.989999999999995,
+    "gap": -7.930000000000007,
+    "type": "normal",
+    "btcPrice": 84733.4
+  },
+  {
+    "timestamp": "2026-09-27T08:45:59.840Z",
+    "countLongPct": 57.709999999999994,
+    "dollarLongPct": 65.66,
+    "globalLongPct": 55.92,
+    "gap": -7.950000000000003,
+    "type": "normal",
+    "btcPrice": 84712.8
+  },
+  {
+    "timestamp": "2026-09-27T09:01:01.562Z",
+    "countLongPct": 57.620000000000005,
+    "dollarLongPct": 65.67,
+    "globalLongPct": 55.78999999999999,
+    "gap": -8.049999999999997,
+    "type": "normal",
+    "btcPrice": 84736.9
+  },
+  {
+    "timestamp": "2026-09-27T09:16:05.039Z",
+    "countLongPct": 57.57,
+    "dollarLongPct": 65.64,
+    "globalLongPct": 55.769999999999996,
+    "gap": -8.07,
+    "type": "normal",
+    "btcPrice": 84631.9
+  },
+  {
+    "timestamp": "2026-09-27T09:31:02.725Z",
+    "countLongPct": 57.489999999999995,
+    "dollarLongPct": 65.60000000000001,
+    "globalLongPct": 55.71,
+    "gap": -8.110000000000014,
+    "type": "normal",
+    "btcPrice": 84666
+  },
+  {
+    "timestamp": "2026-09-27T09:46:01.002Z",
+    "countLongPct": 57.489999999999995,
+    "dollarLongPct": 65.61,
+    "globalLongPct": 55.720000000000006,
+    "gap": -8.120000000000005,
+    "type": "normal",
+    "btcPrice": 84833.3
+  },
+  {
+    "timestamp": "2026-09-27T10:01:21.068Z",
+    "countLongPct": 57.550000000000004,
+    "dollarLongPct": 65.57,
+    "globalLongPct": 55.83,
+    "gap": -8.019999999999989,
+    "type": "normal",
+    "btcPrice": 84866.3
+  },
+  {
+    "timestamp": "2026-09-27T10:16:07.171Z",
+    "countLongPct": 57.57,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 55.879999999999995,
+    "gap": -7.940000000000005,
+    "type": "normal",
+    "btcPrice": 85030.5
+  },
+  {
+    "timestamp": "2026-09-27T10:31:13.194Z",
+    "countLongPct": 57.220000000000006,
+    "dollarLongPct": 65.58,
+    "globalLongPct": 55.58,
+    "gap": -8.359999999999992,
+    "type": "normal",
+    "btcPrice": 84870.8
+  },
+  {
+    "timestamp": "2026-09-27T10:45:59.005Z",
+    "countLongPct": 57.07,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 55.400000000000006,
+    "gap": -8.440000000000005,
+    "type": "normal",
+    "btcPrice": 84813.3
+  },
+  {
+    "timestamp": "2026-09-27T11:01:03.260Z",
+    "countLongPct": 56.95,
+    "dollarLongPct": 65.42,
+    "globalLongPct": 55.24,
+    "gap": -8.469999999999999,
+    "type": "normal",
+    "btcPrice": 84807.9
+  },
+  {
+    "timestamp": "2026-09-27T11:15:59.845Z",
+    "countLongPct": 56.940000000000005,
+    "dollarLongPct": 65.38000000000001,
+    "globalLongPct": 55.22,
+    "gap": -8.440000000000005,
+    "type": "normal",
+    "btcPrice": 84873.6
+  },
+  {
+    "timestamp": "2026-09-27T11:30:58.237Z",
+    "countLongPct": 56.93,
+    "dollarLongPct": 65.36999999999999,
+    "globalLongPct": 55.21,
+    "gap": -8.43999999999999,
+    "type": "normal",
+    "btcPrice": 84860.7
+  },
+  {
+    "timestamp": "2026-09-27T11:45:59.312Z",
+    "countLongPct": 56.95,
+    "dollarLongPct": 65.31,
+    "globalLongPct": 55.22,
+    "gap": -8.36,
+    "type": "normal",
+    "btcPrice": 84858
+  },
+  {
+    "timestamp": "2026-09-27T12:01:02.645Z",
+    "countLongPct": 56.93,
+    "dollarLongPct": 65.27,
+    "globalLongPct": 55.21,
+    "gap": -8.339999999999996,
+    "type": "normal",
+    "btcPrice": 84883.2
+  },
+  {
+    "timestamp": "2026-09-27T12:15:58.354Z",
+    "countLongPct": 56.97,
+    "dollarLongPct": 65.28,
+    "globalLongPct": 55.279999999999994,
+    "gap": -8.310000000000002,
+    "type": "normal",
+    "btcPrice": 84963
+  },
+  {
+    "timestamp": "2026-09-27T12:31:06.860Z",
+    "countLongPct": 56.95,
+    "dollarLongPct": 65.24,
+    "globalLongPct": 55.26,
+    "gap": -8.289999999999992,
+    "type": "normal",
+    "btcPrice": 84916.7
+  },
+  {
+    "timestamp": "2026-09-27T12:46:02.564Z",
+    "countLongPct": 56.92,
+    "dollarLongPct": 65.21000000000001,
+    "globalLongPct": 55.22,
+    "gap": -8.290000000000006,
+    "type": "normal",
+    "btcPrice": 84939.6
+  },
+  {
+    "timestamp": "2026-09-27T13:01:05.816Z",
+    "countLongPct": 56.879999999999995,
+    "dollarLongPct": 65.14999999999999,
+    "globalLongPct": 55.169999999999995,
+    "gap": -8.269999999999996,
+    "type": "normal",
+    "btcPrice": 84640.9
+  },
+  {
+    "timestamp": "2026-09-27T13:16:34.859Z",
+    "countLongPct": 56.63,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 54.89000000000001,
+    "gap": -8.539999999999985,
+    "type": "normal",
+    "btcPrice": 84678.5
+  },
+  {
+    "timestamp": "2026-09-27T13:31:06.905Z",
+    "countLongPct": 56.56,
+    "dollarLongPct": 65.14999999999999,
+    "globalLongPct": 54.74,
+    "gap": -8.58999999999999,
+    "type": "normal",
+    "btcPrice": 84967.5
+  },
+  {
+    "timestamp": "2026-09-27T13:46:02.094Z",
+    "countLongPct": 56.55,
+    "dollarLongPct": 64.99000000000001,
+    "globalLongPct": 54.800000000000004,
+    "gap": -8.440000000000012,
+    "type": "normal",
+    "btcPrice": 84785.4
+  },
+  {
+    "timestamp": "2026-09-27T14:01:10.430Z",
+    "countLongPct": 56.54,
+    "dollarLongPct": 64.99000000000001,
+    "globalLongPct": 54.75,
+    "gap": -8.45000000000001,
+    "type": "normal",
+    "btcPrice": 85015.6
+  },
+  {
+    "timestamp": "2026-09-27T14:16:06.193Z",
+    "countLongPct": 56.55,
+    "dollarLongPct": 64.98,
+    "globalLongPct": 54.81,
+    "gap": -8.430000000000007,
+    "type": "normal",
+    "btcPrice": 84967.3
+  },
+  {
+    "timestamp": "2026-09-27T14:31:08.968Z",
+    "countLongPct": 56.52,
+    "dollarLongPct": 64.96,
+    "globalLongPct": 54.75,
+    "gap": -8.43999999999999,
+    "type": "normal",
+    "btcPrice": 84684.8
+  },
+  {
+    "timestamp": "2026-09-27T14:46:03.909Z",
+    "countLongPct": 56.68,
+    "dollarLongPct": 64.99000000000001,
+    "globalLongPct": 54.879999999999995,
+    "gap": -8.31000000000001,
+    "type": "normal",
+    "btcPrice": 84682.1
+  },
+  {
+    "timestamp": "2026-09-27T15:01:06.799Z",
+    "countLongPct": 56.779999999999994,
+    "dollarLongPct": 65.22,
+    "globalLongPct": 54.92,
+    "gap": -8.440000000000005,
+    "type": "normal",
+    "btcPrice": 84494.6
+  },
+  {
+    "timestamp": "2026-09-27T15:16:04.441Z",
+    "countLongPct": 57.010000000000005,
+    "dollarLongPct": 65.27,
+    "globalLongPct": 55.089999999999996,
+    "gap": -8.259999999999991,
+    "type": "normal",
+    "btcPrice": 84483.6
+  },
+  {
+    "timestamp": "2026-09-27T15:31:06.510Z",
+    "countLongPct": 57.07,
+    "dollarLongPct": 65.33,
+    "globalLongPct": 55.169999999999995,
+    "gap": -8.259999999999998,
+    "type": "normal",
+    "btcPrice": 84591.3
+  },
+  {
+    "timestamp": "2026-09-27T15:46:09.052Z",
+    "countLongPct": 57.02,
+    "dollarLongPct": 65.27,
+    "globalLongPct": 55.14,
+    "gap": -8.249999999999993,
+    "type": "normal",
+    "btcPrice": 84394.6
+  },
+  {
+    "timestamp": "2026-09-27T16:01:07.253Z",
+    "countLongPct": 57.08,
+    "dollarLongPct": 65.36999999999999,
+    "globalLongPct": 55.17999999999999,
+    "gap": -8.289999999999992,
+    "type": "normal",
+    "btcPrice": 84455.5
+  },
+  {
+    "timestamp": "2026-09-27T16:16:00.168Z",
+    "countLongPct": 57.17,
+    "dollarLongPct": 65.45,
+    "globalLongPct": 55.269999999999996,
+    "gap": -8.280000000000001,
+    "type": "normal",
+    "btcPrice": 84534.5
+  },
+  {
+    "timestamp": "2026-09-27T16:31:04.239Z",
+    "countLongPct": 57.17,
+    "dollarLongPct": 65.55,
+    "globalLongPct": 55.28999999999999,
+    "gap": -8.379999999999995,
+    "type": "normal",
+    "btcPrice": 84450.4
+  },
+  {
+    "timestamp": "2026-09-27T16:45:59.686Z",
+    "countLongPct": 57.230000000000004,
+    "dollarLongPct": 65.45,
+    "globalLongPct": 55.33,
+    "gap": -8.219999999999999,
+    "type": "normal",
+    "btcPrice": 84349.8
+  },
+  {
+    "timestamp": "2026-09-27T17:01:01.759Z",
+    "countLongPct": 57.25,
+    "dollarLongPct": 65.42999999999999,
+    "globalLongPct": 55.33,
+    "gap": -8.179999999999993,
+    "type": "normal",
+    "btcPrice": 84383.1
+  },
+  {
+    "timestamp": "2026-09-27T17:15:58.578Z",
+    "countLongPct": 57.3,
+    "dollarLongPct": 65.39,
+    "globalLongPct": 55.42,
+    "gap": -8.090000000000003,
+    "type": "normal",
+    "btcPrice": 84395.4
+  },
+  {
+    "timestamp": "2026-09-27T17:30:59.783Z",
+    "countLongPct": 57.34,
+    "dollarLongPct": 65.45,
+    "globalLongPct": 55.43,
+    "gap": -8.11,
+    "type": "normal",
+    "btcPrice": 84394.9
+  },
+  {
+    "timestamp": "2026-09-27T17:45:57.183Z",
+    "countLongPct": 57.379999999999995,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 55.50000000000001,
+    "gap": -8.060000000000002,
+    "type": "normal",
+    "btcPrice": 84466.2
+  },
+  {
+    "timestamp": "2026-09-27T18:01:09.278Z",
+    "countLongPct": 57.4,
+    "dollarLongPct": 65.45,
+    "globalLongPct": 55.54,
+    "gap": -8.050000000000004,
+    "type": "normal",
+    "btcPrice": 84522.8
+  },
+  {
+    "timestamp": "2026-09-27T18:16:00.113Z",
+    "countLongPct": 57.410000000000004,
+    "dollarLongPct": 65.49000000000001,
+    "globalLongPct": 55.55,
+    "gap": -8.080000000000005,
+    "type": "normal",
+    "btcPrice": 84573.5
+  },
+  {
+    "timestamp": "2026-09-27T18:31:02.935Z",
+    "countLongPct": 57.440000000000005,
+    "dollarLongPct": 65.58,
+    "globalLongPct": 55.63,
+    "gap": -8.139999999999993,
+    "type": "normal",
+    "btcPrice": 84644.7
+  },
+  {
+    "timestamp": "2026-09-27T18:45:54.812Z",
+    "countLongPct": 57.47,
+    "dollarLongPct": 65.53999999999999,
+    "globalLongPct": 55.65,
+    "gap": -8.069999999999993,
+    "type": "normal",
+    "btcPrice": 84704.3
+  },
+  {
+    "timestamp": "2026-09-27T19:00:59.427Z",
+    "countLongPct": 57.489999999999995,
+    "dollarLongPct": 65.53999999999999,
+    "globalLongPct": 55.67999999999999,
+    "gap": -8.049999999999997,
+    "type": "normal",
+    "btcPrice": 84716.1
+  },
+  {
+    "timestamp": "2026-09-27T19:16:03.133Z",
+    "countLongPct": 56.10000000000001,
+    "dollarLongPct": 65.35,
+    "globalLongPct": 54.449999999999996,
+    "gap": -9.249999999999986,
+    "type": "normal",
+    "btcPrice": 84779.3
+  },
+  {
+    "timestamp": "2026-09-27T19:31:02.225Z",
+    "countLongPct": 56.07,
+    "dollarLongPct": 65.29,
+    "globalLongPct": 54.44,
+    "gap": -9.220000000000006,
+    "type": "normal",
+    "btcPrice": 84638
+  },
+  {
+    "timestamp": "2026-09-27T19:46:00.085Z",
+    "countLongPct": 56.02,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 54.37,
+    "gap": -9.18,
+    "type": "normal",
+    "btcPrice": 84752.7
+  },
+  {
+    "timestamp": "2026-09-27T20:01:03.747Z",
+    "countLongPct": 56.010000000000005,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 54.339999999999996,
+    "gap": -9.159999999999982,
+    "type": "normal",
+    "btcPrice": 84715.9
+  },
+  {
+    "timestamp": "2026-09-27T20:16:12.441Z",
+    "countLongPct": 56.00000000000001,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 54.339999999999996,
+    "gap": -9.16999999999998,
+    "type": "normal",
+    "btcPrice": 84779.8
+  },
+  {
+    "timestamp": "2026-09-27T20:31:01.081Z",
+    "countLongPct": 56.02,
+    "dollarLongPct": 65.16,
+    "globalLongPct": 54.32,
+    "gap": -9.139999999999993,
+    "type": "normal",
+    "btcPrice": 84607.5
+  },
+  {
+    "timestamp": "2026-09-27T20:45:55.900Z",
+    "countLongPct": 56.00000000000001,
+    "dollarLongPct": 65.14999999999999,
+    "globalLongPct": 54.300000000000004,
+    "gap": -9.149999999999984,
+    "type": "normal",
+    "btcPrice": 84604
+  },
+  {
+    "timestamp": "2026-09-27T21:01:02.120Z",
+    "countLongPct": 55.989999999999995,
+    "dollarLongPct": 65.19,
+    "globalLongPct": 54.26,
+    "gap": -9.200000000000003,
+    "type": "normal",
+    "btcPrice": 84529.9
+  },
+  {
+    "timestamp": "2026-09-27T21:16:01.044Z",
+    "countLongPct": 55.97,
+    "dollarLongPct": 65.18,
+    "globalLongPct": 54.25,
+    "gap": -9.210000000000008,
+    "type": "normal",
+    "btcPrice": 84686.6
+  },
+  {
+    "timestamp": "2026-09-27T21:31:02.425Z",
+    "countLongPct": 55.989999999999995,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 54.269999999999996,
+    "gap": -9.210000000000008,
+    "type": "normal",
+    "btcPrice": 84565.1
+  },
+  {
+    "timestamp": "2026-09-27T21:46:05.700Z",
+    "countLongPct": 55.989999999999995,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 54.269999999999996,
+    "gap": -9.210000000000008,
+    "type": "normal",
+    "btcPrice": 84567.3
+  },
+  {
+    "timestamp": "2026-09-27T22:01:00.614Z",
+    "countLongPct": 55.53,
+    "dollarLongPct": 65.21000000000001,
+    "globalLongPct": 53.92,
+    "gap": -9.680000000000007,
+    "type": "normal",
+    "btcPrice": 84601.6
+  },
+  {
+    "timestamp": "2026-09-27T22:15:57.194Z",
+    "countLongPct": 55.46,
+    "dollarLongPct": 65.35,
+    "globalLongPct": 53.82,
+    "gap": -9.889999999999993,
+    "type": "normal",
+    "btcPrice": 84238.3
+  },
+  {
+    "timestamp": "2026-09-27T22:31:07.477Z",
+    "countLongPct": 55.43,
+    "dollarLongPct": 65.41,
+    "globalLongPct": 53.75,
+    "gap": -9.979999999999997,
+    "type": "normal",
+    "btcPrice": 84395.1
+  },
+  {
+    "timestamp": "2026-09-27T22:45:59.676Z",
+    "countLongPct": 55.42,
+    "dollarLongPct": 65.47,
+    "globalLongPct": 53.669999999999995,
+    "gap": -10.049999999999997,
+    "type": "normal",
+    "btcPrice": 84111.5
+  },
+  {
+    "timestamp": "2026-09-27T23:01:04.891Z",
+    "countLongPct": 55.48,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 53.73,
+    "gap": -10.030000000000008,
+    "type": "normal",
+    "btcPrice": 84218
+  },
+  {
+    "timestamp": "2026-09-27T23:16:02.815Z",
+    "countLongPct": 55.55,
+    "dollarLongPct": 65.5,
+    "globalLongPct": 53.81,
+    "gap": -9.950000000000003,
+    "type": "normal",
+    "btcPrice": 84151.6
+  },
+  {
+    "timestamp": "2026-09-27T23:31:00.010Z",
+    "countLongPct": 55.559999999999995,
+    "dollarLongPct": 65.42999999999999,
+    "globalLongPct": 53.849999999999994,
+    "gap": -9.869999999999997,
+    "type": "normal",
+    "btcPrice": 84409.2
+  },
+  {
+    "timestamp": "2026-09-27T23:45:59.158Z",
+    "countLongPct": 55.559999999999995,
+    "dollarLongPct": 65.39,
+    "globalLongPct": 53.839999999999996,
+    "gap": -9.830000000000005,
+    "type": "normal",
+    "btcPrice": 84297.2
+  },
+  {
+    "timestamp": "2026-09-28T00:01:04.943Z",
+    "countLongPct": 55.55,
+    "dollarLongPct": 65.38000000000001,
+    "globalLongPct": 53.87,
+    "gap": -9.830000000000013,
+    "type": "normal",
+    "btcPrice": 84435.9
+  },
+  {
+    "timestamp": "2026-09-28T00:16:06.647Z",
+    "countLongPct": 55.60000000000001,
+    "dollarLongPct": 65.35,
+    "globalLongPct": 53.839999999999996,
+    "gap": -9.749999999999986,
+    "type": "normal",
+    "btcPrice": 84424.1
+  },
+  {
+    "timestamp": "2026-09-28T00:31:02.507Z",
+    "countLongPct": 55.25,
+    "dollarLongPct": 65.59,
+    "globalLongPct": 53.580000000000005,
+    "gap": -10.340000000000003,
+    "type": "normal",
+    "btcPrice": 84710
+  },
+  {
+    "timestamp": "2026-09-28T00:46:06.569Z",
+    "countLongPct": 55.43,
+    "dollarLongPct": 65.38000000000001,
+    "globalLongPct": 53.779999999999994,
+    "gap": -9.95000000000001,
+    "type": "normal",
+    "btcPrice": 84345
+  },
+  {
+    "timestamp": "2026-09-28T01:01:06.512Z",
+    "countLongPct": 55.44,
+    "dollarLongPct": 65.3,
+    "globalLongPct": 53.790000000000006,
+    "gap": -9.86,
+    "type": "normal",
+    "btcPrice": 84041.1
+  },
+  {
+    "timestamp": "2026-09-28T01:16:01.782Z",
+    "countLongPct": 55.48,
+    "dollarLongPct": 65.25,
+    "globalLongPct": 53.769999999999996,
+    "gap": -9.770000000000003,
+    "type": "normal",
+    "btcPrice": 83913.9
+  },
+  {
+    "timestamp": "2026-09-28T01:31:06.626Z",
+    "countLongPct": 55.57,
+    "dollarLongPct": 65.18,
+    "globalLongPct": 53.93,
+    "gap": -9.610000000000007,
+    "type": "normal",
+    "btcPrice": 84072.6
+  },
+  {
+    "timestamp": "2026-09-28T01:46:01.501Z",
+    "countLongPct": 55.61000000000001,
+    "dollarLongPct": 65,
+    "globalLongPct": 53.93,
+    "gap": -9.389999999999993,
+    "type": "normal",
+    "btcPrice": 83800
+  },
+  {
+    "timestamp": "2026-09-28T02:01:03.384Z",
+    "countLongPct": 55.64,
+    "dollarLongPct": 64.85,
+    "globalLongPct": 53.910000000000004,
+    "gap": -9.209999999999994,
+    "type": "normal",
+    "btcPrice": 83555.9
+  },
+  {
+    "timestamp": "2026-09-28T02:15:57.968Z",
+    "countLongPct": 55.83,
+    "dollarLongPct": 64.91,
+    "globalLongPct": 54.17999999999999,
+    "gap": -9.079999999999998,
+    "type": "normal",
+    "btcPrice": 83665.8
+  },
+  {
+    "timestamp": "2026-09-28T02:31:07.916Z",
+    "countLongPct": 56.04,
+    "dollarLongPct": 64.96,
+    "globalLongPct": 54.300000000000004,
+    "gap": -8.919999999999995,
+    "type": "normal",
+    "btcPrice": 83524.1
+  },
+  {
+    "timestamp": "2026-09-28T02:46:04.308Z",
+    "countLongPct": 56.14,
+    "dollarLongPct": 64.98,
+    "globalLongPct": 54.26,
+    "gap": -8.840000000000003,
+    "type": "normal",
+    "btcPrice": 83483.4
+  },
+  {
+    "timestamp": "2026-09-28T03:01:02.373Z",
+    "countLongPct": 56.2,
+    "dollarLongPct": 65.10000000000001,
+    "globalLongPct": 54.379999999999995,
+    "gap": -8.900000000000006,
+    "type": "normal",
+    "btcPrice": 83483.6
+  },
+  {
+    "timestamp": "2026-09-28T03:16:11.852Z",
+    "countLongPct": 56.330000000000005,
+    "dollarLongPct": 65.10000000000001,
+    "globalLongPct": 54.54,
+    "gap": -8.770000000000003,
+    "type": "normal",
+    "btcPrice": 83351.1
+  },
+  {
+    "timestamp": "2026-09-28T03:31:03.864Z",
+    "countLongPct": 56.279999999999994,
+    "dollarLongPct": 65.29,
+    "globalLongPct": 54.42,
+    "gap": -9.010000000000012,
+    "type": "normal",
+    "btcPrice": 83256.7
+  },
+  {
+    "timestamp": "2026-09-28T03:46:27.414Z",
+    "countLongPct": 56.39999999999999,
+    "dollarLongPct": 65.39,
+    "globalLongPct": 54.65,
+    "gap": -8.990000000000009,
+    "type": "normal",
+    "btcPrice": 83404.5
+  },
+  {
+    "timestamp": "2026-09-28T04:01:04.916Z",
+    "countLongPct": 56.63,
+    "dollarLongPct": 65.41,
+    "globalLongPct": 54.87,
+    "gap": -8.779999999999994,
+    "type": "normal",
+    "btcPrice": 83210.2
+  },
+  {
+    "timestamp": "2026-09-28T04:16:02.972Z",
+    "countLongPct": 56.67,
+    "dollarLongPct": 65.47,
+    "globalLongPct": 54.92,
+    "gap": -8.799999999999997,
+    "type": "normal",
+    "btcPrice": 83384
+  },
+  {
+    "timestamp": "2026-09-28T04:31:10.149Z",
+    "countLongPct": 56.879999999999995,
+    "dollarLongPct": 65.41,
+    "globalLongPct": 55.21,
+    "gap": -8.530000000000001,
+    "type": "normal",
+    "btcPrice": 83425.3
+  },
+  {
+    "timestamp": "2026-09-28T04:46:06.373Z",
+    "countLongPct": 56.97,
+    "dollarLongPct": 65.38000000000001,
+    "globalLongPct": 55.33,
+    "gap": -8.41000000000001,
+    "type": "normal",
+    "btcPrice": 83445.5
+  },
+  {
+    "timestamp": "2026-09-28T05:01:07.887Z",
+    "countLongPct": 57.08,
+    "dollarLongPct": 65.35,
+    "globalLongPct": 55.43,
+    "gap": -8.269999999999996,
+    "type": "normal",
+    "btcPrice": 83487.5
+  },
+  {
+    "timestamp": "2026-09-28T05:16:10.232Z",
+    "countLongPct": 57.11000000000001,
+    "dollarLongPct": 65.32,
+    "globalLongPct": 55.44,
+    "gap": -8.209999999999987,
+    "type": "normal",
+    "btcPrice": 83300.1
+  },
+  {
+    "timestamp": "2026-09-28T05:31:12.911Z",
+    "countLongPct": 57.13,
+    "dollarLongPct": 64.96,
+    "globalLongPct": 55.36,
+    "gap": -7.829999999999991,
+    "type": "normal",
+    "btcPrice": 83020.1
+  },
+  {
+    "timestamp": "2026-09-28T05:46:08.017Z",
+    "countLongPct": 56.92,
+    "dollarLongPct": 65.07,
+    "globalLongPct": 55.50000000000001,
+    "gap": -8.149999999999991,
+    "type": "normal",
+    "btcPrice": 83057.4
+  },
+  {
+    "timestamp": "2026-09-28T06:01:07.474Z",
+    "countLongPct": 57.8,
+    "dollarLongPct": 65.21000000000001,
+    "globalLongPct": 55.900000000000006,
+    "gap": -7.410000000000011,
+    "type": "normal",
+    "btcPrice": 83107.1
+  },
+  {
+    "timestamp": "2026-09-28T06:16:07.907Z",
+    "countLongPct": 57.879999999999995,
+    "dollarLongPct": 65.10000000000001,
+    "globalLongPct": 56.089999999999996,
+    "gap": -7.220000000000013,
+    "type": "normal",
+    "btcPrice": 83195.2
+  },
+  {
+    "timestamp": "2026-09-28T06:31:12.917Z",
+    "countLongPct": 57.91,
+    "dollarLongPct": 65.06,
+    "globalLongPct": 56.03,
+    "gap": -7.150000000000006,
+    "type": "normal",
+    "btcPrice": 83049.1
+  },
+  {
+    "timestamp": "2026-09-28T06:46:06.327Z",
+    "countLongPct": 57.93000000000001,
+    "dollarLongPct": 65.07,
+    "globalLongPct": 56.089999999999996,
+    "gap": -7.139999999999986,
+    "type": "normal",
+    "btcPrice": 83183.4
+  },
+  {
+    "timestamp": "2026-09-28T07:01:14.619Z",
+    "countLongPct": 57.989999999999995,
+    "dollarLongPct": 65.03999999999999,
+    "globalLongPct": 56.15,
+    "gap": -7.049999999999997,
+    "type": "normal",
+    "btcPrice": 83158.6
+  },
+  {
+    "timestamp": "2026-09-28T07:16:24.809Z",
+    "countLongPct": 58.040000000000006,
+    "dollarLongPct": 65,
+    "globalLongPct": 56.169999999999995,
+    "gap": -6.959999999999994,
+    "type": "normal",
+    "btcPrice": 83084.7
+  },
+  {
+    "timestamp": "2026-09-28T07:31:04.799Z",
+    "countLongPct": 58.040000000000006,
+    "dollarLongPct": 65,
+    "globalLongPct": 56.10000000000001,
+    "gap": -6.959999999999994,
+    "type": "normal",
+    "btcPrice": 82950
+  },
+  {
+    "timestamp": "2026-09-28T07:46:05.728Z",
+    "countLongPct": 58.01,
+    "dollarLongPct": 65.03,
+    "globalLongPct": 56.10000000000001,
+    "gap": -7.020000000000003,
+    "type": "normal",
+    "btcPrice": 82908.6
+  },
+  {
+    "timestamp": "2026-09-28T08:01:06.096Z",
+    "countLongPct": 58.120000000000005,
+    "dollarLongPct": 64.97,
+    "globalLongPct": 56.3,
+    "gap": -6.849999999999994,
+    "type": "normal",
+    "btcPrice": 83000
+  },
+  {
+    "timestamp": "2026-09-28T08:16:09.316Z",
+    "countLongPct": 58.230000000000004,
+    "dollarLongPct": 64.81,
+    "globalLongPct": 56.38999999999999,
+    "gap": -6.579999999999998,
+    "type": "normal",
+    "btcPrice": 82984
+  },
+  {
+    "timestamp": "2026-09-28T08:31:02.338Z",
+    "countLongPct": 58.26,
+    "dollarLongPct": 64.87,
+    "globalLongPct": 56.39999999999999,
+    "gap": -6.6100000000000065,
+    "type": "normal",
+    "btcPrice": 82820.3
+  },
+  {
+    "timestamp": "2026-09-28T08:46:06.644Z",
+    "countLongPct": 58.309999999999995,
+    "dollarLongPct": 64.79,
+    "globalLongPct": 56.42,
+    "gap": -6.480000000000011,
+    "type": "normal",
+    "btcPrice": 82875.6
+  },
+  {
+    "timestamp": "2026-09-28T09:01:19.283Z",
+    "countLongPct": 58.43000000000001,
+    "dollarLongPct": 64.81,
+    "globalLongPct": 56.58,
+    "gap": -6.3799999999999955,
+    "type": "normal",
+    "btcPrice": 82945.6
+  },
+  {
+    "timestamp": "2026-09-28T09:16:05.141Z",
+    "countLongPct": 58.3,
+    "dollarLongPct": 64.96,
+    "globalLongPct": 56.42,
+    "gap": -6.659999999999997,
+    "type": "normal",
+    "btcPrice": 82929.5
+  },
+  {
+    "timestamp": "2026-09-28T09:31:10.078Z",
+    "countLongPct": 58.53,
+    "dollarLongPct": 64.98,
+    "globalLongPct": 56.49999999999999,
+    "gap": -6.450000000000003,
+    "type": "normal",
+    "btcPrice": 82794.8
+  },
+  {
+    "timestamp": "2026-09-28T09:46:00.231Z",
+    "countLongPct": 58.489999999999995,
+    "dollarLongPct": 65.03,
+    "globalLongPct": 56.52,
+    "gap": -6.540000000000006,
+    "type": "normal",
+    "btcPrice": 82627.5
+  },
+  {
+    "timestamp": "2026-09-28T10:01:16.831Z",
+    "countLongPct": 58.58,
+    "dollarLongPct": 65.03999999999999,
+    "globalLongPct": 56.57,
+    "gap": -6.459999999999994,
+    "type": "normal",
+    "btcPrice": 82721.9
+  },
+  {
+    "timestamp": "2026-09-28T10:16:03.583Z",
+    "countLongPct": 58.64,
+    "dollarLongPct": 64.99000000000001,
+    "globalLongPct": 56.65,
+    "gap": -6.3500000000000085,
+    "type": "normal",
+    "btcPrice": 82786.4
+  },
+  {
+    "timestamp": "2026-09-28T10:31:04.584Z",
+    "countLongPct": 58.699999999999996,
+    "dollarLongPct": 64.97,
+    "globalLongPct": 56.779999999999994,
+    "gap": -6.270000000000003,
+    "type": "normal",
+    "btcPrice": 82748
+  },
+  {
+    "timestamp": "2026-09-28T10:46:03.870Z",
+    "countLongPct": 58.87,
+    "dollarLongPct": 65.01,
+    "globalLongPct": 57.010000000000005,
+    "gap": -6.140000000000008,
+    "type": "normal",
+    "btcPrice": 82898.5
+  },
+  {
+    "timestamp": "2026-09-28T11:01:06.640Z",
+    "countLongPct": 58.97,
+    "dollarLongPct": 65,
+    "globalLongPct": 57.13,
+    "gap": -6.030000000000001,
+    "type": "normal",
+    "btcPrice": 83001.9
+  },
+  {
+    "timestamp": "2026-09-28T11:16:10.460Z",
+    "countLongPct": 59.11,
+    "dollarLongPct": 64.92,
+    "globalLongPct": 57.32000000000001,
+    "gap": -5.810000000000002,
+    "type": "normal",
+    "btcPrice": 82983.5
+  },
+  {
+    "timestamp": "2026-09-28T11:31:04.356Z",
+    "countLongPct": 59.230000000000004,
+    "dollarLongPct": 64.91,
+    "globalLongPct": 57.489999999999995,
+    "gap": -5.679999999999993,
+    "type": "normal",
+    "btcPrice": 82964.9
+  },
+  {
+    "timestamp": "2026-09-28T11:46:08.329Z",
+    "countLongPct": 59.31999999999999,
+    "dollarLongPct": 64.89,
+    "globalLongPct": 57.64,
+    "gap": -5.570000000000007,
+    "type": "normal",
+    "btcPrice": 83023.4
+  },
+  {
+    "timestamp": "2026-09-28T12:01:19.892Z",
+    "countLongPct": 59.36,
+    "dollarLongPct": 64.84,
+    "globalLongPct": 57.63,
+    "gap": -5.480000000000004,
+    "type": "normal",
+    "btcPrice": 83008.8
+  },
+  {
+    "timestamp": "2026-09-28T12:16:17.646Z",
+    "countLongPct": 59.63,
+    "dollarLongPct": 64.68,
+    "globalLongPct": 58.040000000000006,
+    "gap": -5.050000000000004,
+    "type": "normal",
+    "btcPrice": 83257.5
+  },
+  {
+    "timestamp": "2026-09-28T12:31:19.792Z",
+    "countLongPct": 59.64,
+    "dollarLongPct": 64.52,
+    "globalLongPct": 58.040000000000006,
+    "gap": -4.8799999999999955,
+    "type": "normal",
+    "btcPrice": 83284.9
+  },
+  {
+    "timestamp": "2026-09-28T12:46:05.081Z",
+    "countLongPct": 59.61,
+    "dollarLongPct": 64.56,
+    "globalLongPct": 57.97,
+    "gap": -4.950000000000003,
+    "type": "normal",
+    "btcPrice": 83399.9
+  },
+  {
+    "timestamp": "2026-09-28T13:01:25.160Z",
+    "countLongPct": 59.64,
+    "dollarLongPct": 64.62,
+    "globalLongPct": 58.07,
+    "gap": -4.980000000000004,
+    "type": "normal",
+    "btcPrice": 83433.9
+  },
+  {
+    "timestamp": "2026-09-28T13:16:14.915Z",
+    "countLongPct": 59.540000000000006,
+    "dollarLongPct": 64.58,
+    "globalLongPct": 57.940000000000005,
+    "gap": -5.039999999999992,
+    "type": "normal",
+    "btcPrice": 83398.9
+  },
+  {
+    "timestamp": "2026-09-28T13:31:18.508Z",
+    "countLongPct": 59.519999999999996,
+    "dollarLongPct": 64.63,
+    "globalLongPct": 57.74,
+    "gap": -5.109999999999999,
+    "type": "normal",
+    "btcPrice": 83495.9
+  },
+  {
+    "timestamp": "2026-09-28T13:46:05.593Z",
+    "countLongPct": 59.099999999999994,
+    "dollarLongPct": 64.72,
+    "globalLongPct": 57.550000000000004,
+    "gap": -5.6200000000000045,
+    "type": "normal",
+    "btcPrice": 83704.6
+  },
+  {
+    "timestamp": "2026-09-28T14:01:20.731Z",
+    "countLongPct": 58.9,
+    "dollarLongPct": 64.75,
+    "globalLongPct": 57.36,
+    "gap": -5.850000000000001,
+    "type": "normal",
+    "btcPrice": 83470.9
+  },
+  {
+    "timestamp": "2026-09-28T14:16:11.547Z",
+    "countLongPct": 58.75,
+    "dollarLongPct": 64.78,
+    "globalLongPct": 57.13,
+    "gap": -6.030000000000001,
+    "type": "normal",
+    "btcPrice": 83275.7
+  },
+  {
+    "timestamp": "2026-09-28T14:46:20.169Z",
+    "countLongPct": 58.69,
+    "dollarLongPct": 64.7,
+    "globalLongPct": 56.97,
+    "gap": -6.010000000000005,
+    "type": "normal",
+    "btcPrice": 82959.3
+  },
+  {
+    "timestamp": "2026-09-28T15:01:24.384Z",
+    "countLongPct": 58.98,
+    "dollarLongPct": 64.89,
+    "globalLongPct": 57.3,
+    "gap": -5.910000000000004,
+    "type": "normal",
+    "btcPrice": 82978.4
+  },
+  {
+    "timestamp": "2026-09-28T15:16:09.045Z",
+    "countLongPct": 59.099999999999994,
+    "dollarLongPct": 64.89,
+    "globalLongPct": 57.35,
+    "gap": -5.790000000000006,
+    "type": "normal",
+    "btcPrice": 82908
+  },
+  {
+    "timestamp": "2026-09-28T15:31:10.919Z",
+    "countLongPct": 59.08,
+    "dollarLongPct": 64.81,
+    "globalLongPct": 57.42,
+    "gap": -5.730000000000004,
+    "type": "normal",
+    "btcPrice": 83010.7
+  },
+  {
+    "timestamp": "2026-09-28T15:48:16.255Z",
+    "countLongPct": 59.199999999999996,
+    "dollarLongPct": 64.75999999999999,
+    "globalLongPct": 57.49999999999999,
+    "gap": -5.559999999999995,
+    "type": "normal",
+    "btcPrice": 83212.1
+  },
+  {
+    "timestamp": "2026-09-28T16:01:15.984Z",
+    "countLongPct": 59.199999999999996,
+    "dollarLongPct": 64.74,
+    "globalLongPct": 57.58,
+    "gap": -5.539999999999999,
+    "type": "normal",
+    "btcPrice": 83359.5
+  },
+  {
+    "timestamp": "2026-09-28T16:16:10.132Z",
+    "countLongPct": 59.019999999999996,
+    "dollarLongPct": 64.78,
+    "globalLongPct": 57.26,
+    "gap": -5.760000000000005,
+    "type": "normal",
+    "btcPrice": 83378.8
+  },
+  {
+    "timestamp": "2026-09-28T16:31:16.032Z",
+    "countLongPct": 58.86,
+    "dollarLongPct": 64.94,
+    "globalLongPct": 56.830000000000005,
+    "gap": -6.079999999999998,
+    "type": "normal",
+    "btcPrice": 84065
+  },
+  {
+    "timestamp": "2026-09-28T16:46:09.743Z",
+    "countLongPct": 59.17,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 57.230000000000004,
+    "gap": -6.340000000000003,
+    "type": "normal",
+    "btcPrice": 83646.4
+  },
+  {
+    "timestamp": "2026-09-28T17:01:06.036Z",
+    "countLongPct": 59.18,
+    "dollarLongPct": 65.66,
+    "globalLongPct": 57.32000000000001,
+    "gap": -6.479999999999997,
+    "type": "normal",
+    "btcPrice": 83556.8
+  },
+  {
+    "timestamp": "2026-09-28T17:16:09.216Z",
+    "countLongPct": 59.21999999999999,
+    "dollarLongPct": 65.5,
+    "globalLongPct": 57.43000000000001,
+    "gap": -6.280000000000008,
+    "type": "normal",
+    "btcPrice": 84219.9
+  },
+  {
+    "timestamp": "2026-09-28T17:31:27.227Z",
+    "countLongPct": 59.3,
+    "dollarLongPct": 65.42999999999999,
+    "globalLongPct": 57.56,
+    "gap": -6.1299999999999955,
+    "type": "normal",
+    "btcPrice": 83924
+  },
+  {
+    "timestamp": "2026-09-28T17:46:11.651Z",
+    "countLongPct": 59.27,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 57.589999999999996,
+    "gap": -6.169999999999995,
+    "type": "normal",
+    "btcPrice": 83965.5
+  },
+  {
+    "timestamp": "2026-09-28T18:01:15.876Z",
+    "countLongPct": 59.230000000000004,
+    "dollarLongPct": 65.46,
+    "globalLongPct": 57.54,
+    "gap": -6.22999999999999,
+    "type": "normal",
+    "btcPrice": 83837.2
+  },
+  {
+    "timestamp": "2026-09-28T18:16:15.059Z",
+    "countLongPct": 59.24,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 57.57,
+    "gap": -6.199999999999996,
+    "type": "normal",
+    "btcPrice": 83907.3
+  },
+  {
+    "timestamp": "2026-09-28T18:31:20.213Z",
+    "countLongPct": 59.24,
+    "dollarLongPct": 65.42,
+    "globalLongPct": 57.550000000000004,
+    "gap": -6.18,
+    "type": "normal",
+    "btcPrice": 83863.3
+  },
+  {
+    "timestamp": "2026-09-28T18:46:09.776Z",
+    "countLongPct": 59.199999999999996,
+    "dollarLongPct": 65.36,
+    "globalLongPct": 57.46,
+    "gap": -6.160000000000004,
+    "type": "normal",
+    "btcPrice": 83806.6
+  },
+  {
+    "timestamp": "2026-09-28T19:01:12.195Z",
+    "countLongPct": 59.150000000000006,
+    "dollarLongPct": 65.36999999999999,
+    "globalLongPct": 57.42,
+    "gap": -6.219999999999985,
+    "type": "normal",
+    "btcPrice": 83944.5
+  },
+  {
+    "timestamp": "2026-09-28T19:16:21.736Z",
+    "countLongPct": 59.230000000000004,
+    "dollarLongPct": 65.41,
+    "globalLongPct": 57.550000000000004,
+    "gap": -6.179999999999993,
+    "type": "normal",
+    "btcPrice": 83675.6
+  },
+  {
+    "timestamp": "2026-09-28T19:31:00.935Z",
+    "countLongPct": 59.19,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 57.47,
+    "gap": -6.25,
+    "type": "normal",
+    "btcPrice": 83583
+  },
+  {
+    "timestamp": "2026-09-28T19:46:11.096Z",
+    "countLongPct": 59.19,
+    "dollarLongPct": 65.42,
+    "globalLongPct": 57.52,
+    "gap": -6.230000000000004,
+    "type": "normal",
+    "btcPrice": 83345.2
+  },
+  {
+    "timestamp": "2026-09-28T20:31:03.557Z",
+    "countLongPct": 59.419999999999995,
+    "dollarLongPct": 65.4,
+    "globalLongPct": 57.730000000000004,
+    "gap": -5.980000000000011,
+    "type": "normal",
+    "btcPrice": 83436.6
+  },
+  {
+    "timestamp": "2026-09-28T20:49:23.768Z",
+    "countLongPct": 59.419999999999995,
+    "dollarLongPct": 65.4,
+    "globalLongPct": 57.709999999999994,
+    "gap": -5.980000000000011,
+    "type": "normal",
+    "btcPrice": 83428.2
+  },
+  {
+    "timestamp": "2026-09-28T21:01:53.537Z",
+    "countLongPct": 59.41,
+    "dollarLongPct": 65.39,
+    "globalLongPct": 57.709999999999994,
+    "gap": -5.980000000000004,
+    "type": "normal",
+    "btcPrice": 83571.8
+  },
+  {
+    "timestamp": "2026-09-28T21:31:04.901Z",
+    "countLongPct": 59.39,
+    "dollarLongPct": 65.36999999999999,
+    "globalLongPct": 57.68,
+    "gap": -5.97999999999999,
+    "type": "normal",
+    "btcPrice": 83431
+  },
+  {
+    "timestamp": "2026-09-28T21:46:28.555Z",
+    "countLongPct": 59.39,
+    "dollarLongPct": 65.36999999999999,
+    "globalLongPct": 57.67,
+    "gap": -5.97999999999999,
+    "type": "normal",
+    "btcPrice": 83387.1
+  },
+  {
+    "timestamp": "2026-09-28T22:01:11.550Z",
+    "countLongPct": 59.419999999999995,
+    "dollarLongPct": 65.25999999999999,
+    "globalLongPct": 57.66,
+    "gap": -5.839999999999996,
+    "type": "normal",
+    "btcPrice": 83128.7
+  },
+  {
+    "timestamp": "2026-09-28T22:16:12.894Z",
+    "countLongPct": 59.45,
+    "dollarLongPct": 65.36,
+    "globalLongPct": 57.79,
+    "gap": -5.909999999999997,
+    "type": "normal",
+    "btcPrice": 83125.3
+  },
+  {
+    "timestamp": "2026-09-28T22:31:12.883Z",
+    "countLongPct": 59.56,
+    "dollarLongPct": 65.38000000000001,
+    "globalLongPct": 57.89,
+    "gap": -5.820000000000007,
+    "type": "normal",
+    "btcPrice": 83211.2
+  },
+  {
+    "timestamp": "2026-09-28T22:46:03.416Z",
+    "countLongPct": 59.589999999999996,
+    "dollarLongPct": 65.36,
+    "globalLongPct": 57.84,
+    "gap": -5.770000000000003,
+    "type": "normal",
+    "btcPrice": 83475.8
+  },
+  {
+    "timestamp": "2026-09-28T23:01:01.402Z",
+    "countLongPct": 59.550000000000004,
+    "dollarLongPct": 65.36999999999999,
+    "globalLongPct": 57.85,
+    "gap": -5.819999999999986,
+    "type": "normal",
+    "btcPrice": 83514.2
+  },
+  {
+    "timestamp": "2026-09-28T23:16:14.239Z",
+    "countLongPct": 59.57,
+    "dollarLongPct": 65.32,
+    "globalLongPct": 57.86,
+    "gap": -5.749999999999993,
+    "type": "normal",
+    "btcPrice": 83448.7
+  },
+  {
+    "timestamp": "2026-09-28T23:31:01.456Z",
+    "countLongPct": 59.29,
+    "dollarLongPct": 65.34,
+    "globalLongPct": 57.65,
+    "gap": -6.050000000000004,
+    "type": "normal",
+    "btcPrice": 83566.3
+  },
+  {
+    "timestamp": "2026-09-28T23:45:59.418Z",
+    "countLongPct": 59.330000000000005,
+    "dollarLongPct": 65.31,
+    "globalLongPct": 57.67,
+    "gap": -5.979999999999997,
+    "type": "normal",
+    "btcPrice": 83543.4
+  },
+  {
+    "timestamp": "2026-09-29T00:01:11.277Z",
+    "countLongPct": 59.31999999999999,
+    "dollarLongPct": 65.31,
+    "globalLongPct": 57.64,
+    "gap": -5.990000000000009,
+    "type": "normal",
+    "btcPrice": 83450
+  },
+  {
+    "timestamp": "2026-09-29T00:16:26.207Z",
+    "countLongPct": 59.309999999999995,
+    "dollarLongPct": 65.31,
+    "globalLongPct": 57.620000000000005,
+    "gap": -6.000000000000007,
+    "type": "normal",
+    "btcPrice": 83423
+  },
+  {
+    "timestamp": "2026-09-29T00:31:01.828Z",
+    "countLongPct": 59.24,
+    "dollarLongPct": 65.34,
+    "globalLongPct": 57.50999999999999,
+    "gap": -6.100000000000001,
+    "type": "normal",
+    "btcPrice": 83512
+  },
+  {
+    "timestamp": "2026-09-29T00:46:07.912Z",
+    "countLongPct": 59.31999999999999,
+    "dollarLongPct": 65.4,
+    "globalLongPct": 57.69,
+    "gap": -6.0800000000000125,
+    "type": "normal",
+    "btcPrice": 83411.6
+  },
+  {
+    "timestamp": "2026-09-29T01:01:08.800Z",
+    "countLongPct": 59.36,
+    "dollarLongPct": 65.47,
+    "globalLongPct": 57.79,
+    "gap": -6.109999999999999,
+    "type": "normal",
+    "btcPrice": 83069.8
+  },
+  {
+    "timestamp": "2026-09-29T01:16:16.736Z",
+    "countLongPct": 59.69,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 57.92,
+    "gap": -5.75,
+    "type": "normal",
+    "btcPrice": 82942.5
+  },
+  {
+    "timestamp": "2026-09-29T01:31:08.768Z",
+    "countLongPct": 59.75,
+    "dollarLongPct": 65.46,
+    "globalLongPct": 57.99999999999999,
+    "gap": -5.709999999999994,
+    "type": "normal",
+    "btcPrice": 82892.9
+  },
+  {
+    "timestamp": "2026-09-29T01:46:06.368Z",
+    "countLongPct": 59.830000000000005,
+    "dollarLongPct": 65.46,
+    "globalLongPct": 58.13,
+    "gap": -5.629999999999988,
+    "type": "normal",
+    "btcPrice": 83048
+  },
+  {
+    "timestamp": "2026-09-29T02:01:11.116Z",
+    "countLongPct": 59.419999999999995,
+    "dollarLongPct": 65.33,
+    "globalLongPct": 58.099999999999994,
+    "gap": -5.910000000000004,
+    "type": "normal",
+    "btcPrice": 83047.9
+  },
+  {
+    "timestamp": "2026-09-29T02:16:08.247Z",
+    "countLongPct": 59.4,
+    "dollarLongPct": 65.32,
+    "globalLongPct": 58.089999999999996,
+    "gap": -5.919999999999995,
+    "type": "normal",
+    "btcPrice": 83056.3
+  },
+  {
+    "timestamp": "2026-09-29T02:31:05.327Z",
+    "countLongPct": 59.51,
+    "dollarLongPct": 65.29,
+    "globalLongPct": 58.19,
+    "gap": -5.780000000000008,
+    "type": "normal",
+    "btcPrice": 82931
+  },
+  {
+    "timestamp": "2026-09-29T02:46:01.772Z",
+    "countLongPct": 59.5,
+    "dollarLongPct": 65.31,
+    "globalLongPct": 58.160000000000004,
+    "gap": -5.810000000000002,
+    "type": "normal",
+    "btcPrice": 83044.9
+  },
+  {
+    "timestamp": "2026-09-29T03:01:05.550Z",
+    "countLongPct": 59.540000000000006,
+    "dollarLongPct": 65.39,
+    "globalLongPct": 58.209999999999994,
+    "gap": -5.849999999999994,
+    "type": "normal",
+    "btcPrice": 82984.2
+  },
+  {
+    "timestamp": "2026-09-29T03:16:11.010Z",
+    "countLongPct": 59.57,
+    "dollarLongPct": 65.45,
+    "globalLongPct": 58.3,
+    "gap": -5.880000000000003,
+    "type": "normal",
+    "btcPrice": 82903.8
+  },
+  {
+    "timestamp": "2026-09-29T03:31:01.556Z",
+    "countLongPct": 59.58,
+    "dollarLongPct": 65.5,
+    "globalLongPct": 58.24,
+    "gap": -5.920000000000002,
+    "type": "normal",
+    "btcPrice": 83093.5
+  },
+  {
+    "timestamp": "2026-09-29T03:46:00.385Z",
+    "countLongPct": 59.67,
+    "dollarLongPct": 65.48,
+    "globalLongPct": 58.29,
+    "gap": -5.810000000000002,
+    "type": "normal",
+    "btcPrice": 83087.2
+  },
+  {
+    "timestamp": "2026-09-29T04:01:08.703Z",
+    "countLongPct": 59.69,
+    "dollarLongPct": 65.42,
+    "globalLongPct": 58.25,
+    "gap": -5.730000000000004,
+    "type": "normal",
+    "btcPrice": 82997
+  },
+  {
+    "timestamp": "2026-09-29T04:16:10.188Z",
+    "countLongPct": 59.660000000000004,
+    "dollarLongPct": 65.42,
+    "globalLongPct": 58.3,
+    "gap": -5.759999999999998,
+    "type": "normal",
+    "btcPrice": 83118.5
+  },
+  {
+    "timestamp": "2026-09-29T04:31:07.228Z",
+    "countLongPct": 59.730000000000004,
+    "dollarLongPct": 65.48,
+    "globalLongPct": 58.39,
+    "gap": -5.75,
+    "type": "normal",
+    "btcPrice": 83163.8
+  },
+  {
+    "timestamp": "2026-09-29T04:46:04.774Z",
+    "countLongPct": 59.709999999999994,
+    "dollarLongPct": 65.49000000000001,
+    "globalLongPct": 58.379999999999995,
+    "gap": -5.780000000000015,
+    "type": "normal",
+    "btcPrice": 83118.5
+  },
+  {
+    "timestamp": "2026-09-29T05:01:17.557Z",
+    "countLongPct": 59.69,
+    "dollarLongPct": 65.49000000000001,
+    "globalLongPct": 58.36,
+    "gap": -5.800000000000011,
+    "type": "normal",
+    "btcPrice": 83215.3
+  },
+  {
+    "timestamp": "2026-09-29T05:16:20.437Z",
+    "countLongPct": 59.709999999999994,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 58.39,
+    "gap": -5.800000000000011,
+    "type": "normal",
+    "btcPrice": 83235.2
+  },
+  {
+    "timestamp": "2026-09-29T05:31:03.442Z",
+    "countLongPct": 59.78,
+    "dollarLongPct": 65.45,
+    "globalLongPct": 58.52,
+    "gap": -5.670000000000002,
+    "type": "normal",
+    "btcPrice": 83221
+  },
+  {
+    "timestamp": "2026-09-29T05:46:09.787Z",
+    "countLongPct": 59.86,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 58.599999999999994,
+    "gap": -5.579999999999998,
+    "type": "normal",
+    "btcPrice": 83220.1
+  },
+  {
+    "timestamp": "2026-09-29T06:01:10.271Z",
+    "countLongPct": 59.830000000000005,
+    "dollarLongPct": 65.5,
+    "globalLongPct": 58.620000000000005,
+    "gap": -5.669999999999995,
+    "type": "normal",
+    "btcPrice": 83393.9
+  },
+  {
+    "timestamp": "2026-09-29T06:16:11.888Z",
+    "countLongPct": 59.79,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 58.06,
+    "gap": -5.649999999999999,
+    "type": "normal",
+    "btcPrice": 83777.6
+  },
+  {
+    "timestamp": "2026-09-29T06:30:58.421Z",
+    "countLongPct": 58.940000000000005,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 57.56,
+    "gap": -6.259999999999998,
+    "type": "normal",
+    "btcPrice": 83881.5
+  },
+  {
+    "timestamp": "2026-09-29T06:46:13.957Z",
+    "countLongPct": 58.48,
+    "dollarLongPct": 65.21000000000001,
+    "globalLongPct": 57.25,
+    "gap": -6.730000000000011,
+    "type": "normal",
+    "btcPrice": 83868
+  },
+  {
+    "timestamp": "2026-09-29T07:01:03.097Z",
+    "countLongPct": 58.309999999999995,
+    "dollarLongPct": 65.35,
+    "globalLongPct": 57.120000000000005,
+    "gap": -7.039999999999999,
+    "type": "normal",
+    "btcPrice": 83869.1
+  },
+  {
+    "timestamp": "2026-09-29T07:16:01.976Z",
+    "countLongPct": 58.199999999999996,
+    "dollarLongPct": 65.24,
+    "globalLongPct": 56.92,
+    "gap": -7.039999999999999,
+    "type": "normal",
+    "btcPrice": 83983.4
+  },
+  {
+    "timestamp": "2026-09-29T07:31:07.935Z",
+    "countLongPct": 58.06,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 56.81,
+    "gap": -7.109999999999985,
+    "type": "normal",
+    "btcPrice": 83955.4
+  },
+  {
+    "timestamp": "2026-09-29T07:46:07.133Z",
+    "countLongPct": 57.989999999999995,
+    "dollarLongPct": 65.18,
+    "globalLongPct": 56.81,
+    "gap": -7.190000000000012,
+    "type": "normal",
+    "btcPrice": 83990.7
+  },
+  {
+    "timestamp": "2026-09-29T08:01:09.321Z",
+    "countLongPct": 57.9,
+    "dollarLongPct": 65.09,
+    "globalLongPct": 56.43,
+    "gap": -7.190000000000005,
+    "type": "normal",
+    "btcPrice": 84036.3
+  },
+  {
+    "timestamp": "2026-09-29T08:16:08.508Z",
+    "countLongPct": 57.60999999999999,
+    "dollarLongPct": 65.06,
+    "globalLongPct": 56.31,
+    "gap": -7.45000000000001,
+    "type": "normal",
+    "btcPrice": 84037
+  },
+  {
+    "timestamp": "2026-09-29T08:31:03.665Z",
+    "countLongPct": 57.54,
+    "dollarLongPct": 65.11,
+    "globalLongPct": 56.31,
+    "gap": -7.57,
+    "type": "normal",
+    "btcPrice": 84067.2
+  },
+  {
+    "timestamp": "2026-09-29T08:46:05.766Z",
+    "countLongPct": 57.28,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 55.96,
+    "gap": -7.889999999999986,
+    "type": "normal",
+    "btcPrice": 83820
+  },
+  {
+    "timestamp": "2026-09-29T09:01:05.725Z",
+    "countLongPct": 56.99999999999999,
+    "dollarLongPct": 65.19,
+    "globalLongPct": 55.720000000000006,
+    "gap": -8.190000000000005,
+    "type": "normal",
+    "btcPrice": 83820.7
+  },
+  {
+    "timestamp": "2026-09-29T09:16:11.368Z",
+    "countLongPct": 56.75,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 55.34,
+    "gap": -8.419999999999987,
+    "type": "normal",
+    "btcPrice": 83740.5
+  },
+  {
+    "timestamp": "2026-09-29T09:31:03.824Z",
+    "countLongPct": 56.75,
+    "dollarLongPct": 65.32,
+    "globalLongPct": 55.34,
+    "gap": -8.569999999999993,
+    "type": "normal",
+    "btcPrice": 83819.8
+  },
+  {
+    "timestamp": "2026-09-29T09:46:08.305Z",
+    "countLongPct": 56.79,
+    "dollarLongPct": 65.31,
+    "globalLongPct": 55.44,
+    "gap": -8.520000000000003,
+    "type": "normal",
+    "btcPrice": 83950
+  },
+  {
+    "timestamp": "2026-09-29T10:01:13.141Z",
+    "countLongPct": 56.71000000000001,
+    "dollarLongPct": 65.19,
+    "globalLongPct": 55.32,
+    "gap": -8.47999999999999,
+    "type": "normal",
+    "btcPrice": 84156.4
+  },
+  {
+    "timestamp": "2026-09-29T10:16:14.718Z",
+    "countLongPct": 56.54,
+    "dollarLongPct": 65.21000000000001,
+    "globalLongPct": 55.14,
+    "gap": -8.670000000000009,
+    "type": "normal",
+    "btcPrice": 84160.9
+  },
+  {
+    "timestamp": "2026-09-29T10:31:07.105Z",
+    "countLongPct": 56.39999999999999,
+    "dollarLongPct": 65.21000000000001,
+    "globalLongPct": 55.00000000000001,
+    "gap": -8.810000000000016,
+    "type": "normal",
+    "btcPrice": 84090.4
+  },
+  {
+    "timestamp": "2026-09-29T10:46:08.305Z",
+    "countLongPct": 56.330000000000005,
+    "dollarLongPct": 65.16,
+    "globalLongPct": 54.93,
+    "gap": -8.829999999999991,
+    "type": "normal",
+    "btcPrice": 83970.1
+  },
+  {
+    "timestamp": "2026-09-29T11:01:11.977Z",
+    "countLongPct": 56.36,
+    "dollarLongPct": 65.16999999999999,
+    "globalLongPct": 54.96,
+    "gap": -8.809999999999988,
+    "type": "normal",
+    "btcPrice": 83991.7
+  },
+  {
+    "timestamp": "2026-09-29T11:16:10.095Z",
+    "countLongPct": 56.46,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 55.00000000000001,
+    "gap": -8.740000000000002,
+    "type": "normal",
+    "btcPrice": 83939.7
+  },
+  {
+    "timestamp": "2026-09-29T11:31:14.007Z",
+    "countLongPct": 56.46,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 55.03,
+    "gap": -8.740000000000002,
+    "type": "normal",
+    "btcPrice": 84066.6
+  },
+  {
+    "timestamp": "2026-09-29T11:46:03.886Z",
+    "countLongPct": 56.52,
+    "dollarLongPct": 65.18,
+    "globalLongPct": 55.06999999999999,
+    "gap": -8.660000000000004,
+    "type": "normal",
+    "btcPrice": 84220.1
+  },
+  {
+    "timestamp": "2026-09-29T12:01:10.553Z",
+    "countLongPct": 56.68,
+    "dollarLongPct": 65.2,
+    "globalLongPct": 55.36,
+    "gap": -8.520000000000003,
+    "type": "normal",
+    "btcPrice": 84331.2
+  },
+  {
+    "timestamp": "2026-09-29T12:16:12.036Z",
+    "countLongPct": 56.599999999999994,
+    "dollarLongPct": 65.18,
+    "globalLongPct": 55.269999999999996,
+    "gap": -8.580000000000013,
+    "type": "normal",
+    "btcPrice": 84300.9
+  },
+  {
+    "timestamp": "2026-09-29T12:31:22.120Z",
+    "countLongPct": 56.56,
+    "dollarLongPct": 65.10000000000001,
+    "globalLongPct": 55.21,
+    "gap": -8.540000000000006,
+    "type": "normal",
+    "btcPrice": 84184.7
+  },
+  {
+    "timestamp": "2026-09-29T12:46:19.019Z",
+    "countLongPct": 56.599999999999994,
+    "dollarLongPct": 65.09,
+    "globalLongPct": 55.22,
+    "gap": -8.490000000000009,
+    "type": "normal",
+    "btcPrice": 84249.2
+  },
+  {
+    "timestamp": "2026-09-29T13:01:17.596Z",
+    "countLongPct": 56.52,
+    "dollarLongPct": 65.06,
+    "globalLongPct": 55.15,
+    "gap": -8.54,
+    "type": "normal",
+    "btcPrice": 84219.5
+  },
+  {
+    "timestamp": "2026-09-29T13:16:27.830Z",
+    "countLongPct": 56.47,
+    "dollarLongPct": 65.06,
+    "globalLongPct": 55.13,
+    "gap": -8.590000000000003,
+    "type": "normal",
+    "btcPrice": 84346.7
+  },
+  {
+    "timestamp": "2026-09-29T13:31:11.785Z",
+    "countLongPct": 56.47,
+    "dollarLongPct": 64.97,
+    "globalLongPct": 55.24,
+    "gap": -8.5,
+    "type": "normal",
+    "btcPrice": 84268.6
+  },
+  {
+    "timestamp": "2026-09-29T13:46:13.657Z",
+    "countLongPct": 56.43,
+    "dollarLongPct": 64.92999999999999,
+    "globalLongPct": 55.059999999999995,
+    "gap": -8.499999999999993,
+    "type": "normal",
+    "btcPrice": 84154.9
+  },
+  {
+    "timestamp": "2026-09-29T14:01:07.692Z",
+    "countLongPct": 56.379999999999995,
+    "dollarLongPct": 64.87,
+    "globalLongPct": 54.97,
+    "gap": -8.490000000000009,
+    "type": "normal",
+    "btcPrice": 84201
+  },
+  {
+    "timestamp": "2026-09-29T14:16:17.510Z",
+    "countLongPct": 56.46,
+    "dollarLongPct": 64.97,
+    "globalLongPct": 55.08,
+    "gap": -8.509999999999998,
+    "type": "normal",
+    "btcPrice": 83853.7
+  },
+  {
+    "timestamp": "2026-09-29T14:31:16.921Z",
+    "countLongPct": 56.57,
+    "dollarLongPct": 65.02,
+    "globalLongPct": 55.21,
+    "gap": -8.449999999999996,
+    "type": "normal",
+    "btcPrice": 83923.9
+  },
+  {
+    "timestamp": "2026-09-29T14:46:10.148Z",
+    "countLongPct": 56.66,
+    "dollarLongPct": 65.12,
+    "globalLongPct": 55.33,
+    "gap": -8.460000000000008,
+    "type": "normal",
+    "btcPrice": 83938.2
+  },
+  {
+    "timestamp": "2026-09-29T15:01:14.856Z",
+    "countLongPct": 56.730000000000004,
+    "dollarLongPct": 65.16,
+    "globalLongPct": 55.37,
+    "gap": -8.429999999999993,
+    "type": "normal",
+    "btcPrice": 83594.9
+  },
+  {
+    "timestamp": "2026-09-29T15:18:19.220Z",
+    "countLongPct": 57.269999999999996,
+    "dollarLongPct": 65.44,
+    "globalLongPct": 55.74,
+    "gap": -8.170000000000002,
+    "type": "normal",
+    "btcPrice": 83340
+  },
+  {
+    "timestamp": "2026-09-29T15:31:42.549Z",
+    "countLongPct": 57.830000000000005,
+    "dollarLongPct": 65.59,
+    "globalLongPct": 57.04,
+    "gap": -7.759999999999998,
+    "type": "normal",
+    "btcPrice": 83010.8
+  },
+  {
+    "timestamp": "2026-09-29T15:46:10.820Z",
+    "countLongPct": 58.919999999999995,
+    "dollarLongPct": 65.48,
+    "globalLongPct": 57.60999999999999,
+    "gap": -6.560000000000009,
+    "type": "normal",
+    "btcPrice": 83154.5
+  },
+  {
+    "timestamp": "2026-09-29T16:01:14.120Z",
+    "countLongPct": 59.18,
+    "dollarLongPct": 65.42999999999999,
+    "globalLongPct": 58.050000000000004,
+    "gap": -6.249999999999993,
+    "type": "normal",
+    "btcPrice": 83080.1
+  },
+  {
+    "timestamp": "2026-09-29T16:16:08.567Z",
+    "countLongPct": 59.3,
+    "dollarLongPct": 65.49000000000001,
+    "globalLongPct": 58.18,
+    "gap": -6.190000000000012,
+    "type": "normal",
+    "btcPrice": 82960
+  },
+  {
+    "timestamp": "2026-09-29T16:31:01.492Z",
+    "countLongPct": 59.440000000000005,
+    "dollarLongPct": 65.48,
+    "globalLongPct": 58.34,
+    "gap": -6.039999999999999,
+    "type": "normal",
+    "btcPrice": 83152.8
+  },
+  {
+    "timestamp": "2026-09-29T16:46:13.032Z",
+    "countLongPct": 59.57,
+    "dollarLongPct": 65.47,
+    "globalLongPct": 58.45,
+    "gap": -5.899999999999999,
+    "type": "normal",
+    "btcPrice": 82953.7
+  },
+  {
+    "timestamp": "2026-09-29T17:01:20.589Z",
+    "countLongPct": 59.730000000000004,
+    "dollarLongPct": 65.49000000000001,
+    "globalLongPct": 58.63,
+    "gap": -5.760000000000005,
+    "type": "normal",
+    "btcPrice": 82999.9
+  },
+  {
+    "timestamp": "2026-09-29T17:16:14.830Z",
+    "countLongPct": 59.84,
+    "dollarLongPct": 65.49000000000001,
+    "globalLongPct": 58.81999999999999,
+    "gap": -5.650000000000006,
+    "type": "normal",
+    "btcPrice": 83105.2
+  },
+  {
+    "timestamp": "2026-09-29T17:46:12.635Z",
+    "countLongPct": 59.919999999999995,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 58.89,
+    "gap": -5.5900000000000105,
+    "type": "normal",
+    "btcPrice": 83096.5
+  },
+  {
+    "timestamp": "2026-09-29T18:01:19.574Z",
+    "countLongPct": 59.919999999999995,
+    "dollarLongPct": 65.48,
+    "globalLongPct": 58.879999999999995,
+    "gap": -5.560000000000009,
+    "type": "normal",
+    "btcPrice": 83251.8
+  },
+  {
+    "timestamp": "2026-09-29T18:16:15.049Z",
+    "countLongPct": 59.88,
+    "dollarLongPct": 65.53,
+    "globalLongPct": 58.879999999999995,
+    "gap": -5.649999999999999,
+    "type": "normal",
+    "btcPrice": 83440.1
+  },
+  {
+    "timestamp": "2026-09-29T18:31:14.323Z",
+    "countLongPct": 59.86,
+    "dollarLongPct": 65.64999999999999,
+    "globalLongPct": 58.830000000000005,
+    "gap": -5.789999999999992,
+    "type": "normal",
+    "btcPrice": 83463.2
+  },
+  {
+    "timestamp": "2026-09-29T18:46:08.255Z",
+    "countLongPct": 59.79,
+    "dollarLongPct": 65.72,
+    "globalLongPct": 58.67,
+    "gap": -5.93,
+    "type": "normal",
+    "btcPrice": 83619.2
+  },
+  {
+    "timestamp": "2026-09-29T19:01:12.032Z",
+    "countLongPct": 59.63,
+    "dollarLongPct": 65.72,
+    "globalLongPct": 58.5,
+    "gap": -6.089999999999996,
+    "type": "normal",
+    "btcPrice": 83588.3
+  },
+  {
+    "timestamp": "2026-09-29T19:16:16.489Z",
+    "countLongPct": 59.57,
+    "dollarLongPct": 65.75999999999999,
+    "globalLongPct": 58.32000000000001,
+    "gap": -6.189999999999991,
+    "type": "normal",
+    "btcPrice": 83560.1
+  },
+  {
+    "timestamp": "2026-09-29T19:31:10.832Z",
+    "countLongPct": 59.36,
+    "dollarLongPct": 65.81,
+    "globalLongPct": 58.199999999999996,
+    "gap": -6.450000000000003,
+    "type": "normal",
+    "btcPrice": 83541.7
+  },
+  {
+    "timestamp": "2026-09-29T19:46:09.634Z",
+    "countLongPct": 59.260000000000005,
+    "dollarLongPct": 65.86999999999999,
+    "globalLongPct": 58.220000000000006,
+    "gap": -6.609999999999985,
+    "type": "normal",
+    "btcPrice": 83388
+  },
+  {
+    "timestamp": "2026-09-29T20:01:13.550Z",
+    "countLongPct": 59.29,
+    "dollarLongPct": 65.86999999999999,
+    "globalLongPct": 58.160000000000004,
+    "gap": -6.579999999999991,
+    "type": "normal",
+    "btcPrice": 83564.5
+  },
+  {
+    "timestamp": "2026-09-29T20:16:16.608Z",
+    "countLongPct": 59.3,
+    "dollarLongPct": 65.86,
+    "globalLongPct": 58.18,
+    "gap": -6.560000000000002,
+    "type": "normal",
+    "btcPrice": 83533.2
+  },
+  {
+    "timestamp": "2026-09-29T20:31:05.114Z",
+    "countLongPct": 59.31999999999999,
+    "dollarLongPct": 65.86999999999999,
+    "globalLongPct": 58.199999999999996,
+    "gap": -6.549999999999997,
+    "type": "normal",
+    "btcPrice": 83578.9
+  },
+  {
+    "timestamp": "2026-09-29T20:46:05.937Z",
+    "countLongPct": 59.3,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 58.209999999999994,
+    "gap": -6.5800000000000125,
+    "type": "normal",
+    "btcPrice": 83591.2
+  },
+  {
+    "timestamp": "2026-09-29T21:01:13.040Z",
+    "countLongPct": 59.31999999999999,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 58.209999999999994,
+    "gap": -6.5600000000000165,
+    "type": "normal",
+    "btcPrice": 83580.2
+  },
+  {
+    "timestamp": "2026-09-29T21:16:08.080Z",
+    "countLongPct": 59.27,
+    "dollarLongPct": 65.82000000000001,
+    "globalLongPct": 58.160000000000004,
+    "gap": -6.550000000000004,
+    "type": "normal",
+    "btcPrice": 83481.1
+  },
+  {
+    "timestamp": "2026-09-29T21:31:09.157Z",
+    "countLongPct": 59.260000000000005,
+    "dollarLongPct": 65.75999999999999,
+    "globalLongPct": 58.089999999999996,
+    "gap": -6.499999999999986,
+    "type": "normal",
+    "btcPrice": 83397.1
+  },
+  {
+    "timestamp": "2026-09-29T21:45:59.312Z",
+    "countLongPct": 59.36,
+    "dollarLongPct": 65.81,
+    "globalLongPct": 58.209999999999994,
+    "gap": -6.450000000000003,
+    "type": "normal",
+    "btcPrice": 83406.7
+  },
+  {
+    "timestamp": "2026-09-29T22:01:02.483Z",
+    "countLongPct": 59.38,
+    "dollarLongPct": 65.83,
+    "globalLongPct": 58.220000000000006,
+    "gap": -6.449999999999996,
+    "type": "normal",
+    "btcPrice": 83506.5
+  },
+  {
+    "timestamp": "2026-09-29T22:16:03.729Z",
+    "countLongPct": 59.39,
+    "dollarLongPct": 65.79,
+    "globalLongPct": 58.26,
+    "gap": -6.400000000000006,
+    "type": "normal",
+    "btcPrice": 83554.1
+  },
+  {
+    "timestamp": "2026-09-29T22:31:07.774Z",
+    "countLongPct": 59.29,
+    "dollarLongPct": 65.77,
+    "globalLongPct": 58.099999999999994,
+    "gap": -6.479999999999997,
+    "type": "normal",
+    "btcPrice": 83521.7
+  },
+  {
+    "timestamp": "2026-09-29T22:46:05.769Z",
+    "countLongPct": 59.24,
+    "dollarLongPct": 65.74,
+    "globalLongPct": 58.089999999999996,
+    "gap": -6.499999999999993,
+    "type": "normal",
+    "btcPrice": 83554.4
+  },
+  {
+    "timestamp": "2026-09-29T23:01:01.532Z",
+    "countLongPct": 59.24,
+    "dollarLongPct": 65.72,
+    "globalLongPct": 58.10999999999999,
+    "gap": -6.479999999999997,
+    "type": "normal",
+    "btcPrice": 83587.7
+  },
+  {
+    "timestamp": "2026-09-29T23:16:08.378Z",
+    "countLongPct": 59.19,
+    "dollarLongPct": 65.86999999999999,
+    "globalLongPct": 58.050000000000004,
+    "gap": -6.679999999999993,
+    "type": "normal",
+    "btcPrice": 83776.9
+  },
+  {
+    "timestamp": "2026-09-29T23:31:02.486Z",
+    "countLongPct": 59.14,
+    "dollarLongPct": 65.9,
+    "globalLongPct": 57.98,
+    "gap": -6.760000000000005,
+    "type": "normal",
+    "btcPrice": 83691.4
+  },
+  {
+    "timestamp": "2026-09-29T23:46:02.489Z",
+    "countLongPct": 59.17,
+    "dollarLongPct": 65.81,
+    "globalLongPct": 58.06,
+    "gap": -6.640000000000001,
+    "type": "normal",
+    "btcPrice": 83651.8
+  },
+  {
+    "timestamp": "2026-09-30T00:01:11.590Z",
+    "countLongPct": 59.13,
+    "dollarLongPct": 65.84,
+    "globalLongPct": 58.040000000000006,
+    "gap": -6.710000000000001,
+    "type": "normal",
+    "btcPrice": 83635.9
+  },
+  {
+    "timestamp": "2026-09-30T00:16:08.230Z",
+    "countLongPct": 59.12,
+    "dollarLongPct": 65.82000000000001,
+    "globalLongPct": 58.03,
+    "gap": -6.70000000000001,
+    "type": "normal",
+    "btcPrice": 83491.6
+  },
+  {
+    "timestamp": "2026-09-30T00:31:15.180Z",
+    "countLongPct": 58.98,
+    "dollarLongPct": 65.82000000000001,
+    "globalLongPct": 57.9,
+    "gap": -6.8400000000000105,
+    "type": "normal",
+    "btcPrice": 83536.9
+  },
+  {
+    "timestamp": "2026-09-30T00:46:04.066Z",
+    "countLongPct": 59,
+    "dollarLongPct": 65.78,
+    "globalLongPct": 57.92,
+    "gap": -6.780000000000001,
+    "type": "normal",
+    "btcPrice": 83398.1
+  },
+  {
+    "timestamp": "2026-09-30T01:01:09.741Z",
+    "countLongPct": 58.95,
+    "dollarLongPct": 65.81,
+    "globalLongPct": 57.830000000000005,
+    "gap": -6.859999999999999,
+    "type": "normal",
+    "btcPrice": 83380.1
+  },
+  {
+    "timestamp": "2026-09-30T01:16:14.544Z",
+    "countLongPct": 58.97,
+    "dollarLongPct": 65.83,
+    "globalLongPct": 57.85,
+    "gap": -6.859999999999999,
+    "type": "normal",
+    "btcPrice": 83421
+  },
+  {
+    "timestamp": "2026-09-30T01:32:05.108Z",
+    "countLongPct": 59,
+    "dollarLongPct": 65.86,
+    "globalLongPct": 57.9,
+    "gap": -6.859999999999999,
+    "type": "normal",
+    "btcPrice": 83319.5
+  },
+  {
+    "timestamp": "2026-09-30T01:46:02.091Z",
+    "countLongPct": 58.98,
+    "dollarLongPct": 65.85,
+    "globalLongPct": 57.809999999999995,
+    "gap": -6.869999999999997,
+    "type": "normal",
+    "btcPrice": 83375
+  },
+  {
+    "timestamp": "2026-09-30T02:01:21.528Z",
+    "countLongPct": 59.12,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 57.85,
+    "gap": -6.760000000000012,
+    "type": "normal",
+    "btcPrice": 83445.9
+  },
+  {
+    "timestamp": "2026-09-30T02:16:13.319Z",
+    "countLongPct": 59.17,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 57.940000000000005,
+    "gap": -6.710000000000008,
+    "type": "normal",
+    "btcPrice": 83451
+  },
+  {
+    "timestamp": "2026-09-30T02:31:06.540Z",
+    "countLongPct": 59.13,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 57.89,
+    "gap": -6.750000000000007,
+    "type": "normal",
+    "btcPrice": 83361.1
+  },
+  {
+    "timestamp": "2026-09-30T02:46:02.981Z",
+    "countLongPct": 59.19,
+    "dollarLongPct": 65.94,
+    "globalLongPct": 58.02,
+    "gap": -6.75,
+    "type": "normal",
+    "btcPrice": 83334.1
+  },
+  {
+    "timestamp": "2026-09-30T03:01:13.155Z",
+    "countLongPct": 59.209999999999994,
+    "dollarLongPct": 65.95,
+    "globalLongPct": 57.99999999999999,
+    "gap": -6.740000000000009,
+    "type": "normal",
+    "btcPrice": 83345.1
+  },
+  {
+    "timestamp": "2026-09-30T03:16:09.408Z",
+    "countLongPct": 59.21999999999999,
+    "dollarLongPct": 65.96,
+    "globalLongPct": 58.01,
+    "gap": -6.740000000000002,
+    "type": "normal",
+    "btcPrice": 83282.6
+  },
+  {
+    "timestamp": "2026-09-30T03:31:17.214Z",
+    "countLongPct": 59.260000000000005,
+    "dollarLongPct": 66.02,
+    "globalLongPct": 58.01,
+    "gap": -6.759999999999991,
+    "type": "normal",
+    "btcPrice": 83238.6
+  },
+  {
+    "timestamp": "2026-09-30T03:46:02.084Z",
+    "countLongPct": 59.31999999999999,
+    "dollarLongPct": 66.06,
+    "globalLongPct": 58.07,
+    "gap": -6.740000000000009,
+    "type": "normal",
+    "btcPrice": 83280
+  },
+  {
+    "timestamp": "2026-09-30T04:01:10.020Z",
+    "countLongPct": 59.34,
+    "dollarLongPct": 66.02,
+    "globalLongPct": 58.07,
+    "gap": -6.679999999999993,
+    "type": "normal",
+    "btcPrice": 83295
+  },
+  {
+    "timestamp": "2026-09-30T04:16:08.130Z",
+    "countLongPct": 59.37,
+    "dollarLongPct": 66.05,
+    "globalLongPct": 58.120000000000005,
+    "gap": -6.68,
+    "type": "normal",
+    "btcPrice": 83357.7
+  },
+  {
+    "timestamp": "2026-09-30T04:31:02.772Z",
+    "countLongPct": 59.43000000000001,
+    "dollarLongPct": 66.07,
+    "globalLongPct": 58.17,
+    "gap": -6.639999999999986,
+    "type": "normal",
+    "btcPrice": 83332
+  },
+  {
+    "timestamp": "2026-09-30T04:46:04.167Z",
+    "countLongPct": 59.440000000000005,
+    "dollarLongPct": 66.07,
+    "globalLongPct": 58.199999999999996,
+    "gap": -6.629999999999988,
+    "type": "normal",
+    "btcPrice": 83288
+  },
+  {
+    "timestamp": "2026-09-30T05:01:11.906Z",
+    "countLongPct": 59.48,
+    "dollarLongPct": 66.02,
+    "globalLongPct": 58.220000000000006,
+    "gap": -6.539999999999999,
+    "type": "normal",
+    "btcPrice": 83310
+  },
+  {
+    "timestamp": "2026-09-30T05:16:07.941Z",
+    "countLongPct": 59.48,
+    "dollarLongPct": 65.99000000000001,
+    "globalLongPct": 58.25,
+    "gap": -6.510000000000012,
+    "type": "normal",
+    "btcPrice": 83154.9
+  },
+  {
+    "timestamp": "2026-09-30T05:31:11.465Z",
+    "countLongPct": 59.5,
+    "dollarLongPct": 66.01,
+    "globalLongPct": 58.26,
+    "gap": -6.510000000000005,
+    "type": "normal",
+    "btcPrice": 83438.4
+  },
+  {
+    "timestamp": "2026-09-30T05:46:06.517Z",
+    "countLongPct": 59.47,
+    "dollarLongPct": 66.03,
+    "globalLongPct": 58.209999999999994,
+    "gap": -6.560000000000002,
+    "type": "normal",
+    "btcPrice": 83425.4
+  },
+  {
+    "timestamp": "2026-09-30T06:02:03.055Z",
+    "countLongPct": 59.489999999999995,
+    "dollarLongPct": 66,
+    "globalLongPct": 58.220000000000006,
+    "gap": -6.510000000000005,
+    "type": "normal",
+    "btcPrice": 83381
+  },
+  {
+    "timestamp": "2026-09-30T06:16:19.552Z",
+    "countLongPct": 59.540000000000006,
+    "dollarLongPct": 65.93,
+    "globalLongPct": 58.37,
+    "gap": -6.390000000000001,
+    "type": "normal",
+    "btcPrice": 83067.3
+  },
+  {
+    "timestamp": "2026-09-30T06:31:14.820Z",
+    "countLongPct": 59.69,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 58.440000000000005,
+    "gap": -6.190000000000012,
+    "type": "normal",
+    "btcPrice": 83069.7
+  },
+  {
+    "timestamp": "2026-09-30T06:46:06.182Z",
+    "countLongPct": 59.699999999999996,
+    "dollarLongPct": 65.86999999999999,
+    "globalLongPct": 58.489999999999995,
+    "gap": -6.169999999999995,
+    "type": "normal",
+    "btcPrice": 83005.8
+  },
+  {
+    "timestamp": "2026-09-30T07:01:12.032Z",
+    "countLongPct": 59.809999999999995,
+    "dollarLongPct": 65.69,
+    "globalLongPct": 58.620000000000005,
+    "gap": -5.880000000000003,
+    "type": "normal",
+    "btcPrice": 82921.1
+  },
+  {
+    "timestamp": "2026-09-30T07:16:34.958Z",
+    "countLongPct": 59.89,
+    "dollarLongPct": 65.69,
+    "globalLongPct": 58.699999999999996,
+    "gap": -5.799999999999997,
+    "type": "normal",
+    "btcPrice": 83045.2
+  },
+  {
+    "timestamp": "2026-09-30T07:32:09.163Z",
+    "countLongPct": 59.89,
+    "dollarLongPct": 65.68,
+    "globalLongPct": 58.620000000000005,
+    "gap": -5.790000000000006,
+    "type": "normal",
+    "btcPrice": 83293.9
+  },
+  {
+    "timestamp": "2026-09-30T07:46:21.251Z",
+    "countLongPct": 59.93000000000001,
+    "dollarLongPct": 65.7,
+    "globalLongPct": 58.660000000000004,
+    "gap": -5.769999999999996,
+    "type": "normal",
+    "btcPrice": 83388.8
+  },
+  {
+    "timestamp": "2026-09-30T08:01:54.933Z",
+    "countLongPct": 59.91,
+    "dollarLongPct": 65.79,
+    "globalLongPct": 58.60999999999999,
+    "gap": -5.88000000000001,
+    "type": "normal",
+    "btcPrice": 83222.1
+  },
+  {
+    "timestamp": "2026-09-30T08:16:06.102Z",
+    "countLongPct": 59.88,
+    "dollarLongPct": 65.88000000000001,
+    "globalLongPct": 58.589999999999996,
+    "gap": -6.000000000000007,
+    "type": "normal",
+    "btcPrice": 83110.8
+  },
+  {
+    "timestamp": "2026-09-30T08:31:20.085Z",
+    "countLongPct": 59.940000000000005,
+    "dollarLongPct": 65.96,
+    "globalLongPct": 58.64,
+    "gap": -6.019999999999989,
+    "type": "normal",
+    "btcPrice": 83028.2
+  },
+  {
+    "timestamp": "2026-09-30T08:46:12.039Z",
+    "countLongPct": 60.06,
+    "dollarLongPct": 66,
+    "globalLongPct": 58.8,
+    "gap": -5.939999999999998,
+    "type": "normal",
+    "btcPrice": 83049.9
+  },
+  {
+    "timestamp": "2026-09-30T09:01:04.362Z",
+    "countLongPct": 60.22,
+    "dollarLongPct": 65.73,
+    "globalLongPct": 58.98,
+    "gap": -5.510000000000005,
+    "type": "normal",
+    "btcPrice": 83045.7
+  },
+  {
+    "timestamp": "2026-09-30T09:16:13.505Z",
+    "countLongPct": 60.27,
+    "dollarLongPct": 65.67,
+    "globalLongPct": 59.040000000000006,
+    "gap": -5.399999999999999,
+    "type": "normal",
+    "btcPrice": 83249.9
+  },
+  {
+    "timestamp": "2026-09-30T09:31:09.309Z",
+    "countLongPct": 60.23,
+    "dollarLongPct": 65.69,
+    "globalLongPct": 58.919999999999995,
+    "gap": -5.460000000000001,
+    "type": "normal",
+    "btcPrice": 83432.8
+  },
+  {
+    "timestamp": "2026-09-30T09:47:01.992Z",
+    "countLongPct": 59.85,
+    "dollarLongPct": 65.57,
+    "globalLongPct": 58.620000000000005,
+    "gap": -5.719999999999992,
+    "type": "normal",
+    "btcPrice": 83550
+  },
+  {
+    "timestamp": "2026-09-30T10:03:41.352Z",
+    "countLongPct": 59.8,
+    "dollarLongPct": 65.51,
+    "globalLongPct": 58.60999999999999,
+    "gap": -5.710000000000008,
+    "type": "normal",
+    "btcPrice": 83674.9
   }
 ]

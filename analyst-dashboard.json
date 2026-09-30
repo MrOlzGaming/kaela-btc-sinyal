@@ -1,34 +1,34 @@
 {
   "btc": {
-    "price": 84377.82,
+    "price": 83834.57,
     "conviction": {
-      "score": 2,
+      "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 69 netral"
+          "reason": "RSI 65 netral"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.54 -- Fair value / akumulasi"
+          "reason": "1.63 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.35 -- Optimism / Anxiety"
+          "reason": "0.38 -- Optimism / Anxiety"
         },
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "74/100 -- Greed (kontrarian)"
+          "reason": "73/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
-          "v": 1,
-          "reason": "+1.05% (7 hari) -- dana segar masuk"
+          "v": 0,
+          "reason": "-0.32% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -42,39 +42,39 @@
         },
         {
           "label": "Credit Spread (High-Yield)",
-          "v": 0,
-          "reason": "STABIL -- netral"
+          "v": -1,
+          "reason": "MELEBAR -- pasar kredit mulai waspada/risk-off -- historis headwind buat BTC (aset risiko)"
         },
         {
           "label": "ETF Flow (institusi)",
           "v": 1,
-          "reason": "7/7 hari inflow, net 7hari $2978jt -- akumulasi institusi konsisten"
+          "reason": "7/7 hari inflow, net 7hari $2850jt -- akumulasi institusi konsisten"
         }
       ],
       "totalFactors": 9
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.44207223610416724,
-      "corr90": 0.4191775273551219,
+      "corr30": 0.44832164302021144,
+      "corr90": 0.4404075549574908,
       "label30": "moderat positif",
       "label90": "moderat positif",
       "sampleDays": 81,
-      "latestDate": "2026-09-25"
+      "latestDate": "2026-09-28"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 34.83,
-        "changePct": -4.102422907488992
+        "value": 35.06,
+        "changePct": -6.256684491978599
       },
       "stablecoin": {
-        "current": 260440737403.53278,
-        "weekAgo": 257746070433.3656,
-        "changePct": 1.045473541317799
+        "current": 258392608336.17316,
+        "weekAgo": 259212062202.09503,
+        "changePct": -0.3161326131817842
       },
       "yieldCurve": {
-        "value": 0.36,
-        "date": "2026-09-25",
+        "value": 0.37,
+        "date": "2026-09-29",
         "inverted": false
       },
       "m2": {
@@ -84,18 +84,18 @@
       },
       "fedRate": {
         "value": 3.88,
-        "date": "2026-09-24",
+        "date": "2026-09-28",
         "changeBps": 25
       },
       "creditSpread": {
-        "value": 2.8,
-        "date": "2026-09-24",
-        "changeBps": 9.999999999999964
+        "value": 3.02,
+        "date": "2026-09-28",
+        "changeBps": 41.99999999999999
       },
       "etfFlow": {
-        "date": "2026-09-25",
-        "latestNetFlowUsd": 134465169.155,
-        "sum7dUsd": 2978270893.6700006,
+        "date": "2026-09-28",
+        "latestNetFlowUsd": 31070566.45000001,
+        "sum7dUsd": 2849887736.8700004,
         "positiveDays7d": 7,
         "totalDays7d": 7
       },
@@ -111,20 +111,20 @@
     }
   },
   "xau": {
-    "price": 4280.51,
+    "price": 4188.97,
     "conviction": {
-      "score": -3,
-      "verdict": "🔴 BEARISH KUAT",
+      "score": -1,
+      "verdict": "🔴 Condong Bearish",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 0,
-          "reason": "RSI 38 netral"
+          "v": 1,
+          "reason": "RSI 30 oversold -- rawan technical bounce"
         },
         {
           "label": "DXY (Dolar)",
-          "v": -1,
-          "reason": "MENGUAT -- Emas cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
         },
         {
           "label": "Real Yield 10Y",
@@ -140,44 +140,44 @@
       "totalFactors": 4
     },
     "trackRecord": {
-      "total": 18,
-      "correct": 4,
-      "winRatePct": 22.22222222222222
+      "total": 19,
+      "correct": 5,
+      "winRatePct": 26.31578947368421
     },
     "regime": {
-      "corr30": -0.6397483391914683,
-      "corr90": -0.530124099765405,
+      "corr30": -0.6069177061498344,
+      "corr90": -0.5246327822306451,
       "label30": "KUAT NEGATIF",
       "label90": "moderat negatif",
-      "sampleDays": 81,
-      "latestDate": "2026-09-25"
+      "sampleDays": 82,
+      "latestDate": "2026-09-29"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-09-25",
-          "value": 101.035
+          "date": "2026-09-29",
+          "value": 101.377
         },
         "prev": {
           "date": null,
-          "value": 100.43
+          "value": 101.29
         },
-        "changePct": 0.6024096385542067,
+        "changePct": 0.08589199328659204,
         "trend": {
-          "arah": "MENGUAT",
-          "efekEmas": "cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
+          "arah": "STABIL",
+          "efekEmas": "netral"
         }
       },
       "realYield": {
         "latest": {
-          "date": "2026-09-24",
-          "value": 2.85
+          "date": "2026-09-28",
+          "value": 2.9
         },
         "prev": {
-          "date": "2026-09-23",
-          "value": 2.76
+          "date": "2026-09-25",
+          "value": 2.83
         },
-        "changePct": 3.2608695652174022,
+        "changePct": 2.473498233215542,
         "trend": {
           "arah": "NAIK",
           "efekEmas": "cenderung TERTEKAN (biaya peluang pegang Emas naik)"
@@ -186,10 +186,10 @@
     },
     "cot": null,
     "yieldCurve": {
-      "value": 0.36,
-      "date": "2026-09-25",
+      "value": 0.37,
+      "date": "2026-09-29",
       "inverted": false
     }
   },
-  "updatedAt": "2026-09-26T23:15:52.783Z"
+  "updatedAt": "2026-09-29T23:15:52.636Z"
 }

@@ -117,5 +117,65 @@
     "side": "short",
     "price": 83731.52,
     "peakUsd": 920313.8926999997
+  },
+  {
+    "timestamp": "2026-09-28T02:15:56.505Z",
+    "type": "burst",
+    "side": "long",
+    "price": 83711.55,
+    "burstUsd": 389871.87630000006,
+    "burstCount": 31
+  },
+  {
+    "timestamp": "2026-09-28T02:46:02.927Z",
+    "type": "exhaustion",
+    "side": "long",
+    "price": 83531.07,
+    "peakUsd": 389871.87630000006
+  },
+  {
+    "timestamp": "2026-09-28T05:46:06.475Z",
+    "type": "burst",
+    "side": "long",
+    "price": 83098.75,
+    "burstUsd": 538938.7028000001,
+    "burstCount": 29
+  },
+  {
+    "timestamp": "2026-09-28T06:16:06.393Z",
+    "type": "exhaustion",
+    "side": "long",
+    "price": 83236.01,
+    "peakUsd": 538938.7028000001
+  },
+  {
+    "timestamp": "2026-09-28T17:31:25.849Z",
+    "type": "burst",
+    "side": "short",
+    "price": 83962.62,
+    "burstUsd": 347773.0545,
+    "burstCount": 43
+  },
+  {
+    "timestamp": "2026-09-28T18:01:14.529Z",
+    "type": "exhaustion",
+    "side": "short",
+    "price": 83873.54,
+    "peakUsd": 347773.0545
+  },
+  {
+    "timestamp": "2026-09-29T15:31:41.104Z",
+    "type": "burst",
+    "side": "long",
+    "price": 83044.01,
+    "burstUsd": 304421.0327,
+    "burstCount": 16
+  },
+  {
+    "timestamp": "2026-09-29T16:01:12.665Z",
+    "type": "exhaustion",
+    "side": "long",
+    "price": 83131.93,
+    "peakUsd": 304421.0327
   }
 ]

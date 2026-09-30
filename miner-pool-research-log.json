@@ -192,14 +192,53 @@
   {
     "dateKey": "2026-09-27",
     "poolCounts": {
-      "Luxor": 2,
-      "Foundry USA": 22,
-      "AntPool": 19,
-      "F2Pool": 14,
-      "unidentified": 17,
+      "Luxor": 3,
+      "Foundry USA": 32,
+      "AntPool": 29,
+      "F2Pool": 22,
+      "unidentified": 29,
       "OCEAN": 3,
-      "ViaBTC": 4,
-      "SpiderPool": 4
+      "ViaBTC": 7,
+      "SpiderPool": 8
+    }
+  },
+  {
+    "dateKey": "2026-09-28",
+    "poolCounts": {
+      "unidentified": 19,
+      "F2Pool": 11,
+      "Foundry USA": 22,
+      "SpiderPool": 10,
+      "AntPool": 15,
+      "ViaBTC": 6,
+      "Luxor": 2,
+      "OCEAN": 2
+    }
+  },
+  {
+    "dateKey": "2026-09-29",
+    "poolCounts": {
+      "Foundry USA": 17,
+      "AntPool": 14,
+      "unidentified": 8,
+      "OCEAN": 3,
+      "F2Pool": 9,
+      "ViaBTC": 8,
+      "SpiderPool": 3,
+      "Luxor": 1
+    }
+  },
+  {
+    "dateKey": "2026-09-30",
+    "poolCounts": {
+      "Foundry USA": 29,
+      "AntPool": 28,
+      "F2Pool": 18,
+      "unidentified": 11,
+      "Luxor": 2,
+      "OCEAN": 2,
+      "ViaBTC": 14,
+      "SpiderPool": 9
     }
   }
 ]

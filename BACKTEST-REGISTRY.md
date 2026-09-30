@@ -204,6 +204,30 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   `.KAELA-TRASH/2026-10-01/`. Catatan: pesan commit `c42d8d5b` nyebut "+ label TP trailing" -- SALAH,
   diff-nya cuma file backtest itu; label TP beneran dikerjain di `darkKaelaLog.js` `_tpLine` (sesi lain).
 
+## ⚠️ Koreksi model exit Ninja MR + riset "culik dikit-dikit" (1 Okt 2026) — `backtest/ninja/culikResearch.js`, `mrExitModelCompare.js`, `liqBurstEventStudy.js`
+
+- **KOREKSI angka "Model fee BingX REALISTIS" di atas**: angka itu (IS +16% PF 1,16 | OOS +21% PF 1,07)
+  ngitung exit SMA20 di harga CLOSE candle + fee maker. Limit ngendap di SMA20 (cara `ninjaMrTrader.js`
+  live) ke-fill DI LEVEL SMA20, bukan di close yang udah lewat -> asumsi itu kelebihan ~0,03%/trade.
+  Direproduksi (`mrExitModelCompare.js`, data spot 5m 2019-09..2026-09 diagregasi 15m): mode `closeMaker`
+  = OOS +23,2% PF 1,06 | IS +13,8% PF 1,14 (cocok registry); mode `strict` (niru live) = **OOS -8,1% PF 0,98
+  | IS +3,2% PF 1,04**, per tahun 19:-5 20:+17 21:+8 22:-7 23:-6 24:-10 25:-10 26:+8. Entry taker (open
+  candle berikut) = -39,7% / -7,0%. **Ekspektasi jujur Ninja MR live = kira-kira IMPAS setelah fee.**
+- **Riset "ambil dikit-dikit" (permintaan Olan)**, 136 kombinasi (kumulatif ~569), model eksekusi niru live
+  (limit 1 tick fill kalau ditembus, exit limit SMA20 di levelnya, SL taker+selip), DEV 2019-10..2023-09 /
+  HOLDOUT 2023-10..2026-09:
+  - A. MR dilonggarin (Bollinger 1,5/2/2,5/3 x TF 5M/15M/30M/1H x tren on/off x SL 3/4 ATR): makin longgar
+    = makin sering TAPI makin rugi (5M bb1,5 ~6-20 trade/hari, PF 0,57-0,83). Tanpa filter tren SEMUA rugi.
+    Terbaik DEV (1H bb1,5 +tren k3 PF 1,08; 30M bb2 +tren PF 1,08) semua BALIK RUGI di HOLDOUT (PF 0,77-0,80).
+  - B. Fade candle "cascade" (rentang >= 2-4 ATR + volume >= 2-5x rata2, close mepet ujung) 5M/15M, exit SMA20
+    atau retrace 50%: SEMUA rugi di DEV & HOLDOUT (PF 0,18-0,93).
+  - **Lolos (DEV PF>1,1 & HOLDOUT PF>1,05): 0/136.** Gerak normal 5M-1H BTC < biaya round-trip -> "crot
+    crot" = yang untung exchange.
+- **Studi kejadian likuidasi ASLI** (`liquidation-events.jsonl` Bybit, 17,4 hari, 3.583 event): burst
+  >= persentil 95 (>= ~$350rb/5 menit, n=20) -> fade +15m rata2 +0,12% menang 70%; persentil 98 (n=8) +0,26%
+  menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
+  akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
+
 ## 🔄 Cara Update File Ini
 
 Sama ritual kayak `BUG_REGISTRY.md`/`SYSTEM-MAP.md` -- update SETELAH approve perubahan besar

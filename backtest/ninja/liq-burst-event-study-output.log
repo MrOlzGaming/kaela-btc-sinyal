@@ -1,0 +1,20 @@
+event 3583, rentang 2026-09-13T06:40:00.000Z -> 2026-09-30T17:15:00.000Z (17.4 hari), bucket berisi 396
+baseline +15m: rata2 long 0.005% (n=5024)
+baseline +30m: rata2 long 0.011% (n=5024)
+baseline +60m: rata2 long 0.021% (n=5024)
+
+burst >= persentil 80 ($61.655 / 5 mnt): 80 kejadian (36 fade-long, 44 fade-short)
+  fade +15m -0.033% (menang 56%, n=80) | +30m -0.009% (menang 55%, n=80) | +60m -0.064% (menang 49%, n=80)
+  fee round-trip maker/maker 0,04% -- taker/taker+selip 0,12%
+
+burst >= persentil 90 ($184.382 / 5 mnt): 40 kejadian (19 fade-long, 21 fade-short)
+  fade +15m -0.009% (menang 53%, n=40) | +30m 0.029% (menang 50%, n=40) | +60m -0.022% (menang 50%, n=40)
+  fee round-trip maker/maker 0,04% -- taker/taker+selip 0,12%
+
+burst >= persentil 95 ($350.308 / 5 mnt): 20 kejadian (11 fade-long, 9 fade-short)
+  fade +15m 0.122% (menang 70%, n=20) | +30m 0.093% (menang 55%, n=20) | +60m 0.133% (menang 65%, n=20)
+  fee round-trip maker/maker 0,04% -- taker/taker+selip 0,12%
+
+burst >= persentil 98 ($856.465 / 5 mnt): 8 kejadian (3 fade-long, 5 fade-short)
+  fade +15m 0.263% (menang 75%, n=8) | +30m 0.205% (menang 63%, n=8) | +60m 0.126% (menang 50%, n=8)
+  fee round-trip maker/maker 0,04% -- taker/taker+selip 0,12%

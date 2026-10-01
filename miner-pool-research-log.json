@@ -257,7 +257,8 @@
   {
     "dateKey": "2026-10-02",
     "poolCounts": {
-      "unidentified": 2
+      "unidentified": 3,
+      "SpiderPool": 2
     }
   }
 ]

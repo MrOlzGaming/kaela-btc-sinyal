@@ -1,0 +1,171 @@
+=== event kebaca di data: 305 (CPI 83, PPI 82, NFP 84, FOMC 56) ===
+CPI  gerak 15 menit pertama rata2 0.89% vs jam sama minggu lalu 0.25% (x3.5)
+PPI  gerak 15 menit pertama rata2 0.33% vs jam sama minggu lalu 0.25% (x1.3)
+NFP  gerak 15 menit pertama rata2 0.49% vs jam sama minggu lalu 0.29% (x1.7)
+FOMC gerak 15 menit pertama rata2 0.72% vs jam sama minggu lalu 0.22% (x3.2)
+
+=== semua kombinasi (fee 0,12% RT sudah dipotong) ===
+ALL  candle1=5m tahan= 30m ikut      | DEV n=142 win=46% PF=0.78 avg=-0.072% | HOLD n=163 win=34% PF=0.53 avg=-0.127%
+ALL  candle1=5m tahan= 30m ikut  +SL | DEV n=142 win=39% PF=0.90 avg=-0.028% | HOLD n=163 win=33% PF=0.55 avg=-0.120%
+ALL  candle1=5m tahan= 30m lawan     | DEV n=142 win=35% PF=0.56 avg=-0.168% | HOLD n=163 win=41% PF=0.55 avg=-0.113%
+ALL  candle1=5m tahan= 30m lawan +SL | DEV n=142 win=22% PF=0.56 avg=-0.110% | HOLD n=163 win=25% PF=0.39 avg=-0.127%
+ALL  candle1=5m tahan= 60m ikut      | DEV n=142 win=44% PF=0.73 avg=-0.128% | HOLD n=163 win=44% PF=0.65 avg=-0.112%
+ALL  candle1=5m tahan= 60m ikut  +SL | DEV n=142 win=35% PF=0.87 avg=-0.046% | HOLD n=163 win=34% PF=0.54 avg=-0.147%
+ALL  candle1=5m tahan= 60m lawan     | DEV n=142 win=42% PF=0.76 avg=-0.112% | HOLD n=163 win=38% PF=0.63 avg=-0.128%
+ALL  candle1=5m tahan= 60m lawan +SL | DEV n=142 win=19% PF=0.56 avg=-0.121% | HOLD n=163 win=17% PF=0.33 avg=-0.163%
+ALL  candle1=5m tahan=120m ikut      | DEV n=142 win=39% PF=0.59 avg=-0.283% | HOLD n=163 win=48% PF=0.87 avg=-0.068%
+ALL  candle1=5m tahan=120m ikut  +SL | DEV n=142 win=23% PF=0.64 avg=-0.170% | HOLD n=163 win=29% PF=0.72 avg=-0.115%
+ALL  candle1=5m tahan=120m lawan     | DEV n=142 win=51% PF=1.08 avg=0.043% | HOLD n=163 win=44% PF=0.70 avg=-0.172%
+ALL  candle1=5m tahan=120m lawan +SL | DEV n=142 win=17% PF=0.55 avg=-0.133% | HOLD n=163 win=15% PF=0.49 avg=-0.138%
+ALL  candle1=5m tahan=240m ikut      | DEV n=142 win=44% PF=0.73 avg=-0.226% | HOLD n=163 win=50% PF=0.98 avg=-0.015%
+ALL  candle1=5m tahan=240m ikut  +SL | DEV n=142 win=24% PF=0.87 avg=-0.065% | HOLD n=163 win=25% PF=0.73 avg=-0.121%
+ALL  candle1=5m tahan=240m lawan     | DEV n=142 win=49% PF=0.98 avg=-0.014% | HOLD n=163 win=40% PF=0.71 avg=-0.225%
+ALL  candle1=5m tahan=240m lawan +SL | DEV n=142 win=15% PF=0.73 avg=-0.084% | HOLD n=163 win=11% PF=0.59 avg=-0.119%
+ALL  candle1=15m tahan= 30m ikut      | DEV n=142 win=44% PF=0.65 avg=-0.106% | HOLD n=163 win=40% PF=0.61 avg=-0.089%
+ALL  candle1=15m tahan= 30m ikut  +SL | DEV n=142 win=41% PF=0.68 avg=-0.092% | HOLD n=163 win=36% PF=0.54 avg=-0.107%
+ALL  candle1=15m tahan= 30m lawan     | DEV n=142 win=32% PF=0.60 avg=-0.134% | HOLD n=163 win=32% PF=0.44 avg=-0.151%
+ALL  candle1=15m tahan= 30m lawan +SL | DEV n=142 win=19% PF=0.56 avg=-0.111% | HOLD n=163 win=24% PF=0.35 avg=-0.152%
+ALL  candle1=15m tahan= 60m ikut      | DEV n=142 win=42% PF=0.69 avg=-0.129% | HOLD n=163 win=45% PF=0.89 avg=-0.036%
+ALL  candle1=15m tahan= 60m ikut  +SL | DEV n=142 win=34% PF=0.63 avg=-0.144% | HOLD n=163 win=36% PF=0.72 avg=-0.087%
+ALL  candle1=15m tahan= 60m lawan     | DEV n=142 win=41% PF=0.72 avg=-0.111% | HOLD n=163 win=37% PF=0.50 avg=-0.204%
+ALL  candle1=15m tahan= 60m lawan +SL | DEV n=142 win=17% PF=0.53 avg=-0.133% | HOLD n=163 win=23% PF=0.49 avg=-0.138%
+ALL  candle1=15m tahan=120m ikut      | DEV n=142 win=39% PF=0.56 avg=-0.297% | HOLD n=163 win=53% PF=1.06 avg=0.026%
+ALL  candle1=15m tahan=120m ikut  +SL | DEV n=142 win=30% PF=0.61 avg=-0.204% | HOLD n=163 win=36% PF=0.91 avg=-0.031%
+ALL  candle1=15m tahan=120m lawan     | DEV n=142 win=49% PF=1.12 avg=0.057% | HOLD n=163 win=39% PF=0.56 avg=-0.266%
+ALL  candle1=15m tahan=120m lawan +SL | DEV n=142 win=14% PF=0.46 avg=-0.168% | HOLD n=163 win=18% PF=0.53 avg=-0.149%
+ALL  candle1=15m tahan=240m ikut      | DEV n=142 win=45% PF=0.75 avg=-0.192% | HOLD n=163 win=55% PF=1.27 avg=0.151%
+ALL  candle1=15m tahan=240m ikut  +SL | DEV n=142 win=31% PF=0.79 avg=-0.121% | HOLD n=163 win=33% PF=1.04 avg=0.016%
+ALL  candle1=15m tahan=240m lawan     | DEV n=142 win=49% PF=0.93 avg=-0.048% | HOLD n=163 win=40% PF=0.54 avg=-0.391%
+ALL  candle1=15m tahan=240m lawan +SL | DEV n=142 win=11% PF=0.70 avg=-0.104% | HOLD n=163 win=13% PF=0.54 avg=-0.160%
+CPI  candle1=5m tahan= 30m ikut      | DEV n=39 win=49% PF=1.53 avg=0.139% | HOLD n=44 win=30% PF=0.97 avg=-0.007%
+CPI  candle1=5m tahan= 30m ikut  +SL | DEV n=39 win=41% PF=1.74 avg=0.164% | HOLD n=44 win=30% PF=1.04 avg=0.009%
+CPI  candle1=5m tahan= 30m lawan     | DEV n=39 win=31% PF=0.29 avg=-0.379% | HOLD n=44 win=43% PF=0.34 avg=-0.233%
+CPI  candle1=5m tahan= 30m lawan +SL | DEV n=39 win=15% PF=0.27 avg=-0.192% | HOLD n=44 win=34% PF=0.40 avg=-0.135%
+CPI  candle1=5m tahan= 60m ikut      | DEV n=39 win=56% PF=1.47 avg=0.140% | HOLD n=44 win=52% PF=1.12 avg=0.032%
+CPI  candle1=5m tahan= 60m ikut  +SL | DEV n=39 win=44% PF=1.77 avg=0.175% | HOLD n=44 win=39% PF=0.93 avg=-0.019%
+CPI  candle1=5m tahan= 60m lawan     | DEV n=39 win=31% PF=0.35 avg=-0.380% | HOLD n=44 win=32% PF=0.39 avg=-0.272%
+CPI  candle1=5m tahan= 60m lawan +SL | DEV n=39 win=15% PF=0.30 avg=-0.203% | HOLD n=44 win=25% PF=0.42 avg=-0.154%
+CPI  candle1=5m tahan=120m ikut      | DEV n=39 win=38% PF=0.45 avg=-0.379% | HOLD n=44 win=52% PF=1.20 avg=0.101%
+CPI  candle1=5m tahan=120m ikut  +SL | DEV n=39 win=23% PF=0.48 avg=-0.240% | HOLD n=44 win=34% PF=1.12 avg=0.044%
+CPI  candle1=5m tahan=120m lawan     | DEV n=39 win=49% PF=1.33 avg=0.139% | HOLD n=44 win=41% PF=0.54 avg=-0.341%
+CPI  candle1=5m tahan=120m lawan +SL | DEV n=39 win=18% PF=0.42 avg=-0.190% | HOLD n=44 win=23% PF=0.89 avg=-0.031%
+CPI  candle1=5m tahan=240m ikut      | DEV n=39 win=41% PF=0.79 avg=-0.164% | HOLD n=44 win=55% PF=0.94 avg=-0.049%
+CPI  candle1=5m tahan=240m ikut  +SL | DEV n=39 win=21% PF=0.67 avg=-0.181% | HOLD n=44 win=34% PF=1.09 avg=0.039%
+CPI  candle1=5m tahan=240m lawan     | DEV n=39 win=51% PF=0.89 avg=-0.076% | HOLD n=44 win=45% PF=0.77 avg=-0.191%
+CPI  candle1=5m tahan=240m lawan +SL | DEV n=39 win=18% PF=0.69 avg=-0.101% | HOLD n=44 win=18% PF=1.07 avg=0.023%
+CPI  candle1=15m tahan= 30m ikut      | DEV n=39 win=41% PF=1.12 avg=0.029% | HOLD n=44 win=43% PF=0.63 avg=-0.097%
+CPI  candle1=15m tahan= 30m ikut  +SL | DEV n=39 win=38% PF=1.17 avg=0.039% | HOLD n=44 win=41% PF=0.67 avg=-0.074%
+CPI  candle1=15m tahan= 30m lawan     | DEV n=39 win=28% PF=0.33 avg=-0.269% | HOLD n=44 win=36% PF=0.51 avg=-0.143%
+CPI  candle1=15m tahan= 30m lawan +SL | DEV n=39 win=10% PF=0.16 avg=-0.235% | HOLD n=44 win=27% PF=0.47 avg=-0.114%
+CPI  candle1=15m tahan= 60m ikut      | DEV n=39 win=41% PF=0.72 avg=-0.089% | HOLD n=44 win=41% PF=0.67 avg=-0.135%
+CPI  candle1=15m tahan= 60m ikut  +SL | DEV n=39 win=36% PF=0.68 avg=-0.105% | HOLD n=44 win=34% PF=0.72 avg=-0.093%
+CPI  candle1=15m tahan= 60m lawan     | DEV n=39 win=38% PF=0.57 avg=-0.151% | HOLD n=44 win=41% PF=0.73 avg=-0.105%
+CPI  candle1=15m tahan= 60m lawan +SL | DEV n=39 win=15% PF=0.24 avg=-0.219% | HOLD n=44 win=30% PF=0.91 avg=-0.021%
+CPI  candle1=15m tahan=120m ikut      | DEV n=39 win=31% PF=0.30 avg=-0.606% | HOLD n=44 win=50% PF=0.85 avg=-0.077%
+CPI  candle1=15m tahan=120m ikut  +SL | DEV n=39 win=23% PF=0.36 avg=-0.408% | HOLD n=44 win=39% PF=0.93 avg=-0.025%
+CPI  candle1=15m tahan=120m lawan     | DEV n=39 win=54% PF=2.03 avg=0.366% | HOLD n=44 win=43% PF=0.72 avg=-0.163%
+CPI  candle1=15m tahan=120m lawan +SL | DEV n=39 win=18% PF=0.65 avg=-0.118% | HOLD n=44 win=27% PF=0.95 avg=-0.013%
+CPI  candle1=15m tahan=240m ikut      | DEV n=39 win=38% PF=0.49 avg=-0.506% | HOLD n=44 win=55% PF=0.87 avg=-0.095%
+CPI  candle1=15m tahan=240m ikut  +SL | DEV n=39 win=26% PF=0.37 avg=-0.480% | HOLD n=44 win=41% PF=1.24 avg=0.107%
+CPI  candle1=15m tahan=240m lawan     | DEV n=39 win=56% PF=1.45 avg=0.266% | HOLD n=44 win=45% PF=0.82 avg=-0.145%
+CPI  candle1=15m tahan=240m lawan +SL | DEV n=39 win=18% PF=1.10 avg=0.035% | HOLD n=44 win=20% PF=1.02 avg=0.005%
+PPI  candle1=5m tahan= 30m ikut      | DEV n=38 win=39% PF=0.50 avg=-0.124% | HOLD n=44 win=34% PF=0.34 avg=-0.161%
+PPI  candle1=5m tahan= 30m ikut  +SL | DEV n=38 win=29% PF=0.41 avg=-0.142% | HOLD n=44 win=34% PF=0.32 avg=-0.173%
+PPI  candle1=5m tahan= 30m lawan     | DEV n=38 win=37% PF=0.54 avg=-0.116% | HOLD n=44 win=41% PF=0.58 avg=-0.079%
+PPI  candle1=5m tahan= 30m lawan +SL | DEV n=38 win=21% PF=0.34 avg=-0.157% | HOLD n=44 win=25% PF=0.43 avg=-0.095%
+PPI  candle1=5m tahan= 60m ikut      | DEV n=38 win=39% PF=0.47 avg=-0.230% | HOLD n=44 win=48% PF=0.48 avg=-0.117%
+PPI  candle1=5m tahan= 60m ikut  +SL | DEV n=38 win=29% PF=0.59 avg=-0.115% | HOLD n=44 win=39% PF=0.31 avg=-0.184%
+PPI  candle1=5m tahan= 60m lawan     | DEV n=38 win=47% PF=0.97 avg=-0.010% | HOLD n=44 win=27% PF=0.52 avg=-0.123%
+PPI  candle1=5m tahan= 60m lawan +SL | DEV n=38 win=21% PF=0.33 avg=-0.151% | HOLD n=44 win=11% PF=0.33 avg=-0.140%
+PPI  candle1=5m tahan=120m ikut      | DEV n=38 win=39% PF=0.60 avg=-0.196% | HOLD n=44 win=45% PF=0.94 avg=-0.022%
+PPI  candle1=5m tahan=120m ikut  +SL | DEV n=38 win=13% PF=0.32 avg=-0.260% | HOLD n=44 win=30% PF=0.55 avg=-0.150%
+PPI  candle1=5m tahan=120m lawan     | DEV n=38 win=47% PF=0.89 avg=-0.044% | HOLD n=44 win=48% PF=0.54 avg=-0.218%
+PPI  candle1=5m tahan=120m lawan +SL | DEV n=38 win=11% PF=0.25 avg=-0.174% | HOLD n=44 win=14% PF=0.47 avg=-0.123%
+PPI  candle1=5m tahan=240m ikut      | DEV n=38 win=45% PF=0.96 avg=-0.024% | HOLD n=44 win=61% PF=1.72 avg=0.283%
+PPI  candle1=5m tahan=240m ikut  +SL | DEV n=38 win=16% PF=0.85 avg=-0.056% | HOLD n=44 win=27% PF=0.80 avg=-0.073%
+PPI  candle1=5m tahan=240m lawan     | DEV n=38 win=50% PF=0.71 avg=-0.216% | HOLD n=44 win=30% PF=0.37 avg=-0.523%
+PPI  candle1=5m tahan=240m lawan +SL | DEV n=38 win=13% PF=0.50 avg=-0.122% | HOLD n=44 win=11% PF=0.74 avg=-0.061%
+PPI  candle1=15m tahan= 30m ikut      | DEV n=38 win=39% PF=0.31 avg=-0.168% | HOLD n=44 win=36% PF=0.51 avg=-0.088%
+PPI  candle1=15m tahan= 30m ikut  +SL | DEV n=38 win=34% PF=0.31 avg=-0.156% | HOLD n=44 win=32% PF=0.45 avg=-0.107%
+PPI  candle1=15m tahan= 30m lawan     | DEV n=38 win=37% PF=0.65 avg=-0.072% | HOLD n=44 win=27% PF=0.34 avg=-0.152%
+PPI  candle1=15m tahan= 30m lawan +SL | DEV n=38 win=24% PF=0.28 avg=-0.131% | HOLD n=44 win=20% PF=0.16 avg=-0.179%
+PPI  candle1=15m tahan= 60m ikut      | DEV n=38 win=37% PF=0.66 avg=-0.130% | HOLD n=44 win=48% PF=0.88 avg=-0.031%
+PPI  candle1=15m tahan= 60m ikut  +SL | DEV n=38 win=26% PF=0.56 avg=-0.147% | HOLD n=44 win=41% PF=0.68 avg=-0.084%
+PPI  candle1=15m tahan= 60m lawan     | DEV n=38 win=45% PF=0.70 avg=-0.110% | HOLD n=44 win=34% PF=0.43 avg=-0.209%
+PPI  candle1=15m tahan= 60m lawan +SL | DEV n=38 win=18% PF=0.37 avg=-0.150% | HOLD n=44 win=18% PF=0.24 avg=-0.217%
+PPI  candle1=15m tahan=120m ikut      | DEV n=38 win=34% PF=0.41 avg=-0.354% | HOLD n=44 win=55% PF=1.11 avg=0.037%
+PPI  candle1=15m tahan=120m ikut  +SL | DEV n=38 win=21% PF=0.28 avg=-0.350% | HOLD n=44 win=36% PF=0.85 avg=-0.041%
+PPI  candle1=15m tahan=120m lawan     | DEV n=38 win=53% PF=1.34 avg=0.114% | HOLD n=44 win=34% PF=0.46 avg=-0.277%
+PPI  candle1=15m tahan=120m lawan +SL | DEV n=38 win=13% PF=0.30 avg=-0.187% | HOLD n=44 win=16% PF=0.38 avg=-0.193%
+PPI  candle1=15m tahan=240m ikut      | DEV n=38 win=45% PF=1.03 avg=0.015% | HOLD n=44 win=55% PF=1.38 avg=0.177%
+PPI  candle1=15m tahan=240m ikut  +SL | DEV n=38 win=24% PF=0.73 avg=-0.131% | HOLD n=44 win=34% PF=1.21 avg=0.067%
+PPI  candle1=15m tahan=240m lawan     | DEV n=38 win=53% PF=0.64 avg=-0.255% | HOLD n=44 win=34% PF=0.48 avg=-0.417%
+PPI  candle1=15m tahan=240m lawan +SL | DEV n=38 win=11% PF=0.20 avg=-0.218% | HOLD n=44 win=11% PF=0.39 avg=-0.213%
+NFP  candle1=5m tahan= 30m ikut      | DEV n=39 win=49% PF=0.62 avg=-0.141% | HOLD n=45 win=33% PF=0.40 avg=-0.165%
+NFP  candle1=5m tahan= 30m ikut  +SL | DEV n=39 win=46% PF=0.99 avg=-0.003% | HOLD n=45 win=33% PF=0.41 avg=-0.157%
+NFP  candle1=5m tahan= 30m lawan     | DEV n=39 win=36% PF=0.73 avg=-0.099% | HOLD n=45 win=38% PF=0.67 avg=-0.075%
+NFP  candle1=5m tahan= 30m lawan +SL | DEV n=39 win=26% PF=0.96 avg=-0.009% | HOLD n=45 win=20% PF=0.38 avg=-0.124%
+NFP  candle1=5m tahan= 60m ikut      | DEV n=39 win=41% PF=0.67 avg=-0.136% | HOLD n=45 win=36% PF=0.47 avg=-0.203%
+NFP  candle1=5m tahan= 60m ikut  +SL | DEV n=39 win=33% PF=0.81 avg=-0.057% | HOLD n=45 win=27% PF=0.40 avg=-0.209%
+NFP  candle1=5m tahan= 60m lawan     | DEV n=39 win=44% PF=0.73 avg=-0.104% | HOLD n=45 win=56% PF=0.86 avg=-0.037%
+NFP  candle1=5m tahan= 60m lawan +SL | DEV n=39 win=21% PF=0.76 avg=-0.056% | HOLD n=45 win=22% PF=0.40 avg=-0.133%
+NFP  candle1=5m tahan=120m ikut      | DEV n=39 win=38% PF=0.56 avg=-0.286% | HOLD n=45 win=42% PF=0.67 avg=-0.158%
+NFP  candle1=5m tahan=120m ikut  +SL | DEV n=39 win=26% PF=0.96 avg=-0.012% | HOLD n=45 win=18% PF=0.45 avg=-0.244%
+NFP  candle1=5m tahan=120m lawan     | DEV n=39 win=54% PF=1.10 avg=0.046% | HOLD n=45 win=42% PF=0.82 avg=-0.082%
+NFP  candle1=5m tahan=120m lawan +SL | DEV n=39 win=21% PF=0.91 avg=-0.023% | HOLD n=45 win=11% PF=0.31 avg=-0.182%
+NFP  candle1=5m tahan=240m ikut      | DEV n=39 win=41% PF=0.68 avg=-0.240% | HOLD n=45 win=38% PF=0.61 avg=-0.305%
+NFP  candle1=5m tahan=240m ikut  +SL | DEV n=39 win=26% PF=1.17 avg=0.059% | HOLD n=45 win=16% PF=0.33 avg=-0.315%
+NFP  candle1=5m tahan=240m lawan     | DEV n=39 win=44% PF=1.00 avg=0.000% | HOLD n=45 win=47% PF=1.11 avg=0.065%
+NFP  candle1=5m tahan=240m lawan +SL | DEV n=39 win=15% PF=0.94 avg=-0.015% | HOLD n=45 win=7% PF=0.26 avg=-0.211%
+NFP  candle1=15m tahan= 30m ikut      | DEV n=39 win=46% PF=0.76 avg=-0.042% | HOLD n=45 win=40% PF=0.48 avg=-0.119%
+NFP  candle1=15m tahan= 30m ikut  +SL | DEV n=39 win=44% PF=0.64 avg=-0.063% | HOLD n=45 win=33% PF=0.50 avg=-0.111%
+NFP  candle1=15m tahan= 30m lawan     | DEV n=39 win=23% PF=0.29 avg=-0.198% | HOLD n=45 win=33% PF=0.48 avg=-0.121%
+NFP  candle1=15m tahan= 30m lawan +SL | DEV n=39 win=21% PF=0.34 avg=-0.145% | HOLD n=45 win=24% PF=0.45 avg=-0.126%
+NFP  candle1=15m tahan= 60m ikut      | DEV n=39 win=46% PF=0.48 avg=-0.185% | HOLD n=45 win=44% PF=0.60 avg=-0.139%
+NFP  candle1=15m tahan= 60m ikut  +SL | DEV n=39 win=36% PF=0.37 avg=-0.194% | HOLD n=45 win=33% PF=0.41 avg=-0.195%
+NFP  candle1=15m tahan= 60m lawan     | DEV n=39 win=38% PF=0.81 avg=-0.055% | HOLD n=45 win=42% PF=0.70 avg=-0.101%
+NFP  candle1=15m tahan= 60m lawan +SL | DEV n=39 win=18% PF=0.59 avg=-0.096% | HOLD n=45 win=27% PF=0.67 avg=-0.085%
+NFP  candle1=15m tahan=120m ikut      | DEV n=39 win=38% PF=0.69 avg=-0.160% | HOLD n=45 win=49% PF=0.70 avg=-0.153%
+NFP  candle1=15m tahan=120m ikut  +SL | DEV n=39 win=31% PF=0.95 avg=-0.016% | HOLD n=45 win=31% PF=0.56 avg=-0.176%
+NFP  candle1=15m tahan=120m lawan     | DEV n=39 win=49% PF=0.83 avg=-0.080% | HOLD n=45 win=42% PF=0.82 avg=-0.087%
+NFP  candle1=15m tahan=120m lawan +SL | DEV n=39 win=10% PF=0.25 avg=-0.194% | HOLD n=45 win=13% PF=0.53 avg=-0.145%
+NFP  candle1=15m tahan=240m ikut      | DEV n=39 win=46% PF=0.52 avg=-0.342% | HOLD n=45 win=47% PF=0.88 avg=-0.084%
+NFP  candle1=15m tahan=240m ikut  +SL | DEV n=39 win=31% PF=0.80 avg=-0.074% | HOLD n=45 win=24% PF=0.45 avg=-0.255%
+NFP  candle1=15m tahan=240m lawan     | DEV n=39 win=44% PF=1.21 avg=0.102% | HOLD n=45 win=51% PF=0.78 avg=-0.156%
+NFP  candle1=15m tahan=240m lawan +SL | DEV n=39 win=8% PF=0.63 avg=-0.124% | HOLD n=45 win=11% PF=0.57 avg=-0.136%
+FOMC candle1=5m tahan= 30m ikut      | DEV n=26 win=46% PF=0.55 avg=-0.209% | HOLD n=30 win=40% PF=0.41 avg=-0.197%
+FOMC candle1=5m tahan= 30m ikut  +SL | DEV n=26 win=42% PF=0.58 avg=-0.185% | HOLD n=30 win=37% PF=0.44 avg=-0.173%
+FOMC candle1=5m tahan= 30m lawan     | DEV n=26 win=38% PF=0.92 avg=-0.031% | HOLD n=30 win=43% PF=0.82 avg=-0.043%
+FOMC candle1=5m tahan= 30m lawan +SL | DEV n=26 win=27% PF=0.78 avg=-0.069% | HOLD n=30 win=17% PF=0.34 avg=-0.169%
+FOMC candle1=5m tahan= 60m ikut      | DEV n=26 win=35% PF=0.59 avg=-0.370% | HOLD n=30 win=40% PF=0.61 avg=-0.180%
+FOMC candle1=5m tahan= 60m ikut  +SL | DEV n=26 win=31% PF=0.65 avg=-0.258% | HOLD n=30 win=30% PF=0.55 avg=-0.188%
+FOMC candle1=5m tahan= 60m lawan     | DEV n=26 win=50% PF=1.20 avg=0.130% | HOLD n=30 win=37% PF=0.86 avg=-0.060%
+FOMC candle1=5m tahan= 60m lawan +SL | DEV n=26 win=19% PF=0.87 avg=-0.050% | HOLD n=30 win=7% PF=0.15 avg=-0.253%
+FOMC candle1=5m tahan=120m ikut      | DEV n=26 win=42% PF=0.75 avg=-0.262% | HOLD n=30 win=53% PF=0.67 avg=-0.250%
+FOMC candle1=5m tahan=120m ikut  +SL | DEV n=26 win=35% PF=0.79 avg=-0.170% | HOLD n=30 win=37% PF=0.79 avg=-0.104%
+FOMC candle1=5m tahan=120m lawan     | DEV n=26 win=58% PF=1.03 avg=0.022% | HOLD n=30 win=47% PF=1.01 avg=0.010%
+FOMC candle1=5m tahan=120m lawan +SL | DEV n=26 win=19% PF=0.62 avg=-0.150% | HOLD n=30 win=10% PF=0.18 avg=-0.249%
+FOMC candle1=5m tahan=240m ikut      | DEV n=26 win=50% PF=0.56 avg=-0.595% | HOLD n=30 win=47% PF=1.05 avg=0.032%
+FOMC candle1=5m tahan=240m ikut  +SL | DEV n=26 win=38% PF=0.88 avg=-0.093% | HOLD n=30 win=23% PF=0.76 avg=-0.137%
+FOMC candle1=5m tahan=240m lawan     | DEV n=26 win=50% PF=1.40 avg=0.355% | HOLD n=30 win=40% PF=0.69 avg=-0.272%
+FOMC candle1=5m tahan=240m lawan +SL | DEV n=26 win=15% PF=0.77 avg=-0.105% | HOLD n=30 win=7% PF=0.11 avg=-0.275%
+FOMC candle1=15m tahan= 30m ikut      | DEV n=26 win=50% PF=0.53 avg=-0.316% | HOLD n=30 win=43% PF=0.85 avg=-0.034%
+FOMC candle1=15m tahan= 30m ikut  +SL | DEV n=26 win=50% PF=0.60 avg=-0.236% | HOLD n=30 win=37% PF=0.53 avg=-0.149%
+FOMC candle1=15m tahan= 30m lawan     | DEV n=26 win=46% PF=1.16 avg=0.076% | HOLD n=30 win=30% PF=0.40 avg=-0.206%
+FOMC candle1=15m tahan= 30m lawan +SL | DEV n=26 win=23% PF=1.44 avg=0.155% | HOLD n=30 win=23% PF=0.31 avg=-0.205%
+FOMC candle1=15m tahan= 60m ikut      | DEV n=26 win=42% PF=0.85 avg=-0.102% | HOLD n=30 win=50% PF=2.12 avg=0.259%
+FOMC candle1=15m tahan= 60m ikut  +SL | DEV n=26 win=38% PF=0.82 avg=-0.124% | HOLD n=30 win=37% PF=1.26 avg=0.082%
+FOMC candle1=15m tahan= 60m lawan     | DEV n=26 win=42% PF=0.80 avg=-0.138% | HOLD n=30 win=30% PF=0.20 avg=-0.499%
+FOMC candle1=15m tahan= 60m lawan +SL | DEV n=26 win=15% PF=0.92 avg=-0.033% | HOLD n=30 win=17% PF=0.21 avg=-0.271%
+FOMC candle1=15m tahan=120m ikut      | DEV n=26 win=62% PF=1.06 avg=0.045% | HOLD n=30 win=63% PF=2.13 avg=0.429%
+FOMC candle1=15m tahan=120m ikut  +SL | DEV n=26 win=54% PF=1.05 avg=0.034% | HOLD n=30 win=37% PF=1.48 avg=0.194%
+FOMC candle1=15m tahan=120m lawan     | DEV n=26 win=35% PF=0.69 avg=-0.285% | HOLD n=30 win=37% PF=0.30 avg=-0.669%
+FOMC candle1=15m tahan=120m lawan +SL | DEV n=26 win=15% PF=0.58 avg=-0.178% | HOLD n=30 win=17% PF=0.30 avg=-0.292%
+FOMC candle1=15m tahan=240m ikut      | DEV n=26 win=54% PF=1.23 avg=0.198% | HOLD n=30 win=70% PF=3.94 avg=0.828%
+FOMC candle1=15m tahan=240m ikut  +SL | DEV n=26 win=50% PF=1.53 avg=0.360% | HOLD n=30 win=33% PF=1.49 avg=0.216%
+FOMC candle1=15m tahan=240m lawan     | DEV n=26 win=38% PF=0.63 avg=-0.438% | HOLD n=30 win=27% PF=0.17 avg=-1.068%
+FOMC candle1=15m tahan=240m lawan +SL | DEV n=26 win=8% PF=0.76 avg=-0.117% | HOLD n=30 win=10% PF=0.18 avg=-0.363%
+
+--- LOLOS (rata2 net > +0,05%/trade di DEV DAN HOLD): 2/160 ---
+FOMC candle1=15m tahan=240m ikut      | DEV n=26 win=54% PF=1.23 avg=0.198% | HOLD n=30 win=70% PF=3.94 avg=0.828%
+FOMC candle1=15m tahan=240m ikut  +SL | DEV n=26 win=50% PF=1.53 avg=0.360% | HOLD n=30 win=33% PF=1.49 avg=0.216%

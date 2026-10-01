@@ -228,6 +228,17 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
   akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
 
+## 📰 Ninja di jam NEWS (riset 1 Okt 2026) — `backtest/ninja/newsWindowStudy.js`
+
+- 305 event 2019-2026 (CPI 83, PPI 82, NFP 84, FOMC 56), data 5m spot. Gerak 15 menit pertama vs jam sama
+  minggu lalu: CPI x3,5 (0,89%), FOMC x3,2 (0,72%), NFP x1,7, PPI x1,3 -- volatilitas BENERAN naik.
+- Strategi tanpa nebak angka: ikut/lawan arah candle pertama (5m/15m), tahan 30-240 mnt, +/- SL, fee 0,12% RT.
+  **Lolos (rata2 net > +0,05% di DEV <2023 DAN HOLD >=2023): 2/160** -- dua2nya FOMC "ikut arah candle 15m
+  pertama, tahan 4 jam" (tanpa SL: DEV PF 1,23 n=26 | HOLD PF 3,94 n=30). n kecil + 160 kombinasi -> bisa
+  kebetulan; FOMC juga UDAH dimanfaatin Ranger Fed Dovish Grid. CPI bolak-balik (gak konsisten antar era),
+  satu-satunya pola stabil: FADE candle 5m pertama CPI = rugi konsisten (PF 0,29-0,39) -> jangan lawan
+  gerakan pertama CPI. Kesimpulan: news = volatil, tapi ARAH-nya gak bisa ditebak dari harga doang.
+
 ## 🌐 Ranger 4H MULTI-KOIN (riset 1 Okt 2026, BELUM LIVE) — `backtest/rangerMultiCoin.js`
 
 - **Latar**: Olan minta "sehari minimal 1 momen culik". Timeframe rendah terbukti kalah fee (bagian atas),

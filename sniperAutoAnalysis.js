@@ -511,7 +511,11 @@ async function main() {
             assetLabel: assetCfg.label, assetEmoji: assetCfg.emoji,
             entryPrice: nyopetEntry, sl: nyopetShortSig.sl, patternType: nyopetShortSig.patternType,
             gapTop: nyopetShortSig.gapTop, gapBottom: nyopetShortSig.gapBottom,
-            badge: '🎯 SNIPER · Kaela (4H)', convergenceNote,
+            // (1 Okt 2026, Olan: "Kok masih ada sniper 4h? Bukannya ini ranger ya?") -- scan ini pakai
+            // PATTERN_PARAMS_4H (parameter Ranger), jadi label Ranger lebih jujur. Sejak 27 Sep yang
+            // lewat sini cuma EMAS (BTC 4H udah dieksekusi rangerBtcDualExec.js) -- short Emas tetap
+            // info-only permanen (SYSTEM-MAP: backtest short Emas jelek, MEXC gak ada akun demo).
+            badge: '🏹 RANGER · Kaela (4H)', convergenceNote,
           });
           console.log(msg + '\n');
           // 🐛 FIX 19 Sep 2026 -- sama gap, jalur short Sniper-4H (numpang parameter Nyopet) juga

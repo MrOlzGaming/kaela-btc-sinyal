@@ -1,0 +1,15 @@
+{
+  "seeded": true,
+  "nextNo": 1,
+  "layers": {},
+  "totals": {
+    "liqCount": 0,
+    "liqLossUsd": 0,
+    "closedCount": 0,
+    "closedPnlUsd": 0
+  },
+  "apiFail": {
+    "count": 0,
+    "alerted": false
+  }
+}

@@ -37,6 +37,10 @@ mr_output=$(timeout -k 5 45 node ninjaMrSignal.js 2>&1)
 # (ninja-mr-exec-journal.json). Saklar: ninja-mr-exec-config.json.
 mrx_output=$(timeout -k 5 55 node ninjaMrTrader.js 2>&1)
 [ -n "$mrx_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $mrx_output" >> "$LOG_FILE"
+# Pengawas likuidasi DCA Tangga Leverage di BingX STANDARD FUTURES (1 Okt 2026) -- MURNI BACA, gak pernah
+# kirim order; posisi kena likuidasi -> DM WA Olan + saran leverage pengganti (lihat stdFuturesLadderMonitor.js).
+std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)
+[ -n "$std_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $std_output" >> "$LOG_FILE"
 
 # Cek rekap saldo-kurang harian TIAP SIKLUS (murah -- cuma baca state lokal, kirim WA 0x atau 1x
 # aja per hari begitu tanggalnya kepotong, lihat ninjaBalanceRecap.js).

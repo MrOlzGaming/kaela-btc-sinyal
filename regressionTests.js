@@ -1172,6 +1172,41 @@ async function main() {
     assert.ok(/\n\d+ lolos, 0 gagal/.test(out), `selftest ada yang gagal:\n${out.split('\n').filter((l) => /GAGAL|lolos,/.test(l)).join('\n')}`);
   });
 
+  // ============ stdFuturesLadderMonitor.js -- pengawas likuidasi DCA Tangga (Standard Futures, 1 Okt 2026) ============
+  await test('stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9', async () => {
+    const M = require('./stdFuturesLadderMonitor');
+    assert.strictEqual(M.nextLeverage(3), 5); assert.strictEqual(M.nextLeverage(7), 9); assert.strictEqual(M.nextLeverage(9), 9);
+    const pos = (time, entry, lev) => ({ symbol: 'BTC-USDT', positionSide: 'LONG', time, entryPrice: String(entry), leverage: String(lev), initialMargin: '3', currentPrice: String(entry) });
+    let live = [pos(1000, 84000, 3), pos(2000, 85000, 3)];
+    let orders = [];
+    let failNext = false;
+    const sent = [];
+    const st = M.freshState();
+    const mon = M.createMonitor({
+      fetchPositions: async () => { if (failNext) throw new Error('network'); return live; },
+      fetchOrders: async () => orders,
+      notify: async (m) => { sent.push(m); },
+      now: () => 5000, log: () => {},
+    }, st);
+    await mon.runCycle();
+    assert.strictEqual(sent.length, 0, 'seed awal gak boleh kirim WA');
+    assert.strictEqual(Object.keys(st.layers).length, 2);
+    failNext = true; await mon.runCycle(); failNext = false;
+    assert.strictEqual(sent.length, 0, 'API gagal gak boleh dianggap posisi hilang');
+    // #1 kena likuidasi (tutup di bawah estimasi liq ~56.420), #2 ditutup manual untung
+    live = [];
+    orders = [
+      { positionSide: 'LONG', time: 1500, leverage: '3', margin: '3', closePrice: '56300', avgPrice: '56300' },
+      { positionSide: 'LONG', time: 2500, leverage: '3', margin: '3', closePrice: '90000', avgPrice: '90000' },
+    ];
+    await mon.runCycle();
+    assert.strictEqual(sent.length, 1, `harusnya cuma 1 WA (likuidasi), dapet ${sent.length}`);
+    assert.ok(/LIKUIDASI/.test(sent[0]) && /x5/.test(sent[0]) && /#1/.test(sent[0]), sent[0]);
+    assert.strictEqual(st.totals.liqCount, 1); assert.strictEqual(st.totals.liqLossUsd, 3); assert.strictEqual(st.totals.closedCount, 1);
+    await mon.runCycle();
+    assert.strictEqual(sent.length, 1, 'likuidasi yang sama gak boleh dilaporin ulang');
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

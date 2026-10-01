@@ -11,16 +11,16 @@
     "tail": "  OK   ninjaMrSignal: TANPA FEE dikunci -- net = gerak harga murni, $ = net% x nilai posisi, pesan \"Fee: $0\"\n  OK   ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)\n  OK   ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua\n\n98 lolos, 0 gagal (dari 2026-09-30 test run)\n"
   },
   "bingxApi": {
-    "lastRunDateKey": "2026-10-01",
-    "at": "2026-09-30T16:46:03.251Z",
+    "lastRunDateKey": "2026-10-02",
+    "at": "2026-10-01T16:01:01.624Z",
     "ok": false,
-    "executorHash": "0a91bb3bac94a30a",
+    "executorHash": "ceeb8ee9a755e882",
     "verifiedAt": null,
     "okCount": null,
     "total": null,
     "failedNames": null,
     "aborted": false,
     "exitCode": 4,
-    "tail": "DEMO VST -- harga 84325.4, saldo 98590.8348 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\nqty kehitung 0 -- stepSize/minNotional aneh: {\n  stepSize: 0.0001,\n  quantityPrecision: 4,\n  pricePrecision: 1,\n  minNotionalUsd: 2\n}\n"
+    "tail": "DEMO VST -- harga 84143.2, saldo 98590.8348 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\nqty kehitung 0 -- stepSize/minNotional aneh: {\n  stepSize: 0.0001,\n  quantityPrecision: 4,\n  pricePrecision: 1,\n  minNotionalUsd: 2\n}\n"
   }
 }

@@ -1,0 +1,64 @@
+Data perp BTCUSDT: 2579 hari 2019-09-10 -> 2026-10-01, funding 7734 catatan
+
+=== UJI 1: 1000 hari dari bottom 2022 ===
+Tangga x3->x5->x7->x9 (ide Olan)  setor $3051 -> panen $16394 (+437%) | rugi likuidasi $51 ({"x3":17}) | funding dibayar $2465 | hidup 1000/1017
+  harga mulai $16273 | setoran terakhir 2025-08-16 $117330 | panen 2025-09-15 $115301
+x3 tanpa ganti                    setor $3000 -> panen $16086 (+436%) | rugi likuidasi $51 ({"x3":17}) | funding dibayar $2432 | hidup 983/1000
+x1 (tanpa leverage)               setor $3000 -> panen $7405 (+147%) | rugi likuidasi $0 ({}) | funding dibayar $816 | hidup 1000/1000
+
+=== UJI 2: bottom 2022 -> halving (517 hari) ===
+Tangga x3->x5->x7->x9 (ide Olan)  setor $1551 -> panen $7416 (+378%) | rugi likuidasi $0 ({}) | funding dibayar $872 | hidup 517/517
+  harga mulai $16273 | setoran terakhir 2024-04-20 $64897 | panen 2024-05-20 $71467
+x3 tanpa ganti                    setor $1551 -> panen $7416 (+378%) | rugi likuidasi $0 ({}) | funding dibayar $872 | hidup 517/517
+x1 (tanpa leverage)               setor $1551 -> panen $3506 (+126%) | rugi likuidasi $0 ({}) | funding dibayar $291 | hidup 517/517
+
+=== UJI 4: mulai pas window BEAR halving berakhir (deteksi bottom otomatis, tanpa ngintip) ===
+mulai 2022-10-26 $20068 1000 hari                  tangga x3->x9  setor $3051 -> panen 2025-08-20 $17304 (+467%) | rugi liq $51 {"x3":17} | funding $2524
+mulai 2022-10-26 $20068 1000 hari                  x1             setor $3000 -> panen 2025-08-20 $7708 (+157%) | rugi liq $0 {} | funding $836
+mulai 2022-10-26 $20068 sampai halving (543 hari)  tangga x3->x9  setor $1629 -> panen 2024-05-20 $8073 (+396%) | rugi liq $0 {} | funding $955
+mulai 2022-10-26 $20068 sampai halving (543 hari)  x1             setor $1629 -> panen 2024-05-20 $3777 (+132%) | rugi liq $0 {} | funding $318
+window bear sekarang: true -- transisi ke BULL berikutnya ~2026-10-20
+
+=== UJI 3: mulai BUKAN di bottom -- tiap kuartal, investasi 1000 hari, panen +30 hari ===
+2019-10-01 $  8285 -> panen 2022-07-26 $ 21241 | tangga: setor $14403 panen $5773 (-60%), rugi liq $11403 {"x3":987,"x5":967,"x7":670,"x9":1177} | x1: -73%
+2020-01-01 $  7189 -> panen 2022-10-26 $ 20758 | tangga: setor $13020 panen $4618 (-65%), rugi liq $10020 {"x3":895,"x5":875,"x7":578,"x9":992} | x1: -66%
+2020-04-01 $  6407 -> panen 2023-01-25 $ 23061 | tangga: setor $15837 panen $12946 (-18%), rugi liq $12837 {"x3":831,"x5":804,"x7":784,"x9":1860} | x1: -55%
+2020-07-01 $  9139 -> panen 2023-04-26 $ 28396 | tangga: setor $15018 panen $18491 (+23%), rugi liq $12018 {"x3":740,"x5":713,"x7":693,"x9":1860} | x1: -32%
+2020-10-01 $ 10773 -> panen 2023-07-27 $ 29210 | tangga: setor $14190 panen $17068 (+20%), rugi liq $11190 {"x3":648,"x5":621,"x7":601,"x9":1860} | x1: -22%
+2021-01-01 $ 28948 -> panen 2023-10-27 $ 33893 | tangga: setor $12969 panen $20003 (+54%), rugi liq $9969 {"x3":556,"x5":529,"x7":509,"x9":1729} | x1: +2%
+2021-04-01 $ 58811 -> panen 2024-01-25 $ 39953 | tangga: setor $10605 panen $21796 (+106%), rugi liq $7605 {"x3":466,"x5":439,"x7":419,"x9":1211} | x1: +23%
+2021-07-01 $ 35031 -> panen 2024-04-25 $ 64479 | tangga: setor $8673 panen $35793 (+313%), rugi liq $5673 {"x3":375,"x5":348,"x7":328,"x9":840} | x1: +94%
+2021-10-01 $ 43799 -> panen 2024-07-26 $ 67883 | tangga: setor $7113 panen $30595 (+330%), rugi liq $4113 {"x3":283,"x5":256,"x7":236,"x9":596} | x1: +98%
+2022-01-01 $ 46211 -> panen 2024-10-26 $ 67072 | tangga: setor $5106 panen $23094 (+352%), rugi liq $2106 {"x3":208,"x5":164,"x7":144,"x9":186} | x1: +94%
+2022-04-01 $ 45506 -> panen 2025-01-24 $104808 | tangga: setor $3906 panen $30288 (+675%), rugi liq $906 {"x3":118,"x5":74,"x7":54,"x9":56} | x1: +198%
+2022-07-01 $ 19923 -> panen 2025-04-25 $ 94592 | tangga: setor $3129 panen $17518 (+460%), rugi liq $129 {"x3":43} | x1: +148%
+2022-10-01 $ 19412 -> panen 2025-07-26 $117889 | tangga: setor $3051 panen $19251 (+531%), rugi liq $51 {"x3":17} | x1: +178%
+2023-01-01 $ 16538 -> panen 2025-10-26 $114498 | tangga: setor $3051 panen $14306 (+369%), rugi liq $51 {"x3":17} | x1: +124%
+2023-04-01 $ 28455 -> panen 2026-01-24 $ 89181 | tangga: setor $3150 panen $7215 (+129%), rugi liq $150 {"x3":50} | x1: +45%
+2023-07-01 $ 30460 -> panen 2026-04-25 $ 77585 | tangga: setor $4908 panen $6606 (+35%), rugi liq $1908 {"x3":429,"x5":207} | x1: +12%
+2023-10-01 $ 26951 -> panen 2026-07-26 $ 65375 | tangga: setor $5178 panen $3277 (-37%), rugi liq $2187 {"x3":461,"x5":220,"x7":48} | x1: -17%
+
+=== UJI 3: mulai BUKAN di bottom -- tiap kuartal, investasi 500 hari, panen +30 hari ===
+2019-10-01 $  8285 -> panen 2021-03-13 $ 61267 | tangga: setor $2979 panen $55525 (+1764%), rugi liq $1479 {"x3":164,"x5":164,"x7":164,"x9":1} | x1: +431%
+2020-01-01 $  7189 -> panen 2021-06-13 $ 38994 | tangga: setor $2151 panen $13373 (+522%), rugi liq $1068 {"x3":211,"x5":73,"x7":72} | x1: +112%
+2020-04-01 $  6407 -> panen 2021-09-12 $ 46047 | tangga: setor $2625 panen $7932 (+202%), rugi liq $1125 {"x3":144,"x5":144,"x7":29,"x9":58} | x1: +111%
+2020-07-01 $  9139 -> panen 2021-12-12 $ 50057 | tangga: setor $2625 panen $5801 (+121%), rugi liq $1212 {"x3":173,"x5":144,"x7":29,"x9":58} | x1: +63%
+2020-10-01 $ 10773 -> panen 2022-03-14 $ 39654 | tangga: setor $3321 panen $2340 (-30%), rugi liq $1821 {"x3":269,"x5":189,"x7":62,"x9":87} | x1: -10%
+2021-01-01 $ 28948 -> panen 2022-06-14 $ 22123 | tangga: setor $5313 panen $3 (-100%), rugi liq $5298 {"x3":495,"x5":438,"x7":264,"x9":569} | x1: -60%
+2021-04-01 $ 58811 -> panen 2022-09-12 $ 22386 | tangga: setor $6633 panen $3399 (-49%), rugi liq $5133 {"x3":439,"x5":419,"x7":358,"x9":495} | x1: -47%
+2021-07-01 $ 35031 -> panen 2022-12-12 $ 17200 | tangga: setor $7173 panen $2126 (-70%), rugi liq $5673 {"x3":375,"x5":348,"x7":328,"x9":840} | x1: -50%
+2021-10-01 $ 43799 -> panen 2023-03-14 $ 24683 | tangga: setor $5613 panen $5773 (+3%), rugi liq $4113 {"x3":283,"x5":256,"x7":236,"x9":596} | x1: -12%
+2022-01-01 $ 46211 -> panen 2023-06-14 $ 25116 | tangga: setor $3555 panen $4428 (+25%), rugi liq $2055 {"x3":191,"x5":164,"x7":144,"x9":186} | x1: -2%
+2022-04-01 $ 45506 -> panen 2023-09-12 $ 25826 | tangga: setor $2355 panen $3136 (+33%), rugi liq $855 {"x3":101,"x5":74,"x7":54,"x9":56} | x1: +5%
+2022-07-01 $ 19923 -> panen 2023-12-12 $ 41515 | tangga: setor $1578 panen $5127 (+225%), rugi liq $78 {"x3":26} | x1: +71%
+2022-10-01 $ 19412 -> panen 2024-03-13 $ 73128 | tangga: setor $1500 panen $8971 (+498%), rugi liq $0 {} | x1: +166%
+2023-01-01 $ 16538 -> panen 2024-06-13 $ 66787 | tangga: setor $1500 panen $5606 (+274%), rugi liq $0 {} | x1: +91%
+2023-04-01 $ 28455 -> panen 2024-09-11 $ 57306 | tangga: setor $1551 panen $3129 (+102%), rugi liq $51 {"x3":17} | x1: +35%
+2023-07-01 $ 30460 -> panen 2024-12-11 $101115 | tangga: setor $1551 panen $6687 (+331%), rugi liq $51 {"x3":17} | x1: +112%
+2023-10-01 $ 26951 -> panen 2025-03-13 $ 81085 | tangga: setor $1551 panen $3034 (+96%), rugi liq $51 {"x3":17} | x1: +32%
+2024-01-01 $ 42314 -> panen 2025-06-13 $106027 | tangga: setor $1551 panen $3767 (+143%), rugi liq $51 {"x3":17} | x1: +47%
+2024-04-01 $ 71363 -> panen 2025-09-12 $115978 | tangga: setor $1512 panen $3345 (+121%), rugi liq $12 {"x3":4} | x1: +40%
+2024-07-01 $ 62766 -> panen 2025-12-12 $ 90230 | tangga: setor $1500 panen $1387 (-8%), rugi liq $99 {"x3":33} | x1: -2%
+2024-10-01 $ 63309 -> panen 2026-03-14 $ 71174 | tangga: setor $3357 panen $2129 (-37%), rugi liq $1857 {"x3":412,"x5":207} | x1: -29%
+2025-01-01 $ 93549 -> panen 2026-06-14 $ 65702 | tangga: setor $3159 panen $1355 (-57%), rugi liq $1809 {"x3":375,"x5":192,"x7":36} | x1: -31%
+2025-04-01 $ 82518 -> panen 2026-09-12 $ 77243 | tangga: setor $3024 panen $2855 (-6%), rugi liq $1524 {"x3":300,"x5":180,"x7":28} | x1: -12%

@@ -228,6 +228,28 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
   akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
 
+## 🪜 DCA Futures "Tangga Leverage" $3/hari (ide Olan, riset 1 Okt 2026, BELUM LIVE) — `backtest/dcaLeverLadder.js`
+
+- **Aturan**: tiap hari 1 posisi long BTC perp ISOLATED margin $3 x3; yang kelikuidasi diganti besoknya
+  $3 baru dgn leverage naik x5 -> x7 -> x9 (maks), rugi likuidasi tetap dicatat; selesai investasi tunggu
+  30 hari lalu panen. Fee taker 0,05%/sisi + FUNDING ASLI Binance (rata2 ~7%/thn notional sejak 2022).
+- **Dari bottom 2022 (21 Nov, tau belakangan)**: 1000 hari setor $3.051 -> $16.394 (+437%), rugi liq $51
+  (17x x3) | sampai halving setor $1.551 -> $7.416 (+378%), 0 liq. Pembanding x1: +147% / +126%.
+  (Tangga ~ sama dgn x3 tanpa ganti di sini, karena hampir gak ada likuidasi kalau mulai di bottom.)
+- **Deteksi bottom TANPA ngintip = akhir window bear halving** (`halvingBearWindow.js`, 2022-10-26, ~4 mgg
+  sebelum bottom asli, harga $20.068): 1000 hari +467% (liq $51) | sampai halving +396% (0 liq). n=1 siklus
+  (data perp baru dari 2019-09) -> BUKAN bukti statistik, cuma 1 contoh.
+- **⚠️ Mulai di waktu SALAH = hancur** (start tiap kuartal): mulai 2019-10/2020-01 (1000 hari, nabrak bear
+  2022) -60%/-65% dgn rugi likuidasi $10-11rb (tangga x9 terus kena berulang); 500 hari mulai 2021-01 -100%,
+  2021-07 -70%, 2025-01 -57%. Tangga leverage MEMPERBESAR rugi di bear market (pengganti x9 dilikuidasi lagi
+  dan lagi). Timing start = SEGALANYA.
+- **Kendala eksekusi BingX**: perp NGEGABUNG semua long 1 simbol jadi 1 posisi (1 leverage, 1 harga
+  likuidasi) -> "tiap posisi independen" WAJIB disimulasi software (layer virtual + tutup reduce-only per
+  layer pas sentuh harga likuidasi virtualnya), bukan isolated asli. Min qty BTC 0,0001 (~$8,4 di $84rb)
+  -> $3 x3 = $9 notional cukup selama BTC < ~$90rb; di atas itu perlu setoran 2 hari sekali / margin naik.
+  Standard Futures BingX: API cuma BACA (gak bisa order).
+- **Calon start nyata berikutnya**: window bear sekarang berakhir **2026-10-20** -> sampai halving ~Apr 2028.
+
 ## 📰 Ninja di jam NEWS (riset 1 Okt 2026) — `backtest/ninja/newsWindowStudy.js`
 
 - 305 event 2019-2026 (CPI 83, PPI 82, NFP 84, FOMC 56), data 5m spot. Gerak 15 menit pertama vs jam sama

@@ -1,29 +1,38 @@
 {
-  "lastProcessedCloseTime": 1790829899999,
+  "lastProcessedCloseTime": 1790830799999,
   "pending": null,
-  "position": {
-    "id": "NMR-1790826299999",
-    "tf": "5m",
-    "dir": "short",
-    "entryPrice": 83714.2,
-    "entryTime": 1790826300000,
-    "slDistPct": 0.35017251453113485,
-    "sl": 84007.34411915962,
-    "sizing": {
-      "exposure": 1.5,
-      "nilaiPosisi": 150,
-      "leverage": 50,
-      "margin": 3,
-      "marginPct": 3,
-      "warning": null
+  "position": null,
+  "closed": [
+    {
+      "id": "NMR-1790826299999",
+      "tf": "5m",
+      "dir": "short",
+      "entryPrice": 83714.2,
+      "entryTime": 1790826300000,
+      "slDistPct": 0.35017251453113485,
+      "sl": 84007.34411915962,
+      "sizing": {
+        "exposure": 1.5,
+        "nilaiPosisi": 150,
+        "leverage": 50,
+        "margin": 3,
+        "marginPct": 3,
+        "warning": null
+      },
+      "exitPrice": 84007.34411915962,
+      "exitTime": 1790830199999,
+      "reason": "SL",
+      "grossPct": -0.35017251453113585,
+      "netPct": -0.35017251453113585,
+      "netUsd": -0.5252587717967038,
+      "holdMin": 65
     }
-  },
-  "closed": [],
+  ],
   "stats": {
-    "n": 0,
+    "n": 1,
     "wins": 0,
-    "losses": 0,
-    "sumNetPct": 0,
-    "sumNetUsd": 0
+    "losses": 1,
+    "sumNetPct": -0.35017251453113585,
+    "sumNetUsd": -0.5252587717967038
   }
 }

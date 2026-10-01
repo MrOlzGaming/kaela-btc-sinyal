@@ -1,5 +1,5 @@
 {
-  "lastProcessedHeight": 969457,
+  "lastProcessedHeight": 969460,
   "lastDigest": {
     "dateKey": "2026-10-01",
     "totalBtc": 2030.86368846,
@@ -2367,6 +2367,91 @@
       },
       {
         "totalBtc": 553.95999118,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 348.82532847,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 614.28160546,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 902.37208612,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 881.79372168,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1402.4312004,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 870.47872185,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1083.72689003,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 334.972139,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 338.96025875,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 829.13916749,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 529.8919248,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 3582.25174015,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 338.89087786,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1231.27745565,
+        "direction": "TO_EXCHANGE",
+        "exchange": "Kraken"
+      },
+      {
+        "totalBtc": 2483.79245033,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2483.79498333,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 574.28009818,
         "direction": null,
         "exchange": null
       }

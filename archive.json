@@ -2873,5 +2873,15 @@
     "type": "anomaly",
     "date": "2026-10-02T22:45:56.340Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 3 indikator lagi gak biasa dibanding histori kita sendiri:\n\n📊 Credit Spread (High-Yield): 3.24 -- JAUH DI ATAS kebiasaan historis kita (median 2.70, z-score 7.3)\n🏦 COT Smart Money Emas (% net-long): 53.79 -- JAUH DI BAWAH kebiasaan historis kita (median 54.94, z-score -3.1)\n🔗 Korelasi Emas-DXY (90 hari): -0.47 -- JAUH DI ATAS kebiasaan historis kita (median -0.53, z-score 3.6)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n📊 Credit Spread (High-Yield)\nIni ngukur seberapa \"takut\" investor pegang obligasi perusahaan yang agak berisiko. MELEBAR jauh dari biasanya -- investor lagi was-was banget soal ekonomi. Histori-nya, pas ini kejadian, BTC & saham SERING ikut kejual bareng (dianggap sama-sama \"aset berisiko\").\n\n🏦 COT Smart Money Emas (% net-long)\n\"COT\" (Commitments of Traders) itu laporan RESMI mingguan dari regulator pasar futures Amerika (CFTC), isinya nunjukin institusi besar (bank, hedge fund) lagi ngurangin posisi LONG di futures Emas, lebih dari biasanya. Emas & BTC kadang gerak mirip -- ini konteks sentimen makro besar, bukan sinyal langsung ke BTC.\n\n🔗 Korelasi Emas-DXY (90 hari)\nEmas biasanya gerak KEBALIKAN dari Dollar Index (DXY) -- dolar naik, emas turun (dan sebaliknya). Hubungan kebalikan ini lagi LEBIH KUAT dari biasanya sekarang."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-10-02T23:15:53.530Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-10-03\nHarga sekarang: $84,490.71 (📈 +1.0% dari kemarin)\n⏳ Halving berikutnya: 559 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.58 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.98 (Normal)\n\n💵 DXY: 101.9 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.45 (normal)\n🛢️ Minyak WTI: $96.2/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 13.1 poin) -- top 67% long vs global 54% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-10-02T23:15:53.530Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-10-03\nHarga sekarang: $4,152.21/oz (≈Rp74.616.988) atau $133.5/gram (≈Rp2.398.992) (📉 -0.3% dari kemarin)\n💵 DXY: 101.9 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.88% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.45 (normal)\n🛢️ Minyak WTI: $96.2/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

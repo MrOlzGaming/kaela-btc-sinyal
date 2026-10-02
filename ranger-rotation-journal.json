@@ -3,9 +3,16 @@
   "lastScanCloseTime": 1790971199999,
   "closedCount": 0,
   "stats": {
-    "wins": 0,
-    "losses": 0,
-    "totalPnlUsd": 0
+    "demo": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0
+    },
+    "real": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0
+    }
   },
   "dailySignalSeq": {
     "dayKey": null,

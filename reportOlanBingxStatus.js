@@ -25,17 +25,31 @@ const secrets = require('./secrets');
 
 const MASTER_NOMOR = '6281299303888';
 
-function normalizePositions(rawPositions) {
-  return (rawPositions || []).map((p) => ({
-    symbol: p.symbol,
-    direction: p.positionSide === 'SHORT' ? 'sell' : 'buy',
-    entryPrice: Number(p.avgPrice) || 0,
-    markPrice: Number(p.markPrice) || 0,
-    leverage: Number(p.leverage) || 0,
-    marginUsd: Number(p.margin) || 0,
-    notionalUsd: Math.abs(Number(p.positionValue) || 0),
-    unrealizedPnlUsd: Number(p.unrealizedProfit) || 0,
-  }));
+// (3 Okt 2026) Akun BingX demo SEKARANG dipakai 2 sistem: Ninja (BTC-USDT) + Ranger Rotasi 8 koin (rangerRotation.js).
+// Tiap posisi ditandai `system` ('rotasi' | 'ninja') -- dicocokin ke floating ranger-rotation-journal.json (simbol+arah);
+// posisi rotasi sekalian bawa SL/TP/signalId/pola/waktu buka biar kartu dashboard lengkap. Cuma buat DEMO (rotasi gak
+// punya leg real) -- real tetap 'ninja'.
+function rotationFloating() {
+  try { return require('./rangerRotation').loadJournal().floating || null; } catch { return null; }
+}
+function normalizePositions(rawPositions, isDemo) {
+  const rot = isDemo ? rotationFloating() : null;
+  return (rawPositions || []).map((p) => {
+    const direction = p.positionSide === 'SHORT' ? 'sell' : 'buy';
+    const isRot = !!(rot && p.symbol === `${rot.coin}-USDT` && direction === rot.direction);
+    return {
+      symbol: p.symbol,
+      direction,
+      entryPrice: Number(p.avgPrice) || 0,
+      markPrice: Number(p.markPrice) || 0,
+      leverage: Number(p.leverage) || 0,
+      marginUsd: Number(p.margin) || 0,
+      notionalUsd: Math.abs(Number(p.positionValue) || 0),
+      unrealizedPnlUsd: Number(p.unrealizedProfit) || 0,
+      system: isRot ? 'rotasi' : 'ninja',
+      ...(isRot ? { sl: rot.sl, tp: rot.partialTp, signalId: rot.signalId, patternType: rot.patternType, openedAt: rot.openedAt, partialDone: !!rot.partialDone, realizedPnlUsd: rot.realizedPnlUsd || 0 } : {}),
+    };
+  });
 }
 
 async function main() {
@@ -58,11 +72,11 @@ async function main() {
   ]);
 
   if (demoBalance != null) {
-    await kaela.recordBingxBalance(MASTER_NOMOR, 'demo', demoBalance, demoPositionsRaw != null ? normalizePositions(demoPositionsRaw) : undefined);
+    await kaela.recordBingxBalance(MASTER_NOMOR, 'demo', demoBalance, demoPositionsRaw != null ? normalizePositions(demoPositionsRaw, true) : undefined);
     console.log(`[ReportOlanBingxStatus] OK demo -- $${demoBalance.toFixed(2)} VST, ${demoPositionsRaw ? demoPositionsRaw.length : '?'} posisi.`);
   }
   if (realBalance != null) {
-    await kaela.recordBingxBalance(MASTER_NOMOR, 'real', realBalance, realPositionsRaw != null ? normalizePositions(realPositionsRaw) : undefined);
+    await kaela.recordBingxBalance(MASTER_NOMOR, 'real', realBalance, realPositionsRaw != null ? normalizePositions(realPositionsRaw, false) : undefined);
     console.log(`[ReportOlanBingxStatus] OK real -- $${realBalance.toFixed(2)} USDT, ${realPositionsRaw ? realPositionsRaw.length : '?'} posisi.`);
   }
 }

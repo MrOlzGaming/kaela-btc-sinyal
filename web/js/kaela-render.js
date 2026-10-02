@@ -401,6 +401,15 @@
   const RANGER_ASSETS_WEB = {
     btc: { symbol: 'BTCUSDC', label: 'BTCUSDC', emoji: '🟧' },
     xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
+    // Ranger ROTASI 8 koin (3 Okt 2026, rangerRotation.js -- BingX demo) -- harga hidup kartu dipoll dari Binance spot
+    // pakai `symbol` ini (sniper-orders-widget.js). Tanpa entri ini kartu SOL dkk jatuh ke fallback BTC (label+harga salah).
+    sol: { symbol: 'SOLUSDT', label: 'SOLUSDT', emoji: '🟣' },
+    doge: { symbol: 'DOGEUSDT', label: 'DOGEUSDT', emoji: '🐕' },
+    trx: { symbol: 'TRXUSDT', label: 'TRXUSDT', emoji: '🔺' },
+    inj: { symbol: 'INJUSDT', label: 'INJUSDT', emoji: '💉' },
+    eth: { symbol: 'ETHUSDT', label: 'ETHUSDT', emoji: '💠' },
+    xlm: { symbol: 'XLMUSDT', label: 'XLMUSDT', emoji: '🚀' },
+    bnb: { symbol: 'BNBUSDT', label: 'BNBUSDT', emoji: '🟨' },
   };
   const MODE_LABEL_WEB = { fvg: 'FVG', sniper: 'Pola Chart' };
 

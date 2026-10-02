@@ -1,9 +1,10 @@
 {
   "enabled": true,
-  "allowReal": true,
+  "allowReal": false,
   "entryEnabled": true,
   "tf": "15m",
   "k": 4,
   "_note": "Eksekutor NINJA Mean Reversion di BingX (ninjaMrTrader.js) -- DEMO (VST) selalu jalan selama enabled:true, REAL cuma tambahan kalau allowReal:true DAN saldo cukup (kalau gak cukup: real skip diam-diam, Wibowo Hedgefund dapet notif DEMO pengganti -- logika SAMA Ninja lama). entryEnabled:false = gak buka posisi baru tapi posisi yang ada tetap dikelola sampai tutup. Akun BingX SAMA dengan Ninja lama (BINGX_API_KEY di secrets.js). Strategi: 15M, tren EMA200, entry Bollinger 2,5 lawan tren, SL 4x ATR14, exit balik ke SMA20 (limit maker). Fee: commission exchange kalau kebaca, fallback 0,05%/sisi.",
-  "_status": "30 Sep 2026 -- AKTIF atas permintaan Olan (\"pake yang terbaik dan jalankan demo, jalankan real\"). Endpoint LIMIT/STOP BingX belum diverifikasi empiris dari VPS -- pantau channel-breakout.log siklus pertama."
+  "_status": "30 Sep 2026 -- AKTIF atas permintaan Olan (\"pake yang terbaik dan jalankan demo, jalankan real\"). Endpoint LIMIT/STOP BingX belum diverifikasi empiris dari VPS -- pantau channel-breakout.log siklus pertama.",
+  "_noteReal": "3 Okt 2026 (Kaela, mandat Olan \"tentukan sendiri yang the best\"): allowReal DIMATIIN -- koreksi model exit (BACKTEST-REGISTRY \"Koreksi model exit Ninja MR\") nunjukin ekspektasi ~IMPAS setelah fee (2019-24 -8%, 2024-26 +3%). Demo tetap jalan ngumpulin bukti nyata; nyalain real lagi kalau demo terbukti untung setelah fee (>= 30 trade)."
 }

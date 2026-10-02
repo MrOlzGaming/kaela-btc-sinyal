@@ -1,28 +1,25 @@
-// rangerRotation.js (3 Okt 2026) -- RANGER ROTASI 8 KOIN (DEMO BingX VST). Olan: "lanjut bangun ranger rotasi 8 koin
-// di demo".
+// rangerRotation.js -- RANGER ROTASI 8 KOIN. v1 (3 Okt 2026, demo BingX) -> v2 (3 Okt 2026): pindah ke BYBIT, leg DEMO +
+// REAL, alt LONG doang (short cuma BTC).
 //
-// Dasar riset (BACKTEST-REGISTRY.md bagian "Ranger 4H MULTI-KOIN" + rangerMultiCoinPortfolio.js): Ranger BTC sering
-// NGANGGUR nunggu sinyal. Kalau boleh "pindah" ke koin lain yang lagi ada sinyal -- TETAP 1 posisi pakai modal penuh
-// (BUKAN dibagi2) -- hasil 2023-2026 (koin dipilih pakai data <2023): 8 koin 1 posisi $100 -> $377 (CAGR ~42%/thn) vs
-// BTC doang $190 (~19%/thn), drawdown tertutup sama ~18%. Bagi modal ke banyak posisi barengan JUSTRU lebih jelek.
+// Kenapa ada: Ranger BTC sering NGANGGUR nunggu sinyal. Rotasi = 1 posisi modal penuh (BUKAN dibagi2) yang pindah ke koin
+// yang lagi ada sinyal Ranger 4H. Riset: BACKTEST-REGISTRY.md "Ranger 4H MULTI-KOIN" + "Upgrade Ranger" +
+// rangerMultiCoinPortfolio.js (koin dipilih pakai <2023, dinilai >=2023: 8 koin ~42%/thn vs BTC doang ~19%, DD sama).
 //
-// Koin (urutan = PRIORITAS kalau 2+ koin sinyal di candle yang sama): BTC, SOL, DOGE, TRX, INJ, ETH, XLM, BNB -- 8 koin
-// dengan PF minimum PALING tinggi di DUA era (<2023 & >=2023, semua >= 1,56; rangerMultiCoin.js). FIL (PF <2023
-// tertinggi) SENGAJA dibuang -- gagal parah >=2023 (-62%).
+// Arahan Olan (3 Okt 2026) yang ditanam di sini:
+//   - "usahakan trading otomatis nanti ga saling tumpang tindih.. biar ga overtrade.. makanya aku sediakan 7 exchange" ->
+//     rotasi punya EXCHANGE SENDIRI (Bybit), gak numpang akun Ninja (BingX) / Sniper+Ranger BTC (Binance) / Emas (MEXC).
+//   - "utamakan cari peluang long.. untuk short cuma BTC aja boleh otomatis" -> `shortCoins` (default ['BTC']): koin lain
+//     LONG doang. Cek backtest (8 koin, >=2023): aturan ini $100->$1.837 DD 17,9% vs dua arah $1.486 DD 27% (lebih bagus).
+//   - "siapkan yang real" -> leg REAL (Bybit real) jalan BARENG demo kalau `allowReal` & saldo cukup; kebijakan WA SAMA
+//     sistem lain: demo SELALU ke Sniper Club, Wibowo dapet REAL kalau real kebuka, kalau nggak dapet DEMO (wibowoRoute
+//     dikunci pas entry).
 //
-// Logika = Ranger live PERSIS (rangerAutoTrader.js + rangerBtcDualExec.js):
-//   - deteksi di candle 4H closed (data publik Binance spot <COIN>USDT, 1820 candle): detectPatternSignal(PATTERN_PARAMS_4H)
-//     + detectFvgSignal(slBuffer 0,5%, tren SMA1200-4H); window bear/bull = siklus halving BTC (isBtcBearWindow) buat
-//     SEMUA koin; long cuma di window bull, short cuma di window bear (allowShort cuma pas bear).
-//   - sizing hitungExposure(modal = saldo VST x 1/5, SL sinyal, arah) -- short otomatis separuh exposure.
-//   - exit polling tiap siklus executor (15 mnt): SL -> tutup; 2R -> tutup 50% & SL ke titik masuk; lewat partial ->
-//     trailing SMA60 4H patah ATAU kena breakeven -> tutup; window ganti -> tutup paksa.
-//   - Filter DXY Ranger BTC SENGAJA GAK dipakai (config dxyFilter:false) -- backtest yang ngebuktiin rotasi gak pakai DXY.
-// Akun: BingX DEMO (BINGX_API_KEY, aset VST) -- akun SAMA dengan Ninja (BTC-USDT). Gak pernah nutup posisi yang bukan
-// punya modul ini: kalau di simbol itu udah ada posisi lain (Ninja/manual), koin itu DILEWATI siklus ini.
-// Ninja balik-arahnya aman: checkAndClearStrayPosition (ninjaTrader.js) liat order pembuka ber-tag kaela- -> 'unsafe'
-// -> Ninja cuma skip, GAK nutup posisi rotasi.
-// WA: kebijakan demo (Sniper Club SELALU + Wibowo dapet demo karena gak ada leg real), label "🏹 RANGER ROTASI".
+// Koin (urutan = PRIORITAS): BTC SOL DOGE TRX INJ ETH XLM BNB (PF minimum 2 era tertinggi; FIL dibuang krn gagal >=2023).
+// Logika = Ranger live PERSIS: detectPatternSignal(PATTERN_PARAMS_4H) + detectFvgSignal(SMA1200-4H) di candle 4H closed (data
+// publik Binance spot); window halving BTC buat semua koin; sizing hitungExposure(saldo leg x 1/5) per leg; exit polling tiap
+// 15 mnt: SL / 2R tutup 50% + SL ke entry / trailing SMA60-4H / tutup paksa pas window ganti. Tanpa DXY (sesuai backtest).
+// Exchange Bybit DIVERIFIKASI empiris 3 Okt 2026 (demo DOGEUSDT buka-tutup beneran): one-way mode (positionIdx 0), demo
+// GAK dukung isolated ("Demo trading are not supported" -> jalan cross, aman krn akun demo khusus rotasi).
 
 const fs = require('fs');
 const path = require('path');
@@ -32,168 +29,207 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
 const { isBtcBearWindow } = require('./halvingBearWindow');
 const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
+// Diambil LANGSUNG dari Ranger live (bukan salinan) biar gak pernah beda kalau Ranger diubah. main() file itu ter-guard.
+const { PATTERN_PARAMS_4H, FVG_TREND_SMA_LEN_4H } = require('./rangerAutoTrader');
 
 const CONFIG_PATH = path.join(__dirname, 'ranger-rotation-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'ranger-rotation-journal.json');
 const DEFAULT_COINS = ['BTC', 'SOL', 'DOGE', 'TRX', 'INJ', 'ETH', 'XLM', 'BNB'];
-// Diambil LANGSUNG dari Ranger live (bukan salinan) biar gak pernah beda kalau Ranger diubah. main() file itu ter-guard.
-const { PATTERN_PARAMS_4H, FVG_TREND_SMA_LEN_4H } = require('./rangerAutoTrader');
 const TRAIL_SMA_LEN_4H = 60;
 const PARTIAL_RR = 2;
 const MODAL_ACTIVE_FRACTION = 1 / 5;
 const CANDLES_NEEDED_4H = 1560 + 260;
 const SYSTEM = { emoji: '🏹', name: 'RANGER ROTASI' };
+const MASTER_NOMOR = '6281299303888';
+const MODES = ['demo', 'real'];
 
 function loadConfig() {
-  const def = { enabled: false, coins: DEFAULT_COINS, dxyFilter: false };
+  const def = { enabled: false, coins: DEFAULT_COINS, dxyFilter: false, exchange: 'bybit', allowReal: true, shortCoins: ['BTC'] };
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
-function freshJournal() { return { floating: null, lastScanCloseTime: null, closedCount: 0, stats: { wins: 0, losses: 0, totalPnlUsd: 0 }, dailySignalSeq: { dayKey: null, count: 0 }, history: [] }; }
+const freshStats = () => ({ wins: 0, losses: 0, totalPnlUsd: 0 });
+function freshJournal() { return { floating: null, lastScanCloseTime: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() }, dailySignalSeq: { dayKey: null, count: 0 }, history: [] }; }
 function loadJournal() {
-  try { const j = JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8')); return { ...freshJournal(), ...j, stats: { ...freshJournal().stats, ...(j.stats || {}) } }; } catch { return freshJournal(); }
+  try {
+    const j = JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8'));
+    const out = { ...freshJournal(), ...j };
+    const legacy = j.stats && j.stats.wins !== undefined ? j.stats : null; // v1 = stats rata (demo doang)
+    out.stats = { demo: { ...freshStats(), ...(legacy || (j.stats && j.stats.demo) || {}) }, real: { ...freshStats(), ...((j.stats && j.stats.real) || {}) } };
+    if (out.floating && !out.floating.legs) out.floating = null; // posisi v1 (BingX) gak dilanjutin di v2 -- v1 belum pernah buka posisi
+    return out;
+  } catch { return freshJournal(); }
 }
 function saveJournal(j) { fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null, 2)); }
 
-const bingxSymbol = (coin) => `${coin}-USDT`;
 const sideOf = (dir) => (dir === 'buy' ? 'LONG' : 'SHORT');
 
-// Sinyal Ranger untuk 1 koin di candle closed terakhir -> {direction, sl, patternType} | null (aturan window SAMA live)
-function rangerSignal(candles4h, bearNow) {
+// Sinyal Ranger 1 koin di candle closed terakhir -> {direction, sl, patternType} | null.
+// `shortAllowed` = koin ini boleh short (Olan: cuma BTC) -- kalau false, window bear = gak ada entry sama sekali buat koin itu.
+function rangerSignal(candles4h, bearNow, shortAllowed = true) {
   const i = candles4h.length - 1;
-  const params = bearNow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
+  const canShort = bearNow && shortAllowed;
+  const params = canShort ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
   const cands = [];
   const p = detectPatternSignal(candles4h, i, params); if (p) cands.push(p);
-  const f = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: bearNow }); if (f) cands.push(f);
-  return cands.find((s) => (s.direction === 'buy' && !bearNow) || (s.direction === 'sell' && bearNow)) || null;
+  const f = detectFvgSignal(candles4h, i, { slBufferPct: PATTERN_PARAMS_4H.slBufferPct, trendSmaLen: FVG_TREND_SMA_LEN_4H, allowShort: canShort }); if (f) cands.push(f);
+  return cands.find((s) => (s.direction === 'buy' && !bearNow) || (s.direction === 'sell' && canShort)) || null;
 }
 
-// deps: { cfg, journal, exec, fetchCandles(coin, n), fetchPrice(coin), notify(msg), now(), isBear(date), dxyWeak(), log, fmt:{open,partial,closed,untracked} }
+// deps: { cfg, journal, legs:{demo:{exec,balance(),price(coin)}, real:{...}|null}, symbolOf(coin), fetchCandles(coin,n),
+//         notify:{sniperClub(msg), wibowo(msg)}, isBear(date), dxyWeak(), isCoinBusy(coin)?, signalFn?, fmt, kaelaJournal?, now, log }
 function createRotation(deps) {
-  const { cfg, journal: j, exec } = deps;
+  const { cfg, journal: j } = deps;
   const now = deps.now || (() => Date.now());
   const log = deps.log || ((m) => console.log(`[RangerRotasi] ${m}`));
   const coins = cfg.coins || DEFAULT_COINS;
-  const signalFn = deps.signalFn || rangerSignal; // bisa disuntik di selftest
+  const shortCoins = cfg.shortCoins || ['BTC'];
+  const signalFn = deps.signalFn || rangerSignal;
+  const sym = (coin) => deps.symbolOf(coin);
 
-  async function roundQty(coin, qty) {
-    const info = await exec.getSymbolInfo(bingxSymbol(coin));
+  async function roundQty(exec, coin, qty) {
+    const info = await exec.getSymbolInfo(sym(coin));
     return exec.roundToStepSize(qty, info.stepSize, info.quantityPrecision);
   }
+  // jumlah MILIK leg ini yang masih kebuka -- gak pernah nutup lebih dari ini
+  const ownQty = (L, pos) => Math.min(L.remainingQty != null ? L.remainingQty : L.qty, Math.abs(Number(pos.positionAmt)));
 
-  async function closeQty(f, qty, reason) {
-    const r = await exec.emergencyCloseMarket({ symbol: bingxSymbol(f.coin), direction: f.direction, quantity: qty });
-    const o = r && r.order ? r.order : r;
-    let px = o && Number(o.avgPrice);
-    if (!px) px = await deps.fetchPrice(f.coin).catch(() => null);
-    return px || null;
+  // Routing WA (SAMA rangerBtcDualExec.js): leg demo -> Sniper Club; Wibowo dapet leg yang cocok wibowoRoute.
+  async function announce(f, mode, msg) {
+    if (mode === 'demo') await deps.notify.sniperClub(msg);
+    if ((mode === 'real') === (f.wibowoRoute === 'real')) await deps.notify.wibowo(msg);
   }
 
-  // Jumlah koin MILIK modul ini yang masih kebuka -- JANGAN pernah nutup lebih dari ini (hedge mode BingX bisa
-  // ngegabung posisi searah dari modul lain di simbol yang sama, mis. Ninja di BTC-USDT).
-  const ownQty = (f, pos) => Math.min(f.remainingQty != null ? f.remainingQty : f.qty, Math.abs(Number(pos.positionAmt)));
+  async function closeLeg(f, mode, reason, exitPrice, closedQty, untracked) {
+    const L = f.legs[mode];
+    const legPnl = untracked || !exitPrice ? null : (f.direction === 'buy' ? exitPrice - L.entryPrice : L.entryPrice - exitPrice) * closedQty;
+    const total = legPnl === null ? null : (L.realizedPnlUsd || 0) + legPnl;
+    Object.assign(L, { closedAt: new Date(now()).toISOString(), exitPrice: exitPrice || null, pnlUsd: total, reason });
+    if (total !== null) { const s = j.stats[mode]; if (total >= 0) s.wins += 1; else s.losses += 1; s.totalPnlUsd += total; }
+    if (mode === 'real' && deps.kaelaJournal) deps.kaelaJournal.update(`${f.id}-real`, { status: 'closed', closedAt: L.closedAt, pnlUsd: total === null ? 0 : total });
+    await announce(f, mode, untracked ? deps.fmt.untracked(f, mode) : deps.fmt.closed(f, mode, reason, j.stats[mode]));
+    log(`TUTUP ${mode} ${f.coin} ${f.direction} (${reason}) pnl ${total === null ? '?' : total.toFixed(2)}`);
+  }
 
-  async function finish(f, reason, exitPrice, untracked, closedQty) {
-    const remainingQty = closedQty != null ? closedQty : (f.remainingQty != null ? f.remainingQty : f.qty);
-    const legPnl = untracked || !exitPrice ? null : (f.direction === 'buy' ? exitPrice - f.entryPrice : f.entryPrice - exitPrice) * remainingQty;
-    const total = legPnl === null ? null : (f.realizedPnlUsd || 0) + legPnl;
-    if (total !== null) { if (total >= 0) j.stats.wins += 1; else j.stats.losses += 1; j.stats.totalPnlUsd += total; }
-    j.closedCount += 1;
-    j.history.unshift({ id: f.id, coin: f.coin, direction: f.direction, patternType: f.patternType, entryPrice: f.entryPrice, exitPrice, pnlUsd: total, reason, openedAt: f.openedAt, closedAt: new Date(now()).toISOString() });
-    j.history = j.history.slice(0, 100);
-    j.floating = null;
-    await deps.notify(untracked ? deps.fmt.untracked(f) : deps.fmt.closed(f, exitPrice, total, reason, j.stats));
-    log(`TUTUP ${f.coin} ${f.direction} (${reason}) pnl ${total === null ? '?' : total.toFixed(2)}`);
+  async function marketClose(exec, f, qty) {
+    const r = await exec.emergencyCloseMarket({ symbol: sym(f.coin), direction: f.direction, quantity: qty });
+    const o = r && r.order ? r.order : r;
+    return (o && Number(o.avgPrice)) || null;
   }
 
   async function monitor() {
     const f = j.floating;
     if (!f) return;
-    const sym = bingxSymbol(f.coin);
-    const pos = await exec.getPositionBySide(sym, sideOf(f.direction)).catch(() => undefined);
-    if (pos === undefined) { log(`gagal cek posisi ${sym} -- coba siklus depan`); return; }
-    if (pos === null || Math.abs(Number(pos.positionAmt)) === 0) { await finish(f, 'OFFLINE_UNTRACKED', null, true); return; }
-    const live = await deps.fetchPrice(f.coin).catch(() => null);
-    if (!live) { log(`harga ${sym} gagal -- coba siklus depan`); return; }
+    const isLong = f.direction === 'buy';
     const bearNow = deps.isBear(new Date(now()));
-    const closeAll = async (reason) => { const q = ownQty(f, pos); const px = await closeQty(f, q, reason); await finish(f, reason, px, false, q); };
-    if ((f.direction === 'buy' && bearNow) || (f.direction === 'sell' && !bearNow)) { await closeAll('WINDOW_FLIP'); return; }
-    const L = f.direction === 'buy';
-    if (!f.partialDone) {
-      if (L ? live <= f.sl : live >= f.sl) { await closeAll('SL'); return; }
-      if (L ? live >= f.partialTp : live <= f.partialTp) {
-        const ownBefore = ownQty(f, pos); // dicatat SEBELUM order tutup (bug ketemu di selftest: dihitung sesudahnya = sisa salah)
-        const half = await roundQty(f.coin, ownBefore * 0.5);
-        if (half <= 0) { log(`${sym} setengah qty kekecilan buat step -- partial dilewati, tunggu trailing/SL`); f.partialDone = true; f.sl = f.entryPrice; return; }
-        const px = await closeQty(f, half, 'PARTIAL');
-        const exitPx = px || live;
-        f.realizedPnlUsd = (L ? exitPx - f.entryPrice : f.entryPrice - exitPx) * half;
-        f.remainingQty = await roundQty(f.coin, ownBefore - half);
-        f.partialDone = true; f.sl = f.entryPrice; f.partialAt = new Date(now()).toISOString();
-        await deps.notify(deps.fmt.partial(f));
-        log(`PARTIAL ${sym} @ ${exitPx} realized ${f.realizedPnlUsd.toFixed(2)}`);
+    const wrongSide = (isLong && bearNow) || (!isLong && !bearNow);
+    let trail; // dihitung lazy sekali per siklus
+    for (const mode of MODES) {
+      const L = f.legs[mode];
+      if (!L || L.closedAt) continue;
+      const venue = deps.legs[mode];
+      if (!venue) continue;
+      const exec = venue.exec;
+      const pos = await exec.getPositionBySide(sym(f.coin), sideOf(f.direction)).catch(() => undefined);
+      if (pos === undefined) { log(`${mode}: gagal cek posisi ${sym(f.coin)} -- coba siklus depan`); continue; }
+      if (pos === null || !(Math.abs(Number(pos.positionAmt)) > 0)) { await closeLeg(f, mode, 'OFFLINE_UNTRACKED', null, 0, true); continue; }
+      const live = await venue.price(f.coin).catch(() => null);
+      if (!live) { log(`${mode}: harga ${f.coin} gagal -- coba siklus depan`); continue; }
+      const closeAll = async (reason) => { const q = ownQty(L, pos); const px = (await marketClose(exec, f, q)) || live; await closeLeg(f, mode, reason, px, q); };
+      if (wrongSide) { await closeAll('WINDOW_FLIP'); continue; }
+      if (!L.partialDone) {
+        if (isLong ? live <= f.sl : live >= f.sl) { await closeAll('SL'); continue; }
+        if (isLong ? live >= f.partialTp : live <= f.partialTp) {
+          const ownBefore = ownQty(L, pos);
+          const half = await roundQty(exec, f.coin, ownBefore * 0.5);
+          if (half <= 0) { log(`${mode}: setengah qty kekecilan buat step -- partial dilewati, SL ke entry`); L.partialDone = true; L.sl = L.entryPrice; continue; }
+          const px = (await marketClose(exec, f, half)) || live;
+          L.realizedPnlUsd = (isLong ? px - L.entryPrice : L.entryPrice - px) * half;
+          L.remainingQty = await roundQty(exec, f.coin, ownBefore - half);
+          L.partialDone = true; L.sl = L.entryPrice; L.partialAt = new Date(now()).toISOString();
+          await announce(f, mode, deps.fmt.partial(f, mode));
+          log(`PARTIAL ${mode} ${f.coin} @ ${px} realized ${L.realizedPnlUsd.toFixed(2)}`);
+        }
+        continue;
       }
-      return;
+      if (isLong ? live <= L.sl : live >= L.sl) { await closeAll('SL_BREAKEVEN'); continue; }
+      if (trail === undefined) { const c = await deps.fetchCandles(f.coin, TRAIL_SMA_LEN_4H + 5).catch(() => []); trail = sma(c.map((x) => x.close), TRAIL_SMA_LEN_4H); }
+      if (trail !== null && (isLong ? live < trail : live > trail)) await closeAll('TRAIL');
     }
-    if (L ? live <= f.sl : live >= f.sl) { await closeAll('SL_BREAKEVEN'); return; }
-    const candles = await deps.fetchCandles(f.coin, TRAIL_SMA_LEN_4H + 5).catch(() => []);
-    const trail = sma(candles.map((c) => c.close), TRAIL_SMA_LEN_4H);
-    if (trail !== null && (L ? live < trail : live > trail)) await closeAll('TRAIL');
+    if (MODES.every((m) => !f.legs[m] || f.legs[m].closedAt)) {
+      j.closedCount += 1;
+      j.history.unshift({ id: f.id, signalId: f.signalId, coin: f.coin, direction: f.direction, patternType: f.patternType, openedAt: f.openedAt, wibowoRoute: f.wibowoRoute, legs: f.legs });
+      j.history = j.history.slice(0, 100);
+      j.floating = null;
+    }
+  }
+
+  async function openLeg(mode, coin, sig, live) {
+    const venue = deps.legs[mode];
+    const exec = venue.exec;
+    const s = sym(coin);
+    const any = await exec.getPositionRisk(s).catch(() => undefined);
+    if (any === undefined) throw new Error(`${mode}: gagal cek posisi ${s}`);
+    if (any && Math.abs(Number(any.positionAmt)) > 0) throw new Error(`${mode}: ${s} udah ada posisi lain (bukan rotasi) -- gak numpuk`);
+    const balance = await venue.balance().catch(() => 0);
+    const calc = hitungExposure({ modal: (balance || 0) * MODAL_ACTIVE_FRACTION, entry: live, stopLoss: sig.sl, direction: sig.direction });
+    if (!(calc.nilaiPosisi > 0)) { const e = new Error(`${mode}: saldo kurang (${(balance || 0).toFixed(2)})`); e.insufficient = true; throw e; }
+    await exec.setIsolatedMargin(s, calc.leverage).catch(() => {});
+    await exec.setLeverage(s, calc.leverage, sideOf(sig.direction)).catch(() => {});
+    const order = await exec.placeMarketEntry({ symbol: s, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice: live });
+    const qty = Number(order.executedQty);
+    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0 };
+  }
+
+  async function open(coin, sig) {
+    if (deps.isCoinBusy && (await deps.isCoinBusy(coin))) { log(`${coin} lagi dipakai modul lain -- lewati`); return false; }
+    const live = await deps.legs.demo.price(coin).catch(() => null);
+    if (!live) return false;
+    if (sig.direction === 'buy' ? sig.sl >= live : sig.sl <= live) { log(`${coin} SL udah kelewat harga live -- lewati`); return false; }
+    let demo;
+    try { demo = await openLeg('demo', coin, sig, live); }
+    catch (e) { log(`${coin} demo gak kebuka: ${e.message} -- lewati koin ini`); return false; }
+    let real = null;
+    if (cfg.allowReal && deps.legs.real) {
+      try { real = await openLeg('real', coin, sig, live); }
+      catch (e) { log(e.insufficient ? `${coin} real skip -- ${e.message}` : `${coin} real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`); }
+    }
+    const d = new Date(now());
+    if (!j.dailySignalSeq || j.dailySignalSeq.dayKey !== dayKeyOf(d)) j.dailySignalSeq = { dayKey: dayKeyOf(d), count: 0 };
+    const signalId = nextSignalId(j.dailySignalSeq.count, d); j.dailySignalSeq.count += 1;
+    const r = Math.abs(demo.entryPrice - sig.sl);
+    const f = {
+      id: `ranger-rotasi-${now()}`, signalId, coin, direction: sig.direction, patternType: sig.patternType, sl: sig.sl,
+      partialTp: sig.direction === 'buy' ? demo.entryPrice + r * PARTIAL_RR : demo.entryPrice - r * PARTIAL_RR,
+      openedAt: d.toISOString(), wibowoRoute: real ? 'real' : 'demo', exchange: cfg.exchange, legs: { demo, real },
+    };
+    j.floating = f;
+    if (real && deps.kaelaJournal) deps.kaelaJournal.record('real', { entryId: `${f.id}-real`, strategy: 'ranger-rotasi', asset: coin.toLowerCase(), direction: f.direction, entryPrice: real.entryPrice, sl: f.sl, tp: f.partialTp, leverage: real.leverage, marginUsd: real.margin, status: 'open', openedAt: f.openedAt, note: `ranger-rotasi ${f.patternType}`, exchange: cfg.exchange });
+    await announce(f, 'demo', deps.fmt.open(f, 'demo'));
+    if (real) await announce(f, 'real', deps.fmt.open(f, 'real'));
+    log(`BUKA ${coin} ${sig.direction} demo @ ${demo.entryPrice}${real ? ` + REAL @ ${real.entryPrice}` : ' (real skip)'} SL ${sig.sl} TP1 ${f.partialTp}`);
+    return true;
   }
 
   async function scan() {
     if (j.floating) return;
-    const btc = await deps.fetchCandles(coins[0], CANDLES_NEEDED_4H);
-    if (!btc.length) { log('candle kosong -- skip'); return; }
-    const clock = btc[btc.length - 1].closeTime;
-    if (j.lastScanCloseTime !== null && clock <= j.lastScanCloseTime) return; // candle 4H yang sama udah discan
+    const first = await deps.fetchCandles(coins[0], CANDLES_NEEDED_4H);
+    if (!first.length) { log('candle kosong -- skip'); return; }
+    const clock = first[first.length - 1].closeTime;
+    if (j.lastScanCloseTime !== null && clock <= j.lastScanCloseTime) return;
     j.lastScanCloseTime = clock;
-    if (now() - clock > 60 * 60e3) { log('candle 4H terakhir udah > 1 jam lalu (cron sempat mati?) -- jangan entry di harga basi'); return; }
+    if (now() - clock > 60 * 60e3) { log('candle 4H terakhir udah > 1 jam lalu -- gak entry di harga basi, tunggu candle berikutnya'); return; }
     if (cfg.dxyFilter && (await deps.dxyWeak().catch(() => null)) === false) { log('DXY kuat -- skip semua entry siklus ini'); return; }
     const bearNow = deps.isBear(new Date(now()));
     for (const coin of coins) {
-      const c = coin === coins[0] ? btc : await deps.fetchCandles(coin, CANDLES_NEEDED_4H).catch(() => []);
+      const c = coin === coins[0] ? first : await deps.fetchCandles(coin, CANDLES_NEEDED_4H).catch(() => []);
       if (c.length < 300) continue;
-      const sig = signalFn(c, bearNow, coin);
+      const sig = signalFn(c, bearNow, shortCoins.includes(coin), coin);
       if (!sig) continue;
+      if (sig.direction === 'sell' && !shortCoins.includes(coin)) continue; // pengaman ganda aturan Olan
       log(`sinyal ${coin} ${sig.patternType} ${sig.direction}`);
-      if (await open(coin, sig)) return; // 1 posisi doang
+      if (await open(coin, sig)) return;
     }
-    log('gak ada sinyal di 8 koin candle ini');
-  }
-
-  async function open(coin, sig) {
-    const sym = bingxSymbol(coin);
-    // Modul lain (Ninja MR BTC-USDT) punya order limit yg NUNGGU fill (belum jadi posisi) -> cek journal-nya juga,
-    // biar gak kebuka bareng searah lalu digabung hedge mode.
-    if (deps.isCoinBusy && (await deps.isCoinBusy(coin))) { log(`${sym} lagi dipakai modul lain (Ninja) -- lewati`); return false; }
-    const any = await exec.getPositionRisk(sym).catch(() => undefined);
-    if (any === undefined) { log(`${sym} gagal cek posisi -- lewati koin ini`); return false; }
-    if (any && Math.abs(Number(any.positionAmt)) > 0) { log(`${sym} udah ada posisi lain (Ninja/manual) -- lewati, gak numpuk`); return false; }
-    const live = await deps.fetchPrice(coin).catch(() => null);
-    if (!live) return false;
-    const risk = Math.abs(live - sig.sl);
-    if (!risk || (sig.direction === 'buy' ? sig.sl >= live : sig.sl <= live)) { log(`${sym} SL udah kelewat harga live -- lewati`); return false; }
-    const balance = await exec.getAccountBalance('VST').catch(() => 0);
-    const calc = hitungExposure({ modal: balance * MODAL_ACTIVE_FRACTION, entry: live, stopLoss: sig.sl, direction: sig.direction });
-    if (!(calc.nilaiPosisi > 0)) { log(`${sym} exposure 0 -- lewati`); return false; }
-    await exec.setIsolatedMargin(sym).catch(() => {});
-    await exec.setLeverage(sym, calc.leverage, sideOf(sig.direction)).catch(() => {});
-    let order;
-    try { order = await exec.placeMarketEntry({ symbol: sym, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice: live }); }
-    catch (e) { log(`${sym} gagal buka: ${e.message}`); return false; }
-    const entryPrice = Number(order.avgPrice) || live, qty = Number(order.executedQty);
-    const d = new Date(now());
-    if (!j.dailySignalSeq || j.dailySignalSeq.dayKey !== dayKeyOf(d)) j.dailySignalSeq = { dayKey: dayKeyOf(d), count: 0 };
-    const signalId = nextSignalId(j.dailySignalSeq.count, d); j.dailySignalSeq.count += 1;
-    const rEntry = Math.abs(entryPrice - sig.sl);
-    j.floating = {
-      id: `ranger-rotasi-${now()}`, signalId, coin, direction: sig.direction, patternType: sig.patternType, entryPrice, qty, remainingQty: qty, sl: sig.sl, originalSl: sig.sl,
-      partialTp: sig.direction === 'buy' ? entryPrice + rEntry * PARTIAL_RR : entryPrice - rEntry * PARTIAL_RR,
-      leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0, openedAt: d.toISOString(),
-    };
-    await deps.notify(deps.fmt.open(j.floating));
-    log(`BUKA ${sym} ${sig.direction} @ ${entryPrice} qty ${qty} SL ${sig.sl} TP1 ${j.floating.partialTp.toFixed(4)} lev ${calc.leverage}`);
-    return true;
+    log(`gak ada sinyal yang bisa dibuka di ${coins.length} koin candle ini`);
   }
 
   async function runCycle() { await monitor(); if (!j.floating) await scan(); }
@@ -214,31 +250,61 @@ async function fetchCandles4h(coin, count) {
   const t = Date.now();
   return all.filter((c) => c.closeTime <= t).slice(-count);
 }
-async function fetchBingxDemoPrice(coin) {
-  const r = await fetch(`https://open-api-vst.bingx.com/openApi/swap/v2/quote/price?symbol=${bingxSymbol(coin)}`);
-  const d = await r.json();
-  const p = Number(d && d.data && d.data.price);
-  if (!p) throw new Error(`harga ${coin} kosong`);
-  return p;
+
+// Profil exchange -- tiap profil nyiapin leg demo/real dgn kontrak exec yang SAMA (getPositionRisk/getPositionBySide/
+// getSymbolInfo/roundToStepSize/setIsolatedMargin/setLeverage/placeMarketEntry/emergencyCloseMarket).
+function buildVenues(exchange, secrets) {
+  if (exchange === 'bybit') {
+    const { createBybitClient } = require('./bybitExecutor');
+    const price = (base) => async (coin) => {
+      const d = await (await fetch(`${base}/v5/market/tickers?category=linear&symbol=${coin}USDT`)).json();
+      const p = Number(d && d.result && d.result.list && d.result.list[0] && d.result.list[0].lastPrice);
+      if (!p) throw new Error(`harga ${coin} kosong`); return p;
+    };
+    const leg = (key, secret, testnet, base) => {
+      if (!key || !secret) return null;
+      const exec = createBybitClient({ apiKey: key, apiSecret: secret, testnet });
+      return { exec, balance: () => exec.getAccountBalance(), price: price(base) };
+    };
+    return {
+      symbolOf: (coin) => `${coin}USDT`, badge: '🟠 Bybit',
+      legs: { demo: leg(secrets.BYBIT_API_KEY_DEMO, secrets.BYBIT_API_SECRET_DEMO, true, 'https://api-demo.bybit.com'), real: leg(secrets.BYBIT_API_KEY, secrets.BYBIT_API_SECRET, false, 'https://api.bybit.com') },
+    };
+  }
+  if (exchange === 'bingx') {
+    const { createBingxClient } = require('./bingxExecutor');
+    const leg = (testnet) => {
+      if (!secrets.BINGX_API_KEY || !secrets.BINGX_API_SECRET) return null;
+      const exec = createBingxClient({ apiKey: secrets.BINGX_API_KEY, apiSecret: secrets.BINGX_API_SECRET, testnet });
+      const base = testnet ? 'https://open-api-vst.bingx.com' : 'https://open-api.bingx.com';
+      return {
+        exec, balance: () => exec.getAccountBalance(testnet ? 'VST' : 'USDT'),
+        price: async (coin) => { const d = await (await fetch(`${base}/openApi/swap/v2/quote/price?symbol=${coin}-USDT`)).json(); const p = Number(d && d.data && d.data.price); if (!p) throw new Error(`harga ${coin} kosong`); return p; },
+      };
+    };
+    return { symbolOf: (coin) => `${coin}-USDT`, badge: '🟣 BingX', legs: { demo: leg(true), real: leg(false) } };
+  }
+  throw new Error(`exchange '${exchange}' belum didukung rotasi`);
 }
 
-function messageFormatters() {
-  const { formatAutoOpen, formatAutoPartial, formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE } = require('./darkKaelaLog');
-  const B = EXCHANGE_BADGE.bingx;
+function messageFormatters(badge) {
+  const { formatAutoOpen, formatAutoPartial, formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, KAELA_ACCESS_URL } = require('./darkKaelaLog');
   const label = (f) => `${f.coin}USDT`;
+  const isDemo = (mode) => mode !== 'real';
   return {
-    open: (f) => formatAutoOpen({ id: f.id, signalId: f.signalId, direction: f.direction, entryPrice: f.entryPrice, sl: f.sl, tp: f.partialTp, marginUsd: f.margin, leverage: f.leverage, nilaiPosisi: f.nilaiPosisi, patternType: f.patternType, mode: f.patternType, assetLabel: label(f) }, new Date(), '', true, null, '', null, B, SYSTEM),
-    partial: (f) => formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: f.realizedPnlUsd, entryPrice: f.entryPrice, assetLabel: label(f), patternType: f.patternType, mode: f.patternType }, new Date(), true, null, null, B, SYSTEM),
-    closed: (f, exitPrice, total, reason, stats) => {
-      const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: f.direction === 'buy' ? 'long' : 'short', mode: f.patternType, entryPrice: f.entryPrice, exitPrice, pnlUsd: total, pnlPct: f.margin && total !== null ? (total / f.margin) * 100 : null, assetLabel: label(f) }, new Date(), true, CLOSE_REASON_LABEL[reason] || reason, null, null, B, SYSTEM);
-      return msg.replace(`🔗 ${KAELA_ACCESS_URL}`, formatWinRateLines(stats, 'Ranger Rotasi 8 koin (Demo)', null) + `🔗 ${KAELA_ACCESS_URL}`);
+    open: (f, mode) => { const L = f.legs[mode]; return formatAutoOpen({ id: f.id, signalId: f.signalId, direction: f.direction, entryPrice: L.entryPrice, sl: f.sl, tp: f.partialTp, marginUsd: L.margin, leverage: L.leverage, nilaiPosisi: L.nilaiPosisi, patternType: f.patternType, mode: f.patternType, assetLabel: label(f) }, new Date(), '', isDemo(mode), null, '', null, badge, SYSTEM); },
+    partial: (f, mode) => { const L = f.legs[mode]; return formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: L.realizedPnlUsd, entryPrice: L.entryPrice, assetLabel: label(f), patternType: f.patternType, mode: f.patternType }, new Date(), isDemo(mode), null, null, badge, SYSTEM); },
+    closed: (f, mode, reason, stats) => {
+      const L = f.legs[mode];
+      const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: f.direction === 'buy' ? 'long' : 'short', mode: f.patternType, entryPrice: L.entryPrice, exitPrice: L.exitPrice, pnlUsd: L.pnlUsd, pnlPct: L.margin && L.pnlUsd !== null ? (L.pnlUsd / L.margin) * 100 : null, assetLabel: label(f) }, new Date(), isDemo(mode), CLOSE_REASON_LABEL[reason] || reason, null, null, badge, SYSTEM);
+      return msg.replace(`🔗 ${KAELA_ACCESS_URL}`, formatWinRateLines(stats, `Ranger Rotasi (${isDemo(mode) ? 'Demo' : 'Real'})`, null) + `🔗 ${KAELA_ACCESS_URL}`);
     },
-    // Template formatAutoClosedUntracked (darkKaelaLog.js) ngomongin "journal gak pernah nyatet buka" -- GAK cocok di
-    // sini (rotasi nyatet bukanya), jadi pesan sendiri: posisi yg DICATAT hilang dari exchange.
-    untracked: (f) => [
-      `${SYSTEM.emoji} ${SYSTEM.name} · Kaela ${label(f)} (Demo) · ${B} #${f.signalId} — *Posisi Hilang dari Exchange*`,
-      `⚠️ ${f.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT'} @ $${f.entryPrice} udah gak ada di BingX -- kemungkinan kena likuidasi di sela pengecekan 15 menit, atau ditutup manual.`,
-      'PnL SENGAJA gak dihitung biar gak ngarang angka -- cek riwayat BingX buat angka pastinya.',
+    // Template formatAutoClosedUntracked (darkKaelaLog.js) ngomongin "journal gak pernah nyatet buka" -- GAK cocok (rotasi
+    // nyatet bukanya), jadi pesan sendiri: posisi yg DICATAT hilang dari exchange.
+    untracked: (f, mode) => [
+      `${SYSTEM.emoji} ${SYSTEM.name} · Kaela ${label(f)} (${isDemo(mode) ? 'Demo' : 'Real'}) · ${badge} #${f.signalId} — *Posisi Hilang dari Exchange*`,
+      `⚠️ ${f.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT'} @ $${f.legs[mode].entryPrice} udah gak ada di exchange -- kemungkinan kena likuidasi di sela pengecekan 15 menit, atau ditutup manual.`,
+      'PnL SENGAJA gak dihitung biar gak ngarang angka -- cek riwayat exchange buat angka pastinya.',
       '',
       `🔗 ${KAELA_ACCESS_URL}`,
     ].join('\n'),
@@ -249,33 +315,31 @@ async function main() {
   const cfg = loadConfig();
   if (!cfg.enabled) { console.log('[RangerRotasi] enabled:false -- gak ngapa-ngapain.'); return; }
   const secrets = require('./secrets');
-  if (!secrets.BINGX_API_KEY || !secrets.BINGX_API_SECRET) { console.log('[RangerRotasi] BINGX_API_KEY kosong -- skip.'); return; }
-  const exec = require('./bingxExecutor').createBingxClient({ apiKey: secrets.BINGX_API_KEY, apiSecret: secrets.BINGX_API_SECRET, testnet: true });
-  const { sendWhatsAppToSniperClub, } = require('./fonnte');
+  const venues = buildVenues(cfg.exchange, secrets);
+  if (!venues.legs.demo) { console.log(`[RangerRotasi] key demo ${cfg.exchange} kosong -- skip.`); return; }
+  const { sendWhatsAppToSniperClub } = require('./fonnte');
   const { sendWhatsAppToWibowo } = require('./wibowoNotify');
   const { toSniperClubLink } = require('./darkKaelaLog');
+  const kaela = require('./kaelaProTraderClient');
   const journal = loadJournal();
   const rot = createRotation({
-    cfg, journal, exec,
-    fetchCandles: fetchCandles4h, fetchPrice: fetchBingxDemoPrice,
-    notify: async (m) => {
-      await sendWhatsAppToSniperClub(toSniperClubLink(m)).catch((e) => console.log('[RangerRotasi] WA Sniper Club gagal:', e.message));
-      await sendWhatsAppToWibowo(m).catch((e) => console.log('[RangerRotasi] WA Wibowo gagal:', e.message)); // gak ada leg real -> Wibowo dapet demo (kebijakan)
+    cfg, journal, legs: venues.legs, symbolOf: venues.symbolOf,
+    fetchCandles: fetchCandles4h,
+    notify: {
+      sniperClub: (m) => sendWhatsAppToSniperClub(toSniperClubLink(m)).catch((e) => console.log('[RangerRotasi] WA Sniper Club gagal:', e.message)),
+      wibowo: (m) => sendWhatsAppToWibowo(m).catch((e) => console.log('[RangerRotasi] WA Wibowo gagal:', e.message)),
     },
     isBear: (d) => isBtcBearWindow(d),
-    // BTC-USDT dipakai Ninja di akun demo yg SAMA -- jangan masuk kalau Ninja lagi nunggu fill / megang posisi.
-    isCoinBusy: async (coin) => {
-      if (coin !== 'BTC') return false;
-      try { const mr = require('./ninjaMrTrader').loadJournal(); if (mr.pendingEntry || mr.floating) return true; } catch { return true; }
-      try { const old = require('./ninjaTrader').loadJournal(); if ((old.trailing || {}).floating) return true; } catch { return true; }
-      return false;
-    },
     dxyWeak: async () => require('./dxyContext').isDxyWeak(20),
-    fmt: messageFormatters(),
+    kaelaJournal: {
+      record: (mode, e) => kaela.recordJournalEntry(MASTER_NOMOR, mode, e).catch((err) => console.log('[RangerRotasi] recordJournalEntry gagal:', err.message)),
+      update: (id, p) => kaela.updateJournalEntry(id, p).catch((err) => console.log('[RangerRotasi] updateJournalEntry gagal:', err.message)),
+    },
+    fmt: messageFormatters(venues.badge),
   });
   try { await rot.runCycle(); } finally { saveJournal(journal); }
 }
 
 if (require.main === module) main().catch((e) => { console.error('[RangerRotasi] ERROR:', e.message); process.exit(1); });
 
-module.exports = { createRotation, rangerSignal, loadConfig, loadJournal, freshJournal, messageFormatters, fetchCandles4h, DEFAULT_COINS, PATTERN_PARAMS_4H };
+module.exports = { createRotation, rangerSignal, loadConfig, loadJournal, freshJournal, messageFormatters, fetchCandles4h, buildVenues, DEFAULT_COINS };

@@ -182,21 +182,39 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
     return waitForFill(symbol, order.orderId);
   }
 
-  // Bybit gak balikin status FILLED langsung di response create (beda dari BingX) -- WAJIB
-  // polling /v5/order/history atau /v5/execution/list. Pola SAMA kayak binanceExecutor.js.
-  async function waitForFill(symbol, orderId, attempts = 6, delayMs = 400) {
+  // Bybit gak balikin status FILLED langsung di response create (beda dari BingX) -- WAJIB polling.
+  // ⛔ BUG NYATA ketemu 3 Okt 2026 (tes empiris PERTAMA kirim order, Bybit demo DOGEUSDT): /v5/order/history
+  // TELAT update -- order udah Filled (posisi 64 DOGE kebuka) tapi history belum nampilin status Filled
+  // sampai 6x cek habis -> kode lama lempar error padahal order SUKSES (bahaya: caller ngira gagal, posisi yatim).
+  // Fix: cek /v5/order/realtime DULU (order terbaru, termasuk yg baru Filled), fallback history; 12x cek.
+  // Return ditambah `executedQty` (= cumExecQty) biar kontraknya SAMA binance/bingx (caller baca executedQty).
+  async function waitForFill(symbol, orderId, attempts = 12, delayMs = 400) {
     for (let i = 0; i < attempts; i++) {
-      const result = await signedGet('/v5/order/history', { category: CATEGORY, symbol, orderId }).catch(() => null);
-      const order = result && (result.list || [])[0];
-      if (order && order.orderStatus === 'Filled' && parseFloat(order.cumExecQty) > 0) return order;
+      for (const p of ['/v5/order/realtime', '/v5/order/history']) {
+        const result = await signedGet(p, { category: CATEGORY, symbol, orderId }).catch(() => null);
+        const order = result && (result.list || [])[0];
+        if (order && order.orderStatus === 'Filled' && parseFloat(order.cumExecQty) > 0) return { ...order, executedQty: order.cumExecQty };
+      }
       await new Promise((r) => setTimeout(r, delayMs));
     }
     throw new Error(`Order ${orderId} (${symbol}) belum Filled setelah ${attempts}x cek -- cek manual via getPositionRisk sebelum lanjut apapun.`);
   }
 
+  // Posisi per arah (one-way mode: 1 posisi per simbol, arah di field `side` Buy/Sell -- DIVERIFIKASI empiris
+  // 3 Okt 2026, positionIdx 0). Dinormalisasi ke kontrak BingX: {positionAmt, positionSide, avgPrice}.
+  async function getPositionBySide(symbol, positionSide) {
+    const p = await getPositionRisk(symbol);
+    if (!p || !(parseFloat(p.size) > 0)) return null;
+    const side = p.side === 'Sell' ? 'SHORT' : 'LONG';
+    if (side !== positionSide) return null;
+    return { ...p, positionAmt: p.size, positionSide: side };
+  }
+
+  // `positionAmt` ditempel (= size) biar caller yg nulis kontrak BingX/Binance (positionAmt) gak salah baca.
   async function getPositionRisk(symbol) {
     const result = await signedGet('/v5/position/list', { category: CATEGORY, symbol });
-    return (result.list || [])[0] || null;
+    const p = (result.list || [])[0] || null;
+    return p ? { ...p, positionAmt: parseFloat(p.size) > 0 ? p.size : '0' } : null;
   }
 
   async function getAllPositions() {
@@ -215,12 +233,16 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
   // TUTUP posisi -- `direction` = arah POSISI ASLI (bukan arah order tutup): side dibalik
   // (buy->Sell, sell->Buy), reduceOnly:true (Bybit one-way TERIMA reduceOnly, beda dari BingX
   // hedge mode yang nolak field ini).
+  // (3 Okt 2026) ditag kaela- + NUNGGU fill -> balikin {order:{avgPrice,...}} (kontrak SAMA bingxExecutor) biar
+  // caller dapet harga keluar asli. Response create Bybit cuma {orderId, orderLinkId} (dicek empiris). Fill gagal
+  // kebaca -> tetap balikin order mentah (penutupan biasanya tetap jalan, caller fallback ke harga live).
   async function emergencyCloseMarket({ symbol, direction, quantity }) {
     const closeSide = direction === 'buy' ? 'Sell' : 'Buy';
-    return signedPost('/v5/order/create', {
+    const created = await signedPost('/v5/order/create', {
       category: CATEGORY, symbol, side: closeSide, orderType: 'Market',
-      qty: String(quantity), positionIdx: 0, reduceOnly: true,
+      qty: String(quantity), positionIdx: 0, reduceOnly: true, orderLinkId: generateKaelaClientOrderId(),
     });
+    try { return { order: await waitForFill(symbol, created.orderId) }; } catch { return { order: created }; }
   }
 
   async function cancelAllOpenOrders(symbol) {
@@ -230,7 +252,7 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
-    emergencyCloseMarket, wasLastEntryOrderByKaela,
+    emergencyCloseMarket, wasLastEntryOrderByKaela, getPositionBySide,
   };
 }
 

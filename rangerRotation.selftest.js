@@ -1,25 +1,24 @@
-// rangerRotation.selftest.js (3 Okt 2026) -- alur penuh Ranger Rotasi dgn exchange PALSU (gak ada network/WA/order asli).
+// rangerRotation.selftest.js (3 Okt 2026, v2) -- alur penuh Ranger Rotasi dgn exchange PALSU (gak ada network/WA/order asli).
 const assert = require('assert');
 const { createRotation, freshJournal } = require('./rangerRotation');
 
 let passed = 0, failed = 0;
 async function t(name, fn) { try { await fn(); passed++; console.log('  OK  ', name); } catch (e) { failed++; console.log('  GAGAL', name, '\n   ', e.message); } }
 
-function fakeExchange() {
-  const positions = {}; // key `${symbol}|${side}` -> {positionAmt}
+function fakeExchange(balance) {
+  const positions = {}; // `${symbol}|${side}` -> {positionAmt}
   const orders = [];
-  return {
-    positions, orders,
+  const ex = {
+    positions, orders, _px: 0,
     async getSymbolInfo() { return { stepSize: 0.001, quantityPrecision: 3 }; },
     roundToStepSize(q, step, prec) { return Number((Math.floor(q / step) * step).toFixed(prec)); },
     async getPositionRisk(symbol) { const k = Object.keys(positions).find((x) => x.startsWith(symbol + '|') && positions[x].positionAmt > 0); return k ? positions[k] : null; },
-    async getPositionBySide(symbol, side) { const p = positions[`${symbol}|${side}`]; return p && p.positionAmt > 0 ? p : null; },
-    async getAccountBalance() { return 100000; },
+    async getPositionBySide(symbol, side) { const p = positions[`${symbol}|${side}`]; return p && p.positionAmt > 0 ? { ...p } : null; },
     async setIsolatedMargin() {}, async setLeverage() {},
     async placeMarketEntry({ symbol, direction, notionalUsd, livePrice }) {
       const qty = Number((notionalUsd / livePrice).toFixed(3));
-      const side = direction === 'buy' ? 'LONG' : 'SHORT';
-      positions[`${symbol}|${side}`] = { positionAmt: qty, positionSide: side };
+      const k = `${symbol}|${direction === 'buy' ? 'LONG' : 'SHORT'}`;
+      positions[k] = { positionAmt: Number(((positions[k] ? positions[k].positionAmt : 0) + qty).toFixed(3)) };
       orders.push({ type: 'open', symbol, direction, qty });
       return { avgPrice: String(livePrice), executedQty: String(qty) };
     },
@@ -27,120 +26,133 @@ function fakeExchange() {
       const k = `${symbol}|${direction === 'buy' ? 'LONG' : 'SHORT'}`;
       positions[k].positionAmt = Number((positions[k].positionAmt - quantity).toFixed(3));
       orders.push({ type: 'close', symbol, quantity });
-      return { order: { avgPrice: String(this._px) } };
+      return { order: { avgPrice: String(ex._px) } };
     },
   };
+  ex.balance = balance;
+  return ex;
 }
 
-function setup({ signals = {}, bear = false, prices = {}, closeTime } = {}) {
-  const ex = fakeExchange();
-  const j = freshJournal();
-  const sent = [];
-  let clock = Date.UTC(2026, 9, 3, 12, 5);
-  const candleClose = closeTime || Date.UTC(2026, 9, 3, 12, 0) - 1;
+function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance = 0, allowReal = true, shortCoins = ['BTC'] } = {}) {
   const st = { prices: { BTC: 100, SOL: 50, DOGE: 0.1, TRX: 0.3, INJ: 7, ETH: 2600, XLM: 0.2, BNB: 700, ...prices }, trail: null, bear };
+  const demoEx = fakeExchange(100000), realEx = fakeExchange(realBalance);
+  const venue = (ex) => ({ exec: ex, balance: async () => ex.balance, price: async (coin) => { ex._px = st.prices[coin]; return st.prices[coin]; } });
+  const j = freshJournal();
+  const sent = { club: [], wibowo: [] };
+  const journalCalls = [];
+  const candleClose = closeTime || Date.UTC(2026, 9, 3, 12, 0) - 1;
   const deps = {
-    cfg: { enabled: true, coins: ['BTC', 'SOL', 'DOGE', 'TRX', 'INJ', 'ETH', 'XLM', 'BNB'], dxyFilter: false },
-    journal: j, exec: ex,
+    cfg: { enabled: true, coins: ['BTC', 'SOL', 'DOGE', 'TRX', 'INJ', 'ETH', 'XLM', 'BNB'], dxyFilter: false, allowReal, shortCoins, exchange: 'fake' },
+    journal: j, legs: { demo: venue(demoEx), real: venue(realEx) }, symbolOf: (c) => `${c}USDT`,
     fetchCandles: async (coin, n) => {
       if (n < 100) return Array.from({ length: 65 }, () => ({ close: st.trail === null ? st.prices[coin] : st.trail, closeTime: candleClose }));
       return Array.from({ length: 400 }, () => ({ close: st.prices[coin], closeTime: candleClose }));
     },
-    fetchPrice: async (coin) => { ex._px = st.prices[coin]; return st.prices[coin]; },
-    notify: async (m) => { sent.push(m); },
-    now: () => clock, isBear: () => st.bear, dxyWeak: async () => true, log: () => {},
-    signalFn: (c, bearNow, coin) => signals[coin] || null,
-    fmt: { open: (f) => `OPEN ${f.coin}`, partial: (f) => `PARTIAL ${f.coin}`, closed: (f, px, tot, r) => `CLOSED ${f.coin} ${r} ${tot === null ? 'null' : tot.toFixed(2)}`, untracked: (f) => `UNTRACKED ${f.coin}` },
+    notify: { sniperClub: async (m) => { sent.club.push(m); }, wibowo: async (m) => { sent.wibowo.push(m); } },
+    now: () => Date.UTC(2026, 9, 3, 12, 5), isBear: () => st.bear, dxyWeak: async () => true, log: () => {},
+    signalFn: (c, bearNow, shortAllowed, coin) => signals[coin] || null,
+    kaelaJournal: { record: (mode, e) => journalCalls.push(['record', mode, e.entryId]), update: (id, p) => journalCalls.push(['update', id, p.status]) },
+    fmt: {
+      open: (f, m) => `OPEN ${m} ${f.coin}`, partial: (f, m) => `PARTIAL ${m} ${f.coin}`,
+      closed: (f, m, r) => `CLOSED ${m} ${f.coin} ${r} ${f.legs[m].pnlUsd === null ? 'null' : f.legs[m].pnlUsd.toFixed(2)}`, untracked: (f, m) => `UNTRACKED ${m} ${f.coin}`,
+    },
   };
   const rot = createRotation(deps);
-  return { ex, j, sent, rot, st, deps, setClock: (v) => { clock = v; } };
+  return { demoEx, realEx, j, sent, rot, st, deps, journalCalls };
 }
 
 (async () => {
-  await t('scan: koin prioritas tertinggi yang ada sinyal dibuka, cuma 1 posisi', async () => {
-    const { ex, j, sent, rot } = setup({ signals: { DOGE: { direction: 'buy', sl: 0.09, patternType: 'fvg_bounce' }, ETH: { direction: 'buy', sl: 2500, patternType: 'flag_bull' } } });
-    await rot.runCycle();
-    assert.strictEqual(j.floating.coin, 'DOGE');
-    assert.strictEqual(ex.orders.filter((o) => o.type === 'open').length, 1);
-    assert.deepStrictEqual(sent, ['OPEN DOGE']);
-    assert.ok(Math.abs(j.floating.partialTp - 0.12) < 1e-9, `TP1 2R salah: ${j.floating.partialTp}`);
+  await t('demo-only (saldo real 0): buka demo di koin prioritas, Wibowo dapet pesan DEMO (bukan dobel)', async () => {
+    const s = setup({ signals: { DOGE: { direction: 'buy', sl: 0.09, patternType: 'fvg_bounce' }, ETH: { direction: 'buy', sl: 2500, patternType: 'flag_bull' } } });
+    await s.rot.runCycle();
+    assert.strictEqual(s.j.floating.coin, 'DOGE');
+    assert.strictEqual(s.j.floating.wibowoRoute, 'demo');
+    assert.strictEqual(s.j.floating.legs.real, null);
+    assert.deepStrictEqual(s.sent.club, ['OPEN demo DOGE']);
+    assert.deepStrictEqual(s.sent.wibowo, ['OPEN demo DOGE']);
+    assert.ok(Math.abs(s.j.floating.partialTp - 0.12) < 1e-9);
   });
-  await t('koin yang udah ada posisi lain (Ninja/manual) dilewati, pindah ke koin berikutnya; posisi lain GAK disentuh', async () => {
-    const { ex, j, rot } = setup({ signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' }, SOL: { direction: 'buy', sl: 45, patternType: 'fvg_bounce' } } });
-    ex.positions['BTC-USDT|SHORT'] = { positionAmt: 0.5, positionSide: 'SHORT' };
-    await rot.runCycle();
-    assert.strictEqual(j.floating.coin, 'SOL');
-    assert.strictEqual(ex.positions['BTC-USDT|SHORT'].positionAmt, 0.5);
+  await t('demo+real (saldo real cukup): 2 leg kebuka, Sniper Club = demo, Wibowo = REAL, jurnal Kaela Access dicatat', async () => {
+    const s = setup({ realBalance: 500, signals: { SOL: { direction: 'buy', sl: 45, patternType: 'flag_bull' } } });
+    await s.rot.runCycle();
+    assert.ok(s.j.floating.legs.real && s.j.floating.legs.real.qty > 0);
+    assert.strictEqual(s.j.floating.wibowoRoute, 'real');
+    assert.deepStrictEqual(s.sent.club, ['OPEN demo SOL']);
+    assert.deepStrictEqual(s.sent.wibowo, ['OPEN real SOL']);
+    assert.strictEqual(s.journalCalls[0][0], 'record');
   });
-  await t('candle 4H yang sama gak discan ulang; candle basi (>1 jam) gak entry', async () => {
-    const s = setup({ signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' } }, closeTime: Date.UTC(2026, 9, 3, 8, 0) - 1 });
+  await t('ATURAN OLAN: alt short GAK pernah dibuka (window bear), BTC short boleh', async () => {
+    const s = setup({ bear: true, signals: { SOL: { direction: 'sell', sl: 55, patternType: 'wedge_rising' }, ETH: { direction: 'sell', sl: 2700, patternType: 'wedge_rising' } } });
     await s.rot.runCycle();
-    assert.strictEqual(s.j.floating, null, 'candle basi harusnya gak entry');
-    await s.rot.runCycle();
-    assert.strictEqual(s.ex.orders.length, 0);
+    assert.strictEqual(s.j.floating, null, 'alt short harusnya gak dibuka');
+    const s2 = setup({ bear: true, signals: { BTC: { direction: 'sell', sl: 105, patternType: 'fvg_bounce_bear' } } });
+    await s2.rot.runCycle();
+    assert.strictEqual(s2.j.floating.direction, 'sell');
   });
-  await t('long: 2R -> tutup separuh & SL ke entry -> trailing patah -> tutup sisa, stats & history kecatat', async () => {
-    const s = setup({ signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
+  await t('2 leg: 2R -> partial tiap leg, trailing patah -> tutup tiap leg, stats per leg, jurnal real di-update', async () => {
+    const s = setup({ realBalance: 500, signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
     await s.rot.runCycle();
-    const qty = s.j.floating.qty;
-    s.st.prices.BTC = 121; s.st.trail = 110; // lewat 2R (120)
+    s.st.prices.BTC = 121; s.st.trail = 110;
     await s.rot.runCycle();
-    assert.ok(s.j.floating.partialDone && s.j.floating.sl === 100);
-    assert.ok(Math.abs(s.ex.positions['BTC-USDT|LONG'].positionAmt - (qty - Math.floor(qty * 0.5 / 0.001) * 0.001)) < 1e-6);
-    s.st.prices.BTC = 108; // di atas entry, di bawah trailing SMA60 110 -> TRAIL
+    assert.ok(s.j.floating.legs.demo.partialDone && s.j.floating.legs.real.partialDone);
+    s.st.prices.BTC = 108;
     await s.rot.runCycle();
     assert.strictEqual(s.j.floating, null);
-    assert.strictEqual(s.j.history[0].reason, 'TRAIL');
-    assert.strictEqual(s.j.stats.wins, 1);
-    assert.deepStrictEqual(s.sent.map((m) => m.split(' ')[0]), ['OPEN', 'PARTIAL', 'CLOSED']);
-    assert.strictEqual(s.ex.positions['BTC-USDT|LONG'].positionAmt, 0);
+    assert.strictEqual(s.j.stats.demo.wins, 1); assert.strictEqual(s.j.stats.real.wins, 1);
+    assert.strictEqual(s.demoEx.positions['BTCUSDT|LONG'].positionAmt, 0);
+    assert.strictEqual(s.realEx.positions['BTCUSDT|LONG'].positionAmt, 0);
+    assert.deepStrictEqual(s.sent.club, ['OPEN demo BTC', 'PARTIAL demo BTC', s.sent.club[2]]);
+    assert.ok(/^CLOSED demo BTC TRAIL/.test(s.sent.club[2]));
+    assert.deepStrictEqual(s.sent.wibowo.map((m) => m.split(' ').slice(0, 2).join(' ')), ['OPEN real', 'PARTIAL real', 'CLOSED real']);
+    assert.ok(s.journalCalls.some((c) => c[0] === 'update' && c[2] === 'closed'));
+    assert.strictEqual(s.j.history[0].coin, 'BTC');
   });
-  await t('long kena SL sebelum partial -> rugi kecatat', async () => {
+  await t('SL sebelum partial -> rugi kecatat per leg', async () => {
     const s = setup({ signals: { SOL: { direction: 'buy', sl: 45, patternType: 'fvg_bounce' } } });
     await s.rot.runCycle();
     s.st.prices.SOL = 44.5;
     await s.rot.runCycle();
-    assert.strictEqual(s.j.history[0].reason, 'SL');
-    assert.strictEqual(s.j.stats.losses, 1);
-    assert.ok(s.j.stats.totalPnlUsd < 0);
+    assert.strictEqual(s.j.history[0].legs.demo.reason, 'SL');
+    assert.strictEqual(s.j.stats.demo.losses, 1);
   });
-  await t('short pas window bear -> window ganti ke bull -> tutup paksa WINDOW_FLIP', async () => {
-    const s = setup({ bear: true, signals: { ETH: { direction: 'sell', sl: 2700, patternType: 'fvg_bounce_bear' } } });
+  await t('BTC short pas bear -> window ganti ke bull -> tutup paksa WINDOW_FLIP', async () => {
+    const s = setup({ bear: true, signals: { BTC: { direction: 'sell', sl: 105, patternType: 'fvg_bounce_bear' } } });
     await s.rot.runCycle();
-    assert.strictEqual(s.j.floating.direction, 'sell');
     s.st.bear = false;
     await s.rot.runCycle();
-    assert.strictEqual(s.j.history[0].reason, 'WINDOW_FLIP');
+    assert.strictEqual(s.j.history[0].legs.demo.reason, 'WINDOW_FLIP');
   });
-  await t('posisi hilang dari exchange (likuidasi/manual) -> ditutup jujur tanpa nebak PnL', async () => {
+  await t('posisi hilang dari exchange -> ditutup jujur tanpa nebak PnL', async () => {
     const s = setup({ signals: { BNB: { direction: 'buy', sl: 650, patternType: 'flag_bull' } } });
     await s.rot.runCycle();
-    s.ex.positions['BNB-USDT|LONG'].positionAmt = 0;
+    s.demoEx.positions['BNBUSDT|LONG'].positionAmt = 0;
     await s.rot.runCycle();
-    assert.strictEqual(s.j.history[0].reason, 'OFFLINE_UNTRACKED');
-    assert.strictEqual(s.j.history[0].pnlUsd, null);
-    assert.strictEqual(s.sent[s.sent.length - 1], 'UNTRACKED BNB');
+    assert.strictEqual(s.j.history[0].legs.demo.reason, 'OFFLINE_UNTRACKED');
+    assert.strictEqual(s.j.history[0].legs.demo.pnlUsd, null);
   });
-  await t('posisi digabung hedge mode (Ninja searah di simbol sama) -> rotasi cuma nutup jumlah MILIKNYA, sisa Ninja utuh', async () => {
-    const s = setup({ signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
-    await s.rot.runCycle();
-    const own = s.j.floating.qty;
-    s.ex.positions['BTC-USDT|LONG'].positionAmt = Number((own + 0.25).toFixed(3)); // Ninja ikut long 0.25
-    s.st.prices.BTC = 89; // kena SL
-    await s.rot.runCycle();
-    assert.strictEqual(s.j.history[0].reason, 'SL');
-    assert.ok(Math.abs(s.ex.positions['BTC-USDT|LONG'].positionAmt - 0.25) < 1e-9, `sisa Ninja harusnya 0.25, dapet ${s.ex.positions['BTC-USDT|LONG'].positionAmt}`);
-  });
-  await t('koin yang lagi dipakai modul lain (Ninja pending limit, belum jadi posisi) dilewati', async () => {
+  await t('posisi lain (bukan rotasi) di simbol itu -> koin dilewati, posisi lain GAK disentuh', async () => {
     const s = setup({ signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' }, SOL: { direction: 'buy', sl: 45, patternType: 'fvg_bounce' } } });
-    s.rot = require('./rangerRotation').createRotation({ ...s.deps, isCoinBusy: async (c) => c === 'BTC' });
+    s.demoEx.positions['BTCUSDT|SHORT'] = { positionAmt: 0.5 };
     await s.rot.runCycle();
     assert.strictEqual(s.j.floating.coin, 'SOL');
+    assert.strictEqual(s.demoEx.positions['BTCUSDT|SHORT'].positionAmt, 0.5);
   });
-  await t('SL yang udah kelewat harga live -> gak entry (jangan buka posisi yang langsung rugi)', async () => {
-    const s = setup({ signals: { BTC: { direction: 'buy', sl: 101, patternType: 'flag_bull' } } });
+  await t('posisi digabung (modul lain searah di simbol sama) -> cuma nutup jumlah MILIKNYA', async () => {
+    const s = setup({ signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
     await s.rot.runCycle();
-    assert.strictEqual(s.j.floating, null);
+    const own = s.j.floating.legs.demo.qty;
+    s.demoEx.positions['BTCUSDT|LONG'].positionAmt = Number((own + 0.25).toFixed(3));
+    s.st.prices.BTC = 89;
+    await s.rot.runCycle();
+    assert.ok(Math.abs(s.demoEx.positions['BTCUSDT|LONG'].positionAmt - 0.25) < 1e-9);
+  });
+  await t('candle basi gak entry; candle sama gak discan ulang; SL kelewat harga live gak entry', async () => {
+    const s = setup({ closeTime: Date.UTC(2026, 9, 3, 8, 0) - 1, signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' } } });
+    await s.rot.runCycle(); await s.rot.runCycle();
+    assert.strictEqual(s.demoEx.orders.length, 0);
+    const s2 = setup({ signals: { BTC: { direction: 'buy', sl: 101, patternType: 'flag_bull' } } });
+    await s2.rot.runCycle();
+    assert.strictEqual(s2.j.floating, null);
   });
   console.log(`\n${passed} lolos, ${failed} gagal`);
   process.exit(failed ? 1 : 0);

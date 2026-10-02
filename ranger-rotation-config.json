@@ -1,6 +1,9 @@
 {
   "enabled": true,
+  "exchange": "bybit",
+  "allowReal": true,
   "coins": ["BTC", "SOL", "DOGE", "TRX", "INJ", "ETH", "XLM", "BNB"],
+  "shortCoins": ["BTC"],
   "dxyFilter": false,
-  "_note": "Ranger Rotasi 8 koin (rangerRotation.js) -- DEMO BingX VST doang, 1 posisi sekaligus, urutan coins = prioritas. enabled:false = berhenti total (posisi yang lagi kebuka TETAP gak dimonitor -- tutup manual dulu kalau mau matiin). dxyFilter:false sengaja (backtest rotasi gak pakai DXY). Mulai 3 Okt 2026 atas permintaan Olan."
+  "_note": "Ranger Rotasi (rangerRotation.js v2, 3 Okt 2026). exchange bybit = akun SENDIRI (gak numpang Ninja/BingX, Sniper+Ranger/Binance, Emas/MEXC -- arahan Olan: gak tumpang tindih). Demo SELALU jalan; real ikut kalau allowReal & saldo Bybit real cukup (Wibowo dapet real, kalau nggak dapet demo). shortCoins = koin yang boleh short otomatis (Olan: cuma BTC, alt LONG doang). Urutan coins = prioritas. enabled:false = berhenti total (posisi kebuka gak dimonitor -- tutup manual dulu)."
 }

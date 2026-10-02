@@ -232,7 +232,7 @@ function applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, exi
 function runFlagBacktestWindowGated(daily, opts = {}) {
   const {
     warmupDays = 60, poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
-    slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10,
+    slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10, partialFrac = 0.5, // partialFrac (3 Okt 2026, riset exit) -- default 0.5 = perilaku LAMA
     startCapital = 100, topUpAmount = 100, topUpStopAt = 1000, topUpDayOfMonth = 5,
     usePatterns = ['flag', 'wedge'],
     wedgeLookbackRange = [15, 40], wedgeMinTouches = 2, wedgeConvergenceRatio = 0.65,
@@ -284,7 +284,7 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
       const wrongSide = forceCloseOnFlip && ((openPos.direction === 'buy' && bearNow) || (openPos.direction === 'sell' && !bearNow));
       if (wrongSide) {
         const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
-        const remainingFrac = openPos.partialDone ? 0.5 : 1;
+        const remainingFrac = openPos.partialDone ? 1 - partialFrac : 1;
         const pnlRest = openPos.nilaiPosisi * remainingFrac * (movePctSigned / 100);
         const totalPnl = openPos.realizedPnl + pnlRest;
         if (useLedger) { ledgerState = applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, today.closeTime); }
@@ -311,7 +311,7 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
           // ke-update nanti pas leg sisa selesai (blok `else` di bawah, `totalPnl` udah gabung
           // `realizedPnl` partial ini + `pnlRest` leg sisa).
           const rewardPct = Math.abs(openPos.partialTp - openPos.entryPrice) / openPos.entryPrice * 100;
-          const profitHalf = openPos.nilaiPosisi * 0.5 * (rewardPct / 100);
+          const profitHalf = openPos.nilaiPosisi * partialFrac * (rewardPct / 100);
           if (!useLedger) capital += profitHalf;
           openPos.realizedPnl = profitHalf;
           openPos.partialDone = true;
@@ -322,7 +322,7 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
         const trendBroken = trailSma !== null && (openPos.direction === 'buy' ? today.close < trailSma : today.close > trailSma);
         if (hitSl || trendBroken) {
           const movePctSigned = (today.close - openPos.entryPrice) / openPos.entryPrice * (openPos.direction === 'buy' ? 1 : -1) * 100;
-          const pnlRest = openPos.nilaiPosisi * 0.5 * (movePctSigned / 100);
+          const pnlRest = openPos.nilaiPosisi * (1 - partialFrac) * (movePctSigned / 100);
           const totalPnl = openPos.realizedPnl + pnlRest;
           if (useLedger) ledgerState = applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, today.closeTime);
           else capital = Math.max(0, capital + pnlRest);

@@ -1,5 +1,5 @@
 {
-  "lastProcessedCloseTime": 1790927999999,
+  "lastProcessedCloseTime": 1790928899999,
   "pending": null,
   "position": {
     "id": "NMR-1790926799999",
@@ -8,7 +8,7 @@
     "entryPrice": 85807.39,
     "entryTime": 1790926800000,
     "slDistPct": 0.5390568180722888,
-    "sl": 86044.2200302671,
+    "sl": 86223.28180344979,
     "sizing": {
       "exposure": 3,
       "nilaiPosisi": 300,
@@ -18,7 +18,7 @@
       "warning": null
     },
     "trailPct": 0.13843445279371613,
-    "extreme": 86163.5
+    "extreme": 86342.81
   },
   "closed": [
     {

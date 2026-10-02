@@ -1,14 +1,14 @@
 {
   "regression": {
-    "dateKey": "2026-10-02",
-    "at": "2026-10-01T19:01:01.060Z",
+    "dateKey": "2026-10-03",
+    "at": "2026-10-02T19:01:05.642Z",
     "passed": 99,
     "failed": 0,
     "ok": true,
     "summary": "99 lolos, 0 gagal",
     "exitCode": 0,
-    "durationSec": 3,
-    "tail": "  OK   ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)\n  OK   ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n\n99 lolos, 0 gagal (dari 2026-10-01 test run)\n"
+    "durationSec": 4,
+    "tail": "  OK   ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)\n  OK   ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n\n99 lolos, 0 gagal (dari 2026-10-02 test run)\n"
   },
   "bingxApi": {
     "lastRunDateKey": "2026-10-03",

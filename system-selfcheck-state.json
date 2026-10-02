@@ -11,8 +11,8 @@
     "tail": "  OK   ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)\n  OK   ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n\n99 lolos, 0 gagal (dari 2026-10-01 test run)\n"
   },
   "bingxApi": {
-    "lastRunDateKey": "2026-10-02",
-    "at": "2026-10-01T16:01:01.624Z",
+    "lastRunDateKey": "2026-10-03",
+    "at": "2026-10-02T16:00:56.018Z",
     "ok": false,
     "executorHash": "ceeb8ee9a755e882",
     "verifiedAt": null,
@@ -21,6 +21,6 @@
     "failedNames": null,
     "aborted": false,
     "exitCode": 4,
-    "tail": "DEMO VST -- harga 84143.2, saldo 98590.8348 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\nqty kehitung 0 -- stepSize/minNotional aneh: {\n  stepSize: 0.0001,\n  quantityPrecision: 4,\n  pricePrecision: 1,\n  minNotionalUsd: 2\n}\n"
+    "tail": "DEMO VST -- harga 85292.4, saldo 0 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\nqty kehitung 0 -- stepSize/minNotional aneh: {\n  stepSize: 0.0001,\n  quantityPrecision: 4,\n  pricePrecision: 1,\n  minNotionalUsd: 2\n}\n"
   }
 }

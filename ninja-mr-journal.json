@@ -1,6 +1,23 @@
 {
-  "lastProcessedCloseTime": 1790950499999,
-  "pending": null,
+  "lastProcessedCloseTime": 1790951399999,
+  "pending": {
+    "id": "NMR-1790951399999",
+    "tf": "5m",
+    "dir": "long",
+    "distPct": 1.103616908953705,
+    "refPrice": 86081.86,
+    "signalTime": 1790951399999,
+    "sma20": 86690.5525,
+    "ema200": 85895.36190440155,
+    "sizing": {
+      "exposure": 3,
+      "nilaiPosisi": 300,
+      "leverage": 50,
+      "margin": 6,
+      "marginPct": 6,
+      "warning": null
+    }
+  },
   "position": null,
   "closed": [
     {

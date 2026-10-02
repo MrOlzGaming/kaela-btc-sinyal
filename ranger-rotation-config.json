@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "coins": ["BTC", "SOL", "DOGE", "TRX", "INJ", "ETH", "XLM", "BNB"],
+  "dxyFilter": false,
+  "_note": "Ranger Rotasi 8 koin (rangerRotation.js) -- DEMO BingX VST doang, 1 posisi sekaligus, urutan coins = prioritas. enabled:false = berhenti total (posisi yang lagi kebuka TETAP gak dimonitor -- tutup manual dulu kalau mau matiin). dxyFilter:false sengaja (backtest rotasi gak pakai DXY). Mulai 3 Okt 2026 atas permintaan Olan."
+}

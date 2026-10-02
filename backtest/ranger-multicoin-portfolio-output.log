@@ -1,0 +1,61 @@
+BTC: 76 trade
+ETH: 98 trade
+BNB: 103 trade
+SOL: 92 trade
+XRP: 109 trade
+DOGE: 82 trade
+ADA: 161 trade
+AVAX: 102 trade
+LINK: 102 trade
+DOT: 122 trade
+LTC: 106 trade
+BCH: 98 trade
+TRX: 108 trade
+ATOM: 157 trade
+NEAR: 128 trade
+UNI: 114 trade
+ETC: 126 trade
+FIL: 88 trade
+INJ: 87 trade
+AAVE: 125 trade
+XLM: 123 trade
+HBAR: 125 trade
+Total trade 22 koin: 2432, rata2 notional/modal engine 0.99x
+
+=== 2019-09 -> sekarang (modal $100) ===
+maks  1 posisi barengan: ambil 120 (0.05/hari), lewat 2312 | $100 -> $2982 (CAGR 61%/thn) | DD tertutup maks 55.5% (asli lebih dalam)
+maks  3 posisi barengan: ambil 409 (0.16/hari), lewat 2023 | $100 -> $1561 (CAGR 47%/thn) | DD tertutup maks 65.5% (asli lebih dalam)
+maks  5 posisi barengan: ambil 706 (0.27/hari), lewat 1726 | $100 -> $2817 (CAGR 60%/thn) | DD tertutup maks 66.9% (asli lebih dalam)
+maks  8 posisi barengan: ambil 1082 (0.42/hari), lewat 1350 | $100 -> $2735 (CAGR 59%/thn) | DD tertutup maks 61.3% (asli lebih dalam)
+maks 12 posisi barengan: ambil 1560 (0.60/hari), lewat 872 | $100 -> $2286 (CAGR 55%/thn) | DD tertutup maks 54.9% (asli lebih dalam)
+maks 22 posisi barengan: ambil 2432 (0.94/hari), lewat 0 | $100 -> $971 (CAGR 38%/thn) | DD tertutup maks 40.5% (asli lebih dalam)
+
+=== <2023 (modal $100) ===
+maks  1 posisi barengan: ambil 83 (0.07/hari), lewat 1107 | $100 -> $1433 (CAGR 122%/thn) | DD tertutup maks 55.5% (asli lebih dalam)
+maks  3 posisi barengan: ambil 254 (0.21/hari), lewat 936 | $100 -> $881 (CAGR 92%/thn) | DD tertutup maks 65.5% (asli lebih dalam)
+maks  5 posisi barengan: ambil 423 (0.35/hari), lewat 767 | $100 -> $1381 (CAGR 120%/thn) | DD tertutup maks 66.9% (asli lebih dalam)
+maks  8 posisi barengan: ambil 635 (0.52/hari), lewat 555 | $100 -> $1345 (CAGR 118%/thn) | DD tertutup maks 61.3% (asli lebih dalam)
+maks 12 posisi barengan: ambil 886 (0.73/hari), lewat 304 | $100 -> $1241 (CAGR 113%/thn) | DD tertutup maks 54.9% (asli lebih dalam)
+maks 22 posisi barengan: ambil 1190 (0.98/hari), lewat 0 | $100 -> $563 (CAGR 68%/thn) | DD tertutup maks 38.2% (asli lebih dalam)
+
+=== >=2023 (modal $100) ===
+maks  1 posisi barengan: ambil 38 (0.03/hari), lewat 1204 | $100 -> $226 (CAGR 24%/thn) | DD tertutup maks 50.2% (asli lebih dalam)
+maks  3 posisi barengan: ambil 150 (0.11/hari), lewat 1092 | $100 -> $264 (CAGR 29%/thn) | DD tertutup maks 35.0% (asli lebih dalam)
+maks  5 posisi barengan: ambil 272 (0.20/hari), lewat 970 | $100 -> $251 (CAGR 28%/thn) | DD tertutup maks 39.5% (asli lebih dalam)
+maks  8 posisi barengan: ambil 449 (0.33/hari), lewat 793 | $100 -> $260 (CAGR 29%/thn) | DD tertutup maks 37.4% (asli lebih dalam)
+maks 12 posisi barengan: ambil 678 (0.49/hari), lewat 564 | $100 -> $214 (CAGR 22%/thn) | DD tertutup maks 39.8% (asli lebih dalam)
+maks 22 posisi barengan: ambil 1242 (0.91/hari), lewat 0 | $100 -> $175 (CAGR 16%/thn) | DD tertutup maks 40.5% (asli lebih dalam)
+ranking PF <2023: FIL 3.40, BTC 2.62, BNB 2.26, ETH 2.24, BCH 2.23, DOGE 2.23, LTC 2.17, TRX 2.11, SOL 2.04, AVAX 1.79, ADA 1.67, INJ 1.64, HBAR 1.63, NEAR 1.63, LINK 1.62, XLM 1.57, UNI 1.43, XRP 1.42, ATOM 1.35, ETC 1.29, DOT 1.22, AAVE 1.21
+top1 [FIL] maks 1 posisi: >=2023 ambil 61 (0.04/hari) $100->$30 CAGR -28%/thn DD tertutup 87.7%
+top3 [FIL,BTC,BNB] maks 1 posisi: >=2023 ambil 37 (0.03/hari) $100->$294 CAGR 33%/thn DD tertutup 21.5%
+top3 [FIL,BTC,BNB] maks 3 posisi: >=2023 ambil 125 (0.09/hari) $100->$119 CAGR 5%/thn DD tertutup 46.9%
+top5 [FIL,BTC,BNB,ETH,BCH] maks 1 posisi: >=2023 ambil 46 (0.03/hari) $100->$259 CAGR 29%/thn DD tertutup 17.9%
+top5 [FIL,BTC,BNB,ETH,BCH] maks 3 posisi: >=2023 ambil 127 (0.09/hari) $100->$204 CAGR 21%/thn DD tertutup 22.0%
+top5 [FIL,BTC,BNB,ETH,BCH] maks 5 posisi: >=2023 ambil 211 (0.15/hari) $100->$140 CAGR 9%/thn DD tertutup 40.4%
+top8 [FIL,BTC,BNB,ETH,BCH,DOGE,LTC,TRX] maks 1 posisi: >=2023 ambil 32 (0.02/hari) $100->$377 CAGR 42%/thn DD tertutup 17.9%
+top8 [FIL,BTC,BNB,ETH,BCH,DOGE,LTC,TRX] maks 3 posisi: >=2023 ambil 145 (0.11/hari) $100->$267 CAGR 30%/thn DD tertutup 25.1%
+top8 [FIL,BTC,BNB,ETH,BCH,DOGE,LTC,TRX] maks 8 posisi: >=2023 ambil 351 (0.26/hari) $100->$156 CAGR 13%/thn DD tertutup 27.3%
+top12 [FIL,BTC,BNB,ETH,BCH,DOGE,LTC,TRX,SOL,AVAX,ADA,INJ] maks 1 posisi: >=2023 ambil 43 (0.03/hari) $100->$347 CAGR 39%/thn DD tertutup 25.5%
+top12 [FIL,BTC,BNB,ETH,BCH,DOGE,LTC,TRX,SOL,AVAX,ADA,INJ] maks 3 posisi: >=2023 ambil 157 (0.11/hari) $100->$319 CAGR 36%/thn DD tertutup 34.0%
+top12 [FIL,BTC,BNB,ETH,BCH,DOGE,LTC,TRX,SOL,AVAX,ADA,INJ] maks 12 posisi: >=2023 ambil 589 (0.43/hari) $100->$203 CAGR 21%/thn DD tertutup 32.2%
+BTC doang (data 1j multicoin): >=2023 $100->$190 CAGR 19% DD 17.9%

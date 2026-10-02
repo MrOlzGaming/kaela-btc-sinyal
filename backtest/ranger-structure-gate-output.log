@@ -1,0 +1,23 @@
+=== BTC 4H (engine Ranger, 19928 candle) ===
+TANPA gerbang (Ranger sekarang)    semua n=90 PF=2.56 total=533% | <2023 n=63 PF=2.73 total=401% | >=2023 n=27 PF=2.21 total=133% | modal $100 -> $2319 DD 39.9%
+struktur L=5 searah                semua n=100 PF=1.85 total=390% | <2023 n=55 PF=2.32 total=325% | >=2023 n=45 PF=1.31 total=65% | modal $100 -> $1104 DD 62.2%
+struktur L=5 bukanLawan            semua n=100 PF=1.85 total=390% | <2023 n=55 PF=2.32 total=325% | >=2023 n=45 PF=1.31 total=65% | modal $100 -> $1104 DD 62.2%
+struktur L=10 searah               semua n=77 PF=2.09 total=413% | <2023 n=43 PF=2.54 total=329% | >=2023 n=34 PF=1.51 total=84% | modal $100 -> $1550 DD 62.2%
+struktur L=10 bukanLawan           semua n=77 PF=2.09 total=413% | <2023 n=43 PF=2.54 total=329% | >=2023 n=34 PF=1.51 total=84% | modal $100 -> $1550 DD 62.2%
+struktur L=20 searah               semua n=74 PF=2.03 total=369% | <2023 n=51 PF=2.17 total=287% | >=2023 n=23 PF=1.72 total=81% | modal $100 -> $966 DD 69.3%
+struktur L=20 bukanLawan           semua n=74 PF=2.03 total=369% | <2023 n=51 PF=2.17 total=287% | >=2023 n=23 PF=1.72 total=81% | modal $100 -> $966 DD 69.3%
+struktur L=30 searah               semua n=74 PF=1.87 total=311% | <2023 n=48 PF=2.07 total=244% | >=2023 n=26 PF=1.52 total=67% | modal $100 -> $989 DD 35.6%
+struktur L=30 bukanLawan           semua n=74 PF=1.87 total=311% | <2023 n=48 PF=2.07 total=244% | >=2023 n=26 PF=1.52 total=67% | modal $100 -> $989 DD 35.6%
+
+=== 22 koin gabungan (seleksi <2023 dari rangerMultiCoin.js) ===
+TANPA gerbang (Ranger sekarang)    semua n=2432 PF=1.52 total=7199% | <2023 n=1190 PF=1.76 total=4954% | >=2023 n=1242 PF=1.31 total=2246% | rata2/trade 2.96%
+struktur L=5 searah                semua n=1781 PF=1.55 total=6192% | <2023 n=793 PF=2.01 total=4826% | >=2023 n=988 PF=1.21 total=1366% | rata2/trade 3.48%
+                                   -> PF per koin lebih bagus di 11/22 koin
+struktur L=5 bukanLawan            semua n=1781 PF=1.55 total=6192% | <2023 n=793 PF=2.01 total=4826% | >=2023 n=988 PF=1.21 total=1366% | rata2/trade 3.48%
+                                   -> PF per koin lebih bagus di 11/22 koin
+struktur L=10 searah               semua n=1648 PF=1.55 total=5868% | <2023 n=743 PF=1.97 total=4233% | >=2023 n=905 PF=1.26 total=1634% | rata2/trade 3.56%
+                                   -> PF per koin lebih bagus di 12/22 koin
+struktur L=10 bukanLawan           semua n=1648 PF=1.55 total=5868% | <2023 n=743 PF=1.97 total=4233% | >=2023 n=905 PF=1.26 total=1634% | rata2/trade 3.56%
+                                   -> PF per koin lebih bagus di 12/22 koin
+struktur L=20 searah               semua n=1606 PF=1.60 total=5816% | <2023 n=729 PF=2.09 total=4461% | >=2023 n=877 PF=1.24 total=1354% | rata2/trade 3.62%
+                                   -> PF per koin lebih bagus di 14/22 koin

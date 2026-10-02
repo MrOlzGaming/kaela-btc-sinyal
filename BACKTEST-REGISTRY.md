@@ -228,6 +228,25 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
   akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
 
+## 🏹 Upgrade Ranger: gerbang struktur (GAGAL) + portofolio multi-koin -> ROTASI (3 Okt 2026)
+
+- **Gerbang struktur BOS/CHoCH ala SMC** (`backtest/rangerStructureGate.js`, output `ranger-structure-gate-output.log`):
+  Ranger 4H cuma entry kalau struktur pivot(L) searah. BTC (engine Ranger 2017-2026): SEMUA varian LEBIH JELEK --
+  tanpa gerbang PF 2,56 $100->$2.319 DD 39,9% | L=5 PF 1,85 $1.104 DD 62% | L=10 2,09 $1.550 | L=20 2,03 $966 DD 69% |
+  L=30 1,87 $989. 22 koin: PF total naik tipis (1,52 -> 1,55-1,60) TAPI >=2023 TURUN (1,31 -> 1,21-1,26), lebih bagus
+  cuma di 11-14/22 koin (= lempar koin). Sinyal bagus yg ditolak bikin slot kosong -> keisi sinyal lebih jelek.
+  **DITOLAK.**
+- **Portofolio multi-koin modal bersama** (`backtest/rangerMultiCoinPortfolio.js`, output `ranger-multicoin-portfolio-output.log`,
+  DD = cuma pas posisi ditutup -> optimis): 22 koin semua slot (0,94 trade/hari) $100 -> $971 (2019-26, CAGR 38%) tapi
+  >=2023 cuma CAGR 16%. Modal DIBAGI ke banyak posisi barengan = alt jatuh barengan, hasil turun.
+  **Temuan kunci -- ROTASI (1 posisi, modal penuh, pindah2 koin)**, koin dipilih pakai PF <2023 lalu dinilai >=2023:
+  top-3 CAGR 33% | top-5 29% | top-8 42% DD 17,9% | top-12 39% -- vs BTC doang 19% DD 17,9%. Konsisten di berbagai N.
+- **LIVE DEMO 3 Okt 2026**: `rangerRotation.js` (BingX VST, 8 koin = PF minimum 2 era tertinggi: BTC SOL DOGE TRX INJ
+  ETH XLM BNB; FIL dibuang krn gagal >=2023). Detektor = fungsi Ranger live (`detectPatternSignal`/`detectFvgSignal`),
+  BUKAN engine backtest -- beda kecil yg sama dgn Ranger BTC live (mis. FVG maks 3% dari gap). Tanpa DXY.
+- **Ide kreatif lain yg DITOLAK di studi indikator**: skor "AI" SMC (gak prediktif), zona OB BigBeluga (= acak),
+  POC structure break (gak konsisten).
+
 ## 🔬 Studi 4 indikator TradingView (3 Okt 2026) — `backtest/indicatorStudy.js`
 
 Kode Pine ASLI diambil (open-source via pine-facade, gak di-commit -- lisensi pembuat), logika ditulis ulang setia

@@ -1172,6 +1172,13 @@ async function main() {
     assert.ok(/\n\d+ lolos, 0 gagal/.test(out), `selftest ada yang gagal:\n${out.split('\n').filter((l) => /GAGAL|lolos,/.test(l)).join('\n')}`);
   });
 
+  // ============ rangerRotation.js -- Ranger Rotasi 8 koin demo BingX, alur penuh dgn exchange palsu (3 Okt 2026) ============
+  await test('rangerRotation: selftest alur penuh (prioritas koin, 1 posisi, partial 2R, trailing, SL, window flip, gak nutup punya Ninja) lolos semua', () => {
+    const { execFileSync } = require('child_process');
+    const out = execFileSync('node', [require('path').join(__dirname, 'rangerRotation.selftest.js')], { encoding: 'utf8', timeout: 120000 });
+    assert.ok(/\n\d+ lolos, 0 gagal/.test(out), `selftest ada yang gagal:\n${out.split('\n').filter((l) => /GAGAL|lolos,/.test(l)).join('\n')}`);
+  });
+
   // ============ stdFuturesLadderMonitor.js -- pengawas likuidasi DCA Tangga (Standard Futures, 1 Okt 2026) ============
   await test('stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9', async () => {
     const M = require('./stdFuturesLadderMonitor');

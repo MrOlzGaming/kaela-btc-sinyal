@@ -228,6 +228,31 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
   akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
 
+## 🔬 Studi 4 indikator TradingView (3 Okt 2026) — `backtest/indicatorStudy.js`
+
+Kode Pine ASLI diambil (open-source via pine-facade, gak di-commit -- lisensi pembuat), logika ditulis ulang setia
+di JS, klaim diuji di BTC 1H & 4H (spot 2019-09..2026-09), return maju searah sinyal - fee 0,12%, dibanding entry
+ACAK searah sama, DEV <2023 / HOLD >=2023. Output: `backtest/indicator-study-output.log`.
+- **BTC Halving & Supply History (sypherh)**: cuma 6 tanggal hardcode + label reward/supply per era (210rb blok x
+  reward, angkanya bener) + hitung mundur. Halving ke-5 diasumsikan 15 Mei 2028 -> MELESET ~1 bln: hitungan dari
+  tinggi blok 969.638 (3 Okt 2026, rata2 blok 597-604 dtk) = **9-16 Apr 2028**; `halvingBearWindow.js` (13 Apr) udah bener.
+- **FVG Order Blocks [BigBeluga]**: FVG = gap 3-candle > 0,5% harga; "order block" BUKAN candle asli tapi pita
+  sintetis [tepi bawah gap - 1x ATR(200), tepi bawah gap]; rusak kalau high candle di bawah pita; sinyal ︽ = low
+  candle sebelumnya <= atap pita & low sekarang > atap. Hasil: long ~SAMA/di bawah long acak (4H tahan 42: DEV
+  +0,65% vs acak +0,87%, HOLD +0,42% vs +0,87%), short = rugi kayak short acak. **Gak ada edge.**
+- **Smart Money Concepts AI [Adaptive] (DefinedEdge)**: "AI"/"Adaptive" = TABEL POIN TETAP (gak ada yg belajar dari
+  hasil). Struktur pivot(5) close-break, FVG candle tengah searah, OB = candle lawan terakhir <=30 bar sebelum break,
+  sinyal = nyentuh FVG aktif searah struktur & EMA50, konfluens FVG*0,45 + OB*0,35 + 20 (tanpa OB overlap maks 65 ->
+  gak pernah ★). Hasil: **LONG di atas long acak di KEDUA era** (1H tahan 96: DEV +0,76% vs acak +0,43%, HOLD +0,85%
+  vs +0,43%; 4H tahan 42: +1,30/+1,07 vs +0,87) -- edge kecil tapi konsisten = "beli pullback ke FVG searah tren".
+  Short tetap rugi (drift naik BTC). ★ terang (>=70) GAK lebih bagus dari ○ redup (n kecil, bolak-balik). Skor FVG
+  tinggi = FVG lebih jarang ketembus (4H: 31% bertahan di skor <40 -> 50% di 85+) TAPI return maju gak naik.
+- **Structure Break Volume Profile (erdensedat)**: pivot fraktal 13, CHoCH -> profil volume 50 baris struktur
+  sebelumnya -> POC; Ask/Bid cuma PERKIRAAN dari posisi close di candle (bukan order flow asli); kode asli ngitung POC
+  cuma di bar terakhir chart (histori sinyal gak keliatan). Hasil (POC dihitung pas CHoCH, non-repaint): 4H DEV rugi
+  berat (PF 0,4-0,7), HOLD tipis positif; 1H ~acak. **Gak ada edge yang konsisten.**
+- Catatan: banyak perbandingan sekaligus -> beda kecil bisa kebetulan; satu2nya pola konsisten 2 era = SMC AI long.
+
 ## 🪜 DCA Futures "Tangga Leverage" $3/hari (ide Olan, riset 1 Okt 2026, BELUM LIVE) — `backtest/dcaLeverLadder.js`
 
 - **Aturan**: tiap hari 1 posisi long BTC perp ISOLATED margin $3 x3; yang kelikuidasi diganti besoknya

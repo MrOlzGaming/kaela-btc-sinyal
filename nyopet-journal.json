@@ -35,5 +35,6 @@
   "watchZoneByAsset": {},
   "balanceUsdc": 0,
   "balanceUsdt": 5000,
-  "mexcBalanceUsdc": 9.48e-9
+  "mexcBalanceUsdc": 9.48e-9,
+  "fedGridLastProcessed": "NFP 2026-10"
 }

@@ -154,6 +154,13 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
     return acct ? parseFloat(acct.totalWalletBalance) : 0;
   }
 
+  // (3 Okt 2026) totalEquity = saldo + PnL posisi berjalan -- dipakai NAV pool (ExtraBalances, Kaela Access).
+  async function getEquity() {
+    const result = await signedGet('/v5/account/wallet-balance', { accountType: 'UNIFIED' });
+    const acct = (result.list || [])[0];
+    return acct ? parseFloat(acct.totalEquity) : 0;
+  }
+
   async function setIsolatedMargin(symbol, leverage) {
     return signedPost('/v5/position/switch-isolated', {
       category: CATEGORY, symbol, tradeMode: 1,
@@ -252,7 +259,7 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
-    emergencyCloseMarket, wasLastEntryOrderByKaela, getPositionBySide,
+    emergencyCloseMarket, wasLastEntryOrderByKaela, getPositionBySide, getEquity,
   };
 }
 

@@ -171,6 +171,13 @@ async function recordMemberStatus(phone, mode, balanceUsdt, balanceUsdc, positio
 // `undefined` sbg value, itu beda -- `URLSearchParams` stringify `undefined` jadi literal teks
 // "undefined" kalau key-nya ADA, makanya key-nya harus BENERAN gak disertain), GAS baca itu sbg
 // field kosong asli -> partial-merge preserve nilai lama.
+// (3 Okt 2026) Saldo exchange TAMBAHAN (Bybit, Bitget, dst) -> kolom ExtraBalances MemberStatus (partial-merge PER KEY
+// exchange di GAS). `info` = {balance, equity, positions}. Cuma kirim key `extraBalances` (+ phone/mode) -- kolom lain
+// dipertahanin GAS (pelajaran URLSearchParams stringify undefined, lihat recordBingxBalance).
+async function recordExtraBalance(phone, mode, exchange, info) {
+  return callGas('recordMemberStatus', { phone, mode, extraBalances: JSON.stringify({ [exchange]: { ...info, updatedAt: new Date().toISOString() } }) });
+}
+
 async function recordBingxBalance(phone, mode, bingxBalance, bingxPositions) {
   const params = { phone, mode, bingxBalance };
   if (bingxPositions !== undefined) params.bingxPositions = JSON.stringify(bingxPositions);
@@ -256,4 +263,4 @@ async function resolveManualOpenRequest(requestId, status, resultMessage) {
   return callGas('resolveManualOpenRequest', { requestId, status, resultMessage: resultMessage || '' });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };
+module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, recordExtraBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };

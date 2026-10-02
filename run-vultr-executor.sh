@@ -294,6 +294,8 @@ timeout -k 10 30 node reportOlanDemoStatus.js >> "$LOG_FILE" 2>&1 || log "report
 # recordBingxBalance di kaelaProTraderClient.js) biar gak nimpa balanceUsdt/positions Binance/MEXC
 # yang ditulis script LAIN di baris (Olan, demo)/(Olan, real) yang SAMA.
 timeout -k 10 30 node reportOlanBingxStatus.js >> "$LOG_FILE" 2>&1 || log "reportOlanBingxStatus.js ERROR (exit $?)"
+# Saldo+posisi exchange TAMBAHAN (Bybit = Ranger Rotasi, Bitget) -> ExtraBalances Kaela Access + NAV pool (3 Okt 2026).
+timeout -k 10 45 node reportOlanExtraExchanges.js >> "$LOG_FILE" 2>&1 || log "reportOlanExtraExchanges.js ERROR (exit $?)"
 
 # whale-netflow-research-log.json dst (13 Sep 2026, permintaan Olan "data itu kita simpen sendiri
 # ya, penting buat masa depan") -- histori riset TERAKUMULASI yang GAK BISA di-backfill kalau

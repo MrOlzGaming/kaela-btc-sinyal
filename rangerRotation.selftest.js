@@ -146,6 +146,25 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     await s.rot.runCycle();
     assert.ok(Math.abs(s.demoEx.positions['BTCUSDT|LONG'].positionAmt - 0.25) < 1e-9);
   });
+  await t('SIZING Olan: alt long = separuh exposure (kayak short), BTC long = full', async () => {
+    // jarak SL sama (5%) -> nilai posisi alt harus ~separuh BTC (exposure dari kalkulator sama, cuma dibagi 2)
+    const a = setup({ signals: { SOL: { direction: 'buy', sl: 47.5, patternType: 'flag_bull' } } });
+    await a.rot.runCycle();
+    const b = setup({ signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' } } });
+    await b.rot.runCycle();
+    const ratio = a.j.floating.legs.demo.nilaiPosisi / b.j.floating.legs.demo.nilaiPosisi;
+    assert.ok(Math.abs(ratio - 0.5) < 1e-9, `rasio nilai posisi alt/BTC harusnya 0.5, dapet ${ratio}`);
+  });
+  await t('partial = 1/3 posisi (default), sisa 2/3 di-trail', async () => {
+    const s = setup({ signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
+    await s.rot.runCycle();
+    const q = s.j.floating.legs.demo.qty;
+    s.st.prices.BTC = 121; s.st.trail = 100;
+    await s.rot.runCycle();
+    const closedQty = s.demoEx.orders.filter((o) => o.type === 'close')[0].quantity;
+    assert.ok(Math.abs(closedQty - Math.floor(q / 3 / 0.001) * 0.001) < 1e-9, `partial qty ${closedQty} vs 1/3 dari ${q}`);
+    assert.ok(Math.abs(s.j.floating.legs.demo.remainingQty - (q - closedQty)) < 1e-6);
+  });
   await t('candle basi gak entry; candle sama gak discan ulang; SL kelewat harga live gak entry', async () => {
     const s = setup({ closeTime: Date.UTC(2026, 9, 3, 8, 0) - 1, signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' } } });
     await s.rot.runCycle(); await s.rot.runCycle();

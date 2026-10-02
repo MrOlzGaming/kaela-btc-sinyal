@@ -228,6 +228,18 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   menang 75%. Persentil 80-90 (n=40-80) ~0/negatif. **n terlalu kecil buat bukti** -- arah hipotesis masuk
   akal cuma di ledakan PALING gede. Butuh data berbulan-bulan (listener tetap jalan, data nambah otomatis).
 
+## 🎯 Exit "TP trailing ultimate" + ukuran posisi alt (3 Okt 2026) — `backtest/rangerExitResearch.js`
+
+- **Exit** (entry Ranger tetap, alt LONG doang/short cuma BTC, 15 varian, output `ranger-exit-research-output.log`):
+  pemenang KONSISTEN di semua sudut = **partial 33% @2R + SL sisa ke BE + trail SMA60** -- BTC PF 2,72/2,04 vs sekarang
+  2,56/1,93 (<2023 / >=2023), 8 koin 2,14/1,63 vs 1,98/1,54, rotasi CAGR 90%/49% vs 78%/42% (DD sama). SMA lebih
+  panjang/Chandelier ATR/tanpa partial = menang di 1 era, kalah di era lain -> DITOLAK. Partial 1,5R = paling jelek.
+  **DIPASANG** (3 Okt): Ranger Rotasi (`partialFrac` 1/3) + Ranger BTC live (`rangerBtcDualExec.js`, + fix pembulatan qty).
+- **Ukuran posisi** (rotasi 8 koin, exit baru, dari dump trade): ukuran sekarang 2019-22 CAGR 90% **DD 81%** | 2023-26
+  CAGR 49% DD 41%. **Alt = exposure /2 (diperlakukan kayak short, ide Olan), BTC long full**: 2019-22 CAGR 84% **DD 55%** |
+  2023-26 CAGR 38% DD 37%. Semua separuh: 55%/28% DD 55%/23%. -> **DIPASANG** di rotasi (`hitung(direction:'sell')` buat
+  alt & short BTC). Rugi maks 1 trade turun -20% -> -15%. DD = cuma pas posisi ditutup (optimis).
+
 ## 🏹 Upgrade Ranger: gerbang struktur (GAGAL) + portofolio multi-koin -> ROTASI (3 Okt 2026)
 
 - **Gerbang struktur BOS/CHoCH ala SMC** (`backtest/rangerStructureGate.js`, output `ranger-structure-gate-output.log`):

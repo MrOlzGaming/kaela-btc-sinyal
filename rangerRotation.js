@@ -44,7 +44,7 @@ const MASTER_NOMOR = '6281299303888';
 const MODES = ['demo', 'real'];
 
 function loadConfig() {
-  const def = { enabled: false, coins: DEFAULT_COINS, dxyFilter: false, exchange: 'bybit', allowReal: true, shortCoins: ['BTC'] };
+  const def = { enabled: false, coins: DEFAULT_COINS, dxyFilter: false, exchange: 'bybit', allowReal: true, shortCoins: ['BTC'], partialFrac: 1 / 3 };
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
 const freshStats = () => ({ wins: 0, losses: 0, totalPnlUsd: 0 });
@@ -140,7 +140,9 @@ function createRotation(deps) {
         if (isLong ? live <= f.sl : live >= f.sl) { await closeAll('SL'); continue; }
         if (isLong ? live >= f.partialTp : live <= f.partialTp) {
           const ownBefore = ownQty(L, pos);
-          const half = await roundQty(exec, f.coin, ownBefore * 0.5);
+          // (3 Okt 2026) porsi partial dari config (default 1/3) -- riset backtest/rangerExitResearch.js: 33% @2R lebih
+          // bagus dari 50% di BTC & 8 koin, DUA era (sisa 2/3 di-trail SMA60 = "biarin yang menang lari").
+          const half = await roundQty(exec, f.coin, ownBefore * (cfg.partialFrac != null ? cfg.partialFrac : 1 / 3));
           if (half <= 0) { log(`${mode}: setengah qty kekecilan buat step -- partial dilewati, SL ke entry`); L.partialDone = true; L.sl = L.entryPrice; continue; }
           const px = (await marketClose(exec, f, half)) || live;
           L.realizedPnlUsd = (isLong ? px - L.entryPrice : L.entryPrice - px) * half;
@@ -171,7 +173,11 @@ function createRotation(deps) {
     if (any === undefined) throw new Error(`${mode}: gagal cek posisi ${s}`);
     if (any && Math.abs(Number(any.positionAmt)) > 0) throw new Error(`${mode}: ${s} udah ada posisi lain (bukan rotasi) -- gak numpuk`);
     const balance = await venue.balance().catch(() => 0);
-    const calc = hitungExposure({ modal: (balance || 0) * MODAL_ACTIVE_FRACTION, entry: live, stopLoss: sig.sl, direction: sig.direction });
+    // Kalkulator exposure resmi (calculator.js hitung). Olan 3 Okt 2026: "size alt [diperlakukan seperti short], jadi yang
+    // buka full cuma BTC long" -> alt & short BTC = exposure /2 (direction 'sell' = jalur separuh yg UDAH ada di hitung()).
+    // Backtest (rangerExitResearch.js, rotasi 8 koin, exit 33%@2R): 2019-22 DD 81% -> 55% (CAGR 90 -> 84%), 2023-26 DD 41 -> 37%.
+    const halfSize = sig.direction === 'sell' || coin !== 'BTC';
+    const calc = hitungExposure({ modal: (balance || 0) * MODAL_ACTIVE_FRACTION, entry: live, stopLoss: sig.sl, direction: halfSize ? 'sell' : 'buy' });
     if (!(calc.nilaiPosisi > 0)) { const e = new Error(`${mode}: saldo kurang (${(balance || 0).toFixed(2)})`); e.insufficient = true; throw e; }
     await exec.setIsolatedMargin(s, calc.leverage).catch(() => {});
     await exec.setLeverage(s, calc.leverage, sideOf(sig.direction)).catch(() => {});
@@ -293,7 +299,7 @@ function messageFormatters(badge) {
   const isDemo = (mode) => mode !== 'real';
   return {
     open: (f, mode) => { const L = f.legs[mode]; return formatAutoOpen({ id: f.id, signalId: f.signalId, direction: f.direction, entryPrice: L.entryPrice, sl: f.sl, tp: f.partialTp, marginUsd: L.margin, leverage: L.leverage, nilaiPosisi: L.nilaiPosisi, patternType: f.patternType, mode: f.patternType, assetLabel: label(f) }, new Date(), '', isDemo(mode), null, '', null, badge, SYSTEM); },
-    partial: (f, mode) => { const L = f.legs[mode]; return formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: L.realizedPnlUsd, entryPrice: L.entryPrice, assetLabel: label(f), patternType: f.patternType, mode: f.patternType }, new Date(), isDemo(mode), null, null, badge, SYSTEM); },
+    partial: (f, mode) => { const L = f.legs[mode]; return formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: L.realizedPnlUsd, entryPrice: L.entryPrice, assetLabel: label(f), patternType: f.patternType, mode: f.patternType, trailSmaLen: TRAIL_SMA_LEN_4H }, new Date(), isDemo(mode), null, null, badge, SYSTEM); },
     closed: (f, mode, reason, stats) => {
       const L = f.legs[mode];
       const msg = formatAutoClosed({ id: f.id, signalId: f.signalId, direction: f.direction === 'buy' ? 'long' : 'short', mode: f.patternType, entryPrice: L.entryPrice, exitPrice: L.exitPrice, pnlUsd: L.pnlUsd, pnlPct: L.margin && L.pnlUsd !== null ? (L.pnlUsd / L.margin) * 100 : null, assetLabel: label(f) }, new Date(), isDemo(mode), CLOSE_REASON_LABEL[reason] || reason, null, null, badge, SYSTEM);

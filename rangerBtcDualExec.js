@@ -282,19 +282,36 @@ async function openRangerBtcDual({ sig, livePrice }) {
 }
 
 // ============ Tutup 1 leg (partial ATAU penuh) -- helper dipakai monitor di bawah ============
+// (3 Okt 2026) Porsi partial 1/3 (bukan 1/2) -- riset backtest/rangerExitResearch.js: BTC PF 2,56->2,72 (<2023) &
+// 1,93->2,04 (>=2023), 8 koin & rotasi juga naik di DUA era. Sisa 2/3 di-trail SMA60 = biarin yang menang lari.
+// Override lewat ranger-btc-dual-exec-config.json `partialFrac`.
+// ⛔ BUG LATEN ketemu+fix (3 Okt 2026): DULU `leg.qty * 0.5` dikirim mentah ke Binance tanpa dibulatkan ke stepSize
+// (0,003 BTC x 0,5 = 0,0015 -> presisi lewat batas, order ditolak). Sekarang qty partial & sisa SELALU dibulatkan.
+async function _roundQty(exec, qty) {
+  const info = await exec.getSymbolInfo(SYMBOL);
+  return exec.roundToStepSize(qty, info.stepSize, info.quantityPrecision);
+}
+
 async function closeLegPartial(mode, leg, sig) {
   const exec = execFor(mode);
   if (!exec) return leg; // key dicabut di tengah jalan -- gak bisa nutup, biarin (kasus ekstrem, log di caller)
-  const partialQty = leg.qty * 0.5;
+  const cfg = loadConfig();
+  const frac = cfg.partialFrac != null ? cfg.partialFrac : 1 / 3;
+  const partialQty = await _roundQty(exec, leg.qty * frac);
+  if (!(partialQty > 0)) {
+    // posisi terlalu kecil buat dipecah -- gak partial, tapi SL tetap ke breakeven (proteksi sama)
+    return { ...leg, partialDone: true, remainingFraction: 1, remainingQty: leg.qty, currentSl: leg.entryPrice, realizedPnlUsd: 0, partialClosedAt: new Date().toISOString() };
+  }
   const closeOrder = await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: sig.direction, quantity: partialQty });
-  const filledExit = parseFloat(closeOrder.avgPrice) || 0;
+  const filledExit = parseFloat(closeOrder.avgPrice) || (await fetchLivePrice(mode).catch(() => 0)) || 0;
   const realizedPnlUsd = sig.direction === 'buy' ? (filledExit - leg.entryPrice) * partialQty : (leg.entryPrice - filledExit) * partialQty;
-  return { ...leg, partialDone: true, remainingFraction: 0.5, currentSl: leg.entryPrice, realizedPnlUsd, partialClosedAt: new Date().toISOString() };
+  const remainingQty = await _roundQty(exec, leg.qty - partialQty);
+  return { ...leg, partialDone: true, remainingFraction: remainingQty / leg.qty, remainingQty, currentSl: leg.entryPrice, realizedPnlUsd, partialClosedAt: new Date().toISOString() };
 }
 
 async function closeLegFull(mode, leg, sig) {
   const exec = execFor(mode);
-  const remainingQty = leg.qty * (leg.remainingFraction != null ? leg.remainingFraction : 1);
+  const remainingQty = leg.remainingQty != null ? leg.remainingQty : leg.qty * (leg.remainingFraction != null ? leg.remainingFraction : 1);
   if (!exec) return { ...leg, closedAt: new Date().toISOString(), exitPrice: leg.currentSl, legPnlUsd: 0 };
   const closeOrder = await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: sig.direction, quantity: remainingQty });
   let avgPrice = parseFloat(closeOrder.avgPrice);
@@ -389,7 +406,7 @@ async function monitorOneSlot(slotKey, slot, f, idrRate) {
 async function reportPartial(slotKey, f, mode, idrRate) {
   const leg = f[mode];
   const isDemo = mode !== 'real';
-  const msg = formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: leg.realizedPnlUsd, entryPrice: leg.entryPrice, assetLabel: ASSET_LABEL, patternType: f.patternType, mode: f.patternType }, new Date(), isDemo, idrRate, null, badge(isDemo), SYSTEM_LABEL.RANGER);
+  const msg = formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: leg.realizedPnlUsd, entryPrice: leg.entryPrice, assetLabel: ASSET_LABEL, patternType: f.patternType, mode: f.patternType, trailSmaLen: TRAIL_SMA_LEN_4H }, new Date(), isDemo, idrRate, null, badge(isDemo), SYSTEM_LABEL.RANGER);
   const wantsThisMode = (mode === 'real') === (f.wibowoRoute === 'real');
   await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club (partial):`, e.message));
   if (mode === 'demo' && f.wibowoRoute === 'demo') await sendWhatsAppToWibowo(msg).catch(() => {});

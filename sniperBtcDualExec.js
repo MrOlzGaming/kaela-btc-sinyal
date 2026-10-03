@@ -59,7 +59,8 @@ const CONFIG_PATH = path.join(__dirname, 'sniper-btc-dual-exec-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'sniper-btc-dual-exec-journal.json');
 const SYMBOL = 'BTCUSDT';
 const MARGIN_ASSET = 'USDT';
-const PARTIAL_RR = 2; // SAMA persis sniperAutoAnalysis.js
+const PARTIAL_RR = 3; // SAMA sniperAutoAnalysis.js PARTIAL_RR_BY_ASSET.btc (3 Okt 2026: 2R -> 3R, riset sniperExitResearch.js)
+const PARTIAL_FRAC = 1 / 3; // porsi TP native tahap 1 (3 Okt 2026: 1/2 -> 1/3, menang 2 era -- lihat BACKTEST-REGISTRY)
 const TRAIL_SMA_LEN = 10; // SAMA persis sniperAutoAnalysis.js -- SMA harian
 const PARTIAL_SHRINK_RATIO = 0.75; // SAMA threshold sniperLiveMonitor.js ("posQty < filledQty*0.75")
 const ASSET_LABEL = 'BTCUSDT';
@@ -219,7 +220,7 @@ async function openSniperBtcDual({ order, livePrice }) {
       throw new Error(`Entry (${mode}) masuk tapi SL gagal nempel (${slErr.message}) -- UDAH DITUTUP PAKSA otomatis.`);
     }
     const { stepSize, quantityPrecision } = await exec.getSymbolInfo(SYMBOL);
-    const halfQty = binanceExecutorDefault.roundToStepSize(filledQty / 2, stepSize, quantityPrecision);
+    const halfQty = binanceExecutorDefault.roundToStepSize(filledQty * PARTIAL_FRAC, stepSize, quantityPrecision); // nama var lama dipertahanin, isinya sekarang 1/3
     await exec.placeTakeProfit({ symbol: SYMBOL, direction: order.direction, tpPrice: order.tp, quantity: halfQty > 0 ? halfQty : filledQty });
     return {
       entryPrice, qty: filledQty, leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
@@ -296,7 +297,10 @@ async function _doPartialAndReopen(o, mode, exec, posQtyBeforeClose, idrRate) {
   // lihat fetchLastReduceOnlyFill) -- fallback ke harga TP target kalau query gagal/gak ketemu
   // (rate-limit/clock-drift, dst -- JANGAN gagalin proses partial cuma gara2 ini).
   const exitPriceLeg1 = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? o.tp;
-  leg.partialPnlUsd = o.direction === 'buy' ? (exitPriceLeg1 - leg.entryPrice) * posQtyBeforeClose : (leg.entryPrice - exitPriceLeg1) * posQtyBeforeClose;
+  // ⛔ BUG LATEN fix 3 Okt 2026: DULU dikali posQtyBeforeClose (= SISA posisi abis TP kepicu), padahal untung tahap 1 = qty yg
+  // DITUTUP TP (leg.qty - sisa). Pas split 1/2 kebetulan angkanya sama (bug gak keliatan); split 1/3 bakal kecatat 2x lipat.
+  const partialClosedQty = Math.max(0, leg.qty - posQtyBeforeClose);
+  leg.partialPnlUsd = o.direction === 'buy' ? (exitPriceLeg1 - leg.entryPrice) * partialClosedQty : (leg.entryPrice - exitPriceLeg1) * partialClosedQty;
   leg.partialDone = true;
 
   const livePrice = await fetchLivePrice(mode);

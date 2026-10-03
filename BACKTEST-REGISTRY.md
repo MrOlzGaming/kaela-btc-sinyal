@@ -235,6 +235,11 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   2,56/1,93 (<2023 / >=2023), 8 koin 2,14/1,63 vs 1,98/1,54, rotasi CAGR 90%/49% vs 78%/42% (DD sama). SMA lebih
   panjang/Chandelier ATR/tanpa partial = menang di 1 era, kalah di era lain -> DITOLAK. Partial 1,5R = paling jelek.
   **DIPASANG** (3 Okt): Ranger Rotasi (`partialFrac` 1/3) + Ranger BTC live (`rangerBtcDualExec.js`, + fix pembulatan qty).
+- **Sniper (BTC harian)** (`backtest/sniperExitResearch.js` + run era-split terpisah 2017-22 / 2023-26, engine
+  `runFlagBacktestWindowGated` + opsi baru `partialFrac`): partial 1/3 @2R GAK lebih bagus buat Sniper; pemenang 2 era =
+  **ambil 1/3 di 3R, trail SMA10** -- 2017-22 CAGR 216% vs 196% (DD 35% sama), 2023-26 CAGR 89% vs 88% DD **36% vs 44%**.
+  **DIPASANG** (3 Okt) di Sniper BTC (`sniperAutoAnalysis.js` PARTIAL_RR_BY_ASSET btc:3, `sniperBtcDualExec.js` TP native
+  1/3) + fix bug laten untung partial (dikali sisa qty, bukan qty yg ditutup). Emas belum diuji -> tetap 2R/separuh.
 - **Ukuran posisi** (rotasi 8 koin, exit baru, dari dump trade): ukuran sekarang 2019-22 CAGR 90% **DD 81%** | 2023-26
   CAGR 49% DD 41%. **Alt = exposure /2 (diperlakukan kayak short, ide Olan), BTC long full**: 2019-22 CAGR 84% **DD 55%** |
   2023-26 CAGR 38% DD 37%. Semua separuh: 55%/28% DD 55%/23%. -> **DIPASANG** di rotasi (`hitung(direction:'sell')` buat

@@ -32,7 +32,9 @@ async function main() {
   console.log(`DEMO VST -- harga ${live}, saldo ${bal} VST, stepSize ${info.stepSize}, minNotional $${info.minNotionalUsd}, pricePrecision ${info.pricePrecision}`);
   const positions = await ex.getAllPositions();
   if (positions.length) { console.log('⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi:', positions.map((p) => `${p.positionSide} ${p.positionAmt}`).join(', ')); process.exit(3); }
-  const qty = ex.roundToStepSize(Math.max(2, (info.minNotionalUsd || 2) * 1.5) / live, info.stepSize, info.quantityPrecision);
+  // (3 Okt 2026) FIX: minNotional BTC cuma $2 tapi qty minimal 1 step (0,0001 BTC ~$8,5) -- $3/harga kebulet jadi 0. Ambil yang
+  // lebih gede: notional minimum x1,5 ATAU 1 step.
+  const qty = Math.max(info.stepSize, ex.roundToStepSize(Math.max(2, (info.minNotionalUsd || 2) * 1.5) / live, info.stepSize, info.quantityPrecision));
   if (qty <= 0) { console.log('qty kehitung 0 -- stepSize/minNotional aneh:', info); process.exit(4); }
   console.log(`qty tes ${qty} BTC (~$${(qty * live).toFixed(2)})\n`);
 

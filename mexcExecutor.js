@@ -311,8 +311,17 @@ function createMexcClient({ apiKey, apiSecret }) {
     });
   }
 
+  // ⛔ FIX 4 Okt 2026 (audit malam, kelas bug SAMA PERSIS yang TERBUKTI di Binance -- SL/TP algo nyangkut abis cancel biasa):
+  // SL/TP di MEXC dipasang sbg PLAN ORDER (/planorder/place), tapi /order/cancel_all cuma batalin order limit biasa -> plan
+  // order lama bisa nyangkut & nutup posisi BARU nanti. Sekarang batalin dua-duanya; gagal batalin plan gak gugurin yang biasa.
   async function cancelAllOpenOrders(symbol) {
-    return signedRequest('POST', '/api/v1/private/order/cancel_all', { symbol });
+    const normal = await signedRequest('POST', '/api/v1/private/order/cancel_all', { symbol });
+    await signedRequest('POST', '/api/v1/private/planorder/cancel_all', { symbol }).catch((e) => console.log(`[mexcExecutor] cancel plan order ${symbol} gagal (diabaikan): ${e.message}`));
+    return normal;
+  }
+  // daftar plan order (SL/TP) yang belum ke-trigger -- buat audit nyangkut. states=1 = untriggered.
+  async function getOpenPlanOrders(symbol) {
+    return signedRequest('GET', '/api/v1/private/planorder/list/orders', { ...(symbol ? { symbol } : {}), states: 1, page_num: 1, page_size: 100 });
   }
 
   // Cek order TERBARU di simbol ini (19 Sep 2026, sama tujuan+pola persis
@@ -354,7 +363,7 @@ function createMexcClient({ apiKey, apiSecret }) {
   return {
     getAccountBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, getOrderDeals, cancelAllOpenOrders, getContractDetail, getSymbolInfo, emergencyCloseMarket,
-    wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela,
+    wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela, getOpenPlanOrders,
   };
 }
 

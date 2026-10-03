@@ -677,9 +677,14 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // bisa "salah" pas window flip pindah ke bull). SEKARANG akun real BOLEH auto-short BTC
       // (izin Olan malam ini) -- proteksi ini WAJIB ikut berlaku, kalau enggak posisi short real
       // bisa nyangkut tanpa pengaman pas window balik ke bull. Gerbang `isDemo` DICABUT.
-      {
-        const windowCandles = assetCfg.key === 'btc' ? null : await fetchCandles4hPaginated(zoneSymbol, FVG_TREND_SMA_LEN_4H + 10).catch(() => null);
-        const bearNow = isBearWindowFor(assetCfg.key, windowCandles);
+      // ⛔ FIX 4 Okt 2026 (audit malam): EMAS gak punya window lagi sejak 13 Sep (entry long gak digerbang -- inBearWindow
+      // di bawah cuma BTC), TAPI blok ini dulu tetap nutup paksa long Emas tiap close 4H < SMA1200 -> long dari pola
+      // flag/wedge yang kebuka di bawah SMA langsung ketutup siklus berikutnya (buka-tutup berulang). Backtest exit LIVE
+      // (backtest/donchianGoldLiveExit.js): perilaku itu n431 trade, 410 tutup paksa, PF 1,11 (era lama modal x0,66 DD 44%)
+      // vs desain yang divalidasi pas milih exit 1/2@3R (tanpa window/tutup paksa) PF 4,29. Sekarang tutup paksa BTC doang,
+      // KONSISTEN sama gerbang entry. (Belum pernah kejadian: 0 WINDOW_FLIP Emas di log eksekutor & jurnal semua akun.)
+      if (assetCfg.key === 'btc') {
+        const bearNow = isBearWindowFor(assetCfg.key, null);
         const wrongSide = (floating.direction === 'buy' && bearNow) || (floating.direction === 'sell' && !bearNow);
         if (wrongSide) {
           console.log(`[NyopetAutoTrader] ${assetCfg.label}: window rezim ganti, posisi ${floating.direction} ini jadi ARAH SALAH (bearNow=${bearNow}) -- tutup PAKSA demi keamanan.`);

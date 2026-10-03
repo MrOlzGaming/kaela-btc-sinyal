@@ -18,3 +18,8 @@ Donchian 100h gerbang          | semua n20 PF 4.23 avg +4.51% | <2023 n7 PF 0.96
 Donchian 100h gerbang+FC       | semua n22 PF 3.31 avg +3.36% | <2023 n7 PF 0.91 avg -0.24% modal x0.96 DD 15% | >=2023 n15 PF 6.77 avg +5.04% modal x2.29 DD 8% | FLIP 4
 
 Membaik di DUA era vs baseline live: gerbang 0/8 N, gerbang+FC 0/8 N.
+
+== PERILAKU LIVE: entry bebas + tutup paksa pas close < SMA1200 (4H) ==
+LIVE kode (entry bebas + FC SMA1200) | semua n431 PF 1.11 avg +0.03% | <2023 n249 PF 0.47 avg -0.13% modal x0.66 DD 44% | >=2023 n182 PF 1.77 avg +0.26% modal x1.62 DD 21% | FLIP 410
+DESAIN (tanpa window, tanpa FC) | semua n25 PF 4.29 avg +4.07% | <2023 n13 PF 1.85 avg +1.59% modal x1.22 DD 19% | >=2023 n12 PF 13.22 avg +6.76% modal x2.44 DD 4% | FLIP 0
+window SMA1200 penuh (gerbang+FC) | semua n82 PF 1.93 avg +0.68% | <2023 n37 PF 0.70 avg -0.22% modal x0.89 DD 24% | >=2023 n45 PF 2.92 avg +1.42% modal x1.99 DD 13% | FLIP 61

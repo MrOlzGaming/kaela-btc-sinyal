@@ -63,3 +63,13 @@ for (const days of [10, 15, 20, 25, 30, 40, 55, 100]) {
   if (fc.e1.pf > b.e1.pf && fc.e2.pf > b.e2.pf) better.fc++;
 }
 console.log(`\nMembaik di DUA era vs baseline live: gerbang ${better.gate}/${total} N, gerbang+FC ${better.fc}/${total} N.`);
+
+// ---- PERILAKU LIVE SEBENARNYA (ketemu 4 Okt): entry Emas gak digerbang window, TAPI monitor rangerAutoTrader.js masih
+// nutup paksa long Emas tiap close 4H < SMA1200 (isBearWindowFor('xau') gak digerbang BTC). Seberapa beda dari desain
+// (tanpa tutup paksa, yang dipakai milih exit 1/2 @3R tanggal 3 Okt)?
+console.log('\n== PERILAKU LIVE: entry bebas + tutup paksa pas close < SMA1200 (4H) ==');
+const sma1200 = smaArr(c, 1200);
+const smaBear = c.map((x, i) => sma1200[i] !== null && x.close < sma1200[i]);
+report('LIVE kode (entry bebas + FC SMA1200)', { sig: base.sig, bear: smaBear });
+report('DESAIN (tanpa window, tanpa FC)', base);
+report('window SMA1200 penuh (gerbang+FC)', { sig: base.sig.map((s, i) => (s && !smaBear[i] ? s : null)), bear: smaBear });

@@ -1,26 +1,26 @@
 {
   "regression": {
     "dateKey": "2026-10-04",
-    "at": "2026-10-03T19:00:54.744Z",
-    "passed": 101,
-    "failed": 1,
-    "ok": false,
-    "summary": "101 lolos, 1 gagal",
-    "exitCode": 1,
-    "durationSec": 2,
-    "tail": "    at Module.require (node:internal/modules/cjs/loader:1289:19)\n    at require (node:internal/modules/helpers:182:18)\n    at Object.<anonymous> (/tmp/kaela-selfcheck-Y8NCdD/rangerRotation.js:33:53)\n\nNode.js v20.20.2\n"
+    "at": "2026-10-03T21:30:31.262Z",
+    "passed": 103,
+    "failed": 0,
+    "ok": true,
+    "summary": "103 lolos, 0 gagal",
+    "exitCode": 0,
+    "durationSec": 6,
+    "tail": "  OK   rangerRotation: selftest alur penuh (prioritas koin, 1 posisi, partial 2R, trailing, SL, window flip, gak nutup punya Ninja) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n  OK   stdFuturesLadderMonitor: minus 50% -> pengingat umum cek posisi ke GRUP Wibowo (1x, tanpa sebut collateral), 75% -> pengingat lanjutan, abis collateral ditambah reset\n\n103 lolos, 0 gagal (dari 2026-10-03 test run)\n"
   },
   "bingxApi": {
     "lastRunDateKey": "2026-10-04",
-    "at": "2026-10-03T16:00:57.963Z",
-    "ok": false,
-    "executorHash": "5afe5da34dc534b7",
-    "verifiedAt": null,
-    "okCount": 13,
+    "at": "2026-10-03T21:30:37.470Z",
+    "ok": true,
+    "executorHash": "d9ed634a44386c6a",
+    "verifiedAt": "2026-10-03T21:30:37.470Z",
+    "okCount": 14,
     "total": 14,
-    "failedNames": "getOrder setelah cancel",
+    "failedNames": null,
     "aborted": false,
-    "exitCode": 1,
-    "tail": "Bersih-bersih:\n  ✅ cancel stop\n  ✅ cancel limit close\n  ✅ emergencyCloseMarket -- {\"orderId\":\"2106414220070359040\",\"positionSide\":\"LONG\",\"side\":\"SELL\",\"type\":\"MARKET\",\"price\":0,\"stopPrice\":0,\"clientOrderId\":\"kaela-1791043259887\",\"timeInForce\":\"GTC\",\"status\":\"FILLED\",\"avgPrice\":\"84830.4\",\"executedQty\":\"0.0001\"}\n  ✅ posisi bersih setelah tutup\n\n13/14 OK. GAGAL: getOrder setelah cancel -- JANGAN nyalain Ninja MR real sebelum ini beres; kirim output ini ke Kaela.\n"
+    "exitCode": 0,
+    "tail": "Bersih-bersih:\n  ✅ cancel stop\n  ✅ cancel limit close\n  ✅ emergencyCloseMarket -- {\"orderId\":\"2106497186318520320\",\"positionSide\":\"LONG\",\"side\":\"SELL\",\"type\":\"MARKET\",\"price\":0,\"stopPrice\":0,\"clientOrderId\":\"kaela-1791063040646\",\"timeInForce\":\"GTC\",\"status\":\"FILLED\",\"avgPrice\":\"84671.0\",\"executedQty\":\"0.0001\"}\n  ✅ posisi bersih setelah tutup\n\n14/14 OK. Semua endpoint yang dipakai ninjaMrTrader.js terbukti jalan di demo.\n"
   }
 }

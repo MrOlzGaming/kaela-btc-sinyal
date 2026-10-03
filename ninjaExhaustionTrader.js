@@ -181,6 +181,8 @@ function createTrader(deps) {
     const exitFee = leg.exitCommission != null ? leg.exitCommission : leg.exitPrice * leg.quantity * FALLBACK_FEE_PER_SIDE / 100;
     leg.feeUsd = entryFee + exitFee; leg.netUsd = leg.grossUsd - leg.feeUsd;
     const st = j.stats[mode]; st.totalPnlUsd += leg.netUsd;
+    // riwayat per transaksi (3 Okt 2026) -- buat rapor uji demo (trialReport.js) nilai 2 paruh, bukan cuma total
+    (j.history = j.history || []).push({ at: now(), mode, net: leg.netUsd }); if (j.history.length > 500) j.history = j.history.slice(-500);
     if (leg.netUsd >= 0) { st.wins += 1; st.grossWinUsd += leg.netUsd; } else { st.losses += 1; st.grossLossUsd += -leg.netUsd; }
     deps.kaelaJournal.update(`${f.id}-${mode}`, { status: 'closed', closedAt: new Date(now()).toISOString(), pnlUsd: leg.netUsd });
     log(`TUTUP ${mode} ${f.dir} ${leg.entryPrice} -> ${leg.exitPrice} (${leg.exitReason}) net ${leg.netUsd.toFixed(2)}`);

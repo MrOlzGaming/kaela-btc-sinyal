@@ -247,6 +247,7 @@ async function runDetector(deps) {
       + (exit.commission != null ? exit.commission : L.exitPrice * L.quantity * FALLBACK_FEE_PER_SIDE / 100);
     L.feeUsd = fee; L.netUsd = L.grossUsd - fee;
     const st = j.stats[mode]; st.totalPnlUsd += L.netUsd;
+    (j.history = j.history || []).push({ at: now(), mode, net: L.netUsd, key: ev.key }); if (j.history.length > 500) j.history = j.history.slice(-500);
     if (L.netUsd >= 0) { st.wins += 1; st.grossWinUsd += L.netUsd; } else { st.losses += 1; st.grossLossUsd += -L.netUsd; }
     deps.kaelaJournal.update(`${f.id}-${mode}`, { status: 'closed', closedAt: new Date(now()).toISOString(), pnlUsd: L.netUsd });
     log(`TUTUP ${mode} ${f.dir} ${L.entryPrice} -> ${L.exitPrice} (${exit.reason}) net ${L.netUsd.toFixed(2)}`);

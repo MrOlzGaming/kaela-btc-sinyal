@@ -167,7 +167,7 @@ timeout -k 10 60 node sniperLiveMonitor.js >> "$LOG_FILE" 2>&1 || log "sniperLiv
 # Nyopet Auto-Trader -- ping-pong zona likuiditas, numpang cadence yang sama.
 timeout -k 10 90 node rangerAutoTrader.js >> "$LOG_FILE" 2>&1 || log "rangerAutoTrader.js ERROR (exit $?)"
 
-# Ranger ROTASI 8 koin (3 Okt 2026) -- DEMO BingX VST, 1 posisi sekaligus pindah2 koin (rangerRotation.js).
+# Ranger ROTASI 8 koin (3 Okt 2026) -- BYBIT demo + real (ranger-rotation-config.json), 1 posisi sekaligus pindah2 koin (rangerRotation.js).
 timeout -k 10 150 node rangerRotation.js >> "$LOG_FILE" 2>&1 || log "rangerRotation.js ERROR (exit $?)"
 
 # Kaela Pro Trader -- eksekutor MULTI-AKUN, JALAN TERAKHIR (butuh sniper-orders.json fresh).

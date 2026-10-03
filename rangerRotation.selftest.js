@@ -165,6 +165,25 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     assert.ok(Math.abs(closedQty - Math.floor(q / 3 / 0.001) * 0.001) < 1e-9, `partial qty ${closedQty} vs 1/3 dari ${q}`);
     assert.ok(Math.abs(s.j.floating.legs.demo.remainingQty - (q - closedQty)) < 1e-6);
   });
+  await t('SL NATIVE: kepasang pas entry, digeser ke BE abis partial, posisi ditutup exchange -> dicatat SL (bukan "hilang")', async () => {
+    const s = setup({ signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
+    const stops = [];
+    s.demoEx.setPositionStopLoss = async (symbol, px) => { stops.push([symbol, px]); };
+    await s.rot.runCycle();
+    assert.deepStrictEqual(stops[0], ['BTCUSDT', 90]);
+    assert.strictEqual(s.j.floating.legs.demo.nativeSl, true);
+    s.st.prices.BTC = 121; s.st.trail = 100;
+    await s.rot.runCycle();
+    assert.deepStrictEqual(stops[1], ['BTCUSDT', 100], 'SL native harusnya digeser ke entry (100)');
+    // exchange nutup posisi pas harga balik ke BE
+    s.demoEx.positions['BTCUSDT|LONG'].positionAmt = 0;
+    s.st.prices.BTC = 99.9;
+    await s.rot.runCycle();
+    const leg = s.j.history[0].legs.demo;
+    assert.strictEqual(leg.reason, 'SL_BREAKEVEN');
+    assert.strictEqual(leg.exitPrice, 100);
+    assert.ok(leg.pnlUsd > 0, 'untung partial tetap kecatat');
+  });
   await t('candle basi gak entry; candle sama gak discan ulang; SL kelewat harga live gak entry', async () => {
     const s = setup({ closeTime: Date.UTC(2026, 9, 3, 8, 0) - 1, signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' } } });
     await s.rot.runCycle(); await s.rot.runCycle();

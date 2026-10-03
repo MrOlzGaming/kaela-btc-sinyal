@@ -136,8 +136,21 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
       stepSize,
       quantityPrecision: decimalPart ? decimalPart.length : 0,
       pricePrecision: info.priceFilter.tickSize.includes('.') ? info.priceFilter.tickSize.split('.')[1].length : 0,
+      tickSize: parseFloat(info.priceFilter.tickSize),
       minNotionalUsd: parseFloat(info.lotSizeFilter.minNotionalValue || '5'),
     };
+  }
+
+  // SL NATIVE di level posisi (3 Okt 2026). Kenapa: akun Bybit Olan = REGULAR_MARGIN (cross, dicek /v5/account/info) ->
+  // "SL via likuidasi isolated" (desain kalkulator exposure Olan) GAK berlaku di sini; tanpa SL native, crash di sela
+  // polling 15 menit bisa rugi lewat SL. trading-stop = stop dijamin EXCHANGE (setara semangat SL-via-likuidasi), dipicu
+  // MarkPrice, tpslMode Full (seluruh posisi). Dipanggil ulang = geser SL (mis. ke breakeven abis partial).
+  async function setPositionStopLoss(symbol, stopPrice) {
+    const { tickSize, pricePrecision } = await getSymbolInfo(symbol);
+    const px = Number((Math.round(stopPrice / tickSize) * tickSize).toFixed(pricePrecision));
+    return signedPost('/v5/position/trading-stop', {
+      category: CATEGORY, symbol, stopLoss: String(px), slTriggerBy: 'MarkPrice', tpslMode: 'Full', positionIdx: 0,
+    });
   }
 
   // UTA cuma dukung accountType=UNIFIED (dites empiris 26 Sep 2026 -- CONTRACT ditolak). Balikin
@@ -259,7 +272,7 @@ function createBybitClient({ apiKey, apiSecret, testnet }) {
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
-    emergencyCloseMarket, wasLastEntryOrderByKaela, getPositionBySide, getEquity,
+    emergencyCloseMarket, wasLastEntryOrderByKaela, getPositionBySide, getEquity, setPositionStopLoss,
   };
 }
 

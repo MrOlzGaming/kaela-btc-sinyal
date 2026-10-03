@@ -131,8 +131,15 @@ function createRotation(deps) {
       const exec = venue.exec;
       const pos = await exec.getPositionBySide(sym(f.coin), sideOf(f.direction)).catch(() => undefined);
       if (pos === undefined) { log(`${mode}: gagal cek posisi ${sym(f.coin)} -- coba siklus depan`); continue; }
-      if (pos === null || !(Math.abs(Number(pos.positionAmt)) > 0)) { await closeLeg(f, mode, 'OFFLINE_UNTRACKED', null, 0, true); continue; }
       const live = await venue.price(f.coin).catch(() => null);
+      if (pos === null || !(Math.abs(Number(pos.positionAmt)) > 0)) {
+        // Posisi udah gak ada. Kalau SL native pernah kepasang & harga udah lewat level stop -> ini SL exchange yg kepicu
+        // (bukan misteri) -> catat SL di harga stop. Selain itu -> jujur "hilang", PnL gak dihitung.
+        const stopHit = L.nativeSl && live && (isLong ? live <= L.sl * 1.003 : live >= L.sl * 0.997);
+        if (stopHit) await closeLeg(f, mode, L.partialDone ? 'SL_BREAKEVEN' : 'SL', L.sl, L.remainingQty != null ? L.remainingQty : L.qty);
+        else await closeLeg(f, mode, 'OFFLINE_UNTRACKED', null, 0, true);
+        continue;
+      }
       if (!live) { log(`${mode}: harga ${f.coin} gagal -- coba siklus depan`); continue; }
       const closeAll = async (reason) => { const q = ownQty(L, pos); const px = (await marketClose(exec, f, q)) || live; await closeLeg(f, mode, reason, px, q); };
       if (wrongSide) { await closeAll('WINDOW_FLIP'); continue; }
@@ -143,11 +150,19 @@ function createRotation(deps) {
           // (3 Okt 2026) porsi partial dari config (default 1/3) -- riset backtest/rangerExitResearch.js: 33% @2R lebih
           // bagus dari 50% di BTC & 8 koin, DUA era (sisa 2/3 di-trail SMA60 = "biarin yang menang lari").
           const half = await roundQty(exec, f.coin, ownBefore * (cfg.partialFrac != null ? cfg.partialFrac : 1 / 3));
-          if (half <= 0) { log(`${mode}: setengah qty kekecilan buat step -- partial dilewati, SL ke entry`); L.partialDone = true; L.sl = L.entryPrice; continue; }
+          if (half <= 0) {
+            log(`${mode}: qty partial kekecilan buat step -- partial dilewati, SL ke entry`);
+            L.partialDone = true; L.sl = L.entryPrice;
+            if (L.nativeSl && exec.setPositionStopLoss) await exec.setPositionStopLoss(sym(f.coin), L.entryPrice).catch((e) => log(`${mode}: geser SL native ke breakeven ${f.coin} GAGAL: ${e.message}`));
+            continue;
+          }
           const px = (await marketClose(exec, f, half)) || live;
           L.realizedPnlUsd = (isLong ? px - L.entryPrice : L.entryPrice - px) * half;
           L.remainingQty = await roundQty(exec, f.coin, ownBefore - half);
           L.partialDone = true; L.sl = L.entryPrice; L.partialAt = new Date(now()).toISOString();
+          if (L.nativeSl && exec.setPositionStopLoss) {
+            await exec.setPositionStopLoss(sym(f.coin), L.entryPrice).catch((e) => log(`${mode}: geser SL native ke breakeven ${f.coin} GAGAL: ${e.message}`));
+          }
           await announce(f, mode, deps.fmt.partial(f, mode));
           log(`PARTIAL ${mode} ${f.coin} @ ${px} realized ${L.realizedPnlUsd.toFixed(2)}`);
         }
@@ -183,7 +198,14 @@ function createRotation(deps) {
     await exec.setLeverage(s, calc.leverage, sideOf(sig.direction)).catch(() => {});
     const order = await exec.placeMarketEntry({ symbol: s, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice: live });
     const qty = Number(order.executedQty);
-    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0 };
+    // SL NATIVE dijamin exchange (3 Okt 2026) -- akun Bybit cross margin (SL-via-likuidasi isolated gak berlaku), jadi stop
+    // dipasang di level posisi. Gagal -> tetap jalan (polling SL 15 mnt masih aktif) tapi DILAPOR (kata GAGAL -> mandor).
+    let nativeSl = false;
+    if (exec.setPositionStopLoss) {
+      try { await exec.setPositionStopLoss(s, sig.sl); nativeSl = true; }
+      catch (e) { log(`${mode}: SL native ${s} GAGAL dipasang (cuma andelin polling): ${e.message}`); }
+    }
+    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0, nativeSl };
   }
 
   async function open(coin, sig) {

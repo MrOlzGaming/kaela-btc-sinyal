@@ -82,6 +82,18 @@ const partialRrFor = (assetKey) => PARTIAL_RR_BY_ASSET[assetKey] || PARTIAL_RR;
 const partialLabelFor = (assetKey) => PARTIAL_LABEL_BY_ASSET[assetKey] || 'separuh';
 // (3 Okt 2026) BTC lewat sniperBtcDualExec = exit TRAILING aturan Olan (SL ngikut harga terbaik, jarak trailR x invalidasi
 // awal, cuma naik, TANPA TP tetap) -- teks sinyal wajib jujur soal itu, bukan nyebut 'jual 1/3 di 3R' lagi.
+// (3 Okt 2026, Olan: "ga ada lagi manual.. ragu tinggal, yakin eksekusi otomatis.. ga usah lagi kasih sinyal short manual")
+// -- sinyal short INFO-ONLY (Emas, BTC yang auto-exec-nya di-skip, scan Ranger-4H Emas) gak dikirim WA lagi. Tetap
+// dicatat ke archive/log biar bisa diteliti; true = balikin perilaku lama.
+const MANUAL_SHORT_INFO_WA = false;
+// ⛔ FIX 3 Okt 2026 -- kaelaBankroll (saldo bayangan) di-reset $0 sejak era real 19 Sep -> SEMUA entry Sniper ke-skip
+// "saldo abis", termasuk BTC yang eksekusinya udah dipegang sniperBtcDualExec.js (sizing dari saldo exchange MASING2 leg,
+// demo SELALU jalan). Buat BTC dual-exec, bankroll bayangan cuma buat isi record shadow -> pakai modal nominal ini kalau kosong.
+const SHADOW_MODAL_FALLBACK_USD = 1000;
+function sizingModalFor(assetKey, availableBalance) {
+  if (availableBalance > 1) return availableBalance;
+  return assetKey === 'btc' && sniperBtcDualExecModule.loadConfig().enabled === true ? SHADOW_MODAL_FALLBACK_USD : availableBalance;
+}
 const btcTrailText = (assetKey) => {
   if (assetKey !== 'btc') return null;
   const c = sniperBtcDualExecModule.loadConfig();
@@ -332,7 +344,7 @@ async function main() {
           // turun ke info-only lagi. `liveExecution.testnet` di bawah SEKARANG ikutin `isTestnet()`
           // ASLI (bukan hardcode true) biar pesan WA jujur bilang Demo/Real yang beneran kejadian.
           if (assetKey === 'btc' && !nearWindowFlip) {
-            const availableBalance = Math.max(0, totalBalance - usedMargin);
+            const availableBalance = sizingModalFor(assetKey, Math.max(0, totalBalance - usedMargin));
             const riskDistance = Math.abs(bearLivePrice - shortSig.sl);
             const nyawaPct = riskDistance / bearLivePrice * 100;
             const partialTpCheck = bearLivePrice - riskDistance * partialRrFor(assetKey);
@@ -454,7 +466,7 @@ async function main() {
               });
               console.log(msg + '\n');
               addEntry('sniper', msg, now);
-              await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+              if (MANUAL_SHORT_INFO_WA) await sendWhatsApp(msg); else console.log('[SniperAutoAnalysis] Sinyal short info-only TIDAK dikirim WA (arahan Olan 3 Okt: ragu = gak usah, yakin = auto-eksekusi).');
               shortSignalSent = true;
               anyMessageSentToday = true;
             }
@@ -468,7 +480,7 @@ async function main() {
             // 🐛 FIX 19 Sep 2026 -- sama gap kayak jalur auto-exec BTC di atas: info-only short
             // (Emas/non-BTC) juga gak pernah keinget di archive.json sebelumnya.
             addEntry('sniper', msg, now);
-            await sendWhatsApp(msg); // broadcast -- Sniper Club + Wibowo Hedgefund (lihat fonnte.js)
+            if (MANUAL_SHORT_INFO_WA) await sendWhatsApp(msg); else console.log('[SniperAutoAnalysis] Sinyal short info-only TIDAK dikirim WA (arahan Olan 3 Okt: ragu = gak usah, yakin = auto-eksekusi).');
             shortSignalSent = true;
             anyMessageSentToday = true;
           }
@@ -535,7 +547,7 @@ async function main() {
           // 🐛 FIX 19 Sep 2026 -- sama gap, jalur short Sniper-4H (numpang parameter Nyopet) juga
           // gak pernah addEntry sebelumnya.
           addEntry('sniper', msg, now);
-          await sendWhatsApp(msg);
+          if (MANUAL_SHORT_INFO_WA) await sendWhatsApp(msg); else console.log('[SniperAutoAnalysis] Sinyal short info-only TIDAK dikirim WA (arahan Olan 3 Okt: ragu = gak usah, yakin = auto-eksekusi).');
           shortSignalSent = true;
           anyMessageSentToday = true;
         }
@@ -644,7 +656,7 @@ async function main() {
       // GAK berbagi pool margin walau 1 API key/akun yang sama -- kesimpulan awal SALAH, TIDAK ADA
       // kontensi Nyopet vs Sniper. `totalBalance` (kaelaBankroll.js) TETAP dipakai apa adanya
       // sesuai desain asli 14 Agu 2026 (perbandingan apel-ke-apel ke backtest).
-      const availableBalance = Math.max(0, totalBalance - usedMargin);
+      const availableBalance = sizingModalFor(assetKey, Math.max(0, totalBalance - usedMargin));
       if (availableBalance <= 1) {
         console.log(`[SniperAutoAnalysis] Saldo available abis, skip sisa sinyal.`);
         invalidNotes.push(`${assetCfg.emoji} ${assetLabelTag} (${modeLabelId}): pola ketemu tapi saldo available abis, gak sempat entry.`);

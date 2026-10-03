@@ -96,12 +96,18 @@ function nextSlotSignalId(slot, date = new Date()) {
 // ============ Exclusivity 2 arah sama Fed Dovish Grid (lihat catatan header) ============
 function isSlotFree(slotKey) { return !loadJournal()[slotKey].floating; }
 function hasAnyFloatingSlot() { const j = loadJournal(); return !!(j.pattern.floating || j.fvg.floating); }
+// (3 Okt 2026) cek DUA journal jalur lama: demo (nyopet-journal.json) + REAL Olan (multiAccountExecutor) -- leg real
+// modul ini juga main di BTCUSDC akun real yang sama. Selain Fed Grid, scalp FOMC (econ_reaction) juga dihitung.
+const OLAN_REAL_OLD_JOURNAL_PATH = path.join(__dirname, 'multi-account-state', '6281299303888-real-nyopet.json');
 function fedGridCurrentlyFloating() {
-  if (!fs.existsSync(OLD_JOURNAL_PATH)) return false;
-  try {
-    const oldJ = JSON.parse(fs.readFileSync(OLD_JOURNAL_PATH, 'utf8'));
-    return (oldJ.orders || []).some((o) => o.status === 'floating' && o.asset === 'btc' && o.patternType === FED_GRID_PATTERN_TYPE);
-  } catch { return false; }
+  for (const jp of [OLD_JOURNAL_PATH, OLAN_REAL_OLD_JOURNAL_PATH]) {
+    if (!fs.existsSync(jp)) continue;
+    try {
+      const oldJ = JSON.parse(fs.readFileSync(jp, 'utf8'));
+      if ((oldJ.orders || []).some((o) => o.status === 'floating' && o.asset === 'btc' && (o.patternType === FED_GRID_PATTERN_TYPE || o.patternType === 'econ_reaction'))) return true;
+    } catch { /* journal rusak/kosong = anggap gak ada */ }
+  }
+  return false;
 }
 
 // ============ Exec per mode -- 2 instance TERPISAH TOTAL (kredensial beda, BUKAN 1 key beda baseUrl

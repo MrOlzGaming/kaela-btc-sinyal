@@ -306,6 +306,11 @@ function formatExhaustionAlert({ price, exhaustedSide, peakUsd, sentiment }) {
   return lines.join('\n');
 }
 
+// (3 Okt 2026, Olan: "ga ada lagi manual.. manfaatkan sinyal kita sendiri di ninja") -- radar ini gak ngirim ajakan
+// fade MANUAL lagi. Sinyalnya tetap ke actionable-liquidity-signal-log.json -> dieksekusi OTOMATIS ninjaExhaustionTrader.js
+// (demo BingX, uji 100 transaksi). true = balikin WA lama.
+const RADAR_WA_ENABLED = false;
+
 async function checkBurst(state, price, sentiment, heatmap, burst, now) {
   const dominant = Math.max(burst.longUsd, burst.shortUsd);
   if (dominant < BURST_THRESHOLD_USD) {
@@ -320,7 +325,7 @@ async function checkBurst(state, price, sentiment, heatmap, burst, now) {
   const clustersSameDirection = nearbyClusters(heatmap, price, side === 'short' ? 'above' : 'below', side === 'short' ? 'shortLiquidatedUsd' : 'longLiquidatedUsd');
   const msg = formatBurstAlert({ price, burst, clustersSameDirection, sentiment });
   console.log(msg);
-  await sendWhatsApp(msg); // broadcast biasa -- Sniper Club + Wibowo Hedgefund (Aturan Besi #4 SYSTEM-MAP.md)
+  if (RADAR_WA_ENABLED) await sendWhatsApp(msg); else console.log('[ActionableLiquidityRadar] WA radar manual dimatikan (3 Okt) -- sinyal dicatat ke log, dieksekusi otomatis Ninja Exhaustion di demo BingX.');
   state.lastBurstSide = side;
   state.lastBurstAt = new Date(now).toISOString();
   appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'burst', side, price, burstUsd: side === 'short' ? burst.shortUsd : burst.longUsd, burstCount: side === 'short' ? burst.shortCount : burst.longCount });
@@ -343,7 +348,7 @@ async function checkImbalance(state, price, sentiment, heatmap, now) {
   }
   const msg = formatImbalanceAlert({ price, imbalance, sentiment });
   console.log(msg);
-  await sendWhatsApp(msg);
+  if (RADAR_WA_ENABLED) await sendWhatsApp(msg); else console.log('[ActionableLiquidityRadar] WA radar manual dimatikan (3 Okt) -- sinyal dicatat ke log, dieksekusi otomatis Ninja Exhaustion di demo BingX.');
   state.lastImbalanceSide = imbalance.side;
   state.lastImbalanceAt = new Date(now).toISOString();
   appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'imbalance', side: imbalance.side, price, fundingPct, clusterPrice: imbalance.cluster.price, clusterUsd: imbalance.cluster.usd });
@@ -365,7 +370,7 @@ async function checkExhaustion(state, price, sentiment, burst, now) {
   if (!result.exhausted) return;
   const msg = formatExhaustionAlert({ price, exhaustedSide: result.exhaustedSide, peakUsd: result.peakUsd, sentiment });
   console.log(msg);
-  await sendWhatsApp(msg, WIBOWO_GROUP_ID);
+  if (RADAR_WA_ENABLED) await sendWhatsApp(msg, WIBOWO_GROUP_ID); else console.log('[ActionableLiquidityRadar] WA radar manual dimatikan (3 Okt) -- sinyal dicatat ke log, dieksekusi otomatis Ninja Exhaustion di demo BingX.');
   appendSignalLog({ timestamp: new Date(now).toISOString(), type: 'exhaustion', side: result.exhaustedSide, price, peakUsd: result.peakUsd });
 }
 

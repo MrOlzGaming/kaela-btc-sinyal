@@ -36,7 +36,9 @@ const { addEntry } = require('./archive');
 
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
-const { createRangerTrader } = require('./rangerAutoTrader');
+const rangerAutoTraderModule = require('./rangerAutoTrader');
+const { createRangerTrader } = rangerAutoTraderModule;
+const rangerBtcDualExec = require('./rangerBtcDualExec');
 const { RANGER_ASSETS } = require('./rangerAssetConfig');
 const { buildJournalHook, buildSendWA, MASTER_NOMOR } = require('./multiAccountExecutor');
 // (5 Sep 2026, permintaan Olan: "atasi sinyal yang numpukin sinyal lain") -- journal REAL Olan
@@ -125,6 +127,12 @@ async function getOlanNyopetTrader() {
   return createRangerTrader({ client, journalPath: olanRealNyopetJournalPath(), apiCreds, onEvent: journalHook, sendWA, phone: account.phone });
 }
 
+// 2 leg scalp (3 Okt 2026): real dulu (akun real Olan), lalu demo (trader default, journal nyopet-journal.json).
+const SCALP_LEGS = [
+  { name: 'REAL', journalPath: olanRealNyopetJournalPath, getTrader: getOlanNyopetTrader },
+  { name: 'DEMO', journalPath: () => rangerAutoTraderModule.DEFAULT_JOURNAL_PATH, getTrader: async () => rangerAutoTraderModule.createOlanDemoRangerTrader() },
+];
+
 // Cek judul event pakai pencocokan teks (data live gak selalu dalam format persis sama kayak
 // generator tanggal deterministik di fedEvents.js) -- NFP/FOMC doang, SAMA scope kayak yang
 // DI-BACKTEST (backtest/econReactionBacktest.js, 93 event NFP 2019-2026). Dipakai 2 tempat:
@@ -195,44 +203,62 @@ async function tryOpenEconScalp(direction, eventLabel) {
     console.log(`[EconCalendarLive] "${eventLabel}" BUKAN NFP/FOMC -- skip eksekusi scalp (dibatasi 6 Sep 2026, CPI/PPI ke-backtest & DITOLAK, event lain belum pernah dites sama sekali).`);
     return null;
   }
-  return withJournalLock(olanRealNyopetJournalPath(), async () => {
-    try {
-      const claimedByFedGrid = await wouldFedGridClaim(eventLabel, direction);
-      if (claimedByFedGrid) {
-        console.log(`[EconCalendarLive] Event "${eventLabel}" juga memenuhi kriteria Fed Dovish Grid (dovish + tren SMA480 konfirmasi) -- econ_reaction NGALAH, biarin Fed Dovish Grid yang dapet slot BTC (keputusan Olan: edge dia lebih tebal/robust).`);
+  const claimedByFedGrid = await wouldFedGridClaim(eventLabel, direction).catch(() => false);
+  if (claimedByFedGrid) {
+    console.log(`[EconCalendarLive] Event "${eventLabel}" juga memenuhi kriteria Fed Dovish Grid (dovish + tren SMA480 konfirmasi) -- econ_reaction NGALAH, biarin Fed Dovish Grid yang dapet slot BTC (keputusan Olan: edge dia lebih tebal/robust).`);
+    return null;
+  }
+  // (3 Okt 2026, arahan Olan "demo dan real jalan") -- scalp dibuka di 2 leg independen: REAL (akun real Olan) +
+  // DEMO (trader default rangerAutoTrader, dikunci testnet). Modul dual-exec Ranger BTC pegang BTCUSDC yang SAMA
+  // di 2 akun itu -- kalau lagi ada slot dia kebuka, scalp skip (Binance netting 1 posisi/simbol, jangan campur).
+  if (rangerBtcDualExec.hasAnyFloatingSlot()) {
+    console.log('[EconCalendarLive] Skip scalp -- Ranger BTC dual-exec lagi pegang posisi BTCUSDC (cegah numpuk/netting).');
+    return null;
+  }
+  let opened = null;
+  for (const leg of SCALP_LEGS) {
+    const o = await withJournalLock(leg.journalPath(), async () => {
+      try {
+        const trader = await leg.getTrader();
+        const journal = trader.loadJournal();
+        if (trader.getFloatingOrder(journal, BTC_ASSET.key)) {
+          console.log(`[EconCalendarLive] ${leg.name}: skip buka scalp -- udah ada posisi BTC floating (dihindari numpuk).`);
+          return null;
+        }
+        const livePrice = await trader.fetchLivePrice(BTC_ASSET.symbol, BTC_ASSET.exchange);
+        const sl = direction === 'buy' ? livePrice * (1 - SCALP_NYAWA_PCT / 100) : livePrice * (1 + SCALP_NYAWA_PCT / 100);
+        const reasonNote = `Scalp otomatis abis rilis data ekonomi high-impact (${eventLabel}) -- BTC bereaksi ${direction === 'buy' ? 'naik' : 'turun'} duluan, exit paksa ~${SCALP_HOLD_MINUTES} menit (lihat backtest/econReactionBacktest.js).`;
+        return await trader.openPosition(BTC_ASSET, { direction, sl, patternType: 'econ_reaction', manualReason: reasonNote }, livePrice);
+      } catch (e) {
+        console.log(`[EconCalendarLive] ${leg.name}: GAGAL buka scalp econ_reaction:`, e.message);
         return null;
       }
-      const trader = await getOlanNyopetTrader();
-      const journal = trader.loadJournal();
-      if (trader.getFloatingOrder(journal, BTC_ASSET.key)) {
-        console.log(`[EconCalendarLive] Skip buka scalp -- udah ada posisi BTC floating (dihindari numpuk).`);
-        return null;
-      }
-      const livePrice = await trader.fetchLivePrice(BTC_ASSET.symbol, BTC_ASSET.exchange);
-      const sl = direction === 'buy' ? livePrice * (1 - SCALP_NYAWA_PCT / 100) : livePrice * (1 + SCALP_NYAWA_PCT / 100);
-      const reasonNote = `Scalp otomatis abis rilis data ekonomi high-impact (${eventLabel}) -- BTC bereaksi ${direction === 'buy' ? 'naik' : 'turun'} duluan, exit paksa ~${SCALP_HOLD_MINUTES} menit (lihat backtest/econReactionBacktest.js).`;
-      const order = await trader.openPosition(BTC_ASSET, { direction, sl, patternType: 'econ_reaction', manualReason: reasonNote }, livePrice);
-      return order;
-    } catch (e) {
-      console.log('[EconCalendarLive] GAGAL buka scalp econ_reaction:', e.message);
-      return null;
-    }
-  });
+    });
+    opened = opened || o;
+  }
+  return opened;
 }
 
 async function tryForceCloseEconScalp(eventLabel) {
-  return withJournalLock(olanRealNyopetJournalPath(), async () => {
-    try {
-      const trader = await getOlanNyopetTrader();
-      const r = await trader.forceClosePosition(BTC_ASSET.key, 'Kaela (auto econ-reaction scalp)', `Exit paksa ~${SCALP_HOLD_MINUTES} menit abis entry (${eventLabel}) -- jendela profit historisnya cuma sebentar ini, lihat backtest.`);
-      if (!r.ok) console.log('[EconCalendarLive] Tutup scalp:', r.error);
-      return r.ok;
-    } catch (e) {
-      console.log('[EconCalendarLive] GAGAL tutup scalp econ_reaction:', e.message);
-      return false;
-    }
-  });
+  let allOk = true;
+  for (const leg of SCALP_LEGS) {
+    await withJournalLock(leg.journalPath(), async () => {
+      try {
+        const trader = await leg.getTrader();
+        const journal = trader.loadJournal();
+        const scalpOpen = (journal.orders || []).some((o) => o.status === 'floating' && o.asset === BTC_ASSET.key && o.patternType === 'econ_reaction');
+        if (!scalpOpen) return; // leg ini gak kebuka / udah ketutup (SL) -- bukan error
+        const r = await trader.forceClosePosition(BTC_ASSET.key, 'Kaela (auto econ-reaction scalp)', `Exit paksa ~${SCALP_HOLD_MINUTES} menit abis entry (${eventLabel}) -- jendela profit historisnya cuma sebentar ini, lihat backtest.`);
+        if (!r.ok) { allOk = false; console.log(`[EconCalendarLive] ${leg.name}: tutup scalp:`, r.error); }
+      } catch (e) {
+        allOk = false;
+        console.log(`[EconCalendarLive] ${leg.name}: GAGAL tutup scalp econ_reaction:`, e.message);
+      }
+    });
+  }
+  return allOk;
 }
+
 
 async function main() {
   const now = new Date();

@@ -188,7 +188,7 @@ function _isReconcilerTrackingManually(reconcilerStatePath, exchange, symbol) {
   }
 }
 
-function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath, phone } = {}) {
+function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalBase, apiCreds, onEvent, idrRate, reconcilerStatePath, phone, forceTestnet, skipAssets } = {}) {
   const c = client || binanceExecutorDefault;
   const mc = mexcClient || mexcExecutorDefault;
   function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : c; }
@@ -207,7 +207,9 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
   // killSwitch.isTestnet()) udah kena uang beneran -- laporan real jadi hilang/salah-label total.
   // Fallback ke `isTestnetGlobal()` (SATU sumber kebenaran yang sama dipakai binanceExecutor.js)
   // kalau `apiCreds.testnet` gak eksplisit diisi (undefined, BUKAN cuma `!== false`).
-  const effectiveTestnet = apiCreds && typeof apiCreds.testnet === 'boolean' ? apiCreds.testnet : isTestnetGlobal();
+  // forceTestnet (3 Okt 2026) -- trader DEFAULT Olan = leg DEMO PERMANEN (lihat _defaultTrader di bawah), gak ikut
+  // killSwitch global lagi. Real Olan dipegang multiAccountExecutor.js (akun real Kaela Access) -- 1 akun 1 jalur.
+  const effectiveTestnet = forceTestnet === true ? true : (apiCreds && typeof apiCreds.testnet === 'boolean' ? apiCreds.testnet : isTestnetGlobal());
   const baseUrl = effectiveTestnet === false ? 'https://fapi.binance.com' : 'https://demo-fapi.binance.com';
   // 29 Agu 2026: pesan WA dulu HARDCODE "(Binance Demo)" -- gak masalah selama Real belum pernah
   // beneran ngirim pesan, TAPI bakal MENYESATKAN begitu Real jalan (nunjuk "Demo" padahal duit
@@ -740,7 +742,12 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // journal SENDIRI. Fed Dovish Grid (bawah file ini) TETAP jalur lama TANPA PERUBAHAN, gak
     // kena gate ini -- mutual-exclusion 2 arah dicek terpisah (lihat rangerBtcDualExec.js header +
     // pengecekan di _processFedDovishGridLocked). XAU/Emas TIDAK kena gate ini sama sekali.
-    const btcDualEnabled = assetKey === 'btc' && rangerBtcDualExecModule.loadConfig().enabled === true;
+    // (3 Okt 2026) dual-exec = punya OLAN doang. Trader default (demo) yang manggil modulnya; trader akun REAL Olan
+    // (multiAccountExecutor) SKIP chart-pattern/FVG BTC total (real leg-nya udah dipegang modul) biar gak dobel; member
+    // lain TETAP jalur lama di akun mereka sendiri (SEBELUMNYA ikut kebelokin ke modul Olan = gak pernah trading BTC).
+    const isOlanAccount = !apiCreds || String(phone || '').replace(/\D/g, '') === MASTER_NOMOR;
+    const btcDualEnabled = assetKey === 'btc' && isOlanAccount && rangerBtcDualExecModule.loadConfig().enabled === true;
+    if (btcDualEnabled && apiCreds) return;
     let patternFloating = null, fvgFloating = null;
     if (btcDualEnabled) {
       await rangerBtcDualExecModule.monitorRangerBtcDual({ idrRate });
@@ -1167,6 +1174,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
 
   async function main() {
     for (const assetCfg of Object.values(RANGER_ASSETS)) {
+      if (skipAssets && skipAssets.includes(assetCfg.key)) continue;
       try {
         await processAsset(assetCfg);
       } catch (e) {
@@ -1295,7 +1303,16 @@ function _journalHookOlanDemo(evt) {
 // (broadcast SEMUA grup di FONNTE_BROADCAST_GROUPS, otomatis kena Sniper Club + Wibowo Hedgefund
 // dua-duanya) biar konsisten sama aturan baru: apapun yang nyampe Sniper Club WAJIB nyampe Wibowo
 // Hedgefund juga.
-const _defaultTrader = createRangerTrader({ onEvent: _journalHookOlanDemo, sendWA: sendWhatsApp });
+// ⛔ FIX 3 Okt 2026 -- SEJAK killSwitch testnet di-flip false (26 Sep), trader ini DIAM-DIAM ikut jadi REAL (binanceExecutor
+// default ngikut isTestnet()) -> Fed Grid/econ Olan gak punya demo lagi DAN real berpotensi DOBEL sama trader akun real
+// Olan di multiAccountExecutor.js (akun sama, journal beda). Sekarang DIKUNCI demo (key BINANCE_API_KEY testnet) apapun
+// killSwitch-nya; Emas (MEXC, gak ada demo) di-skip di sini -- real Emas Olan cuma lewat multiAccountExecutor.
+function createOlanDemoRangerTrader(extra = {}) {
+  const s = (() => { try { return require('./secrets'); } catch { return {}; } })();
+  const demoClient = binanceExecutorDefault.createBinanceClient({ apiKey: s.BINANCE_API_KEY || process.env.BINANCE_API_KEY, apiSecret: s.BINANCE_API_SECRET || process.env.BINANCE_API_SECRET, testnet: true });
+  return createRangerTrader({ client: demoClient, forceTestnet: true, skipAssets: ['xau'], onEvent: _journalHookOlanDemo, sendWA: sendWhatsApp, ...extra });
+}
+const _defaultTrader = createOlanDemoRangerTrader();
 
 async function main() {
   if (!isLiveTradingEnabled()) {
@@ -1309,7 +1326,7 @@ async function main() {
 // sniperAutoAnalysis.js bisa REUSE buat sinyal short window-bear timeframe Nyopet (4H) -- fungsi
 // murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createRangerTrader
 // yang emang eksekusi trading, itu tetap TERGUARD if require.main===module di bawah).
-module.exports = { createRangerTrader, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
+module.exports = { createRangerTrader, createOlanDemoRangerTrader, DEFAULT_JOURNAL_PATH, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR nyopetAutoTrader.js:', e.message); process.exit(1); });

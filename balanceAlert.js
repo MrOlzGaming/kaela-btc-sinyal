@@ -86,10 +86,10 @@ function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry
 
   return `🔔 *Sinyal ${strategy} ${assetLabel} kelewat -- saldo Real kurang*\n\n`
     + `Sinyal *${dirLabel}* baru muncul, tapi Kaela *gak bisa buka otomatis* di akun Real kamu -- saldo kurang buat nutup margin minimum.\n\n`
-    + `💡 Kalau masih mau ikut sinyal ini: isi saldo dulu ke Binance, terus buka manual sendiri (selama harga belum geser jauh):\n`
+    // (3 Okt 2026, Olan: "ga ada lagi manual") -- gak ngajak buka manual lagi; level cuma buat catatan.
+    + `ℹ️ Posisi DEMO tetap jalan otomatis. Level sinyal (catatan, BUKAN ajakan buka manual):\n`
     + levels.map((l) => `- ${l}`).join('\n') + '\n\n'
-    + `🧮 Hitung volume/margin sendiri: ${KALKULATOR_URL}\n\n`
-    + `Kalau gak sempat, gapapa -- sinyal berikutnya otomatis jalan begitu saldo cukup 🙏`;
+    + `Begitu saldo Real cukup, sinyal berikutnya otomatis jalan di Real juga 🙏`;
 }
 
 // Cocokin error "MEXC belum disetup buat member X" (_mexcNotConfiguredStub, multiAccountExecutor.js)

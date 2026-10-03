@@ -4,6 +4,10 @@ Katalog SEMUA strategi yang pernah dipelajari + hasil backtest terakhir + status
 ❌ ditolak) + alasannya. Kalau idenya udah ada di situ -> presentasikan langsung dari situ, JANGAN riset/backtest ulang
 (permintaan Olan 3 Okt 2026). Riset baru (lolos maupun gagal) WAJIB ditambah ke katalog.
 
+# Olan nanya "gantungan apa aja / apa yang belum"? Buka [`GANTUNGAN.md`](GANTUNGAN.md)
+
+Waiting list: yang nunggu Olan, nunggu tanggal/data, dan antrian kerja Kaela. Kerjaan ketunda WAJIB dicatat di situ.
+
 # Baca [`SYSTEM-MAP.md`](SYSTEM-MAP.md) DULUAN kalau kamu baru mulai kerja di folder ini
 
 Peta navigasi sistem (status strategi terkini, peta file, aturan besi, arsitektur infra) --

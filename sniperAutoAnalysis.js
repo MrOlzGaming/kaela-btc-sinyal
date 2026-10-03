@@ -80,6 +80,14 @@ const PARTIAL_RR_BY_ASSET = { btc: 3, xau: 2 };
 const PARTIAL_LABEL_BY_ASSET = { btc: '1/3', xau: 'separuh' };
 const partialRrFor = (assetKey) => PARTIAL_RR_BY_ASSET[assetKey] || PARTIAL_RR;
 const partialLabelFor = (assetKey) => PARTIAL_LABEL_BY_ASSET[assetKey] || 'separuh';
+// (3 Okt 2026) BTC lewat sniperBtcDualExec = exit TRAILING aturan Olan (SL ngikut harga terbaik, jarak trailR x invalidasi
+// awal, cuma naik, TANPA TP tetap) -- teks sinyal wajib jujur soal itu, bukan nyebut 'jual 1/3 di 3R' lagi.
+const btcTrailText = (assetKey) => {
+  if (assetKey !== 'btc') return null;
+  const c = sniperBtcDualExecModule.loadConfig();
+  const r = c.trailR !== undefined ? c.trailR : 3;
+  return c.enabled === true && r > 0 ? `Exit: SL TRAILING ${r}x jarak invalidasi awal -- ngikut harga terbaik, cuma bisa naik, TANPA TP tetap (profit gak dibatesin).` : null;
+};
 const TRAIL_SMA_LEN = 10;
 const PATTERN_HISTORY_DAYS = 200;
 
@@ -353,7 +361,7 @@ async function main() {
                 const created = createOrder({
                   asset: assetKey, mode: isFvgShort ? 'fvg' : 'sniper', direction: 'sell', strategyType: 'breakout', triggerPrice: bearLivePrice,
                   confirmationNote: `SHORT window bear -- ${shortSig.patternType} (nyawa ${nyawaPct.toFixed(1)}%). Lihat GANTUNGAN STRATEGI 12 Sep 2026.`,
-                  tpReasoning: `Target tahap 1 (beli-balik ${partialLabelFor(assetKey)}): ${partialRrFor(assetKey)}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}.`,
+                  tpReasoning: btcTrailText(assetKey) || `Target tahap 1 (beli-balik ${partialLabelFor(assetKey)}): ${partialRrFor(assetKey)}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}.`,
                   tp: partialTp, sl: shortSig.sl, exposure: calc.exposure, leverage: calc.leverage, marginUsd: calc.margin,
                   patternType: shortSig.patternType, partialTp, trailSmaLen: TRAIL_SMA_LEN,
                   notes: `Sinyal SHORT window bear, BTC DOANG (Emas tetap info-only -- lihat pesan info terpisah).`,
@@ -673,7 +681,7 @@ async function main() {
       const confirmationNote = cand.mode === 'fvg'
         ? `Fair Value Gap terbentuk @ $${cand.gapBottom.toLocaleString('en-US')}-$${cand.gapTop.toLocaleString('en-US')} (candle harian ${assetCfg.label} tutup balik di atas batas atas gap, tanda pantulan). SL di bawah batas bawah gap (nyawa ${nyawaPct.toFixed(1)}%) -- kalau gap keisi penuh, thesis-nya gugur. Deteksi otomatis fvgDetector.js.`
         : `Breakout pola ${patternLabel} -- candle harian ${assetCfg.label} CLOSE ${cand.direction === 'buy' ? 'di atas' : 'di bawah'} batas pola ($${dailyClose.toLocaleString('en-US')}). SL nempel lebar pola itu sendiri (nyawa ${nyawaPct.toFixed(1)}%), bukan zona jauh. Deteksi otomatis chartPatterns.js.`;
-      const tpReasoning = `Target tahap 1 (jual ${partialLabelFor(assetKey)}): ${partialRrFor(assetKey)}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}. Sisanya di-trail pakai SMA${TRAIL_SMA_LEN} harian (SL digeser breakeven abis tahap 1).`;
+      const tpReasoning = btcTrailText(assetKey) || `Target tahap 1 (jual ${partialLabelFor(assetKey)}): ${partialRrFor(assetKey)}x risiko @ $${partialTp.toLocaleString('en-US', { maximumFractionDigits: 0 })}. Sisanya di-trail pakai SMA${TRAIL_SMA_LEN} harian (SL digeser breakeven abis tahap 1).`;
 
       // 12 Sep 2026, riset "filter smart-money buat Sniper" Fase 1 -- KONTEKS doang buat sekarang
       // (lihat sentimentLines/smartMoneyContextLine di sniperOrderLog.js), disimpen di sini biar

@@ -84,6 +84,13 @@ function computePnl(order, exitPrice, fraction = 1) {
 // `silent` (14 Agu 2026, buat order trial/simulasi "jangan pernah kasih tau WA") -- BEDA dari
 // isWaMuted() yang cuma nunda sementara: order silent SELAMANYA gak pernah kirim WA di
 // SEPANJANG hidupnya (trigger/partial/closed), tetap kecatat normal di web/jurnal/bankroll.
+// (3 Okt 2026) order BTC yang dieksekusi sniperBtcDualExec.js (liveExecution.wibowoRoute ada) udah punya WA SENDIRI
+// per leg (Sniper Club + Wibowo) dan exit-nya TRAILING -- shadow di sini tetap dicatat (web/backtest), tapi DIEM
+// biar gak dobel / gak ngabarin 'target tahap 1' yang gak pernah ada di posisi asli.
+function isSilentOrder(order) {
+  return !!order.silentTest || !!(order.liveExecution && order.liveExecution.wibowoRoute);
+}
+
 async function sendWhatsAppRespectMute(msg, label, silent = false) {
   if (silent) {
     console.log(`[SniperOrderMonitor] Order SILENT (trial/simulasi) -- ${label} TETAP tercatat di web, gak pernah dikirim ke grup.`);
@@ -127,7 +134,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
       const msg = formatTriggered(updated, idrRate);
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
-      await sendWhatsAppRespectMute(msg, 'order kena trigger', order.silentTest);
+      await sendWhatsAppRespectMute(msg, 'order kena trigger', isSilentOrder(order));
       continue;
     }
 
@@ -148,7 +155,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
           const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
           console.log(msg + '\n');
           addEntry('sniper', msg, now);
-          await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
+          await sendWhatsAppRespectMute(msg, 'posisi kena SL', isSilentOrder(order));
           continue;
         }
         if (hitPartial) {
@@ -162,7 +169,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
             const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
             console.log(msg + '\n');
             addEntry('sniper', msg, now);
-            await sendWhatsAppRespectMute(msg, 'posisi kena SL', order.silentTest);
+            await sendWhatsAppRespectMute(msg, 'posisi kena SL', isSilentOrder(order));
             continue;
           }
           const { pnlUsd: realizedPnlUsd } = computePnl(order, order.partialTp, 0.5);
@@ -173,7 +180,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
           const msg = formatPartialClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
           console.log(msg + '\n');
           addEntry('sniper', msg, now);
-          await sendWhatsAppRespectMute(msg, 'target tahap 1 kena', order.silentTest);
+          await sendWhatsAppRespectMute(msg, 'target tahap 1 kena', isSilentOrder(order));
           continue;
         }
         continue; // belum kena apa-apa
@@ -205,7 +212,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
       const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
       console.log(msg + '\n');
       addEntry('sniper', msg, now);
-      await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh', order.silentTest);
+      await sendWhatsAppRespectMute(msg, 'posisi ditutup penuh', isSilentOrder(order));
       continue;
     }
 
@@ -232,7 +239,7 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
     const msg = formatClosed(updated, idrRate, await getTodaysPnl(assetCfg.symbol));
     console.log(msg + '\n');
     addEntry('sniper', msg, now);
-    await sendWhatsAppRespectMute(msg, 'posisi ditutup', order.silentTest);
+    await sendWhatsAppRespectMute(msg, 'posisi ditutup', isSilentOrder(order));
   }
 }
 

@@ -92,7 +92,7 @@ function main() {
     console.log(`  ${r.name}: ` + Object.entries(by).map(([y, t]) => `${y} ${t.reduce((s, q) => s + q.r, 0).toFixed(1)}R`).join(' | '));
   }
 }
-if (require.main === module && process.env.MODE !== "validate") main();
+if (require.main === module && !process.env.MODE) main();
 if (require.main === module && process.env.MODE === "validate") setImmediate(() => validate());
 
 // ---- VALIDASI (MODE=validate): robustness grid + pembanding entry ACAK (risk% & exit sama) ----
@@ -174,3 +174,25 @@ function runWithRisk(cs, v) {
   return trades;
 }
 if (require.main === module && process.env.MODE === 'validate') { /* main() udah jalan di atas kalau MODE kosong */ }
+
+// ---- MODE=validate1d: pembanding entry ACAK buat kandidat HARIAN (Sniper) ----
+function validate1d() {
+  const c5 = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+  const cs = aggregate(c5, 1440);
+  let seed = 777; const rng = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  for (const v of [
+    { name: '1D swing5 tren wick 2arah trail1', look: 5, trend: true, trendLen: 50, bodyConfirm: false, longOnly: false, exit: 'trail', trailR: 1, maxRiskPct: 10 },
+    { name: '1D swing5 tren wick 2arah trail2', look: 5, trend: true, trendLen: 50, bodyConfirm: false, longOnly: false, exit: 'trail', trailR: 2, maxRiskPct: 10 },
+    { name: '1D swing10 tren wick 2arah trail1', look: 10, trend: true, trendLen: 50, bodyConfirm: false, longOnly: false, exit: 'trail', trailR: 1, maxRiskPct: 10 },
+    { name: '1D swing5 tren wick 2arah trail3', look: 5, trend: true, trendLen: 50, bodyConfirm: false, longOnly: false, exit: 'trail', trailR: 3, maxRiskPct: 10 },
+  ]) {
+    const tr = runWithRisk(cs, v);
+    const SPLIT = Date.UTC(2023, 0, 1);
+    const a = tr.filter((t) => t.t < SPLIT), b = tr.filter((t) => t.t >= SPLIT);
+    const sims = []; for (let s = 0; s < 300; s++) sims.push(pf(runRandom(cs, v, tr, rng)));
+    sims.sort((x, y) => x - y);
+    const real = pf(tr), p = sims.filter((x) => x >= real).length / sims.length;
+    console.log(`${v.name}: PF ${real.toFixed(2)} (2019-22 ${pf(a).toFixed(2)} n${a.length} / 2023-26 ${pf(b).toFixed(2)} n${b.length}) | acak median ${sims[150].toFixed(2)} p95 ${sims[285].toFixed(2)} | p=${p.toFixed(3)}`);
+  }
+}
+if (require.main === module && process.env.MODE === 'validate1d') setImmediate(() => validate1d());

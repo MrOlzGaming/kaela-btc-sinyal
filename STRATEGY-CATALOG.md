@@ -49,8 +49,9 @@ Terakhir diperbarui: **3 Okt 2026**.
 - ❌ **Short Emas (Sniper/Ranger)** — window-gated jelek ($4.500 vs baseline $11.469, whipsaw SMA200); pengganti pakai posisi
   COT Commercial juga gak robust; ADX gate gagal split-era; real-yield/minyak cuma informasional. Sinyal info-only juga
   dimatikan 3 Okt (arahan "ragu tinggal").
-- ⏸️ **ICT sweep harian** (sapu low/high 5 hari + close balik, searah tren, tahan 5 hari) — PF 1,81/2,07 dua era tapi n ~150.
-  Belum dipasang (sampel kecil). Kandidat buat Sniper.
+- ❌ **ICT sweep harian** (sapu low/high 5-10 hari + close balik, searah tren SMA50) — kelihatan bagus (PF 1,6-1,9 dua era), TAPI
+  vs entry ACAK cuma 1 varian yang beda nyata (swing5 trail1 p=0,03); tetangganya (trail2 p=0,20, swing10 p=0,12, trail3 p=0,46)
+  gak beda dari acak -> gak robust, gak dipasang (3 Okt, `ict-sweep-1d-validate-output.log`).
 
 ## 🏹 RANGER (4 jam)
 
@@ -135,6 +136,12 @@ Terakhir diperbarui: **3 Okt 2026**.
 - **Trend follower besar (Man AHL, Winton, Paul Tudor Jones)**: potong rugi cepat, biarin untung lari, ikut tren menengah
   (= trailing 3x + filter tren kita). Tahun choppy pasti ada; solusinya diversifikasi banyak pasar (= rotasi koin).
 - **Kandidat uji berikutnya**: ukuran posisi menyesuaikan volatilitas, pyramiding (nambah posisi pas udah untung).
+
+## ⏳ NUNGGU OLAN
+
+- **Bitget demo**: demo Bitget cuma punya BTC/ETH/XRP & WAJIB API key demo terpisah (key real ditolak "exchange environment is
+  incorrect"). Saldo real Bitget $0,58. Rencana: begitu ada key demo -> slot ICT Sweep pindah ke Bitget (exchange sendiri, gak
+  bentrok netting sama slot pattern/FVG di Binance BTCUSDC).
 
 ## 🗒️ IDE YANG BELUM DICOBA (dari RESEARCH-LOG)
 

@@ -116,6 +116,7 @@ Terakhir diperbarui: **3 Okt 2026**.
   TAPI mulai di waktu salah -57% s/d -100%. API cuma baca -> Olan buka manual, Kaela pantau likuidasi (`stdFuturesLadderMonitor.js`).
   Rencana mulai 20 Okt 2026 (akhir window bear). Keputusan Olan 3 Okt: ini jadi jalur DCA real-nya (~Rp50rb/hari x3, saran
   margin >= Rp55rb biar lolos min 0,0001 BTC), gantiin spot DCA real (anggaran spot tetap 0).
+  Monitor juga ngingetin TAMBAH COLLATERAL (Std Futures bisa) pas posisi minus >= 50% / 75% margin + saran nominal (3 Okt).
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

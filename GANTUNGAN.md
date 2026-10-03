@@ -34,6 +34,9 @@ Keputusan Olan 3 Okt 2026 malam:
 - **Ranger Emas exit 1/2@3R** — n kecil, dipantau.
 - **Desember 2026** — tambah jadwal rilis 2027 ke `news-schedule.json` (verifikasi Fed/BLS/BEA/Census). Jadwal FOMC Minutes &
   Beige Book belum dimasukin (tanggalnya belum diverifikasi).
+- **Pertama kali Olan tambah collateral** di BingX Standard Futures -- cek di `std-futures-ladder-state.json` apakah `margin` posisi
+  ikut naik (asumsi: field `initialMargin` allPosition ke-update). Kalau gak, cari field lain biar leverage efektif & harga
+  likuidasi perkiraan ikut bener. Peringatan collateral (-50% / -75% margin) aktif sejak 3 Okt.
 - **Data radar** (likuidasi, order book, whale, miner, smart-money) — numpuk; revisit setelah beberapa bulan.
 
 ## 🛠️ KAELA KERJAIN (antrian)

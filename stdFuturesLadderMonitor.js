@@ -33,6 +33,12 @@ const MMR = 0.005;            // maintenance margin rate perkiraan (sama dgn bac
 const LIQ_LOSS_FRAC = 0.85;   // rugi >= 85% margin = dianggap likuidasi
 const MAX_WAIT_RUNS = 10;     // ~10 menit nunggu riwayat order muncul
 const FAIL_ALERT_RUNS = 30;   // ~30 menit gagal baca beruntun -> lapor
+// (3 Okt 2026, Olan: "std futures bingx bisa tambahin collateral.. kalo ada posisi yang minus di atas 50% ingatkan aku buat
+// tambah collateral") -- rugi floating vs margin SEKARANG: >= 50% -> DM, >= 75% -> DM keras; pulih < 35% -> reset (bisa
+// ngingetin lagi kalau turun lagi). Saran nominal = tambahan biar rugi balik ke ~25% margin.
+const COLL_WARN_LEVELS = [0.5, 0.75];
+const COLL_RESET_BELOW = 0.35;
+const COLL_TARGET_LOSS = 0.25;
 
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
 const fmtUsd = (v) => (v === null || v === undefined ? '-' : '$' + Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }));
@@ -56,7 +62,7 @@ function normalizePosition(p) {
 // Klasifikasi penutupan dari harga tutup: 'liquidated' | 'closed'
 function classifyClose(layer, closePrice) {
   const dirSign = layer.side === 'SHORT' ? -1 : 1;
-  const pnlFrac = ((closePrice - layer.entry) / layer.entry) * layer.lev * dirSign; // relatif ke margin
+  const pnlFrac = ((closePrice - layer.entry) / layer.entry) * (layer.effLev || layer.lev) * dirSign; // relatif ke margin SEKARANG (abis tambah collateral)
   const pastLiq = layer.liqEst !== null && (layer.side === 'SHORT' ? closePrice >= layer.liqEst * 0.995 : closePrice <= layer.liqEst * 1.005);
   return { kind: pastLiq || pnlFrac <= -LIQ_LOSS_FRAC ? 'liquidated' : 'closed', pnlUsd: (layer.margin || 0) * pnlFrac };
 }
@@ -65,6 +71,26 @@ function freshState() {
 }
 function loadState() {
   try { return { ...freshState(), ...JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')) }; } catch { return freshState(); }
+}
+
+// rugi floating sebagai pecahan margin sekarang (positif = rugi)
+function lossFrac(layer) {
+  if (!layer.lastPrice || !layer.entry) return null;
+  const dirSign = layer.side === 'SHORT' ? -1 : 1;
+  return -((layer.lastPrice - layer.entry) / layer.entry) * (layer.effLev || layer.lev) * dirSign;
+}
+function collateralMessage(layer, lf, level) {
+  const lossUsd = lf * (layer.margin || 0);
+  const addUsd = Math.max(0, lossUsd / COLL_TARGET_LOSS - (layer.margin || 0));
+  return [
+    `🪜 TANGGA DCA · Kaela — ${level >= 0.75 ? '🚨 BAHAYA' : '⚠️ PERINGATAN'}: posisi minus ${(lf * 100).toFixed(0)}% margin`,
+    '',
+    `Posisi #${layer.no} ${layer.symbol} ${layer.side} x${layer.lev}${layer.effLev && Math.abs(layer.effLev - layer.lev) > 0.05 ? ` (efektif x${layer.effLev.toFixed(2)} abis tambah collateral)` : ''}`,
+    `Entry ${fmtUsd(layer.entry)} → sekarang ${fmtUsd(layer.lastPrice)} | margin ${fmtUsd(layer.margin)}, rugi floating ~${fmtUsd(lossUsd)}`,
+    `Perkiraan harga likuidasi: ~${fmtUsd(layer.liqEst)}`,
+    '',
+    `👉 Tambah collateral sekitar ${fmtUsd(addUsd)} biar rugi balik ke ~${(COLL_TARGET_LOSS * 100).toFixed(0)}% margin (harga likuidasi ikut menjauh).`,
+  ].join('\n');
 }
 
 function liqMessage(layer, closePrice, st) {
@@ -136,12 +162,31 @@ function createMonitor(deps, st) {
     for (const p of [...positions].sort((a, b) => (a.openedAt || 0) - (b.openedAt || 0))) {
       seen.add(p.key);
       const L = st.layers[p.key];
-      if (!L) { st.layers[p.key] = { ...p, no: st.nextNo++, status: 'open', firstSeenAt: now() }; log(`posisi baru #${st.layers[p.key].no} ${p.symbol} ${p.side} x${p.lev} entry ${p.entry}`); }
-      else if (L.status === 'open') { L.lastPrice = p.lastPrice; if (p.margin !== null) L.margin = p.margin; }
+      if (!L) { st.layers[p.key] = { ...p, no: st.nextNo++, status: 'open', firstSeenAt: now(), notional0: p.margin !== null && p.lev ? p.margin * p.lev : null }; log(`posisi baru #${st.layers[p.key].no} ${p.symbol} ${p.side} x${p.lev} entry ${p.entry}`); }
+      else if (L.status === 'open') {
+        L.lastPrice = p.lastPrice;
+        if (p.margin !== null) L.margin = p.margin;
+        // collateral ditambah -> margin naik -> leverage efektif turun & harga likuidasi menjauh (posisi lama tanpa notional0 diisi skrg)
+        if (!L.notional0 && L.margin && L.lev) L.notional0 = L.margin * L.lev;
+        if (L.notional0 && L.margin) { L.effLev = L.notional0 / L.margin; L.liqEst = estimateLiqPrice(L.side, L.entry, L.effLev); }
+      }
     }
     if (!st.seeded) { st.seeded = true; log(`seed awal: ${positions.length} posisi dicatat diam-diam`); return { ok: true, seeded: true }; }
 
     const events = [];
+    // peringatan tambah collateral (posisi yang MASIH hidup)
+    for (const L of Object.values(st.layers)) {
+      if (L.status !== 'open' || !seen.has(L.key)) continue;
+      const lf = lossFrac(L);
+      if (lf === null) continue;
+      if (lf < COLL_RESET_BELOW) { L.collAlert = 0; continue; }
+      const lvl = [...COLL_WARN_LEVELS].reverse().find((x) => lf >= x);
+      if (lvl && (L.collAlert || 0) < lvl) {
+        L.collAlert = lvl;
+        await deps.notify(collateralMessage(L, lf, lvl));
+        events.push({ no: L.no, kind: 'collateral', level: lvl });
+      }
+    }
     for (const L of Object.values(st.layers)) {
       if (L.status !== 'open' || seen.has(L.key)) continue;
       const r = await resolveGone(L);

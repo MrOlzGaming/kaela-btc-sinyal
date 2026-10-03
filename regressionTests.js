@@ -1227,6 +1227,30 @@ async function main() {
     assert.strictEqual(sent.length, 1, 'likuidasi yang sama gak boleh dilaporin ulang');
   });
 
+  // (3 Okt 2026) peringatan TAMBAH COLLATERAL: minus >=50% margin -> DM, >=75% -> DM keras, gak spam, reset abis pulih
+  await test('stdFuturesLadderMonitor: minus 50% -> ingetin tambah collateral (1x), 75% -> keras, abis collateral ditambah margin naik & reset', async () => {
+    const M = require('./stdFuturesLadderMonitor');
+    const pos = (price, margin) => ({ symbol: 'BTC-USDT', positionSide: 'LONG', time: 1000, entryPrice: '84000', leverage: '3', initialMargin: String(margin), currentPrice: String(price) });
+    let live = [pos(84000, 3)];
+    const sent = [];
+    const st = M.freshState();
+    const mon = M.createMonitor({ fetchPositions: async () => live, fetchOrders: async () => [], notify: async (m) => { sent.push(m); }, now: () => 5000, log: () => {} }, st);
+    await mon.runCycle(); // seed
+    live = [pos(84000 * (1 - 0.17), 3)]; await mon.runCycle(); // -17% harga x3 = -51% margin
+    assert.strictEqual(sent.length, 1); assert.ok(/PERINGATAN/.test(sent[0]) && /collateral/i.test(sent[0]), sent[0]);
+    await mon.runCycle();
+    assert.strictEqual(sent.length, 1, 'level sama gak boleh dikirim ulang');
+    live = [pos(84000 * (1 - 0.26), 3)]; await mon.runCycle(); // -78% margin
+    assert.strictEqual(sent.length, 2); assert.ok(/BAHAYA/.test(sent[1]), sent[1]);
+    // Olan tambah collateral $6 (margin 3 -> 9): leverage efektif 1x, rugi turun ke ~26% -> reset; harga likuidasi menjauh
+    live = [pos(84000 * (1 - 0.26), 9)]; await mon.runCycle();
+    const L = Object.values(st.layers)[0];
+    assert.ok(Math.abs(L.effLev - 1) < 1e-9, `effLev harusnya 1, dapet ${L.effLev}`);
+    assert.strictEqual(L.collAlert, 0, 'abis pulih di bawah 35% -> reset');
+    assert.ok(L.liqEst < 84000 * 0.1, 'x1 -> harga likuidasi jauh banget');
+    assert.strictEqual(sent.length, 2);
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

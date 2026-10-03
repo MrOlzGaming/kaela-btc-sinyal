@@ -24,7 +24,7 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 
-- **14 Okt 2026 20:30 WITA** — rilis pertama Ninja News (CPI) di demo: cek `ninja-news.log` + `ninja-news-research-log.json`,
+- **Kamis 8 Okt 2026 20:30 WITA** — rilis pertama Ninja News (Jobless Claims mingguan), lalu CPI 14 Okt. Di demo: cek `ninja-news.log` + `ninja-news-research-log.json`,
   pastikan detektor nyala & datanya kerekam. Lanjut tiap rilis di `news-schedule.json`.
 - **Ninja News** — evaluasi setelah 1-2 bulan demo (target 30 rilis): naik real kalau hasil bagus.
 - **Ninja Exhaustion** — evaluasi di **100 transaksi demo**: real kalau PF bersih > 1,2 dan gak ada paruh PF < 1.

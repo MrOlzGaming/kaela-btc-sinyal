@@ -92,7 +92,8 @@ Terakhir diperbarui: **3 Okt 2026**.
   GDP+PCE Okt-Des 2026 diverifikasi resmi; EURUSDT per detik. **Backtest per detik** (164 rilis 2023-26, `newsDxyLeadStudy.js`):
   arah EUR di 5-10 dtk pertama searah BTC 5 mnt kemudian 63-64%, tapi dibaca dtk 30-60 cuma ~50%. Edge cuma kalau EUR gerak
   >= 0,10% dalam 5-10 dtk: PF 1,14-1,21 (n=27-48, tipis). Selalu lebih bagus dari ikut BTC sendiri. Setting dikalibrasi: jendela
-  10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, maks 30 mnt. Uji demo 1-2 bulan, rilis pertama CPI 14 Okt 20:30 WITA.
+  10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, maks 30 mnt. Uji demo 1-2 bulan. + Jobless Claims mingguan (Kamis)
+  biar cepet keuji: rilis pertama Kamis 8 Okt 20:30 WITA.
 - ❌ **ICT Sweep di timeframe Ninja (1H / 2H BTC)** (3 Okt) — gak beda dari entry acak (p 0,15-1,0), >=2023 mayoritas rugi.
   Edge sweep CUMA muncul >= 4H (`ict-sweep-ninja-output.log`).
 - ❌ **ICT Sweep 4H di ALT** (21 koin, long doang) — gabungan lebih jelek dari acak (p 0,63-1,0); pilih koin pakai <2023 ->

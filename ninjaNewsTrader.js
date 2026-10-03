@@ -329,7 +329,19 @@ function armIfDue() {
   console.log(`[NinjaNews] Detektor dinyalain buat ${ev.label} (rilis ${new Date(ev.timeMs).toISOString()}), pid ${child.pid}.`);
 }
 
+// Kunci 1-detektor-per-rilis di /tmp (4 Okt 2026, audit): journal ada di STATE_FILES executor -> pas run-vultr-executor.sh
+// reset --hard (cron :00/:15/:30/:45 -- PAS jam rilis 20:30!) file itu sesaat balik ke versi GitHub (tanpa handled/active
+// rilis ini). armIfDue di cron per-menit yang kebetulan baca di detik itu bisa nyalain detektor KEDUA -> entry dobel.
+// File di /tmp gak kesentuh git, jadi detektor kedua langsung mundur.
+function acquireEventLock(key) {
+  const p = path.join(require('os').tmpdir(), `kaela-ninja-news-${String(key).replace(/[^0-9A-Za-z-]/g, '_')}.lock`);
+  // EEXIST = rilis ini udah pernah dipegang detektor lain (hidup ATAU udah selesai) -> mundur. Error lain (/tmp bermasalah)
+  // -> tetap jalan, jangan sampai detektor mati total gara-gara kunci.
+  try { fs.writeFileSync(p, String(process.pid), { flag: 'wx' }); return true; } catch (e) { return e.code !== 'EEXIST'; }
+}
+
 async function live(key) {
+  if (!acquireEventLock(key)) { console.log(`[NinjaNews] Detektor ${key} udah pernah/lagi jalan (kunci /tmp) -- mundur.`); return; }
   const cfg = loadConfig();
   const journal = loadJournal();
   const ev = loadSchedule().find((e) => e.key === key);

@@ -64,6 +64,13 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   // penyebabnya request nyangkut di jaringan > recvWindow default 5 dtk. GET = baca doang (aman
   // diulang dgn timestamp baru); POST/DELETE SENGAJA gak diulang (risiko order dobel/eksekusi ganda).
   const TIMESTAMP_INVALID_CODE = 109400;
+  // ⛔ FIX 3 Okt 2026 (ketemu pas uji mekanik Ninja News di demo) -- orderId BingX 19 digit (mis. 2106296322092523520)
+  // > Number.MAX_SAFE_INTEGER -> res.json() MOTONG presisinya (digit belakang geser) -> cancelOrder/getOrder by orderId
+  // SELALU nyasar ("order not exist"). Kena semua yg pakai orderId: Ninja MR (cek fill limit, geser limit exit), Exhaustion
+  // & News (geser stop trailing). Angka >= 16 digit di luar string dijadiin STRING sebelum parse (timestamp 13 digit aman).
+  function parseJsonKeepBigInts(text) {
+    return JSON.parse(text.replace(/([:\[,]\s*)(-?\d{16,})(?=\s*[,\}\]])/g, '$1"$2"'));
+  }
   async function signedRequest(method, path, params = {}, attempt = 1) {
     const sortedKeys = Object.keys(params).sort();
     const base = sortedKeys.map((k) => `${k}=${params[k]}`).join('&');
@@ -71,7 +78,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     const signature = sign(paramsStr);
     const url = `${baseUrl}${path}?${paramsStr}&signature=${signature}`;
     const res = await fetch(url, { method, headers: { 'X-BX-APIKEY': apiKey } });
-    const data = await res.json();
+    const data = parseJsonKeepBigInts(await res.text());
     if (data.code === TIMESTAMP_INVALID_CODE && method === 'GET' && attempt === 1) {
       return signedRequest(method, path, params, 2);
     }

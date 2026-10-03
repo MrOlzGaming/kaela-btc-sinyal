@@ -189,7 +189,7 @@ async function fetchClosedCandles(tf) {
 
 async function main() {
   const cfg = loadConfig();
-  if (!cfg.enabled) { console.log('[NinjaMR] enabled:false -- gak ngapa-ngapain.'); return; }
+  if (!cfg.enabled) return; // diam total (3 Okt 2026: paper dimatikan, runner tiap menit -- jangan nyampah log)
   if (!TF_MS[cfg.tf]) { console.log(`[NinjaMR] tf '${cfg.tf}' gak didukung (5m/15m), skip.`); return; }
   const candles = await fetchClosedCandles(cfg.tf);
   if (candles.length < 300) { console.log(`[NinjaMR] Candle kurang (${candles.length}), skip.`); return; }

@@ -45,6 +45,10 @@ Terakhir diperbarui: **3 Okt 2026**.
   window-bear 20 trade (tipis, dipantau).
   Demo+real paralel (`sniperBtcDualExec.js`), exit trailing 3x.
 - ✅ **Short BTC window bear** (auto) — sampel tipis, tetap jalan (arahan Olan).
+- ℹ️ **Sniper Emas: gerbang long pas < SMA200 harian** (cek paritas 4 Okt, `backtest/sniperGoldWindowParity.js`, flag+wedge
+  2010-26) — konfigurasi live (gerbang long, tanpa short, tanpa tutup paksa) vs buy-only polos: PF sedikit lebih tinggi (1,42 vs
+  1,31; trailing 3x 2,26 vs 1,83) tapi total R lebih kecil (12 vs 18 / 21,6 vs 28) krn trade separuh. Trade-off wajar, sesuai
+  arahan Olan ("window habis jangan long") -- gak diubah. (Beda dari Ranger Emas yang ketemu bug tutup paksa, 0056.)
 - ❌ **Filter DXY buat Sniper** — gagal rigor (split-era + sensitivitas). Cuma Ranger yang dapet filter DXY.
 - ❌ **Short Emas (Sniper/Ranger)** — window-gated jelek ($4.500 vs baseline $11.469, whipsaw SMA200); pengganti pakai posisi
   COT Commercial juga gak robust; ADX gate gagal split-era; real-yield/minyak cuma informasional. Sinyal info-only juga

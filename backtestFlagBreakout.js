@@ -241,6 +241,9 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
     // buat sensitivity test (mis. geser window, atau matiin force-close WINDOW_FLIP).
     bearWindowFn = require('./halvingBearWindow').isBtcBearWindow,
     forceCloseOnFlip = true,
+    // allowShort (4 Okt 2026, audit paritas Sniper Emas) -- false = window bear cuma MATIIN long, gak buka short (aturan live
+    // Emas: long-only). Default true = perilaku LAMA persis.
+    allowShort = true,
     // `halfShortExposure` (14 Sep 2026, default TRUE -- PERSIS aturan live sekarang: "short
     // exposure separuh long") -- opsional `false` CUMA buat riset perbandingan "gimana kalau
     // ATURAN INI gak ada" (validasi 14 Sep, backtest/shortHalfExposureValidation.js), BUKAN buat
@@ -372,13 +375,13 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
       const flag = detectFlag(daily, i, { poleLookbackRange, poleMinMovePct, flagLookbackRange, flagMaxRangePct });
       if (!bearNow && flag && flag.type === 'bull' && lastPrice > flag.flagHigh) {
         direction = 'buy'; sl = flag.flagLow * (1 - slBufferPct / 100); patternType = 'flag_bull';
-      } else if (bearNow && flag && flag.type === 'bear' && lastPrice < flag.flagLow) {
+      } else if (bearNow && allowShort && flag && flag.type === 'bear' && lastPrice < flag.flagLow) {
         direction = 'sell'; sl = flag.flagHigh * (1 + slBufferPct / 100); patternType = 'flag_bear';
       }
     }
     if (!direction && usePatterns.includes('wedge')) {
       const wedge = detectWedge(daily, i, { wedgeLookbackRange, minTouches: wedgeMinTouches, convergenceRatio: wedgeConvergenceRatio });
-      if (bearNow && wedge && wedge.type === 'rising' && lastPrice < wedge.projectedSupport) {
+      if (bearNow && allowShort && wedge && wedge.type === 'rising' && lastPrice < wedge.projectedSupport) {
         direction = 'sell'; sl = wedge.recentSwingHigh * (1 + slBufferPct / 100); patternType = 'wedge_rising';
       } else if (!bearNow && wedge && wedge.type === 'falling' && lastPrice > wedge.projectedResistance) {
         direction = 'buy'; sl = wedge.recentSwingLow * (1 - slBufferPct / 100); patternType = 'wedge_falling';

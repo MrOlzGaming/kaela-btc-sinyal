@@ -68,6 +68,8 @@ function readScheduledWorkflows() {
 async function ghApi(token, endpoint) {
   const res = await fetch(`https://api.github.com${endpoint}`, {
     headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'kaela-audit', Accept: 'application/vnd.github+json' },
+    // (4 Okt 2026) tanpa batas, 1 request GitHub yang ngegantung bikin seluruh script kena timeout 60 dtk eksekutor (exit 124)
+    signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();

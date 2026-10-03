@@ -1,14 +1,14 @@
 {
   "regression": {
-    "dateKey": "2026-10-03",
-    "at": "2026-10-02T19:01:05.642Z",
-    "passed": 99,
-    "failed": 0,
-    "ok": true,
-    "summary": "99 lolos, 0 gagal",
-    "exitCode": 0,
-    "durationSec": 4,
-    "tail": "  OK   ninjaMrSignal: run pertama cuma proses candle terakhir (gak nge-replay histori jadi sinyal basi)\n  OK   ninjaMrTrader: selftest alur penuh (limit entry, stop/limit exit, routing WA demo/real, fee) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n\n99 lolos, 0 gagal (dari 2026-10-02 test run)\n"
+    "dateKey": "2026-10-04",
+    "at": "2026-10-03T19:00:54.744Z",
+    "passed": 101,
+    "failed": 1,
+    "ok": false,
+    "summary": "101 lolos, 1 gagal",
+    "exitCode": 1,
+    "durationSec": 2,
+    "tail": "    at Module.require (node:internal/modules/cjs/loader:1289:19)\n    at require (node:internal/modules/helpers:182:18)\n    at Object.<anonymous> (/tmp/kaela-selfcheck-Y8NCdD/rangerRotation.js:33:53)\n\nNode.js v20.20.2\n"
   },
   "bingxApi": {
     "lastRunDateKey": "2026-10-04",

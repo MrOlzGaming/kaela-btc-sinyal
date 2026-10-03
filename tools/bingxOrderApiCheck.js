@@ -49,6 +49,7 @@ async function main() {
     if (limitId) {
       try { const o = await ex.getOrder(SYMBOL, limitId); if (!o) throw new Error('order null'); (String(o.status).toUpperCase() === 'NEW' || String(o.status).toUpperCase() === 'PENDING' ? ok : fail)('getOrder (limit ngendap)', show(o)); } catch (e) { fail('getOrder (limit)', e); }
       try { await ex.cancelOrder(SYMBOL, limitId); ok('cancelOrder (limit)'); } catch (e) { fail('cancelOrder (limit)', e); }
+      await new Promise((r) => setTimeout(r, 2000)); // BingX baru bisa baca order ~1,5 dtk abis cancel (109421 kalau langsung) -- diukur 4 Okt 2026
       try { const o = await ex.getOrder(SYMBOL, limitId); const st = o ? String(o.status).toUpperCase() : 'null'; (['CANCELED', 'CANCELLED'].includes(st) ? ok : fail)('getOrder setelah cancel', `status ${st}`); } catch (e) { fail('getOrder setelah cancel', e); }
       limitId = null;
     }

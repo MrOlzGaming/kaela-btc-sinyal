@@ -92,6 +92,7 @@ function createTrader(deps) {
   const { cfg, journal: j } = deps;
   const log = deps.log || ((m) => console.log(`[NinjaMR/exec] ${m}`));
   const now = deps.now || (() => Date.now());
+  const wait = deps.sleep || ((ms) => new Promise((r) => setTimeout(r, ms)));
   const tfMs = TF_MS[cfg.tf] || TF_MS['15m'];
   const P = { kind: 'mr', trend: true, k: cfg.k, exit: 'mean' };
 
@@ -226,6 +227,9 @@ function createTrader(deps) {
       else if (expired) {
         await safe(`cancel limit entry ${mode}`, () => exec.cancelOrder(EXEC_SYMBOL, L.orderId));
         order = await safe(`getOrder ${mode} (setelah cancel)`, () => exec.getOrder(EXEC_SYMBOL, L.orderId));
+        // BingX butuh ~1,5 dtk abis cancel sebelum order kebaca lagi (tepat abis cancel: 109421 "order not exist",
+        // diukur di demo 4 Okt 2026) -- tunggu 2 dtk + coba sekali lagi biar partial fill dapet avgPrice/fee asli.
+        if (!order) { await wait(2000); order = await safe(`getOrder ${mode} (setelah cancel, ulang)`, () => exec.getOrder(EXEC_SYMBOL, L.orderId)); }
         if (order) {
           filledQty = num(order.executedQty) || 0;
           L.resolved = true;

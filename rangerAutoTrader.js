@@ -1346,13 +1346,16 @@ function createOlanDemoRangerTrader(extra = {}) {
   const demoClient = binanceExecutorDefault.createBinanceClient({ apiKey: s.BINANCE_API_KEY || process.env.BINANCE_API_KEY, apiSecret: s.BINANCE_API_SECRET || process.env.BINANCE_API_SECRET, testnet: true });
   return createRangerTrader({ client: demoClient, forceTestnet: true, skipAssets: ['xau'], onEvent: _journalHookOlanDemo, sendWA: sendWhatsApp, ...extra });
 }
-const _defaultTrader = createOlanDemoRangerTrader();
+// LAZY (4 Okt 2026): dulu dibikin pas modul di-require -> salinan repo tanpa secrets.js (SelfCheck regression di /tmp)
+// CRASH cuma gara-gara require('./rangerAutoTrader') dari rangerRotation.js. Sekarang client baru dibikin pas main() jalan.
+let _defaultTrader = null;
 
 async function main() {
   if (!isLiveTradingEnabled()) {
     console.log('[NyopetAutoTrader] Kill switch OFF -- gak ngapa-ngapain.');
     return;
   }
+  if (!_defaultTrader) _defaultTrader = createOlanDemoRangerTrader();
   await _defaultTrader.main();
 }
 

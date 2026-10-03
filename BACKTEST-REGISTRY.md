@@ -261,6 +261,27 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
     >=0,1%, dibulatin ke tick 0,1), `rangerBtcDualExec.js` (`trailR` default 3, polling), `rangerRotation.js`
     (`trailRByCoin:{BTC:3}`, SL native Bybit digeser). Selftest rotasi 14/14, regression 100/100.
 
+## 📚 ICT Power of 3 / AMD (Akumulasi-Manipulasi-Distribusi) (3 Okt 2026) — `backtest/ictPo3Study.js`, `backtest/ictSweepHtfStudy.js`
+
+- **Konsep** (dirangkum dari fxopen.com, chartwhisperer.ca, theinnercircletraders.com): akumulasi = range sempit (sesi Asia),
+  manipulasi = "Judas swing" nyapu high/low range (ambil stop orang), distribusi = gerak asli ke arah SEBALIKNYA. Entry setelah
+  sapuan balik + konfirmasi (close balik ke range / patah struktur CHoCH), SL di ujung sapuan.
+- **INTRADAY (wilayah Ninja) -- GAGAL.** BTC 5m 2019-10..2026-09 (2.558 hari), range Asia (NY 20:00-00:00/02:00), sapuan di killzone
+  London 02-05 / NY AM 07-10 / gabungan, konfirmasi reclaim/CHoCH, exit TP ujung range / 2R / trailing / tutup 16:00 NY, filter
+  bias SMA20 harian / open tengah malam: **0/144 varian lolos** (fee 0,1%). Tanpa fee terbaik cuma PF ~1,1 (CHoCH + bias SMA, tutup
+  16:00); fee 0,05% pun impas. Pelajaran: sama kayak semua riset Ninja -- gerak intraday BTC < biaya; konsep PO3 ADA jejaknya
+  (tanpa fee positif) tapi terlalu tipis. Output: `ict-po3-output.log`, `ict-po3-nofee-output.log`, `ict-po3-fee005-output.log`.
+- **4 JAM / HARIAN (wilayah Ranger/Sniper) -- LOLOS.** "Sweep reversal": candle nyapu low/high N candle sebelumnya lalu close
+  balik ke dalam. 384 varian, 40 lolos PF > 1,2 di DUA era. Grid robustness 4H LONG trailing: hampir semua sel swing 20-50 x
+  trailing 3x positif dua era. **Pembanding entry ACAK** (risiko & exit sama, 300 simulasi): LONG swing20+tren PF 1,85 vs acak
+  median 1,29 (p=0,03); **2 arah swing20+tren SMA300 trailing 3x: PF 1,50 vs acak 1,03 (p=0,000), n=353, 2019-22 PF 1,45 /
+  2023-26 PF 1,55.** Harian (Sniper) juga ada yang lolos (swing5 + tren, tahan 5 hari PF 1,81/2,07) tapi n kecil (~150) -- belum
+  dipasang. Output: `ict-sweep-htf-output.log`, `ict-sweep-htf-validate-output.log`.
+- **DIPASANG** (3 Okt): slot ke-3 Ranger BTC "sweep" (`rangerSweep.js` + `rangerBtcDualExec.js` + `rangerAutoTrader.js`
+  `processBtcSweepSlot`), demo+real, aturan SAMA backtest (swing 20, tren SMA300 4H, SL ujung sapuan +/-0,1%, trailing 3x, tanpa DXY,
+  gak ikut tutup paksa window halving). Paritas modul live vs backtest: n=342 PF 1,48 (beda ~11 trade di awal data, SMA300 belum
+  penuh). Pengaman: skip kalau slot lain kebuka arah sebaliknya (Binance BTCUSDC one-way netting) / Fed Grid pegang simbol.
+
 ## 🧪 Ninja EXHAUSTION -- fade likuidasi "kehabisan tenaga" (3 Okt 2026) — `backtest/ninjaExhaustionStudy.js`
 
 - Replay logika radar Jalur C (episode likuidasi 1 sisi >= ambang/30 mnt, kering <= 30% puncak) di `liquidation-events.jsonl` Bybit

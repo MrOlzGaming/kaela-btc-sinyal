@@ -157,6 +157,8 @@ const PATTERN_REASON_LABEL = {
   // (30 Sep 2026, Ninja Mean Reversion -- ninjaMrTrader.js/ninjaMrSignal.js)
   // (3 Okt 2026, Ninja Exhaustion -- ninjaExhaustionTrader.js, UJI DEMO 100 transaksi)
   // (3 Okt 2026, Ninja News -- ninjaNewsTrader.js, UJI DEMO)
+  // (3 Okt 2026, Ranger slot sweep -- rangerSweep.js)
+  ict_sweep: 'ICT liquidity sweep 4 jam -- harga nyapu low/high swing (stop orang kena = manipulasi) lalu close balik ke dalam, Kaela masuk arah distribusi searah tren',
   news_dxy: 'Copet rilis data ekonomi -- dolar (EURUSDT per detik) bereaksi duluan, Kaela ambil arah BTC KEBALIKAN dolar sebelum BTC nyusul',
   exhaustion_fade: 'Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)',
   mean_reversion: 'Mean Reversion searah tren -- harga keluar Bollinger Band lawan arah tren EMA200, masuk balik ke arah tren (beli saat turun / jual saat naik)',

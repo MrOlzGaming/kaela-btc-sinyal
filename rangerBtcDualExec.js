@@ -66,14 +66,16 @@ function loadConfig() {
 
 function freshStats() { return { wins: 0, losses: 0, totalPnlUsd: 0 }; }
 function freshSlot() { return { floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() }, dailySignalSeq: { dayKey: null, count: 0 } }; }
-function defaultJournal() { return { pattern: freshSlot(), fvg: freshSlot() }; }
+// 'sweep' (3 Okt 2026) = slot ke-3: ICT liquidity sweep 4H (rangerSweep.js), arah ikut tren SMA300 (BUKAN window halving).
+const SLOT_KEYS = ['pattern', 'fvg', 'sweep'];
+function defaultJournal() { return { pattern: freshSlot(), fvg: freshSlot(), sweep: freshSlot() }; }
 
 function loadJournal() {
   if (!fs.existsSync(JOURNAL_PATH)) return defaultJournal();
   try {
     const j = JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8'));
     const merged = {};
-    for (const slotKey of ['pattern', 'fvg']) {
+    for (const slotKey of SLOT_KEYS) {
       merged[slotKey] = { ...freshSlot(), ...(j[slotKey] || {}) };
       merged[slotKey].stats = { demo: { ...freshStats(), ...(j[slotKey]?.stats?.demo || {}) }, real: { ...freshStats(), ...(j[slotKey]?.stats?.real || {}) } };
       merged[slotKey].dailySignalSeq = { dayKey: null, count: 0, ...(j[slotKey]?.dailySignalSeq || {}) };
@@ -83,7 +85,7 @@ function loadJournal() {
 }
 function saveJournal(j) { fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null, 2)); }
 
-function slotKeyFor(patternType) { return (patternType && patternType.startsWith('fvg')) ? 'fvg' : 'pattern'; }
+function slotKeyFor(patternType) { if (patternType === 'ict_sweep') return 'sweep'; return (patternType && patternType.startsWith('fvg')) ? 'fvg' : 'pattern'; }
 
 function nextSlotSignalId(slot, date = new Date()) {
   const dayKey = dayKeyOf(date);
@@ -95,7 +97,10 @@ function nextSlotSignalId(slot, date = new Date()) {
 
 // ============ Exclusivity 2 arah sama Fed Dovish Grid (lihat catatan header) ============
 function isSlotFree(slotKey) { return !loadJournal()[slotKey].floating; }
-function hasAnyFloatingSlot() { const j = loadJournal(); return !!(j.pattern.floating || j.fvg.floating); }
+function hasAnyFloatingSlot() { const j = loadJournal(); return SLOT_KEYS.some((k) => !!j[k].floating); }
+// candle 4H terakhir yang udah dipake sinyal sweep (cegah entry dobel dari candle yang sama abis posisi ketutup)
+function getSweepLastSignalT() { return loadJournal().sweep.lastSignalCandleT || null; }
+function markSweepSignal(t) { const j = loadJournal(); j.sweep.lastSignalCandleT = t; saveJournal(j); }
 // (3 Okt 2026) cek DUA journal jalur lama: demo (nyopet-journal.json) + REAL Olan (multiAccountExecutor) -- leg real
 // modul ini juga main di BTCUSDC akun real yang sama. Selain Fed Grid, scalp FOMC (econ_reaction) juga dihitung.
 const OLAN_REAL_OLD_JOURNAL_PATH = path.join(__dirname, 'multi-account-state', '6281299303888-real-nyopet.json');
@@ -207,6 +212,10 @@ async function openRangerBtcDual({ sig, livePrice }) {
   const journal = loadJournal();
   const slot = journal[slotKey];
   if (slot.floating) { console.log(`[RangerBtcDual/${slotKey}] Udah ada posisi floating, skip sinyal baru.`); return; }
+  // (3 Okt 2026) Binance BTCUSDC one-way = 1 posisi NET per simbol -- slot lain yang lagi kebuka ARAH SEBALIKNYA bakal
+  // saling ngurangin (bukan 2 posisi). Sejak ada slot sweep (arah ikut tren, bukan window), ini bisa kejadian -> skip.
+  const opposite = SLOT_KEYS.find((k) => k !== slotKey && journal[k].floating && journal[k].floating.direction !== sig.direction);
+  if (opposite) { console.log(`[RangerBtcDual/${slotKey}] Slot ${opposite} lagi kebuka arah sebaliknya -- skip (cegah posisi saling netting).`); return; }
   if (fedGridCurrentlyFloating()) { console.log(`[RangerBtcDual/${slotKey}] Fed Dovish Grid lagi pegang symbol ini (jalur lama) -- skip, cegah numpuk posisi.`); return; }
 
   const riskDistance = Math.abs(livePrice - sig.sl);
@@ -333,7 +342,7 @@ async function closeLegFull(mode, leg, sig) {
 async function monitorRangerBtcDual({ idrRate } = {}) {
   const journal = loadJournal();
   let touched = false;
-  for (const slotKey of ['pattern', 'fvg']) {
+  for (const slotKey of SLOT_KEYS) {
     const slot = journal[slotKey];
     const f = slot.floating;
     if (!f) continue;
@@ -356,7 +365,8 @@ async function monitorOneSlot(slotKey, slot, f, idrRate) {
   // Window-flip force-close (13 Sep 2026 punya jalur lama) -- BTC-only, cek 1x per slot pakai
   // isBtcBearWindow (siklus halving, gak butuh candle).
   const bearNow = isBtcBearWindow(new Date());
-  const wrongSide = (f.direction === 'buy' && bearNow) || (f.direction === 'sell' && !bearNow);
+  // slot sweep arahnya dari tren SMA300 (bukan window halving) -> gak ikut tutup paksa pas window ganti
+  const wrongSide = slotKey !== 'sweep' && ((f.direction === 'buy' && bearNow) || (f.direction === 'sell' && !bearNow));
 
   // Trailing SMA (SHARED, market sama) -- cuma dihitung kalau ADA leg yang udah lewat partial.
   let trailBroken = null;
@@ -466,4 +476,4 @@ async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
   if ((mode === 'real') === (f.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Wibowo (close):`, e.message));
 }
 
-module.exports = { loadConfig, loadJournal, openRangerBtcDual, monitorRangerBtcDual, isSlotFree, hasAnyFloatingSlot, fedGridCurrentlyFloating };
+module.exports = { getSweepLastSignalT, markSweepSignal, SLOT_KEYS, loadConfig, loadJournal, openRangerBtcDual, monitorRangerBtcDual, isSlotFree, hasAnyFloatingSlot, fedGridCurrentlyFloating };

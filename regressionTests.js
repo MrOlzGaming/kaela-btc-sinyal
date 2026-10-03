@@ -866,12 +866,25 @@ async function main() {
         delete require.cache[require.resolve('./rangerBtcDualExec')];
       });
 
-      await test('rangerBtcDualExec: journal fresh -- 2 slot (pattern/fvg) kosong, stats demo+real nol', () => {
+      await test('rangerSweep: sapu low 20 candle + close balik di atas (tren naik) = LONG, SL di ujung sapuan; gak balik / lawan tren = null', () => {
+        const { detectSweepSignal } = require('./rangerSweep');
+        const mk = (n) => Array.from({ length: n }, (_, k) => { const b = 100 + k * 0.05; return { open: b, high: b + 1, low: b - 1, close: b }; });
+        const cs = mk(320); const i = cs.length - 1; const prevLo = Math.min(...cs.slice(i - 20, i).map((c) => c.low));
+        cs[i] = { open: prevLo + 1, high: prevLo + 2, low: prevLo - 1, close: prevLo + 1.5 };
+        const sig = detectSweepSignal(cs, i);
+        assert.ok(sig && sig.direction === 'buy' && sig.patternType === 'ict_sweep');
+        assert.ok(Math.abs(sig.sl - (prevLo - 1) * 0.999) < 1e-9);
+        const cs2 = cs.slice(); cs2[i] = { ...cs[i], close: prevLo - 0.5 }; assert.strictEqual(detectSweepSignal(cs2, i), null, 'gak close balik = bukan sweep');
+        const cs3 = mk(320).map((c, k) => ({ ...c, open: 200 - k * 0.05, high: 201 - k * 0.05, low: 199 - k * 0.05, close: 200 - k * 0.05 }));
+        const lo3 = Math.min(...cs3.slice(i - 20, i).map((c) => c.low)); cs3[i] = { open: lo3 + 1, high: lo3 + 2, low: lo3 - 1, close: lo3 + 1.5 };
+        assert.strictEqual(detectSweepSignal(cs3, i), null, 'long lawan tren turun (di bawah SMA300) = skip');
+      });
+      await test('rangerBtcDualExec: journal fresh -- 3 slot (pattern/fvg/sweep) kosong, stats demo+real nol', () => {
         delete require.cache[require.resolve('./rangerBtcDualExec')];
         const rbdFresh = require('./rangerBtcDualExec');
         const j = rbdFresh.loadJournal();
-        assert.deepStrictEqual(Object.keys(j).sort(), ['fvg', 'pattern']);
-        for (const slotKey of ['pattern', 'fvg']) {
+        assert.deepStrictEqual(Object.keys(j).sort(), ['fvg', 'pattern', 'sweep']);
+        for (const slotKey of ['pattern', 'fvg', 'sweep']) {
           assert.strictEqual(j[slotKey].floating, null, `slot ${slotKey} harusnya kosong`);
           assert.strictEqual(j[slotKey].stats.demo.wins, 0);
           assert.strictEqual(j[slotKey].stats.real.wins, 0);

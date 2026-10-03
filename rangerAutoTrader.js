@@ -62,6 +62,30 @@ const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertI
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const goldTwinPositionModule = require('./goldTwinPosition');
 const rangerBtcDualExecModule = require('./rangerBtcDualExec');
+const { detectSweepSignal } = require('./rangerSweep');
+
+// ============ Slot ke-3 Ranger BTC: ICT LIQUIDITY SWEEP 4H (3 Okt 2026, riset ICT AMD permintaan Olan) ============
+// Lihat rangerSweep.js + backtest/ictSweepHtfStudy.js (2 arah PF 1,45/1,55, p=0,000 vs entry acak). Aturan SAMA backtest:
+// arah dari tren SMA300 4H (bukan window halving), TANPA filter DXY, exit trailing 3x invalidasi (rangerBtcDualExec).
+// Cuma candle 4H yang BARU closed (<= 30 mnt) & belum pernah dipake -- deploy/restart gak nembak candle lama.
+const SWEEP_FRESH_MS = 30 * 60 * 1000;
+async function processBtcSweepSlot(zoneSymbol) {
+  try {
+    if (!rangerBtcDualExecModule.isSlotFree('sweep')) return;
+    const candles = await fetchCandles4hPaginated(zoneSymbol, 330);
+    if (candles.length < 310) return;
+    const i = candles.length - 1, x = candles[i];
+    if (Date.now() - x.closeTime > SWEEP_FRESH_MS) return;
+    if (rangerBtcDualExecModule.getSweepLastSignalT() === x.openTime) return;
+    const sig = detectSweepSignal(candles, i);
+    if (!sig) return;
+    rangerBtcDualExecModule.markSweepSignal(x.openTime);
+    console.log(`[NyopetAutoTrader][Sweep] ${sig.reasoning} SL ${sig.sl.toFixed(1)} (risiko ${sig.riskPct.toFixed(2)}%).`);
+    await rangerBtcDualExecModule.openRangerBtcDual({ sig, livePrice: x.close });
+  } catch (e) {
+    console.log('[NyopetAutoTrader][Sweep] ERROR:', e.message);
+  }
+}
 const { fetchBinancePositioning } = require('./marketSentiment');
 const { isBtcBearWindow, isBtcApproachingWindowFlip, daysUntilBtcWindowFlip } = require('./halvingBearWindow');
 const { nextSignalId, countSignalIdsToday } = require('./signalIdGenerator');
@@ -751,6 +775,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     let patternFloating = null, fvgFloating = null;
     if (btcDualEnabled) {
       await rangerBtcDualExecModule.monitorRangerBtcDual({ idrRate });
+      await processBtcSweepSlot(zoneSymbol); // slot ke-3 ICT liquidity sweep (3 Okt 2026) -- independen dari pattern/FVG
       if (!rangerBtcDualExecModule.isSlotFree('pattern') && !rangerBtcDualExecModule.isSlotFree('fvg')) return;
     } else {
       // 2 SLOT INDEPENDEN (23 Sep 2026) -- pattern (flag/wedge/pennant) vs FVG BISA floating

@@ -1,0 +1,92 @@
+Funding: 7742 settlement 2019-09-10 .. 2026-10-03; candle 5m s/d 2026-09-30
+Sebaran funding/8j: p5 -0.0054%, median 0.0095%, p95 0.0454%, max 0.3000%
+
+== Grid (urut PF era terburuk). Lolos = PF >= 1,2 dua era + permutasi p < 0,05 ==
+✅ persentil 0.98 long-only H=24j SL=-% | semua n207 PF 1.45 avg +0.50% | <2023 n98 PF 1.49 avg +0.74% | >=2023 n109 PF 1.37 avg +0.28% | funding rata2 -0.005% | p=0.007
+✅ persentil 0.98 both H=24j SL=-% | semua n306 PF 1.33 avg +0.37% | <2023 n154 PF 1.31 avg +0.45% | >=2023 n152 PF 1.38 avg +0.29% | funding rata2 +0.036% | p=0.007
+   persentil 0.95 long-only H=72j SL=-% | semua n191 PF 1.63 avg +0.93% | <2023 n80 PF 2.01 avg +1.64% | >=2023 n111 PF 1.31 avg +0.41% | funding rata2 -0.022% | p=0.169
+   persentil 0.98 long-only H=72j SL=-% | semua n122 PF 1.52 avg +0.86% | <2023 n51 PF 1.81 avg +1.53% | >=2023 n71 PF 1.26 avg +0.38% | funding rata2 -0.022% | p=0.279
+   persentil 0.95 long-only H=72j SL=4% | semua n250 PF 1.26 avg +0.45% | <2023 n121 PF 1.24 avg +0.52% | >=2023 n129 PF 1.28 avg +0.38% | funding rata2 -0.018% | p=0.120
+✅ persentil 0.98 long-only H=24j SL=4% | semua n223 PF 1.27 avg +0.33% | <2023 n112 PF 1.29 avg +0.45% | >=2023 n111 PF 1.23 avg +0.20% | funding rata2 -0.007% | p=0.007
+   persentil 0.98 short-only H=24j SL=2% | semua n115 PF 1.25 avg +0.22% | <2023 n65 PF 1.23 avg +0.22% | >=2023 n50 PF 1.28 avg +0.23% | funding rata2 +0.077% | p=0.056
+   persentil 0.9 long-only H=72j SL=-% | semua n293 PF 1.24 avg +0.36% | <2023 n129 PF 1.20 avg +0.39% | >=2023 n164 PF 1.28 avg +0.34% | funding rata2 -0.032% | p=0.638
+   persentil 0.98 both H=24j SL=4% | semua n330 PF 1.21 avg +0.26% | <2023 n174 PF 1.19 avg +0.29% | >=2023 n156 PF 1.25 avg +0.22% | funding rata2 +0.028% | p=0.013
+   persentil 0.98 both H=72j SL=4% | semua n226 PF 1.21 avg +0.37% | <2023 n122 PF 1.22 avg +0.45% | >=2023 n104 PF 1.19 avg +0.27% | funding rata2 +0.059% | p=0.073
+   persentil 0.98 long-only H=72j SL=4% | semua n156 PF 1.23 avg +0.42% | <2023 n79 PF 1.18 avg +0.41% | >=2023 n77 PF 1.31 avg +0.42% | funding rata2 -0.022% | p=0.209
+   persentil 0.95 both H=72j SL=4% | semua n362 PF 1.18 avg +0.31% | <2023 n184 PF 1.18 avg +0.38% | >=2023 n178 PF 1.18 avg +0.24% | funding rata2 +0.058% | p=0.060
+   persentil 0.95 both H=72j SL=-% | semua n279 PF 1.35 avg +0.59% | <2023 n125 PF 1.52 avg +1.02% | >=2023 n154 PF 1.16 avg +0.24% | funding rata2 +0.084% | p=0.086
+   persentil 0.95 both H=72j SL=2% | semua n441 PF 1.18 avg +0.24% | <2023 n232 PF 1.15 avg +0.23% | >=2023 n209 PF 1.22 avg +0.25% | funding rata2 +0.040% | p=0.037
+   persentil 0.98 both H=24j SL=2% | semua n354 PF 1.24 avg +0.25% | <2023 n190 PF 1.31 avg +0.36% | >=2023 n164 PF 1.14 avg +0.13% | funding rata2 +0.022% | p=0.007
+   persentil 0.95 long-only H=72j SL=2% | semua n305 PF 1.18 avg +0.25% | <2023 n157 PF 1.11 avg +0.17% | >=2023 n148 PF 1.28 avg +0.34% | funding rata2 -0.012% | p=0.249
+   persentil 0.98 both H=72j SL=-% | semua n178 PF 1.28 avg +0.52% | <2023 n83 PF 1.45 avg +0.94% | >=2023 n95 PF 1.09 avg +0.15% | funding rata2 +0.085% | p=0.123
+   persentil 0.98 long-only H=24j SL=2% | semua n239 PF 1.24 avg +0.27% | <2023 n125 PF 1.35 avg +0.44% | >=2023 n114 PF 1.09 avg +0.08% | funding rata2 -0.004% | p=0.017
+
+Lolos rigor: 3/81 kombinasi (catatan: 81 uji -> ~4 lolos p<0,05 kebetulan doang, jadi butuh DATARAN, bukan 1 titik).
+
+== Per tahun: persentil 0.98 long-only H=24j SL=-% ==
+  2020: n17 PF 1.37 avg +0.54%
+  2021: n51 PF 1.26 avg +0.44%
+  2022: n30 PF 2.15 avg +1.36%
+  2023: n20 PF 4.24 avg +1.31%
+  2024: n41 PF 1.71 avg +0.46%
+  2025: n34 PF 0.79 avg -0.21%
+  2026: n14 PF 0.47 avg -0.51%
+  long n207 PF 1.45 avg +0.50% | short n0 PF 0.00 avg +0.00%
+
+== ROBUSTNESS long-only (funding persentil rendah), tanpa SL ==
+  lb  30h q0.95 H12j | n630 PF 1.19 avg +0.13% | <2023 PF 1.40 (n306) | 2023-24 PF 1.09 (n219) | 2025-26 PF 0.73 (n105) | p=0.005
+  lb  30h q0.95 H24j | n495 PF 1.34 avg +0.33% | <2023 PF 1.44 (n234) | 2023-24 PF 1.54 (n169) | 2025-26 PF 0.68 (n92) | p=0.005
+  lb  30h q0.95 H48j | n343 PF 1.45 avg +0.53% | <2023 PF 1.59 (n155) | 2023-24 PF 1.81 (n115) | 2025-26 PF 0.68 (n73) | p=0.025
+  lb  30h q0.97 H12j | n468 PF 1.11 avg +0.08% | <2023 PF 1.28 (n257) | 2023-24 PF 0.99 (n148) | 2025-26 PF 0.59 (n63) | p=0.040
+  lb  30h q0.97 H24j | n373 PF 1.35 avg +0.34% | <2023 PF 1.41 (n200) | 2023-24 PF 1.60 (n117) | 2025-26 PF 0.59 (n56) | p=0.025
+  lb  30h q0.97 H48j | n252 PF 1.62 avg +0.70% | <2023 PF 1.54 (n128) | 2023-24 PF 2.13 (n79) | 2025-26 PF 1.18 (n45) | p=0.015
+  lb  30h q0.98 H12j | n404 PF 0.95 avg -0.04% | <2023 PF 1.04 (n220) | 2023-24 PF 0.90 (n132) | 2025-26 PF 0.63 (n52) | p=0.224
+  lb  30h q0.98 H24j | n319 PF 1.12 avg +0.12% | <2023 PF 1.13 (n170) | 2023-24 PF 1.27 (n102) | 2025-26 PF 0.70 (n47) | p=0.463
+  lb  30h q0.98 H48j | n218 PF 1.30 avg +0.37% | <2023 PF 1.21 (n109) | 2023-24 PF 1.52 (n69) | 2025-26 PF 1.27 (n40) | p=0.279
+  lb  30h q0.99 H12j | n325 PF 0.97 avg -0.03% | <2023 PF 1.01 (n184) | 2023-24 PF 0.91 (n111) | 2025-26 PF 0.84 (n30) | p=0.194
+  lb  30h q0.99 H24j | n253 PF 1.11 avg +0.12% | <2023 PF 1.12 (n141) | 2023-24 PF 1.16 (n84) | 2025-26 PF 0.92 (n28) | p=0.502
+  lb  30h q0.99 H48j | n173 PF 1.44 avg +0.49% | <2023 PF 1.29 (n91) | 2023-24 PF 1.59 (n56) | 2025-26 PF 2.05 (n26) | p=0.184
+  lb  60h q0.95 H12j | n514 PF 1.20 avg +0.15% | <2023 PF 1.37 (n236) | 2023-24 PF 1.16 (n182) | 2025-26 PF 0.74 (n96) | p=0.005
+  lb  60h q0.95 H24j | n404 PF 1.26 avg +0.26% | <2023 PF 1.43 (n186) | 2023-24 PF 1.66 (n136) | 2025-26 PF 0.46 (n82) | p=0.040
+  lb  60h q0.95 H48j | n273 PF 1.63 avg +0.68% | <2023 PF 1.95 (n116) | 2023-24 PF 1.99 (n94) | 2025-26 PF 0.74 (n63) | p=0.035
+  lb  60h q0.97 H12j | n385 PF 1.22 avg +0.18% | <2023 PF 1.35 (n189) | 2023-24 PF 1.29 (n127) | 2025-26 PF 0.71 (n69) | p=0.015
+  lb  60h q0.97 H24j | n309 PF 1.37 avg +0.37% | <2023 PF 1.43 (n148) | 2023-24 PF 1.83 (n101) | 2025-26 PF 0.61 (n60) | p=0.010
+  lb  60h q0.97 H48j | n220 PF 1.46 avg +0.56% | <2023 PF 1.63 (n99) | 2023-24 PF 1.86 (n72) | 2025-26 PF 0.69 (n49) | p=0.045
+  lb  60h q0.98 H12j | n307 PF 1.11 avg +0.10% | <2023 PF 1.36 (n158) | 2023-24 PF 0.84 (n99) | 2025-26 PF 0.77 (n50) | p=0.050
+  lb  60h q0.98 H24j | n252 PF 1.36 avg +0.37% | <2023 PF 1.47 (n128) | 2023-24 PF 1.36 (n80) | 2025-26 PF 0.85 (n44) | p=0.035
+  lb  60h q0.98 H48j | n177 PF 1.59 avg +0.71% | <2023 PF 1.91 (n85) | 2023-24 PF 1.50 (n57) | 2025-26 PF 0.84 (n35) | p=0.045
+  lb  60h q0.99 H12j | n171 PF 1.01 avg +0.01% | <2023 PF 1.22 (n107) | 2023-24 PF 0.63 (n34) | 2025-26 PF 0.72 (n30) | p=0.239
+  lb  60h q0.99 H24j | n143 PF 1.32 avg +0.36% | <2023 PF 1.42 (n85) | 2023-24 PF 1.68 (n31) | 2025-26 PF 0.57 (n27) | p=0.179
+  lb  60h q0.99 H48j | n106 PF 1.64 avg +0.72% | <2023 PF 1.76 (n57) | 2023-24 PF 1.83 (n26) | 2025-26 PF 1.12 (n23) | p=0.119
+  lb  90h q0.95 H12j | n434 PF 1.15 avg +0.11% | <2023 PF 1.28 (n190) | 2023-24 PF 1.33 (n130) | 2025-26 PF 0.72 (n114) | p=0.030
+  lb  90h q0.95 H24j | n345 PF 1.23 avg +0.25% | <2023 PF 1.41 (n150) | 2023-24 PF 1.89 (n103) | 2025-26 PF 0.52 (n92) | p=0.080
+  lb  90h q0.95 H48j | n239 PF 1.60 avg +0.68% | <2023 PF 1.82 (n98) | 2023-24 PF 2.89 (n70) | 2025-26 PF 0.81 (n71) | p=0.020
+  lb  90h q0.97 H12j | n305 PF 1.16 avg +0.13% | <2023 PF 1.45 (n135) | 2023-24 PF 0.96 (n93) | 2025-26 PF 0.74 (n77) | p=0.040
+  lb  90h q0.97 H24j | n254 PF 1.25 avg +0.28% | <2023 PF 1.50 (n112) | 2023-24 PF 1.72 (n77) | 2025-26 PF 0.45 (n65) | p=0.129
+  lb  90h q0.97 H48j | n181 PF 1.64 avg +0.72% | <2023 PF 2.06 (n75) | 2023-24 PF 2.30 (n56) | 2025-26 PF 0.72 (n50) | p=0.040
+  lb  90h q0.98 H12j | n235 PF 1.26 avg +0.21% | <2023 PF 1.74 (n112) | 2023-24 PF 0.87 (n69) | 2025-26 PF 0.74 (n54) | p=0.040
+  lb  90h q0.98 H24j | n201 PF 1.50 avg +0.53% | <2023 PF 1.58 (n92) | 2023-24 PF 2.30 (n61) | 2025-26 PF 0.70 (n48) | p=0.005
+  lb  90h q0.98 H48j | n147 PF 1.78 avg +0.86% | <2023 PF 1.94 (n64) | 2023-24 PF 2.78 (n45) | 2025-26 PF 0.85 (n38) | p=0.020
+  lb  90h q0.99 H12j | n141 PF 1.06 avg +0.06% | <2023 PF 1.45 (n86) | 2023-24 PF 0.40 (n28) | 2025-26 PF 0.68 (n27) | p=0.159
+  lb  90h q0.99 H24j | n124 PF 1.33 avg +0.41% | <2023 PF 1.41 (n73) | 2023-24 PF 2.07 (n27) | 2025-26 PF 0.54 (n24) | p=0.134
+  lb  90h q0.99 H48j | n90 PF 1.62 avg +0.78% | <2023 PF 1.77 (n49) | 2023-24 PF 1.79 (n23) | 2025-26 PF 0.99 (n18) | p=0.159
+  lb 180h q0.95 H12j | n387 PF 1.13 avg +0.10% | <2023 PF 1.13 (n178) | 2023-24 PF 1.50 (n107) | 2025-26 PF 0.86 (n102) | p=0.035
+  lb 180h q0.95 H24j | n306 PF 1.18 avg +0.21% | <2023 PF 1.16 (n136) | 2023-24 PF 1.88 (n85) | 2025-26 PF 0.79 (n85) | p=0.204
+  lb 180h q0.95 H48j | n213 PF 1.53 avg +0.67% | <2023 PF 1.50 (n87) | 2023-24 PF 2.84 (n64) | 2025-26 PF 0.91 (n62) | p=0.020
+  lb 180h q0.97 H12j | n264 PF 1.27 avg +0.22% | <2023 PF 1.35 (n125) | 2023-24 PF 1.29 (n76) | 2025-26 PF 1.04 (n63) | p=0.015
+  lb 180h q0.97 H24j | n221 PF 1.25 avg +0.31% | <2023 PF 1.36 (n100) | 2023-24 PF 1.50 (n65) | 2025-26 PF 0.79 (n56) | p=0.134
+  lb 180h q0.97 H48j | n157 PF 1.54 avg +0.69% | <2023 PF 1.71 (n68) | 2023-24 PF 2.13 (n46) | 2025-26 PF 0.97 (n43) | p=0.055
+  lb 180h q0.98 H12j | n162 PF 1.10 avg +0.10% | <2023 PF 1.50 (n74) | 2023-24 PF 0.77 (n49) | 2025-26 PF 0.61 (n39) | p=0.104
+  lb 180h q0.98 H24j | n143 PF 1.31 avg +0.38% | <2023 PF 1.58 (n65) | 2023-24 PF 1.94 (n44) | 2025-26 PF 0.31 (n34) | p=0.124
+  lb 180h q0.98 H48j | n105 PF 1.83 avg +0.92% | <2023 PF 2.53 (n44) | 2023-24 PF 1.86 (n33) | 2025-26 PF 0.82 (n28) | p=0.025
+  lb 180h q0.99 H12j | n100 PF 1.21 avg +0.19% | <2023 PF 1.69 (n48) | 2023-24 PF 0.47 (n30) | 2025-26 PF 0.85 (n22) | p=0.104
+  lb 180h q0.99 H24j | n94 PF 1.49 avg +0.62% | <2023 PF 1.41 (n44) | 2023-24 PF 2.77 (n29) | 2025-26 PF 0.91 (n21) | p=0.040
+  lb 180h q0.99 H48j | n72 PF 1.58 avg +0.76% | <2023 PF 1.81 (n32) | 2023-24 PF 2.20 (n22) | 2025-26 PF 0.69 (n18) | p=0.109
+
+Ringkasan dataran: 46/48 kombinasi PF > 1, 27/48 p < 0,05 (kebetulan ~2.4), 2025-26 PF > 1 cuma 5/48.
+
+== FILTER TREN (close harian > SMA N) -- long-only funding rendah, tanpa SL ==
+  tanpa filter: 24 kombinasi | PF>1 24/24 | p<0,05 14/24 | median PF <2023 1.54, 2023-24 1.86, 2025-26 0.74 (PF>1 2/24) | median n 252
+  SMA50: 24 kombinasi | PF>1 24/24 | p<0,05 0/24 | median PF <2023 3.06, 2023-24 1.34, 2025-26 0.65 (PF>1 0/24) | median n 92
+  SMA100: 24 kombinasi | PF>1 24/24 | p<0,05 0/24 | median PF <2023 1.77, 2023-24 1.43, 2025-26 0.56 (PF>1 2/24) | median n 121
+  SMA200: 24 kombinasi | PF>1 19/24 | p<0,05 0/24 | median PF <2023 0.97, 2023-24 2.19, 2025-26 0.61 (PF>1 0/24) | median n 143

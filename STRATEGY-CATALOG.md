@@ -104,6 +104,15 @@ Terakhir diperbarui: **3 Okt 2026**.
   >=2023 PF 0,65-0,94. Edge sweep KHUSUS BTC (`ict-sweep-alt-output.log`).
 - ❌ **ICT Power of 3 intraday** (range Asia -> sapuan London/NY -> distribusi) — 0/144 varian lolos; tanpa fee terbaik PF ~1,1,
   fee 0,05% pun impas. Konsepnya ada jejak tapi terlalu tipis.
+- ❌ **CME Gap Fill** (4 Okt, `backtest/cmeGapStudy.js`, 365 gap mingguan 2019-26, biaya 0,12%) — "80% gap ketutup sebelum Jumat"
+  memang bener, TAPI itu cuma matematika jarak dekat: win rate tutup-gap malah DI BAWAH peluang random walk (median z -2,3),
+  0/120 kombinasi lolos (terbaik PF 0,88/0,78 per era). Arah sebaliknya (ikut gap) juga PF < 1. Mitos, jangan dipakai.
+- ⏸️ **Funding Ekstrem (kontrarian, mindset bandar)** (4 Okt, `backtest/fundingExtremeStudy.js`, funding Binance 7.742 settlement
+  2019-26, biaya 0,12% + funding ikut dihitung, null permutasi waktu) — SHORT pas funding tertinggi: lemah/gak signifikan.
+  LONG pas funding di 2-5% terendah (vs 30-180 hari ke belakang), tahan 24-48 jam: 2020-24 KUAT & berdataran (46/48 kombinasi
+  PF > 1, 27/48 p < 0,05 vs kebetulan ~2,4; contoh lb 90h q0,98 H24j PF 1,58 / 2,30). TAPI **2025-26 rugi di 43/48 kombinasi**
+  (median PF 0,74) -- edge MATI di rezim terbaru. Filter tren SMA50/100/200 gak nolong (2025-26 malah lebih jelek). Gak dipasang.
+  Revisit tiap kuartal (jalanin ulang script, cek apakah 2025-26+ balik positif) -- lihat GANTUNGAN.
 - ❌ **News 5M "ikut/lawan candle pertama"** (CPI/PPI/NFP/FOMC 2019-26) — 2/160 lolos (FOMC ikut 15m, n kecil). Satu pola
   stabil: JANGAN fade candle 5m pertama CPI (PF 0,29-0,39).
 

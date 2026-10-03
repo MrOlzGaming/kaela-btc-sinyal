@@ -248,6 +248,18 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   CAGR 49% DD 41%. **Alt = exposure /2 (diperlakukan kayak short, ide Olan), BTC long full**: 2019-22 CAGR 84% **DD 55%** |
   2023-26 CAGR 38% DD 37%. Semua separuh: 55%/28% DD 55%/23%. -> **DIPASANG** di rotasi (`hitung(direction:'sell')` buat
   alt & short BTC). Rugi maks 1 trade turun -20% -> -15%. DD = cuma pas posisi ditutup (optimis).
+- **🧲 TRAILING ATURAN OLAN** (3 Okt, ide Olan: SL ngikut harga terbaik, jaraknya tetap = N x invalidasi awal, cuma naik,
+  tanpa TP tetap). Engine: `rangerExitResearch.js` TRAIL_STUDY=1 (opsi `trailR`) + `runFlagBacktestWindowGated` opsi
+  `trailR`/`beAt`. Output: `ranger-olan-trail-output.log`, `ranger-btc-olan-trail-output.log`, `sniper-olan-trail-output.log`,
+  `ranger-be-study-output.log`, `sniper-be-study-output.log`.
+  - **N=1 (persis contoh Olan) LEBIH JELEK** di semua aset: kena "gocek" kecil terus, DD gak turun. N=2 masih kalah.
+  - **N=3 menang di BTC, 2 era**: Ranger BTC 4H PF **3,15/2,87** vs 2,72/2,04 (partial 1/3+SMA60); Sniper harian 2017-22
+    CAGR **236%** vs 224%, 2023-26 CAGR **129%** vs 99%, DD **27%** vs 33%.
+  - **Alt & emas: trailing kalah** -> tetap exit lama (alt 1/3@2R+BE+SMA60, emas 1/2@3R+SMA60).
+  - Early-BE (SL ke entry pas +1,5R): bantu dikit di BTC/Sniper, NGERUSAK emas -> gak dipakai terpisah (ketutup trailing 3x).
+  - **DIPASANG** (3 Okt, commit e5a4c790): `sniperBtcDualExec.js` (tanpa TP, SL native Binance dipasang ulang tiap naik
+    >=0,1%, dibulatin ke tick 0,1), `rangerBtcDualExec.js` (`trailR` default 3, polling), `rangerRotation.js`
+    (`trailRByCoin:{BTC:3}`, SL native Bybit digeser). Selftest rotasi 14/14, regression 100/100.
 
 ## 🏹 Upgrade Ranger: gerbang struktur (GAGAL) + portofolio multi-koin -> ROTASI (3 Okt 2026)
 

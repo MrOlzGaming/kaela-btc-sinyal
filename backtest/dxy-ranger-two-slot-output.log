@@ -1,0 +1,9 @@
+BTC 4H 16974 candle 2019-01-01..2026-08-27 | sinyal pattern 2452, fvg 11012 | exit trailing 3x, 2 slot
+TANPA DXY                | <2023 n47 PF 3.18 total +547.8% modal | >=2023 n48 PF 2.70 total +373.6% modal
+DXY SMA10                | <2023 n49 PF 2.82 total +384.2% modal | >=2023 n34 PF 3.41 total +305.4% modal
+DXY SMA20 (LIVE)         | <2023 n49 PF 3.02 total +426.5% modal | >=2023 n37 PF 2.56 total +253.3% modal
+DXY SMA30                | <2023 n41 PF 3.24 total +407.3% modal | >=2023 n28 PF 2.10 total +172.6% modal
+DXY SMA50                | <2023 n35 PF 4.03 total +506.1% modal | >=2023 n43 PF 1.70 total +147.0% modal
+
+Efek filter DXY SMA20 (LIVE) vs tanpa: <2023 -121.2%, >=2023 -120.4% modal.
+Permutasi (DXY palsu, blok 20 hari diacak, 200x): p = 0.652 (seberapa sering filter ACAK sama/lebih bagus dari filter DXY asli)

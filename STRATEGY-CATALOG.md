@@ -145,6 +145,10 @@ Terakhir diperbarui: **3 Okt 2026**.
   ⚠️ Cek ulang 4 Okt pakai exit LIVE sekarang (`backtest/dxyLiveExitCheck.js`, mesin 1 slot): BTC trailing 3x -> era lama malah
   lebih jelek pakai DXY (modal x6,80 -> x4,99), era baru ~sama (x3,24 -> x3,31); Emas 1/2@3R -> PF turun dua era tapi modal era
   baru naik, n kecil. Manfaatnya udah GAK JELAS di exit baru. Live BELUM diubah -- antri uji lengkap (2 slot + sweep), lihat GANTUNGAN.
+  ❌ **Uji LENGKAP BTC 4 Okt** (`backtest/dxyRangerTwoSlotCheck.js`, 2 slot independen + window halving + trailing 3x = mesin live):
+  filter DXY SMA20 MOTONG untung di DUA era (+548% -> +427% / +374% -> +253% modal), SEMUA panjang SMA (10/20/30/50) motong di dua
+  era, permutasi DXY palsu p = 0,65 (gak beda dari skip acak). Di exit baru filter DXY BTC = GAGAL rigor. Rekomendasi: cabut buat
+  BTC (Emas: hasil campur, n kecil, biarin). NUNGGU KEPUTUSAN OLAN (filter ini dulu permintaan dia langsung, 31 Agu).
 
 ## 🌱 SPOT / JANGKA PANJANG
 

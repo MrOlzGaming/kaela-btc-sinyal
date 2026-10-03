@@ -145,9 +145,8 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## ⏳ NUNGGU OLAN
 
-- **Bitget demo**: demo Bitget cuma punya BTC/ETH/XRP & WAJIB API key demo terpisah (key real ditolak "exchange environment is
-  incorrect"). Saldo real Bitget $0,58. Rencana: begitu ada key demo -> slot ICT Sweep pindah ke Bitget (exchange sendiri, gak
-  bentrok netting sama slot pattern/FVG di Binance BTCUSDC).
+- **Bitget demo**: key demo tersambung 3 Okt, tapi demo baru (yang bisa API) saldo 0 tanpa tombol isi; saldo 3.000 SUSDT di demo
+  lama gak bisa diakses API. Slot ICT Sweep tetap di Binance sampai saldo demo baru Bitget bisa diisi (detail di GANTUNGAN.md).
 
 ## 🔧 VALIDASI & FILTER RANGER (3 Okt 2026, `backtest/rangerFilterStudy.js`, 8 koin rotasi 2019-26, exit live)
 

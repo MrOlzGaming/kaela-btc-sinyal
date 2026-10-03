@@ -10,8 +10,10 @@ Terakhir diperbarui: **3 Okt 2026**.
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 
 1. **Isi saldo real Bybit** (Funding -> Unified Trading) — Ranger Rotasi real nunggu ini. Gak mendesak, kapan siap.
-2. **Klaim saldo demo Bitget** (mode Demo Trading -> Assets) -- key demo UDAH tersambung 3 Okt (saldo demo masih 0). Abis itu
-   Kaela pindahin slot ICT Sweep ke Bitget.
+2. **Saldo demo Bitget** -- key demo TERSAMBUNG (uid demo 27090010955, induk akun utama) tapi demo BARU (BTCUSDT/USDT, yg dipake
+   API) saldonya 0 & gak ada tombol isi. Saldo 3.000 SUSDT ada di demo LAMA (SBTCSUSDT) yang API-nya udah dimatiin Bitget
+   (V1 decommissioned, SBTCSUSDT "does not exist", 9+ endpoint saldo dicek kosong). Jalan keluar: tanya CS Bitget cara top up
+   demo baru buat API, ATAU pakai Bitget real-only begitu ada saldo real. Sementara slot ICT Sweep TETAP di Binance.
 3. **Anggaran DCA real** (`spot-live-config.json realBudgetUsd`, sekarang 0) — sebut angkanya kalau mau Compound Alt DCA /
    Musiman BTC belanja beneran. Window tanam alt mulai **19 Okt 2026**.
 4. **Mulai DCA Tangga Leverage** BingX Standard Futures ($3/hari x3) — rencana **20 Okt 2026** (akhir window bear), buka

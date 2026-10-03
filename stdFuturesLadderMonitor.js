@@ -79,17 +79,21 @@ function lossFrac(layer) {
   const dirSign = layer.side === 'SHORT' ? -1 : 1;
   return -((layer.lastPrice - layer.entry) / layer.entry) * (layer.effLev || layer.lev) * dirSign;
 }
+// (3 Okt 2026, Olan: "jangan DM, masukin ke hedgefund.. peringatan umum aja, silahkan dicek posisi, jangan seolah mau
+// liquidated.. peringatan halus biar anggota tidak panik") -- dikirim ke GRUP Wibowo Hedgefund, bahasa tenang: TANPA persen
+// minus, TANPA kata bahaya/likuidasi. Angka detail cukup saran nominal collateral (buat yang megang posisi).
 function collateralMessage(layer, lf, level) {
   const lossUsd = lf * (layer.margin || 0);
   const addUsd = Math.max(0, lossUsd / COLL_TARGET_LOSS - (layer.margin || 0));
   return [
-    `🪜 TANGGA DCA · Kaela — ${level >= 0.75 ? '🚨 BAHAYA' : '⚠️ PERINGATAN'}: posisi minus ${(lf * 100).toFixed(0)}% margin`,
+    `🪜 TANGGA DCA · Kaela — 🔔 Pengingat ${level >= 0.75 ? 'lanjutan' : 'rutin'}`,
     '',
-    `Posisi #${layer.no} ${layer.symbol} ${layer.side} x${layer.lev}${layer.effLev && Math.abs(layer.effLev - layer.lev) > 0.05 ? ` (efektif x${layer.effLev.toFixed(2)} abis tambah collateral)` : ''}`,
-    `Entry ${fmtUsd(layer.entry)} → sekarang ${fmtUsd(layer.lastPrice)} | margin ${fmtUsd(layer.margin)}, rugi floating ~${fmtUsd(lossUsd)}`,
-    `Perkiraan harga likuidasi: ~${fmtUsd(layer.liqEst)}`,
+    `Posisi DCA #${layer.no} (${layer.symbol.replace('-USDT', '')} ${layer.side === 'SHORT' ? 'short' : 'long'}) lagi kena koreksi harga, wajar buat DCA jangka panjang.`,
+    `Silakan dicek posisinya ya, dan kalau sempat tambah collateral sekitar ${fmtUsd(addUsd)} biar makin lega.`,
     '',
-    `👉 Tambah collateral sekitar ${fmtUsd(addUsd)} biar rugi balik ke ~${(COLL_TARGET_LOSS * 100).toFixed(0)}% margin (harga likuidasi ikut menjauh).`,
+    'Tetap pantau berkala, santai aja 🙏',
+    '',
+    '— Kaela',
   ].join('\n');
 }
 
@@ -183,7 +187,7 @@ function createMonitor(deps, st) {
       const lvl = [...COLL_WARN_LEVELS].reverse().find((x) => lf >= x);
       if (lvl && (L.collAlert || 0) < lvl) {
         L.collAlert = lvl;
-        await deps.notify(collateralMessage(L, lf, lvl));
+        await (deps.notifyGroup || deps.notify)(collateralMessage(L, lf, lvl));
         events.push({ no: L.no, kind: 'collateral', level: lvl });
       }
     }
@@ -236,7 +240,9 @@ async function main() {
   const st = loadState();
   const reader = makeBingxReader();
   const { sendWhatsApp } = require('./fonnte');
-  const mon = createMonitor({ ...reader, notify: (m) => sendWhatsApp(m, OLAN_NUMBER) }, st);
+  // likuidasi & gangguan monitor -> DM Olan; pengingat collateral (halus) -> grup Wibowo Hedgefund (permintaan Olan 3 Okt)
+  const { WIBOWO_GROUP_ID } = require('./wibowoNotify');
+  const mon = createMonitor({ ...reader, notify: (m) => sendWhatsApp(m, OLAN_NUMBER), notifyGroup: (m) => sendWhatsApp(m, WIBOWO_GROUP_ID) }, st);
   try { const r = await mon.runCycle(); if (r.events && r.events.length) console.log('[StdLadder] event:', JSON.stringify(r.events)); }
   finally { fs.writeFileSync(STATE_PATH, JSON.stringify(st, null, 2)); }
 }

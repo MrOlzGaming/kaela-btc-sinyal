@@ -49,26 +49,36 @@ if [ -n "$CHANGED" ]; then
   # nol, bukan klaim "pasti nol" (masih ada celah teoretis kalau lock gagal DIAMBIL tepat pas
   # reset --hard proses lain kejadian di detik yang sama -- probabilitas sangat rendah).
   exec 201>/tmp/kaela-executor.lock
+  LOCKED=1
   if ! flock -w 5 201; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: gagal ambil lock commit dalam 5 detik (siklus 15-menit masih pegang) -- lanjut TANPA lock, retry push di bawah tetap jaga-jaga." >> "$LOG_FILE"
+    LOCKED=0
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: siklus 15-menit lagi jalan -- commit lokal aja, push diserahin ke run-vultr-executor.sh." >> "$LOG_FILE"
   fi
   for f in archive.json econ-reaction-research-log.json; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync econ-calendar-live $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1
   synced=0
+  # (4 Okt 2026) Lock gak kedapet = run-vultr-executor.sh lagi jalan + file state-nya belum di-commit -> pull --rebase PASTI
+  # gagal "unstaged changes" (5x "sync GAGAL 3x" palsu ke Watchdog 1-3 Okt). Gak perlu push di sini: archive.json +
+  # econ-reaction-research-log.json ada di STATE_FILES executor -> dijaga dari reset --hard + ke-commit+push ujung siklusnya.
+  [ "$LOCKED" -eq 0 ] && synced=2
   for attempt in 1 2 3; do
-    if timeout -k 10 20 git pull --rebase origin-new master --quiet >> "$LOG_FILE" 2>&1 \
+    [ "$synced" -ne 0 ] && break
+    if timeout -k 10 20 git pull --rebase --autostash origin-new master --quiet >> "$LOG_FILE" 2>&1 \
        && timeout -k 10 20 git push origin-new master --quiet >> "$LOG_FILE" 2>&1; then
       synced=1
       break
     fi
+    git rebase --abort >/dev/null 2>&1 || true # (4 Okt 2026) konflik -> jangan tinggalin repo setengah rebase (HEAD detached)
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: sync GAGAL percobaan $attempt, coba lagi..." >> "$LOG_FILE"
     sleep 3
   done
   SYNC_STATUS_LINE=""
   if [ "$synced" -eq 1 ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: archive/research-log ke-sync." >> "$LOG_FILE"
+  elif [ "$synced" -eq 2 ]; then
+    : # ditunda ke executor (lihat di atas), bukan kegagalan
   else
     SYNC_STATUS_LINE="econ-calendar-live: sync GAGAL 3x -- entri BERISIKO kehapus git reset --hard siklus vultr-executor berikutnya."
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $SYNC_STATUS_LINE" >> "$LOG_FILE"

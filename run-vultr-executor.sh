@@ -350,7 +350,23 @@ if [ -n "$CHANGED" ]; then
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1
-  if timeout -k 10 30 git push origin-new master --quiet >> "$LOG_FILE" 2>&1; then
+  # (4 Okt 2026) Retry: run-econ-calendar-live-vultr.sh push tiap 5 menit -> push siklus ini sering ditolak "fetch first"
+  # (5x semalam). Dulu langsung nyerah (state ditahan sampai siklus berikutnya + "error: failed to push" nyampah di log).
+  # Sekarang pull --rebase --autostash lalu push ulang (maks 3x); konflik -> rebase --abort (JANGAN tinggalin repo setengah
+  # rebase: HEAD detached -> commit siklus berikutnya gak pernah nyampe branch master). Output git cuma ditulis kalau gagal total.
+  PUSH_OK=0; PUSH_OUT=''
+  for attempt in 1 2 3; do
+    if PUSH_OUT=$(timeout -k 10 30 git push origin-new master --quiet 2>&1); then PUSH_OK=1; break; fi
+    [ "$attempt" -eq 3 ] && break
+    if ! PULL_OUT=$(timeout -k 10 30 git pull --rebase --autostash origin-new master --quiet 2>&1); then
+      git rebase --abort >/dev/null 2>&1 || true
+      PUSH_OUT="$PUSH_OUT / pull --rebase gagal: $PULL_OUT"
+      break
+    fi
+    sleep 2
+  done
+  [ "$PUSH_OK" -eq 0 ] && echo "$PUSH_OUT" >> "$LOG_FILE"
+  if [ "$PUSH_OK" -eq 1 ]; then
     log 'Push selesai.'
     for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json kaela-spot-alt.json kaela-spot.json; do
       curl -s -o /dev/null "https://purge.jsdelivr.net/gh/MrOlzGaming/kaela-btc-sinyal@master/$f" || true

@@ -168,7 +168,7 @@ const VARIANTS = process.env.TRAIL_STUDY ? [
 ];
 
 // (3 Okt 2026) bisa di-require (backtest/topTraderPrinciples.js) -- main cuma jalan kalau dipanggil langsung
-module.exports = { precomputeSignals, smaArr, atrArr, P, FEE };
+module.exports = { precomputeSignals, runVariant, smaArr, atrArr, P, FEE };
 if (require.main === module) (function main() {
   const dir = process.argv[2];
   const data = {};

@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const { createBinanceSpotEarnClient } = require('./binanceSpotEarnExecutor');
 const { sendWhatsApp } = require('./fonnte');
+const realLeg = require('./spotRealLeg');
 
 const SPOT_ALT_PATH = path.join(__dirname, 'kaela-spot-alt.json');
 const SPOT_MUSIMAN_PATH = path.join(__dirname, 'kaela-spot.json');
@@ -71,6 +72,33 @@ async function runAltPendingSell(client, state) {
   return results;
 }
 
+// ============ Leg REAL (3 Okt 2026, spotRealLeg.js) -- rencana SAMA demo, saldo spot USDT real doang ============
+function realClientOrNull() {
+  if (!realLeg.loadConfig().allowReal) return null;
+  const s = loadSecrets();
+  if (!s.BINANCE_API_KEY_REAL || !s.BINANCE_API_SECRET_REAL) return null;
+  return createBinanceSpotEarnClient({ apiKey: s.BINANCE_API_KEY_REAL, apiSecret: s.BINANCE_API_SECRET_REAL, testnet: false });
+}
+async function runRealLeg(label, bucket, buyAmounts, sellSymbols) {
+  const rc = realClientOrNull();
+  if (!rc || (!buyAmounts && !sellSymbols)) return;
+  const ledger = realLeg.loadLedger();
+  const out = [];
+  try {
+    if (buyAmounts) {
+      const r = await realLeg.realBuys(rc, ledger, bucket, buyAmounts, new Date(), Number(realLeg.loadConfig().realBudgetUsd) || 0);
+      out.push(...r.lines);
+      if (r.skippedLowBalance) console.log(`[SpotAltLiveExecutor] REAL ${label}: ${r.skippedLowBalance} beli di-skip (anggaran realBudgetUsd / saldo USDT spot real kurang).`);
+    }
+    if (sellSymbols) { const r = await realLeg.realSells(rc, ledger, bucket, sellSymbols); out.push(...r.lines); }
+  } catch (e) { out.push(`❌ GAGAL akses akun real: ${e.message}`); }
+  realLeg.saveLedger(ledger);
+  if (out.length) {
+    console.log(`[SpotAltLiveExecutor] REAL ${label}:\n${out.join('\n')}`);
+    await require('./wibowoNotify').sendWhatsAppToWibowo(`💰 BINANCE REAL (Spot) -- ${label}:\n\n${out.join('\n')}\n\n— Kaela`).catch((e) => console.log('[SpotAltLiveExecutor] WA Wibowo gagal:', e.message));
+  }
+}
+
 async function processCompoundAlt(client) {
   const state = loadJson(SPOT_ALT_PATH);
   if (!state) { console.log('[SpotAltLiveExecutor] kaela-spot-alt.json belum ada, skip Compound Alt.'); return; }
@@ -78,10 +106,18 @@ async function processCompoundAlt(client) {
     console.log('[SpotAltLiveExecutor] Compound Alt: gak ada rencana baru yang belum dieksekusi live.');
     return;
   }
-  const buyResults = await runAltPendingBuy(client, state);
-  if (buyResults) await sendWhatsApp(`🧪 BINANCE DEMO (Spot Testnet) -- Eksekusi live Compound Alt:\n\n${buyResults.join('\n')}`);
-  const sellResults = await runAltPendingSell(client, state);
-  if (sellResults) await sendWhatsApp(`🧪 BINANCE DEMO (Spot Testnet) -- Eksekusi live jual Compound Alt:\n\n${sellResults.join('\n')}`);
+  // rencana disalin DULU (fungsi demo di bawah ngehapus pending abis jalan) -> leg real pakai rencana yang SAMA
+  const realBuy = state.pendingLiveBuy ? { ...state.pendingLiveBuy.amounts } : null;
+  const realSell = state.pendingLiveSell ? Object.keys(state.pendingLiveSell.symbols || {}) : null;
+  if (client) {
+    const buyResults = await runAltPendingBuy(client, state);
+    if (buyResults) await sendWhatsApp(`🧪 BINANCE DEMO (Spot Testnet) -- Eksekusi live Compound Alt:\n\n${buyResults.join('\n')}`);
+    const sellResults = await runAltPendingSell(client, state);
+    if (sellResults) await sendWhatsApp(`🧪 BINANCE DEMO (Spot Testnet) -- Eksekusi live jual Compound Alt:\n\n${sellResults.join('\n')}`);
+  } else {
+    delete state.pendingLiveBuy; delete state.pendingLiveSell; saveJson(SPOT_ALT_PATH, state);
+  }
+  await runRealLeg('Compound Alt DCA', 'alt', realBuy, realSell);
 }
 
 // ============ Musiman / Spot BTC (1 koin) ============
@@ -93,7 +129,11 @@ async function processMusiman(client) {
     return;
   }
 
-  if (state.pendingLiveBuy) {
+  const realBuy = state.pendingLiveBuy ? { [MUSIMAN_SYMBOL]: state.pendingLiveBuy.usdAmount } : null;
+  const realSell = state.pendingLiveSell ? [MUSIMAN_SYMBOL] : null;
+  if (!client) { delete state.pendingLiveBuy; delete state.pendingLiveSell; saveJson(SPOT_MUSIMAN_PATH, state); }
+
+  if (client && state.pendingLiveBuy) {
     const { usdAmount } = state.pendingLiveBuy;
     try {
       const order = await client.placeSpotMarketBuy({ symbol: MUSIMAN_SYMBOL, quoteOrderQty: usdAmount });
@@ -107,7 +147,7 @@ async function processMusiman(client) {
     saveJson(SPOT_MUSIMAN_PATH, state);
   }
 
-  if (state.pendingLiveSell) {
+  if (client && state.pendingLiveSell) {
     const { qty } = state.pendingLiveSell;
     try {
       const order = await client.placeSpotMarketSell({ symbol: MUSIMAN_SYMBOL, quantity: qty });
@@ -120,15 +160,17 @@ async function processMusiman(client) {
     delete state.pendingLiveSell;
     saveJson(SPOT_MUSIMAN_PATH, state);
   }
+  await runRealLeg('Musiman BTC', 'musiman', realBuy, realSell);
 }
 
 async function main() {
   const secrets = loadSecrets();
+  let client = null; // demo (Spot Testnet) -- kalau key-nya gak ada, leg real TETAP jalan sendiri
   if (!secrets.BINANCE_SPOT_TESTNET_API_KEY || !secrets.BINANCE_SPOT_TESTNET_API_SECRET) {
-    console.log('[SpotAltLiveExecutor] BINANCE_SPOT_TESTNET_API_KEY/SECRET belum diisi di secrets.js -- skip, tetap shadow.');
-    return;
+    console.log('[SpotAltLiveExecutor] BINANCE_SPOT_TESTNET_API_KEY/SECRET belum diisi -- leg demo skip (real tetap dicek).');
+  } else {
+    client = createBinanceSpotEarnClient({ apiKey: secrets.BINANCE_SPOT_TESTNET_API_KEY, apiSecret: secrets.BINANCE_SPOT_TESTNET_API_SECRET, testnet: true });
   }
-  const client = createBinanceSpotEarnClient({ apiKey: secrets.BINANCE_SPOT_TESTNET_API_KEY, apiSecret: secrets.BINANCE_SPOT_TESTNET_API_SECRET, testnet: true });
 
   await processCompoundAlt(client);
   await processMusiman(client);

@@ -106,9 +106,11 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🌱 SPOT / JANGKA PANJANG
 
-- ✅ **Musiman DCA BTC (siklus halving)** — walk-forward $500 -> $288.911, CAGR 73,8%, 3 siklus. Demo spot testnet (real belum).
+- ✅ **Musiman DCA BTC (siklus halving)** — walk-forward $500 -> $288.911, CAGR 73,8%, 3 siklus. Demo spot testnet + leg REAL
+  (3 Okt, `spotRealLeg.js`) yang cuma belanja dari ANGGARAN KHUSUS `spot-live-config.json realBudgetUsd` (default 0 -- setoran Olan
+  yang mampir di Spot gak kemakan).
 - ✅ **Compound Alt DCA 10 koin** — 2 siklus: invest $24.948 -> $93.139 (+273%); ZIL rugi -51,7% di siklus 2024. Window tanam
-  berikutnya mulai 19 Okt 2026.
+  berikutnya mulai 19 Okt 2026. Leg real sama (anggaran khusus, kepemilikan dicatat `kaela-spot-real-ledger.json`).
 - 🔬 **DCA Tangga Leverage BingX Std Futures** ($3/hari x3 -> x5/x7/x9 kalau likuidasi, ide Olan) — dari bottom 2022 +437%,
   TAPI mulai di waktu salah -57% s/d -100%. API cuma baca -> Olan buka manual, Kaela pantau likuidasi (`stdFuturesLadderMonitor.js`).
   Rencana mulai 20 Okt 2026 (akhir window bear).

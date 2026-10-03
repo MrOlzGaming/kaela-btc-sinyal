@@ -282,6 +282,17 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   gak ikut tutup paksa window halving). Paritas modul live vs backtest: n=342 PF 1,48 (beda ~11 trade di awal data, SMA300 belum
   penuh). Pengaman: skip kalau slot lain kebuka arah sebaliknya (Binance BTCUSDC one-way netting) / Fed Grid pegang simbol.
 
+## 📰 Ninja NEWS dipandu dolar per detik (3 Okt 2026) — `backtest/newsDxyLeadStudy.js`
+
+- Data Binance 1 DETIK EURUSDT (proksi DXY terbalik) + BTCUSDT, 164 rilis CPI/PPI/NFP/FOMC 2023-2026, entry +2 dtk latensi,
+  fee+selip 0,12% RT. Output `news-dxy-lead-output.log` (cache data `backtest/.cache-news-1s/`, gitignored).
+- **Lead-lag NYATA tapi singkat**: arah EUR di 5 dtk (n=73) / 10 dtk (n=104) pertama searah BTC 5 menit kemudian 63% / 64%;
+  dibaca di 30-60 dtk cuma 46-53% (lempar koin). Sinyal dolar SELALU lebih bagus dari 'ikut arah BTC sendiri' (PF 0,3-0,9).
+- **Transaksi**: cuma lolos impas+ kalau EUR gerak >= 0,10% dalam 5 dtk (n=27; SL 0,8% trail 0,4% aktif +0,6% maks 30m PF 1,21,
+  paruh 0,75/2,62) atau 10 dtk (n=48; PF 1,14, paruh 1,31/1,00). Ambang 0,03-0,06% & jendela 30 dtk = rugi semua.
+- **Keputusan**: `ninja-news-config.json` dikalibrasi (jendela 10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, 30 mnt),
+  tetap DEMO (sampel kecil, edge tipis). Real kalau 1-2 bulan demo bagus.
+
 ## 🧪 Ninja EXHAUSTION -- fade likuidasi "kehabisan tenaga" (3 Okt 2026) — `backtest/ninjaExhaustionStudy.js`
 
 - Replay logika radar Jalur C (episode likuidasi 1 sisi >= ambang/30 mnt, kering <= 30% puncak) di `liquidation-events.jsonl` Bybit

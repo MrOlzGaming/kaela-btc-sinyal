@@ -2,15 +2,16 @@
   "enabled": true,
   "allowReal": false,
   "armBeforeSec": 120,
-  "windowSec": 90,
-  "thrPct": 0.05,
+  "windowSec": 10,
+  "thrPct": 0.1,
   "maxChasePct": 0.5,
-  "slPct": 0.4,
-  "trailActPct": 0.3,
-  "trailPct": 0.2,
-  "maxHoldMin": 20,
+  "slPct": 0.8,
+  "trailActPct": 0.6,
+  "trailPct": 0.4,
+  "maxHoldMin": 30,
   "recordMin": 15,
   "targetTrades": 30,
   "_note": "NINJA NEWS (ninjaNewsTrader.js) -- copet rilis data ekonomi (jadwal news-schedule.json). Dolar per detik pakai EURUSDT Binance (kebalikan DXY). Dalam windowSec detik pertama EUR gerak >= thrPct% -> BTC arah KEBALIKAN dolar (EUR naik = LONG). Skip kalau BTC udah lari >= maxChasePct%. SL slPct% (stop exchange) + trailing trailPct% aktif begitu untung >= trailActPct%, maks maxHoldMin menit, 1 transaksi per rilis. allowReal=false: real BARU dinyalain kalau uji demo 1-2 bulan (targetTrades rilis) bagus. Ambang awal dari teori (backtest per detik belum dijalanin) -- dikalibrasi dari ninja-news-research-log.json.",
-  "_status": "3 Okt 2026 -- AKTIF demo (arahan Olan: \"kalo backtest gagal jangan nyerah, tetep buat, trial pake demo sebulan-2 bulan, kalo bisa dimanfaatin baru real\"). Rilis pertama yang kejaga: CPI 14 Okt 20:30 WITA."
+  "_status": "3 Okt 2026 -- AKTIF demo (arahan Olan: \"kalo backtest gagal jangan nyerah, tetep buat, trial pake demo sebulan-2 bulan, kalo bisa dimanfaatin baru real\"). Rilis pertama yang kejaga: CPI 14 Okt 20:30 WITA.",
+  "_kalibrasi": "3 Okt 2026 -- backtest per detik (backtest/newsDxyLeadStudy.js, 164 rilis CPI/PPI/NFP/FOMC 2023-2026, fee+selip 0,12%): arah EUR di 5-10 detik pertama searah BTC 5 menit kemudian 63-64% (n=73-104); dibaca di detik 30-60 cuma ~50% (lempar koin). Edge cuma di gerak EUR BESAR+CEPAT: >=0,10% dalam 5 dtk n=27 PF 1,21 (SL 0,8 trail 0,4 aktif +0,6, 30 mnt) / dalam 10 dtk n=48 PF 1,14. Selalu lebih bagus dari ikut arah BTC sendiri. Masih tipis + sampel kecil -> tetap DEMO. Setting lama (jendela 90 dtk, ambang 0,05%) = lempar koin, diganti."
 }

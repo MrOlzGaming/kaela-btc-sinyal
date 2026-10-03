@@ -167,7 +167,9 @@ const VARIANTS = process.env.TRAIL_STUDY ? [
   { name: 'TANPA partial, BE@1R, SMA90 + Chandelier 8x', partialRR: null, partialFrac: 0, sma: 90, chand: 8 },
 ];
 
-(function main() {
+// (3 Okt 2026) bisa di-require (backtest/topTraderPrinciples.js) -- main cuma jalan kalau dipanggil langsung
+module.exports = { precomputeSignals, smaArr, atrArr, P, FEE };
+if (require.main === module) (function main() {
   const dir = process.argv[2];
   const data = {};
   for (const coin of COINS) {

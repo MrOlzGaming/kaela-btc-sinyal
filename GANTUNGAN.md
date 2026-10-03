@@ -35,7 +35,6 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-1. Uji prinsip top trader: ukuran posisi menurut volatilitas + pyramiding.
 2. Ide lama: filter volatilitas, filter jam, validasi lookback Ranger.
 3. Update dashboard Kaela Access (Exhaustion, News, slot Sweep, spot real) -> Netlify nunggu izin Olan.
 

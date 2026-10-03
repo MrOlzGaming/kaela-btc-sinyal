@@ -296,6 +296,15 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
 - **Keputusan**: `ninja-news-config.json` dikalibrasi (jendela 10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, 30 mnt),
   tetap DEMO (sampel kecil, edge tipis). Real kalau 1-2 bulan demo bagus.
 
+## 🏛️ Prinsip top trader: sizing volatilitas & pyramiding (3 Okt 2026) — `backtest/topTraderPrinciples.js`
+
+- BTC 4H 2019-01..2026-09 (1h resample, `multicoin-cache`), sinyal Ranger pattern+FVG PERSIS (`precomputeSignals`) + slot ICT Sweep,
+  exit trailing 3x, fee 0,12%/unit, modal compound $100, DD mark-to-market tiap candle. Output `top-trader-principles-output.log`.
+- **Sizing**: kalkulator exposure (sekarang) Ranger CAGR 74%/61% DD 57%/41% MAR 1,30/1,49 (<2023/>=2023); risiko tetap 1/2/3/5%
+  MAR 0,33-0,36 / 1,24-1,41. Sweep: exposure MAR 0,59/0,93 vs risiko tetap 0,23-0,29 / 0,60-0,72. -> kalkulator MENANG dua era.
+- **Pyramiding** (+1R/+2R, 1-2 unit, 50-100%): Ranger <2023 MAR turun ke 0,98-1,24 (DD 65-73%), >=2023 naik 1,75-2,34; Sweep
+  kebalikannya (<2023 naik 0,74-0,88, >=2023 turun 0,44-0,70). Gak konsisten -> DITOLAK.
+
 ## 🧪 Ninja EXHAUSTION -- fade likuidasi "kehabisan tenaga" (3 Okt 2026) — `backtest/ninjaExhaustionStudy.js`
 
 - Replay logika radar Jalur C (episode likuidasi 1 sisi >= ambang/30 mnt, kering <= 30% puncak) di `liquidation-events.jsonl` Bybit

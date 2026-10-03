@@ -1,0 +1,32 @@
+BTC 4H 2019-01-01..2026-09-30 | exit trailing 3x | fee 0,12%/unit | DD mark-to-market tiap candle
+
+===== Ranger BTC pattern+FVG =====
+KALKULATOR EXPOSURE (sekarang) | tanpa pyramid                   | <2023 CAGR 74% DD 57% MAR 1.30 n16 win38% | >=2023 CAGR 61% DD 41% MAR 1.49 n15 win47%
+KALKULATOR EXPOSURE (sekarang) | pyramid +1R x1 (50%)            | <2023 CAGR 76% DD 72% MAR 1.06 n16 win38% | >=2023 CAGR 68% DD 39% MAR 1.75 n15 win47%
+KALKULATOR EXPOSURE (sekarang) | pyramid +1R x2 (50%)            | <2023 CAGR 74% DD 72% MAR 1.03 n16 win31% | >=2023 CAGR 83% DD 41% MAR 2.03 n15 win47%
+KALKULATOR EXPOSURE (sekarang) | pyramid +2R x1 (100%)           | <2023 CAGR 71% DD 73% MAR 0.98 n16 win31% | >=2023 CAGR 84% DD 36% MAR 2.34 n15 win47%
+KALKULATOR EXPOSURE (sekarang) | pyramid +2R x2 (50%)            | <2023 CAGR 80% DD 65% MAR 1.24 n16 win25% | >=2023 CAGR 70% DD 36% MAR 1.95 n15 win47%
+risiko tetap 1%/trade | tanpa pyramid                            | <2023 CAGR 2% DD 7% MAR 0.36 n16 win38% | >=2023 CAGR 7% DD 6% MAR 1.24 n15 win47%
+risiko tetap 2%/trade | tanpa pyramid                            | <2023 CAGR 5% DD 13% MAR 0.35 n16 win38% | >=2023 CAGR 14% DD 11% MAR 1.28 n15 win47%
+risiko tetap 2%/trade | pyramid +1R x1 (50%)                     | <2023 CAGR 5% DD 17% MAR 0.27 n16 win38% | >=2023 CAGR 18% DD 17% MAR 1.11 n15 win47%
+risiko tetap 2%/trade | pyramid +1R x2 (50%)                     | <2023 CAGR 5% DD 17% MAR 0.29 n16 win31% | >=2023 CAGR 23% DD 18% MAR 1.26 n15 win47%
+risiko tetap 2%/trade | pyramid +2R x1 (100%)                    | <2023 CAGR 5% DD 15% MAR 0.34 n16 win31% | >=2023 CAGR 23% DD 14% MAR 1.64 n15 win47%
+risiko tetap 2%/trade | pyramid +2R x2 (50%)                     | <2023 CAGR 5% DD 13% MAR 0.38 n16 win25% | >=2023 CAGR 19% DD 14% MAR 1.39 n15 win47%
+risiko tetap 3%/trade | tanpa pyramid                            | <2023 CAGR 7% DD 19% MAR 0.34 n16 win38% | >=2023 CAGR 21% DD 16% MAR 1.33 n15 win47%
+risiko tetap 5%/trade | tanpa pyramid                            | <2023 CAGR 10% DD 30% MAR 0.33 n16 win38% | >=2023 CAGR 34% DD 24% MAR 1.41 n15 win47%
+
+===== Ranger slot ICT Sweep =====
+KALKULATOR EXPOSURE (sekarang) | tanpa pyramid                   | <2023 CAGR 29% DD 48% MAR 0.59 n244 win24% | >=2023 CAGR 25% DD 27% MAR 0.93 n228 win28%
+KALKULATOR EXPOSURE (sekarang) | pyramid +1R x1 (50%)            | <2023 CAGR 42% DD 57% MAR 0.74 n244 win20% | >=2023 CAGR 27% DD 39% MAR 0.70 n228 win25%
+KALKULATOR EXPOSURE (sekarang) | pyramid +1R x2 (50%)            | <2023 CAGR 52% DD 62% MAR 0.85 n244 win19% | >=2023 CAGR 24% DD 48% MAR 0.49 n228 win21%
+KALKULATOR EXPOSURE (sekarang) | pyramid +2R x1 (100%)           | <2023 CAGR 49% DD 57% MAR 0.86 n244 win16% | >=2023 CAGR 21% DD 48% MAR 0.44 n228 win21%
+KALKULATOR EXPOSURE (sekarang) | pyramid +2R x2 (50%)            | <2023 CAGR 46% DD 53% MAR 0.88 n244 win18% | >=2023 CAGR 20% DD 43% MAR 0.47 n228 win21%
+risiko tetap 1%/trade | tanpa pyramid                            | <2023 CAGR 8% DD 28% MAR 0.29 n244 win24% | >=2023 CAGR 11% DD 16% MAR 0.72 n228 win28%
+risiko tetap 2%/trade | tanpa pyramid                            | <2023 CAGR 14% DD 49% MAR 0.29 n244 win24% | >=2023 CAGR 21% DD 30% MAR 0.71 n228 win28%
+risiko tetap 2%/trade | pyramid +1R x1 (50%)                     | <2023 CAGR 19% DD 56% MAR 0.34 n244 win20% | >=2023 CAGR 22% DD 37% MAR 0.59 n228 win25%
+risiko tetap 2%/trade | pyramid +1R x2 (50%)                     | <2023 CAGR 24% DD 62% MAR 0.38 n244 win19% | >=2023 CAGR 18% DD 43% MAR 0.41 n228 win21%
+risiko tetap 2%/trade | pyramid +2R x1 (100%)                    | <2023 CAGR 21% DD 63% MAR 0.33 n244 win16% | >=2023 CAGR 18% DD 39% MAR 0.45 n228 win21%
+risiko tetap 2%/trade | pyramid +2R x2 (50%)                     | <2023 CAGR 21% DD 59% MAR 0.35 n244 win18% | >=2023 CAGR 16% DD 37% MAR 0.42 n228 win21%
+risiko tetap 3%/trade | tanpa pyramid                            | <2023 CAGR 18% DD 64% MAR 0.28 n244 win24% | >=2023 CAGR 28% DD 41% MAR 0.68 n228 win28%
+risiko tetap 5%/trade | tanpa pyramid                            | <2023 CAGR 19% DD 82% MAR 0.23 n244 win24% | >=2023 CAGR 35% DD 59% MAR 0.60 n228 win28%
+

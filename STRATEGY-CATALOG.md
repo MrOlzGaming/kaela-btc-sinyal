@@ -135,7 +135,13 @@ Terakhir diperbarui: **3 Okt 2026**.
   temuan Ninja. Disiplin ke model, gak pernah ditimpa perasaan.
 - **Trend follower besar (Man AHL, Winton, Paul Tudor Jones)**: potong rugi cepat, biarin untung lari, ikut tren menengah
   (= trailing 3x + filter tren kita). Tahun choppy pasti ada; solusinya diversifikasi banyak pasar (= rotasi koin).
-- **Kandidat uji berikutnya**: ukuran posisi menyesuaikan volatilitas, pyramiding (nambah posisi pas udah untung).
+- ❌ **Ukuran posisi menurut volatilitas / risiko tetap per trade** (ala CTA/Turtle/PTJ) — diuji 3 Okt (`topTraderPrinciples.js`,
+  BTC 4H 2019-26, trailing 3x, DD mark-to-market): Ranger pattern+FVG kalkulator exposure CAGR 74%/61% MAR 1,30/1,49 vs risiko
+  tetap 2-5% MAR 0,33-0,35 di era lama. Alasan: kalkulator kita naruh risiko lebih gede di trade SL lebar; trade SL SEMPIT yang
+  justru lebih jelek -> sizing volatilitas malah gedein taruhan di trade jelek. (Uji lama 10 Agu di Nyopet versi lama sempat
+  nurunin DD 78%->47% -- gak berlaku lagi di sistem trailing sekarang.) **Kalkulator exposure tetap.**
+- ❌ **Pyramiding** (nambah unit tiap +1R/+2R, ikut trailing yang sama) — gak konsisten: Ranger pattern bagus >=2023 (MAR 1,49 ->
+  1,75-2,34) tapi rusak <2023 (DD 57% -> 65-73%); slot Sweep kebalikannya. Gagal 1 era = ditolak.
 
 ## ⏳ NUNGGU OLAN
 

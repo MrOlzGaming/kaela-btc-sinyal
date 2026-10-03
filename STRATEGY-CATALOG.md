@@ -93,6 +93,10 @@ Terakhir diperbarui: **3 Okt 2026**.
   arah EUR di 5-10 dtk pertama searah BTC 5 mnt kemudian 63-64%, tapi dibaca dtk 30-60 cuma ~50%. Edge cuma kalau EUR gerak
   >= 0,10% dalam 5-10 dtk: PF 1,14-1,21 (n=27-48, tipis). Selalu lebih bagus dari ikut BTC sendiri. Setting dikalibrasi: jendela
   10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, maks 30 mnt. Uji demo 1-2 bulan, rilis pertama CPI 14 Okt 20:30 WITA.
+- ❌ **ICT Sweep di timeframe Ninja (1H / 2H BTC)** (3 Okt) — gak beda dari entry acak (p 0,15-1,0), >=2023 mayoritas rugi.
+  Edge sweep CUMA muncul >= 4H ().
+- ❌ **ICT Sweep 4H di ALT** (21 koin, long doang) — gabungan lebih jelek dari acak (p 0,63-1,0); pilih koin pakai <2023 ->
+  >=2023 PF 0,65-0,94. Edge sweep KHUSUS BTC ().
 - ❌ **ICT Power of 3 intraday** (range Asia -> sapuan London/NY -> distribusi) — 0/144 varian lolos; tanpa fee terbaik PF ~1,1,
   fee 0,05% pun impas. Konsepnya ada jejak tapi terlalu tipis.
 - ❌ **News 5M "ikut/lawan candle pertama"** (CPI/PPI/NFP/FOMC 2019-26) — 2/160 lolos (FOMC ikut 15m, n kecil). Satu pola

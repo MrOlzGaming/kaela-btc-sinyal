@@ -196,3 +196,25 @@ function validate1d() {
   }
 }
 if (require.main === module && process.env.MODE === 'validate1d') setImmediate(() => validate1d());
+
+// ---- MODE=ninja: sweep di timeframe Ninja (1H / 2H) -- kandidat strategi Ninja (3 Okt 2026) ----
+function validateNinja() {
+  const c5 = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+  const SPLIT = Date.UTC(2023, 0, 1);
+  let seed = 4242; const rng = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  for (const [tf, min, trendLen] of [['1H', 60, 1200], ['2H', 120, 600]]) {
+    const cs = aggregate(c5, min);
+    console.log(`\n=== ${tf} (tren SMA${trendLen} = ~50 hari, sama kayak SMA300 4H) ===`);
+    for (const look of [20, 50]) for (const trailR of [2, 3]) for (const longOnly of [false, true]) {
+      const v = { look, trend: true, trendLen, bodyConfirm: false, longOnly, exit: 'trail', trailR, maxRiskPct: 5 };
+      const tr = runWithRisk(cs, v);
+      const a = tr.filter((t) => t.t < SPLIT), b = tr.filter((t) => t.t >= SPLIT);
+      const sims = []; for (let s = 0; s < 200; s++) sims.push(pf(runRandom(cs, v, tr, rng)));
+      sims.sort((x, y) => x - y);
+      const real = pf(tr), p = sims.filter((x) => x >= real).length / sims.length;
+      console.log(`${tf} swing${look} trail${trailR} ${longOnly ? 'LONG' : '2arah'} | PF ${real.toFixed(2)} (2019-22 ${pf(a).toFixed(2)} n${a.length} / 2023-26 ${pf(b).toFixed(2)} n${b.length}) | acak median ${sims[100].toFixed(2)} | p=${p.toFixed(3)}`);
+    }
+  }
+}
+if (require.main === module && process.env.MODE === 'ninja') setImmediate(() => validateNinja());
+module.exports = { aggregate, run, runWithRisk, runRandom, pf, summ };

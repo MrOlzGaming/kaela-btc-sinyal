@@ -277,6 +277,10 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
   median 1,29 (p=0,03); **2 arah swing20+tren SMA300 trailing 3x: PF 1,50 vs acak 1,03 (p=0,000), n=353, 2019-22 PF 1,45 /
   2023-26 PF 1,55.** Harian (Sniper) juga ada yang lolos (swing5 + tren, tahan 5 hari PF 1,81/2,07) tapi n kecil (~150) -- belum
   dipasang. Output: `ict-sweep-htf-output.log`, `ict-sweep-htf-validate-output.log`.
+- **1H/2H BTC** (MODE=ninja, `ict-sweep-ninja-output.log`): 16 varian, terbaik 2H swing50 trail2 2arah PF 1,13 (1,27/1,01) p=0,155; 1H
+  semua PF 0,79-1,10 & gak beda acak -> GAGAL buat Ninja.
+- **4H ALT long** (`backtest/ictSweepAltStudy.js`, `ict-sweep-alt-output.log`, 21 koin histori >=3 thn): PF 0,89-1,04 gabungan, acak
+  median 0,98-1,08, p 0,63-1,00; seleksi <2023 -> >=2023 PF 0,65-0,94 -> GAGAL. Edge sweep spesifik BTC.
 - **Harian vs entry acak** (MODE=validate1d, `ict-sweep-1d-validate-output.log`): swing5 trail1 PF 1,65 vs acak median 1,18 p=0,033;
   swing5 trail2 p=0,197; swing10 trail1 p=0,123; swing5 trail3 PF 1,18 p=0,460 -> cuma 1 sel lolos, tetangga gagal = GAK ROBUST,
   Sniper gak dikasih slot sweep.

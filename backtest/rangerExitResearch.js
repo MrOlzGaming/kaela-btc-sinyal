@@ -76,7 +76,16 @@ function runVariant(c, pre, ind, v) {
         if (ch !== null) pos.stop = L ? Math.max(pos.stop, ch) : Math.min(pos.stop, ch);
       }
       const stopHit = L ? x.low <= pos.stop : x.high >= pos.stop;
-      if (stopHit) { done(L ? Math.min(x.open, pos.stop) : Math.max(x.open, pos.stop), pos.trailing ? 'TRAIL_STOP' : 'SL'); continue; }
+      // (3 Okt 2026, ATURAN OLAN) trailR: stop = harga terbaik - trailR x JARAK INVALIDASI AWAL, aktif dari entry, cuma naik.
+      // Dicek SETELAH stopHit candle ini (pakai stop lama), update buat candle berikutnya -- gak ngintip intrabar.
+      const olanTrail = () => { if (!v.trailR) return; if (L) { pos.peak = Math.max(pos.peak, x.high); pos.stop = Math.max(pos.stop, pos.peak - v.trailR * pos.risk); } else { pos.peak = Math.min(pos.peak, x.low); pos.stop = Math.min(pos.stop, pos.peak + v.trailR * pos.risk); } };
+      if (stopHit) { done(L ? Math.min(x.open, pos.stop) : Math.max(x.open, pos.stop), pos.trailing || v.trailR ? 'TRAIL_STOP' : 'SL'); continue; }
+      olanTrail();
+      // (3 Okt 2026, Olan: "biar ga kena gocek bandar.. profit ke kunci") -- opsi kunci BE LEBIH AWAL: begitu untung >= beAt x R
+      // (sebelum target partial), stop digeser ke titik masuk. Dicek pakai high/low candle INI, efektif mulai candle berikutnya.
+      if (v.beAt && !pos.partialDone && !pos.beEarly && (L ? x.high >= pos.entry + pos.risk * v.beAt : x.low <= pos.entry - pos.risk * v.beAt)) {
+        pos.beEarly = true; pos.stop = L ? Math.max(pos.stop, pos.entry) : Math.min(pos.stop, pos.entry);
+      }
       if (!pos.partialDone && v.partialRR) {
         const tp = pos.entry + sgn * pos.risk * v.partialRR;
         if (L ? x.high >= tp : x.low <= tp) {
@@ -86,11 +95,11 @@ function runVariant(c, pre, ind, v) {
           continue;
         }
       }
-      if (!v.partialRR && !pos.trailing) {
+      if (!v.partialRR && !pos.trailing && !v.trailR) {
         // tanpa partial: trailing aktif begitu untung >= 1R (stop ke BE dulu)
         if (L ? x.high >= pos.entry + pos.risk : x.low <= pos.entry - pos.risk) { pos.trailing = true; pos.stop = L ? Math.max(pos.stop, pos.entry) : Math.min(pos.stop, pos.entry); pos.ext = L ? x.high : x.low; }
       }
-      if (pos.trailing && v.sma) {
+      if ((pos.trailing || v.smaFromStart) && v.sma) {
         const s = ind.sma[v.sma][i];
         if (s !== null && (L ? x.close < s : x.close > s)) { done(x.close, 'TRAIL_SMA'); continue; }
       }
@@ -100,7 +109,7 @@ function runVariant(c, pre, ind, v) {
     if (!s) continue;
     const calc = hitungExposure({ modal: 100 / 5, entry: x.close, stopLoss: s.sl, direction: s.dir });
     if (!(calc.nilaiPosisi > 0) || calc.margin > 100 || calc.margin > 20) continue; // maxMarginPct 20 = engine
-    pos = { dir: s.dir, entry: x.close, idx: i, risk: Math.abs(x.close - s.sl), stop: s.sl, partialDone: false, partialMv: 0, trailing: false, ext: x.close, notionalFrac: calc.nilaiPosisi / 100 };
+    pos = { dir: s.dir, entry: x.close, idx: i, risk: Math.abs(x.close - s.sl), stop: s.sl, peak: x.close, partialDone: false, partialMv: 0, trailing: false, ext: x.close, notionalFrac: calc.nilaiPosisi / 100 };
   }
   return trades;
 }
@@ -120,7 +129,27 @@ function rotation(all, start, end) {
 }
 const f = (v, d = 2) => (isFinite(v) ? v.toFixed(d) : String(v));
 
-const VARIANTS = [
+const VARIANTS = process.env.TRAIL_STUDY ? [
+  { name: 'SEKARANG alt: 1/3 @2R, SMA60', partialRR: 2, partialFrac: 1 / 3, sma: 60 },
+  { name: 'SEKARANG emas: 1/2 @3R, SMA60', partialRR: 3, partialFrac: 0.5, sma: 60 },
+  { name: 'OLAN murni: trail 1.0x invalidasi', partialRR: null, partialFrac: 0, trailR: 1 },
+  { name: 'OLAN trail 1.5x invalidasi', partialRR: null, partialFrac: 0, trailR: 1.5 },
+  { name: 'OLAN trail 2.0x invalidasi', partialRR: null, partialFrac: 0, trailR: 2 },
+  { name: 'OLAN trail 2.5x invalidasi', partialRR: null, partialFrac: 0, trailR: 2.5 },
+  { name: 'OLAN trail 3.0x invalidasi', partialRR: null, partialFrac: 0, trailR: 3 },
+  { name: 'OLAN 1.0x + partial 1/3 @2R', partialRR: 2, partialFrac: 1 / 3, trailR: 1 },
+  { name: 'OLAN 1.5x + partial 1/3 @2R', partialRR: 2, partialFrac: 1 / 3, trailR: 1.5 },
+  { name: 'OLAN 1.0x + SMA60 (mana yg duluan)', partialRR: null, partialFrac: 0, trailR: 1, sma: 60, smaFromStart: true },
+  { name: 'OLAN 1.5x + partial 1/3 @2R + SMA60', partialRR: 2, partialFrac: 1 / 3, trailR: 1.5, sma: 60 },
+] : process.env.BE_STUDY ? [
+  { name: 'SEKARANG: 1/3 @2R, SMA60', partialRR: 2, partialFrac: 1 / 3, sma: 60 },
+  { name: '1/3 @2R, SMA60, BE di 1R', partialRR: 2, partialFrac: 1 / 3, sma: 60, beAt: 1 },
+  { name: '1/3 @2R, SMA60, BE di 1.5R', partialRR: 2, partialFrac: 1 / 3, sma: 60, beAt: 1.5 },
+  { name: '1/2 @3R, SMA60 (emas)', partialRR: 3, partialFrac: 0.5, sma: 60 },
+  { name: '1/2 @3R, SMA60, BE di 1R', partialRR: 3, partialFrac: 0.5, sma: 60, beAt: 1 },
+  { name: '1/2 @3R, SMA60, BE di 1.5R', partialRR: 3, partialFrac: 0.5, sma: 60, beAt: 1.5 },
+  { name: '1/2 @3R, SMA60, BE di 2R', partialRR: 3, partialFrac: 0.5, sma: 60, beAt: 2 },
+] : [
   { name: 'SEKARANG: partial 50% @2R, trail SMA60', partialRR: 2, partialFrac: 0.5, sma: 60 },
   { name: 'partial 50% @2R, trail SMA30', partialRR: 2, partialFrac: 0.5, sma: 30 },
   { name: 'partial 50% @2R, trail SMA90', partialRR: 2, partialFrac: 0.5, sma: 90 },

@@ -60,6 +60,7 @@ const JOURNAL_PATH = path.join(__dirname, 'sniper-btc-dual-exec-journal.json');
 const SYMBOL = 'BTCUSDT';
 const MARGIN_ASSET = 'USDT';
 const PARTIAL_RR = 3; // SAMA sniperAutoAnalysis.js PARTIAL_RR_BY_ASSET.btc (3 Okt 2026: 2R -> 3R, riset sniperExitResearch.js)
+const BE_EARLY_AT_R = 1.5; // (3 Okt 2026) kunci SL ke harga masuk begitu untung >= 1,5R SEBELUM partial -- sniper-be-study: 2017-22 CAGR 224% vs 216%, 2023-26 99% vs 89%, DD 33% vs 36%
 const PARTIAL_FRAC = 1 / 3; // porsi TP native tahap 1 (3 Okt 2026: 1/2 -> 1/3, menang 2 era -- lihat BACKTEST-REGISTRY)
 const TRAIL_SMA_LEN = 10; // SAMA persis sniperAutoAnalysis.js -- SMA harian
 const PARTIAL_SHRINK_RATIO = 0.75; // SAMA threshold sniperLiveMonitor.js ("posQty < filledQty*0.75")
@@ -221,8 +222,11 @@ async function openSniperBtcDual({ order, livePrice }) {
     }
     const { stepSize, quantityPrecision } = await exec.getSymbolInfo(SYMBOL);
     const halfQty = binanceExecutorDefault.roundToStepSize(filledQty * PARTIAL_FRAC, stepSize, quantityPrecision); // nama var lama dipertahanin, isinya sekarang 1/3
-    await exec.placeTakeProfit({ symbol: SYMBOL, direction: order.direction, tpPrice: order.tp, quantity: halfQty > 0 ? halfQty : filledQty });
+    // (3 Okt 2026) mode TRAILING aturan Olan (cfg.trailR, default 3): GAK pasang TP -- profit dikunci SL yang ngikut naik.
+    const trailR = cfg.trailR !== undefined ? cfg.trailR : 3;
+    if (!(trailR > 0)) await exec.placeTakeProfit({ symbol: SYMBOL, direction: order.direction, tpPrice: order.tp, quantity: halfQty > 0 ? halfQty : filledQty });
     return {
+      trailR: trailR > 0 ? trailR : null, currentSl: order.sl, peak: entryPrice, slNativeOk: true,
       entryPrice, qty: filledQty, leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
       openedAt: new Date().toISOString(), partialDone: false, partialPnlUsd: 0, leg2: null, closedAt: null, exitPrice: null, pnlUsd: null,
     };
@@ -274,7 +278,7 @@ async function openSniperBtcDual({ order, livePrice }) {
     liveExecution: { demo: { ok: true, filledQty: demoResult.qty }, real: realResult ? { ok: true, filledQty: realResult.qty } : null, wibowoRoute },
   });
 
-  const posBase = { id: order.id, signalId: order.signalId, direction: order.direction, sl: order.sl, tp: order.tp, patternType: order.patternType, mode: order.mode, assetLabel: ASSET_LABEL };
+  const posBase = { id: order.id, signalId: order.signalId, direction: order.direction, sl: order.sl, tp: (cfg.trailR !== undefined ? cfg.trailR : 3) > 0 ? null : order.tp, patternType: order.patternType, mode: order.mode, assetLabel: ASSET_LABEL };
   const demoMsg = formatAutoOpen({ ...posBase, entryPrice: demoResult.entryPrice, marginUsd: demoResult.marginUsd, leverage: demoResult.leverage, nilaiPosisi: demoResult.nilaiPosisi }, new Date(), '', true, null, '', null, badge(), SYSTEM_LABEL.SNIPER);
   await sendWhatsAppToSniperClub(toSniperClubLink(demoMsg)).catch((e) => console.log('[SniperBtcDual] Gagal kirim Sniper Club:', e.message));
   if (wibowoRoute === 'real') {
@@ -376,6 +380,47 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
       if (posRisk === undefined) continue; // gagal fetch -- coba lagi siklus depan
       const posQty = posRisk ? Math.abs(parseFloat(posRisk.positionAmt)) : 0;
 
+      // ===== TRAILING ATURAN OLAN (3 Okt 2026) -- produk unggulan: kalkulator exposure + trailing stop =====
+      // SL native (full qty) = harga terbaik - trailR x invalidasi awal, cuma naik, tanpa TP/partial, tanpa batas atas.
+      // Riset sniperEra (BTC harian): trail 3x 2017-22 CAGR 236% vs 224%, 2023-26 129% vs 99%, DD 27% vs 33%.
+      // Binance gak bisa edit stop -> cancel + pasang ulang tiap naik >= 0,1%. Pasang ulang GAGAL -> polling yang nutup.
+      if (leg.trailR && !leg.leg2) {
+        const isLong = o.direction === 'buy';
+        if (posQty <= 0) {
+          const px = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? leg.currentSl;
+          leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
+          leg.pnlUsd = isLong ? (px - leg.entryPrice) * leg.qty : (leg.entryPrice - px) * leg.qty;
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL' : 'SL');
+          continue;
+        }
+        const livePx = await fetchLivePrice(mode).catch(() => null);
+        if (!livePx) continue;
+        if (!leg.slNativeOk && (isLong ? livePx <= leg.currentSl : livePx >= leg.currentSl)) {
+          try {
+            await exec.cancelAllOpenOrders(SYMBOL).catch(() => {});
+            const r = await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: o.direction, quantity: posQty });
+            const px = parseFloat(r && r.avgPrice) || livePx;
+            leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
+            leg.pnlUsd = isLong ? (px - leg.entryPrice) * posQty : (leg.entryPrice - px) * posQty;
+            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL' : 'SL');
+          } catch (e) { console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL tutup pengaman trailing: ${e.message}`); }
+          continue;
+        }
+        const risk = Math.abs(leg.entryPrice - o.sl);
+        leg.peak = isLong ? Math.max(leg.peak != null ? leg.peak : leg.entryPrice, livePx) : Math.min(leg.peak != null ? leg.peak : leg.entryPrice, livePx);
+        // dibulatkan ke tick 0,1 BTCUSDT, arah AMAN (long ke bawah, short ke atas) biar gak ditolak "tick size"
+        const cand = isLong ? Math.floor((leg.peak - leg.trailR * risk) * 10) / 10 : Math.ceil((leg.peak + leg.trailR * risk) * 10) / 10;
+        if (isLong ? cand > leg.currentSl * 1.001 : cand < leg.currentSl * 0.999) {
+          leg.currentSl = cand; leg.slNativeOk = false;
+          try {
+            await exec.cancelAllOpenOrders(SYMBOL);
+            await exec.placeStopLoss({ symbol: SYMBOL, direction: o.direction, stopPrice: cand, quantity: posQty });
+            leg.slNativeOk = true;
+            console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: SL trailing naik ke ${cand.toFixed(1)} (puncak ${leg.peak}).`);
+          } catch (e) { console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL geser SL trailing native (${e.message}) -- pengaman polling aktif.`); }
+        }
+        continue;
+      }
       if (!leg.leg2) {
         // ============ Fase leg1 (belum partial) ============
         if (posQty <= 0) {
@@ -383,11 +428,11 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
           // leg1 ke NOL (TP sekarang cuma separuh qty, gak pernah nutup penuh sendirian). Exit
           // price = harga FILL ASLI order STOP_MARKET (query sempit sejak leg dibuka), fallback
           // ke harga SL target kalau query gagal/gak ketemu.
-          const exitPriceLeg1Sl = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? o.sl;
+          const exitPriceLeg1Sl = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? (leg.beEarly ? leg.entryPrice : o.sl);
           leg.closedAt = new Date().toISOString();
           leg.exitPrice = exitPriceLeg1Sl;
           leg.pnlUsd = o.direction === 'buy' ? (exitPriceLeg1Sl - leg.entryPrice) * leg.qty : (leg.entryPrice - exitPriceLeg1Sl) * leg.qty;
-          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL');
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, leg.beEarly ? 'SL_BREAKEVEN' : 'SL');
           continue;
         }
         if (posQty < leg.qty * PARTIAL_SHRINK_RATIO) {
@@ -396,6 +441,37 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
           } catch (e) {
             console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL proses partial->leg2:`, e.message);
           }
+          continue;
+        }
+        // ============ Kunci impas AWAL (3 Okt 2026, Olan: "biar ga kena gocek bandar") ============
+        // Untung >= BE_EARLY_AT_R x risiko (sebelum TP 1/3 kena) -> SL native dipindah ke harga masuk. Binance gak bisa edit
+        // stop -> cancel semua order, pasang ulang SL (harga masuk) + TP (target sama, 1/3 qty). Pasang ulang GAGAL -> pengaman:
+        // monitor sendiri yang nutup kalau harga balik ke harga masuk (leg.beNativeOk=false), + log GAGAL (mandor).
+        const riskAbs = Math.abs(leg.entryPrice - o.sl);
+        const livePx = await fetchLivePrice(mode).catch(() => null);
+        if (livePx && !leg.beEarly && riskAbs > 0 && (o.direction === 'buy' ? livePx >= leg.entryPrice + riskAbs * BE_EARLY_AT_R : livePx <= leg.entryPrice - riskAbs * BE_EARLY_AT_R)) {
+          leg.beEarly = true; leg.beNativeOk = false;
+          try {
+            await exec.cancelAllOpenOrders(SYMBOL);
+            await exec.placeStopLoss({ symbol: SYMBOL, direction: o.direction, stopPrice: leg.entryPrice, quantity: posQty });
+            leg.beNativeOk = true;
+            const { stepSize, quantityPrecision } = await exec.getSymbolInfo(SYMBOL);
+            const tpQty = binanceExecutorDefault.roundToStepSize(leg.qty * PARTIAL_FRAC, stepSize, quantityPrecision);
+            if (tpQty > 0) await exec.placeTakeProfit({ symbol: SYMBOL, direction: o.direction, tpPrice: o.tp, quantity: tpQty });
+            console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: untung >= ${BE_EARLY_AT_R}R -> SL native dipindah ke harga masuk ${leg.entryPrice}.`);
+          } catch (e) {
+            console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL pindah SL native ke BE (${e.message}) -- pengaman polling aktif.`);
+          }
+        }
+        if (leg.beEarly && !leg.beNativeOk && livePx && (o.direction === 'buy' ? livePx <= leg.entryPrice : livePx >= leg.entryPrice)) {
+          try {
+            await exec.cancelAllOpenOrders(SYMBOL).catch(() => {});
+            const r = await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: o.direction, quantity: posQty });
+            const px = parseFloat(r && r.avgPrice) || livePx;
+            leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
+            leg.pnlUsd = o.direction === 'buy' ? (px - leg.entryPrice) * posQty : (leg.entryPrice - px) * posQty;
+            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL_BREAKEVEN');
+          } catch (e) { console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL tutup pengaman BE: ${e.message}`); }
           continue;
         }
         continue; // masih floating penuh, lanjut pantau

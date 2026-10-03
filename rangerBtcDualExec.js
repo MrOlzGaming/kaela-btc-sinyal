@@ -264,13 +264,16 @@ async function openRangerBtcDual({ sig, livePrice }) {
   const signalId = nextSlotSignalId(slot, new Date());
   slot.floating = {
     id: tradeId, signalId, direction: sig.direction, patternType: sig.patternType, sl: sig.sl, partialTp, wibowoRoute,
+    // (3 Okt 2026) trailR dikunci per posisi pas entry -- posisi lama (tanpa field ini) tetap aturan partial+SMA lama
+    trailR: cfg.trailR !== undefined ? cfg.trailR : 3,
     manualReason: sig.manualReason || null, triggeredAt: new Date().toISOString(),
     demo: demoResult, real: realResult,
   };
   saveJournal(journal);
   console.log(`[RangerBtcDual/${slotKey}] Entry ${sig.direction.toUpperCase()} @ ${livePrice} -- demo @ ${demoResult.entryPrice}${realResult ? `, real @ ${realResult.entryPrice}` : ' (real skip)'}.`);
 
-  const posBase = { id: tradeId, signalId, direction: sig.direction, sl: sig.sl, tp: partialTp, patternType: sig.patternType, mode: sig.patternType, manualReason: sig.manualReason, assetLabel: ASSET_LABEL };
+  const trailOn = (cfg.trailR !== undefined ? cfg.trailR : 3) > 0;
+  const posBase = { id: tradeId, signalId, direction: sig.direction, sl: sig.sl, tp: trailOn ? null : partialTp, patternType: sig.patternType, mode: sig.patternType, manualReason: sig.manualReason, assetLabel: ASSET_LABEL };
   const demoMsg = formatAutoOpen({ ...posBase, entryPrice: demoResult.entryPrice, marginUsd: demoResult.margin, leverage: demoResult.leverage, nilaiPosisi: demoResult.nilaiPosisi }, new Date(), '', true, null, '', null, badge(true), SYSTEM_LABEL.RANGER);
   await sendWhatsAppToSniperClub(toSniperClubLink(demoMsg)).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Sniper Club:`, e.message));
   if (wibowoRoute === 'real') {
@@ -386,6 +389,23 @@ async function monitorOneSlot(slotKey, slot, f, idrRate) {
       continue;
     }
 
+    // ===== TRAILING ATURAN OLAN (3 Okt 2026) -- produk unggulan: kalkulator exposure + trailing stop =====
+    // SL = harga terbaik - trailR x JARAK INVALIDASI AWAL, cuma naik, TANPA partial, tanpa batas atas profit. Riset
+    // rangerExitResearch.js (BTC 4H): trail 3x PF 3,15/2,87 vs partial+SMA 2,72/2,04 (2 era). Dicek tiap siklus 15 mnt;
+    // pengaman terakhir tetap likuidasi isolated di SL AWAL (kalkulator exposure).
+    if (f.trailR > 0) {
+      const isLong = sig.direction === 'buy';
+      const hitStop = isLong ? livePrice <= leg.currentSl : livePrice >= leg.currentSl;
+      if (hitStop) {
+        const inProfit = isLong ? leg.currentSl > leg.entryPrice : leg.currentSl < leg.entryPrice;
+        f[mode] = await closeLegFull(mode, leg, sig); await reportClose(slotKey, slot, f, mode, inProfit ? 'TRAIL' : 'SL', idrRate); continue;
+      }
+      const risk = Math.abs(leg.entryPrice - f.sl);
+      leg.peak = isLong ? Math.max(leg.peak != null ? leg.peak : leg.entryPrice, livePrice) : Math.min(leg.peak != null ? leg.peak : leg.entryPrice, livePrice);
+      const cand = isLong ? leg.peak - f.trailR * risk : leg.peak + f.trailR * risk;
+      if (isLong ? cand > leg.currentSl : cand < leg.currentSl) leg.currentSl = cand;
+      continue;
+    }
     if (!leg.partialDone) {
       const hitSl = sig.direction === 'buy' ? livePrice <= leg.currentSl : livePrice >= leg.currentSl;
       const hitPartial = sig.direction === 'buy' ? livePrice >= f.partialTp : livePrice <= f.partialTp;

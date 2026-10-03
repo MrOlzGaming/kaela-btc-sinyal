@@ -184,6 +184,27 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     assert.strictEqual(leg.exitPrice, 100);
     assert.ok(leg.pnlUsd > 0, 'untung partial tetap kecatat');
   });
+  await t('TRAILING OLAN (BTC 3x invalidasi): SL ngikut harga terbaik, cuma naik, tutup = TRAIL profit, gak ada TP tetap', async () => {
+    const s = setup({ signals: { BTC: { direction: 'buy', sl: 90, patternType: 'flag_bull' } } });
+    s.deps.cfg.trailRByCoin = { BTC: 3 };
+    const rot = require('./rangerRotation').createRotation(s.deps);
+    const stops = [];
+    s.demoEx.setPositionStopLoss = async (symbol, px) => { stops.push(px); };
+    await rot.runCycle();
+    assert.strictEqual(s.j.floating.partialTp, null, 'koin trailing gak boleh punya TP tetap');
+    s.st.prices.BTC = 120; await rot.runCycle();
+    assert.strictEqual(s.j.floating.legs.demo.sl, 90, 'stop 120-30=90 belum naik');
+    s.st.prices.BTC = 140; await rot.runCycle();
+    assert.strictEqual(s.j.floating.legs.demo.sl, 110, 'stop harus naik ke 140-30=110');
+    assert.strictEqual(stops[stops.length - 1], 110, 'SL native ikut digeser');
+    s.st.prices.BTC = 130; await rot.runCycle();
+    assert.strictEqual(s.j.floating.legs.demo.sl, 110, 'stop GAK boleh turun');
+    s.st.prices.BTC = 109; await rot.runCycle();
+    const leg = s.j.history[0].legs.demo;
+    assert.strictEqual(leg.reason, 'TRAIL');
+    assert.ok(leg.pnlUsd > 0, 'harus profit');
+    assert.strictEqual(s.demoEx.orders.filter((o) => o.type === 'close').length, 1, 'tanpa partial: cuma 1 kali tutup');
+  });
   await t('candle basi gak entry; candle sama gak discan ulang; SL kelewat harga live gak entry', async () => {
     const s = setup({ closeTime: Date.UTC(2026, 9, 3, 8, 0) - 1, signals: { BTC: { direction: 'buy', sl: 95, patternType: 'flag_bull' } } });
     await s.rot.runCycle(); await s.rot.runCycle();

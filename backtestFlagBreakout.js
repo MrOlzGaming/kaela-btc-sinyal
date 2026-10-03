@@ -232,7 +232,7 @@ function applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, exi
 function runFlagBacktestWindowGated(daily, opts = {}) {
   const {
     warmupDays = 60, poleLookbackRange = [5, 20], poleMinMovePct = 15, flagLookbackRange = [3, 15], flagMaxRangePct = 8,
-    slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10, partialFrac = 0.5, // partialFrac (3 Okt 2026, riset exit) -- default 0.5 = perilaku LAMA
+    slBufferPct = 0.5, partialRR = 2, trailSmaLen = 10, partialFrac = 0.5, beAt = null, trailR = null, // trailR (3 Okt 2026, ATURAN OLAN): stop = harga terbaik - trailR x invalidasi awal, cuma naik, TANPA partial (null = perilaku LAMA) // beAt (3 Okt 2026): kunci BE lebih awal di xR sebelum partial (null = perilaku LAMA) // partialFrac (3 Okt 2026, riset exit) -- default 0.5 = perilaku LAMA
     startCapital = 100, topUpAmount = 100, topUpStopAt = 1000, topUpDayOfMonth = 5,
     usePatterns = ['flag', 'wedge'],
     wedgeLookbackRange = [15, 40], wedgeMinTouches = 2, wedgeConvergenceRatio = 0.65,
@@ -294,12 +294,41 @@ function runFlagBacktestWindowGated(daily, opts = {}) {
         capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
         continue;
       }
+      if (trailR) {
+        // stop dicek pakai nilai LAMA dulu (candle ini), baru di-update pakai high/low candle ini buat candle berikutnya
+        const isLong = openPos.direction === 'buy';
+        if (openPos.peak == null) openPos.peak = openPos.entryPrice;
+        const hit = isLong ? today.low <= openPos.sl : today.high >= openPos.sl;
+        if (hit) {
+          const exitPx = isLong ? Math.min(today.open, openPos.sl) : Math.max(today.open, openPos.sl);
+          const mv = (exitPx - openPos.entryPrice) / openPos.entryPrice * (isLong ? 1 : -1) * 100;
+          const totalPnl = openPos.nilaiPosisi * (mv / 100);
+          if (useLedger) ledgerState = applyLedgerTradeResult(ledgerState, openPos, totalPnl, cycleEvents, today.closeTime);
+          else capital = Math.max(0, capital + totalPnl);
+          const riskPct = Math.abs(openPos.entryPrice - openPos.originalSl) / openPos.entryPrice * 100;
+          trades.push({ ...openPos, exitReason: mv > 0 ? 'TRAIL_PROFIT' : 'SL', rMultiple: riskPct > 0 ? mv / riskPct : 0, pnlUsd: totalPnl, exitTime: today.closeTime });
+          capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
+          continue;
+        }
+        const riskAbs = Math.abs(openPos.entryPrice - openPos.originalSl);
+        if (isLong) { openPos.peak = Math.max(openPos.peak, today.high); openPos.sl = Math.max(openPos.sl, openPos.peak - trailR * riskAbs); }
+        else { openPos.peak = Math.min(openPos.peak, today.low); openPos.sl = Math.min(openPos.sl, openPos.peak + trailR * riskAbs); }
+        continue;
+      }
       const closes = daily.slice(0, i + 1).map((c) => c.close);
       const trailSma = sma(closes, trailSmaLen);
       if (!openPos.partialDone) {
+        // (3 Okt 2026, Olan "biar ga kena gocek bandar") -- opsi kunci BE awal: SL efektif = harga masuk mulai candle BERIKUTNYA
+        const beHitNow = beAt && !openPos.beEarly && (openPos.direction === 'buy' ? today.high >= openPos.entryPrice + Math.abs(openPos.entryPrice - openPos.originalSl) * beAt : today.low <= openPos.entryPrice - Math.abs(openPos.entryPrice - openPos.originalSl) * beAt);
         const hitSl = openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl;
         const hitPartial = openPos.direction === 'buy' ? today.high >= openPos.partialTp : today.low <= openPos.partialTp;
+        if (beHitNow && !(openPos.direction === 'buy' ? today.low <= openPos.sl : today.high >= openPos.sl)) { openPos.beEarly = true; openPos.sl = openPos.entryPrice; }
         if (hitSl) {
+          if (openPos.beEarly) { // SL udah di harga masuk -> keluar impas, bukan rugi penuh
+            trades.push({ ...openPos, exitReason: 'SL_BE_EARLY', rMultiple: 0, pnlUsd: 0, exitTime: today.closeTime });
+            capitalSeries.push({ time: today.closeTime, capital: useLedger ? totalWealth(ledgerState) : capital }); openPos = null;
+            continue;
+          }
           if (useLedger) ledgerState = applyLedgerTradeResult(ledgerState, openPos, -openPos.lossAtSl, cycleEvents, today.closeTime);
           else capital = Math.max(0, capital - openPos.lossAtSl);
           trades.push({ ...openPos, exitReason: 'SL', rMultiple: -1, pnlUsd: -openPos.lossAtSl, exitTime: today.closeTime });

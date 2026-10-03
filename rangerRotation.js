@@ -44,7 +44,7 @@ const MASTER_NOMOR = '6281299303888';
 const MODES = ['demo', 'real'];
 
 function loadConfig() {
-  const def = { enabled: false, coins: DEFAULT_COINS, dxyFilter: false, exchange: 'bybit', allowReal: true, shortCoins: ['BTC'], partialFrac: 1 / 3 };
+  const def = { enabled: false, coins: DEFAULT_COINS, dxyFilter: false, exchange: 'bybit', allowReal: true, shortCoins: ['BTC'], partialFrac: 1 / 3, trailRByCoin: { BTC: 3 } };
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
 const freshStats = () => ({ wins: 0, losses: 0, totalPnlUsd: 0 });
@@ -136,13 +136,31 @@ function createRotation(deps) {
         // Posisi udah gak ada. Kalau SL native pernah kepasang & harga udah lewat level stop -> ini SL exchange yg kepicu
         // (bukan misteri) -> catat SL di harga stop. Selain itu -> jujur "hilang", PnL gak dihitung.
         const stopHit = L.nativeSl && live && (isLong ? live <= L.sl * 1.003 : live >= L.sl * 0.997);
-        if (stopHit) await closeLeg(f, mode, L.partialDone ? 'SL_BREAKEVEN' : 'SL', L.sl, L.remainingQty != null ? L.remainingQty : L.qty);
+        const inProfit = isLong ? L.sl > L.entryPrice : L.sl < L.entryPrice;
+        if (stopHit) await closeLeg(f, mode, inProfit ? 'TRAIL' : (L.partialDone ? 'SL_BREAKEVEN' : 'SL'), L.sl, L.remainingQty != null ? L.remainingQty : L.qty);
         else await closeLeg(f, mode, 'OFFLINE_UNTRACKED', null, 0, true);
         continue;
       }
       if (!live) { log(`${mode}: harga ${f.coin} gagal -- coba siklus depan`); continue; }
       const closeAll = async (reason) => { const q = ownQty(L, pos); const px = (await marketClose(exec, f, q)) || live; await closeLeg(f, mode, reason, px, q); };
       if (wrongSide) { await closeAll('WINDOW_FLIP'); continue; }
+      // ===== TRAILING ATURAN OLAN (3 Okt 2026) -- koin di cfg.trailRByCoin (default BTC: 3) =====
+      // SL = harga terbaik - trailR x JARAK INVALIDASI AWAL, cuma naik, TANPA partial, tanpa batas atas profit. Riset
+      // rangerExitResearch.js TRAIL_STUDY: BTC 4H trail 3x PF 3,15/2,87 vs partial-SMA 2,72/2,04 (2 era). Alt/emas tetap
+      // partial+SMA (trail ketat bikin kegocek, kalah di 2 era).
+      const trailR = (cfg.trailRByCoin || {})[f.coin];
+      if (trailR) {
+        if (isLong ? live <= L.sl : live >= L.sl) { await closeAll((isLong ? L.sl > L.entryPrice : L.sl < L.entryPrice) ? 'TRAIL' : 'SL'); continue; }
+        const risk = L.risk || Math.abs(L.entryPrice - f.sl);
+        L.peak = isLong ? Math.max(L.peak != null ? L.peak : L.entryPrice, live) : Math.min(L.peak != null ? L.peak : L.entryPrice, live);
+        const cand = isLong ? L.peak - trailR * risk : L.peak + trailR * risk;
+        // geser cuma kalau naik >= 0,1% (hemat panggilan API, SL native gak di-spam tiap siklus)
+        if (isLong ? cand > L.sl * 1.001 : cand < L.sl * 0.999) {
+          L.sl = cand;
+          if (L.nativeSl && exec.setPositionStopLoss) await exec.setPositionStopLoss(sym(f.coin), cand).catch((e) => log(`${mode}: geser SL trailing ${f.coin} GAGAL: ${e.message}`));
+        }
+        continue;
+      }
       if (!L.partialDone) {
         if (isLong ? live <= f.sl : live >= f.sl) { await closeAll('SL'); continue; }
         if (isLong ? live >= f.partialTp : live <= f.partialTp) {
@@ -205,7 +223,7 @@ function createRotation(deps) {
       try { await exec.setPositionStopLoss(s, sig.sl); nativeSl = true; }
       catch (e) { log(`${mode}: SL native ${s} GAGAL dipasang (cuma andelin polling): ${e.message}`); }
     }
-    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0, nativeSl };
+    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, risk: Math.abs((Number(order.avgPrice) || live) - sig.sl), peak: Number(order.avgPrice) || live, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0, nativeSl };
   }
 
   async function open(coin, sig) {
@@ -227,7 +245,8 @@ function createRotation(deps) {
     const r = Math.abs(demo.entryPrice - sig.sl);
     const f = {
       id: `ranger-rotasi-${now()}`, signalId, coin, direction: sig.direction, patternType: sig.patternType, sl: sig.sl,
-      partialTp: sig.direction === 'buy' ? demo.entryPrice + r * PARTIAL_RR : demo.entryPrice - r * PARTIAL_RR,
+      // koin trailing (cfg.trailRByCoin) gak punya TP tetap -> null (pesan WA nampilin 'TP: trailing')
+      partialTp: (cfg.trailRByCoin || {})[coin] ? null : (sig.direction === 'buy' ? demo.entryPrice + r * PARTIAL_RR : demo.entryPrice - r * PARTIAL_RR),
       openedAt: d.toISOString(), wibowoRoute: real ? 'real' : 'demo', exchange: cfg.exchange, legs: { demo, real },
     };
     j.floating = f;

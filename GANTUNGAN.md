@@ -10,8 +10,8 @@ Terakhir diperbarui: **3 Okt 2026**.
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 
 1. **Isi saldo real Bybit** (Funding -> Unified Trading) — Ranger Rotasi real nunggu ini. Gak mendesak, kapan siap.
-2. **API key DEMO Bitget** — bikin dari mode Demo Trading Bitget, centang *Order futures* DAN *Open interest*, kirim lewat
-   Kaela Access (bukan screenshot). Begitu ada: slot ICT Sweep pindah ke Bitget (exchange sendiri). Key real ditolak buat demo.
+2. **Klaim saldo demo Bitget** (mode Demo Trading -> Assets) -- key demo UDAH tersambung 3 Okt (saldo demo masih 0). Abis itu
+   Kaela pindahin slot ICT Sweep ke Bitget.
 3. **Anggaran DCA real** (`spot-live-config.json realBudgetUsd`, sekarang 0) — sebut angkanya kalau mau Compound Alt DCA /
    Musiman BTC belanja beneran. Window tanam alt mulai **19 Okt 2026**.
 4. **Mulai DCA Tangga Leverage** BingX Standard Futures ($3/hari x3) — rencana **20 Okt 2026** (akhir window bear), buka

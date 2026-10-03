@@ -260,7 +260,6 @@ async function main() {
   const cfg = loadConfig();
   if (!cfg.enabled) return;
   const old = require('./ninjaTrader');
-  const mr = require('./ninjaMrTrader');
   const { sendWhatsAppToSniperClub } = require('./fonnte');
   const { sendWhatsAppToWibowo } = require('./wibowoNotify');
   const { getUsdIdrRate, recordJournalEntry, updateJournalEntry } = require('./kaelaProTraderClient');
@@ -271,11 +270,7 @@ async function main() {
     execFor: (testnet) => old.execFor('trailing', testnet),
     fetchLivePrice: (testnet) => old.fetchLivePrice(old.baseUrlFor(testnet)),
     strayCheck: (exec) => old.checkAndClearStrayPosition(exec, null),
-    otherNinjaBusy: () => {
-      try { const m = mr.loadJournal(); if (m.pendingEntry || m.floating) return true; } catch { /* abaikan */ }
-      try { if ((old.loadJournal().trailing || {}).floating) return true; } catch { /* abaikan */ }
-      return false;
-    },
+    otherNinjaBusy: () => !!require('./ninjaBusy').ninjaBusyReason('exhaustion'), // MR/CB/News (ninjaBusy.js)
     notify: { sniperClub: (m) => sendWhatsAppToSniperClub(m), wibowo: (m) => sendWhatsAppToWibowo(m) },
     kaelaJournal: {
       record: (mode, e) => recordJournalEntry(MASTER_NOMOR, mode, e).catch((err) => console.log('[NinjaEX] recordJournalEntry gagal:', err.message)),

@@ -156,6 +156,8 @@ const PATTERN_REASON_LABEL = {
   channel_breakout: 'Channel Breakout -- harga breakout terkonfirmasi dari channel konsolidasi candle 5-menit',
   // (30 Sep 2026, Ninja Mean Reversion -- ninjaMrTrader.js/ninjaMrSignal.js)
   // (3 Okt 2026, Ninja Exhaustion -- ninjaExhaustionTrader.js, UJI DEMO 100 transaksi)
+  // (3 Okt 2026, Ninja News -- ninjaNewsTrader.js, UJI DEMO)
+  news_dxy: 'Copet rilis data ekonomi -- dolar (EURUSDT per detik) bereaksi duluan, Kaela ambil arah BTC KEBALIKAN dolar sebelum BTC nyusul',
   exhaustion_fade: 'Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)',
   mean_reversion: 'Mean Reversion searah tren -- harga keluar Bollinger Band lawan arah tren EMA200, masuk balik ke arah tren (beli saat turun / jual saat naik)',
   // Varian BEARISH (25 Sep 2026, unifikasi desain pesan Sniper+Ranger+Ninja -- Sniper punya sinyal
@@ -211,6 +213,11 @@ const CLOSE_REASON_LABEL = {
   MR_MEAN: 'Target tercapai -- harga balik ke rata-rata SMA20',
   MR_MANUAL: 'Posisi ditutup di luar sistem (manual/exchange) -- dicatat apa adanya dari harga terakhir',
   // Ninja Exhaustion (3 Okt 2026, ninjaExhaustionTrader.js)
+  // Ninja News (3 Okt 2026, ninjaNewsTrader.js)
+  NW_SL: 'Stop Loss pendek kena -- BTC gak nyusul arah kebalikan dolar',
+  NW_TRAIL: 'Trailing ketat kena -- copetan dikunci, posisi ditinggal',
+  NW_TIME: 'Batas waktu tahan habis -- momen rilis udah lewat, ditutup',
+  NW_MANUAL: 'Posisi ditutup di luar sistem -- dicatat dari harga terakhir',
   EX_SL: 'Stop Loss kena -- tenaga forced-flow ternyata belum abis, harga lanjut',
   EX_TRAIL: 'Trailing stop kena -- level invalidasi yang ikut harga terbaik kesentuh',
   EX_TIME: 'Batas waktu tahan habis -- ditutup paksa (momen balik arah udah lewat)',

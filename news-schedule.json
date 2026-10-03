@@ -1,0 +1,20 @@
+{
+  "_note": "Jadwal rilis HIGH IMPACT buat Ninja News (ninjaNewsTrader.js). Jam = Eastern Time (ET); kode yang ngubah ke UTC (EDT/EST otomatis). Diverifikasi 3 Okt 2026 dari sumber resmi: federalreserve.gov/monetarypolicy/fomccalendars.htm, bls.gov/schedule/2026, bea.gov/news/schedule, census.gov economic indicators calendar. Tambah baris baru tiap ada jadwal tahun berikutnya.",
+  "events": [
+    { "date": "2026-10-14", "timeET": "08:30", "label": "CPI AS (Sep)" },
+    { "date": "2026-10-15", "timeET": "08:30", "label": "PPI + Retail Sales (Sep)" },
+    { "date": "2026-10-28", "timeET": "14:00", "label": "FOMC Rate Decision" },
+    { "date": "2026-10-29", "timeET": "08:30", "label": "GDP Q3 Advance + PCE (Sep)" },
+    { "date": "2026-11-06", "timeET": "08:30", "label": "NFP / Jobs Report (Okt)" },
+    { "date": "2026-11-10", "timeET": "08:30", "label": "CPI AS (Okt)" },
+    { "date": "2026-11-13", "timeET": "08:30", "label": "PPI (Okt)" },
+    { "date": "2026-11-17", "timeET": "08:30", "label": "Retail Sales (Okt)" },
+    { "date": "2026-11-25", "timeET": "08:30", "label": "GDP Q3 Second + PCE (Okt)" },
+    { "date": "2026-12-04", "timeET": "08:30", "label": "NFP / Jobs Report (Nov)" },
+    { "date": "2026-12-09", "timeET": "14:00", "label": "FOMC Rate Decision + SEP" },
+    { "date": "2026-12-10", "timeET": "08:30", "label": "CPI AS (Nov)" },
+    { "date": "2026-12-15", "timeET": "08:30", "label": "PPI (Nov)" },
+    { "date": "2026-12-16", "timeET": "08:30", "label": "Retail Sales (Nov)" },
+    { "date": "2026-12-23", "timeET": "08:30", "label": "GDP Q3 Third + PCE (Nov)" }
+  ]
+}

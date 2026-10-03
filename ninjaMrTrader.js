@@ -362,7 +362,8 @@ async function main() {
     execFor: (testnet) => old.execFor('trailing', testnet), // akun BingX SAMA Ninja lama (BINGX_API_KEY)
     fetchLivePrice: (testnet) => old.fetchLivePrice(old.baseUrlFor(testnet)),
     strayCheck: (exec, idrRate) => old.checkAndClearStrayPosition(exec, idrRate),
-    oldNinjaFloating: () => { try { return !!(old.loadJournal().trailing || {}).floating; } catch { return false; } },
+    // (3 Okt 2026) cek SEMUA Ninja lain di akun BingX yang sama (CB lama, Exhaustion, News) lewat ninjaBusy.js
+    oldNinjaFloating: () => !!require('./ninjaBusy').ninjaBusyReason('mr'),
     notify: { sniperClub: (m) => sendWhatsAppToSniperClub(m), wibowo: (m) => sendWhatsAppToWibowo(m) },
     recordSkipped: (x) => recordSkippedInsufficientBalance(x),
     kaelaJournal: {

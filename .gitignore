@@ -48,6 +48,8 @@ backtest/correlation-raw.json
 secrets.js
 # backup secrets (3 Okt 2026: secrets.js.bak-3sep di VPS hampir ke-commit lewat git add -A, diblok push protection GitHub)
 secrets.js.*
+ninja-news.log
+backtest/.cache-news-1s/
 *.bak-*
 _test_*.js
 channel-breakout.log

@@ -41,6 +41,10 @@ mrx_output=$(timeout -k 5 55 node ninjaMrTrader.js 2>&1)
 # (forced-flow kehabisan tenaga -> fade). Akun BingX SAMA, saling skip sama Ninja MR. Saklar: ninja-exhaustion-config.json.
 exh_output=$(timeout -k 5 50 node ninjaExhaustionTrader.js 2>&1)
 [ -n "$exh_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $exh_output" >> "$LOG_FILE"
+# NINJA NEWS (3 Okt 2026, ninjaNewsTrader.js) -- cek jadwal rilis (news-schedule.json); ~2 menit sebelum rilis nyalain
+# detektor DXY/EURUSDT per detik (proses terpisah, log ninja-news.log). Saklar: ninja-news-config.json.
+nws_output=$(timeout -k 5 20 node ninjaNewsTrader.js 2>&1)
+[ -n "$nws_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $nws_output" >> "$LOG_FILE"
 # Pengawas likuidasi DCA Tangga Leverage di BingX STANDARD FUTURES (1 Okt 2026) -- MURNI BACA, gak pernah
 # kirim order; posisi kena likuidasi -> DM WA Olan + saran leverage pengganti (lihat stdFuturesLadderMonitor.js).
 std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)

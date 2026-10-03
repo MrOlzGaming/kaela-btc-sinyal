@@ -75,9 +75,10 @@ function createBitgetClient({ apiKey, apiSecret, passphrase, testnet }) {
   if (!apiKey || !apiSecret || !passphrase) {
     throw new Error('createBitgetClient: apiKey/apiSecret/passphrase wajib diisi (Bitget WAJIB 3 kredensial, beda dari Binance/BingX).');
   }
-  if (testnet) {
-    throw new Error('createBitgetClient: testnet/demo Bitget BELUM diimplementasi (mekanismenya belum diriset) -- akun ini REAL dari awal, panggil dengan testnet:false.');
-  }
+  // (3 Okt 2026) DEMO Bitget DIIMPLEMENTASI -- dites empiris: WAJIB key DEMO terpisah (dibikin di mode Demo Trading; key real
+  // ditolak code 40099 "exchange environment is incorrect") + header `paptrading: 1`. productType TETAP USDT-FUTURES & simbol
+  // SAMA kayak real (BTCUSDT) -- cara lama SUSDT-FUTURES/SBTCSUSDT sekarang balikin data kosong. Caller ngoper key DEMO
+  // (secrets BITGET_DEMO_API_*) + testnet:true.
   let symbolInfoCache = null;
   let posModeCache = null; // 'one_way_mode' | 'hedge_mode', cached SEKALI per instance (jarang ganti pas jalan)
 
@@ -100,6 +101,7 @@ function createBitgetClient({ apiKey, apiSecret, passphrase, testnet }) {
       headers: {
         'ACCESS-KEY': apiKey, 'ACCESS-SIGN': signature, 'ACCESS-TIMESTAMP': timestamp,
         'ACCESS-PASSPHRASE': passphrase, 'Content-Type': 'application/json',
+        ...(testnet ? { paptrading: '1' } : {}),
       },
       body: body ? bodyStr : undefined,
     });
@@ -198,9 +200,13 @@ function createBitgetClient({ apiKey, apiSecret, passphrase, testnet }) {
     return { ...detail, executedQty: detail.baseVolume, avgPrice: detail.priceAvg };
   }
 
+  // (3 Okt 2026) + field normalisasi `positionAmt` (= total, selalu positif) & `positionSide` -- biar caller generik
+  // (rangerBtcDualExec.js) bisa cek "posisi masih ada" pakai nama field yang sama kayak Binance/BingX. Field asli tetap ada.
   async function getPositionRisk(symbol) {
     const positions = await signedRequest('GET', '/api/v2/mix/position/single-position', { symbol, productType: PRODUCT_TYPE, marginCoin: MARGIN_COIN });
-    return (positions || [])[0] || null;
+    const open = (positions || []).filter((p) => parseFloat(p.total) > 0);
+    const p = open[0] || (positions || [])[0] || null;
+    return p ? { ...p, positionAmt: p.total, positionSide: String(p.holdSide || '').toUpperCase() } : null;
   }
 
   async function getAllPositions() {

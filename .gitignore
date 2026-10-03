@@ -46,6 +46,14 @@ backtest/correlation-raw.json
 
 # kredensial -- JANGAN PERNAH commit. Tanpa file ini, fonnte.js otomatis no-op (aman buat dev).
 secrets.js
+# backup secrets (3 Okt 2026: secrets.js.bak-3sep di VPS hampir ke-commit lewat git add -A, diblok push protection GitHub)
+secrets.js.*
+*.bak-*
+_test_*.js
+channel-breakout.log
+cron-heartbeat.log
+econ-calendar-live.log
+position-check-fast.log
 
 # PAT GitHub buat push manual ke origin-new (MrOlzGaming) dari sesi lokal -- JANGAN PERNAH commit.
 .gh-token-mrolzgaming

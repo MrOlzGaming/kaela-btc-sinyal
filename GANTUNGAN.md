@@ -37,6 +37,8 @@ Keputusan Olan 3 Okt 2026 malam:
 - **Pertama kali Olan tambah collateral** di BingX Standard Futures -- cek di `std-futures-ladder-state.json` apakah `margin` posisi
   ikut naik (asumsi: field `initialMargin` allPosition ke-update). Kalau gak, cari field lain biar leverage efektif & harga
   likuidasi perkiraan ikut bener. Peringatan collateral (-50% / -75% margin) aktif sejak 3 Okt.
+- **Kredit server Vultr** -- $13,89 per 4 Okt (~$0,17/hari) -> cukup sampai ~akhir Des 2026. vultrBalanceMonitor.js otomatis nagih
+  ke grup Wibowo tiap hari begitu < $5 (~akhir Nov). Olan top up di vultr.com sebelum itu.
 - **Data radar** (likuidasi, order book, whale, miner, smart-money) — numpuk; revisit setelah beberapa bulan.
 
 ## 🛠️ KAELA KERJAIN (antrian)
@@ -46,6 +48,9 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## ✅ SELESAI (terbaru di atas)
 
+- 4 Okt 2026 subuh (kerja mandiri pas Olan tidur) — Audit: FIX SL/TP algo Binance & plan order MEXC nyangkut abis cancel (TERBUKTI
+  di demo; bersihin 1 TP basi di demo Nirwan; akun real Binance/MEXC dicek bersih); listener likuidasi dicek sehat. Riset: filter
+  Fear & Greed buat slot ICT Sweep (skip short pas F&G < 25 -> PF 1,45/1,55 jadi 1,87/1,81) DIPASANG. BUG_REGISTRY 0047-0051.
 - 4 Okt 2026 — Rapor Uji Demo otomatis (`trialReport.js`): Senin ke grup Wibowo + tonggak penilaian otomatis (Exhaustion 100 /
   News 30 transaksi). Evaluasi di bagian NUNGGU TANGGAL sekarang dilaporin sistem sendiri, gak bergantung sesi Kaela.
 - 4 Okt 2026 dini hari — Health check: (1) FIX laten serius: state cron menit (Ninja MR/Exhaustion/News, DCA Tangga, leg demo

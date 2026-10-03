@@ -110,6 +110,10 @@ const PATTERN_PARAMS_4H = {
 const FVG_TREND_SMA_LEN_4H = 1200;
 const TRAIL_SMA_LEN_4H = 60;
 const PARTIAL_RR = 2; // target tahap 1 = 2x risiko, sama kayak Sniper
+// (3 Okt 2026, riset backtest/rangerExitResearch.js COINS=XAU NOBEAR=1) -- EMAS: partial @3R menang di DUA era (PF 1,23->1,85
+// <2023 & 2,88->13,2 >=2023, DD 32%->4%) TAPI n kecil (13/12 trade) -> dipasang dgn status DIPANTAU. BTC jalur ini udah gak
+// dipakai (rangerBtcDualExec.js), tetap 2R biar perilaku lama gak berubah kalau dual-exec dimatiin.
+const PARTIAL_RR_BY_ASSET = { btc: 2, xau: 3 };
 const CANDLES_NEEDED_4H = 1560 + 260; // warmup + buffer buat window terlebar (wedge 240)
 
 // (13 Sep 2026, diekstrak biar dipakai bareng 2 tempat: gating sinyal baru DAN cek force-close
@@ -387,7 +391,8 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // `direction` (14 Sep 2026, permintaan Olan: "kalo short exposurenya separuh dari long") --
     // lihat calculator.js `hitung()`, exposure otomatis dibagi 2 kalau sig.direction==='sell'.
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction, exposureModal });
-    const partialTp = sig.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
+    const partialRr = PARTIAL_RR_BY_ASSET[assetCfg.key] || PARTIAL_RR;
+    const partialTp = sig.direction === 'buy' ? livePrice + riskDistance * partialRr : livePrice - riskDistance * partialRr;
     console.log(`[NyopetAutoTrader] ${assetCfg.label}: Saldo ${marginAsset} penuh $${modalFull.toFixed(2)} -> modal aktif (1/5) $${modal.toFixed(2)} | nyawa ${(riskDistance / livePrice * 100).toFixed(2)}% -> leverage ${calc.leverage}x | pattern=${sig.patternType}`);
 
     await exec.setIsolatedMargin(symbol);

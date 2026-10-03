@@ -17,7 +17,9 @@ const { detectFvgSignalBoth, makeBtcBearWindowFn, resampleTo4h, RESCALED_4H } = 
 const { hitung: hitungExposure } = require('../calculator');
 
 const FEE = 0.12, SPLIT = Date.UTC(2023, 0, 1);
-const COINS = ['BTC', 'SOL', 'DOGE', 'TRX', 'INJ', 'ETH', 'XLM', 'BNB'];
+const COINS = process.env.COINS ? process.env.COINS.split(',') : ['BTC', 'SOL', 'DOGE', 'TRX', 'INJ', 'ETH', 'XLM', 'BNB'];
+// NOBEAR=1 -> window bear selalu false (aturan Ranger EMAS live: long doang, gak ikut siklus halving BTC)
+const NOBEAR = process.env.NOBEAR === '1';
 const P = { poleMinMovePct: 15, flagMaxRangePct: 8, wedgeMinTouches: 2, wedgeConvergenceRatio: 0.65, slBufferPct: 0.5, ...RESCALED_4H };
 
 function smaArr(c, n) { const o = new Array(c.length).fill(null); let s = 0; for (let i = 0; i < c.length; i++) { s += c[i].close; if (i >= n) s -= c[i - n].close; if (i >= n - 1) o[i] = s / n; } return o; }
@@ -29,7 +31,7 @@ function precomputeSignals(c, coin) {
   const out = new Array(c.length).fill(null), bear = new Array(c.length).fill(false);
   const shortOk = coin === 'BTC';
   for (let i = P.warmupCandles; i < c.length; i++) {
-    const bearNow = bearFn(c, i); bear[i] = bearNow;
+    const bearNow = NOBEAR ? false : bearFn(c, i); bear[i] = bearNow;
     const last = c[i].close;
     let s = null;
     const flag = detectFlag(c, i, { poleLookbackRange: P.poleLookbackRange, poleMinMovePct: P.poleMinMovePct, flagLookbackRange: P.flagLookbackRange, flagMaxRangePct: P.flagMaxRangePct });

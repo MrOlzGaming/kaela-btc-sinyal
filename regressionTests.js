@@ -1228,7 +1228,7 @@ async function main() {
   });
 
   // (3 Okt 2026) peringatan TAMBAH COLLATERAL: minus >=50% margin -> DM, >=75% -> DM keras, gak spam, reset abis pulih
-  await test('stdFuturesLadderMonitor: minus 50% -> pengingat halus tambah collateral ke GRUP Wibowo (1x), 75% -> pengingat lanjutan, abis collateral ditambah reset', async () => {
+  await test('stdFuturesLadderMonitor: minus 50% -> pengingat umum cek posisi ke GRUP Wibowo (1x, tanpa sebut collateral), 75% -> pengingat lanjutan, abis collateral ditambah reset', async () => {
     const M = require('./stdFuturesLadderMonitor');
     const pos = (price, margin) => ({ symbol: 'BTC-USDT', positionSide: 'LONG', time: 1000, entryPrice: '84000', leverage: '3', initialMargin: String(margin), currentPrice: String(price) });
     let live = [pos(84000, 3)];
@@ -1238,7 +1238,7 @@ async function main() {
     const mon = M.createMonitor({ fetchPositions: async () => live, fetchOrders: async () => [], notify: async (m) => { dm.push(m); }, notifyGroup: async (m) => { sent.push(m); }, now: () => 5000, log: () => {} }, st);
     await mon.runCycle(); // seed
     live = [pos(84000 * (1 - 0.17), 3)]; await mon.runCycle(); // -17% harga x3 = -51% margin
-    assert.strictEqual(sent.length, 1); assert.ok(/Pengingat rutin/.test(sent[0]) && /collateral/i.test(sent[0]), sent[0]);
+    assert.strictEqual(sent.length, 1); assert.ok(/Pengingat rutin/.test(sent[0]) && /cek posisi/i.test(sent[0]) && !/collateral/i.test(sent[0]), sent[0]);
     assert.ok(!/likuidasi|bahaya|minus|%/i.test(sent[0]), 'bahasa halus: gak boleh nyebut likuidasi/bahaya/persen minus');
     assert.strictEqual(dm.length, 0, 'pengingat collateral ke GRUP, bukan DM');
     await mon.runCycle();

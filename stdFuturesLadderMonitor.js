@@ -81,17 +81,15 @@ function lossFrac(layer) {
 }
 // (3 Okt 2026, Olan: "jangan DM, masukin ke hedgefund.. peringatan umum aja, silahkan dicek posisi, jangan seolah mau
 // liquidated.. peringatan halus biar anggota tidak panik") -- dikirim ke GRUP Wibowo Hedgefund, bahasa tenang: TANPA persen
-// minus, TANPA kata bahaya/likuidasi. Angka detail cukup saran nominal collateral (buat yang megang posisi).
+// minus, TANPA kata bahaya/likuidasi. Revisi Olan: "ga usah sebut tambah collateral, pengingat umum aja suruh aku cek posisi"
+// -> cuma ajakan cek posisi (Olan sendiri yang mutusin tambah collateral atau nggak).
 function collateralMessage(layer, lf, level) {
-  const lossUsd = lf * (layer.margin || 0);
-  const addUsd = Math.max(0, lossUsd / COLL_TARGET_LOSS - (layer.margin || 0));
   return [
     `🪜 TANGGA DCA · Kaela — 🔔 Pengingat ${level >= 0.75 ? 'lanjutan' : 'rutin'}`,
     '',
-    `Posisi DCA #${layer.no} (${layer.symbol.replace('-USDT', '')} ${layer.side === 'SHORT' ? 'short' : 'long'}) lagi kena koreksi harga, wajar buat DCA jangka panjang.`,
-    `Silakan dicek posisinya ya, dan kalau sempat tambah collateral sekitar ${fmtUsd(addUsd)} biar makin lega.`,
+    `Waktunya cek posisi DCA #${layer.no} (${layer.symbol.replace('-USDT', '')} ${layer.side === 'SHORT' ? 'short' : 'long'}) ya.`,
     '',
-    'Tetap pantau berkala, santai aja 🙏',
+    'Tetap pantau berkala 🙏',
     '',
     '— Kaela',
   ].join('\n');

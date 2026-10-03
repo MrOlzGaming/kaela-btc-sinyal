@@ -1,0 +1,36 @@
+### BURST 800000 fade
+=== cadence 1 menit: 12 sinyal exhaustion (6 LONG / 6 SHORT) ===|||
+waktu 15m (SL 1,5%)                  | SEMUA n=12 win=50% avg=-0.101% PF=0.44 total=-1.21% | paruh1 n=6 win=50% avg=-0.163% PF=0.25 total=-0.98% | paruh2 n=6 win=50% avg=-0.038% PF=0.74 total=-0.23%
+waktu 30m (SL 1,5%)                  | SEMUA n=12 win=42% avg=-0.116% PF=0.46 total=-1.39% | paruh1 n=6 win=33% avg=-0.196% PF=0.30 total=-1.18% | paruh2 n=6 win=50% avg=-0.036% PF=0.76 total=-0.21%
+waktu 60m (SL 1,5%)                  | SEMUA n=12 win=50% avg=-0.111% PF=0.49 total=-1.33% | paruh1 n=6 win=33% avg=-0.295% PF=0.16 total=-1.77% | paruh2 n=6 win=67% avg=0.074% PF=1.92 total=0.44%
+waktu 120m (SL 1,5%)                 | SEMUA n=12 win=58% avg=0.049% PF=1.25 total=0.58% | paruh1 n=6 win=50% avg=-0.143% PF=0.45 total=-0.86% | paruh2 n=6 win=67% avg=0.240% PF=2.89 total=1.44%
+waktu 240m (SL 1,5%)                 | SEMUA n=12 win=33% avg=0.095% PF=1.45 total=1.15% | paruh1 n=6 win=17% avg=-0.322% PF=0.16 total=-1.93% | paruh2 n=6 win=50% avg=0.513% PF=14.61 total=3.08%
+SL 0.5% TP 0.5% (maks 4j)            | SEMUA n=12 win=58% avg=-0.017% PF=0.93 total=-0.20% | paruh1 n=6 win=33% avg=-0.267% PF=0.33 total=-1.60% | paruh2 n=6 win=83% avg=0.233% PF=3.33 total=1.40%
+SL 0.5% TP 1% (maks 4j)              | SEMUA n=12 win=42% avg=-0.007% PF=0.98 total=-0.09% | paruh1 n=6 win=33% avg=-0.188% PF=0.53 total=-1.13% | paruh2 n=6 win=50% avg=0.174% PF=1.80 total=1.04%
+SL 0.7% TP 0.7% (maks 4j)            | SEMUA n=12 win=42% avg=-0.086% PF=0.73 total=-1.03% | paruh1 n=6 win=33% avg=-0.320% PF=0.34 total=-1.92% | paruh2 n=6 win=50% avg=0.148% PF=1.98 total=0.89%
+SL 0.7% TP 1.4% (maks 4j)            | SEMUA n=12 win=33% avg=-0.061% PF=0.81 total=-0.73% | paruh1 n=6 win=17% avg=-0.440% PF=0.12 total=-2.64% | paruh2 n=6 win=50% avg=0.318% PF=3.10 total=1.91%
+SL 1% TP 1% (maks 4j)                | SEMUA n=12 win=42% avg=0.013% PF=1.04 total=0.15% | paruh1 n=6 win=33% avg=-0.328% PF=0.39 total=-1.97% | paruh2 n=6 win=50% avg=0.354% PF=10.38 total=2.12%
+SL 1% TP 2% (maks 4j)                | SEMUA n=12 win=33% avg=0.017% PF=1.06 total=0.20% | paruh1 n=6 win=17% avg=-0.498% PF=0.11 total=-2.99% | paruh2 n=6 win=50% avg=0.532% PF=15.10 total=3.19%
+SL 0.7% trail 0.3% aktif +0.5% (maks 8j) | SEMUA n=12 win=67% avg=-0.007% PF=0.97 total=-0.08% | paruh1 n=6 win=33% avg=-0.297% PF=0.32 total=-1.78% | paruh2 n=6 win=100% avg=0.283% PF=inf total=1.70%
+SL 1% trail 0.5% aktif +0.5% (maks 8j) | SEMUA n=12 win=50% avg=0.008% PF=1.03 total=0.09% | paruh1 n=6 win=17% avg=-0.513% PF=0.14 total=-3.08% | paruh2 n=6 win=83% avg=0.529% PF=323.95 total=3.17%
+SL 1% trail 0.5% aktif +1% (maks 8j) | SEMUA n=12 win=58% avg=0.034% PF=1.11 total=0.41% | paruh1 n=6 win=33% avg=-0.499% PF=0.15 total=-2.99% | paruh2 n=6 win=83% avg=0.568% PF=11.29 total=3.41%
+SL 0.7% trail 0.3% aktif +0.3% (maks 8j) | SEMUA n=12 win=42% avg=-0.099% PF=0.53 total=-1.19% | paruh1 n=6 win=33% avg=-0.278% PF=0.31 total=-1.67% | paruh2 n=6 win=50% avg=0.079% PF=5.37 total=0.47%
+|||
+### BURST 1500000 fade
+=== cadence 1 menit: 4 sinyal exhaustion (2 LONG / 2 SHORT) ===|||
+waktu 15m (SL 1,5%)                  | SEMUA n=4 win=25% avg=-0.225% PF=0.13 total=-0.90% | paruh1 n=2 win=0% avg=-0.284% PF=0.00 total=-0.57% | paruh2 n=2 win=50% avg=-0.166% PF=0.29 total=-0.33%
+waktu 30m (SL 1,5%)                  | SEMUA n=4 win=0% avg=-0.359% PF=0.00 total=-1.44% | paruh1 n=2 win=0% avg=-0.406% PF=0.00 total=-0.81% | paruh2 n=2 win=0% avg=-0.313% PF=0.00 total=-0.63%
+waktu 60m (SL 1,5%)                  | SEMUA n=4 win=25% avg=-0.247% PF=0.09 total=-0.99% | paruh1 n=2 win=0% avg=-0.378% PF=0.00 total=-0.76% | paruh2 n=2 win=50% avg=-0.117% PF=0.30 total=-0.23%
+waktu 120m (SL 1,5%)                 | SEMUA n=4 win=25% avg=0.036% PF=1.12 total=0.14% | paruh1 n=2 win=0% avg=-0.513% PF=0.00 total=-1.03% | paruh2 n=2 win=50% avg=0.584% PF=6.82 total=1.17%
+waktu 240m (SL 1,5%)                 | SEMUA n=4 win=25% avg=0.224% PF=2.00 total=0.89% | paruh1 n=2 win=0% avg=-0.446% PF=0.00 total=-0.89% | paruh2 n=2 win=50% avg=0.893% PF=957.30 total=1.79%
+SL 0.5% TP 0.5% (maks 4j)            | SEMUA n=4 win=25% avg=-0.350% PF=0.22 total=-1.40% | paruh1 n=2 win=0% avg=-0.600% PF=0.00 total=-1.20% | paruh2 n=2 win=50% avg=-0.100% PF=0.67 total=-0.20%
+SL 0.5% TP 1% (maks 4j)              | SEMUA n=4 win=25% avg=-0.225% PF=0.50 total=-0.90% | paruh1 n=2 win=0% avg=-0.600% PF=0.00 total=-1.20% | paruh2 n=2 win=50% avg=0.150% PF=1.50 total=0.30%
+SL 0.7% TP 0.7% (maks 4j)            | SEMUA n=4 win=25% avg=-0.250% PF=0.37 total=-1.00% | paruh1 n=2 win=0% avg=-0.800% PF=0.00 total=-1.60% | paruh2 n=2 win=50% avg=0.299% PF=321.16 total=0.60%
+SL 0.7% TP 1.4% (maks 4j)            | SEMUA n=4 win=25% avg=-0.075% PF=0.81 total=-0.30% | paruh1 n=2 win=0% avg=-0.800% PF=0.00 total=-1.60% | paruh2 n=2 win=50% avg=0.649% PF=695.85 total=1.30%
+SL 1% TP 1% (maks 4j)                | SEMUA n=4 win=25% avg=-0.187% PF=0.55 total=-0.75% | paruh1 n=2 win=0% avg=-0.824% PF=0.00 total=-1.65% | paruh2 n=2 win=50% avg=0.449% PF=481.75 total=0.90%
+SL 1% TP 2% (maks 4j)                | SEMUA n=4 win=25% avg=0.063% PF=1.15 total=0.25% | paruh1 n=2 win=0% avg=-0.824% PF=0.00 total=-1.65% | paruh2 n=2 win=50% avg=0.949% PF=1017.02 total=1.90%
+SL 0.7% trail 0.3% aktif +0.5% (maks 8j) | SEMUA n=4 win=50% avg=-0.304% PF=0.24 total=-1.21% | paruh1 n=2 win=0% avg=-0.800% PF=0.00 total=-1.60% | paruh2 n=2 win=100% avg=0.193% PF=inf total=0.39%
+SL 1% trail 0.5% aktif +0.5% (maks 8j) | SEMUA n=4 win=50% avg=0.056% PF=1.10 total=0.23% | paruh1 n=2 win=0% avg=-1.100% PF=0.00 total=-2.20% | paruh2 n=2 win=100% avg=1.213% PF=inf total=2.43%
+SL 1% trail 0.5% aktif +1% (maks 8j) | SEMUA n=4 win=50% avg=0.056% PF=1.10 total=0.23% | paruh1 n=2 win=0% avg=-1.100% PF=0.00 total=-2.20% | paruh2 n=2 win=100% avg=1.213% PF=inf total=2.43%
+SL 0.7% trail 0.3% aktif +0.3% (maks 8j) | SEMUA n=4 win=0% avg=-0.421% PF=0.00 total=-1.68% | paruh1 n=2 win=0% avg=-0.800% PF=0.00 total=-1.60% | paruh2 n=2 win=0% avg=-0.042% PF=0.00 total=-0.08%
+|||

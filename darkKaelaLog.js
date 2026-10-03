@@ -155,6 +155,8 @@ const PATTERN_REASON_LABEL = {
   // CB_SL di bawah), bukan diulang di sini.
   channel_breakout: 'Channel Breakout -- harga breakout terkonfirmasi dari channel konsolidasi candle 5-menit',
   // (30 Sep 2026, Ninja Mean Reversion -- ninjaMrTrader.js/ninjaMrSignal.js)
+  // (3 Okt 2026, Ninja Exhaustion -- ninjaExhaustionTrader.js, UJI DEMO 100 transaksi)
+  exhaustion_fade: 'Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)',
   mean_reversion: 'Mean Reversion searah tren -- harga keluar Bollinger Band lawan arah tren EMA200, masuk balik ke arah tren (beli saat turun / jual saat naik)',
   // Varian BEARISH (25 Sep 2026, unifikasi desain pesan Sniper+Ranger+Ninja -- Sniper punya sinyal
   // short window-bear yang sebelumnya pakai teks lokal sendiri di sniperOrderLog.js PATTERN_EXPLAIN,
@@ -208,6 +210,11 @@ const CLOSE_REASON_LABEL = {
   MR_SL: 'Stop Loss kena -- harga lanjut lawan tren, bukan cuma koreksi sesaat',
   MR_MEAN: 'Target tercapai -- harga balik ke rata-rata SMA20',
   MR_MANUAL: 'Posisi ditutup di luar sistem (manual/exchange) -- dicatat apa adanya dari harga terakhir',
+  // Ninja Exhaustion (3 Okt 2026, ninjaExhaustionTrader.js)
+  EX_SL: 'Stop Loss kena -- tenaga forced-flow ternyata belum abis, harga lanjut',
+  EX_TRAIL: 'Trailing stop kena -- level invalidasi yang ikut harga terbaik kesentuh',
+  EX_TIME: 'Batas waktu tahan habis -- ditutup paksa (momen balik arah udah lewat)',
+  EX_MANUAL: 'Posisi ditutup di luar sistem (manual/exchange) -- dicatat dari harga terakhir',
 };
 
 function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'manual'; }

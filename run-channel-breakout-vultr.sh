@@ -37,6 +37,10 @@ mr_output=$(timeout -k 5 45 node ninjaMrSignal.js 2>&1)
 # (ninja-mr-exec-journal.json). Saklar: ninja-mr-exec-config.json.
 mrx_output=$(timeout -k 5 55 node ninjaMrTrader.js 2>&1)
 [ -n "$mrx_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $mrx_output" >> "$LOG_FILE"
+# NINJA EXHAUSTION (3 Okt 2026, ninjaExhaustionTrader.js) -- UJI DEMO 100 transaksi sinyal radar likuidasi sendiri
+# (forced-flow kehabisan tenaga -> fade). Akun BingX SAMA, saling skip sama Ninja MR. Saklar: ninja-exhaustion-config.json.
+exh_output=$(timeout -k 5 50 node ninjaExhaustionTrader.js 2>&1)
+[ -n "$exh_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $exh_output" >> "$LOG_FILE"
 # Pengawas likuidasi DCA Tangga Leverage di BingX STANDARD FUTURES (1 Okt 2026) -- MURNI BACA, gak pernah
 # kirim order; posisi kena likuidasi -> DM WA Olan + saran leverage pengganti (lihat stdFuturesLadderMonitor.js).
 std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)

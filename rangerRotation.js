@@ -150,7 +150,7 @@ function createRotation(deps) {
       // partial+SMA (trail ketat bikin kegocek, kalah di 2 era).
       const trailR = (cfg.trailRByCoin || {})[f.coin];
       if (trailR) {
-        if (isLong ? live <= L.sl : live >= L.sl) { await closeAll((isLong ? L.sl > L.entryPrice : L.sl < L.entryPrice) ? 'TRAIL' : 'SL'); continue; }
+        if (isLong ? live <= L.sl : live >= L.sl) { await closeAll((isLong ? L.sl > L.entryPrice : L.sl < L.entryPrice) ? 'TRAIL_STOP' : 'SL'); continue; }
         const risk = L.risk || Math.abs(L.entryPrice - f.sl);
         L.peak = isLong ? Math.max(L.peak != null ? L.peak : L.entryPrice, live) : Math.min(L.peak != null ? L.peak : L.entryPrice, live);
         const cand = isLong ? L.peak - trailR * risk : L.peak + trailR * risk;
@@ -349,7 +349,10 @@ function messageFormatters(badge) {
     // Template formatAutoClosedUntracked (darkKaelaLog.js) ngomongin "journal gak pernah nyatet buka" -- GAK cocok (rotasi
     // nyatet bukanya), jadi pesan sendiri: posisi yg DICATAT hilang dari exchange.
     untracked: (f, mode) => [
-      `${SYSTEM.emoji} ${SYSTEM.name} · Kaela ${label(f)} (${isDemo(mode) ? 'Demo' : 'Real'}) · ${badge} #${f.signalId} — *Posisi Hilang dari Exchange*`,
+      `${SYSTEM.emoji} ${SYSTEM.name}`,
+      `Kaela ${label(f)} (${isDemo(mode) ? 'Demo' : 'Real'})`,
+      badge,
+      `#${f.signalId} — *Posisi Hilang dari Exchange*`,
       `⚠️ ${f.direction === 'buy' ? '🟢 LONG' : '🔴 SHORT'} @ $${f.legs[mode].entryPrice} udah gak ada di exchange -- kemungkinan kena likuidasi di sela pengecekan 15 menit, atau ditutup manual.`,
       'PnL SENGAJA gak dihitung biar gak ngarang angka -- cek riwayat exchange buat angka pastinya.',
       '',

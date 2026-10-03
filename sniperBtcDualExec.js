@@ -397,7 +397,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
           const px = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? leg.currentSl;
           leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
           leg.pnlUsd = isLong ? (px - leg.entryPrice) * leg.qty : (leg.entryPrice - px) * leg.qty;
-          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL' : 'SL');
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL_STOP' : 'SL');
           continue;
         }
         const livePx = await fetchLivePrice(mode).catch(() => null);
@@ -409,7 +409,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
             const px = parseFloat(r && r.avgPrice) || livePx;
             leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
             leg.pnlUsd = isLong ? (px - leg.entryPrice) * posQty : (leg.entryPrice - px) * posQty;
-            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL' : 'SL');
+            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL_STOP' : 'SL');
           } catch (e) { console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL tutup pengaman trailing: ${e.message}`); }
           continue;
         }

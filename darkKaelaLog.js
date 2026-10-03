@@ -188,7 +188,9 @@ function liquidationPrice(entryPrice, leverage, direction) {
 // nutup posisi OTOMATIS (bukan manual Olan -- itu pakai teks yang DIA TULIS SENDIRI, lihat caller).
 const CLOSE_REASON_LABEL = {
   SL: 'Stop Loss kena', SL_BREAKEVEN: 'SL breakeven kena (abis partial TP tahap 1)',
-  TRAIL: 'Trend patah (trailing SMA)', OFFLINE: 'Kelikuidasi/tertutup pas eksekutor offline, baru kesinkron sekarang',
+  TRAIL: 'Trend patah (trailing SMA)',
+  // (3 Okt 2026) trailing 3x invalidasi (aturan Olan, BTC) -- BEDA mekanisme dari TRAIL (SMA), label sendiri biar jujur
+  TRAIL_STOP: 'Trailing stop kena -- SL yang ikut harga terbaik kesentuh, profit dikunci', OFFLINE: 'Kelikuidasi/tertutup pas eksekutor offline, baru kesinkron sekarang',
   // (5 Sep 2026, Fed Dovish Grid) -- TP/SL di sini beda dari chart-pattern (agregat % modal dari
   // basket, bukan harga tunggal) tapi teksnya sengaja tetap simpel/sama gaya biar konsisten dibaca.
   TP: 'Take Profit agregat kena', TIMEOUT_GRID: 'Hold maksimal 7 hari kesentuh, tutup basket',
@@ -258,7 +260,13 @@ const SYSTEM_LABEL = {
 // SYSTEM_LABEL.RANGER/NINJA/SNIPER eksplisit.
 function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name: 'NYOPET' }) {
   // (3 Okt 2026, Olan: "real dan demo sama, cuma demo ada (Demo).. boleh juga (Real)") -- SELALU sebut salah satu, biar gak ambigu.
-  return `${system.emoji} ${system.name} · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ' (Real)'}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
+  // (3 Okt 2026, Olan: "pesan WhatsApp gunakan enter, biar ga sambung tumpuk") -- header dipecah PER BARIS: sistem / akun+aset+
+  // Demo-Real / exchange. Caller nyambung baris berikutnya ("#ID — *Aksi*") pakai enter juga.
+  return [
+    `${system.emoji} ${system.name}`,
+    `${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ' (Real)'}`,
+    ...(exchangeBadge ? [exchangeBadge] : []),
+  ].join('\n');
 }
 
 // (5 Sep 2026, permintaan Olan: "nilai investasi juga ada dalam kurung rupiah.. lalu rapikan
@@ -294,14 +302,15 @@ function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, toda
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.patternType || pos.mode);
   const liqPrice = liquidationPrice(pos.entryPrice, pos.leverage, pos.direction);
-  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Buka Posisi*
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)}
+${shortId(pos.id, pos.signalId)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 ${_tpLine(pos)}
 SL: ${fmtUsd(pos.sl)}${liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
-Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}${_todaysPnlLine(todaysPnl, idrRate)}
+Alasan buka: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}${_todaysPnlLine(todaysPnl, idrRate)}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
@@ -310,12 +319,13 @@ Alasan: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smart
 // masih floating, BUKAN posisi baru/tutup posisi). `pos.layers` = jumlah layer SETELAH ditambah.
 // `todaysPnl` -- lihat catatan di formatAutoOpen di atas, alasan sama persis.
 function formatAutoAddLayer(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, system) {
-  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Nambah Posisi* (Layer ${pos.layers})
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)}
+${shortId(pos.id, pos.signalId)} — *Nambah Posisi* (Layer ${pos.layers})
 🟢 *LONG* rata-rata baru @ ${fmtUsd(pos.entryPrice)}
 
 Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}${_todaysPnlLine(todaysPnl, idrRate)}
-Alasan: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam batas SL agregat)
+Alasan nambah: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam batas SL agregat)
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
@@ -330,7 +340,8 @@ function formatAutoPartial(pos, now, isDemo, idrRate, todaysPnl, exchangeBadge, 
   const detailLine = (pos.entryPrice != null && pos.trailSmaLen)
     ? `SL sisa digeser ke BREAKEVEN (${fmtUsd(pos.entryPrice)}) -- gak bisa rugi lagi dari sini. Sisa posisi di-trail SMA${pos.trailSmaLen} sampai momentum patah.`
     : 'SL sisa digeser breakeven, separuh posisi di-trail.';
-  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)} ${shortId(pos.id, pos.signalId)} — *Partial TP Diamankan*
+  return `${_rangerBadge(pos, isDemo, exchangeBadge, system)}
+${shortId(pos.id, pos.signalId)} — *Partial TP Diamankan*
 🟡 Tahap 1: *${sign}${fmtUsdWithIdr(pos.realizedPnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}
 
 ${detailLine}
@@ -370,11 +381,12 @@ function formatAutoClosed(trade, now, isDemo, alasanText, idrRate, todaysPnl, ex
   const pnlBlock = hasFee
     ? `PnL Kotor: ${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}\nFee (round-trip): ${fmtUsdWithIdr(-trade.feeUsd, idrRate)}\nPnL Bersih: *${netPnl >= 0 ? '+' : ''}${fmtUsdWithIdr(netPnl, idrRate)}*`
     : `PnL: *${grossSign}${fmtUsdWithIdr(trade.pnlUsd, idrRate)}${pctLine}*`;
-  return `${_rangerBadge(trade, isDemo, exchangeBadge, system)} ${shortId(trade.id, trade.signalId)} — *Tutup Posisi*
+  return `${_rangerBadge(trade, isDemo, exchangeBadge, system)}
+${shortId(trade.id, trade.signalId)} — *Tutup Posisi*
 ${won ? '✅' : '❌'} ${dirLabel} ${fmtUsd(trade.entryPrice)} → ${fmtUsd(trade.exitPrice)}
 
 ${pnlBlock}${_todaysPnlLine(todaysPnl, idrRate)}
-Alasan: ${alasanText || '-'}
+Alasan tutup: ${alasanText || '-'}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }
@@ -403,7 +415,9 @@ function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, is
   const dirLabel = direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
   return `${roleOpener('DRAKE', `ada posisi ${system.name} yang gak ke-track`)}
 
-${system.emoji} ${system.name} ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ' (Real)'} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
+${system.emoji} ${system.name}
+Kaela ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ' (Real)'}
+${shortId(id)} — *Tutup Posisi (gak ke-track)*
 ⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya, sekarang udah gak ada lagi. Kaela GAK BISA mastiin kenapa dari sini -- 2 kemungkinan yang SAMA-SAMA masuk akal: (1) disentuh trading manual langsung di exchange, ATAU (2) mesin eksekutor sempat pindah (data posisi ini memang sengaja gak disinkron antar-mesin) sehingga posisi Kaela sendiri "kelupaan" jurnalnya -- BUKAN berarti ini otomatis manual.
 
 Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan (kemungkinan #2), cek langsung riwayat exchange buat angka pastinya.
@@ -438,7 +452,9 @@ const MANUAL_ALASAN = 'Posisi manual (dibuka langsung di exchange)';
 // konteks total). `null` -> baris diilangin, JANGAN nampilin $0 yang kesannya beneran impas.
 function formatManualOpen({ exchangeBadge, symbol, direction, entryPrice, leverage, marginUsd, nilaiPosisi, todaysPnl }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi*
+  return `${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(entryPrice)}
 
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
@@ -471,7 +487,9 @@ function formatManualOpenAutoClosed({ exchangeBadge, symbol, direction, entryPri
     : `PnL auto-close: *${closePnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(closePnlUsd, idrRate)}*`;
   return `${roleOpener('MARCUS', `ada posisi ilegal kedeteksi di ${exchangeBadge}, udah ditutup paksa demi keamanan Olan`)}
 
-${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Buka Posisi TERDETEKSI, LANGSUNG DITUTUP OTOMATIS*
+${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Buka Posisi TERDETEKSI, LANGSUNG DITUTUP OTOMATIS*
 ${dirLabel} @ ${fmtUsd(entryPrice)} → ditutup @ ${fmtUsd(closePrice)}
 
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
@@ -499,7 +517,9 @@ function formatManualClose({ exchangeBadge, symbol, direction, prevEntryPrice, p
   const pnlLine = pnlUsd === null
     ? '⚠️ PnL belum kebaca otomatis -- cek manual di exchange.'
     : `PnL: *${pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pnlUsd, idrRate)}*`;
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Tutup Posisi*
+  return `${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Tutup Posisi*
 ${dirLabel} @ ${fmtUsd(prevEntryPrice)} → ditutup
 
 ${pnlLine}${_todaysPnlLine(todaysPnl, idrRate)}
@@ -511,7 +531,9 @@ Alasan: ${MANUAL_ALASAN}
 // `todaysPnl` -- lihat catatan di formatManualOpen di atas, alasan sama persis.
 function formatManualAdd({ exchangeBadge, symbol, direction, entryPrice, prevEntryPrice, leverage, marginUsd, nilaiPosisi, todaysPnl }, idrRate) {
   const dirLabel = direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Nambah Posisi*
+  return `${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Nambah Posisi*
 ${dirLabel} rata-rata baru @ ${fmtUsd(entryPrice)} (sebelumnya ${fmtUsd(prevEntryPrice)})
 
 Margin: ${fmtUsdWithIdr(marginUsd, idrRate)} (${leverage || '-'}x)
@@ -529,7 +551,9 @@ function formatManualReduce({ exchangeBadge, symbol, direction, entryPrice, marg
   const pnlLine = pnlUsd === null
     ? '⚠️ PnL bagian ini belum kebaca otomatis -- cek manual di exchange.'
     : `PnL bagian yang ditutup: *${pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pnlUsd, idrRate)}*`;
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Kurangin Posisi*
+  return `${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Kurangin Posisi*
 ${dirLabel} sisa @ ${fmtUsd(entryPrice)}
 
 ${pnlLine}${_todaysPnlLine(todaysPnl, idrRate)}
@@ -550,7 +574,9 @@ function formatManualFlip({ exchangeBadge, symbol, prevDirection, direction, ent
   const pnlLine = pnlUsd === null
     ? '⚠️ PnL posisi lama belum kebaca otomatis -- cek manual di exchange.'
     : `PnL posisi lama: *${pnlUsd >= 0 ? '+' : ''}${fmtUsdWithIdr(pnlUsd, idrRate)}*`;
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Balik Arah*
+  return `${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Balik Arah*
 ${oldLabel} → ${newLabel} @ ${fmtUsd(entryPrice)}
 
 ${pnlLine}${_todaysPnlLine(todaysPnl, idrRate)}
@@ -572,7 +598,9 @@ Alasan: ${MANUAL_ALASAN}
 // (bisa aja beberapa round-trip beda arah dalam 1 window), cukup laporan TOTAL PnL window ini.
 function formatHiddenActivity({ exchangeBadge, symbol, pnlUsd, stillOpen, todaysPnl }, idrRate) {
   const sign = pnlUsd >= 0 ? '+' : '';
-  return `${MANUAL_BADGE} · ${exchangeBadge} ${symbol} — *Aktivitas Tersembunyi*
+  return `${MANUAL_BADGE}
+${exchangeBadge}
+${symbol} — *Aktivitas Tersembunyi*
 ⚠️ Posisi net ${stillOpen ? 'gak berubah' : 'balik ke KOSONG'} dari cek terakhir (~15 menit lalu), TAPI kedetect ada trading beneran di antaranya (kemungkinan buka-tutup/balik arah cepat beberapa kali).
 
 PnL total window ini: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*${_todaysPnlLine(todaysPnl, idrRate)}

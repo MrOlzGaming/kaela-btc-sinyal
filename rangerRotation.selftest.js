@@ -201,7 +201,7 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     assert.strictEqual(s.j.floating.legs.demo.sl, 110, 'stop GAK boleh turun');
     s.st.prices.BTC = 109; await rot.runCycle();
     const leg = s.j.history[0].legs.demo;
-    assert.strictEqual(leg.reason, 'TRAIL');
+    assert.strictEqual(leg.reason, 'TRAIL_STOP');
     assert.ok(leg.pnlUsd > 0, 'harus profit');
     assert.strictEqual(s.demoEx.orders.filter((o) => o.type === 'close').length, 1, 'tanpa partial: cuma 1 kali tutup');
   });

@@ -419,7 +419,7 @@ async function monitorOneSlot(slotKey, slot, f, idrRate) {
       const hitStop = isLong ? livePrice <= leg.currentSl : livePrice >= leg.currentSl;
       if (hitStop) {
         const inProfit = isLong ? leg.currentSl > leg.entryPrice : leg.currentSl < leg.entryPrice;
-        f[mode] = await closeLegFull(mode, leg, sig); await reportClose(slotKey, slot, f, mode, inProfit ? 'TRAIL' : 'SL', idrRate); continue;
+        f[mode] = await closeLegFull(mode, leg, sig); await reportClose(slotKey, slot, f, mode, inProfit ? 'TRAIL_STOP' : 'SL', idrRate); continue;
       }
       const risk = Math.abs(leg.entryPrice - f.sl);
       leg.peak = isLong ? Math.max(leg.peak != null ? leg.peak : leg.entryPrice, livePrice) : Math.min(leg.peak != null ? leg.peak : leg.entryPrice, livePrice);

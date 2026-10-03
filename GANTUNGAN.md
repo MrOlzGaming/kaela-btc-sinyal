@@ -53,8 +53,10 @@ Keputusan Olan 3 Okt 2026 malam:
 - 4 Okt 2026 pagi (lanjutan kerja mandiri) — Audit: SelfCheck harian balik HIJAU (regression 103/103 di salinan bersih -- crash
   require tanpa secrets dibenerin; BingX 14/14 -- getOrder abis cancel ternyata cuma telat ~1,5 dtk, diukur di demo); sync git VPS
   gak nyampah lagi (push retry + econ-calendar gak alarm palsu); Ninja News dikunci 1 detektor per rilis (cegah entry dobel pas
-  20:30 bareng reset executor); rapor uji demo Senin digeser ke >= 09:00 WITA. BUG_REGISTRY 0052-0054. Riset Ninja: CME Gap Fill
-  DITOLAK (mitos), Funding Ekstrem DISIMPAN (kuat 2020-24, mati 2025-26).
+  20:30 bareng reset executor); rapor uji demo Senin digeser ke >= 09:00 WITA. BUG_REGISTRY 0052-0056. Riset Ninja: CME Gap Fill
+  DITOLAK (mitos), Funding Ekstrem DISIMPAN (kuat 2020-24, mati 2025-26), efek kalender (Senin+Rabu kandidat tipis, gak dipasang).
+  Riset Emas: Donchian window DITOLAK -- tapi dari situ KETEMU bug laten Ranger Emas (tutup paksa window padahal Emas udah
+  tanpa window; backtest PF 4,29 -> 1,11) -> DIBENERIN sebelum MEXC diisi. FedGrid crash path (2 Okt) dibenerin.
 
 - 4 Okt 2026 subuh (kerja mandiri pas Olan tidur) — Audit: FIX SL/TP algo Binance & plan order MEXC nyangkut abis cancel (TERBUKTI
   di demo; bersihin 1 TP basi di demo Nirwan; akun real Binance/MEXC dicek bersih); listener likuidasi dicek sehat. Riset: filter

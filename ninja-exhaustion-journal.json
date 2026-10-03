@@ -1,19 +1,23 @@
 {
-  "lastProcessedCloseTime": 1791002699999,
-  "pendingEntry": null,
+  "episode": null,
   "floating": null,
   "closedCount": 0,
-  "missedEntries": 0,
+  "signals": 0,
+  "skipped": 0,
   "stats": {
     "demo": {
       "wins": 0,
       "losses": 0,
-      "totalPnlUsd": 0
+      "totalPnlUsd": 0,
+      "grossWinUsd": 0,
+      "grossLossUsd": 0
     },
     "real": {
       "wins": 0,
       "losses": 0,
-      "totalPnlUsd": 0
+      "totalPnlUsd": 0,
+      "grossWinUsd": 0,
+      "grossLossUsd": 0
     }
   },
   "dailySignalSeq": {

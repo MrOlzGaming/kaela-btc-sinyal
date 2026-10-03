@@ -137,7 +137,10 @@ Terakhir diperbarui: **3 Okt 2026**.
 - ✅ **Scalp FOMC econ-reaction** (ikut reaksi BTC 10 menit pertama, exit paksa 30 menit) — FOMC doang, demo+real.
 - ⏸️ **Scalp NFP** — DIPAUSE: permutation p~0,20 + Deflated Sharpe ~0%.
 - ❌ **Scalp CPI/PPI** — CPI PF 1,17 gak konsisten per tahun, PPI rugi sebelum fee. Versi long-only juga ditolak.
-- ✅ **Filter DXY lemah buat Ranger** — lolos split-era + sensitivitas.
+- ✅ **Filter DXY lemah buat Ranger** — lolos split-era + sensitivitas (31 Agu, exit LAMA).
+  ⚠️ Cek ulang 4 Okt pakai exit LIVE sekarang (`backtest/dxyLiveExitCheck.js`, mesin 1 slot): BTC trailing 3x -> era lama malah
+  lebih jelek pakai DXY (modal x6,80 -> x4,99), era baru ~sama (x3,24 -> x3,31); Emas 1/2@3R -> PF turun dua era tapi modal era
+  baru naik, n kecil. Manfaatnya udah GAK JELAS di exit baru. Live BELUM diubah -- antri uji lengkap (2 slot + sweep), lihat GANTUNGAN.
 
 ## 🌱 SPOT / JANGKA PANJANG
 

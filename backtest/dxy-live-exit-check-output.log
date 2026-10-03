@@ -1,0 +1,12 @@
+XAU 4H, exit LIVE {"partialRR":3,"partialFrac":0.5,"sma":60}, data DXY s/d 2026-08-27
+tanpa filter DXY           | <2023 n13 PF 1.85 avg +1.59% modal x1.22 DD 19% | >=2023 n12 PF 13.22 avg +6.76% modal x2.44 DD 4%
+DXY lemah (SMA10)          | <2023 n6 PF 1.52 avg +1.35% modal x1.08 DD 10% | >=2023 n22 PF 2.56 avg +3.96% modal x2.35 DD 37%
+DXY lemah (SMA20) = LIVE   | <2023 n6 PF 1.58 avg +1.71% modal x1.09 DD 12% | >=2023 n20 PF 4.13 avg +5.18% modal x2.94 DD 27%
+DXY lemah (SMA30)          | <2023 n5 PF 1.88 avg +2.61% modal x1.13 DD 9% | >=2023 n23 PF 3.78 avg +4.32% modal x2.84 DD 28%
+DXY lemah (SMA50)          | <2023 n4 PF 1.72 avg +2.14% modal x1.09 DD 14% | >=2023 n20 PF 3.60 avg +4.53% modal x2.58 DD 26%
+BTC 4H, exit LIVE {"partialRR":null,"partialFrac":0,"trailR":3}, data DXY s/d 2026-08-27
+tanpa filter DXY           | <2023 n28 PF 3.15 avg +9.78% modal x6.80 DD 45% | >=2023 n22 PF 2.87 avg +8.68% modal x3.24 DD 26%
+DXY lemah (SMA10)          | <2023 n29 PF 2.66 avg +6.73% modal x3.88 DD 41% | >=2023 n14 PF 4.05 avg +14.11% modal x3.58 DD 29%
+DXY lemah (SMA20) = LIVE   | <2023 n31 PF 2.88 avg +7.10% modal x4.99 DD 39% | >=2023 n11 PF 4.30 avg +13.84% modal x3.31 DD 26%
+DXY lemah (SMA30)          | <2023 n27 PF 2.81 avg +7.56% modal x3.69 DD 46% | >=2023 n7 PF 4.67 avg +17.42% modal x2.70 DD 22%
+DXY lemah (SMA50)          | <2023 n24 PF 3.00 avg +10.48% modal x3.71 DD 46% | >=2023 n12 PF 4.42 avg +15.12% modal x3.31 DD 22%

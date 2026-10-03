@@ -45,8 +45,10 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-- (kosong) -- semua kerjaan Kaela beres 3 Okt 2026. Sisa: nunggu Olan / tanggal / data (di atas). Kandidat riset baru ada di
-  STRATEGY-CATALOG.md bagian "IDE YANG BELUM DICOBA".
+- **Uji ulang filter DXY Ranger pakai exit LIVE** (temuan 4 Okt): cek cepat 1-slot nunjukin manfaat DXY udah gak jelas sejak exit
+  ganti ke trailing 3x (BTC era lama malah lebih jelek). Butuh uji LENGKAP mesin live (2 slot pattern/FVG + sweep, BTC & Emas,
+  split era + sensitivitas SMA DXY + permutasi) sebelum mutusin cabut/pertahankan. Live gak diubah sampai itu beres.
+- Kandidat riset baru lainnya ada di STRATEGY-CATALOG.md bagian "IDE YANG BELUM DICOBA".
 
 ## ✅ SELESAI (terbaru di atas)
 

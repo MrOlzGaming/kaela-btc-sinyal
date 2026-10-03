@@ -58,7 +58,7 @@ async function main() {
     try {
       await ex.setIsolatedMargin(SYMBOL).catch(() => {});
       await ex.setLeverage(SYMBOL, 5, 'LONG');
-      const o = await ex.placeMarketEntry({ symbol: SYMBOL, direction: 'buy', notionalUsd: qty * live, livePrice: live });
+      const o = await ex.placeMarketEntry({ symbol: SYMBOL, direction: 'buy', notionalUsd: qty * live * 1.01 /* +1% biar gak kebulet 0 */, livePrice: live });
       opened = true; ok('placeMarketEntry (demo)', show(o));
       console.log('     field fee di order market:', o.commission === undefined ? 'commission TIDAK ADA di respons (fallback bakal dipakai)' : `commission=${o.commission}`);
     } catch (e) { fail('placeMarketEntry', e); }

@@ -62,7 +62,7 @@ const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertI
 const { formatDxyLine, isDxyWeak } = require('./dxyContext');
 const goldTwinPositionModule = require('./goldTwinPosition');
 const rangerBtcDualExecModule = require('./rangerBtcDualExec');
-const { detectSweepSignal } = require('./rangerSweep');
+const { detectSweepSignal, passesFngFilter } = require('./rangerSweep');
 
 // ============ Slot ke-3 Ranger BTC: ICT LIQUIDITY SWEEP 4H (3 Okt 2026, riset ICT AMD permintaan Olan) ============
 // Lihat rangerSweep.js + backtest/ictSweepHtfStudy.js (2 arah PF 1,45/1,55, p=0,000 vs entry acak). Aturan SAMA backtest:
@@ -79,6 +79,15 @@ async function processBtcSweepSlot(zoneSymbol) {
     if (rangerBtcDualExecModule.getSweepLastSignalT() === x.openTime) return;
     const sig = detectSweepSignal(candles, i);
     if (!sig) return;
+    // filter F&G (4 Okt 2026): jangan short pas takut ekstrem (F&G < 25) -- lihat rangerSweep.js
+    if (sig.direction === 'sell') {
+      const fng = await require('./marketSentiment').fetchFearGreed().then((r) => r.value).catch(() => null);
+      if (!passesFngFilter(sig, fng)) {
+        rangerBtcDualExecModule.markSweepSignal(x.openTime);
+        console.log(`[NyopetAutoTrader][Sweep] Sinyal SHORT di-skip: Fear & Greed ${fng} (< 25, takut ekstrem -- short di dasar rugi konsisten di backtest).`);
+        return;
+      }
+    }
     rangerBtcDualExecModule.markSweepSignal(x.openTime);
     console.log(`[NyopetAutoTrader][Sweep] ${sig.reasoning} SL ${sig.sl.toFixed(1)} (risiko ${sig.riskPct.toFixed(2)}%).`);
     await rangerBtcDualExecModule.openRangerBtcDual({ sig, livePrice: x.close });

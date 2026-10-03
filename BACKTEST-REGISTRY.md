@@ -311,6 +311,14 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
 - **Jam candle sinyal**: 00 UTC 2,07/4,32 | 04 1,35/2,87 | 08 5,65/1,12 | 12 1,96/1,04 | 16 1,99/0,75 | 20 1,13/1,11 -> gak ada jam
   jelek konsisten. DITOLAK.
 
+## 😱 Fear & Greed sbg filter slot ICT Sweep (4 Okt 2026) — `backtest/fngFilterStudy.js`
+
+- Trade slot sweep 4H BTC (n=353, trailing 3x) dikelompokin per zona F&G hari entry (alternative.me 2018+). Output `fng-filter-output.log`.
+- **SHORT pas takut ekstrem (<25): n=70 PF 0,40 (<2023 0,55 n47 / >=2023 0,09 n23), -35,5R** = short di dasar, rugi konsisten.
+  Zona lain short positif (takut 25-44 PF 1,58, netral 2,85). LONG gak ada pola konsisten antar era.
+- Sensitivitas "skip short kalau F&G < X": X=15 PF 1,56/1,63 | 20 1,63/1,68 | **25 1,87/1,81 (totR 74,6/89,5 vs 56,8/71,7)** | 30
+  1,91/1,82 | 35 2,00/1,88 | 40 1,78/1,88 -> dataran rata, semua membaik dua era. DIPASANG X=25 (`rangerSweep.js passesFngFilter`).
+
 ## 🏛️ Prinsip top trader: sizing volatilitas & pyramiding (3 Okt 2026) — `backtest/topTraderPrinciples.js`
 
 - BTC 4H 2019-01..2026-09 (1h resample, `multicoin-cache`), sinyal Ranger pattern+FVG PERSIS (`precomputeSignals`) + slot ICT Sweep,

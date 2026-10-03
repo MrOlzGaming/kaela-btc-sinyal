@@ -879,6 +879,13 @@ async function main() {
         const lo3 = Math.min(...cs3.slice(i - 20, i).map((c) => c.low)); cs3[i] = { open: lo3 + 1, high: lo3 + 2, low: lo3 - 1, close: lo3 + 1.5 };
         assert.strictEqual(detectSweepSignal(cs3, i), null, 'long lawan tren turun (di bawah SMA300) = skip');
       });
+      await test('rangerSweep: filter F&G -- short ditolak pas F&G < 25, long bebas, data F&G gagal = gak blokir', () => {
+        const { passesFngFilter } = require('./rangerSweep');
+        assert.strictEqual(passesFngFilter({ direction: 'sell' }, 20), false);
+        assert.strictEqual(passesFngFilter({ direction: 'sell' }, 25), true);
+        assert.strictEqual(passesFngFilter({ direction: 'buy' }, 5), true);
+        assert.strictEqual(passesFngFilter({ direction: 'sell' }, null), true);
+      });
       await test('rangerBtcDualExec: journal fresh -- 3 slot (pattern/fvg/sweep) kosong, stats demo+real nol', () => {
         delete require.cache[require.resolve('./rangerBtcDualExec')];
         const rbdFresh = require('./rangerBtcDualExec');

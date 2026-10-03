@@ -61,6 +61,8 @@ Terakhir diperbarui: **3 Okt 2026**.
 - ✅ **Ranger slot ke-3: ICT liquidity sweep 4H** (3 Okt) — candle nyapu low/high 20 candle lalu close balik, searah tren
   SMA300, SL ujung sapuan, trailing 3x. 2 arah PF 1,45 (2019-22) / 1,55 (2023-26), n=353; entry ACAK dgn exit sama cuma
   PF 1,03 -> p=0,000. `rangerSweep.js`.
+  + ✅ **Filter Fear & Greed** (4 Okt): SHORT di-skip kalau F&G < 25 (takut ekstrem = short di dasar, rugi konsisten 2 era n=70
+  PF 0,55/0,09). Slot jadi PF 1,87/1,81 (dari 1,45/1,55); ambang 15-35 semua membaik (dataran). Long gak difilter (gak ada pola).
 - ✅ **Fed Dovish Grid** (FOMC/NFP dovish + tren SMA480, basket layer, LONG) — n=38, win 81,6%, PF 3,03, +163%, DD 27,6%.
   ⚠️ 2022 rugi (PF 0,26) — nyambung ke rezim macro. Demo + real (sejak 3 Okt dua-duanya beneran jalan).
 - ✅ **Ranger Emas 4H** (MEXC, long doang, real doang — MEXC gak ada demo) — exit 1/2@3R + SMA60, n kecil, dipantau.
@@ -168,7 +170,7 @@ Terakhir diperbarui: **3 Okt 2026**.
 ## 🗒️ IDE YANG BELUM DICOBA (dari RESEARCH-LOG)
 
 - Donchian sbg pengganti window bull/bear Emas.
-- Fear & Greed / real yield sbg konfirmasi.
+- ~~Fear & Greed sbg konfirmasi~~ -- DITES 4 Okt: berguna CUMA buat blok short sweep pas takut ekstrem (dipasang). Real yield belum.
 
 ---
 

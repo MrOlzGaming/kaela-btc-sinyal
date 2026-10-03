@@ -1,0 +1,23 @@
+
+=== LONG (n=171) ===
+takut ekstrem (<25)      | semua n=2 win=50% totR=9.3 PF=9.95 ddR=1.0 | <2023 PF 0.00 n1 | >=2023 PF 99.00 n1
+takut (25-44)            | semua n=39 win=38% totR=33.8 PF=2.32 ddR=7.0 | <2023 PF 3.68 n24 | >=2023 PF 0.66 n15
+netral (45-55)           | semua n=42 win=33% totR=24.7 PF=1.83 ddR=7.7 | <2023 PF 1.31 n23 | >=2023 PF 2.69 n19
+serakah (56-75)          | semua n=60 win=25% totR=18.4 PF=1.40 ddR=12.1 | <2023 PF 0.00 n10 | >=2023 PF 1.76 n50
+serakah ekstrem (>75)    | semua n=28 win=39% totR=14.3 PF=1.86 ddR=3.2 | <2023 PF 2.81 n14 | >=2023 PF 0.87 n14
+
+=== SHORT (n=182) ===
+takut ekstrem (<25)      | semua n=70 win=14% totR=-35.5 PF=0.40 ddR=35.5 | <2023 PF 0.55 n47 | >=2023 PF 0.09 n23
+takut (25-44)            | semua n=64 win=27% totR=27.4 PF=1.58 ddR=13.2 | <2023 PF 1.73 n44 | >=2023 PF 1.32 n20
+netral (45-55)           | semua n=33 win=45% totR=37.7 PF=2.85 ddR=3.5 | <2023 PF 2.52 n6 | >=2023 PF 2.92 n27
+serakah (56-75)          | semua n=15 win=13% totR=-1.5 PF=0.85 ddR=5.4 | <2023 PF 0.00 n1 | >=2023 PF 0.95 n14
+serakah ekstrem (>75)    | semua n=0 | <2023 PF 0.00 n0 | >=2023 PF 0.00 n0
+
+=== Filter "jangan short pas F&G < X" -> hasil SELURUH slot sweep ===
+X= 0 (tanpa filter) | n=353 | <2023 PF 1.45 totR 56.8 | >=2023 PF 1.55 totR 71.7
+X=15               | n=333 | <2023 PF 1.56 totR 64.5 | >=2023 PF 1.63 totR 77.6
+X=20               | n=320 | <2023 PF 1.63 totR 68.6 | >=2023 PF 1.68 totR 80.8
+X=25               | n=283 | <2023 PF 1.87 totR 74.6 | >=2023 PF 1.81 totR 89.5
+X=30               | n=256 | <2023 PF 1.91 totR 68.3 | >=2023 PF 1.82 totR 83.4
+X=35               | n=241 | <2023 PF 2.00 totR 70.4 | >=2023 PF 1.88 totR 83.0
+X=40               | n=233 | <2023 PF 1.78 totR 52.3 | >=2023 PF 1.88 totR 83.0

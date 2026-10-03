@@ -9,7 +9,17 @@
 //   1,55 (2023-26), n=353; vs entry ACAK dgn risiko & exit sama: PF median 1,03 -> p=0,000 (pola beneran nambah edge).
 // Fungsi MURNI (gak ada I/O) -- dipakai live (rangerAutoTrader.js) DAN dicek paritasnya sama backtest.
 
-const SWEEP_PARAMS = { look: 20, trendLen: 300, slBufferPct: 0.1, minRiskPct: 0.3, maxRiskPct: 5 };
+// shortMinFng (4 Okt 2026, riset backtest/fngFilterStudy.js): SHORT pas Fear & Greed < 25 (takut ekstrem) = short di dasar --
+// rugi konsisten 2 era (n=70, PF 0,55 / 0,09). Skip short kalau F&G < 25: slot PF 1,45/1,55 -> 1,87/1,81, ambang 15-35 semua
+// membaik (dataran rata). Long gak kena filter (gak ada pola konsisten).
+const SWEEP_PARAMS = { look: 20, trendLen: 300, slBufferPct: 0.1, minRiskPct: 0.3, maxRiskPct: 5, shortMinFng: 25 };
+
+// filter F&G (dipisah dari deteksi biar fungsi deteksi tetap murni & paritas backtest gampang dicek)
+function passesFngFilter(sig, fngValue, params = SWEEP_PARAMS) {
+  if (!sig || sig.direction !== 'sell') return true;
+  if (fngValue == null || !Number.isFinite(fngValue)) return true; // data F&G gagal -> jangan blokir
+  return fngValue >= (params.shortMinFng != null ? params.shortMinFng : 25);
+}
 
 // candles: [{open,high,low,close}] candle 4H CLOSED, i = index candle sinyal (biasanya terakhir)
 function detectSweepSignal(candles, i, params = SWEEP_PARAMS) {
@@ -35,4 +45,4 @@ function detectSweepSignal(candles, i, params = SWEEP_PARAMS) {
   };
 }
 
-module.exports = { detectSweepSignal, SWEEP_PARAMS };
+module.exports = { detectSweepSignal, passesFngFilter, SWEEP_PARAMS };

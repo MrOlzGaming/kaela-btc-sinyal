@@ -1,0 +1,20 @@
+Emas 4H 13159 candle 2020-08-28..2026-08-30, sinyal long 8517 (exit LIVE 1/2 @3R + SMA60, fee 0,12%)
+BASELINE tanpa window (LIVE)   | semua n25 PF 4.29 avg +4.07% | <2023 n13 PF 1.85 avg +1.59% modal x1.22 DD 19% | >=2023 n12 PF 13.22 avg +6.76% modal x2.44 DD 4% | FLIP 0
+Donchian 10h gerbang           | semua n18 PF 3.70 avg +3.98% | <2023 n3 PF 1.22 avg +0.97% modal x1.01 DD 15% | >=2023 n15 PF 6.19 avg +4.58% modal x2.12 DD 9% | FLIP 0
+Donchian 10h gerbang+FC        | semua n49 PF 2.30 avg +1.47% | <2023 n13 PF 1.38 avg +0.45% modal x1.05 DD 11% | >=2023 n36 PF 2.65 avg +1.84% modal x2.03 DD 17% | FLIP 34
+Donchian 15h gerbang           | semua n19 PF 3.77 avg +4.18% | <2023 n7 PF 1.29 avg +0.74% modal x1.04 DD 15% | >=2023 n12 PF 7.96 avg +6.19% modal x2.25 DD 9% | FLIP 0
+Donchian 15h gerbang+FC        | semua n38 PF 2.07 avg +1.55% | <2023 n10 PF 1.36 avg +0.44% modal x1.04 DD 11% | >=2023 n28 PF 2.27 avg +1.95% modal x1.75 DD 21% | FLIP 24
+Donchian 20h gerbang           | semua n20 PF 3.73 avg +4.10% | <2023 n6 PF 1.39 avg +1.09% modal x1.05 DD 14% | >=2023 n14 PF 6.66 avg +5.38% modal x2.27 DD 8% | FLIP 0
+Donchian 20h gerbang+FC        | semua n37 PF 2.72 avg +2.19% | <2023 n8 PF 1.53 avg +0.85% modal x1.07 DD 8% | >=2023 n29 PF 3.16 avg +2.56% modal x2.20 DD 9% | FLIP 17
+Donchian 25h gerbang           | semua n20 PF 3.33 avg +3.88% | <2023 n6 PF 1.27 avg +0.80% modal x1.03 DD 14% | >=2023 n14 PF 5.60 avg +5.21% modal x2.20 DD 11% | FLIP 0
+Donchian 25h gerbang+FC        | semua n30 PF 2.96 avg +2.74% | <2023 n6 PF 1.24 avg +0.35% modal x1.02 DD 7% | >=2023 n24 PF 3.41 avg +3.34% modal x2.32 DD 12% | FLIP 14
+Donchian 30h gerbang           | semua n19 PF 3.97 avg +4.42% | <2023 n5 PF 1.82 avg +1.97% modal x1.10 DD 11% | >=2023 n14 PF 5.56 avg +5.29% modal x2.23 DD 11% | FLIP 0
+Donchian 30h gerbang+FC        | semua n27 PF 3.31 avg +3.13% | <2023 n5 PF 1.64 avg +0.82% modal x1.05 DD 5% | >=2023 n22 PF 3.66 avg +3.66% modal x2.33 DD 10% | FLIP 10
+Donchian 40h gerbang           | semua n19 PF 4.93 avg +4.99% | <2023 n5 PF 1.82 avg +1.97% modal x1.10 DD 11% | >=2023 n14 PF 8.00 avg +6.07% modal x2.54 DD 7% | FLIP 0
+Donchian 40h gerbang+FC        | semua n23 PF 5.42 avg +4.03% | <2023 n5 PF 0.88 avg -0.21% modal x0.98 DD 7% | >=2023 n18 PF 8.43 avg +5.21% modal x2.82 DD 5% | FLIP 7
+Donchian 55h gerbang           | semua n19 PF 4.93 avg +4.99% | <2023 n5 PF 1.82 avg +1.97% modal x1.10 DD 11% | >=2023 n14 PF 8.00 avg +6.07% modal x2.54 DD 7% | FLIP 0
+Donchian 55h gerbang+FC        | semua n20 PF 5.68 avg +4.55% | <2023 n5 PF 0.61 avg -0.94% modal x0.94 DD 11% | >=2023 n15 PF 13.89 avg +6.37% modal x2.88 DD 4% | FLIP 5
+Donchian 100h gerbang          | semua n20 PF 4.23 avg +4.51% | <2023 n7 PF 0.96 avg -0.10% modal x0.97 DD 14% | >=2023 n13 PF 10.03 avg +7.00% modal x2.64 DD 4% | FLIP 0
+Donchian 100h gerbang+FC       | semua n22 PF 3.31 avg +3.36% | <2023 n7 PF 0.91 avg -0.24% modal x0.96 DD 15% | >=2023 n15 PF 6.77 avg +5.04% modal x2.29 DD 8% | FLIP 4
+
+Membaik di DUA era vs baseline live: gerbang 0/8 N, gerbang+FC 0/8 N.

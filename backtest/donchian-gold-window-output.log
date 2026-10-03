@@ -1,0 +1,98 @@
+Emas 4H: 13159 candle 2020-08-28 .. 2026-08-30
+
+========== KONTROL ==========
+[baseline SMA1200 polos -- LIVE] rezim ganti 147x, porsi bear 27%
+
+--- Baseline SMA1200 polos (LIVE) ---
+  n=147 PF=0.92 totalR=-3.36 winRate=17.0% | final=$181 maxDD=32.0%
+  WINDOW_FLIP: 105/147 (71%), rata2 hold sebelum flip: 4.45 hari
+  Per tahun:
+      2021: n=35, totalR=-6.50, winRate=5.7%, WINDOW_FLIP=33
+      2022: n=38, totalR=-1.56, winRate=10.5%, WINDOW_FLIP=31
+      2023: n=34, totalR=-4.37, winRate=11.8%, WINDOW_FLIP=24
+      2024: n=3, totalR=5.29, winRate=100.0%, WINDOW_FLIP=0
+      2025: n=14, totalR=8.91, winRate=57.1%, WINDOW_FLIP=0
+      2026: n=23, totalR=-5.13, winRate=17.4%, WINDOW_FLIP=17
+  Era1 (2020-2023): n=73 PF=0.47 totalR=-8.05 flips=64 | Era2 (2023-2026): n=74 PF=1.18 totalR=4.69 flips=41
+
+[buffer 12%] rezim ganti 1x, porsi bear 4%
+
+--- Buffer 12% (riset 15 Sep) ---
+  n=40 PF=1.13 totalR=3.18 winRate=40.0% | final=$237 maxDD=31.3%
+  WINDOW_FLIP: 1/40 (3%), rata2 hold sebelum flip: 79.00 hari
+  Per tahun:
+      2021: n=1, totalR=-1.00, winRate=0.0%, WINDOW_FLIP=0
+      2022: n=15, totalR=-6.32, winRate=26.7%, WINDOW_FLIP=0
+      2023: n=2, totalR=1.45, winRate=50.0%, WINDOW_FLIP=0
+      2024: n=2, totalR=3.42, winRate=100.0%, WINDOW_FLIP=0
+      2025: n=14, totalR=8.91, winRate=57.1%, WINDOW_FLIP=0
+      2026: n=6, totalR=-3.27, winRate=16.7%, WINDOW_FLIP=1
+  Era1 (2020-2023): n=16 PF=0.39 totalR=-7.32 flips=0 | Era2 (2023-2026): n=24 PF=1.88 totalR=10.50 flips=1
+
+
+========== KANDIDAT: Donchian N hari (x6 candle 4H) ==========
+
+[Donchian 20 hari] rezim ganti 40x, porsi bear 38%
+
+--- Donchian 20 hari (120 candle 4H) ---
+  n=78 PF=1.58 totalR=18.98 winRate=42.3% | final=$286 maxDD=15.7%
+  WINDOW_FLIP: 33/78 (42%), rata2 hold sebelum flip: 24.03 hari
+  Per tahun:
+      2021: n=8, totalR=-2.40, winRate=12.5%, WINDOW_FLIP=6
+      2022: n=15, totalR=0.56, winRate=40.0%, WINDOW_FLIP=6
+      2023: n=15, totalR=0.22, winRate=40.0%, WINDOW_FLIP=7
+      2024: n=8, totalR=10.52, winRate=75.0%, WINDOW_FLIP=3
+      2025: n=20, totalR=8.72, winRate=45.0%, WINDOW_FLIP=7
+      2026: n=12, totalR=1.37, winRate=41.7%, WINDOW_FLIP=4
+  Era1 (2020-2023): n=23 PF=0.82 totalR=-1.84 flips=12 | Era2 (2023-2026): n=55 PF=1.93 totalR=20.82 flips=21
+
+[Donchian 55 hari] rezim ganti 14x, porsi bear 34%
+
+--- Donchian 55 hari (330 candle 4H) ---
+  n=53 PF=1.27 totalR=7.45 winRate=43.4% | final=$238 maxDD=26.9%
+  WINDOW_FLIP: 9/53 (17%), rata2 hold sebelum flip: 66.30 hari
+  Per tahun:
+      2021: n=3, totalR=-3.06, winRate=0.0%, WINDOW_FLIP=2
+      2022: n=9, totalR=-0.96, winRate=44.4%, WINDOW_FLIP=2
+      2023: n=11, totalR=-3.35, winRate=27.3%, WINDOW_FLIP=3
+      2024: n=3, totalR=5.29, winRate=100.0%, WINDOW_FLIP=0
+      2025: n=14, totalR=8.91, winRate=57.1%, WINDOW_FLIP=0
+      2026: n=13, totalR=0.63, winRate=38.5%, WINDOW_FLIP=2
+  Era1 (2020-2023): n=12 PF=0.49 totalR=-4.02 flips=4 | Era2 (2023-2026): n=41 PF=1.58 totalR=11.47 flips=5
+
+[Donchian 100 hari] rezim ganti 10x, porsi bear 25%
+
+--- Donchian 100 hari (600 candle 4H) ---
+  n=47 PF=1.25 totalR=6.35 winRate=42.6% | final=$213 maxDD=28.0%
+  WINDOW_FLIP: 7/47 (15%), rata2 hold sebelum flip: 71.79 hari
+  Per tahun:
+      2021: n=3, totalR=-3.05, winRate=0.0%, WINDOW_FLIP=2
+      2022: n=8, totalR=-2.14, winRate=37.5%, WINDOW_FLIP=2
+      2023: n=5, totalR=-0.64, winRate=20.0%, WINDOW_FLIP=2
+      2024: n=3, totalR=4.34, winRate=100.0%, WINDOW_FLIP=0
+      2025: n=14, totalR=8.91, winRate=57.1%, WINDOW_FLIP=0
+      2026: n=14, totalR=-1.07, winRate=35.7%, WINDOW_FLIP=1
+  Era1 (2020-2023): n=11 PF=0.29 totalR=-5.19 flips=4 | Era2 (2023-2026): n=36 PF=1.64 totalR=11.54 flips=3
+
+[Donchian 200 hari] rezim ganti 5x, porsi bear 14%
+
+--- Donchian 200 hari (1200 candle 4H) ---
+  n=43 PF=1.02 totalR=0.46 winRate=39.5% | final=$176 maxDD=36.4%
+  WINDOW_FLIP: 2/43 (5%), rata2 hold sebelum flip: 120.50 hari
+  Per tahun:
+      2021: n=1, totalR=-1.00, winRate=0.0%, WINDOW_FLIP=0
+      2022: n=6, totalR=-2.49, winRate=33.3%, WINDOW_FLIP=0
+      2023: n=11, totalR=-4.92, winRate=27.3%, WINDOW_FLIP=1
+      2024: n=3, totalR=5.29, winRate=100.0%, WINDOW_FLIP=0
+      2025: n=14, totalR=8.91, winRate=57.1%, WINDOW_FLIP=0
+      2026: n=8, totalR=-5.32, winRate=12.5%, WINDOW_FLIP=1
+  Era1 (2020-2023): n=7 PF=0.30 totalR=-3.49 flips=0 | Era2 (2023-2026): n=36 PF=1.19 totalR=3.95 flips=2
+
+
+========== DATARAN: Donchian 10-40 hari ==========
+  10 hari | rezim ganti 84x, porsi bear 40% | semua n93 PF 1.57 | Era1 n32 PF 0.61 | Era2 n61 PF 2.13
+  15 hari | rezim ganti 62x, porsi bear 41% | semua n84 PF 1.42 | Era1 n25 PF 0.52 | Era2 n59 PF 1.83
+  20 hari | rezim ganti 40x, porsi bear 38% | semua n78 PF 1.58 | Era1 n23 PF 0.82 | Era2 n55 PF 1.93
+  25 hari | rezim ganti 32x, porsi bear 40% | semua n78 PF 1.37 | Era1 n22 PF 0.71 | Era2 n56 PF 1.64
+  30 hari | rezim ganti 24x, porsi bear 41% | semua n66 PF 1.46 | Era1 n15 PF 0.54 | Era2 n51 PF 1.79
+  40 hari | rezim ganti 18x, porsi bear 40% | semua n61 PF 1.48 | Era1 n15 PF 0.50 | Era2 n46 PF 1.94

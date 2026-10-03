@@ -68,6 +68,12 @@ Terakhir diperbarui: **3 Okt 2026**.
 - ✅ **Fed Dovish Grid** (FOMC/NFP dovish + tren SMA480, basket layer, LONG) — n=38, win 81,6%, PF 3,03, +163%, DD 27,6%.
   ⚠️ 2022 rugi (PF 0,26) — nyambung ke rezim macro. Demo + real (sejak 3 Okt dua-duanya beneran jalan).
 - ✅ **Ranger Emas 4H** (MEXC, long doang, real doang — MEXC gak ada demo) — exit 1/2@3R + SMA60, n kecil, dipantau.
+  Live TANPA window bull/bear (window SMA1200 lama cuma bikin whipsaw/tutup paksa). Riset window lama (buffer band, ADX,
+  RESEARCH-LOG 15 Sep) pakai baseline window yang udah gak live -- jangan dipakai buat banding lagi.
+  + ❌ **Donchian (Turtle) sbg window Emas** (4 Okt, `backtest/donchianGoldWindow.js` + `donchianGoldLiveExit.js`) — vs window
+  SMA1200 lama memang jauh lebih bagus (PF 0,92 -> 1,37-1,58, dataran 10-40 hari), TAPI vs sistem LIVE (tanpa window, PF 4,29:
+  1,85 / 13,2 per era) gerbang Donchian malah NGURANGIN di dua era buat 0/8 panjang N (gerbang doang maupun + tutup paksa).
+  Live tetap tanpa window.
 - ✅ **Ranger ROTASI 8 koin** (Bybit, 1 posisi pindah2 koin: BTC SOL DOGE TRX INJ ETH XLM BNB) — top-8 CAGR 42% DD 17,9%
   (>=2023) vs BTC doang 19%. Alt long doang, alt /2, short cuma BTC.
 - ❌ **Gerbang struktur BOS/CHoCH (SMC)** — semua varian LEBIH JELEK (PF 2,56 -> 1,85-2,09, DD naik ke 62-69%).
@@ -190,7 +196,7 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🗒️ IDE YANG BELUM DICOBA (dari RESEARCH-LOG)
 
-- Donchian sbg pengganti window bull/bear Emas.
+- ~~Donchian sbg pengganti window bull/bear Emas~~ -- DITES 4 Okt, ditolak (lihat bagian RANGER).
 - ~~Fear & Greed sbg konfirmasi~~ -- DITES 4 Okt: berguna CUMA buat blok short sweep pas takut ekstrem (dipasang). Real yield belum.
 
 ---

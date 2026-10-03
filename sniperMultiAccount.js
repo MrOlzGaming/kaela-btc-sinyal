@@ -23,7 +23,7 @@ const path = require('path');
 // 3 Sep 2026, permintaan Olan ("bedakan badge dan emojinya.. desain konsisten") -- REUSE helper
 // desain pesan terpadu dari darkKaelaLog.js (1 sumber format, badge beda per strategi: 🎯 SNIPER
 // di sini vs 🥷 NYOPET di darkKaelaLog.js).
-const { fmtUsd, fmtUsdWithIdr, shortId, KAELA_ACCESS_URL, todaysPnlLine } = require('./darkKaelaLog');
+const { fmtUsd, fmtUsdWithIdr, shortId, KAELA_ACCESS_URL, todaysPnlLine, formatAutoOpen, formatAutoPartial, formatAutoClosed, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
 
 // Pesan "Tutup Posisi" terpadu (3 Sep 2026) -- dipakai SEMUA 4 jalur close (liquidasi/SL sebelum
 // partial, leg2 liquidasi, trend patah trailing, manual) biar formatnya SAMA PERSIS, cuma teks
@@ -32,16 +32,11 @@ const { fmtUsd, fmtUsdWithIdr, shortId, KAELA_ACCESS_URL, todaysPnlLine } = requ
 // `todaysPnl` (13 Sep 2026, permintaan Olan: "pesan tambah posisi perlu diikuti pnl hari ini..
 // buat semua ya jangan ini aja") -- disamain ke pola darkKaelaLog.js `_todaysPnlLine` yang udah
 // dipakai Nyopet/manual reconciler, biar SEMUA pesan trading (Sniper termasuk) konsisten.
-function _sniperCloseMsg(assetCfg, mirror, entryRef, exitPrice, pnlUsd, alasan, idrRate, todaysPnl) {
-  const dirLabel = mirror.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
-  const sign = pnlUsd >= 0 ? '+' : '';
-  return `🎯 SNIPER · Kaela ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Tutup Posisi*
-${pnlUsd >= 0 ? '✅' : '❌'} ${dirLabel} ${fmtUsd(entryRef)} → ${fmtUsd(exitPrice)}
-
-PnL: *${sign}${fmtUsdWithIdr(pnlUsd, idrRate)}*${todaysPnlLine(todaysPnl, idrRate)}
-Alasan: ${alasan}
-
-🔗 ${KAELA_ACCESS_URL}`;
+// (3 Okt 2026, Olan: "template semua sama, cuma beda alasan/aset/mode/exchange, demo ada (Demo)") -- SEMUA pesan mirror
+// member (buka/partial/tutup) sekarang pakai template BAKU darkKaelaLog (formatAutoOpen/Partial/Closed), bukan teks sendiri.
+// `ctx` = { isDemo, badge } per akun member (lihat acctCtx di createSniperAccountTrader).
+function _sniperCloseMsg(ctx, assetCfg, mirror, entryRef, exitPrice, pnlUsd, alasan, idrRate, todaysPnl) {
+  return formatAutoClosed({ id: mirror.originalOrderId, signalId: mirror.signalId, direction: mirror.direction === 'buy' ? 'long' : 'short', mode: mirror.mode, entryPrice: entryRef, exitPrice, pnlUsd, pnlPct: null, assetLabel: assetCfg.label }, new Date(), ctx.isDemo, alasan, idrRate, todaysPnl, ctx.badge, SYSTEM_LABEL.SNIPER);
 }
 
 // `mexcClient` (BARU, 30 Agu 2026, migrasi eksekusi Emas -- lihat memori
@@ -53,6 +48,8 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
   const mc = mexcClient || mexcExecutorDefault;
   function execFor(assetCfg) { return assetCfg.exchange === 'mexc' ? mc : client; }
   const notify = sendWA || (async () => {});
+  // Demo/Real + badge exchange per akun member (Emas/MEXC SELALU real -- MEXC gak punya demo)
+  function acctCtx(assetCfg) { return { isDemo: assetCfg.exchange === 'mexc' ? false : !(apiCreds && apiCreds.testnet === false), badge: EXCHANGE_BADGE[assetCfg.exchange] || assetCfg.exchange }; }
   const emit = onEvent || (() => {}); // hook OPSIONAL buat jurnal personal (Kaela Pro Trader)
   const baseUrl = apiCreds && apiCreds.testnet === false ? 'https://fapi.binance.com' : 'https://demo-fapi.binance.com';
 
@@ -129,7 +126,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     }
 
     const mirror = {
-      originalOrderId: originalOrder.id, asset: originalOrder.asset, mode: originalOrder.mode,
+      originalOrderId: originalOrder.id, signalId: originalOrder.signalId, asset: originalOrder.asset, mode: originalOrder.mode,
       direction: originalOrder.direction, sl: originalOrder.sl, tp: originalOrder.tp,
       status: 'floating', filledQty, halfQty: halfQty > 0 ? halfQty : filledQty,
       entryPriceReal: parseFloat(entryOrder.avgPrice), leverage: calc.leverage, marginUsd: calc.margin,
@@ -142,14 +139,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
     // ini gak kepake sama sekali di pesan mirror akun lain, cuma leverage/margin doang.
     const alasanOpen = (originalOrder.confirmationNote || '').split('.')[0] || 'Chart Pattern/FVG terkonfirmasi (lihat detail di web)';
     const todaysPnlOpen = await _todaysPnl(assetCfg, new Date());
-    await notify(`🎯 SNIPER · Kaela ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Buka Posisi*
-${mirror.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*'} @ ${fmtUsd(mirror.entryPriceReal)}
-
-Margin: ${fmtUsdWithIdr(mirror.marginUsd, idrRate)} (${mirror.leverage}x)
-Nilai Investasi: ${fmtUsdWithIdr(calc.nilaiPosisi, idrRate)}${todaysPnlLine(todaysPnlOpen, idrRate)}
-Alasan: ${alasanOpen}
-
-🔗 ${KAELA_ACCESS_URL}`);
+    await notify(formatAutoOpen({ id: mirror.originalOrderId, signalId: originalOrder.signalId, direction: mirror.direction, entryPrice: mirror.entryPriceReal, tp: tpPrice, sl: mirror.sl, leverage: mirror.leverage, marginUsd: mirror.marginUsd, nilaiPosisi: calc.nilaiPosisi, assetLabel: assetCfg.label, mode: originalOrder.mode, patternType: originalOrder.patternType }, new Date(), '', acctCtx(assetCfg).isDemo, idrRate, '', todaysPnlOpen, acctCtx(assetCfg).badge, SYSTEM_LABEL.SNIPER));
     // 6 Sep 2026, permintaan Olan (jurnal member: "kasih keterangan alasan+mode, Kaela yang
     // trigger buat semua member") -- `note` SEBELUMNYA gak pernah dikirim ke sini sama sekali,
     // jurnal Sheet member buat Sniper selalu KOSONG alasannya (beda dari Nyopet yang udah ada).
@@ -179,13 +169,8 @@ Alasan: ${alasanOpen}
     target.leg2 = { qty: leg2Qty, entryPrice: leg2Entry, leverage: calc.leverage, openedAt: new Date().toISOString() };
     saveState(state);
     const todaysPnlPartial = await _todaysPnl(assetCfg, new Date());
-    await notify(`🎯 SNIPER · Kaela ${assetCfg.label} ${shortId(mirror.originalOrderId)} — *Partial TP Diamankan*
-🟡 Leg2 dibuka @ ${fmtUsd(leg2Entry)}
-
-Target likuidasi ~breakeven ${fmtUsd(mirror.entryPriceReal)}${todaysPnlLine(todaysPnlPartial, idrRate)}
-Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
-
-🔗 ${KAELA_ACCESS_URL}`);
+    const tahap1Pnl = (mirror.tp && mirror.halfQty) ? (mirror.tp - mirror.entryPriceReal) * mirror.halfQty * (mirror.direction === 'buy' ? 1 : -1) : 0;
+    await notify(formatAutoPartial({ id: mirror.originalOrderId, signalId: mirror.signalId, realizedPnlUsd: tahap1Pnl, entryPrice: mirror.entryPriceReal, trailSmaLen: 10, assetLabel: assetCfg.label, mode: mirror.mode }, new Date(), acctCtx(assetCfg).isDemo, idrRate, todaysPnlPartial, acctCtx(assetCfg).badge, SYSTEM_LABEL.SNIPER));
   }
 
   function finalize(mirror, pnlUsd) {
@@ -218,7 +203,7 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
         const pnlUsd = mirror.direction === 'buy' ? (livePrice - mirror.entryPriceReal) * mirror.filledQty : (mirror.entryPriceReal - livePrice) * mirror.filledQty;
         const closed = finalize(mirror, pnlUsd);
         const todaysPnlA = await _todaysPnl(assetCfg, new Date());
-        await notify(_sniperCloseMsg(assetCfg, mirror, mirror.entryPriceReal, livePrice, pnlUsd, 'Stop Loss/likuidasi kena sebelum sempat partial TP (estimasi PNL, belum lewat income history)', idrRate, todaysPnlA));
+        await notify(_sniperCloseMsg(acctCtx(assetCfg), assetCfg, mirror, mirror.entryPriceReal, livePrice, pnlUsd, 'Stop Loss/likuidasi kena sebelum sempat partial TP (estimasi PNL, belum lewat income history)', idrRate, todaysPnlA));
         return closed;
       }
       if (posQty < mirror.filledQty * 0.75) {
@@ -232,7 +217,7 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
       const pnlUsd = mirror.direction === 'buy' ? (livePrice - mirror.leg2.entryPrice) * mirror.leg2.qty : (mirror.leg2.entryPrice - livePrice) * mirror.leg2.qty;
       const closed = finalize(mirror, pnlUsd);
       const todaysPnlB = await _todaysPnl(assetCfg, new Date());
-      await notify(_sniperCloseMsg(assetCfg, mirror, mirror.leg2.entryPrice, livePrice, pnlUsd, 'Leg2 (breakeven) kena likuidasi/SL', idrRate, todaysPnlB));
+      await notify(_sniperCloseMsg(acctCtx(assetCfg), assetCfg, mirror, mirror.leg2.entryPrice, livePrice, pnlUsd, 'Leg2 (breakeven) kena likuidasi/SL', idrRate, todaysPnlB));
       return closed;
     }
 
@@ -248,7 +233,7 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
       const pnlUsd = mirror.direction === 'buy' ? (exitPrice - mirror.leg2.entryPrice) * mirror.leg2.qty : (mirror.leg2.entryPrice - exitPrice) * mirror.leg2.qty;
       const closed = finalize(mirror, pnlUsd);
       const todaysPnlC = await _todaysPnl(assetCfg, new Date());
-      await notify(_sniperCloseMsg(assetCfg, mirror, mirror.leg2.entryPrice, exitPrice, pnlUsd, 'Trend patah (trailing SMA10), leg2 ditutup sebelum kena SL breakeven', idrRate, todaysPnlC));
+      await notify(_sniperCloseMsg(acctCtx(assetCfg), assetCfg, mirror, mirror.leg2.entryPrice, exitPrice, pnlUsd, 'Trend patah (trailing SMA10), leg2 ditutup sebelum kena SL breakeven', idrRate, todaysPnlC));
       return closed;
     }
     return null;
@@ -325,7 +310,7 @@ Alasan: Target tahap 1 (2R) tercapai, SL sisa digeser breakeven
     // "Ditutup manual atas permintaan X" walau Olan udah capek-capek ngetik alasan aslinya.
     const alasanManual = reason || (requestedBy ? `Ditutup manual atas permintaan ${requestedBy}` : 'Ditutup manual');
     const todaysPnlD = await _todaysPnl(assetCfg, new Date());
-    await notify(_sniperCloseMsg(assetCfg, mirror, refEntry, exitPrice, pnlUsd, alasanManual, idrRate, todaysPnlD));
+    await notify(_sniperCloseMsg(acctCtx(assetCfg), assetCfg, mirror, refEntry, exitPrice, pnlUsd, alasanManual, idrRate, todaysPnlD));
     return { ok: true, closed };
   }
 

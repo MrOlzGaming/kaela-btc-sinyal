@@ -233,7 +233,7 @@ function _isManual(pos) { return pos.mode === 'manual' || pos.patternType === 'm
 // Ninja biar warnanya konsisten kalau ada exchange baru nanti). File LAMA yang udah punya versi
 // lokal sendiri (positionReconciler.js) SENGAJA gak diubah (resiko regresi kecil, gak worth-nya
 // buat perubahan kosmetik doang di file yang udah jalan).
-const EXCHANGE_BADGE = { binance: '🟨 Binance', mexc: '🔷 MEXC', bingx: '🟣 BingX', bitget: '🟢 Bitget' };
+const EXCHANGE_BADGE = { binance: '🟨 Binance', mexc: '🔷 MEXC', bingx: '🟣 BingX', bitget: '🟢 Bitget', bybit: '🟠 Bybit' };
 
 // Nama+emoji sistem (25 Sep 2026, permintaan Olan: rename biar konsisten -- Sniper harian tetap
 // "Sniper", Nyopet 4-jam jadi "Ranger" (Sniper tapi timeframe lebih rendah, sinyal masih agak
@@ -257,7 +257,8 @@ const SYSTEM_LABEL = {
 // caller BARU (nyopetAutoTrader.js/ninjaTrader.js/sniperOrderLog.js) oper
 // SYSTEM_LABEL.RANGER/NINJA/SNIPER eksplisit.
 function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name: 'NYOPET' }) {
-  return `${system.emoji} ${system.name} · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
+  // (3 Okt 2026, Olan: "real dan demo sama, cuma demo ada (Demo).. boleh juga (Real)") -- SELALU sebut salah satu, biar gak ambigu.
+  return `${system.emoji} ${system.name} · ${_isManual(pos) ? 'Manual Olan' : 'Kaela'} ${pos.assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ' (Real)'}${exchangeBadge ? ' · ' + exchangeBadge : ''}`;
 }
 
 // (5 Sep 2026, permintaan Olan: "nilai investasi juga ada dalam kurung rupiah.. lalu rapikan
@@ -402,7 +403,7 @@ function formatAutoClosedUntracked({ id, direction, assetLabel, entryPrice }, is
   const dirLabel = direction === 'long' ? '🟢 LONG' : '🔴 SHORT';
   return `${roleOpener('DRAKE', `ada posisi ${system.name} yang gak ke-track`)}
 
-${system.emoji} ${system.name} ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ''} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
+${system.emoji} ${system.name} ${assetLabel || 'BTC'}${isDemo ? ' (Demo)' : ' (Real)'} ${shortId(id)} — *Tutup Posisi (gak ke-track)*
 ⚠️ ${dirLabel} @ ${fmtUsd(entryPrice)} -- posisi ini sempat kedetect hidup di exchange tapi journal Kaela sendiri gak pernah beneran nyatet buka-nya, sekarang udah gak ada lagi. Kaela GAK BISA mastiin kenapa dari sini -- 2 kemungkinan yang SAMA-SAMA masuk akal: (1) disentuh trading manual langsung di exchange, ATAU (2) mesin eksekutor sempat pindah (data posisi ini memang sengaja gak disinkron antar-mesin) sehingga posisi Kaela sendiri "kelupaan" jurnalnya -- BUKAN berarti ini otomatis manual.
 
 Harga tutup & PnL SENGAJA gak dihitung di sini biar gak nyebar angka ngarang -- kalau ini manual, angka akuratnya udah dilaporin terpisah lewat pesan 🙋 MANUAL. Kalau bukan (kemungkinan #2), cek langsung riwayat exchange buat angka pastinya.

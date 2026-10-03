@@ -314,7 +314,7 @@ function buildVenues(exchange, secrets) {
       return { exec, balance: () => exec.getAccountBalance(), price: price(base) };
     };
     return {
-      symbolOf: (coin) => `${coin}USDT`, badge: '🟠 Bybit',
+      symbolOf: (coin) => `${coin}USDT`, badge: require('./darkKaelaLog').EXCHANGE_BADGE.bybit,
       legs: { demo: leg(secrets.BYBIT_API_KEY_DEMO, secrets.BYBIT_API_SECRET_DEMO, true, 'https://api-demo.bybit.com'), real: leg(secrets.BYBIT_API_KEY, secrets.BYBIT_API_SECRET, false, 'https://api.bybit.com') },
     };
   }

@@ -37,7 +37,7 @@ const { detectFvgSignal } = require('./fvgDetector');
 const { getActiveOrders, getClosedOrders, createOrder, updateOrder } = require('./sniperOrders');
 const { hitung: hitungExposure } = require('./calculator');
 const { checkAndApplyTopUp, getBalance: getKaelaBalance } = require('./kaelaBankroll');
-const { formatAutoValid, formatAutoInvalid, formatPositionMonitor, formatBearShortSignal } = require('./sniperOrderLog');
+const { formatAutoValid, formatAutoInvalid, formatPositionMonitor, formatBearShortSignal, formatTriggered } = require('./sniperOrderLog');
 const { sendWhatsApp, sendWhatsAppExcept } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { addEntry, addOrReplaceDaily } = require('./archive');
@@ -449,7 +449,9 @@ async function main() {
                   // jadi sinyal SHORT beneran kekirim ke WA tapi HILANG dari archive.json (gap audit).
                   addEntry('sniper', msg, now);
                   // `alsoWibowo` (14 Sep 2026) -- SAMA aturan kayak di atas, demo gak masuk Wibowo.
-                  await sendWhatsAppRespectMute(msg, `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, !isTestnet());
+                  // (3 Okt 2026, Olan: "template semua sama") -- WA pakai template BAKU buka posisi (formatTriggered ->
+                  // formatAutoOpen), bukan desain panjang 'VALID' sendiri. Versi panjang tetap di archive (web) di atas.
+                  await sendWhatsAppRespectMute(formatTriggered(updateOrder(created.id, {}) || opened, idrRate), `sinyal SHORT ${isTestnet() ? 'DEMO' : 'REAL'} window bear (${assetCfg.label})`, false, !isTestnet());
                   shortSignalSent = true;
                   anyMessageSentToday = true;
                 }
@@ -794,7 +796,10 @@ async function main() {
       // ->Wibowo) lewat sniperBtcDualExec.js -- JANGAN kirim lagi di sini, bakal dobel.
       if (!handledByDualExec) {
         // `alsoWibowo` (14 Sep 2026, permintaan Olan) -- demo gak masuk Wibowo, cuma Sniper Club.
-        await sendWhatsAppRespectMute(msg, `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, !isTestnet());
+        // (3 Okt 2026, Olan: "template semua sama, cuma beda alasan/aset/mode/exchange") -- WA pakai template BAKU buka
+        // posisi (formatTriggered -> formatAutoOpen, label Sniper + badge exchange + Demo/Real). Versi panjang 'VALID' (TA,
+        // sentimen, on-chain) tetap disimpan di archive web (addEntry di atas), gak dikirim ke WA lagi.
+        await sendWhatsAppRespectMute(formatTriggered(updateOrder(created.id, {}) || opened, idrRate), `sinyal VALID (${assetCfg.label} ${patternLabel})`, false, !isTestnet());
       }
       console.log('[SniperAutoAnalysis] VALID --', assetCfg.label, cand.mode, patternLabel, 'posisi bayangan dibuka @', livePrice);
     }

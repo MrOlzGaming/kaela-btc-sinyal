@@ -261,14 +261,25 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return signedRequest('POST', '/fapi/v1/order', { symbol, side: closeSide, type: 'MARKET', quantity, reduceOnly: true });
   }
 
+  // ⛔ FIX 4 Okt 2026 (audit malam, TERBUKTI empiris di demo -- tools/binanceAlgoStopCheck.js): SL/TP dipasang lewat endpoint
+  // ALGO (/fapi/v1/algoOrder, migrasi Binance Des 2025), tapi /fapi/v1/allOpenOrders CUMA batalin order biasa -- SL/TP algo
+  // TETAP NYANGKUT. Akibat: trailing Sniper (cancel+pasang ulang) numpuk SL lama, SL/TP basi bisa nutup posisi BARU di sinyal
+  // berikutnya, TP lama motong leg2 mirror member. Sekarang batalin DUA-DUANYA (order biasa + algo). Gagal batalin algo
+  // (mis. gak ada order) gak gugurin hasil cancel biasa.
   async function cancelAllOpenOrders(symbol) {
-    return signedRequest('DELETE', '/fapi/v1/allOpenOrders', { symbol });
+    const normal = await signedRequest('DELETE', '/fapi/v1/allOpenOrders', { symbol });
+    await signedRequest('DELETE', '/fapi/v1/algoOpenOrders', { symbol }).catch((e) => console.log(`[binanceExecutor] cancel algo ${symbol} gagal (diabaikan): ${e.message}`));
+    return normal;
+  }
+  // daftar SL/TP algo yang masih kebuka (buat audit/cek nyangkut)
+  async function getOpenAlgoOrders(symbol) {
+    return signedRequest('GET', '/fapi/v1/openAlgoOrders', symbol ? { symbol } : {});
   }
 
   return {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
-    wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela,
+    wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela, getOpenAlgoOrders,
   };
 }
 

@@ -37,10 +37,14 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-1. Dashboard kosmetik (opsional): label sub-strategi Ninja (MR/Exhaustion/News) & kartu Rotasi, tampilan ledger spot real.
-   Data transaksi UDAH masuk dashboard lewat jurnal (3 Okt) -- ini cuma tampilan, butuh deploy Netlify = izin Olan dulu.
+- (kosong) -- semua kerjaan Kaela beres 3 Okt 2026. Sisa: nunggu Olan / tanggal / data (di atas). Kandidat riset baru ada di
+  STRATEGY-CATALOG.md bagian "IDE YANG BELUM DICOBA".
 
 ## ✅ SELESAI (terbaru di atas)
+
+- 3 Okt 2026 — Label sub-strategi di dashboard: TERPENUHI lewat kolom Note jurnal ("Ninja Exhaustion · ...", "Ninja News · ...",
+  "Ranger BTC · ICT Liquidity Sweep") yang otomatis tampil sbg alasan posisi -- tanpa ubah kode/Netlify. Kartu Rotasi & tampilan
+  ledger spot real nunggu ada datanya (Bybit real / anggaran DCA).
 
 - 3 Okt 2026 — Uji top trader (sizing volatilitas & pyramiding: DITOLAK, kalkulator exposure menang), validasi lookback x6
   (aman), filter volatilitas & jam (DITOLAK), jurnal Kaela Access buat Sniper/Ranger BTC dual-exec (sebelumnya gak nyatet).

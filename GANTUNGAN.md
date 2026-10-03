@@ -46,6 +46,10 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## ✅ SELESAI (terbaru di atas)
 
+- 4 Okt 2026 dini hari — Health check: (1) FIX laten serius: state cron menit (Ninja MR/Exhaustion/News, DCA Tangga, leg demo
+  scalp) gak ilang lagi kena git reset --hard eksekutor (STATE_FILES dijaga, terverifikasi live 00:15 "State lokal 1 file dijaga");
+  (2) alat verifikasi endpoint BingX diperbaiki (qty 0) -> 13/14 lolos di demo asli (sisa: getOrder abis cancel kadang "order not
+  exist", udah ditangani eksekutor); (3) template pesan WA seragam + rapi per baris; (4) Jobless Claims mingguan masuk jadwal News.
 - 3 Okt 2026 — Label sub-strategi di dashboard: TERPENUHI lewat kolom Note jurnal ("Ninja Exhaustion · ...", "Ninja News · ...",
   "Ranger BTC · ICT Liquidity Sweep") yang otomatis tampil sbg alasan posisi -- tanpa ubah kode/Netlify. Kartu Rotasi & tampilan
   ledger spot real nunggu ada datanya (Bybit real / anggaran DCA).

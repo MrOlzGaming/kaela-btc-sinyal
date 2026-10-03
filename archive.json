@@ -2928,5 +2928,15 @@
     "type": "anomaly",
     "date": "2026-10-03T22:45:48.381Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 2 indikator lagi gak biasa dibanding histori kita sendiri:\n\n🐋 Total BTC Pindah Transaksi Raksasa (harian): 441206.93 -- JAUH DI ATAS kebiasaan historis kita (median 32491.21, z-score 11.4)\n🐋 Jumlah Transaksi Raksasa (harian): 356.00 -- JAUH DI ATAS kebiasaan historis kita (median 17.00, z-score 32.7)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n🐋 Total BTC Pindah Transaksi Raksasa (harian)\nIni total BTC yang \"pindah tangan\" dalam transaksi RAKSASA (di atas 1000 BTC/transaksi) hari ini. Jumlahnya LEBIH BANYAK dari kebiasaan kita -- bisa berarti exchange/institusi besar lagi mindahin dana gede (rebalancing, pindah cold wallet, atau beneran whale beraksi). BUKAN otomatis berarti jual/beli -- banyak transaksi segede ini cuma pindah dari 1 dompet ke dompet LAIN milik orang yang SAMA.\n\n🐋 Jumlah Transaksi Raksasa (harian)\nIni ngitung BERAPA KALI ada transaksi raksasa (>=1000 BTC) hari ini. Lebih SERING dari biasanya -- banyak pihak besar gerak bareng dalam waktu singkat, kadang nemenin naiknya volatilitas harga."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-10-03T23:15:53.325Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-10-04\nHarga sekarang: $84,760.01 (📉 -0.1% dari kemarin)\n⏳ Halving berikutnya: 558 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.59 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.13 (Normal)\n\n💵 DXY: 101.9 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.45 (normal)\n🛢️ Minyak WTI: $96.2/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Whale netflow (24 jam): 🔴 7248 BTC masuk exchange · 🟢 5270 BTC keluar exchange\n🐋 Smart Money: trader kakap lebih LONG drpd akun biasa/retail (selisih 10.0 poin) -- top 65% long vs global 55% long\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-10-03T23:15:53.325Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-10-04\nHarga sekarang: $4,147.46/oz (≈Rp74.169.214) atau $133.34/gram (≈Rp2.384.596) (📉 -1.1% dari kemarin)\n💵 DXY: 101.9 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.88% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.45 (normal)\n🛢️ Minyak WTI: $96.2/barel (NAIK TAJAM)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

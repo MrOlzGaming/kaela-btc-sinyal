@@ -1,19 +1,19 @@
 {
   "btc": {
-    "price": 84490.71,
+    "price": 84760.01,
     "conviction": {
-      "score": -1,
+      "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": -1,
-          "reason": "RSI 77 overbought -- rawan technical pullback"
+          "v": 0,
+          "reason": "RSI 66 netral"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.58 -- Fair value / akumulasi"
+          "reason": "1.59 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "72/100 -- Greed (kontrarian)"
+          "reason": "67/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "-0.83% (7 hari) -- stabil"
+          "reason": "-0.38% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -55,22 +55,22 @@
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.4940365541173049,
-      "corr90": 0.3890868411149985,
+      "corr30": 0.5815765785830963,
+      "corr90": 0.3769461926817493,
       "label30": "moderat positif",
       "label90": "moderat positif",
       "sampleDays": 81,
-      "latestDate": "2026-10-01"
+      "latestDate": "2026-10-02"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 34.82,
-        "changePct": 0.5777007510109846
+        "value": 35.44,
+        "changePct": 1.4891179839633333
       },
       "stablecoin": {
-        "current": 258005647841.95563,
-        "weekAgo": 260169406468.61353,
-        "changePct": -0.8316729687888691
+        "current": 258257296759.73486,
+        "weekAgo": 259237203406.878,
+        "changePct": -0.3779961495746983
       },
       "yieldCurve": {
         "value": 0.45,
@@ -111,15 +111,15 @@
     }
   },
   "xau": {
-    "price": 4152.21,
+    "price": 4147.46,
     "conviction": {
-      "score": -1,
-      "verdict": "🔴 Condong Bearish",
+      "score": 0,
+      "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 0,
-          "reason": "RSI 31 netral"
+          "v": 1,
+          "reason": "RSI 24 oversold -- rawan technical bounce"
         },
         {
           "label": "DXY (Dolar)",
@@ -140,16 +140,16 @@
       "totalFactors": 4
     },
     "trackRecord": {
-      "total": 22,
-      "correct": 8,
-      "winRatePct": 36.36363636363637
+      "total": 24,
+      "correct": 10,
+      "winRatePct": 41.66666666666667
     },
     "regime": {
-      "corr30": -0.40170988364612287,
-      "corr90": -0.4698100742103863,
+      "corr30": -0.40256400609441717,
+      "corr90": -0.47044027665926114,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 82,
+      "sampleDays": 81,
       "latestDate": "2026-10-02"
     },
     "macro": {
@@ -191,5 +191,5 @@
       "inverted": false
     }
   },
-  "updatedAt": "2026-10-02T23:15:53.530Z"
+  "updatedAt": "2026-10-03T23:15:53.325Z"
 }

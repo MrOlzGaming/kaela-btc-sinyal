@@ -115,7 +115,23 @@ fi
 # sama `??` di atas (itu SELALU aman diabaikan), file ini SEKALI-SEKALI beneran kotor krn alasan
 # valid TAPI gak pernah beresiko -- exclude eksplisit drpd nutupin sinyal tracked file LAIN yang
 # beneran perlu diwaspadai.
-DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null | grep -v '^??' | grep -v ' usd-idr-rate-cache.json$' || true)
+# ⛔ FIX 4 Okt 2026 (BUG LATEN SERIUS ketemu pas health check) -- cron TIAP MENIT (run-channel-breakout-vultr.sh: Ninja MR,
+# Ninja Exhaustion, Ninja News, pengawas DCA Tangga) + cron 5-menit (econ live: leg demo scalp nulis nyopet-journal.json) NULIS
+# journal/state yang TRACKED tapi GAK PERNAH commit sendiri. `git reset --hard` di bawah balikin file itu ke versi GitHub (commit
+# siklus SEBELUMNYA, ~15 mnt lalu) -> state 1-14 menit terakhir HILANG (posisi floating Ninja bisa "kelupaan", daftar layer DCA
+# Tangga mundur). Fix: file state di STATE_FILES yang berubah lokal DISALIN dulu, reset, lalu DIKEMBALIIN -- VPS ini satu-satunya
+# penulis state (leader), jadi versi lokal SELALU yang paling baru. Di-commit+push normal di ujung siklus (CHANGED di bawah).
+# STATE_FILES = SATU daftar (dulu 3 salinan inline: cek perubahan, git add, purge jsDelivr).
+STATE_FILES="sniper-orders.json kaela-bankroll.json nyopet-journal.json channel-breakout-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json actionable-liquidity-state.json actionable-liquidity-signal-log.json ninja-mr-journal.json ninja-mr-exec-journal.json ninja-exhaustion-journal.json sniper-btc-dual-exec-journal.json ranger-btc-dual-exec-journal.json kaela-spot-real-ledger.json ninja-news-journal.json ninja-news-research-log.json system-selfcheck-state.json std-futures-ladder-state.json ranger-rotation-journal.json"
+PRESERVE_DIR=$(mktemp -d)
+PRESERVED_COUNT=0
+for f in $STATE_FILES; do
+  # bandingin ke versi GitHub (origin-new/master, baru di-fetch) -- nangkep 2 kasus: file kotor DAN commit lokal yang gagal push
+  if [ -f "$f" ] && ! git diff --quiet origin-new/master -- "$f" 2>/dev/null; then
+    mkdir -p "$PRESERVE_DIR/$(dirname "$f")" && cp -p "$f" "$PRESERVE_DIR/$f" && PRESERVED_COUNT=$((PRESERVED_COUNT + 1))
+  fi
+done
+DIRTY_BEFORE_RESET=$(git status --porcelain 2>/dev/null | grep -v '^??' | grep -v ' usd-idr-rate-cache.json$' | awk '{print $2}' | while read -r df; do case " $STATE_FILES " in *" $df "*) ;; *) echo "$df";; esac; done || true)
 UNPUSHED_COMMITS=$(git rev-list --count origin-new/master..HEAD 2>/dev/null || echo 0)
 if [ -n "$DIRTY_BEFORE_RESET" ] || [ "$UNPUSHED_COMMITS" -gt 0 ]; then
   log "PERINGATAN: git reset --hard AKAN MEMBUANG state -- working tree kotor: $([ -n "$DIRTY_BEFORE_RESET" ] && echo yes || echo no), commit lokal belum ke-push: $UNPUSHED_COMMITS. Kemungkinan besar sisa push GAGAL siklus sebelumnya -- cek log."
@@ -124,6 +140,9 @@ if ! git reset --hard origin-new/master --quiet >> "$LOG_FILE" 2>&1; then
   log 'git reset --hard GAGAL -- coba lagi run berikutnya.'
   report_and_exit 'git reset --hard GAGAL di vultr-sg' 1
 fi
+# balikin state lokal yang tadi disalin (lihat FIX 4 Okt di atas)
+if [ "$PRESERVED_COUNT" -gt 0 ]; then cp -rp "$PRESERVE_DIR/." . && log "State lokal $PRESERVED_COUNT file dijaga dari reset --hard (bakal ke-commit ujung siklus)."; fi
+rm -rf "$PRESERVE_DIR"
 log 'git sync sukses (fetch+reset --hard).'
 
 # Cek mandiri kredensial (31 Agu 2026) -- jalan SELALU (bukan cuma pas leader), pola sama kayak
@@ -302,7 +321,7 @@ timeout -k 10 45 node reportOlanExtraExchanges.js >> "$LOG_FILE" 2>&1 || log "re
 # hilang (beda dari cursor/state operasional lain di baris ini) -- lihat catatan panjang di
 # .gitignore. WAJIB ikut daftar ini, kalau nggak `git reset --hard` box ini nelen balik histori
 # yang baru ke-tulis siklus ini (KELAS BUG SAMA PERSIS kayak insiden state.json 8 Sep 2026).
-CHANGED=$(git status --porcelain -- sniper-orders.json kaela-bankroll.json nyopet-journal.json channel-breakout-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json actionable-liquidity-state.json actionable-liquidity-signal-log.json ninja-mr-journal.json ninja-mr-exec-journal.json ninja-exhaustion-journal.json sniper-btc-dual-exec-journal.json ranger-btc-dual-exec-journal.json kaela-spot-real-ledger.json ninja-news-journal.json ninja-news-research-log.json system-selfcheck-state.json std-futures-ladder-state.json ranger-rotation-journal.json)
+CHANGED=$(git status --porcelain -- $STATE_FILES)
 if [ -n "$CHANGED" ]; then
   log 'Ada perubahan state -- push balik ke GitHub...'
   # Per-file safe (29 Agu 2026) -- `git add fileA fileB` CRASH TOTAL kalau salah satu gak ada
@@ -325,7 +344,7 @@ if [ -n "$CHANGED" ]; then
   # kayak sistem lain. Nama file TETAP channel-breakout-journal.json (kebijakan sama kayak
   # nyopet-journal.json -- data file gak ikut di-rename pas rombak Nyopet->Ranger/Ninja, cuma
   # kode+pesannya, hindari resiko whitelist ini ketinggalan sinkron).
-  for f in sniper-orders.json kaela-bankroll.json nyopet-journal.json channel-breakout-journal.json kaela-spot-alt.json kaela-spot.json research-log-state.json archive.json price-alert-state.json dxy-zone-state.json squeeze-alert-state.json econ-calendar-notified.json whale-state.json state.json anomaly-history.json sniper-trigger-state.json conviction-track-record.json analyst-dashboard.json usd-idr-rate-cache.json whale-netflow-research-log.json whale-netflow-4h-research-log.json miner-pool-research-log.json miner-pool-wallets.json miner-outflow-research-log.json smart-money-research-log.json econ-reaction-research-log.json liquidation-heatmap.json liquidation-events.jsonl orderbook-wall-research-log.json exchange-wallet-balances.json monthly-funding-reminder-state.json web/wallet-cap-progress.json web/wallet-cap-progress-history.json wallet-cap-anomaly-state.json actionable-liquidity-state.json actionable-liquidity-signal-log.json ninja-mr-journal.json ninja-mr-exec-journal.json ninja-exhaustion-journal.json sniper-btc-dual-exec-journal.json ranger-btc-dual-exec-journal.json kaela-spot-real-ledger.json ninja-news-journal.json ninja-news-research-log.json system-selfcheck-state.json std-futures-ladder-state.json ranger-rotation-journal.json; do
+  for f in $STATE_FILES; do
     [ -f "$f" ] && git add "$f"
   done
   git commit -m "Auto: sync eksekusi live (Vultr run-executor) $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1

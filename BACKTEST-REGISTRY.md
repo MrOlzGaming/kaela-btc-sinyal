@@ -261,6 +261,17 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
     >=0,1%, dibulatin ke tick 0,1), `rangerBtcDualExec.js` (`trailR` default 3, polling), `rangerRotation.js`
     (`trailRByCoin:{BTC:3}`, SL native Bybit digeser). Selftest rotasi 14/14, regression 100/100.
 
+## 🧪 Ninja EXHAUSTION -- fade likuidasi "kehabisan tenaga" (3 Okt 2026) — `backtest/ninjaExhaustionStudy.js`
+
+- Replay logika radar Jalur C (episode likuidasi 1 sisi >= ambang/30 mnt, kering <= 30% puncak) di `liquidation-events.jsonl` Bybit
+  (13 Sep - 3 Okt 2026, 4.209 event), cadence cek 1/5/15 mnt, entry open 1m berikut, fee RT 0,10%, 15 aturan exit (waktu 15m-4j,
+  SL/TP tetap, trailing). Output: `ninja-exhaustion-output.log` (fade), `-follow-output.log` (ikut arah), `-bigburst-output.log`.
+- **Ambang $300rb (n=30): RUGI di semua aturan exit** (PF 0,2-0,8), fade MAUPUN ikut arah. LONG paling jelek (long-liq kering = harga
+  sering lanjut turun). **$800rb (n=12): ~impas** (PF 0,9-1,1; paruh 1 rugi, paruh 2 untung = noise). $1,5jt n=4 gak berarti.
+- **Kesimpulan jujur: belum ada edge.** Arahan Olan "uji di demo 100 transaksi" -> DIPASANG demo doang (`ninjaExhaustionTrader.js`,
+  ambang $800rb, SL 1% + trailing 0,5% aktif +1%, maks 8 jam -- dipilih dari teori + backtest ~impas, DIKUNCI sebelum uji). Kriteria
+  naik real: 100 transaksi demo, PF bersih > 1,2, gak ada 1 paruh pun yang PF < 1.
+
 ## 🏹 Upgrade Ranger: gerbang struktur (GAGAL) + portofolio multi-koin -> ROTASI (3 Okt 2026)
 
 - **Gerbang struktur BOS/CHoCH ala SMC** (`backtest/rangerStructureGate.js`, output `ranger-structure-gate-output.log`):

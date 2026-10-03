@@ -281,5 +281,14 @@
       "ViaBTC": 11,
       "WhitePool": 1
     }
+  },
+  {
+    "dateKey": "2026-10-04",
+    "poolCounts": {
+      "ViaBTC": 1,
+      "AntPool": 3,
+      "F2Pool": 1,
+      "unidentified": 1
+    }
   }
 ]

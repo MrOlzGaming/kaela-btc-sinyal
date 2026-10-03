@@ -5,6 +5,7 @@ const { run, verdict, pfOf } = require('./trialReport');
 const toLocal = (d) => new Date(new Date(d).getTime() + 8 * 3600e3);
 const MONDAY = new Date('2026-10-12T02:00:00Z'); // Senin 10:00 WITA
 const TUESDAY = new Date('2026-10-13T02:00:00Z');
+const MONDAY_MIDNIGHT = new Date('2026-10-11T16:15:00Z'); // Senin 00:15 WITA
 
 function harness(files, state = {}) {
   const sent = [], archive = { entries: new Set(), hasEntryToday: (t) => archive.entries.has(t), addOrReplaceDaily: (t) => archive.entries.add(t) };
@@ -34,6 +35,7 @@ test('belum ada transaksi sama sekali -> Senin pun DIAM (anti-spam)', async () =
 test('ada transaksi -> rapor Senin 1x (rapi per baris), Selasa gak kirim, Senin yg sama gak dobel', async () => {
   const h = harness({ 'ninja-exhaustion-journal.json': exJournal([1, -0.5, 2]) });
   await run(h.deps(TUESDAY)); assert.strictEqual(h.sent.length, 0);
+  await run(h.deps(MONDAY_MIDNIGHT)); assert.strictEqual(h.sent.length, 0, 'Senin 00:15 WITA jangan bunyiin grup tengah malam');
   await run(h.deps(MONDAY)); assert.strictEqual(h.sent.length, 1);
   assert.ok(/RAPOR UJI DEMO/.test(h.sent[0]) && /3 \/ 100/.test(h.sent[0]) && /— Kaela/.test(h.sent[0]), h.sent[0]);
   await run(h.deps(MONDAY)); assert.strictEqual(h.sent.length, 1, 'gak boleh dobel di hari yang sama');

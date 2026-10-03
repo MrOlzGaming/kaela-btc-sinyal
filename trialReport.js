@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 const TYPE_WEEKLY = 'trial-report-weekly';
+const WEEKLY_EARLIEST_HOUR = 9; // WITA
 const STATE_PATH = path.join(__dirname, 'trial-report-state.json');
 
 function readJson(file) { try { return JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8')); } catch { return null; } }
@@ -118,8 +119,10 @@ async function run(deps) {
     await deps.send(msg); sent.push(msg);
     st.milestones = { ...(st.milestones || {}), [s.key]: new Date(now).toISOString() };
   }
-  // mingguan (Senin WITA)
-  if (deps.toLocal(now).getUTCDay() === 1 && total > 0 && !deps.archive.hasEntryToday(TYPE_WEEKLY, now)) {
+  // mingguan (Senin WITA, mulai jam 09:00 -- 4 Okt 2026: siklus pertama Senin = 00:00, laporan gak mendesak gak usah
+  // bunyiin HP anggota grup tengah malam)
+  const local = deps.toLocal(now);
+  if (local.getUTCDay() === 1 && local.getUTCHours() >= WEEKLY_EARLIEST_HOUR && total > 0 && !deps.archive.hasEntryToday(TYPE_WEEKLY, now)) {
     const msg = formatWeekly(systems);
     deps.archive.addOrReplaceDaily(TYPE_WEEKLY, msg, now);
     await deps.send(msg); sent.push(msg);

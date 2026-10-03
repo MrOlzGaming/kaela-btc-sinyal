@@ -296,6 +296,17 @@ snapshot + pointer, bukan pengganti jalanin backtest beneran.
 - **Keputusan**: `ninja-news-config.json` dikalibrasi (jendela 10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, 30 mnt),
   tetap DEMO (sampel kecil, edge tipis). Real kalau 1-2 bulan demo bagus.
 
+## 🔧 Ranger: lookback, filter volatilitas, filter jam (3 Okt 2026) — `backtest/rangerFilterStudy.js`
+
+- Engine Ranger PERSIS (precomputeSignals/runVariant), 8 koin rotasi live, exit live (BTC trail 3x, alt 1/3@2R+SMA60), fee 0,12%.
+  Output `ranger-filter-study-output.log`.
+- **Lookback**: x4 PF 2,18/1,73 | x5 2,25/1,67 | **x6 (live) 2,15/1,67** | x7 2,21/1,64 | x8 2,13/1,60 (8 koin <2023/>=2023) -> dataran
+  rata, x6 aman. BTC: x4 3,27/3,76, x6 3,15/2,87, x8 2,87/2,70 (n 18-29, terlalu kecil buat ganti).
+- **Volatilitas** (persentil ATR14/harga vs 500 candle): skip >80 = 2,74/1,52; skip <20 = 2,08/1,55; tengah 20-80 = 2,81/1,32;
+  >50 = 1,78/1,68; <=50 = 3,11/1,65 -> gak ada yang naik di dua era. DITOLAK.
+- **Jam candle sinyal**: 00 UTC 2,07/4,32 | 04 1,35/2,87 | 08 5,65/1,12 | 12 1,96/1,04 | 16 1,99/0,75 | 20 1,13/1,11 -> gak ada jam
+  jelek konsisten. DITOLAK.
+
 ## 🏛️ Prinsip top trader: sizing volatilitas & pyramiding (3 Okt 2026) — `backtest/topTraderPrinciples.js`
 
 - BTC 4H 2019-01..2026-09 (1h resample, `multicoin-cache`), sinyal Ranger pattern+FVG PERSIS (`precomputeSignals`) + slot ICT Sweep,

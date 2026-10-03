@@ -35,10 +35,12 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-2. Ide lama: filter volatilitas, filter jam, validasi lookback Ranger.
-3. Update dashboard Kaela Access (Exhaustion, News, slot Sweep, spot real) -> Netlify nunggu izin Olan.
+1. Dashboard kosmetik (opsional): label sub-strategi Ninja (MR/Exhaustion/News) & kartu Rotasi, tampilan ledger spot real.
+   Data transaksi UDAH masuk dashboard lewat jurnal (3 Okt) -- ini cuma tampilan, butuh deploy Netlify = izin Olan dulu.
 
 ## ✅ SELESAI (terbaru di atas)
 
+- 3 Okt 2026 — Uji top trader (sizing volatilitas & pyramiding: DITOLAK, kalkulator exposure menang), validasi lookback x6
+  (aman), filter volatilitas & jam (DITOLAK), jurnal Kaela Access buat Sniper/Ranger BTC dual-exec (sebelumnya gak nyatet).
 - 3 Okt 2026 — Katalog strategi (`STRATEGY-CATALOG.md`), backup journal dual-exec ke git, kalibrasi Ninja News dari backtest
   per detik, leg real spot DCA (anggaran khusus), riset Bitget (butuh key demo), ICT sweep harian (gak robust).

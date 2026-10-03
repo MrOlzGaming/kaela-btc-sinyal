@@ -1,0 +1,23 @@
+=== C) VALIDASI LOOKBACK (rentang pola = skala x N dari versi harian; live = x6) ===
+x4       | 8 koin <2023 n=365 PF 2.18 avg 5.96% | >=2023 n=454 PF 1.73 avg 3.29% | BTC <2023 n=29 PF 3.27 avg 10.70% | >=2023 n=18 PF 3.76 avg 11.52%
+x5       | 8 koin <2023 n=350 PF 2.25 avg 6.18% | >=2023 n=420 PF 1.67 avg 3.20% | BTC <2023 n=23 PF 4.30 avg 15.15% | >=2023 n=19 PF 3.07 avg 8.69%
+x6 (LIVE) | 8 koin <2023 n=357 PF 2.15 avg 5.68% | >=2023 n=425 PF 1.67 avg 3.14% | BTC <2023 n=28 PF 3.15 avg 9.78% | >=2023 n=22 PF 2.87 avg 8.68%
+x7       | 8 koin <2023 n=350 PF 2.21 avg 5.86% | >=2023 n=417 PF 1.64 avg 3.07% | BTC <2023 n=24 PF 3.29 avg 12.38% | >=2023 n=22 PF 2.77 avg 8.62%
+x8       | 8 koin <2023 n=358 PF 2.13 avg 5.43% | >=2023 n=411 PF 1.60 avg 2.91% | BTC <2023 n=26 PF 2.87 avg 9.59% | >=2023 n=23 PF 2.70 avg 8.26%
+
+Baseline live (x6, tanpa filter): 8 koin <2023 n=357 PF 2.15 avg 5.68% | >=2023 n=425 PF 1.67 avg 3.14%
+
+=== A) FILTER VOLATILITAS (persentil ATR14/harga vs 500 candle) -- trade yang LOLOS filter ===
+skip vol tinggi (>80)    | <2023 n=226 PF 2.74 avg 7.04% | >=2023 n=290 PF 1.52 avg 2.40%
+skip vol rendah (<20)    | <2023 n=281 PF 2.08 avg 5.77% | >=2023 n=382 PF 1.55 avg 2.67%
+cuma tengah (20-80)      | <2023 n=150 PF 2.81 avg 7.89% | >=2023 n=247 PF 1.32 avg 1.55%
+cuma vol tinggi (>50)    | <2023 n=213 PF 1.78 avg 4.63% | >=2023 n=280 PF 1.68 avg 3.26%
+cuma vol rendah (<=50)   | <2023 n=144 PF 3.11 avg 7.24% | >=2023 n=145 PF 1.65 avg 2.90%
+
+=== B) PER JAM candle sinyal (UTC buka candle 4H) ===
+jam 00 UTC (08 WITA) | <2023 n=66 PF 2.07 avg 5.59% | >=2023 n=71 PF 4.32 avg 11.61%
+jam 04 UTC (12 WITA) | <2023 n=58 PF 1.35 avg 2.03% | >=2023 n=66 PF 2.87 avg 7.71%
+jam 08 UTC (16 WITA) | <2023 n=51 PF 5.65 avg 17.88% | >=2023 n=55 PF 1.12 avg 0.54%
+jam 12 UTC (20 WITA) | <2023 n=66 PF 1.96 avg 4.53% | >=2023 n=83 PF 1.04 avg 0.21%
+jam 16 UTC (00 WITA) | <2023 n=53 PF 1.99 avg 4.93% | >=2023 n=65 PF 0.75 avg -1.44%
+jam 20 UTC (04 WITA) | <2023 n=62 PF 1.13 avg 0.65% | >=2023 n=85 PF 1.11 avg 0.54%

@@ -149,11 +149,17 @@ Terakhir diperbarui: **3 Okt 2026**.
   incorrect"). Saldo real Bitget $0,58. Rencana: begitu ada key demo -> slot ICT Sweep pindah ke Bitget (exchange sendiri, gak
   bentrok netting sama slot pattern/FVG di Binance BTCUSDC).
 
+## 🔧 VALIDASI & FILTER RANGER (3 Okt 2026, `backtest/rangerFilterStudy.js`, 8 koin rotasi 2019-26, exit live)
+
+- ✅ **Lookback pola x6** (rescale dari harian) — x4..x8 semua mirip (8 koin PF 2,13-2,25 / 1,60-1,73), x6 di tengah dataran rata
+  = robust, bukan hasil tuning. Tetap.
+- ❌ **Filter volatilitas** (persentil ATR14/harga) — gak ada yang membaik di DUA era: skip vol tinggi 2,15->2,74 tapi >=2023
+  1,67->1,52; cuma tengah >=2023 turun ke 1,32; cuma vol rendah ~sama tapi trade separuh.
+- ❌ **Filter jam** (jam candle sinyal 4H) — gak ada jam yang jelek konsisten: 00 WITA rugi >=2023 (PF 0,75) tapi bagus <2023
+  (1,99); 04 WITA lemah dua era (1,13/1,11) tapi tetap positif -> dibuang malah ngurangin untung.
+
 ## 🗒️ IDE YANG BELUM DICOBA (dari RESEARCH-LOG)
 
-- Lookback pola Nyopet/Ranger (sekarang hasil rescale x6 dari harian, belum divalidasi independen).
-- Filter volatilitas (skip entry kalau ATR ekstrem).
-- Filter jam/hari buat Ranger 4H.
 - Donchian sbg pengganti window bull/bear Emas.
 - Fear & Greed / real yield sbg konfirmasi.
 

@@ -44,6 +44,7 @@
 // auto-adopt posisi nyasar ke journal (SAMA arsitektur ninjaTrader.js/rangerBtcDualExec.js).
 
 const fs = require('fs');
+const kaelaJournalHook = require('./kaelaJournalHook');
 const path = require('path');
 const { sma } = require('./technicalAnalysis');
 const { fetchCandles } = require('./technicalAnalysis');
@@ -271,6 +272,10 @@ async function openSniperBtcDual({ order, livePrice }) {
     demo: demoResult, real: realResult,
   };
   saveJournal(journal);
+  // (3 Okt 2026) catat ke jurnal Kaela Access (dashboard) -- sebelumnya modul ini gak nyatet sama sekali
+  for (const [mode, leg] of [['demo', demoResult], ['real', realResult]]) {
+    if (leg) await kaelaJournalHook.recordOpen(mode, { entryId: `${order.id}-${mode}`, strategy: 'sniper', direction: order.direction, entryPrice: leg.entryPrice, sl: order.sl, tp: null, leverage: leg.leverage, marginUsd: leg.marginUsd, note: `Sniper BTC · ${kaelaJournalHook.patternLabel(order.patternType)}` });
+  }
   console.log(`[SniperBtcDual] Entry ${order.direction.toUpperCase()} @ ${livePrice} -- demo @ ${demoResult.entryPrice}${realResult ? `, real @ ${realResult.entryPrice}` : ' (real skip)'}.`);
 
   updateOrder(order.id, {
@@ -330,12 +335,14 @@ async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
   const stats = (loadJournal().stats)[mode]; // re-load biar stats akumulasi konsisten kalau ada order lain kepr proses bareng siklus ini -- caller yang nyimpen ulang journal penuh
 
   if (leg.untracked) {
+    await kaelaJournalHook.recordClose(`${orderId}-${mode}`, null);
     const msg = formatAutoClosedUntracked({ id: o.id, direction: o.direction === 'buy' ? 'long' : 'short', assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice }, isDemo, SYSTEM_LABEL.SNIPER);
     if (mode === 'demo') await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch(() => {});
     if ((mode === 'real') === (o.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch(() => {});
     return stats;
   }
 
+  await kaelaJournalHook.recordClose(`${orderId}-${mode}`, leg.pnlUsd);
   const won = leg.pnlUsd >= 0;
   if (won) stats.wins += 1; else stats.losses += 1;
   stats.totalPnlUsd += leg.pnlUsd;

@@ -36,6 +36,7 @@
 // JUJUR (pnl null, style formatAutoClosedUntracked) -- BUKAN nebak PnL dari histori income.
 
 const fs = require('fs');
+const kaelaJournalHook = require('./kaelaJournalHook');
 const path = require('path');
 const { sma } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
@@ -285,6 +286,10 @@ async function openRangerBtcDual({ sig, livePrice }) {
     demo: demoResult, real: realResult,
   };
   saveJournal(journal);
+  // (3 Okt 2026) catat ke jurnal Kaela Access (dashboard) -- sebelumnya modul ini gak nyatet sama sekali
+  for (const [mode, leg] of [['demo', demoResult], ['real', realResult]]) {
+    if (leg) await kaelaJournalHook.recordOpen(mode, { entryId: `${tradeId}-${mode}`, strategy: 'nyopet', direction: sig.direction, entryPrice: leg.entryPrice, sl: sig.sl, tp: null, leverage: leg.leverage, marginUsd: leg.margin, note: `Ranger BTC · ${kaelaJournalHook.patternLabel(sig.patternType)}` });
+  }
   console.log(`[RangerBtcDual/${slotKey}] Entry ${sig.direction.toUpperCase()} @ ${livePrice} -- demo @ ${demoResult.entryPrice}${realResult ? `, real @ ${realResult.entryPrice}` : ' (real skip)'}.`);
 
   const trailOn = (cfg.trailR !== undefined ? cfg.trailR : 3) > 0;
@@ -455,6 +460,7 @@ async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
   const stats = slot.stats[mode];
 
   if (leg.untracked) {
+    await kaelaJournalHook.recordClose(`${f.id}-${mode}`, null);
     const msg = formatAutoClosedUntracked({ id: f.id, direction: f.direction === 'buy' ? 'long' : 'short', assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice }, isDemo, SYSTEM_LABEL.RANGER);
     if (mode === 'demo') await sendWhatsAppToSniperClub(toSniperClubLink(msg)).catch(() => {});
     if ((mode === 'real') === (f.wibowoRoute === 'real')) await sendWhatsAppToWibowo(msg).catch(() => {});
@@ -462,6 +468,7 @@ async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
   }
 
   const totalPnlUsd = (leg.realizedPnlUsd || 0) + (leg.legPnlUsd || 0);
+  await kaelaJournalHook.recordClose(`${f.id}-${mode}`, totalPnlUsd);
   const pnlPct = leg.margin ? (totalPnlUsd / leg.margin) * 100 : null;
   const won = totalPnlUsd >= 0;
   if (won) stats.wins += 1; else stats.losses += 1;

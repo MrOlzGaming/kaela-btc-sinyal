@@ -167,7 +167,7 @@ function createTrader(deps) {
     const f = { id: crypto.randomUUID(), signalId: nextId(), dir, peakUsd: peak, openedAt: now(), legs: { demo, real } };
     j.floating = f;
     for (const [mode, leg] of Object.entries(f.legs)) {
-      if (leg) deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: dir, entryPrice: leg.entryPrice, sl: leg.sl, tp: null, status: 'open', openedAt: new Date(now()).toISOString(), note: 'exhaustion-fade (uji demo)' });
+      if (leg) deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: dir, entryPrice: leg.entryPrice, sl: leg.sl, tp: null, status: 'open', openedAt: new Date(now()).toISOString(), note: 'Ninja Exhaustion · fade likuidasi kering (uji demo)' });
     }
     log(`BUKA ${dir.toUpperCase()} #${f.signalId} demo @ ${demo.entryPrice}${real ? ` + real @ ${real.entryPrice}` : ''} -- SL ${demo.sl.toFixed(1)}${demo.stopOrderId ? '' : ' (stop exchange GAGAL, backup software)'}.`);
     await sendOpen(f);

@@ -190,7 +190,7 @@ async function runDetector(deps) {
     const f = { id: crypto.randomUUID(), key: ev.key, label: ev.label, dir: d, openedAt: now(), legs };
     j.floating = f; save();
     log(`BUKA ${d.toUpperCase()} demo @ ${legs.demo.entryPrice}${legs.real ? ` + real @ ${legs.real.entryPrice}` : ''}, SL ${legs.demo.sl.toFixed(1)}${legs.demo.stopOrderId ? '' : ' (stop exchange GAGAL, backup per detik)'}`);
-    for (const [mode, leg] of Object.entries(legs)) deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: d, entryPrice: leg.entryPrice, sl: leg.sl, tp: null, status: 'open', openedAt: new Date(now()).toISOString(), note: `news-dxy ${ev.label}` });
+    for (const [mode, leg] of Object.entries(legs)) deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: d, entryPrice: leg.entryPrice, sl: leg.sl, tp: null, status: 'open', openedAt: new Date(now()).toISOString(), note: `Ninja News · ${ev.label} (dolar per detik, uji demo)` });
     await notifyOpen(f);
 
     // kelola per detik sampai semua leg tutup

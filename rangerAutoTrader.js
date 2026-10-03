@@ -443,7 +443,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // dikasih tau (bukan cuma nyampah di log lokal) -- Demo gak usah (solusinya beda, reset
       // Testnet, bukan isi saldo beneran).
       if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
-        const alertKey = `${path.basename(journalPath, '.json')}-nyopet-${assetCfg.label}`;
+        const alertKey = `${path.basename(jPath, '.json')}-nyopet-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
           await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }), assetCfg);
         }
@@ -1029,6 +1029,9 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     const { symbol, marginAsset, key: assetKey } = assetCfg;
     const exec = execFor(assetCfg);
     const [modalFull, livePrice] = await Promise.all([resolveModal(marginAsset, exec), fetchLivePrice(symbol, assetCfg.exchange)]);
+    // (4 Okt 2026) Akun saldo $0 (real Olan sebelum topup): dulu lanjut sampai "Quantity kehitung 0 ... ERROR" -> baris ERROR ke
+    // Watchdog tiap sinyal. Saldo kosong itu kondisi normal yang udah dilaporin laporan saldo harian -- skip polos.
+    if (!(modalFull > 0)) { console.log(`[NyopetAutoTrader][FedGrid] ${symbol}: saldo ${marginAsset} $0 -- basket gak dibuka (bukan error).`); return null; }
     const modal = modalFull * MODAL_ACTIVE_FRACTION;
     const notionalUsd = modal * (FINAL_RECIPE.layerSchedulePct[0] / 100);
 
@@ -1039,7 +1042,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       entryOrder = await exec.placeMarketEntry({ symbol, direction: 'buy', notionalUsd, livePrice });
     } catch (e) {
       if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
-        const alertKey = `${path.basename(journalPath, '.json')}-nyopet-fedgrid-${assetCfg.label}`;
+        const alertKey = `${path.basename(jPath, '.json')}-nyopet-fedgrid-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
           await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Nyopet (Fed Dovish Grid)', assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }), assetCfg);
         }

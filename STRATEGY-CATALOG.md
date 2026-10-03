@@ -114,7 +114,8 @@ Terakhir diperbarui: **3 Okt 2026**.
   berikutnya mulai 19 Okt 2026. Leg real sama (anggaran khusus, kepemilikan dicatat `kaela-spot-real-ledger.json`).
 - 🔬 **DCA Tangga Leverage BingX Std Futures** ($3/hari x3 -> x5/x7/x9 kalau likuidasi, ide Olan) — dari bottom 2022 +437%,
   TAPI mulai di waktu salah -57% s/d -100%. API cuma baca -> Olan buka manual, Kaela pantau likuidasi (`stdFuturesLadderMonitor.js`).
-  Rencana mulai 20 Okt 2026 (akhir window bear).
+  Rencana mulai 20 Okt 2026 (akhir window bear). Keputusan Olan 3 Okt: ini jadi jalur DCA real-nya (~Rp50rb/hari x3, saran
+  margin >= Rp55rb biar lolos min 0,0001 BTC), gantiin spot DCA real (anggaran spot tetap 0).
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

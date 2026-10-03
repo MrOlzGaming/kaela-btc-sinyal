@@ -9,17 +9,18 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 
-1. **Isi saldo real Bybit** (Funding -> Unified Trading) — Ranger Rotasi real nunggu ini. Gak mendesak, kapan siap.
-2. **Saldo demo Bitget** -- key demo TERSAMBUNG (uid demo 27090010955, induk akun utama) tapi demo BARU (BTCUSDT/USDT, yg dipake
-   API) saldonya 0 & gak ada tombol isi. Saldo 3.000 SUSDT ada di demo LAMA (SBTCSUSDT) yang API-nya udah dimatiin Bitget
-   (V1 decommissioned, SBTCSUSDT "does not exist", 9+ endpoint saldo dicek kosong). Jalan keluar: tanya CS Bitget cara top up
-   demo baru buat API, ATAU pakai Bitget real-only begitu ada saldo real. Sementara slot ICT Sweep TETAP di Binance.
-3. **Anggaran DCA real** (`spot-live-config.json realBudgetUsd`, sekarang 0) — sebut angkanya kalau mau Compound Alt DCA /
-   Musiman BTC belanja beneran. Window tanam alt mulai **19 Okt 2026**.
-4. **Mulai DCA Tangga Leverage** BingX Standard Futures ($3/hari x3) — rencana **20 Okt 2026** (akhir window bear), buka
-   manual (API cuma baca), Kaela pantau likuidasi otomatis.
-5. **Izin deploy Netlify** — tiap update tampilan dashboard Kaela Access/BTC Sinyal yang butuh upload ulang.
-6. **Isi saldo real Binance** (Sniper USDT / Ranger USDC) — semua leg real BTC udah siap, saldo $0 = skip aman.
+Keputusan Olan 3 Okt 2026 malam:
+1. **Saldo real Bybit** — nanti (belum ada dana). Ranger Rotasi real nunggu ini.
+2. **Bitget** — demo GAK dikejar lagi. Nanti langsung REAL begitu Olan isi saldo (key real udah tersambung, saldo $0,58).
+   Key demo tetap tersimpan kalau suatu saat saldo demo baru bisa diisi.
+3. **DCA real** — BUKAN spot DCA. Olan DCA sendiri BTC long x3 di **BingX Standard Futures** ~Rp50.000/hari (tiap posisi
+   independen, berlapis-lapis). `spot-live-config.json realBudgetUsd` TETAP 0 (leg real spot DCA diem). Catatan: Rp50rb ≈
+   $2,80 (kurs 17.883) x3 = $8,39 < min 0,0001 BTC (~$8,48) -> saran margin >= ~Rp55rb.
+4. **DCA Tangga** — Kaela CUMA mantau (`stdFuturesLadderMonitor.js`, tiap menit): posisi kelikuidasi -> DM WA Olan, Olan
+   ganti posisi sendiri. Rencana riset mulai 20 Okt 2026 (akhir window bear).
+5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
+   luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
+6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang.
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 

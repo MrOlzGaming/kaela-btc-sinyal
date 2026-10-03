@@ -2,5 +2,5 @@
   "allowReal": true,
   "realBudgetUsd": 0,
   "_note": "Leg REAL Compound Alt DCA + Musiman BTC (spotRealLeg.js via spotAltLiveExecutor.js). Rencana beli/jual SAMA demo. Belanja CUMA dari saldo USDT spot real DAN maksimal realBudgetUsd kumulatif (hasil jual balik ke anggaran). realBudgetUsd 0 = gak belanja (setoran Olan yang mampir di Spot gak kemakan). Isi angka ini kalau Olan alokasiin dana DCA -- sesuai kebijakan setoran bulanan, Alt DCA dapet jatah kalau 4 dompet trading udah cap $1000.",
-  "_status": "3 Okt 2026 -- dipasang (arahan Olan \"semua demo+real\"), anggaran 0 nunggu alokasi."
+  "_status": "3 Okt 2026 -- dipasang, anggaran 0. Keputusan Olan malam itu: DCA real dilakukan SENDIRI via BingX Standard Futures (BTC long x3 ~Rp50rb/hari, dipantau stdFuturesLadderMonitor.js), BUKAN spot DCA -> realBudgetUsd tetap 0 kecuali Olan bilang lain."
 }

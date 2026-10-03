@@ -63,6 +63,8 @@ Terakhir diperbarui: **3 Okt 2026**.
   PF 1,03 -> p=0,000. `rangerSweep.js`.
   + ✅ **Filter Fear & Greed** (4 Okt): SHORT di-skip kalau F&G < 25 (takut ekstrem = short di dasar, rugi konsisten 2 era n=70
   PF 0,55/0,09). Slot jadi PF 1,87/1,81 (dari 1,45/1,55); ambang 15-35 semua membaik (dataran). Long gak difilter (gak ada pola).
+  🔬 Cek ke short Ranger pola chart/FVG (`fngRangerStudy.js`): cuma 7 short 2019-26 (2 pas F&G<25 dua-duanya rugi) -> searah tapi
+  n kecil, GAK dipasang. Sampingan: LONG Ranger pas takut ekstrem PF 4,33 (n=10) -- "beli pas orang takut", observasi doang.
 - ✅ **Fed Dovish Grid** (FOMC/NFP dovish + tren SMA480, basket layer, LONG) — n=38, win 81,6%, PF 3,03, +163%, DD 27,6%.
   ⚠️ 2022 rugi (PF 0,26) — nyambung ke rezim macro. Demo + real (sejak 3 Okt dua-duanya beneran jalan).
 - ✅ **Ranger Emas 4H** (MEXC, long doang, real doang — MEXC gak ada demo) — exit 1/2@3R + SMA60, n kecil, dipantau.

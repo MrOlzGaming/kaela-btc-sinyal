@@ -113,6 +113,16 @@ Terakhir diperbarui: **3 Okt 2026**.
   PF > 1, 27/48 p < 0,05 vs kebetulan ~2,4; contoh lb 90h q0,98 H24j PF 1,58 / 2,30). TAPI **2025-26 rugi di 43/48 kombinasi**
   (median PF 0,74) -- edge MATI di rezim terbaru. Filter tren SMA50/100/200 gak nolong (2025-26 malah lebih jelek). Gak dipasang.
   Revisit tiap kuartal (jalanin ulang script, cek apakah 2025-26+ balik positif) -- lihat GANTUNGAN.
+- 🔬 **Efek hari: LONG Senin + Rabu 24 jam (08:00 -> 08:00 WITA)** (4 Okt, `backtest/calendarEffectsStudy.js`, pilih di <2023, uji
+  di >=2023) — 2 hari terbaik era lama TETAP 2 terbaik era baru (peringkat 1/21 pasangan hari, korelasi efek per hari 0,79),
+  Kamis terburuk di dua era. Net +0,31%/trade dua era (PF 1,23 / 1,36, holdout z 2,3), 6/8 tahun positif. TAPI: edge tipis vs
+  goyangan harian (DD 42-50% notional), SL darurat 2-4% malah ngerusak era lama, digeser mulai 00:00/04:00 WITA efeknya ilang.
+  Gak dipasang: uji demo 100 trade gak bisa ngebuktiin apa2 (galat statistik ~ sebesar efeknya), profil untung/DD kalah jauh dari
+  Ranger. Short Kamis (/2) cuma +0,08%/trade di era baru, ~0 di era lama.
+- ❌ **Pergantian bulan (turn of the month)** (4 Okt, sama) — era lama kuat (k2 m1 net +2,2%/trade, PF 3,5) tapi era baru KEBALIK
+  (net -0,5%, cuma 3/20 varian positif). Overfit/kedaluwarsa klasik.
+- ℹ️ **Expiry opsi bulanan Deribit** (Jumat terakhir 16:00 WITA) — 24 jam sebelum expiry BTC lebih kalem dari Jumat biasa di dua era
+  (efek "pinning": |gerak| 2,25% vs 2,94% / 1,74% vs 2,04%), tapi arah naik/turun gak konsisten -> gak bisa ditradingin arah.
 - ❌ **News 5M "ikut/lawan candle pertama"** (CPI/PPI/NFP/FOMC 2019-26) — 2/160 lolos (FOMC ikut 15m, n kecil). Satu pola
   stabil: JANGAN fade candle 5m pertama CPI (PF 0,29-0,39).
 

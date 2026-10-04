@@ -298,8 +298,10 @@
   {
     "dateKey": "2026-10-05",
     "poolCounts": {
-      "Foundry USA": 1,
-      "F2Pool": 2
+      "Foundry USA": 3,
+      "F2Pool": 2,
+      "AntPool": 1,
+      "SpiderPool": 1
     }
   }
 ]

@@ -218,5 +218,15 @@
     "fromExchangeBtc": 5269.541721330001,
     "netFlowBtc": -1978.22635214,
     "btcPriceUsd": 84867.27
+  },
+  {
+    "dateKey": "2026-10-05",
+    "recordedAt": "2026-10-04T16:01:46.785Z",
+    "totalBtc": 4424.4554178299995,
+    "count": 4,
+    "toExchangeBtc": 0,
+    "fromExchangeBtc": 0,
+    "netFlowBtc": 0,
+    "btcPriceUsd": 85263.91
   }
 ]

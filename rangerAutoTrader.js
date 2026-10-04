@@ -153,6 +153,10 @@ const CANDLES_NEEDED_4H = 1560 + 260; // warmup + buffer buat window terlebar (w
 // posisi yang udah kebuka pas window ganti) -- BTC pakai isBtcBearWindow (siklus halving, gak
 // butuh candle). Emas pakai SMA200-di-4H (reuse FVG_TREND_SMA_LEN_4H=1200, `candles4h` WAJIB
 // dioper caller -- gak fetch sendiri di sini biar caller bisa reuse fetch yang udah ada kalau ada).
+// Aset yang KENA tutup paksa WINDOW_FLIP & gerbang arah window -- BTC doang (Emas long-only tanpa window sejak 13 Sep;
+// BUG-KAELATRADE-0056: dulu Emas masih ditutup paksa). Dites di regressionTests.js.
+function windowFlipApplies(assetKey) { return assetKey === 'btc'; }
+
 function isBearWindowFor(assetKey, candles4h) {
   if (assetKey === 'btc') return isBtcBearWindow(new Date());
   if (!candles4h || candles4h.length === 0) return false;
@@ -683,7 +687,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       // (backtest/donchianGoldLiveExit.js): perilaku itu n431 trade, 410 tutup paksa, PF 1,11 (era lama modal x0,66 DD 44%)
       // vs desain yang divalidasi pas milih exit 1/2@3R (tanpa window/tutup paksa) PF 4,29. Sekarang tutup paksa BTC doang,
       // KONSISTEN sama gerbang entry. (Belum pernah kejadian: 0 WINDOW_FLIP Emas di log eksekutor & jurnal semua akun.)
-      if (assetCfg.key === 'btc') {
+      if (windowFlipApplies(assetCfg.key)) {
         const bearNow = isBearWindowFor(assetCfg.key, null);
         const wrongSide = (floating.direction === 'buy' && bearNow) || (floating.direction === 'sell' && !bearNow);
         if (wrongSide) {
@@ -907,7 +911,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // yang dicabut -- posisi yang lagi floating pas window BENERAN ganti TETAP kena WINDOW_FLIP
     // force-close SEPERTI BIASA (safety net itu TIDAK ikut tercabut, cuma pause pre-entry ini doang).
 
-    const inBearWindow = assetKey === 'btc' && isBearWindowFor(assetKey, candles4h);
+    const inBearWindow = windowFlipApplies(assetKey) && isBearWindowFor(assetKey, candles4h);
     const patternParams = inBearWindow ? { ...PATTERN_PARAMS_4H, allowShort: true } : PATTERN_PARAMS_4H;
 
     // 2-slot independen (23 Sep 2026) -- pattern & FVG dicek TERPISAH per slot yang KOSONG,
@@ -1371,7 +1375,7 @@ async function main() {
 // sniperAutoAnalysis.js bisa REUSE buat sinyal short window-bear timeframe Nyopet (4H) -- fungsi
 // murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createRangerTrader
 // yang emang eksekusi trading, itu tetap TERGUARD if require.main===module di bawah).
-module.exports = { createRangerTrader, createOlanDemoRangerTrader, DEFAULT_JOURNAL_PATH, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
+module.exports = { createRangerTrader, createOlanDemoRangerTrader, DEFAULT_JOURNAL_PATH, windowFlipApplies, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR nyopetAutoTrader.js:', e.message); process.exit(1); });

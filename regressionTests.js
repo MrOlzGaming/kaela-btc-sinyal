@@ -1261,6 +1261,20 @@ async function main() {
     assert.strictEqual(sent.length, 2);
   });
 
+  // BUG-KAELATRADE-0056 (4 Okt 2026): Ranger Emas long-only TANPA window, tapi monitor dulu masih nutup paksa long Emas
+  // (WINDOW_FLIP) tiap close < SMA1200 -- backtest exit live PF 4,29 -> 1,11. Gerbang window/tutup paksa WAJIB BTC doang.
+  await test('Ranger: window bear & tutup paksa WINDOW_FLIP cuma BTC, Emas gak pernah (0056)', async () => {
+    const { windowFlipApplies } = require('./rangerAutoTrader');
+    assert.strictEqual(windowFlipApplies('btc'), true);
+    assert.strictEqual(windowFlipApplies('xau'), false);
+    // statis: SEMUA pemanggilan isBearWindowFor di rangerAutoTrader.js wajib dijaga windowFlipApplies (baris sama / baris
+    // tepat di atasnya, mis. `if (windowFlipApplies(..)) {`)
+    const src = fs.readFileSync(require('path').join(__dirname, 'rangerAutoTrader.js'), 'utf8').split('\n');
+    const idx = src.map((l, i) => i).filter((i) => /isBearWindowFor\(/.test(src[i]) && !/^\s*(\/\/|function isBearWindowFor)/.test(src[i]));
+    assert.ok(idx.length >= 2, `minimal 2 pemanggilan (gerbang entry + tutup paksa), ketemu ${idx.length}`);
+    for (const i of idx) assert.ok(/windowFlipApplies\(/.test(src[i]) || /windowFlipApplies\(/.test(src[i - 1]), `pemanggilan tanpa gerbang BTC (baris ${i + 1}): ${src[i].trim()}`);
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

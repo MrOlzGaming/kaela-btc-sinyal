@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 84760.01,
+    "price": 86588.01,
     "conviction": {
       "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
@@ -8,7 +8,7 @@
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 66 netral"
+          "reason": "RSI 65 netral"
         },
         {
           "label": "MVRV (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "67/100 -- Greed (kontrarian)"
+          "reason": "65/100 -- Greed (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": 0,
-          "reason": "-0.38% (7 hari) -- stabil"
+          "reason": "-0.35% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -64,13 +64,13 @@
     },
     "advancedMacro": {
       "dvol": {
-        "value": 35.44,
-        "changePct": 1.4891179839633333
+        "value": 36.43,
+        "changePct": 3.8779583689763317
       },
       "stablecoin": {
-        "current": 258257296759.73486,
-        "weekAgo": 259237203406.878,
-        "changePct": -0.3779961495746983
+        "current": 258272960805.48242,
+        "weekAgo": 259187203552.49448,
+        "changePct": -0.35273452334111405
       },
       "yieldCurve": {
         "value": 0.45,
@@ -111,7 +111,7 @@
     }
   },
   "xau": {
-    "price": 4147.46,
+    "price": 4151.42,
     "conviction": {
       "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
@@ -135,34 +135,39 @@
           "label": "Fed Funds Rate",
           "v": -1,
           "reason": "DINAIKKAN (hawkish) -- historis BEARISH buat aset risiko (BTC) & Emas -- likuiditas mengetat, biaya peluang pegang Emas naik"
+        },
+        {
+          "label": "COT Smart Money",
+          "v": 0,
+          "reason": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade) -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote"
         }
       ],
-      "totalFactors": 4
+      "totalFactors": 5
     },
     "trackRecord": {
-      "total": 24,
-      "correct": 10,
-      "winRatePct": 41.66666666666667
+      "total": 25,
+      "correct": 11,
+      "winRatePct": 44
     },
     "regime": {
-      "corr30": -0.40256400609441717,
-      "corr90": -0.47044027665926114,
+      "corr30": -0.38570457644416156,
+      "corr90": -0.47032037629832185,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 81,
-      "latestDate": "2026-10-02"
+      "sampleDays": 82,
+      "latestDate": "2026-10-04"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-10-02",
-          "value": 101.924
+          "date": "2026-10-04",
+          "value": 101.89
         },
         "prev": {
           "date": null,
-          "value": 101.2
+          "value": 101.37
         },
-        "changePct": 0.7154150197628496,
+        "changePct": 0.5129722797671855,
         "trend": {
           "arah": "MENGUAT",
           "efekEmas": "cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
@@ -184,12 +189,18 @@
         }
       }
     },
-    "cot": null,
+    "cot": {
+      "date": "2026-09-29",
+      "net": 218632,
+      "netPctOi": 53.78983210974866,
+      "label": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade)",
+      "weekChangeContracts": -7221
+    },
     "yieldCurve": {
       "value": 0.45,
       "date": "2026-10-02",
       "inverted": false
     }
   },
-  "updatedAt": "2026-10-03T23:15:53.325Z"
+  "updatedAt": "2026-10-04T23:15:54.212Z"
 }

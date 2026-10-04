@@ -1,14 +1,14 @@
 {
   "regression": {
-    "dateKey": "2026-10-04",
-    "at": "2026-10-03T21:30:31.262Z",
+    "dateKey": "2026-10-05",
+    "at": "2026-10-04T19:00:49.384Z",
     "passed": 103,
     "failed": 0,
     "ok": true,
     "summary": "103 lolos, 0 gagal",
     "exitCode": 0,
     "durationSec": 6,
-    "tail": "  OK   rangerRotation: selftest alur penuh (prioritas koin, 1 posisi, partial 2R, trailing, SL, window flip, gak nutup punya Ninja) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n  OK   stdFuturesLadderMonitor: minus 50% -> pengingat umum cek posisi ke GRUP Wibowo (1x, tanpa sebut collateral), 75% -> pengingat lanjutan, abis collateral ditambah reset\n\n103 lolos, 0 gagal (dari 2026-10-03 test run)\n"
+    "tail": "  OK   rangerRotation: selftest alur penuh (prioritas koin, 1 posisi, partial 2R, trailing, SL, window flip, gak nutup punya Ninja) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n  OK   stdFuturesLadderMonitor: minus 50% -> pengingat umum cek posisi ke GRUP Wibowo (1x, tanpa sebut collateral), 75% -> pengingat lanjutan, abis collateral ditambah reset\n\n103 lolos, 0 gagal (dari 2026-10-04 test run)\n"
   },
   "bingxApi": {
     "lastRunDateKey": "2026-10-04",

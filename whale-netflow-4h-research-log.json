@@ -1251,12 +1251,12 @@
   },
   {
     "bucketKey": "2026-10-05T04",
-    "totalBtc": 35469.46811026,
-    "count": 37,
-    "toExchangeBtc": 0,
+    "totalBtc": 43090.16528398,
+    "count": 44,
+    "toExchangeBtc": 658.50668177,
     "fromExchangeBtc": 541.20846221,
-    "netFlowBtc": 541.20846221,
-    "btcPriceUsd": 86057.99,
-    "updatedAt": "2026-10-04T21:46:50.786Z"
+    "netFlowBtc": -117.29821956,
+    "btcPriceUsd": 85998,
+    "updatedAt": "2026-10-04T22:01:46.221Z"
   }
 ]

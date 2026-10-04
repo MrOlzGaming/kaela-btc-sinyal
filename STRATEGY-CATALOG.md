@@ -71,6 +71,9 @@ Terakhir diperbarui: **3 Okt 2026**.
   n kecil, GAK dipasang. Sampingan: LONG Ranger pas takut ekstrem PF 4,33 (n=10) -- "beli pas orang takut", observasi doang.
 - ✅ **Fed Dovish Grid** (FOMC/NFP dovish + tren SMA480, basket layer, LONG) — n=38, win 81,6%, PF 3,03, +163%, DD 27,6%.
   ⚠️ 2022 rugi (PF 0,26) — nyambung ke rezim macro. Demo + real (sejak 3 Okt dua-duanya beneran jalan).
+  ℹ️ Cek paritas 5 Okt (`backtest/fedGridLayerTriggerParity.js`): live nambah layer pas harga -2% dari RATA2 posisi, backtest
+  dari LAYER TERAKHIR -> live nambah layer lebih cepat. Hasil: live total untung LEBIH GEDE dua era (+55% vs +51% / +60% vs +37%
+  modal), tapi SL lebih sering (7 vs 4) & PF era lama 1,69 vs 2,00; rugi per basket tetap dibatasi SL -10% modal. Dibiarin.
 - ✅ **Ranger Emas 4H** (MEXC, long doang, real doang — MEXC gak ada demo) — exit 1/2@3R + SMA60, n kecil, dipantau.
   Live TANPA window bull/bear (window SMA1200 lama cuma bikin whipsaw/tutup paksa). Riset window lama (buffer band, ADX,
   RESEARCH-LOG 15 Sep) pakai baseline window yang udah gak live -- jangan dipakai buat banding lagi.

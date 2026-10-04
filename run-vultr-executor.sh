@@ -265,7 +265,11 @@ timeout -k 10 60 node actionableLiquidityRadar.js >> "$LOG_FILE" 2>&1 || log "ac
 # aman dipanggil tiap siklus 15 menit (state dedup+cooldown sendiri, lihat file-nya).
 timeout -k 10 60 node smartMoneyDivergenceMonitor.js >> "$LOG_FILE" 2>&1 || log "smartMoneyDivergenceMonitor.js ERROR/TIMEOUT (exit $?)"
 timeout -k 10 120 node econCalendarMonitor.js >> "$LOG_FILE" 2>&1 || log "econCalendarMonitor.js ERROR/TIMEOUT (exit $?)"
-timeout -k 10 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1 || log "whaleDailyDigest.js ERROR/TIMEOUT (exit $?)"
+# (5 Okt 2026) exit 124 (kepotong timeout) = lambat, BUKAN error: progress kesimpan per blok, run berikutnya lanjut (373x
+# "ERROR/TIMEOUT" nyampah ke Watchdog). Ketinggalan beneran dilaporin ERROR dari dalam script (LAG_ALARM_BLOCKS).
+timeout -k 10 120 node whaleDailyDigest.js >> "$LOG_FILE" 2>&1; WHALE_RC=$?
+if [ "$WHALE_RC" -eq 124 ]; then log "whaleDailyDigest.js kepotong batas 120 dtk (progress per blok tersimpan, lanjut siklus depan)."
+elif [ "$WHALE_RC" -ne 0 ]; then log "whaleDailyDigest.js ERROR (exit $WHALE_RC)"; fi
 
 # Invariant check journal Nyopet/Sniper (5 Sep 2026, permintaan Olan: "cari anomali/bug otomatis")
 # -- READ-ONLY, ngecek hal yang HARUSNYA selalu bener (PnL closed gak boleh null, leverage gak

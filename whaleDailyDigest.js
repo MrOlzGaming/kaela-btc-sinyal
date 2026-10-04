@@ -56,6 +56,7 @@ const WHALE_THRESHOLD_BTC = 300;
 // ~1 blok baru/siklus 15 menit) ini LEBIH dari cukup, backlog gede tetap kelar (nyicil lebih
 // banyak siklus -- SEKARANG beneran nyicil TIAP SIKLUS, bukan cuma 1x/hari, lihat fix bug di atas).
 const MAX_BLOCKS_PER_RUN = 8;
+const LAG_ALARM_BLOCKS = 72; // ~12 jam (blok ~10 mnt) -- kejar 8 blok/15 mnt jauh lebih cepat dari chain, lag segini = ada yang macet
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return { lastProcessedHeight: null };
@@ -100,6 +101,12 @@ async function main() {
     const endHeight = Math.min(latestHeight, startHeight + MAX_BLOCKS_PER_RUN - 1);
     if (endHeight < latestHeight) {
       console.log(`[WhaleDailyDigest] Ketinggalan banyak blok, cuma proses ${startHeight}-${endHeight} (batas ${MAX_BLOCKS_PER_RUN} blok/run, sisa lanjut run berikutnya).`);
+    }
+    // (5 Okt 2026) Timeout eksekutor (exit 124) di script ini BUKAN error lagi (progress kesimpan per blok, run berikutnya
+    // lanjut). Yang BENERAN masalah = scan ketinggalan jauh dari ujung chain -> itu yang dilaporin ERROR (ke Watchdog).
+    const lagBlocks = latestHeight - startHeight + 1;
+    if (lagBlocks > LAG_ALARM_BLOCKS) {
+      console.log(`[WhaleDailyDigest] ERROR: scan whale ketinggalan ${lagBlocks} blok (~${Math.round(lagBlocks / 6)} jam) dari ujung chain -- data netflow/rekap gak lengkap, cek koneksi blockchain.info.`);
     }
 
     const poolCounts = {};

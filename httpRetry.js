@@ -3,11 +3,17 @@
 // seluruh run gagal, laporan/sinyal hari itu bisa lolos tanpa ada yang sadar. Retry 3x kecil
 // jauh lebih murah daripada itu.
 
+// (5 Okt 2026) Batas waktu default per PERCOBAAN -- dulu gak ada sama sekali: 1 request yang ngegantung (kejadian:
+// rawblock blockchain.info di whaleDailyDigest.js) ngabisin seluruh jatah `timeout` eksekutor (exit 124, 373x di log).
+// Caller yang udah ngasih `signal` sendiri dipakai apa adanya. SENGAJA gak dipasang di fetchRetryNetworkErrorOnly di bawah
+// (kirim WA): abort pas server udah nerima request -> retry -> pesan bisa DOBEL.
+const DEFAULT_ATTEMPT_TIMEOUT_MS = 30000;
+
 async function fetchWithRetry(url, options = {}, attempts = 3, delayMs = 1500) {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(url, options.signal ? options : { ...options, signal: AbortSignal.timeout(DEFAULT_ATTEMPT_TIMEOUT_MS) });
       if (res.ok) return res;
       lastErr = new Error(`HTTP ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
     } catch (e) {

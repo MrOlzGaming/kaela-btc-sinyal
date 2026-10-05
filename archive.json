@@ -3063,5 +3063,10 @@
     "type": "whale-daily",
     "date": "2026-10-05T16:01:08.449Z",
     "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-10-06\n5 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 3.782,94 BTC berpindah (~$322,435,481 / ~Rp5.776.450.640.243)\nTerbesar: 1.402,19 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 5 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "econ-calendar",
+    "date": "2026-10-05T18:01:08.029Z",
+    "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Kamis, 8 Okt · 02:00 WITA\n📰 *FOMC Meeting Minutes*\n🇺🇸 Federal Open Market Committee Meeting Minutes\n🇮🇩 Notulen rapat The Fed sebelumnya (dirilis ~3 minggu setelah rapat)\nLevel: 🔴 Boss (efek tinggi)\nArah BTC (dari nada omongan):\n• Nada galak/hawkish → 📉 BTC cenderung tertekan\n• Nada lunak/dovish → 📈 BTC cenderung menguat\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

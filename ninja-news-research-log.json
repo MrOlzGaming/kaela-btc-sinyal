@@ -1,0 +1,36 @@
+[
+  {
+    "key": "2026-10-05T10:00",
+    "label": "ISM Services PMI (Sep)",
+    "timeMs": 1791208800000,
+    "eur": {
+      "base": 1.1191,
+      "s5": 1.1191,
+      "m1": 1.119,
+      "m2": 1.1194,
+      "m5": 1.1195,
+      "m10": 1.1197,
+      "m15": 1.1195
+    },
+    "btc": {
+      "base": 86435.11,
+      "s5": 86410,
+      "m1": 86296.01,
+      "m2": 86388.01,
+      "m5": 86320,
+      "m10": 86636.15,
+      "m15": 86643.15
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu"
+    }
+  }
+]

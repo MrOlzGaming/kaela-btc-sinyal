@@ -1,16 +1,11 @@
 {
   "handled": {
     "2026-10-05T10:00": {
-      "armedAt": "2026-10-05T13:58:05.930Z"
+      "armedAt": "2026-10-05T13:58:05.930Z",
+      "doneAt": "2026-10-05T14:15:00.301Z"
     }
   },
-  "active": {
-    "key": "2026-10-05T10:00",
-    "label": "ISM Services PMI (Sep)",
-    "pid": 632203,
-    "startedAt": 1791208685930,
-    "until": 1791210730000
-  },
+  "active": null,
   "floating": null,
   "closedCount": 0,
   "stats": {

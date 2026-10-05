@@ -1,0 +1,32 @@
+{
+  "handled": {
+    "2026-10-05T10:00": {
+      "armedAt": "2026-10-05T13:58:05.930Z"
+    }
+  },
+  "active": {
+    "key": "2026-10-05T10:00",
+    "label": "ISM Services PMI (Sep)",
+    "pid": 632203,
+    "startedAt": 1791208685930,
+    "until": 1791210730000
+  },
+  "floating": null,
+  "closedCount": 0,
+  "stats": {
+    "demo": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0,
+      "grossWinUsd": 0,
+      "grossLossUsd": 0
+    },
+    "real": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0,
+      "grossWinUsd": 0,
+      "grossLossUsd": 0
+    }
+  }
+}

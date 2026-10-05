@@ -3058,5 +3058,10 @@
     "type": "econ-calendar-headsup",
     "date": "2026-10-05T13:55:02.164Z",
     "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 22:00 WITA\n\n📰 *ISM Services PMI*\n🇺🇸 Institute for Supply Management Services Purchasing Managers' Index\n🇮🇩 Survei manajer pembelian perusahaan JASA AS: di atas 50 = tumbuh, di bawah 50 = menyusut\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 55,1 · Sebelumnya: 55,4\nArah BTC (logika makro, keyakinan sedang):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n🥷 *Ninja News siaga (Demo)*\nDolar gerak ≥0,1% di 10 detik pertama → Kaela nyopet BTC arah KEBALIKAN dolar.\nSL 0,8% · trailing aktif +0,6% · maks 30 menit. Dolar adem = gak entry."
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-10-05T16:01:08.449Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-10-06\n5 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 3.782,94 BTC berpindah (~$322,435,481 / ~Rp5.776.450.640.243)\nTerbesar: 1.402,19 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 5 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

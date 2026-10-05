@@ -76,5 +76,31 @@
       "binanceGlobalLongPct": 61.82,
       "topVsGlobalGap": 8.18
     }
+  },
+  {
+    "recordedAt": "2026-10-05T14:05:02.923Z",
+    "key": "2026-10-05T10:00:00-04:00__ISM Services PMI",
+    "title": "ISM Services PMI",
+    "timeMs": 1791208800000,
+    "actual": "74",
+    "forecast": "55.1",
+    "previous": "55.4",
+    "conclusionLabel": "HAWKISH 📉",
+    "expectedDirection": "tertekan",
+    "dxyChangePct": 0.0195,
+    "btcBefore": 86281.2,
+    "btcAfter": 86253.9,
+    "btcReactionPct": -0.0316,
+    "divergence": false,
+    "positioningBefore": {
+      "fundingRate": 0.0000600347071056,
+      "openInterest": 29062.042300000103,
+      "longAccountPct": 52.61,
+      "shortAccountPct": 47.39,
+      "fearGreed": 70,
+      "binanceTopLongPct": 64.51,
+      "binanceGlobalLongPct": 49.95,
+      "topVsGlobalGap": 14.56
+    }
   }
 ]

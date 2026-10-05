@@ -147,7 +147,38 @@ function collect() {
     if (p.set && p.set.reasonCloseCode && !r.reasonClose) r.reasonClose = reasonClose(p.set.reasonCloseCode);
     r.patched = true;
   }
+  const recs = [...byKey.values()];
+  for (const r of recs) fillPnlFromIncome(r, recs);
   return [...byKey.values()].sort((a, b) => String(b.openedAt || '').localeCompare(String(a.openedAt || '')));
+}
+
+// PnL "gak kebaca" (posisi Olan ditutup manual pas sistem offline, 10-14 Sep) -- diisi dari riwayat income Binance yang UDAH
+// tersimpan (tradeHistoryStore, multi-account-state/trade-history/, cuma ada di VPS -- gak manggil API apa pun di sini).
+// Jumlah REALIZED_PNL + COMMISSION + FUNDING_FEE simbol itu di jendela buka..tutup(+15 mnt). Ditandai `pnlSource: 'income'`
+// biar jelas ini rekonstruksi, bukan angka jurnal. Riwayat belum nyampe tanggal tutup / gak ada realisasi -> tetap '?'.
+const INCOME_TYPES = new Set(['REALIZED_PNL', 'COMMISSION', 'FUNDING_FEE']);
+const _incomeCache = {};
+function incomeStore(file) {
+  if (!(file in _incomeCache)) _incomeCache[file] = readJson(`multi-account-state/trade-history/${file}`);
+  return _incomeCache[file];
+}
+function fillPnlFromIncome(r, all) {
+  if (r.status !== 'tutup' || r.netUsd !== null || r.exchange !== EXCHANGE.binance || r.account !== 'Olan Real' || !r.openedAt || !r.closedAt) return;
+  const store = incomeStore(`binance-${OLAN}-real.json`);
+  const entries = (store && store.entries) || [];
+  // jendela berhenti di buka posisi BERIKUTNYA (akun+exchange sama) biar realisasi trade lain gak kehitung dobel
+  const from = Date.parse(r.openedAt);
+  const nextOpen = Math.min(...all.filter((x) => x !== r && x.account === r.account && x.exchange === r.exchange && x.openedAt && Date.parse(x.openedAt) > from).map((x) => Date.parse(x.openedAt)));
+  const to = Math.min(Date.parse(r.closedAt) + 15 * 60000, nextOpen);
+  if (!entries.length || Math.max(...entries.map((e) => e.time)) < to) return; // riwayat belum nyampe -> gak nebak
+  for (const sym of ['BTCUSDC', 'BTCUSDT']) {
+    const inWin = entries.filter((e) => e.symbol === sym && e.time >= from && e.time <= to && INCOME_TYPES.has(e.type));
+    if (!inWin.some((e) => e.type === 'REALIZED_PNL' && e.amount !== 0)) continue;
+    const sum = (t) => inWin.filter((e) => e.type === t).reduce((a, e) => a + e.amount, 0);
+    r.grossUsd = sum('REALIZED_PNL'); r.feeUsd = -(sum('COMMISSION') + sum('FUNDING_FEE')); r.netUsd = r.grossUsd - r.feeUsd;
+    r.pnlSource = 'income'; r.incomeSymbol = sym;
+    return;
+  }
 }
 
 // ---------- tampilan ----------
@@ -197,7 +228,7 @@ function toMarkdown(trades, now) {
     const ctx = Object.entries(r.context || {}).filter(([k]) => !CTX_HIDE.has(k)).slice(0, 12);
     if (ctx.length) L.push(`- Konteks entry: ${ctx.map(([k, v]) => `${k}=${typeof v === 'number' ? +v.toPrecision(8) : v}`).join(', ')}`);
     L.push(`- Tutup: ${wita(r.closedAt)} @ ${px(r.exit)} — Alasan tutup: ${r.reasonClose || '?'}`);
-    L.push(`- Hasil: bersih ${usd(r.netUsd)}${r.grossUsd !== null ? ` (kotor ${usd(r.grossUsd)}, fee $${(r.feeUsd || 0).toFixed(2)})` : ''}${r.seed ? ' _(dipulihin dari pesan WA)_' : ''}`);
+    L.push(`- Hasil: bersih ${usd(r.netUsd)}${r.grossUsd !== null ? ` (kotor ${usd(r.grossUsd)}, fee $${(r.feeUsd || 0).toFixed(2)})` : ''}${r.seed ? ' _(dipulihin dari pesan WA)_' : ''}${r.pnlSource === 'income' ? ` _(direkonstruksi dari riwayat income Binance ${r.incomeSymbol})_` : ''}`);
     L.push('');
   }
   return L.join('\n') + '\n';

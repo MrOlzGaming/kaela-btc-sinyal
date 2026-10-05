@@ -1,18 +1,18 @@
 {
   "regression": {
-    "dateKey": "2026-10-05",
-    "at": "2026-10-04T19:00:49.384Z",
-    "passed": 103,
+    "dateKey": "2026-10-06",
+    "at": "2026-10-05T19:00:54.465Z",
+    "passed": 108,
     "failed": 0,
     "ok": true,
-    "summary": "103 lolos, 0 gagal",
+    "summary": "108 lolos, 0 gagal",
     "exitCode": 0,
     "durationSec": 6,
-    "tail": "  OK   rangerRotation: selftest alur penuh (prioritas koin, 1 posisi, partial 2R, trailing, SL, window flip, gak nutup punya Ninja) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n  OK   stdFuturesLadderMonitor: minus 50% -> pengingat umum cek posisi ke GRUP Wibowo (1x, tanpa sebut collateral), 75% -> pengingat lanjutan, abis collateral ditambah reset\n\n103 lolos, 0 gagal (dari 2026-10-04 test run)\n"
+    "tail": "  OK   Kalender: ISM PMI (Medium) masuk pesan siap-siap, Final PMI S&P (Low) enggak\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n108 lolos, 0 gagal (dari 2026-10-05 test run)\n"
   },
   "bingxApi": {
     "lastRunDateKey": null,
-    "at": "2026-10-05T18:45:56.309Z",
+    "at": "2026-10-05T19:00:54.465Z",
     "ok": false,
     "executorHash": "d797d0a997bf6ee9",
     "verifiedAt": "2026-10-05T03:45:49.522Z",
@@ -21,6 +21,6 @@
     "failedNames": null,
     "aborted": true,
     "exitCode": 3,
-    "tail": "DEMO VST -- harga 85573.6, saldo 9922.6842 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: LONG 0.0350\n"
+    "tail": "DEMO VST -- harga 85590.8, saldo 9922.6842 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: LONG 0.0350\n"
   }
 }

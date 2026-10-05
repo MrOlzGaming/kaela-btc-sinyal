@@ -1275,6 +1275,16 @@ async function main() {
     for (const i of idx) assert.ok(/windowFlipApplies\(/.test(src[i]) || /windowFlipApplies\(/.test(src[i - 1]), `pemanggilan tanpa gerbang BTC (baris ${i + 1}): ${src[i].trim()}`);
   });
 
+  // 5 Okt 2026 (keputusan Olan): filter DXY Ranger dicabut buat BTC (motong untung dua era di exit trailing 3x), Emas tetap.
+  await test('Ranger: filter DXY cuma Emas, BTC gak lagi dijeda dolar kuat (5 Okt)', async () => {
+    const { DXY_FILTER_ASSETS } = require('./rangerAutoTrader');
+    assert.ok(!DXY_FILTER_ASSETS.includes('btc'), 'BTC gak boleh balik kena filter DXY tanpa riset baru');
+    assert.ok(DXY_FILTER_ASSETS.includes('xau'), 'Emas tetap pakai filter DXY');
+    const src = fs.readFileSync(require('path').join(__dirname, 'rangerAutoTrader.js'), 'utf8');
+    const calls = src.split('\n').filter((l) => /isDxyWeak\(/.test(l) && !/^\s*\/\//.test(l) && !/require\(/.test(l));
+    for (const l of calls) assert.ok(/DXY_FILTER_ASSETS\.includes\(/.test(l), `isDxyWeak tanpa gerbang aset: ${l.trim()}`);
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

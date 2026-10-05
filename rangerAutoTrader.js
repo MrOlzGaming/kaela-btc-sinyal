@@ -156,6 +156,8 @@ const CANDLES_NEEDED_4H = 1560 + 260; // warmup + buffer buat window terlebar (w
 // Aset yang KENA tutup paksa WINDOW_FLIP & gerbang arah window -- BTC doang (Emas long-only tanpa window sejak 13 Sep;
 // BUG-KAELATRADE-0056: dulu Emas masih ditutup paksa). Dites di regressionTests.js.
 function windowFlipApplies(assetKey) { return assetKey === 'btc'; }
+// Aset yang entry barunya dijeda pas DXY kuat (5 Okt 2026: BTC dicabut, lihat catatan di gerbang DXY). Dites di regressionTests.js.
+const DXY_FILTER_ASSETS = ['xau'];
 
 function isBearWindowFor(assetKey, candles4h) {
   if (assetKey === 'btc') return isBtcBearWindow(new Date());
@@ -951,7 +953,10 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
     // dua tes yang sama). null (fetch DXY gagal) = treat LOLOS, jangan block trading gara2 DXY
     // down -- ini konfirmasi TAMBAHAN, bukan syarat mutlak. 1x fetch dipakai bareng SEMUA kandidat
     // siklus ini (bukan per-kandidat) -- kalau dolar kuat, jedain SEMUA entry baru siklus ini.
-    const dxyWeak = await isDxyWeak(20).catch(() => null);
+    // ⛔ 5 Okt 2026 (keputusan Olan: "ikut saranmu") -- DICABUT buat BTC. Uji ulang pakai mesin live sekarang (2 slot +
+    // trailing 3x, backtest/dxyRangerTwoSlotCheck.js): filter DXY MOTONG untung di DUA era (+548% -> +427% / +374% -> +253%
+    // modal), semua SMA 10-50 sama, permutasi p 0,65 (= skip acak). Emas TETAP pakai (hasil campur, n kecil -- gak diubah).
+    const dxyWeak = DXY_FILTER_ASSETS.includes(assetKey) ? await isDxyWeak(20).catch(() => null) : null;
     if (dxyWeak === false) {
       console.log(`[NyopetAutoTrader] ${assetCfg.label}: sinyal ketemu (${validSigs.map((s) => s.patternType).join(', ')}) TAPI DXY lagi kuat (dolar menguat) -- skip, tunggu konfirmasi dolar lemah.`);
       return;
@@ -1375,7 +1380,7 @@ async function main() {
 // sniperAutoAnalysis.js bisa REUSE buat sinyal short window-bear timeframe Nyopet (4H) -- fungsi
 // murni, gak ada efek samping, aman di-require dari file lain (BEDA dari main()/createRangerTrader
 // yang emang eksekusi trading, itu tetap TERGUARD if require.main===module di bawah).
-module.exports = { createRangerTrader, createOlanDemoRangerTrader, DEFAULT_JOURNAL_PATH, windowFlipApplies, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
+module.exports = { createRangerTrader, createOlanDemoRangerTrader, DEFAULT_JOURNAL_PATH, windowFlipApplies, DXY_FILTER_ASSETS, main, fetchCandles4hPaginated, PATTERN_PARAMS_4H, CANDLES_NEEDED_4H, FVG_TREND_SMA_LEN_4H };
 
 if (require.main === module) {
   main().catch((e) => { console.error('ERROR nyopetAutoTrader.js:', e.message); process.exit(1); });

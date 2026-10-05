@@ -21,10 +21,6 @@ Keputusan Olan 3 Okt 2026 malam:
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
 6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang.
-7. **(BARU 4 Okt) Cabut filter DXY buat Ranger BTC?** — filter ini dulu permintaan Olan (31 Agu, "tiap entry diyakinkan DXY"),
-   lolos rigor di exit LAMA. Diuji ulang pakai mesin live sekarang (2 slot + trailing 3x, `backtest/dxyRangerTwoSlotCheck.js`):
-   filter MOTONG untung di dua era (+548% -> +427% / +374% -> +253% modal), semua SMA 10-50 sama, permutasi p = 0,65 (= skip acak).
-   Rekomendasi Kaela: cabut buat BTC (Emas biarin -- hasil campur). Nunggu jawaban Olan (ya/tidak), live gak diubah sebelum itu.
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 
@@ -52,6 +48,11 @@ Keputusan Olan 3 Okt 2026 malam:
 - Kandidat riset baru lainnya ada di STRATEGY-CATALOG.md bagian "IDE YANG BELUM DICOBA".
 
 ## ✅ SELESAI (terbaru di atas)
+
+- 5 Okt 2026 — Filter DXY Ranger BTC DICABUT (Olan: "ikut saranmu"; uji ulang exit live: filter motong untung dua era); Emas
+  tetap. Alarm palsu whale timeout dibereskan (fetchWithRetry timeout 30 dtk + alarm cuma kalau scan ketinggalan > 72 blok).
+  Test regresi 0056 & DXY (105 lolos). Audit paritas Fed Dovish Grid: picu layer beda (rata2 vs layer terakhir) tapi live lebih
+  untung -- dibiarin.
 
 - 4 Okt 2026 pagi (lanjutan kerja mandiri) — Audit: SelfCheck harian balik HIJAU (regression 103/103 di salinan bersih -- crash
   require tanpa secrets dibenerin; BingX 14/14 -- getOrder abis cancel ternyata cuma telat ~1,5 dtk, diukur di demo); sync git VPS

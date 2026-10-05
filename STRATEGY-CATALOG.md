@@ -61,7 +61,7 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 - ✅ **Ranger BTC chart-pattern + FVG 4H** (Binance USDC, 2 slot) — n=90, win 47,8%, PF 3,71, $100 -> $2.319, DD 39,9%;
   era 2018-20 PF 4,00 / 2021-25 PF 3,34. Divalidasi 2 metode independen (Deflated Sharpe PSR 99,9% + bar permutation
-  p=0,025) = bukti terkuat dari semua strategi live. Filter DXY (lolos rigor). Demo+real (`rangerBtcDualExec.js`), trailing 3x.
+  p=0,025) = bukti terkuat dari semua strategi live. Filter DXY DICABUT 5 Okt (motong untung di exit trailing 3x). Demo+real (`rangerBtcDualExec.js`), trailing 3x.
 - ✅ **Ranger slot ke-3: ICT liquidity sweep 4H** (3 Okt) — candle nyapu low/high 20 candle lalu close balik, searah tren
   SMA300, SL ujung sapuan, trailing 3x. 2 arah PF 1,45 (2019-22) / 1,55 (2023-26), n=353; entry ACAK dgn exit sama cuma
   PF 1,03 -> p=0,000. `rangerSweep.js`.
@@ -144,14 +144,14 @@ Terakhir diperbarui: **3 Okt 2026**.
 - ✅ **Scalp FOMC econ-reaction** (ikut reaksi BTC 10 menit pertama, exit paksa 30 menit) — FOMC doang, demo+real.
 - ⏸️ **Scalp NFP** — DIPAUSE: permutation p~0,20 + Deflated Sharpe ~0%.
 - ❌ **Scalp CPI/PPI** — CPI PF 1,17 gak konsisten per tahun, PPI rugi sebelum fee. Versi long-only juga ditolak.
-- ✅ **Filter DXY lemah buat Ranger** — lolos split-era + sensitivitas (31 Agu, exit LAMA).
+- ✅ **Filter DXY lemah buat Ranger EMAS** (BTC dicabut 5 Okt, lihat bawah) — lolos split-era + sensitivitas (31 Agu, exit LAMA).
   ⚠️ Cek ulang 4 Okt pakai exit LIVE sekarang (`backtest/dxyLiveExitCheck.js`, mesin 1 slot): BTC trailing 3x -> era lama malah
   lebih jelek pakai DXY (modal x6,80 -> x4,99), era baru ~sama (x3,24 -> x3,31); Emas 1/2@3R -> PF turun dua era tapi modal era
   baru naik, n kecil. Manfaatnya udah GAK JELAS di exit baru. Live BELUM diubah -- antri uji lengkap (2 slot + sweep), lihat GANTUNGAN.
   ❌ **Uji LENGKAP BTC 4 Okt** (`backtest/dxyRangerTwoSlotCheck.js`, 2 slot independen + window halving + trailing 3x = mesin live):
   filter DXY SMA20 MOTONG untung di DUA era (+548% -> +427% / +374% -> +253% modal), SEMUA panjang SMA (10/20/30/50) motong di dua
   era, permutasi DXY palsu p = 0,65 (gak beda dari skip acak). Di exit baru filter DXY BTC = GAGAL rigor. Rekomendasi: cabut buat
-  BTC (Emas: hasil campur, n kecil, biarin). NUNGGU KEPUTUSAN OLAN (filter ini dulu permintaan dia langsung, 31 Agu).
+  BTC (Emas: hasil campur, n kecil, biarin). **5 Okt Olan setuju -> DICABUT buat BTC** (rangerAutoTrader.js DXY_FILTER_ASSETS = [xau]).
 
 ## 🌱 SPOT / JANGKA PANJANG
 

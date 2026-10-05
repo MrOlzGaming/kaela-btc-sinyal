@@ -35,20 +35,26 @@ function verdict(nets) {
   return { ok: false, pf, p1, p2, text: '🟡 BELUM MEYAKINKAN -- untung tipis / gak konsisten, saran lanjut uji demo' };
 }
 
+// Net per transaksi demo buat PENILAIAN (5 Okt 2026, arahan Olan "walau demo, yang realistis tetep siapkan"): pakai
+// netRealistic (biaya fee+selip realistis, lihat ninjaNewsTrader/ninjaExhaustionTrader) kalau ada, fallback net demo apa adanya.
+function realisticNets(history) {
+  return (history || []).filter((h) => h.mode === 'demo').map((h) => (Number.isFinite(h.netRealistic) ? h.netRealistic : h.net));
+}
+
 // Kumpulin data tiap sistem uji (demo). Return [{ key, name, n, target, nets|null, wins, losses, totalPnl }]
 function collect(read = readJson) {
   const out = [];
   const ex = read('ninja-exhaustion-journal.json');
   if (ex) {
-    const nets = (ex.history || []).filter((h) => h.mode === 'demo').map((h) => h.net);
+    const nets = realisticNets(ex.history);
     const st = (ex.stats && ex.stats.demo) || {};
-    out.push({ key: 'exhaustion', name: '🥷 Ninja Exhaustion', n: (st.wins || 0) + (st.losses || 0), target: 100, nets, wins: st.wins || 0, losses: st.losses || 0, totalPnl: st.totalPnlUsd || 0, extra: `sinyal ${ex.signals || 0}, di-skip ${ex.skipped || 0}` });
+    out.push({ key: 'exhaustion', name: '🥷 Ninja Exhaustion', switchFile: 'ninja-exhaustion-config.json', n: (st.wins || 0) + (st.losses || 0), target: 100, nets, wins: st.wins || 0, losses: st.losses || 0, totalPnl: st.totalPnlUsd || 0, extra: `sinyal ${ex.signals || 0}, di-skip ${ex.skipped || 0}` });
   }
   const nw = read('ninja-news-journal.json');
   if (nw) {
-    const nets = (nw.history || []).filter((h) => h.mode === 'demo').map((h) => h.net);
+    const nets = realisticNets(nw.history);
     const st = (nw.stats && nw.stats.demo) || {};
-    out.push({ key: 'news', name: '🥷 Ninja News', n: (st.wins || 0) + (st.losses || 0), target: 30, nets, wins: st.wins || 0, losses: st.losses || 0, totalPnl: st.totalPnlUsd || 0, extra: `rilis dijaga ${Object.keys(nw.handled || {}).length}` });
+    out.push({ key: 'news', name: '🥷 Ninja News', switchFile: 'ninja-news-config.json', n: (st.wins || 0) + (st.losses || 0), target: 30, nets, wins: st.wins || 0, losses: st.losses || 0, totalPnl: st.totalPnlUsd || 0, extra: `rilis dijaga ${Object.keys(nw.handled || {}).length}` });
   }
   const mr = read('ninja-mr-exec-journal.json');
   if (mr) {
@@ -69,7 +75,10 @@ function systemBlock(s) {
   if (s.n > 0) {
     lines.push(`Menang/kalah: ${s.wins}/${s.losses} (${(s.wins / s.n * 100).toFixed(0)}%)`);
     lines.push(`Hasil bersih: ${fmtUsd(s.totalPnl)}`);
-    if (s.nets && s.nets.length) lines.push(`Profit factor: ${pfText(pfOf(s.nets))}`);
+    if (s.nets && s.nets.length) {
+      lines.push(`Hasil realistis (+selip): ${fmtUsd(s.nets.reduce((a, b) => a + b, 0))}`);
+      lines.push(`Profit factor (realistis): ${pfText(pfOf(s.nets))}`);
+    }
   } else lines.push('Belum ada transaksi (nunggu sinyal)');
   if (s.extra) lines.push(`Catatan: ${s.extra}`);
   return lines.join('\n');
@@ -94,12 +103,13 @@ function formatMilestone(s, v) {
     s.name,
     `Target ${s.target} transaksi demo tercapai (${s.n})`,
     '',
-    `Profit factor: ${pfText(v.pf)}`,
+    `Profit factor (realistis, +selip): ${pfText(v.pf)}`,
     `Paruh pertama: ${pfText(v.p1)}`,
     `Paruh kedua: ${pfText(v.p2)}`,
     `Hasil bersih: ${fmtUsd(s.totalPnl)}`,
     '',
     `Penilaian: ${v.text}`,
+    ...(v.ok && s.switchFile ? ['', `Siap nyala: tinggal ubah allowReal jadi true di ${s.switchFile} (nunggu OK Olan)`] : []),
     '',
     '— Kaela',
   ].join('\n');

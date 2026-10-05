@@ -43,9 +43,12 @@ const FALLBACK_FEE_PER_SIDE = 0.05;
 const STOP_UPDATE_MIN_MS = 3000;   // stop exchange digeser maks tiap 3 detik
 const STOP_MOVE_MIN_PCT = 0.03;
 const MASTER_NOMOR = '6281299303888';
+// Kesiapan REAL (5 Okt 2026, arahan Olan: "walau masih demo, yang realistis tetep siapkan -- kalo data bagus tinggal di-ON").
+// Min order BingX BTC-USDT = 0,0001 BTC (~$9-12) -- dibulatin aman ke $15 biar gak mepet pas harga naik.
+const REAL_MIN_NOTIONAL_USD = 15;
 
 function loadConfig() {
-  const def = { enabled: false, allowReal: false, armBeforeSec: 120, preSec: 45, windowSec: 90, thrPct: 0.05, maxChasePct: 0.5, slPct: 0.4, trailActPct: 0.3, trailPct: 0.2, maxHoldMin: 20, recordMin: 15, targetTrades: 30 };
+  const def = { enabled: false, allowReal: false, armBeforeSec: 120, preSec: 45, windowSec: 90, thrPct: 0.05, maxChasePct: 0.5, slPct: 0.4, trailActPct: 0.3, trailPct: 0.2, maxHoldMin: 20, recordMin: 15, targetTrades: 30, realisticCostRtPct: 0.12 };
   if (!fs.existsSync(CONFIG_PATH)) return def;
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
@@ -115,6 +118,10 @@ async function runDetector(deps) {
   async function safe(label, fn) { try { return await fn(); } catch (e) { log(`${label} GAGAL: ${e.message}`); return undefined; } }
 
   const rec = { key: ev.key, label: ev.label, timeMs: ev.timeMs, eur: {}, btc: {}, signal: null, trade: null };
+  // 0) cek kesiapan REAL tiap rilis (BACA doang: key ada? saldo cukup buat ukuran posisi minimum?) -- biar pas uji demo lolos,
+  //    nyalain allowReal gak ada kejutan. Gak pernah buka order real di sini.
+  rec.realReady = await safe('cek kesiapan real', () => realReadiness());
+  if (rec.realReady) log(`Kesiapan real: ${rec.realReady.ok ? 'SIAP' : 'BELUM'} -- ${rec.realReady.note}`);
   // 1) patokan: harga terakhir sebelum rilis
   let base = null;
   while (now() < ev.timeMs) {
@@ -160,6 +167,15 @@ async function runDetector(deps) {
     if (p) { rec.eur[`m${mn}`] = p.eur; rec.btc[`m${mn}`] = p.btc; }
   }
   return rec;
+
+  async function realReadiness() {
+    const exec = deps.execFor(false);
+    if (!exec) return { ok: false, note: 'API key BingX real belum dipasang' };
+    const balance = num(await exec.getAccountBalance('USDT')) || 0;
+    const calc = hitungExposure({ modal: balance * MODAL_ACTIVE_FRACTION, nyawa: cfg.slPct, direction: 'buy' });
+    const ok = calc.nilaiPosisi >= REAL_MIN_NOTIONAL_USD;
+    return { ok, balance, notional: calc.nilaiPosisi, leverage: calc.leverage, note: `saldo real $${balance.toFixed(2)} -> posisi $${calc.nilaiPosisi.toFixed(2)} (lev ${calc.leverage}x)${ok ? '' : `, di bawah minimum $${REAL_MIN_NOTIONAL_USD} -- perlu setoran dulu`}` };
+  }
 
   // ---------- trade ----------
   async function openLeg(exec, testnet, d, live) {
@@ -246,8 +262,13 @@ async function runDetector(deps) {
     const fee = (L.entryCommission != null ? L.entryCommission : L.entryPrice * L.quantity * FALLBACK_FEE_PER_SIDE / 100)
       + (exit.commission != null ? exit.commission : L.exitPrice * L.quantity * FALLBACK_FEE_PER_SIDE / 100);
     L.feeUsd = fee; L.netUsd = L.grossUsd - fee;
+    // Net REALISTIS (5 Okt 2026) -- isi order demo gak kena selip asli pas rilis berita. Penilaian naik-real pakai biaya
+    // pulang-pergi realistisCostRtPct (0,12% = asumsi fee+selip backtest newsDxyLeadStudy.js), ambil yang lebih jelek.
+    L.notionalUsd = L.entryPrice * L.quantity;
+    L.netRealisticUsd = Math.min(L.netUsd, L.grossUsd - L.notionalUsd * (cfg.realisticCostRtPct ?? 0.12) / 100);
     const st = j.stats[mode]; st.totalPnlUsd += L.netUsd;
-    (j.history = j.history || []).push({ at: now(), mode, net: L.netUsd, key: ev.key, label: ev.label, id: f.id, signalId: f.signalId, dir: f.dir, entry: L.entryPrice, exit: L.exitPrice, sl: L.sl, reason: L.exitReason, grossUsd: L.grossUsd, feeUsd: L.feeUsd, openedAt: L.openedAt || f.openedAt || null }); // detail (5 Okt) buat tradeLedger.js if (j.history.length > 500) j.history = j.history.slice(-500);
+    (j.history = j.history || []).push({ at: now(), mode, net: L.netUsd, key: ev.key, label: ev.label, id: f.id, signalId: f.signalId, dir: f.dir, entry: L.entryPrice, exit: L.exitPrice, sl: L.sl, reason: L.exitReason, grossUsd: L.grossUsd, feeUsd: L.feeUsd, netRealistic: L.netRealisticUsd, notionalUsd: L.notionalUsd, openedAt: L.openedAt || f.openedAt || null }); // detail (5 Okt) buat tradeLedger.js
+    if (j.history.length > 500) j.history = j.history.slice(-500);
     if (L.netUsd >= 0) { st.wins += 1; st.grossWinUsd += L.netUsd; } else { st.losses += 1; st.grossLossUsd += -L.netUsd; }
     deps.kaelaJournal.update(`${f.id}-${mode}`, { status: 'closed', closedAt: new Date(now()).toISOString(), pnlUsd: L.netUsd });
     log(`TUTUP ${mode} ${f.dir} ${L.entryPrice} -> ${L.exitPrice} (${exit.reason}) net ${L.netUsd.toFixed(2)}`);

@@ -37,6 +37,7 @@ const WINDOW_MS = 30 * 60 * 1000;
 const EPISODE_MAX_AGE_MS = 6 * 3600 * 1000;
 const STOP_MOVE_MIN_PCT = 0.05;      // stop exchange baru dipasang ulang kalau geser >= 0,05%
 const FALLBACK_FEE_PER_SIDE = 0.05;  // % notional (taker BingX) kalau commission gak kebaca
+const REALISTIC_COST_RT_PCT = 0.12;  // % notional pulang-pergi (fee taker + selip) buat net REALISTIS penilaian naik-real
 const MASTER_NOMOR = '6281299303888';
 
 function loadConfig() {
@@ -180,9 +181,14 @@ function createTrader(deps) {
     const entryFee = leg.entryCommission != null ? leg.entryCommission : leg.entryPrice * leg.quantity * FALLBACK_FEE_PER_SIDE / 100;
     const exitFee = leg.exitCommission != null ? leg.exitCommission : leg.exitPrice * leg.quantity * FALLBACK_FEE_PER_SIDE / 100;
     leg.feeUsd = entryFee + exitFee; leg.netUsd = leg.grossUsd - leg.feeUsd;
+    // Net REALISTIS (5 Okt 2026, arahan Olan "yang realistis tetep siapkan") -- isi order demo gak kena selip asli; penilaian
+    // naik-real (trialReport.js) pakai biaya pulang-pergi REALISTIC_COST_RT_PCT, ambil yang lebih jelek. Aturan trading gak berubah.
+    leg.notionalUsd = leg.entryPrice * leg.quantity;
+    leg.netRealisticUsd = Math.min(leg.netUsd, leg.grossUsd - leg.notionalUsd * REALISTIC_COST_RT_PCT / 100);
     const st = j.stats[mode]; st.totalPnlUsd += leg.netUsd;
     // riwayat per transaksi (3 Okt 2026) -- buat rapor uji demo (trialReport.js) nilai 2 paruh, bukan cuma total
-    (j.history = j.history || []).push({ at: now(), mode, net: leg.netUsd, id: f.id, signalId: f.signalId, dir: f.dir, entry: leg.entryPrice, exit: leg.exitPrice, sl: leg.sl, reason: leg.exitReason, grossUsd: leg.grossUsd, feeUsd: leg.feeUsd, openedAt: leg.openedAt || f.openedAt || null, peakLiqUsd: f.peakUsd != null ? f.peakUsd : null }); // detail (5 Okt) buat tradeLedger.js if (j.history.length > 500) j.history = j.history.slice(-500);
+    (j.history = j.history || []).push({ at: now(), mode, net: leg.netUsd, id: f.id, signalId: f.signalId, dir: f.dir, entry: leg.entryPrice, exit: leg.exitPrice, sl: leg.sl, reason: leg.exitReason, grossUsd: leg.grossUsd, feeUsd: leg.feeUsd, netRealistic: leg.netRealisticUsd, notionalUsd: leg.notionalUsd, openedAt: leg.openedAt || f.openedAt || null, peakLiqUsd: f.peakUsd != null ? f.peakUsd : null }); // detail (5 Okt) buat tradeLedger.js
+    if (j.history.length > 500) j.history = j.history.slice(-500);
     if (leg.netUsd >= 0) { st.wins += 1; st.grossWinUsd += leg.netUsd; } else { st.losses += 1; st.grossLossUsd += -leg.netUsd; }
     deps.kaelaJournal.update(`${f.id}-${mode}`, { status: 'closed', closedAt: new Date(now()).toISOString(), pnlUsd: leg.netUsd });
     log(`TUTUP ${mode} ${f.dir} ${leg.entryPrice} -> ${leg.exitPrice} (${leg.exitReason}) net ${leg.netUsd.toFixed(2)}`);

@@ -96,6 +96,28 @@ test('akun BingX lagi dipegang Ninja lain -> sinyal dicatat, gak entry', async (
   assert.strictEqual(rec.trade.skipped, 'Ninja MR floating');
 });
 
+// 5 Okt 2026 (arahan Olan "walau demo, yang realistis tetep siapkan"): net realistis + cek kesiapan real (baca doang)
+test('net REALISTIS <= net demo & kecatat di riwayat; kesiapan real kebaca tanpa buka order real', async () => {
+  const eur = (s) => (s < 3 ? 1.1 : 1.1 * 1.0008);
+  const btc = (s) => (s < 5 ? 80000 : s < 60 ? 80000 + (s - 5) * 10 : Math.max(80000, 80550 - (s - 60) * 20));
+  const h = harness({ eurPath: eur, btcPath: btc });
+  h.deps.cfg = { ...CFG, realisticCostRtPct: 0.12 };
+  const rec = await runDetector(h.deps);
+  const hist = h.j.history[h.j.history.length - 1];
+  assert(Number.isFinite(hist.netRealistic) && hist.netRealistic <= hist.net, 'net realistis wajib <= net demo');
+  assert(hist.notionalUsd > 0);
+  assert.strictEqual(rec.realReady.ok, false, 'key real belum ada di harness');
+  let realOrders = 0;
+  const realExec = { getAccountBalance: async () => 100, placeMarketEntry: async () => { realOrders += 1; } };
+  const h2 = harness({ eurPath: () => 1.1, btcPath: () => 80000 });
+  const demoExec = h2.deps.execFor(true);
+  h2.deps.execFor = (testnet) => (testnet ? demoExec : realExec);
+  const rec2 = await runDetector(h2.deps);
+  assert.strictEqual(rec2.realReady.ok, true, rec2.realReady.note);
+  assert.strictEqual(rec2.realReady.balance, 100);
+  assert.strictEqual(realOrders, 0, 'cek kesiapan gak boleh buka order real');
+});
+
 (async () => {
   let ok = 0, fail = 0;
   for (const [n, f] of tests) { try { await f(); ok++; console.log('  OK  ', n); } catch (e) { fail++; console.log('  GAGAL', n, '--', e.message); } }

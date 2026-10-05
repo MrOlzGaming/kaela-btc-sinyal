@@ -22,7 +22,7 @@ Keputusan Olan 3 Okt 2026 malam:
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
 6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)
 7. ~~Push GAS Kaela Access~~ -- BERES 6 Okt: GAS v245 live, 7 koneksi tersimpan, AdminView jalan, masking workflow dibenerin
-   (YAML rusak sejak ~20 Sep) + di-dispatch (cek hasil run 37365868872 / kaela-access.netlify.app).
+   (YAML rusak sejak ~20 Sep); tampilan baru TAYANG 6 Okt 04:17 WITA lewat Netlify API langsung (GitHub Actions lagi gangguan).
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 

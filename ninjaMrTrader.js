@@ -314,7 +314,8 @@ function createTrader(deps) {
           if (o && String(o.status).toUpperCase() === 'FILLED' && (num(o.executedQty) || 0) > 0) { exit = { price: num(o.avgPrice) || L.exitLimitPrice || L.sl, commission: parseCommission(o), reason }; break; }
         }
         if (!exit) { const live = await safe(`harga live ${mode}`, () => deps.fetchLivePrice(mode === 'demo')); exit = { price: live || L.entryPrice, commission: null, reason: 'MR_MANUAL' }; }
-        for (const oid of [L.exitOrderId, L.stopOrderId]) if (oid) await safe(`cancel sisa order ${mode}`, () => exec.cancelOrder(EXEC_SYMBOL, oid));
+        // "order not exist" (109400/109421) = BingX udah ngehapus sendiri order reduce-only pas posisi tutup -- normal, bukan GAGAL
+        for (const oid of [L.exitOrderId, L.stopOrderId]) if (oid) await exec.cancelOrder(EXEC_SYMBOL, oid).catch((e) => { if (!/10940[0-9]|109421|not exist/i.test(e.message)) log(`cancel sisa order ${mode} GAGAL: ${e.message}`); });
         closeLeg(f, L, mode, exit);
         continue;
       }
@@ -338,6 +339,9 @@ function createTrader(deps) {
     if (allDone) {
       j.closedCount += 1;
       await sendCloseNotifications(f);
+      // (5 Okt 2026, permintaan Olan: "catatan otomatis tiap metode & alasan entri, buat review kapan pun") -- dulu trade yang
+      // udah tutup ILANG dari journal (cuma stats), sekarang disimpen utuh (dibaca tradeLedger.js). Maks 500 terakhir.
+      j.history = [{ ...f, closedAt: now() }, ...(j.history || [])].slice(0, 500);
       j.floating = null;
       return true;
     }

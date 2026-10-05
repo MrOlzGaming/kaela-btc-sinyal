@@ -66,6 +66,9 @@ function loadConfig() {
 }
 
 function freshStats() { return { wins: 0, losses: 0, totalPnlUsd: 0 }; }
+// (5 Okt 2026, permintaan Olan "catatan otomatis tiap metode & alasan entri") -- posisi yang udah tutup DISIMPEN ke
+// slot.history (dulu ilang begitu floating=null), dibaca tradeLedger.js. Maks 300 per slot.
+function archiveSlot(slot, f) { slot.history = [{ ...f, archivedAt: new Date().toISOString() }, ...(slot.history || [])].slice(0, 300); slot.floating = null; }
 function freshSlot() { return { floating: null, closedCount: 0, stats: { demo: freshStats(), real: freshStats() }, dailySignalSeq: { dayKey: null, count: 0 } }; }
 // 'sweep' (3 Okt 2026) = slot ke-3: ICT liquidity sweep 4H (rangerSweep.js), arah ikut tren SMA300 (BUKAN window halving).
 const SLOT_KEYS = ['pattern', 'fvg', 'sweep'];
@@ -360,7 +363,7 @@ async function monitorRangerBtcDual({ idrRate } = {}) {
 async function monitorOneSlot(slotKey, slot, f, idrRate) {
   const sig = { direction: f.direction, sl: f.sl };
   const activeLegs = ['demo', 'real'].filter((m) => f[m] && !f[m].closedAt);
-  if (activeLegs.length === 0) { slot.floating = null; return; }
+  if (activeLegs.length === 0) { archiveSlot(slot, f); return; }
 
   // Harga per-mode (demo/real base URL beda-beda, SAMA pola ninjaTrader.js) -- cuma fetch yang
   // beneran dibutuhin (real gak pernah dibuka -> gak usah fetch harga real).
@@ -441,7 +444,7 @@ async function monitorOneSlot(slotKey, slot, f, idrRate) {
   }
 
   const allDone = ['demo', 'real'].every((m) => !f[m] || !!f[m].closedAt);
-  if (allDone) { slot.closedCount = (slot.closedCount || 0) + 1; slot.floating = null; }
+  if (allDone) { slot.closedCount = (slot.closedCount || 0) + 1; archiveSlot(slot, f); }
 }
 
 async function reportPartial(slotKey, f, mode, idrRate) {
@@ -456,6 +459,7 @@ async function reportPartial(slotKey, f, mode, idrRate) {
 
 async function reportClose(slotKey, slot, f, mode, reasonCode, idrRate) {
   const leg = f[mode];
+  if (leg && !leg.closeReason) leg.closeReason = reasonCode; // (5 Okt) disimpen buat tradeLedger.js
   const isDemo = mode !== 'real';
   const stats = slot.stats[mode];
 

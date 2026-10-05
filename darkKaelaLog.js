@@ -620,7 +620,7 @@ module.exports = {
   COINGLASS_LINK, KALKULATOR_LINK, KAELA_ACCESS_URL, SNIPER_WEB_URL, toSniperClubLink, CLOSE_REASON_LABEL,
   // 3 Sep 2026 -- diexpose biar sniperMultiAccount.js/positionReconciler.js bisa REUSE (desain
   // pesan terpadu, 1 sumber format/helper, gak duplikat fmtUsd/shortId versi masing-masing file).
-  fmtUsd, shortId, fmtUsdWithIdr, formatWinRateLines, liquidationPrice,
+  fmtUsd, shortId, fmtUsdWithIdr, formatWinRateLines, liquidationPrice, patternReason, // patternReason (5 Okt): dipakai tradeLedger.js
   // 12 Sep 2026 -- diexpose biar sniperOrderLog.js (Sniper Club REAL Olan sendiri) bisa reuse SAMA
   // baris "PnL hari ini", bukan reimplementasi/format beda sendiri.
   todaysPnlLine: _todaysPnlLine,

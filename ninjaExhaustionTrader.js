@@ -182,7 +182,7 @@ function createTrader(deps) {
     leg.feeUsd = entryFee + exitFee; leg.netUsd = leg.grossUsd - leg.feeUsd;
     const st = j.stats[mode]; st.totalPnlUsd += leg.netUsd;
     // riwayat per transaksi (3 Okt 2026) -- buat rapor uji demo (trialReport.js) nilai 2 paruh, bukan cuma total
-    (j.history = j.history || []).push({ at: now(), mode, net: leg.netUsd }); if (j.history.length > 500) j.history = j.history.slice(-500);
+    (j.history = j.history || []).push({ at: now(), mode, net: leg.netUsd, id: f.id, signalId: f.signalId, dir: f.dir, entry: leg.entryPrice, exit: leg.exitPrice, sl: leg.sl, reason: leg.exitReason, grossUsd: leg.grossUsd, feeUsd: leg.feeUsd, openedAt: leg.openedAt || f.openedAt || null, peakLiqUsd: f.peakUsd != null ? f.peakUsd : null }); // detail (5 Okt) buat tradeLedger.js if (j.history.length > 500) j.history = j.history.slice(-500);
     if (leg.netUsd >= 0) { st.wins += 1; st.grossWinUsd += leg.netUsd; } else { st.losses += 1; st.grossLossUsd += -leg.netUsd; }
     deps.kaelaJournal.update(`${f.id}-${mode}`, { status: 'closed', closedAt: new Date(now()).toISOString(), pnlUsd: leg.netUsd });
     log(`TUTUP ${mode} ${f.dir} ${leg.entryPrice} -> ${leg.exitPrice} (${leg.exitReason}) net ${leg.netUsd.toFixed(2)}`);

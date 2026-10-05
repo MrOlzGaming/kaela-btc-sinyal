@@ -331,6 +331,7 @@ async function _doPartialAndReopen(o, mode, exec, posQtyBeforeClose, idrRate) {
 // ============ Tutup leg (final -- leg1 SL-hit sebelum partial, ATAU leg2 selesai) ============
 async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
   const leg = o[mode];
+  if (leg && !leg.closeReason) leg.closeReason = reasonCode; // (5 Okt) disimpen buat tradeLedger.js
   const isDemo = mode !== 'real';
   const stats = (loadJournal().stats)[mode]; // re-load biar stats akumulasi konsisten kalau ada order lain kepr proses bareng siklus ini -- caller yang nyimpen ulang journal penuh
 

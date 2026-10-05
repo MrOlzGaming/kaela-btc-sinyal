@@ -168,6 +168,16 @@ async function runDetector(deps) {
   }
   return rec;
 
+  // Alasan buka SPESIFIK per rilis (5 Okt 2026, permintaan Olan: "alasannya nyopet high volatilitas news PMI, sesuaikan yang
+  // lain") -- nyebut nama rilis + level dampak + gerak dolar yang jadi pemicu. Dipakai pesan WA buka + Buku Besar.
+  function openReasonText(d) {
+    const lvl = ev.level ? (require('./econCalendar').IMPACT_LEVELS.find((l) => l.key === ev.level) || {}).badge : null;
+    const s = rec.signal || {};
+    const mv = Number.isFinite(s.eurMovePct) ? s.eurMovePct : null;
+    const dolar = mv === null ? 'dolar bereaksi duluan' : `dolar ${mv > 0 ? 'melemah' : 'menguat'} ${Math.abs(mv).toFixed(2)}% (EURUSDT) di ${s.sec} detik pertama`;
+    return `Nyopet volatilitas tinggi rilis berita ${ev.label}${lvl ? ` -- ${lvl}` : ''}: ${dolar}, Kaela ambil BTC ${d === 'long' ? 'LONG' : 'SHORT'} (kebalikan dolar) sebelum BTC nyusul`;
+  }
+
   async function realReadiness() {
     const exec = deps.execFor(false);
     if (!exec) return { ok: false, note: 'API key BingX real belum dipasang' };
@@ -203,7 +213,7 @@ async function runDetector(deps) {
         try { legs.real = await openLeg(realExec, false, d, sp.btc); } catch (e) { log(`Real skip: ${e.message}`); }
       }
     }
-    const f = { id: crypto.randomUUID(), key: ev.key, label: ev.label, dir: d, openedAt: now(), legs };
+    const f = { id: crypto.randomUUID(), key: ev.key, label: ev.label, dir: d, openedAt: now(), legs, reasonText: openReasonText(d) };
     j.floating = f; save();
     log(`BUKA ${d.toUpperCase()} demo @ ${legs.demo.entryPrice}${legs.real ? ` + real @ ${legs.real.entryPrice}` : ''}, SL ${legs.demo.sl.toFixed(1)}${legs.demo.stopOrderId ? '' : ' (stop exchange GAGAL, backup per detik)'}`);
     for (const [mode, leg] of Object.entries(legs)) deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: d, entryPrice: leg.entryPrice, sl: leg.sl, tp: null, status: 'open', openedAt: new Date(now()).toISOString(), note: `Ninja News · ${ev.label} (dolar per detik, uji demo)` });
@@ -267,7 +277,7 @@ async function runDetector(deps) {
     L.notionalUsd = L.entryPrice * L.quantity;
     L.netRealisticUsd = Math.min(L.netUsd, L.grossUsd - L.notionalUsd * (cfg.realisticCostRtPct ?? 0.12) / 100);
     const st = j.stats[mode]; st.totalPnlUsd += L.netUsd;
-    (j.history = j.history || []).push({ at: now(), mode, net: L.netUsd, key: ev.key, label: ev.label, id: f.id, signalId: f.signalId, dir: f.dir, entry: L.entryPrice, exit: L.exitPrice, sl: L.sl, reason: L.exitReason, grossUsd: L.grossUsd, feeUsd: L.feeUsd, netRealistic: L.netRealisticUsd, notionalUsd: L.notionalUsd, openedAt: L.openedAt || f.openedAt || null }); // detail (5 Okt) buat tradeLedger.js
+    (j.history = j.history || []).push({ at: now(), mode, net: L.netUsd, key: ev.key, label: ev.label, id: f.id, signalId: f.signalId, dir: f.dir, entry: L.entryPrice, exit: L.exitPrice, sl: L.sl, reason: L.exitReason, grossUsd: L.grossUsd, feeUsd: L.feeUsd, netRealistic: L.netRealisticUsd, notionalUsd: L.notionalUsd, reasonText: f.reasonText || null, openedAt: L.openedAt || f.openedAt || null }); // detail (5 Okt) buat tradeLedger.js
     if (j.history.length > 500) j.history = j.history.slice(-500);
     if (L.netUsd >= 0) { st.wins += 1; st.grossWinUsd += L.netUsd; } else { st.losses += 1; st.grossLossUsd += -L.netUsd; }
     deps.kaelaJournal.update(`${f.id}-${mode}`, { status: 'closed', closedAt: new Date(now()).toISOString(), pnlUsd: L.netUsd });
@@ -278,7 +288,7 @@ async function runDetector(deps) {
     if (!deps.notify) return;
     const { formatAutoOpen, toSniperClubLink, SYSTEM_LABEL } = require('./darkKaelaLog');
     const idr = await safe('kurs', () => deps.getIdrRate());
-    const msg = (leg, isDemo) => formatAutoOpen({ id: f.id, signalId: ev.label, direction: execDirOf(f.dir), entryPrice: leg.entryPrice, tp: null, sl: leg.sl, marginUsd: leg.margin, nilaiPosisi: leg.nilaiPosisi, leverage: leg.leverage, mode: 'news_dxy', patternType: 'news_dxy', assetLabel: 'BTC' }, new Date(now()), '', isDemo, idr, '', null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
+    const msg = (leg, isDemo) => formatAutoOpen({ id: f.id, signalId: ev.label, direction: execDirOf(f.dir), entryPrice: leg.entryPrice, tp: null, sl: leg.sl, marginUsd: leg.margin, nilaiPosisi: leg.nilaiPosisi, leverage: leg.leverage, mode: 'news_dxy', patternType: 'news_dxy', assetLabel: 'BTC', reasonText: f.reasonText }, new Date(now()), '', isDemo, idr, '', null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
     if (f.legs.demo) await safe('WA Sniper Club', () => deps.notify.sniperClub(toSniperClubLink(msg(f.legs.demo, true))));
     const w = f.legs.real ? msg(f.legs.real, false) : f.legs.demo ? msg(f.legs.demo, true) : null;
     if (w) await safe('WA Wibowo', () => deps.notify.wibowo(w));

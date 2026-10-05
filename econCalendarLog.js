@@ -1,77 +1,81 @@
 // Format pesan Jadwal Ekonomi -- MURNI INFORMASI (sama kayak Kaela News), gak pengaruhi sinyal.
 
-const { WEB_URL, localDateKey } = require('./config');
+const { WEB_URL, localDateKey, toLocal } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 
-// Keterangan level dampak (5 Okt 2026) -- dibangun dari IMPACT_LEVELS di econCalendar.js (satu sumber badge).
-const { IMPACT_LEVELS } = require('./econCalendar');
-const IMPACT_LEGEND = `Level dampak: ${[...IMPACT_LEVELS].reverse().map((l) => l.badge).join(' · ')} = keputusan suku bunga FOMC`;
+// ====== Format baru pesan JADWAL & SIAP-SIAP (5 Okt 2026, permintaan Olan: "tulis lebih rapi, review & kritik sendiri") ======
+// Kritik versi lama: header + disclaimer panjang diulang tiap pesan, "(keyakinan: sedang):" numpuk kurung, legenda 3 level
+// nongol terus (padahal tiap event udah ada levelnya), nama event cuma terjemahan (gak ada nama asli/kepanjangan/arti), angka
+// pakai titik desimal ala Inggris, event jam sama dikirim terpisah. Versi baru: 1 blok rapi per event (nama asli -> kepanjangan
+// -> arti -> level -> angka -> arah BTC), event jam sama digabung, disclaimer 1 baris.
 
-const ARAH_LABEL = { tertekan: '📉 BTC cenderung TERTEKAN', menguat: '📈 BTC cenderung MENGUAT', campuran: '↔️ Efek CAMPURAN, gak konsisten' };
+const ARAH_SINGKAT = { tertekan: '📉 BTC cenderung tertekan', menguat: '📈 BTC cenderung menguat', campuran: '↔️ efek ke BTC campuran' };
+const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const GARIS = '━━━━━━━━━━━━';
 
-// Baris perkiraan arah (11 Agu 2026, permintaan Olan: "berani memperkirakan arah, jelasin
-// kalau begini maka begitu") -- heuristik makro standar (channel ekspektasi The Fed
-// hawkish/dovish), BUKAN backtest data historis kayak sinyal Sniper/Musiman. `strength`
-// ditampilkan biar jujur soal seberapa reliable hubungannya -- gak semua event sama kuat.
-function directionalLines(e) {
-  const v = e.directionalView;
-  if (!v) return ['   (belum ada peta sebab-akibat buat event ini -- gak dipaksa nebak)'];
-  if (v.aboveForecast === null) {
-    return [`   📐 ${v.label} (keyakinan: ${v.strength}) -- ${v.mechanism}`];
-  }
-  return [
-    `   📐 ${v.label} (keyakinan: ${v.strength}):`,
-    `      • Kalau ACTUAL > forecast -> ${ARAH_LABEL[v.aboveForecast] || v.aboveForecast}`,
-    `      • Kalau ACTUAL < forecast -> ${ARAH_LABEL[v.belowForecast] || v.belowForecast}`,
-  ];
-}
+// angka ForexFactory "55.1" / "0.3%" / "225K" -> desimal koma ala Indonesia
+const fmtNum = (v) => (v == null || v === '' || v === '-' ? null : String(v).replace(/(\d)\.(\d)/g, '$1,$2'));
 
-// Label hari relatif ke `now` -- "HARI INI"/"BESOK"/tanggal biasa (event bisa jatuh lebih dari
-// 1 hari ke depan karena window sekarang 48 jam, bukan cuma hari kalender ini lagi).
-function dayLabel(dateKey, now) {
+// "Senin, 5 Okt (hari ini)"
+function dayLabel(e, now) {
+  const d = toLocal(new Date(e.timeMs));
   const todayKey = localDateKey(now);
   const tomorrowKey = localDateKey(new Date(now.getTime() + 24 * 60 * 60 * 1000));
-  if (dateKey === todayKey) return 'HARI INI';
-  if (dateKey === tomorrowKey) return 'BESOK';
-  return dateKey;
+  const rel = e.dateKey === todayKey ? ' (hari ini)' : e.dateKey === tomorrowKey ? ' (besok)' : '';
+  return `${HARI[d.getUTCDay()]}, ${d.getUTCDate()} ${BULAN[d.getUTCMonth()]}${rel}`;
 }
 
+function directionalLines(e) {
+  const v = e.directionalView;
+  if (!v) return ['Arah BTC: belum dipetakan (gak dipaksa nebak)'];
+  const head = `Arah BTC (logika makro, keyakinan ${v.strength}):`;
+  if (v.aboveForecast === null) return ['Arah BTC (dari nada omongan):', '• Nada galak/hawkish → 📉 BTC cenderung tertekan', '• Nada lunak/dovish → 📈 BTC cenderung menguat'];
+  if (v.aboveForecast === 'campuran' && v.belowForecast === 'campuran') return [head, '• Efek ke BTC campuran -- gak dipaksa 1 arah'];
+  return [head, `• Di atas perkiraan → ${ARAH_SINGKAT[v.aboveForecast] || v.aboveForecast}`, `• Di bawah perkiraan → ${ARAH_SINGKAT[v.belowForecast] || v.belowForecast}`];
+}
+
+// 1 blok event: nama asli -> kepanjangan -> arti -> level -> angka -> arah
+function eventBlock(e) {
+  const lines = [`📰 *${e.rawTitle || e.title}*`];
+  if (e.glossary) lines.push(`🇺🇸 ${e.glossary.inggris}`, `🇮🇩 ${e.glossary.arti}`);
+  else if (e.title && e.title !== e.rawTitle) lines.push(`🇮🇩 ${e.title}`);
+  if (e.impactLevel) lines.push(`Level: ${e.impactLevel.badge}`);
+  const fc = fmtNum(e.forecast), prev = fmtNum(e.previous);
+  if (fc || prev) lines.push(`Perkiraan: ${fc || '-'} · Sebelumnya: ${prev || '-'}`);
+  lines.push(...directionalLines(e));
+  return lines;
+}
+
+// kelompokin event yang jamnya PERSIS sama (rilis barengan) -> [{ timeMs, events }] urut waktu
+function groupByTime(events) {
+  const map = new Map();
+  for (const e of events) { if (!map.has(e.timeMs)) map.set(e.timeMs, []); map.get(e.timeMs).push(e); }
+  return [...map.entries()].sort((a, b) => a[0] - b[0]).map(([timeMs, evs]) => ({ timeMs, events: evs }));
+}
+
+const DISCLAIMER = 'ℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.';
+
 function formatEconCalendar(now, events) {
-  const lines = [];
-  lines.push(`${CATEGORY_COLOR.econ.emoji} 📅 JADWAL EKONOMI MENDATANG (peringatan dini)`);
-  lines.push('(event USD penting dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)');
-  lines.push('');
-  for (const e of events) {
-    lines.push(`🕐 ${dayLabel(e.dateKey, now)}, ${e.time} WITA — ${e.title}`);
-    if (e.impactLevel) lines.push(`   Dampak: ${e.impactLevel.badge}`);
-    lines.push(`   Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`);
-    lines.push(...directionalLines(e));
-    lines.push('');
+  const lines = [`${CATEGORY_COLOR.econ.emoji} 📅 *JADWAL BERITA EKONOMI AS*`, 'Peringatan dini · 48 jam ke depan'];
+  for (const g of groupByTime(events)) {
+    lines.push('', GARIS, `🕐 ${dayLabel(g.events[0], now)} · ${g.events[0].time} WITA`);
+    g.events.forEach((e, i) => { lines.push(...(i ? [''] : []), ...eventBlock(e)); });
   }
-  lines.push(IMPACT_LEGEND);
-  lines.push('⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.');
-  lines.push('');
-  lines.push(`🔗 ${WEB_URL}`);
+  lines.push(GARIS, '', DISCLAIMER, '', `🔗 ${WEB_URL}`);
   return lines.join('\n');
 }
 
-// 5 Sep 2026, permintaan Olan ("detektor tiap 5 menit.. 5 menit sebelum kasih info siap-siap
-// high impact, 5 menit sesudah simpulkan intinya hawkish/dovish") -- dipake econCalendarLiveMonitor.js.
-
-// extraLines (5 Okt 2026) -- baris tambahan dari pemanggil, mis. status Ninja News kalau rilis ini masuk jadwal ujinya.
-function formatHeadsUp(e, extraLines = []) {
-  const lines = [
-    `${CATEGORY_COLOR.econ.emoji} ⏰ SIAP-SIAP -- ${e.time} WITA (sebentar lagi)`,
-    e.title,
-    ...(e.impactLevel ? [`Dampak: ${e.impactLevel.badge}`] : []),
-    `Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`,
-    ...directionalLines(e),
-    '',
-    e.impactLevel && e.impactLevel.key === 'raja'
-      ? 'FINAL BOSS -- BTC bisa gerak liar beberapa persen dalam hitungan menit. Jangan buka posisi manual pas rilis.'
-      : 'Data penting -- pantau reaksi pasar (DXY/BTC) sebentar lagi.',
-    ...(extraLines.length ? ['', ...extraLines] : []),
-  ];
+// 5 Sep 2026 -- dipake econCalendarLiveMonitor.js ~5 menit sebelum rilis. 5 Okt 2026: terima 1 event ATAU array event
+// yang rilis barengan (digabung 1 pesan), + extraLines dari pemanggil (mis. status Ninja News).
+function formatHeadsUp(eventOrList, extraLines = []) {
+  const events = Array.isArray(eventOrList) ? eventOrList : [eventOrList];
+  const lines = [`${CATEGORY_COLOR.econ.emoji} ⏰ *SIAP-SIAP · 5 menit lagi*`, `🕐 ${events[0].time} WITA`];
+  events.forEach((e) => { lines.push('', ...eventBlock(e)); });
+  if (events.some((e) => e.impactLevel && e.impactLevel.key === 'raja')) {
+    lines.push('', '👑 FINAL BOSS -- BTC bisa gerak liar beberapa persen dalam hitungan menit. Jangan buka posisi manual pas rilis.');
+  }
+  if (extraLines.length) lines.push('', ...extraLines);
   return lines.join('\n');
 }
 

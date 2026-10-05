@@ -43,10 +43,11 @@ function ninjaNewsHeadsUpLines(e) {
     if (!cfg.enabled) return [];
     const hit = ninjaNews.loadSchedule().some((ev) => Math.abs(ev.timeMs - e.timeMs) <= 2 * 60 * 1000);
     if (!hit) return [];
+    const pct = (v) => String(v).replace('.', ',');
     return [
-      `🥷 Ninja News siaga (${cfg.allowReal ? 'Demo + Real' : 'Demo'}) -- kalau dolar gerak kuat di ${cfg.windowSec} detik pertama`
-        + ` (EUR >= ${cfg.thrPct}%), Kaela buka BTC arah KEBALIKAN dolar. SL ${cfg.slPct}%, trailing aktif +${cfg.trailActPct}%,`
-        + ` maks ${cfg.maxHoldMin} menit. Dolar adem = gak entry.`,
+      `🥷 *Ninja News siaga (${cfg.allowReal ? 'Demo + Real' : 'Demo'})*`,
+      `Dolar gerak ≥${pct(cfg.thrPct)}% di ${cfg.windowSec} detik pertama → Kaela nyopet BTC arah KEBALIKAN dolar.`,
+      `SL ${pct(cfg.slPct)}% · trailing aktif +${pct(cfg.trailActPct)}% · maks ${cfg.maxHoldMin} menit. Dolar adem = gak entry.`,
     ];
   } catch (err) {
     console.log('[EconCalendarLive] Gagal cek jadwal Ninja News (pesan siap-siap tetap jalan):', err.message);
@@ -305,11 +306,13 @@ async function main() {
     // ── 1) HEADS-UP -- event 0..5 menit LAGI -- snapshot DXY (info) + BTC (buat sinyal trading) ──
     if (!st.headsup && minsUntil > 0 && minsUntil <= HEADSUP_BEFORE_MIN) {
       const [dxyBefore, btcBefore, positioningBefore] = await Promise.all([safeFetchDxyPrice(), safeFetchBtcPrice(), safeFetchPositioning()]);
-      const msg = formatHeadsUp(e, ninjaNewsHeadsUpLines(e));
+      // 5 Okt 2026 -- rilis BARENGAN (jam sama, mis. UoM Sentiment + UoM Inflation) digabung 1 pesan, bukan beruntun.
+      const batch = events.filter((x) => x.timeMs === e.timeMs && !(state[x.key] || {}).headsup);
+      const msg = formatHeadsUp(batch, ninjaNewsHeadsUpLines(e));
       console.log(msg);
       addEntry('econ-calendar-headsup', msg, now);
       await sendWhatsApp(msg);
-      state[e.key] = { ...st, headsup: true, dxyBefore, btcBefore, positioningBefore };
+      for (const x of batch) state[x.key] = { ...(state[x.key] || {}), headsup: true, dxyBefore, btcBefore, positioningBefore };
       didSomething = true;
       continue;
     }

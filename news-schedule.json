@@ -1,150 +1,179 @@
 {
-  "_note": "Jadwal rilis HIGH IMPACT buat Ninja News (ninjaNewsTrader.js). Jam = Eastern Time (ET); kode yang ngubah ke UTC (EDT/EST otomatis). Diverifikasi 3 Okt 2026 dari sumber resmi: federalreserve.gov/monetarypolicy/fomccalendars.htm, bls.gov/schedule/2026, bea.gov/news/schedule, census.gov economic indicators calendar. Tambah baris baru tiap ada jadwal tahun berikutnya. | 3 Okt 2026: + Initial Jobless Claims mingguan (DOL, Kamis 08:30 ET; minggu Thanksgiving maju Rabu 25 Nov) biar Ninja News cepet keuji -- impact lebih kecil dari CPI/NFP, detektor cuma nembak kalau EUR >= ambang. Rilis yang barengan jam sama digabung labelnya (1 detektor). | 5 Okt 2026: + ISM PMI (Manufaktur = hari kerja ke-1, Jasa = hari kerja ke-3, 10:00 ET; ismworld.org + financecalendar.com) -- sama alasan Jobless Claims: nambah sampel uji DEMO, belum pernah di-backtest, detektor tetap cuma nembak kalau EUR >= ambang.",
+  "_note": "Jadwal rilis HIGH IMPACT buat Ninja News (ninjaNewsTrader.js). Jam = Eastern Time (ET); kode yang ngubah ke UTC (EDT/EST otomatis). Diverifikasi 3 Okt 2026 dari sumber resmi: federalreserve.gov/monetarypolicy/fomccalendars.htm, bls.gov/schedule/2026, bea.gov/news/schedule, census.gov economic indicators calendar. Tambah baris baru tiap ada jadwal tahun berikutnya. | 3 Okt 2026: + Initial Jobless Claims mingguan (DOL, Kamis 08:30 ET; minggu Thanksgiving maju Rabu 25 Nov) biar Ninja News cepet keuji -- impact lebih kecil dari CPI/NFP, detektor cuma nembak kalau EUR >= ambang. Rilis yang barengan jam sama digabung labelnya (1 detektor). | 5 Okt 2026: + ISM PMI (Manufaktur = hari kerja ke-1, Jasa = hari kerja ke-3, 10:00 ET; ismworld.org + financecalendar.com) -- sama alasan Jobless Claims: nambah sampel uji DEMO, belum pernah di-backtest, detektor tetap cuma nembak kalau EUR >= ambang. | 5 Okt 2026: + field level (raja = FOMC Final Boss / tinggi = Boss / sedang = Mini Boss) buat alasan buka posisi Ninja News -- event gabungan ikut level tertinggi.",
   "events": [
     {
       "date": "2026-10-05",
       "timeET": "10:00",
-      "label": "ISM Services PMI (Sep)"
+      "label": "ISM Services PMI (Sep)",
+      "level": "sedang"
     },
     {
       "date": "2026-10-08",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-10-14",
       "timeET": "08:30",
-      "label": "CPI AS (Sep)"
+      "label": "CPI AS (Sep)",
+      "level": "tinggi"
     },
     {
       "date": "2026-10-15",
       "timeET": "08:30",
-      "label": "PPI + Retail Sales (Sep) + Jobless Claims"
+      "label": "PPI + Retail Sales (Sep) + Jobless Claims",
+      "level": "tinggi"
     },
     {
       "date": "2026-10-22",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-10-28",
       "timeET": "14:00",
-      "label": "FOMC Rate Decision"
+      "label": "FOMC Rate Decision",
+      "level": "raja"
     },
     {
       "date": "2026-10-29",
       "timeET": "08:30",
-      "label": "GDP Q3 Advance + PCE (Sep) + Jobless Claims"
+      "label": "GDP Q3 Advance + PCE (Sep) + Jobless Claims",
+      "level": "tinggi"
     },
     {
       "date": "2026-11-02",
       "timeET": "10:00",
-      "label": "ISM Manufacturing PMI (Okt)"
+      "label": "ISM Manufacturing PMI (Okt)",
+      "level": "sedang"
     },
     {
       "date": "2026-11-04",
       "timeET": "10:00",
-      "label": "ISM Services PMI (Okt)"
+      "label": "ISM Services PMI (Okt)",
+      "level": "sedang"
     },
     {
       "date": "2026-11-05",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-11-06",
       "timeET": "08:30",
-      "label": "NFP / Jobs Report (Okt)"
+      "label": "NFP / Jobs Report (Okt)",
+      "level": "tinggi"
     },
     {
       "date": "2026-11-10",
       "timeET": "08:30",
-      "label": "CPI AS (Okt)"
+      "label": "CPI AS (Okt)",
+      "level": "tinggi"
     },
     {
       "date": "2026-11-12",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-11-13",
       "timeET": "08:30",
-      "label": "PPI (Okt)"
+      "label": "PPI (Okt)",
+      "level": "tinggi"
     },
     {
       "date": "2026-11-17",
       "timeET": "08:30",
-      "label": "Retail Sales (Okt)"
+      "label": "Retail Sales (Okt)",
+      "level": "tinggi"
     },
     {
       "date": "2026-11-19",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-11-25",
       "timeET": "08:30",
-      "label": "GDP Q3 Second + PCE (Okt) + Jobless Claims"
+      "label": "GDP Q3 Second + PCE (Okt) + Jobless Claims",
+      "level": "tinggi"
     },
     {
       "date": "2026-12-01",
       "timeET": "10:00",
-      "label": "ISM Manufacturing PMI (Nov)"
+      "label": "ISM Manufacturing PMI (Nov)",
+      "level": "sedang"
     },
     {
       "date": "2026-12-03",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-12-03",
       "timeET": "10:00",
-      "label": "ISM Services PMI (Nov)"
+      "label": "ISM Services PMI (Nov)",
+      "level": "sedang"
     },
     {
       "date": "2026-12-04",
       "timeET": "08:30",
-      "label": "NFP / Jobs Report (Nov)"
+      "label": "NFP / Jobs Report (Nov)",
+      "level": "tinggi"
     },
     {
       "date": "2026-12-09",
       "timeET": "14:00",
-      "label": "FOMC Rate Decision + SEP"
+      "label": "FOMC Rate Decision + SEP",
+      "level": "raja"
     },
     {
       "date": "2026-12-10",
       "timeET": "08:30",
-      "label": "CPI AS (Nov) + Jobless Claims"
+      "label": "CPI AS (Nov) + Jobless Claims",
+      "level": "tinggi"
     },
     {
       "date": "2026-12-15",
       "timeET": "08:30",
-      "label": "PPI (Nov)"
+      "label": "PPI (Nov)",
+      "level": "tinggi"
     },
     {
       "date": "2026-12-16",
       "timeET": "08:30",
-      "label": "Retail Sales (Nov)"
+      "label": "Retail Sales (Nov)",
+      "level": "tinggi"
     },
     {
       "date": "2026-12-17",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-12-23",
       "timeET": "08:30",
-      "label": "GDP Q3 Third + PCE (Nov)"
+      "label": "GDP Q3 Third + PCE (Nov)",
+      "level": "tinggi"
     },
     {
       "date": "2026-12-24",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     },
     {
       "date": "2026-12-31",
       "timeET": "08:30",
-      "label": "Jobless Claims (mingguan)"
+      "label": "Jobless Claims (mingguan)",
+      "level": "sedang"
     }
   ]
 }

@@ -1,12 +1,13 @@
 // Kalender ekonomi -- MURNI INFORMASI, gak pernah pengaruhi sinyal/logic tanam-panen manapun.
 // Sumber: ForexFactory (via nfs.faireconomy.media, gratis, no API key, dipakai luas komunitas trading).
-// Fokus: event USD High-impact aja (paling relevan buat BTC lewat sentimen risiko/DXY) --
-// event negara lain/impact rendah cuma noise buat konteks kripto, sengaja disaring.
+// Fokus: event USD High + Medium (5 Okt 2026, sebelumnya High doang) -- paling relevan buat BTC lewat sentimen
+// risiko/DXY. Event negara lain/impact rendah cuma noise buat konteks kripto, sengaja disaring.
 
 const { fetchWithRetry } = require('./httpRetry');
 const { toLocal, localDateKey } = require('./config');
 const { translateEventTitle } = require('./econTranslate');
 const { getDirectionalView } = require('./econDirectionalView');
+const { lookupGlossary } = require('./econGlossary');
 
 const CALENDAR_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
 
@@ -30,26 +31,28 @@ async function fetchWeekCalendar() {
 // sentimen risiko, terlepas dari label impact ForexFactory. Fix: 2 jalur -- impact High (SEMUA
 // judul) TETAP masuk kayak biasa, DITAMBAH override title-match buat pidato Chair/pengumuman FOMC
 // inti (BUKAN pidato member regional biasa -- itu masih legit di-skip, terlalu sering/low-signal).
-// 5 Okt 2026 (permintaan Olan) -- + ISM PMI Manufaktur/Jasa: ForexFactory kadang ngelabel "Medium" (ISM Services
-// 5 Okt = Medium), padahal masuk jadwal uji Ninja News (news-schedule.json) -> wajib ada pesan SIAP-SIAP juga.
-// Dianchor ke "ISM" biar "Final Services/Manufacturing PMI" (S&P Global, impact Low) gak ikut nyampah.
+// 5 Okt 2026 (permintaan Olan: "news US dampak brutal, tinggi dan sedang -- masukkan semua dalam sistem") -- filter
+// diperluas dari High doang ke High + MEDIUM. Override judul di atas tetap jalan buat event inti yang kadang dilabel Low.
 const ALWAYS_RELEVANT_TITLE = /fed chair|fomc statement|fomc press conference|federal funds rate|fomc economic projections|^ism (services|manufacturing|non-manufacturing) pmi/i;
+const INCLUDED_IMPACTS = ['High', 'Medium'];
 
-// Level dampak buat pesan (5 Okt 2026, permintaan Olan: "kasih keterangan impact medium sama brutal, rajanya FOMC").
-// Urutan = prioritas (yang pertama cocok menang). RAJA = keputusan suku bunga FOMC (+statement/konpers/proyeksi) --
-// reaksi BTC paling liar di backtest rilis kita. Notulen FOMC & pidato Chair TIDAK raja (ikut label ForexFactory).
+// Level dampak (5 Okt 2026, permintaan Olan -- tema "boss game": "FOMC final boss, efek brutal"). Urutan = prioritas
+// (yang pertama cocok menang). FINAL BOSS = keputusan suku bunga FOMC (+statement/konpers/proyeksi) -- reaksi BTC
+// paling liar di backtest rilis kita. Notulen FOMC & pidato Chair BUKAN final boss (ikut label ForexFactory).
 const IMPACT_LEVELS = [
-  { key: 'raja', badge: '👑 FINAL BOSS (efek brutal)', titleRe: /federal funds rate|fomc statement|fomc press conference|fomc economic projections/i },
-  { key: 'tinggi', badge: '🔴 TINGGI', impact: 'High' },
-  { key: 'sedang', badge: '🟡 SEDANG', impact: 'Medium' },
+  { key: 'raja', badge: '👑 Final Boss (efek brutal)', titleRe: /federal funds rate|fomc statement|fomc press conference|fomc economic projections/i },
+  { key: 'tinggi', badge: '🔴 Boss (efek tinggi)', impact: 'High' },
+  { key: 'sedang', badge: '🟡 Mini Boss (efek sedang)', impact: 'Medium' },
 ];
+const LEVEL_BY_KEY = Object.fromEntries(IMPACT_LEVELS.map((l) => [l.key, l]));
 function impactLevelOf(e) {
-  const lvl = IMPACT_LEVELS.find((l) => (l.titleRe && l.titleRe.test(e.title)) || (l.impact && l.impact === e.impact));
-  return lvl ? { key: lvl.key, badge: lvl.badge } : { key: 'rendah', badge: '⚪ RENDAH' };
+  const lvl = IMPACT_LEVELS.find((l) => (l.titleRe && l.titleRe.test(e.title)) || (l.impact && l.impact === e.impact))
+    || (ALWAYS_RELEVANT_TITLE.test(e.title) ? LEVEL_BY_KEY.sedang : null); // event inti yang dilabel Low -> minimal Mini Boss
+  return lvl ? { key: lvl.key, badge: lvl.badge } : { key: 'rendah', badge: '⚪ Kecil' };
 }
 
 function isHighImpactUsd(e) {
-  return e.country === 'USD' && (e.impact === 'High' || ALWAYS_RELEVANT_TITLE.test(e.title));
+  return e.country === 'USD' && (INCLUDED_IMPACTS.includes(e.impact) || ALWAYS_RELEVANT_TITLE.test(e.title));
 }
 
 // `timeMs`+`actual` ditambahin (5 Sep 2026, buat econCalendarLiveMonitor.js) -- gak dipake fungsi
@@ -69,6 +72,7 @@ function mapEventBase(e) {
     actual: e.actual || '',
     directionalView: getDirectionalView(e.title),
     impactLevel: impactLevelOf(e),
+    glossary: lookupGlossary(e.title), // { inggris, arti } | null -- nama panjang + arti (5 Okt 2026)
   };
 }
 

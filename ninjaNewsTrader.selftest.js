@@ -106,6 +106,8 @@ test('net REALISTIS <= net demo & kecatat di riwayat; kesiapan real kebaca tanpa
   const hist = h.j.history[h.j.history.length - 1];
   assert(Number.isFinite(hist.netRealistic) && hist.netRealistic <= hist.net, 'net realistis wajib <= net demo');
   assert(hist.notionalUsd > 0);
+  assert(/Nyopet volatilitas tinggi rilis berita CPI TEST: dolar melemah 0,08|Nyopet volatilitas tinggi rilis berita CPI TEST: dolar melemah 0\.08/.test(hist.reasonText), hist.reasonText);
+  assert(h.st.wa.some((m) => /Alasan buka: Nyopet volatilitas tinggi/.test(m)), 'pesan WA buka wajib pakai alasan spesifik');
   assert.strictEqual(rec.realReady.ok, false, 'key real belum ada di harness');
   let realOrders = 0;
   const realExec = { getAccountBalance: async () => 100, placeMarketEntry: async () => { realOrders += 1; } };

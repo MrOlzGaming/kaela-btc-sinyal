@@ -64,7 +64,7 @@ function rec(base, L, extra = {}) {
     grossUsd: n.grossUsd, feeUsd: n.feeUsd,
     // PnL 0 + tanpa harga keluar + kode tutup "gak kebaca" = sebenernya GAK DIKETAHUI, bukan impas
     netUsd: !closed ? null : (n.exit === null && n.netUsd === 0 && /UNKNOWN|UNTRACKED/.test(String(n.reasonCode)) ? null : n.netUsd),
-    reasonOpen: reasonOpen(base.patternType), reasonCloseCode: n.reasonCode, reasonClose: closed ? reasonClose(n.reasonCode) : null,
+    reasonOpen: base.reasonText || reasonOpen(base.patternType), reasonCloseCode: n.reasonCode, reasonClose: closed ? reasonClose(n.reasonCode) : null,
     ...extra,
   };
 }
@@ -125,12 +125,12 @@ function collect() {
   for (const [file, pt] of [['ninja-exhaustion-journal.json', 'exhaustion_fade'], ['ninja-news-journal.json', 'news_dxy']]) {
     const j = readJson(file); if (!j) continue;
     for (const h of j.history || []) {
-      out.push(rec({ systemKey: 'ninja', id: h.id || `${pt}-${h.at}`, signalId: h.signalId, account: acct(h.mode), mode: h.mode, exchange: 'bingx', patternType: pt, direction: h.dir || 'long', openedAt: h.openedAt },
+      out.push(rec({ systemKey: 'ninja', id: h.id || `${pt}-${h.at}`, signalId: h.signalId, account: acct(h.mode), mode: h.mode, exchange: 'bingx', patternType: pt, direction: h.dir || 'long', openedAt: h.openedAt, reasonText: h.reasonText },
         { entryPrice: h.entry, exitPrice: h.exit, sl: h.sl, netUsd: h.net, grossUsd: h.grossUsd, feeUsd: h.feeUsd, exitReason: h.reason, openedAt: h.openedAt, closedAt: h.at }, { ...(h.label ? { event: h.label } : {}), context: ctxOf(h) }));
     }
     const f = j.floating;
     if (f && f.legs) for (const mode of ['demo', 'real']) if (f.legs[mode] && !f.legs[mode].closedAt) {
-      out.push(rec({ systemKey: 'ninja', id: f.id, signalId: f.signalId, account: acct(mode), mode, exchange: 'bingx', patternType: pt, direction: f.dir, openedAt: f.openedAt }, f.legs[mode], { context: ctxOf(f) }));
+      out.push(rec({ systemKey: 'ninja', id: f.id, signalId: f.signalId, account: acct(mode), mode, exchange: 'bingx', patternType: pt, direction: f.dir, openedAt: f.openedAt, reasonText: f.reasonText }, f.legs[mode], { context: ctxOf(f) }));
     }
   }
   // Trade yang tutup sebelum jurnalnya nyimpen riwayat (dipulihin manual dari pesan WA -- ditandai `seed`)

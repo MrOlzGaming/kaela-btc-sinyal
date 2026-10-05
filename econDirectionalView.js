@@ -31,7 +31,7 @@ const CATEGORIES = [
     aboveForecast: 'menguat', belowForecast: 'tertekan',
   },
   {
-    match: ['Initial Jobless Claims'],
+    match: ['Initial Jobless Claims', 'Unemployment Claims'], // ForexFactory nulisnya "Unemployment Claims" (5 Okt 2026)
     label: 'Klaim pengangguran mingguan', strength: 'lemah',
     mechanism: 'Logika sama kayak Tingkat Pengangguran (klaim lebih banyak = dovish = BTC diuntungkan, lebih sedikit = hawkish = BTC tertekan), tapi data mingguan/noisy -- pengaruh biasanya lemah kecuali angkanya ekstrem jauh dari perkiraan.',
     beginnerWhy: 'Ini ngitung berapa orang Amerika baru daftar klaim tunjangan pengangguran MINGGU ini. Logikanya SAMA kayak Tingkat Pengangguran (naik = ekonomi melemah = BTC berpotensi diuntungkan) -- cuma data mingguan lebih "berisik"/naik-turun, jadi pengaruhnya biasanya lebih lemah kecuali angkanya ekstrem banget beda dari perkiraan.',
@@ -64,6 +64,21 @@ const CATEGORIES = [
     mechanism: 'Angka di atas perkiraan (apalagi di atas 50 = ekspansi) -> ekonomi kuat -> hawkish-leaning -> BTC cenderung tertekan. Di bawah perkiraan -> BTC cenderung diuntungkan.',
     beginnerWhy: '"PMI" (Purchasing Managers\' Index) itu survei ke manajer pabrik/perusahaan jasa, nanya "bisnis lagi bagus apa nggak". Angka di atas 50 = lagi berkembang (ekonomi kuat), di bawah 50 = lagi menyusut (ekonomi melemah) -- logika pengaruhnya ke BTC mirip data lapangan kerja/ritel.',
     aboveForecast: 'tertekan', belowForecast: 'menguat',
+  },
+  // 5 Okt 2026 -- event MEDIUM ikut masuk pesan, beberapa butuh peta arah sendiri.
+  {
+    match: ['Inflation Expectations'],
+    label: 'Ekspektasi inflasi', strength: 'lemah',
+    mechanism: 'Warga AS ngira inflasi bakal LEBIH TINGGI -> The Fed makin waspada (hawkish) -> BTC cenderung tertekan. Lebih rendah -> sebaliknya.',
+    beginnerWhy: 'Survei nanya warga AS "menurut lo harga-harga setahun lagi naik berapa persen". The Fed takut ekspektasi inflasi "nempel" tinggi, jadi angka naik bikin mereka lebih galak.',
+    aboveForecast: 'tertekan', belowForecast: 'menguat',
+  },
+  {
+    match: ['Speaks', 'Beige Book'],
+    label: 'Pidato/laporan pejabat', strength: 'kualitatif',
+    mechanism: 'Gak ada angka -- arahnya dari NADA omongan. Nada galak (hawkish: inflasi masih bahaya, suku bunga tahan tinggi) -> BTC cenderung tertekan; nada lunak (dovish: siap turunin bunga) -> BTC cenderung diuntungkan.',
+    beginnerWhy: 'Pejabat The Fed/Presiden AS ngomong di depan publik. Pasar nyari petunjuk soal arah suku bunga dari kata-katanya.',
+    aboveForecast: null, belowForecast: null,
   },
   {
     match: ['CB Consumer Confidence', 'Consumer Sentiment'],

@@ -305,7 +305,8 @@ function _tpLine(pos) {
 
 function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge, system) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
-  const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.patternType || pos.mode);
+  // pos.reasonText (5 Okt 2026) -- alasan spesifik per sinyal (mis. Ninja News nyebut nama rilis + level), menang dari label generik.
+  const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : (pos.reasonText || patternReason(pos.patternType || pos.mode));
   const liqPrice = Number(pos.liquidationPrice) > 0 ? Number(pos.liquidationPrice) : liquidationPrice(pos.entryPrice, pos.leverage, pos.direction);
   return `${_rangerBadge(pos, isDemo, exchangeBadge, system)}
 ${shortId(pos.id, pos.signalId)} — *Buka Posisi*

@@ -1315,8 +1315,33 @@ async function main() {
     assert.strictEqual(lvl('FOMC Press Conference', 'High'), 'raja');
     assert.strictEqual(lvl('FOMC Meeting Minutes', 'High'), 'tinggi', 'notulen bukan final boss');
     const { formatHeadsUp } = require('./econCalendarLog');
-    const msg = formatHeadsUp({ time: '01:00', title: 'Suku Bunga The Fed', forecast: '-', previous: '-', impactLevel: impactLevelOf({ title: 'Federal Funds Rate', impact: 'High' }) });
-    assert.ok(/Dampak: 👑 FINAL BOSS/.test(msg) && /FINAL BOSS --/.test(msg), msg);
+    const msg = formatHeadsUp({ time: '01:00', title: 'Suku Bunga The Fed', rawTitle: 'Federal Funds Rate', forecast: '-', previous: '-', impactLevel: impactLevelOf({ title: 'Federal Funds Rate', impact: 'High' }) });
+    assert.ok(/Level: 👑 Final Boss \(efek brutal\)/.test(msg) && /FINAL BOSS --/.test(msg), msg);
+  });
+
+  // 5 Okt 2026 (permintaan Olan): semua news USD Medium+High masuk, tiap event ada nama asli + kepanjangan + arti,
+  // rilis barengan digabung 1 pesan siap-siap, legenda 3 level GAK diulang di pesan jadwal.
+  await test('Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi', async () => {
+    const { getAllHighImpactUsdEvents } = require('./econCalendar');
+    const { formatHeadsUp, formatEconCalendar } = require('./econCalendarLog');
+    const raw = [
+      { title: 'Prelim UoM Consumer Sentiment', country: 'USD', impact: 'Medium', date: '2026-10-09T10:00:00-04:00', forecast: '54.2', previous: '55.1' },
+      { title: 'Prelim UoM Inflation Expectations', country: 'USD', impact: 'Medium', date: '2026-10-09T10:00:00-04:00', forecast: '', previous: '4.7%' },
+      { title: 'Unemployment Claims', country: 'USD', impact: 'Medium', date: '2026-10-08T08:30:00-04:00', forecast: '225K', previous: '218K' },
+      { title: 'Some Low Event', country: 'USD', impact: 'Low', date: '2026-10-08T08:30:00-04:00' },
+    ];
+    const ev = getAllHighImpactUsdEvents(raw);
+    assert.strictEqual(ev.length, 3, 'Low tetap disaring');
+    const claims = ev.find((e) => e.rawTitle === 'Unemployment Claims');
+    assert.ok(claims.glossary && /Initial Jobless Claims/.test(claims.glossary.inggris) && claims.directionalView, 'claims wajib ada kamus + peta arah');
+    const uom = ev.filter((e) => /UoM/.test(e.rawTitle));
+    const hu = formatHeadsUp(uom, []);
+    assert.ok(/University of Michigan Consumer Sentiment/.test(hu) && /University of Michigan Inflation Expectations/.test(hu), hu);
+    assert.ok(/Perkiraan: 54,2 · Sebelumnya: 55,1/.test(hu), 'desimal koma');
+    const cal = formatEconCalendar(new Date('2026-10-07T12:00:00Z'), ev);
+    assert.ok(!/Level dampak:/.test(cal), 'legenda 3 level gak boleh nongol terus');
+    assert.strictEqual((cal.match(/🕐/g) || []).length, 2, 'event jam sama digabung 1 header waktu');
+    assert.ok(/Mini Boss \(efek sedang\)/.test(cal));
   });
 
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);

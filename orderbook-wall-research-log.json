@@ -76552,5 +76552,86 @@
     "qty": 50.313,
     "notionalUsd": 4321282.944,
     "distPct": 0.04676878920088759
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "BID",
+    "price": 85719.5,
+    "qty": 5.843,
+    "notionalUsd": 500859.0385,
+    "distPct": -0.000058329750917859906
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "BID",
+    "price": 85707,
+    "qty": 7.632,
+    "notionalUsd": 654115.824,
+    "distPct": -0.014640767479534028
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "BID",
+    "price": 85686.8,
+    "qty": 33.504,
+    "notionalUsd": 2870850.5472,
+    "distPct": -0.03820598684897436
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "BID",
+    "price": 85680,
+    "qty": 8.69,
+    "notionalUsd": 744559.2,
+    "distPct": -0.04613883297334495
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "BID",
+    "price": 85667.1,
+    "qty": 6.731,
+    "notionalUsd": 576625.2501000001,
+    "distPct": -0.061187908709270045
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "ASK",
+    "price": 85728.8,
+    "qty": 6.453,
+    "notionalUsd": 553207.9464,
+    "distPct": 0.010791003919175963
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "ASK",
+    "price": 85734.8,
+    "qty": 6.813,
+    "notionalUsd": 584111.1923999999,
+    "distPct": 0.017790574028911724
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "ASK",
+    "price": 85739.8,
+    "qty": 6.261,
+    "notionalUsd": 536816.8878,
+    "distPct": 0.02362354912035819
+  },
+  {
+    "timestamp": "2026-10-05T23:47:06.439Z",
+    "midPrice": 85719.55,
+    "side": "ASK",
+    "price": 85761.8,
+    "qty": 8.647,
+    "notionalUsd": 741582.2846,
+    "distPct": 0.04928863952272265
   }
 ]

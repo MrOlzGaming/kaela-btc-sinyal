@@ -1,42 +1,14 @@
 {
-  "lastProcessedCloseTime": 1791182699999,
+  "lastProcessedCloseTime": 1791183599999,
   "pendingEntry": null,
-  "floating": {
-    "id": "04ef71dc-2196-4f92-b987-d57747863254",
-    "signalId": "2026100501",
-    "dir": "long",
-    "slDistPct": 1.053689723628587,
-    "sma20AtSignal": 86471.156,
-    "openedAt": 1791174666700,
-    "legs": {
-      "demo": {
-        "entryPrice": 85723.3,
-        "quantity": 0.0349,
-        "leverage": 50,
-        "margin": 59.84432220000001,
-        "nilaiPosisi": 2991.74317,
-        "entryCommission": 0.598349,
-        "openedAt": 1791174666700,
-        "sl": 84820.0423971447,
-        "stopOrderId": "2106965380370620416",
-        "exitOrderId": "2106999101863235584",
-        "exitLimitPrice": 86044.90095018402
-      },
-      "real": null
-    },
-    "wibowoRoute": "demo",
-    "notified": {
-      "demo": true,
-      "wibowo": true
-    }
-  },
-  "closedCount": 0,
+  "floating": null,
+  "closedCount": 1,
   "missedEntries": 0,
   "stats": {
     "demo": {
-      "wins": 0,
+      "wins": 1,
       "losses": 0,
-      "totalPnlUsd": 0
+      "totalPnlUsd": 10.024897999999695
     },
     "real": {
       "wins": 0,

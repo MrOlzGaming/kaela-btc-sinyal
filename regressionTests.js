@@ -1305,6 +1305,20 @@ async function main() {
     assert.deepStrictEqual(got, ['ISM Services PMI', 'ISM Manufacturing PMI']);
   });
 
+  // 5 Okt 2026 (permintaan Olan): level dampak di pesan -- SEDANG/TINGGI/FINAL BOSS (cuma keputusan suku bunga FOMC).
+  await test('Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener', async () => {
+    const { impactLevelOf } = require('./econCalendar');
+    const lvl = (title, impact) => impactLevelOf({ title, impact }).key;
+    assert.strictEqual(lvl('ISM Services PMI', 'Medium'), 'sedang');
+    assert.strictEqual(lvl('CPI m/m', 'High'), 'tinggi');
+    assert.strictEqual(lvl('Federal Funds Rate', 'High'), 'raja');
+    assert.strictEqual(lvl('FOMC Press Conference', 'High'), 'raja');
+    assert.strictEqual(lvl('FOMC Meeting Minutes', 'High'), 'tinggi', 'notulen bukan final boss');
+    const { formatHeadsUp } = require('./econCalendarLog');
+    const msg = formatHeadsUp({ time: '01:00', title: 'Suku Bunga The Fed', forecast: '-', previous: '-', impactLevel: impactLevelOf({ title: 'Federal Funds Rate', impact: 'High' }) });
+    assert.ok(/Dampak: 👑 FINAL BOSS/.test(msg) && /FINAL BOSS --/.test(msg), msg);
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

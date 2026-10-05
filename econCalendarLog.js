@@ -3,6 +3,10 @@
 const { WEB_URL, localDateKey } = require('./config');
 const { CATEGORY_COLOR } = require('./categoryColors');
 
+// Keterangan level dampak (5 Okt 2026) -- dibangun dari IMPACT_LEVELS di econCalendar.js (satu sumber badge).
+const { IMPACT_LEVELS } = require('./econCalendar');
+const IMPACT_LEGEND = `Level dampak: ${[...IMPACT_LEVELS].reverse().map((l) => l.badge).join(' · ')} = keputusan suku bunga FOMC`;
+
 const ARAH_LABEL = { tertekan: '📉 BTC cenderung TERTEKAN', menguat: '📈 BTC cenderung MENGUAT', campuran: '↔️ Efek CAMPURAN, gak konsisten' };
 
 // Baris perkiraan arah (11 Agu 2026, permintaan Olan: "berani memperkirakan arah, jelasin
@@ -35,14 +39,16 @@ function dayLabel(dateKey, now) {
 function formatEconCalendar(now, events) {
   const lines = [];
   lines.push(`${CATEGORY_COLOR.econ.emoji} 📅 JADWAL EKONOMI MENDATANG (peringatan dini)`);
-  lines.push('(event USD dampak tinggi dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)');
+  lines.push('(event USD penting dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)');
   lines.push('');
   for (const e of events) {
     lines.push(`🕐 ${dayLabel(e.dateKey, now)}, ${e.time} WITA — ${e.title}`);
+    if (e.impactLevel) lines.push(`   Dampak: ${e.impactLevel.badge}`);
     lines.push(`   Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`);
     lines.push(...directionalLines(e));
     lines.push('');
   }
+  lines.push(IMPACT_LEGEND);
   lines.push('⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.');
   lines.push('');
   lines.push(`🔗 ${WEB_URL}`);
@@ -57,10 +63,13 @@ function formatHeadsUp(e, extraLines = []) {
   const lines = [
     `${CATEGORY_COLOR.econ.emoji} ⏰ SIAP-SIAP -- ${e.time} WITA (sebentar lagi)`,
     e.title,
+    ...(e.impactLevel ? [`Dampak: ${e.impactLevel.badge}`] : []),
     `Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`,
     ...directionalLines(e),
     '',
-    'Data penting -- pantau reaksi pasar (DXY/BTC) sebentar lagi.',
+    e.impactLevel && e.impactLevel.key === 'raja'
+      ? 'FINAL BOSS -- BTC bisa gerak liar beberapa persen dalam hitungan menit. Jangan buka posisi manual pas rilis.'
+      : 'Data penting -- pantau reaksi pasar (DXY/BTC) sebentar lagi.',
     ...(extraLines.length ? ['', ...extraLines] : []),
   ];
   return lines.join('\n');

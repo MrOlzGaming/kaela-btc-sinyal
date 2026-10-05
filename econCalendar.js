@@ -35,6 +35,19 @@ async function fetchWeekCalendar() {
 // Dianchor ke "ISM" biar "Final Services/Manufacturing PMI" (S&P Global, impact Low) gak ikut nyampah.
 const ALWAYS_RELEVANT_TITLE = /fed chair|fomc statement|fomc press conference|federal funds rate|fomc economic projections|^ism (services|manufacturing|non-manufacturing) pmi/i;
 
+// Level dampak buat pesan (5 Okt 2026, permintaan Olan: "kasih keterangan impact medium sama brutal, rajanya FOMC").
+// Urutan = prioritas (yang pertama cocok menang). RAJA = keputusan suku bunga FOMC (+statement/konpers/proyeksi) --
+// reaksi BTC paling liar di backtest rilis kita. Notulen FOMC & pidato Chair TIDAK raja (ikut label ForexFactory).
+const IMPACT_LEVELS = [
+  { key: 'raja', badge: '👑 FINAL BOSS (efek brutal)', titleRe: /federal funds rate|fomc statement|fomc press conference|fomc economic projections/i },
+  { key: 'tinggi', badge: '🔴 TINGGI', impact: 'High' },
+  { key: 'sedang', badge: '🟡 SEDANG', impact: 'Medium' },
+];
+function impactLevelOf(e) {
+  const lvl = IMPACT_LEVELS.find((l) => (l.titleRe && l.titleRe.test(e.title)) || (l.impact && l.impact === e.impact));
+  return lvl ? { key: lvl.key, badge: lvl.badge } : { key: 'rendah', badge: '⚪ RENDAH' };
+}
+
 function isHighImpactUsd(e) {
   return e.country === 'USD' && (e.impact === 'High' || ALWAYS_RELEVANT_TITLE.test(e.title));
 }
@@ -55,6 +68,7 @@ function mapEventBase(e) {
     previous: e.previous || '-',
     actual: e.actual || '',
     directionalView: getDirectionalView(e.title),
+    impactLevel: impactLevelOf(e),
   };
 }
 
@@ -80,4 +94,4 @@ function getAllHighImpactUsdEvents(allEvents) {
   return allEvents.filter(isHighImpactUsd).map(mapEventBase);
 }
 
-module.exports = { fetchWeekCalendar, getUpcomingHighImpactUsdEvents, getAllHighImpactUsdEvents };
+module.exports = { fetchWeekCalendar, getUpcomingHighImpactUsdEvents, getAllHighImpactUsdEvents, impactLevelOf, IMPACT_LEVELS };

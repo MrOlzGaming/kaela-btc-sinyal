@@ -26,7 +26,9 @@ Keputusan Olan 3 Okt 2026 malam:
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 
 - **Senin 5 Okt 2026 22:00 WITA** — rilis pertama Ninja News = ISM Services PMI (ditambah 5 Okt atas pertanyaan Olan; ISM
-  Manufaktur/Jasa juga 2/4 Nov & 1/3 Des). Lalu Jobless Claims Kamis 8 Okt 20:30 WITA, CPI 14 Okt. Di demo: cek `ninja-news.log` + `ninja-news-research-log.json`,
+  Manufaktur/Jasa juga 2/4 Nov & 1/3 Des). Lalu Jobless Claims Kamis 8 Okt 20:30 WITA, CPI 14 Okt.
+  ➜ Abis rilis ISM: cek reaksi EUR/BTC di `ninja-news-research-log.json`. Kalau reaksinya lumayan, usulin ke Olan masukin
+  event MEDIUM lain ke pesan siap-siap + jadwal uji (arahan Olan 5 Okt). Level dampak di pesan: SEDANG/TINGGI/👑 FINAL BOSS (FOMC). Di demo: cek `ninja-news.log` + `ninja-news-research-log.json`,
   pastikan detektor nyala & datanya kerekam. Lanjut tiap rilis di `news-schedule.json`.
 - **Ninja News** — evaluasi setelah 1-2 bulan demo (target 30 rilis): naik real kalau hasil bagus.
 - **Ninja Exhaustion** — evaluasi di **100 transaksi demo**: real kalau PF bersih > 1,2 dan gak ada paruh PF < 1.

@@ -53,7 +53,7 @@ function collect(read = readJson) {
   const mr = read('ninja-mr-exec-journal.json');
   if (mr) {
     const st = (mr.stats && mr.stats.demo) || {};
-    out.push({ key: 'mr', name: '🥷 Ninja Mean Reversion', n: (st.wins || 0) + (st.losses || 0), target: null, nets: null, wins: st.wins || 0, losses: st.losses || 0, totalPnl: st.totalPnlUsd || 0, extra: `limit gak ke-fill ${mr.missedEntries || 0}` });
+    out.push({ key: 'mr', name: '🥷 Ninja Mean Reversion', n: (st.wins || 0) + (st.losses || 0), target: null, nets: null, wins: st.wins || 0, losses: st.losses || 0, totalPnl: st.totalPnlUsd || 0, extra: `limit gak ke-fill ${mr.missedEntries || 0}, ditolak exchange ${mr.rejectedEntries || 0}` });
   }
   const rg = read('ranger-btc-dual-exec-journal.json');
   if (rg && rg.sweep) {

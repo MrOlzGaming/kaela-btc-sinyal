@@ -99,6 +99,29 @@ async function test(name, fn) { try { await fn(); passed++; console.log(`  OK   
     assert.strictEqual(h.sent.sc.length + h.sent.wb.length, 0, 'belum ada WA sebelum fill');
   });
 
+  // 5 Okt 2026: harga BingX (venue) beda dari Binance spot (sumber sinyal) -- demo diukur -$36,5. Limit dari close spot bikin
+  // post-only BUY nyeberang -> ditolak BingX (101215) -> MR nol trade sejak 30 Sep. Limit & target exit WAJIB skala harga venue.
+  await test('harga venue beda dari spot (-$36,5): limit 1 tick dari harga VENUE (gak nyeberang), target exit SMA20 ikut digeser', async () => {
+    const demo = fakeExchange(), real = fakeExchange({ balance: 14 });
+    const h = harness({ demo, real });
+    await h.cycle(s0 - 1);
+    const c = candles[s0].close, venue = c - 36.5;
+    demo.live = real.live = venue;
+    await h.cycle(s0);
+    const pe = h.journal.pendingEntry;
+    for (const L of [pe.legs.demo, pe.legs.real]) {
+      assert.ok(dir0 === 'long' ? L.limitPrice < venue : L.limitPrice > venue, `limit ${L.limitPrice} harus di sisi baik harga venue ${venue} (bukan close spot ${c})`);
+      assert.ok(Math.abs(L.limitPrice - venue) / venue < 1e-4, 'limit nempel harga venue (1 tick)');
+    }
+    demo.fill(pe.legs.demo.orderId, pe.legs.demo.limitPrice); real.fill(pe.legs.real.orderId, pe.legs.real.limitPrice);
+    demo.live = real.live = pe.legs.demo.limitPrice;
+    await h.cycle(s0, 1);
+    const L = h.journal.floating.legs.demo;
+    const expected = ind.sma20[s0] * pe.legs.demo.limitPrice / c;
+    assert.ok(Math.abs(L.exitLimitPrice - expected) / expected < 1e-9, `target exit ${L.exitLimitPrice} harus SMA20 x rasio venue/spot (${expected})`);
+    assert.ok(Math.abs(L.exitLimitPrice - ind.sma20[s0]) / ind.sma20[s0] > 0.0003, 'target exit beneran kegeser dari SMA20 spot');
+  });
+
   await test('fill demo+real -> floating, stop exchange + limit exit SMA20 terpasang, WA buka: SC demo, Wibowo REAL', async () => {
     const demo = fakeExchange(), real = fakeExchange({ balance: 14 });
     const h = harness({ demo, real });

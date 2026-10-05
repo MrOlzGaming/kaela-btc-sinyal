@@ -24,7 +24,9 @@ if ! flock -n 200; then
 fi
 
 output=$(node ninjaTrader.js 2>&1)
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
+# (5 Okt 2026) cuma ditulis kalau ADA isinya -- dulu stempel kosong tiap menit + rekap {"sent":false} tiap menit = ~2.880
+# baris sampah/hari, log dipotong ke 3.000 baris -> jejak penting (mis. alasan Ninja MR gak entry 2 Okt) ilang dalam ~1 hari.
+[ -n "$output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
 
 # NINJA Mean Reversion 15M PAPER (30 Sep 2026, ninjaMrSignal.js) -- sinyal + hitungan kertas buat
 # eksekusi manual Olan, TANPA order exchange. Journal sendiri (ninja-mr-journal.json), murah:
@@ -52,7 +54,8 @@ std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)
 
 # Cek rekap saldo-kurang harian TIAP SIKLUS (murah -- cuma baca state lokal, kirim WA 0x atau 1x
 # aja per hari begitu tanggalnya kepotong, lihat ninjaBalanceRecap.js).
-node -e "require('./ninjaBalanceRecap').reportYesterdayRecapIfPending().then(r=>console.log(JSON.stringify(r)))" >> "$LOG_FILE" 2>&1
+# Hasil rutin ("gak ada akumulasi"/"masih hari yang sama"/"udah pernah dilaporin") gak ditulis -- cuma yang kekirim / aneh.
+node -e "require('./ninjaBalanceRecap').reportYesterdayRecapIfPending().then(r=>{const rutin=['gak ada akumulasi','masih hari yang sama, belum waktunya','udah pernah dilaporin'];if(r.sent||!rutin.includes(r.reason))console.log('['+new Date().toISOString()+'] NinjaBalanceRecap '+JSON.stringify(r))})" >> "$LOG_FILE" 2>&1
 
 # Log cap ~5000 baris (cadence 1 menit = ~1440x/hari, numpuk cepat).
 if [ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt 5000 ]; then

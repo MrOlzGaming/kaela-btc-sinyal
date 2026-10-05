@@ -140,7 +140,19 @@ function createTrader(deps) {
   }
 
   // ---------- entry ----------
-  async function placeLeg(exec, testnet, dir, limitPrice, slDistPct) {
+  // ⛔ FIX 5 Okt 2026 (Ninja MR NOL trade sejak aktif 30 Sep): limit dulu dihitung dari close BINANCE SPOT (sumber sinyal),
+  // padahal eksekusi di BingX perp yang harganya beda (demo VST diukur -$36,5 dari spot). Limit BUY 1 tick di bawah close spot
+  // = ~$35 DI ATAS harga BingX -> post-only nyeberang -> DITOLAK BingX (code 101215, dites empiris) -> sinyal LONG 2 Okt 22:59
+  // ilang tanpa order; limit SELL ketinggian -> gak pernah ke-fill. Sekarang limit = 1 tick dari harga LIVE venue leg itu
+  // sendiri (demo/real masing2) -- semantik backtest ("limit 1 tick di sisi baik harga pas sinyal") di bursa eksekusinya.
+  async function venueLimitPrice(testnet, dir, signalClose) {
+    const venue = await safe(`harga live ${testnet ? 'demo' : 'real'}`, () => deps.fetchLivePrice(testnet));
+    const ref = venue > 0 ? venue : signalClose;
+    return dir === 'long' ? ref * (1 - TICK) : ref * (1 + TICK);
+  }
+
+  async function placeLeg(exec, testnet, dir, signalClose, slDistPct) {
+    const limitPrice = await venueLimitPrice(testnet, dir, signalClose);
     const balance = await exec.getAccountBalance(testnet ? 'VST' : 'USDT');
     const modal = balance * MODAL_ACTIVE_FRACTION;
     const calc = hitungExposure({ modal, nyawa: slDistPct, direction: execDirOf(dir) });
@@ -161,48 +173,52 @@ function createTrader(deps) {
     const dir = signal(P, candles, ind, i);
     if (!dir) return;
     if (deps.oldNinjaFloating()) { log('Ninja lama (Channel Breakout) masih floating di akun yang sama -- skip entry.'); return; }
-    const limitPrice = dir === 'long' ? x.close * (1 - TICK) : x.close * (1 + TICK);
     const slDistPct = (cfg.k * ind.atr[i] / x.close) * 100;
-    const slRef = dir === 'long' ? limitPrice * (1 - slDistPct / 100) : limitPrice * (1 + slDistPct / 100);
+    const spotLimit = dir === 'long' ? x.close * (1 - TICK) : x.close * (1 + TICK); // cuma buat catatan saldo-kurang (real)
+    const slRef = dir === 'long' ? spotLimit * (1 - slDistPct / 100) : spotLimit * (1 + slDistPct / 100);
     const idrRate = await safe('kurs', () => deps.getIdrRate());
 
     const demoExec = deps.execFor(true);
     if (!demoExec) { log('Akun demo BingX belum di-setup -- skip.'); return; }
     if ((await deps.strayCheck(demoExec, idrRate)) === 'unsafe') { log('Akun demo belum dipastikan bersih -- skip entry siklus ini.'); return; }
     let demoLeg;
-    try { demoLeg = await placeLeg(demoExec, true, dir, limitPrice, slDistPct); }
-    catch (e) { log(`Gagal pasang limit DEMO: ${e.message}`); return; }
+    try { demoLeg = await placeLeg(demoExec, true, dir, x.close, slDistPct); }
+    catch (e) { j.rejectedEntries = (j.rejectedEntries || 0) + 1; log(`Gagal pasang limit DEMO: ${e.message}`); return; } // dihitung (5 Okt) -- dulu ilang diam2 bareng log yang kepotong
 
     let realLeg = null;
     if (cfg.allowReal) {
       const realExec = deps.execFor(false);
       if (realExec && (await deps.strayCheck(realExec, idrRate)) === 'unsafe') log('Akun real belum dipastikan bersih -- real skip (demo tetap jalan).');
       else if (realExec) {
-        try { realLeg = await placeLeg(realExec, false, dir, limitPrice, slDistPct); }
+        try { realLeg = await placeLeg(realExec, false, dir, x.close, slDistPct); }
         catch (e) {
-          if (isInsufficientBalanceError(e.message)) { deps.recordSkipped({ dir, entryPrice: limitPrice, sl: slRef, tp: ind.sma20[i] }); log('Real skip -- saldo kurang (dicatat ke rekap harian).'); }
+          if (isInsufficientBalanceError(e.message)) { deps.recordSkipped({ dir, entryPrice: spotLimit, sl: slRef, tp: ind.sma20[i] }); log('Real skip -- saldo kurang (dicatat ke rekap harian).'); }
           else log(`Real gagal (BUKAN saldo kurang -- perlu dicek): ${e.message}`);
         }
       }
     }
-    j.pendingEntry = { id: crypto.randomUUID(), signalId: nextId(), dir, signalCloseTime: x.closeTime, expiresAtCloseTime: x.closeTime + tfMs, limitPrice, slDistPct, sma20AtSignal: ind.sma20[i], legs: { demo: demoLeg, real: realLeg }, placedAt: now() };
-    log(`Sinyal ${dir.toUpperCase()} #${j.pendingEntry.signalId} -- limit ${limitPrice.toFixed(1)} dipasang (demo${realLeg ? ' + real' : ''}), SL ${slDistPct.toFixed(2)}%, berlaku sampai candle berikutnya close.`);
+    j.pendingEntry = { id: crypto.randomUUID(), signalId: nextId(), dir, signalCloseTime: x.closeTime, expiresAtCloseTime: x.closeTime + tfMs, limitPrice: demoLeg.limitPrice, slDistPct, sma20AtSignal: ind.sma20[i], legs: { demo: demoLeg, real: realLeg }, placedAt: now() };
+    log(`Sinyal ${dir.toUpperCase()} #${j.pendingEntry.signalId} -- limit ${demoLeg.limitPrice.toFixed(1)} dipasang (demo${realLeg ? ' + real' : ''}), SL ${slDistPct.toFixed(2)}%, berlaku sampai candle berikutnya close.`);
   }
 
   // ---------- pending -> floating ----------
   function newFloatingFrom(pe) {
     return { id: pe.id, signalId: pe.signalId, dir: pe.dir, slDistPct: pe.slDistPct, sma20AtSignal: pe.sma20AtSignal, openedAt: now(), legs: { demo: null, real: null }, wibowoRoute: 'demo', notified: { demo: false, wibowo: false } };
   }
-  async function armLeg(exec, f, leg, mode, ind, i) {
+  async function armLeg(exec, f, leg, mode, ind, i, spotRef) {
     const f2 = f.slDistPct / 100;
     leg.sl = f.dir === 'long' ? leg.entryPrice * (1 - f2) : leg.entryPrice * (1 + f2);
     const stop = await safe(`STOP_MARKET ${mode}`, () => exec.placeStopMarketClose({ symbol: EXEC_SYMBOL, direction: execDirOf(f.dir), quantity: leg.quantity, stopPrice: leg.sl }));
     leg.stopOrderId = stop ? stop.orderId : null;
-    await placeExitLimit(exec, f, leg, mode, ind.sma20[i], null);
+    await placeExitLimit(exec, f, leg, mode, ind.sma20[i], null, spotRef);
     deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: f.dir, entryPrice: leg.entryPrice, sl: leg.sl, tp: leg.exitLimitPrice || null, status: 'open', openedAt: new Date(now()).toISOString(), note: 'mean-reversion' });
   }
-  async function placeExitLimit(exec, f, leg, mode, target, live) {
-    if (target === null || target === undefined) return;
+  // spotTarget = SMA20 dari candle BINANCE SPOT (sumber sinyal). (5 Okt 2026) diterjemahin ke skala harga venue (BingX perp beda
+  // puluhan dolar, demo diukur -$36,5) pakai rasio harga venue / close spot -- kalau nggak, limit exit kegeser segitu.
+  async function placeExitLimit(exec, f, leg, mode, spotTarget, live, spotRef) {
+    if (spotTarget === null || spotTarget === undefined) return;
+    const venueNow = live > 0 ? live : await safe(`harga live ${mode}`, () => deps.fetchLivePrice(mode === 'demo'));
+    const target = venueNow > 0 && spotRef > 0 ? spotTarget * venueNow / spotRef : spotTarget;
     const sideOk = live === null ? true : (f.dir === 'long' ? target > live : target < live); // limit di seberang harga -> ngendap (maker), bukan langsung match
     if (!sideOk) return;
     if (leg.exitLimitPrice && Math.abs(target - leg.exitLimitPrice) / leg.exitLimitPrice * 100 < EXIT_LIMIT_MOVE_MIN_PCT) return;
@@ -247,7 +263,7 @@ function createTrader(deps) {
         const leg = { entryPrice: L.fill.entryPrice, quantity: L.fill.quantity, leverage: L.leverage, margin: L.margin, nilaiPosisi: L.fill.entryPrice * L.fill.quantity, entryCommission: L.fill.commission, openedAt: now() };
         j.floating.legs[mode] = leg;
         if (mode === 'real') j.floating.wibowoRoute = 'real';
-        await armLeg(exec, j.floating, leg, mode, ind, i);
+        await armLeg(exec, j.floating, leg, mode, ind, i, candles[i].close);
         L.armed = true;
         log(`FILL ${mode} ${pe.dir} @ ${leg.entryPrice} qty ${leg.quantity} (#${pe.signalId}) -- SL ${leg.sl.toFixed(1)}${leg.stopOrderId ? ' (stop exchange terpasang)' : ' (stop exchange GAGAL, backup software)'}${leg.exitLimitPrice ? `, limit exit ${leg.exitLimitPrice.toFixed(1)}` : ''}.`);
       }
@@ -312,7 +328,7 @@ function createTrader(deps) {
         closeLeg(f, L, mode, { price: (o && num(o.avgPrice)) || live, commission: parseCommission(o), reason: slHit ? 'MR_SL' : 'MR_MEAN' });
         continue;
       }
-      if (newCandle && ind.sma20[i] !== null) await placeExitLimit(exec, f, L, mode, ind.sma20[i], live);
+      if (newCandle && ind.sma20[i] !== null) await placeExitLimit(exec, f, L, mode, ind.sma20[i], live, x.close);
     }
     if (!f.notified.demo || !f.notified.wibowo) await sendOpenNotifications(f);
     const allDone = ['demo', 'real'].every((m) => !f.legs[m] || f.legs[m].closedAt);

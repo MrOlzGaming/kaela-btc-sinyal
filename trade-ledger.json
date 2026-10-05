@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-05T16:02:20.360Z",
+ "updatedAt": "2026-10-05T16:17:07.753Z",
  "count": 27,
  "trades": [
   {
@@ -65,6 +65,40 @@
    "reasonCloseCode": "MR_MEAN",
    "reasonClose": "Target tercapai -- harga balik ke rata-rata SMA20",
    "seed": true
+  },
+  {
+   "key": "ninja|exhaustion_fade-1791163147123|demo",
+   "system": "🥷 Ninja",
+   "systemKey": "ninja",
+   "id": "exhaustion_fade-1791163147123",
+   "signalId": "2026100501",
+   "account": "Kaela Demo",
+   "mode": "demo",
+   "exchange": "BingX",
+   "asset": "BTC",
+   "patternType": "exhaustion_fade",
+   "direction": "SHORT",
+   "entry": 85933.6,
+   "sl": 86792.9,
+   "exit": 86802.2,
+   "qty": null,
+   "leverage": null,
+   "marginUsd": null,
+   "openedAt": "2026-10-04T21:42:11.000Z",
+   "closedAt": "2026-10-05T01:19:07.123Z",
+   "status": "tutup",
+   "grossUsd": null,
+   "feeUsd": null,
+   "netUsd": -16.616441319999847,
+   "reasonOpen": "Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)",
+   "reasonCloseCode": "EX_SL",
+   "reasonClose": "Stop Loss kena -- tenaga forced-flow ternyata belum abis, harga lanjut",
+   "context": {
+    "at": 1791163147123,
+    "mode": "demo",
+    "net": -16.616441319999847
+   },
+   "patched": true
   },
   {
    "key": "ranger|nyopet-adopted-1790072107921|demo",
@@ -240,9 +274,9 @@
    "openedAt": "2026-09-14T13:11:33.802Z",
    "closedAt": "2026-09-14T14:51:08.505Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 51.44479996000001,
+   "feeUsd": 7.671593080000001,
+   "netUsd": 43.77320688000001,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -266,7 +300,9 @@
     "triggeredAt": "2026-09-14T13:11:33.802Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T14:51:08.505Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789390855487|real",
@@ -289,9 +325,9 @@
    "openedAt": "2026-09-14T13:00:55.487Z",
    "closedAt": "2026-09-14T13:07:10.442Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": -5.1471,
+   "feeUsd": 3.74985523,
+   "netUsd": -8.89695523,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -315,7 +351,9 @@
     "triggeredAt": "2026-09-14T13:00:55.487Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T13:07:10.442Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789384268023|real",
@@ -338,9 +376,9 @@
    "openedAt": "2026-09-14T11:11:08.023Z",
    "closedAt": "2026-09-14T12:56:07.683Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": -2.3287,
+   "feeUsd": 3.04318004,
+   "netUsd": -5.371880040000001,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -364,7 +402,9 @@
     "triggeredAt": "2026-09-14T11:11:08.023Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T12:56:07.683Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789381267188|real",
@@ -387,9 +427,9 @@
    "openedAt": "2026-09-14T10:21:07.188Z",
    "closedAt": "2026-09-14T11:06:08.432Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": -1.0418,
+   "feeUsd": 1.02683384,
+   "netUsd": -2.0686338400000004,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -413,7 +453,9 @@
     "triggeredAt": "2026-09-14T10:21:07.188Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T11:06:08.432Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789376167130|real",
@@ -436,9 +478,9 @@
    "openedAt": "2026-09-14T08:56:07.130Z",
    "closedAt": "2026-09-14T09:56:07.032Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 16.7184,
+   "feeUsd": 0.84540024,
+   "netUsd": 15.872999759999999,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -462,7 +504,9 @@
     "triggeredAt": "2026-09-14T08:56:07.130Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T09:56:07.032Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789370468514|real",
@@ -485,9 +529,9 @@
    "openedAt": "2026-09-14T07:21:08.514Z",
    "closedAt": "2026-09-14T08:51:07.979Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 0.8622000000000001,
+   "feeUsd": 3.55155419,
+   "netUsd": -2.68935419,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -511,7 +555,9 @@
     "triggeredAt": "2026-09-14T07:21:08.514Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T08:51:07.979Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789328739418|real",
@@ -534,9 +580,9 @@
    "openedAt": "2026-09-13T19:45:39.418Z",
    "closedAt": "2026-09-14T02:41:06.593Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 6.7726,
+   "feeUsd": 2.0885673799999998,
+   "netUsd": 4.68403262,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -560,7 +606,9 @@
     "triggeredAt": "2026-09-13T19:45:39.418Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-14T02:41:06.593Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789327268366|real",
@@ -681,9 +729,9 @@
    "openedAt": "2026-09-13T17:50:08.429Z",
    "closedAt": "2026-09-13T18:21:06.742Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": -0.2725,
+   "feeUsd": 0.1546874,
+   "netUsd": -0.4271874,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -707,7 +755,9 @@
     "triggeredAt": "2026-09-13T17:50:08.429Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-13T18:21:06.742Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789308010044|real",
@@ -730,9 +780,9 @@
    "openedAt": "2026-09-13T14:00:10.044Z",
    "closedAt": "2026-09-13T17:30:07.673Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 0.8579000099999998,
+   "feeUsd": 1.47947486,
+   "netUsd": -0.6215748500000002,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -756,7 +806,9 @@
     "triggeredAt": "2026-09-13T14:00:10.044Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-13T17:30:07.673Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789290937603|real",
@@ -779,9 +831,9 @@
    "openedAt": "2026-09-13T09:15:37.603Z",
    "closedAt": "2026-09-13T13:55:10.001Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 1.3091000000000002,
+   "feeUsd": 0.42963676,
+   "netUsd": 0.8794632400000002,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -805,7 +857,9 @@
     "triggeredAt": "2026-09-13T09:15:37.603Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-13T13:55:10.001Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789086645496|real",
@@ -828,9 +882,9 @@
    "openedAt": "2026-09-11T00:30:45.496Z",
    "closedAt": "2026-09-13T09:01:13.795Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 42.11319995,
+   "feeUsd": 19.02932680999999,
+   "netUsd": 23.083873140000012,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -854,7 +908,9 @@
     "triggeredAt": "2026-09-11T00:30:45.496Z",
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-13T09:01:13.795Z"
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789067744272|real",
@@ -877,9 +933,9 @@
    "openedAt": "2026-09-10T19:15:44.273Z",
    "closedAt": "2026-09-10T22:45:41.843Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": -0.2955,
+   "feeUsd": 0,
+   "netUsd": -0.2955,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -904,7 +960,9 @@
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-10T22:45:41.843Z",
     "retroactiveFixNote": "Angka lama (exitPrice/pnlUsd) DIBUKTIKAN ngarang (cross-check ke income history Binance asli, gak match sama sekali) -- dibersihin 12 Sep 2026 abis fix bug closePosition(). PnL akurat posisi ini (kalau manual) ada di pesan/journal Manual terpisah."
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789047949690|real",
@@ -927,9 +985,9 @@
    "openedAt": "2026-09-10T13:45:49.690Z",
    "closedAt": "2026-09-10T18:15:43.439Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 5.65119999,
+   "feeUsd": 1.27008705,
+   "netUsd": 4.38111294,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -954,7 +1012,9 @@
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-10T18:15:43.439Z",
     "retroactiveFixNote": "Angka lama (exitPrice/pnlUsd) DIBUKTIKAN ngarang (cross-check ke income history Binance asli, gak match sama sekali) -- dibersihin 12 Sep 2026 abis fix bug closePosition(). PnL akurat posisi ini (kalau manual) ada di pesan/journal Manual terpisah."
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-adopted-1789028142767|real",
@@ -977,9 +1037,9 @@
    "openedAt": "2026-09-10T08:15:42.767Z",
    "closedAt": "2026-09-10T12:48:17.336Z",
    "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
+   "grossUsd": 3.4678,
+   "feeUsd": 0.31033816,
+   "netUsd": 3.15746184,
    "reasonOpen": "Posisi manual / diadopsi dari exchange (bukan sinyal otomatis Kaela)",
    "reasonCloseCode": "OFFLINE_UNKNOWN",
    "reasonClose": "Posisi udah gak ada di exchange tanpa jejak (offline / ditutup manual) -- PnL gak kebaca",
@@ -1004,7 +1064,9 @@
     "closeReason": "OFFLINE_UNKNOWN",
     "closedAt": "2026-09-10T12:48:17.336Z",
     "retroactiveFixNote": "Angka lama (exitPrice/pnlUsd) DIBUKTIKAN ngarang (cross-check ke income history Binance asli, gak match sama sekali) -- dibersihin 12 Sep 2026 abis fix bug closePosition(). PnL akurat posisi ini (kalau manual) ada di pesan/journal Manual terpisah."
-   }
+   },
+   "pnlSource": "income",
+   "incomeSymbol": "BTCUSDC"
   },
   {
    "key": "ranger|nyopet-demo-1788444256770|real",
@@ -1277,39 +1339,6 @@
     "pnlPct": 0,
     "closeReason": "OFFLINE",
     "closedAt": "2026-09-07T21:12:00.659Z"
-   }
-  },
-  {
-   "key": "ninja|exhaustion_fade-1791163147123|demo",
-   "system": "🥷 Ninja",
-   "systemKey": "ninja",
-   "id": "exhaustion_fade-1791163147123",
-   "signalId": null,
-   "account": "Kaela Demo",
-   "mode": "demo",
-   "exchange": "BingX",
-   "asset": "BTC",
-   "patternType": "exhaustion_fade",
-   "direction": "LONG",
-   "entry": null,
-   "sl": null,
-   "exit": null,
-   "qty": null,
-   "leverage": null,
-   "marginUsd": null,
-   "openedAt": null,
-   "closedAt": "2026-10-05T01:19:07.123Z",
-   "status": "tutup",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": -16.616441319999847,
-   "reasonOpen": "Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
-   "context": {
-    "at": 1791163147123,
-    "mode": "demo",
-    "net": -16.616441319999847
    }
   }
  ]

@@ -11,16 +11,16 @@
     "tail": "  OK   Kalender: ISM PMI (Medium) masuk pesan siap-siap, Final PMI S&P (Low) enggak\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n108 lolos, 0 gagal (dari 2026-10-05 test run)\n"
   },
   "bingxApi": {
-    "lastRunDateKey": null,
-    "at": "2026-10-05T23:01:02.666Z",
-    "ok": false,
+    "lastRunDateKey": "2026-10-06",
+    "at": "2026-10-05T23:16:03.413Z",
+    "ok": true,
     "executorHash": "d797d0a997bf6ee9",
-    "verifiedAt": "2026-10-05T03:45:49.522Z",
-    "okCount": null,
-    "total": null,
+    "verifiedAt": "2026-10-05T23:16:03.413Z",
+    "okCount": 14,
+    "total": 14,
     "failedNames": null,
-    "aborted": true,
-    "exitCode": 3,
-    "tail": "DEMO VST -- harga 85923.3, saldo 9922.6842 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: LONG 0.0350\n"
+    "aborted": false,
+    "exitCode": 0,
+    "tail": "Bersih-bersih:\n  ✅ cancel stop\n  ✅ cancel limit close\n  ✅ emergencyCloseMarket -- {\"orderId\":\"2107248495791443968\",\"positionSide\":\"LONG\",\"side\":\"SELL\",\"type\":\"MARKET\",\"price\":0,\"stopPrice\":0,\"clientOrderId\":\"kaela-1791242166766\",\"timeInForce\":\"GTC\",\"status\":\"FILLED\",\"avgPrice\":\"85820.4\",\"executedQty\":\"0.0001\"}\n  ✅ posisi bersih setelah tutup\n\n14/14 OK. Semua endpoint yang dipakai ninjaMrTrader.js terbukti jalan di demo.\n"
   }
 }

@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-06 07:02 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-06 07:16 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -8,14 +8,21 @@ Diperbarui otomatis: 2026-10-06 07:02 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - **🏹 Ranger · Posisi manual/adopsi · Kaela Demo (Binance)**: 1 trade, menang 0/0, bersih ? (1 PnL gak kebaca)
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (MEXC)**: 3 trade, menang 1/1 (100%), bersih +$0.00 (2 PnL gak kebaca)
-- **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 1 trade, menang 0/1 (0%), bersih -$16.62
+- **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 2 trade, menang 1/2 (50%), bersih -$5.24
 - **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$10.02
 
-## Posisi terbuka (1)
+## Posisi terbuka (0)
 
-- 🥷 Ninja · Exhaustion · Kaela Demo · BingX · BTC LONG @ 85,567.1 (SL 84,711.4) sejak 2026-10-05 23:04 WITA
+- Gak ada.
 
-## Trade terakhir (26 terbaru)
+## Trade terakhir (27 terbaru)
+
+### #2026100502 — 🥷 Ninja · Exhaustion · Kaela Demo · BingX
+- Buka: 2026-10-05 23:04 WITA — BTC LONG @ 85,567.1 (SL 84,711.4)
+- Alasan buka: Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)
+- Konteks entry: netRealistic=10.784182, notionalUsd=2994.8485, peakLiqUsd=1890132.8
+- Tutup: 2026-10-06 07:04 WITA @ 85,977.9 — Alasan tutup: Batas waktu tahan habis -- ditutup paksa (momen balik arah udah lewat)
+- Hasil: bersih +$11.38 (kotor +$14.38, fee $3.00)
 
 ### #2026100501 — 🥷 Ninja · Mean Reversion · Kaela Demo · BingX
 - Buka: 2026-10-05 12:31 WITA — BTC LONG @ 85,723.3 (SL 84,820), 50x

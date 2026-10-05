@@ -11,16 +11,16 @@
     "tail": "  OK   rangerRotation: selftest alur penuh (prioritas koin, 1 posisi, partial 2R, trailing, SL, window flip, gak nutup punya Ninja) lolos semua\n  OK   stdFuturesLadderMonitor: seed diam, likuidasi -> WA 1x + saran x5, tutup biasa diam, API gagal gak alarm palsu, tangga mentok x9\n  OK   stdFuturesLadderMonitor: minus 50% -> pengingat umum cek posisi ke GRUP Wibowo (1x, tanpa sebut collateral), 75% -> pengingat lanjutan, abis collateral ditambah reset\n\n103 lolos, 0 gagal (dari 2026-10-04 test run)\n"
   },
   "bingxApi": {
-    "lastRunDateKey": "2026-10-04",
-    "at": "2026-10-03T21:30:37.470Z",
+    "lastRunDateKey": "2026-10-05",
+    "at": "2026-10-05T03:45:49.522Z",
     "ok": true,
-    "executorHash": "d9ed634a44386c6a",
-    "verifiedAt": "2026-10-03T21:30:37.470Z",
+    "executorHash": "d381b411a6b028ab",
+    "verifiedAt": "2026-10-05T03:45:49.522Z",
     "okCount": 14,
     "total": 14,
     "failedNames": null,
     "aborted": false,
     "exitCode": 0,
-    "tail": "Bersih-bersih:\n  ✅ cancel stop\n  ✅ cancel limit close\n  ✅ emergencyCloseMarket -- {\"orderId\":\"2106497186318520320\",\"positionSide\":\"LONG\",\"side\":\"SELL\",\"type\":\"MARKET\",\"price\":0,\"stopPrice\":0,\"clientOrderId\":\"kaela-1791063040646\",\"timeInForce\":\"GTC\",\"status\":\"FILLED\",\"avgPrice\":\"84671.0\",\"executedQty\":\"0.0001\"}\n  ✅ posisi bersih setelah tutup\n\n14/14 OK. Semua endpoint yang dipakai ninjaMrTrader.js terbukti jalan di demo.\n"
+    "tail": "Bersih-bersih:\n  ✅ cancel stop\n  ✅ cancel limit close\n  ✅ emergencyCloseMarket -- {\"orderId\":\"2106953996364156928\",\"positionSide\":\"LONG\",\"side\":\"SELL\",\"type\":\"MARKET\",\"price\":0,\"stopPrice\":0,\"clientOrderId\":\"kaela-1791171952645\",\"timeInForce\":\"GTC\",\"status\":\"FILLED\",\"avgPrice\":\"86229.3\",\"executedQty\":\"0.0001\"}\n  ✅ posisi bersih setelah tutup\n\n14/14 OK. Semua endpoint yang dipakai ninjaMrTrader.js terbukti jalan di demo.\n"
   }
 }

@@ -1,38 +1,16 @@
 {
   "episode": null,
-  "floating": {
-    "id": "44fe15c3-0c13-4cef-bc54-62f26f724f2b",
-    "signalId": "2026100501",
-    "dir": "short",
-    "peakUsd": 1066595.2832,
-    "openedAt": 1791150126877,
-    "legs": {
-      "demo": {
-        "entryPrice": 85933.6,
-        "quantity": 0.0174,
-        "sl": 86792.936,
-        "stopOrderId": "2106862452121100288",
-        "best": 85801.9,
-        "trailed": false,
-        "leverage": 50,
-        "margin": 29.9719146,
-        "nilaiPosisi": 1495.24464,
-        "entryCommission": null,
-        "openedAt": 1791150126876
-      },
-      "real": null
-    }
-  },
-  "closedCount": 0,
+  "floating": null,
+  "closedCount": 1,
   "signals": 1,
   "skipped": 0,
   "stats": {
     "demo": {
       "wins": 0,
-      "losses": 0,
-      "totalPnlUsd": 0,
+      "losses": 1,
+      "totalPnlUsd": -16.616441319999847,
       "grossWinUsd": 0,
-      "grossLossUsd": 0
+      "grossLossUsd": 16.616441319999847
     },
     "real": {
       "wins": 0,
@@ -45,5 +23,12 @@
   "dailySignalSeq": {
     "dayKey": "20261005",
     "count": 1
-  }
+  },
+  "history": [
+    {
+      "at": 1791163147123,
+      "mode": "demo",
+      "net": -16.616441319999847
+    }
+  ]
 }

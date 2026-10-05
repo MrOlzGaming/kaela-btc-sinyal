@@ -3068,5 +3068,10 @@
     "type": "econ-calendar",
     "date": "2026-10-05T18:01:08.029Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Kamis, 8 Okt · 02:00 WITA\n📰 *FOMC Meeting Minutes*\n🇺🇸 Federal Open Market Committee Meeting Minutes\n🇮🇩 Notulen rapat The Fed sebelumnya (dirilis ~3 minggu setelah rapat)\nLevel: 🔴 Boss (efek tinggi)\nArah BTC (dari nada omongan):\n• Nada galak/hawkish → 📉 BTC cenderung tertekan\n• Nada lunak/dovish → 📈 BTC cenderung menguat\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "anomaly",
+    "date": "2026-10-05T22:46:06.589Z",
+    "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 2 indikator lagi gak biasa dibanding histori kita sendiri:\n\n📊 Credit Spread (High-Yield): 3.10 -- JAUH DI ATAS kebiasaan historis kita (median 2.70, z-score 5.4)\n🔗 Korelasi Emas-DXY (90 hari): -0.47 -- JAUH DI ATAS kebiasaan historis kita (median -0.53, z-score 3.3)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n📊 Credit Spread (High-Yield)\nIni ngukur seberapa \"takut\" investor pegang obligasi perusahaan yang agak berisiko. MELEBAR jauh dari biasanya -- investor lagi was-was banget soal ekonomi. Histori-nya, pas ini kejadian, BTC & saham SERING ikut kejual bareng (dianggap sama-sama \"aset berisiko\").\n\n🔗 Korelasi Emas-DXY (90 hari)\nEmas biasanya gerak KEBALIKAN dari Dollar Index (DXY) -- dolar naik, emas turun (dan sebaliknya). Hubungan kebalikan ini lagi LEBIH KUAT dari biasanya sekarang."
   }
 ]

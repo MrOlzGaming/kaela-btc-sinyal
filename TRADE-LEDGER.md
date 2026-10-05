@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-05 23:03 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-05 23:16 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -11,9 +11,9 @@ Diperbarui otomatis: 2026-10-05 23:03 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 1 trade, menang 0/1 (0%), bersih -$16.62
 - **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$10.02
 
-## Posisi terbuka (0)
+## Posisi terbuka (1)
 
-- Gak ada.
+- 🥷 Ninja · Exhaustion · Kaela Demo · BingX · BTC LONG @ 85,567.1 (SL 84,711.4) sejak 2026-10-05 23:04 WITA
 
 ## Trade terakhir (26 terbaru)
 

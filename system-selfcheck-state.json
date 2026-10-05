@@ -12,7 +12,7 @@
   },
   "bingxApi": {
     "lastRunDateKey": null,
-    "at": "2026-10-05T16:16:00.833Z",
+    "at": "2026-10-05T16:31:02.075Z",
     "ok": false,
     "executorHash": "d797d0a997bf6ee9",
     "verifiedAt": "2026-10-05T03:45:49.522Z",
@@ -21,6 +21,6 @@
     "failedNames": null,
     "aborted": true,
     "exitCode": 3,
-    "tail": "DEMO VST -- harga 85143.7, saldo 9922.6842 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: LONG 0.0350\n"
+    "tail": "DEMO VST -- harga 85116.4, saldo 9922.6842 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: LONG 0.0350\n"
   }
 }

@@ -33,6 +33,26 @@ const { fetchDxy } = require('./macroData');
 const { analyzeSentiment } = require('./marketSentiment');
 const { sendWhatsApp } = require('./fonnte');
 const { addEntry } = require('./archive');
+const ninjaNews = require('./ninjaNewsTrader'); // main() ter-guard require.main -- aman di-require
+
+// 5 Okt 2026 (permintaan Olan "buat pemberitahuan siap-siap kayak yang lain") -- kalau rilis ini masuk jadwal uji Ninja
+// News (news-schedule.json, jam sama +-2 menit) dan Ninja News nyala, pesan SIAP-SIAP ikut bilang Ninja lagi siaga + aturannya.
+function ninjaNewsHeadsUpLines(e) {
+  try {
+    const cfg = ninjaNews.loadConfig();
+    if (!cfg.enabled) return [];
+    const hit = ninjaNews.loadSchedule().some((ev) => Math.abs(ev.timeMs - e.timeMs) <= 2 * 60 * 1000);
+    if (!hit) return [];
+    return [
+      `🥷 Ninja News siaga (${cfg.allowReal ? 'Demo + Real' : 'Demo'}) -- kalau dolar gerak kuat di ${cfg.windowSec} detik pertama`
+        + ` (EUR >= ${cfg.thrPct}%), Kaela buka BTC arah KEBALIKAN dolar. SL ${cfg.slPct}%, trailing aktif +${cfg.trailActPct}%,`
+        + ` maks ${cfg.maxHoldMin} menit. Dolar adem = gak entry.`,
+    ];
+  } catch (err) {
+    console.log('[EconCalendarLive] Gagal cek jadwal Ninja News (pesan siap-siap tetap jalan):', err.message);
+    return [];
+  }
+}
 
 const kaela = require('./kaelaProTraderClient');
 const { createBinanceClient } = require('./binanceExecutor');
@@ -285,7 +305,7 @@ async function main() {
     // ── 1) HEADS-UP -- event 0..5 menit LAGI -- snapshot DXY (info) + BTC (buat sinyal trading) ──
     if (!st.headsup && minsUntil > 0 && minsUntil <= HEADSUP_BEFORE_MIN) {
       const [dxyBefore, btcBefore, positioningBefore] = await Promise.all([safeFetchDxyPrice(), safeFetchBtcPrice(), safeFetchPositioning()]);
-      const msg = formatHeadsUp(e);
+      const msg = formatHeadsUp(e, ninjaNewsHeadsUpLines(e));
       console.log(msg);
       addEntry('econ-calendar-headsup', msg, now);
       await sendWhatsApp(msg);

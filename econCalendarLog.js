@@ -52,14 +52,16 @@ function formatEconCalendar(now, events) {
 // 5 Sep 2026, permintaan Olan ("detektor tiap 5 menit.. 5 menit sebelum kasih info siap-siap
 // high impact, 5 menit sesudah simpulkan intinya hawkish/dovish") -- dipake econCalendarLiveMonitor.js.
 
-function formatHeadsUp(e) {
+// extraLines (5 Okt 2026) -- baris tambahan dari pemanggil, mis. status Ninja News kalau rilis ini masuk jadwal ujinya.
+function formatHeadsUp(e, extraLines = []) {
   const lines = [
     `${CATEGORY_COLOR.econ.emoji} ⏰ SIAP-SIAP -- ${e.time} WITA (sebentar lagi)`,
     e.title,
     `Forecast: ${e.forecast} | Sebelumnya: ${e.previous}`,
     ...directionalLines(e),
     '',
-    'High-impact -- pantau reaksi pasar (DXY/BTC) sebentar lagi.',
+    'Data penting -- pantau reaksi pasar (DXY/BTC) sebentar lagi.',
+    ...(extraLines.length ? ['', ...extraLines] : []),
   ];
   return lines.join('\n');
 }

@@ -30,7 +30,10 @@ async function fetchWeekCalendar() {
 // sentimen risiko, terlepas dari label impact ForexFactory. Fix: 2 jalur -- impact High (SEMUA
 // judul) TETAP masuk kayak biasa, DITAMBAH override title-match buat pidato Chair/pengumuman FOMC
 // inti (BUKAN pidato member regional biasa -- itu masih legit di-skip, terlalu sering/low-signal).
-const ALWAYS_RELEVANT_TITLE = /fed chair|fomc statement|fomc press conference|federal funds rate|fomc economic projections/i;
+// 5 Okt 2026 (permintaan Olan) -- + ISM PMI Manufaktur/Jasa: ForexFactory kadang ngelabel "Medium" (ISM Services
+// 5 Okt = Medium), padahal masuk jadwal uji Ninja News (news-schedule.json) -> wajib ada pesan SIAP-SIAP juga.
+// Dianchor ke "ISM" biar "Final Services/Manufacturing PMI" (S&P Global, impact Low) gak ikut nyampah.
+const ALWAYS_RELEVANT_TITLE = /fed chair|fomc statement|fomc press conference|federal funds rate|fomc economic projections|^ism (services|manufacturing|non-manufacturing) pmi/i;
 
 function isHighImpactUsd(e) {
   return e.country === 'USD' && (e.impact === 'High' || ALWAYS_RELEVANT_TITLE.test(e.title));

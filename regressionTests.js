@@ -1292,6 +1292,19 @@ async function main() {
     for (const l of calls) assert.ok(/DXY_FILTER_ASSETS\.includes\(/.test(l), `isDxyWeak tanpa gerbang aset: ${l.trim()}`);
   });
 
+  // 5 Okt 2026 (permintaan Olan): ISM PMI wajib dapet pesan SIAP-SIAP walau ForexFactory ngelabel Medium; PMI S&P (Low) tetap gak.
+  await test('Kalender: ISM PMI (Medium) masuk pesan siap-siap, Final PMI S&P (Low) enggak', async () => {
+    const { getAllHighImpactUsdEvents } = require('./econCalendar');
+    const raw = [
+      { title: 'ISM Services PMI', country: 'USD', impact: 'Medium', date: '2026-10-05T10:00:00-04:00' },
+      { title: 'ISM Manufacturing PMI', country: 'USD', impact: 'Medium', date: '2026-11-02T10:00:00-05:00' },
+      { title: 'Final Services PMI', country: 'USD', impact: 'Low', date: '2026-10-05T09:45:00-04:00' },
+      { title: 'ISM Services PMI', country: 'EUR', impact: 'Medium', date: '2026-10-05T10:00:00-04:00' },
+    ];
+    const got = getAllHighImpactUsdEvents(raw).map((e) => e.rawTitle);
+    assert.deepStrictEqual(got, ['ISM Services PMI', 'ISM Manufacturing PMI']);
+  });
+
   console.log(`\n${passed} lolos, ${failed} gagal (dari ${todayIso.slice(0, 10)} test run)`);
   cleanupFixtureFile();
   process.exit(failed > 0 ? 1 : 0);

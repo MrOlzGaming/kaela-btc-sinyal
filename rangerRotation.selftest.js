@@ -45,7 +45,11 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     cfg: { enabled: true, coins: ['BTC', 'SOL', 'DOGE', 'TRX', 'INJ', 'ETH', 'XLM', 'BNB'], dxyFilter: false, allowReal, shortCoins, exchange: 'fake' },
     journal: j, legs: { demo: venue(demoEx), real: venue(realEx) }, symbolOf: (c) => `${c}USDT`,
     fetchCandles: async (coin, n) => {
-      if (n < 100) return Array.from({ length: 65 }, () => ({ close: st.trail === null ? st.prices[coin] : st.trail, closeTime: candleClose }));
+      if (n < 100) {
+        const arr = Array.from({ length: 65 }, () => ({ close: st.trail === null ? st.prices[coin] : st.trail, closeTime: candleClose }));
+        if (st.lastClose != null) arr[arr.length - 1] = { close: st.lastClose, closeTime: candleClose }; // close candle 4H terakhir
+        return arr;
+      }
       return Array.from({ length: 400 }, () => ({ close: st.prices[coin], closeTime: candleClose }));
     },
     notify: { sniperClub: async (m) => { sent.club.push(m); }, wibowo: async (m) => { sent.wibowo.push(m); } },
@@ -95,7 +99,11 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     s.st.prices.BTC = 121; s.st.trail = 110;
     await s.rot.runCycle();
     assert.ok(s.j.floating.legs.demo.partialDone && s.j.floating.legs.real.partialDone);
+    // (5 Okt 2026) harga live sesaat di bawah SMA60 TAPI candle 4H belum tutup di bawahnya -> TETAP pegang (sama backtest)
     s.st.prices.BTC = 108;
+    await s.rot.runCycle();
+    assert.ok(s.j.floating, 'ekor candle sesaat di bawah SMA60 gak boleh bikin keluar');
+    s.st.lastClose = 108; // candle 4H TUTUP di bawah SMA60 -> trailing patah
     await s.rot.runCycle();
     assert.strictEqual(s.j.floating, null);
     assert.strictEqual(s.j.stats.demo.wins, 1); assert.strictEqual(s.j.stats.real.wins, 1);

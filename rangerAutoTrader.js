@@ -750,7 +750,11 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
         const candles4hForTrail = await fetchCandles4hPaginated(zoneSymbol, TRAIL_SMA_LEN_4H + 5);
         const closes = candles4hForTrail.map((c) => c.close);
         const trailSma = sma(closes, TRAIL_SMA_LEN_4H);
-        if (trailSma !== null) trailBroken = floating.direction === 'buy' ? livePrice < trailSma : livePrice > trailSma;
+        // (5 Okt 2026, audit paritas) dinilai di CLOSE candle 4H terakhir yang udah tutup (SAMA backtest yang memvalidasi
+        // exit ini), BUKAN harga live -- ekor candle sesaat di bawah SMA60 dulu udah bikin keluar. backtest/smaTrailTriggerParity.js:
+        // versi harga-live lebih jelek di dua era (Emas PF 1,17/2,85 -> 1,11/2,39; alt 2,07/1,61 -> 2,00/1,57).
+        const lastClose = closes.length ? closes[closes.length - 1] : null;
+        if (trailSma !== null && lastClose !== null) trailBroken = floating.direction === 'buy' ? lastClose < trailSma : lastClose > trailSma;
       }
       if (!hitBreakevenSl && !trailBroken) {
         console.log(`[NyopetAutoTrader] ${assetCfg.label}: sisa posisi (partial done) masih floating -- lanjut pantau.`);

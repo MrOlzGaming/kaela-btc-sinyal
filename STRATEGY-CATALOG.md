@@ -81,6 +81,9 @@ Terakhir diperbarui: **3 Okt 2026**.
   SMA1200 lama memang jauh lebih bagus (PF 0,92 -> 1,37-1,58, dataran 10-40 hari), TAPI vs sistem LIVE (tanpa window, PF 4,29:
   1,85 / 13,2 per era) gerbang Donchian malah NGURANGIN di dua era buat 0/8 panjang N (gerbang doang maupun + tutup paksa).
   Live tetap tanpa window.
+- ℹ️ **Paritas trailing SMA60 (5 Okt, `backtest/smaTrailTriggerParity.js`)** — live dulu keluar begitu HARGA LIVE < SMA60, backtest nunggu
+  CLOSE candle 4H. Versi live lebih jelek dua era (7 alt PF 2,07/1,61 -> 2,00/1,57; Emas 2,85 -> 2,39 era baru) -> live DISAMAIN ke close
+  candle (rangerRotation.js + rangerAutoTrader.js), dijaga selftest rotasi.
 - ✅ **Ranger ROTASI 8 koin** (Bybit, 1 posisi pindah2 koin: BTC SOL DOGE TRX INJ ETH XLM BNB) — top-8 CAGR 42% DD 17,9%
   (>=2023) vs BTC doang 19%. Alt long doang, alt /2, short cuma BTC.
 - ❌ **Gerbang struktur BOS/CHoCH (SMC)** — semua varian LEBIH JELEK (PF 2,56 -> 1,85-2,09, DD naik ke 62-69%).

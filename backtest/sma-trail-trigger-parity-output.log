@@ -1,0 +1,8 @@
+
+== 7 alt rotasi (SOL DOGE TRX INJ ETH XLM BNB) ==
+  BACKTEST (close < SMA60)      | <2023 n329 PF 2.07 total +1754% | >=2023 n403 PF 1.61 total +1142%
+  LIVE (harga sesaat < SMA60)   | <2023 n342 PF 2.00 total +1722% | >=2023 n410 PF 1.57 total +1108%
+
+== Emas (Ranger, tanpa window) ==
+  BACKTEST (close < SMA60)      | <2023 n 17 PF 1.17 total +5% | >=2023 n 23 PF 2.85 total +81%
+  LIVE (harga sesaat < SMA60)   | <2023 n 17 PF 1.11 total +3% | >=2023 n 23 PF 2.39 total +72%

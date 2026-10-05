@@ -187,8 +187,10 @@ function createRotation(deps) {
         continue;
       }
       if (isLong ? live <= L.sl : live >= L.sl) { await closeAll('SL_BREAKEVEN'); continue; }
-      if (trail === undefined) { const c = await deps.fetchCandles(f.coin, TRAIL_SMA_LEN_4H + 5).catch(() => []); trail = sma(c.map((x) => x.close), TRAIL_SMA_LEN_4H); }
-      if (trail !== null && (isLong ? live < trail : live > trail)) await closeAll('TRAIL');
+      // (5 Okt 2026, audit paritas) trailing SMA60 dinilai di CLOSE candle 4H terakhir yang udah tutup (SAMA backtest), BUKAN
+      // harga live -- versi harga-live lebih jelek di dua era (backtest/smaTrailTriggerParity.js, alt PF 2,07/1,61 -> 2,00/1,57).
+      if (trail === undefined) { const c = await deps.fetchCandles(f.coin, TRAIL_SMA_LEN_4H + 5).catch(() => []); trail = { sma: sma(c.map((x) => x.close), TRAIL_SMA_LEN_4H), lastClose: c.length ? c[c.length - 1].close : null }; }
+      if (trail.sma !== null && trail.lastClose !== null && (isLong ? trail.lastClose < trail.sma : trail.lastClose > trail.sma)) await closeAll('TRAIL');
     }
     if (MODES.every((m) => !f.legs[m] || f.legs[m].closedAt)) {
       j.closedCount += 1;

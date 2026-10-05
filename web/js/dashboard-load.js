@@ -32,12 +32,14 @@
 
   async function main() {
     const now = new Date();
-    const [state, ordersState, archive, rangerState, ninjaJournal] = await Promise.all([
+    const [state, ordersState, archive, rangerState, ninjaJournal, ledger] = await Promise.all([
       fetchJson('state.json', { status: 'TUNAI', position: null }),
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
       fetchJson('archive.json', []),
       fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }, { freshOnly: true }),
       fetchJson('channel-breakout-journal.json', {}, { freshOnly: true }),
+      // (5 Okt 2026) buku besar terpadu SEMUA sistem (tradeLedger.js) -- sumber posisi & riwayat Sniper/Ranger/Ninja
+      fetchJson('trade-ledger.json', { trades: [] }, { freshOnly: true }),
     ]);
 
     const musimanEl = document.getElementById('musiman-container');
@@ -46,17 +48,17 @@
     const sniperEntries = archive.filter((e) => e.type === 'sniper').slice().reverse();
     const latestSniperEntry = sniperEntries[0] || null;
     const sniperEl = document.getElementById('sniper-container');
-    if (sniperEl) sniperEl.innerHTML = KaelaRender.renderSniperOrdersPanel(ordersState, latestSniperEntry);
+    if (sniperEl) sniperEl.innerHTML = KaelaRender.renderSniperOrdersPanel(ordersState, latestSniperEntry) + KaelaRender.renderLedgerPanel(ledger, 'sniper', { hideIntro: true });
 
     // Nyopet muncul di Home juga (23 Agu 2026, permintaan Olan: "floatingnya juga muncul di
     // home dan di jurnal") -- sebelumnya cuma ada di tab Jurnal.
     const rangerEl = document.getElementById('ranger-container');
-    if (rangerEl) rangerEl.innerHTML = KaelaRender.renderRangerHomePanel(rangerState);
+    if (rangerEl) rangerEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ranger'); // (5 Okt) dulu renderRangerHomePanel(nyopet-journal) -- gak liat Ranger dual/Sweep/Rotasi
 
     // Ninja muncul di Home juga (26 Sep 2026, permintaan Olan "pastikan web kita dah terupdate
     // sistem ninja bingx") -- pola sama kayak Ranger di atas.
     const ninjaEl = document.getElementById('ninja-container');
-    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderNinjaHomePanel(ninjaJournal);
+    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ninja'); // (5 Okt) dulu renderNinjaHomePanel(channel-breakout-journal) -- Channel Breakout udah mati
   }
 
   main();

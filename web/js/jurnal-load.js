@@ -31,9 +31,15 @@
     return { coins, lastBuyMonthKey: null, halvingStopNotified: false };
   }
 
+  // (5 Okt 2026) jurnal LAMA (sebelum buku besar) dilipat -- tetap bisa dibuka buat riwayat, gak nyesatin sbg data utama
+  function archiveWrap(html) {
+    const en = document.documentElement.lang === 'en';
+    return '<details style="margin-top:14px;"><summary style="cursor:pointer; opacity:0.8;">🗄️ ' + (en ? 'Old journal archive' : 'Arsip jurnal lama') + '</summary>' + html + '</details>';
+  }
+
   async function main() {
     const now = new Date();
-    const [ordersState, bankrollState, spotState, altState, rangerState, liveConfig, ninjaJournal] = await Promise.all([
+    const [ordersState, bankrollState, spotState, altState, rangerState, liveConfig, ninjaJournal, ledger] = await Promise.all([
       fetchJson('sniper-orders.json', { balance: 0, orders: [] }, { freshOnly: true }),
       fetchJson('kaela-bankroll.json', { balance: 100, startedAt: null, topUpHistory: [], pnlHistory: [] }, { freshOnly: true }),
       fetchJson('kaela-spot.json', { btcHeld: 0, totalInvestedCurrentCycle: 0, totalRealizedCash: 0, completedCycles: [], buyLog: [] }),
@@ -41,6 +47,7 @@
       fetchJson('nyopet-journal.json', { openPosition: null, trades: [] }, { freshOnly: true }),
       fetchJson('live-trading-config.json', { enabled: false, testnet: true }),
       fetchJson('channel-breakout-journal.json', {}, { freshOnly: true }),
+      fetchJson('trade-ledger.json', { trades: [] }, { freshOnly: true }), // (5 Okt 2026) buku besar terpadu
     ]);
 
     const spotEl = document.querySelector('[data-panel="spot"]');
@@ -55,16 +62,16 @@
     const fundReport = KaelaRender.computeFundReport(bankrollState, { isDemoMode: liveConfig.testnet !== false });
     const sniperEl = document.querySelector('[data-panel="sniper"]');
     if (sniperEl) {
-      sniperEl.innerHTML = KaelaRender.renderJurnalPanel(ordersState, now, fundReport);
+      sniperEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'sniper', { limit: 30 }) + archiveWrap(KaelaRender.renderJurnalPanel(ordersState, now, fundReport));
       KaelaRender.wireStrategyFilter();
     }
 
     const rangerEl = document.querySelector('[data-panel="ranger"]');
-    if (rangerEl) rangerEl.innerHTML = KaelaRender.renderRangerJurnalPanel(rangerState, now);
+    if (rangerEl) rangerEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ranger', { limit: 30 }) + archiveWrap(KaelaRender.renderRangerJurnalPanel(rangerState, now));
 
     // Ninja (26 Sep 2026, permintaan Olan "pastikan web kita dah terupdate sistem ninja bingx").
     const ninjaEl = document.querySelector('[data-panel="ninja"]');
-    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderNinjaJurnalPanel(ninjaJournal, now);
+    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ninja', { limit: 30 }) + archiveWrap(KaelaRender.renderNinjaJurnalPanel(ninjaJournal, now));
   }
 
   main();

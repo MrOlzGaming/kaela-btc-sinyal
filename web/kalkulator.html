@@ -69,6 +69,15 @@
     </div>
 
     <div class="field">
+      <label data-i18n="label_aset">Aset</label>
+      <div class="mode-toggle">
+        <button type="button" id="aset-major" class="active" data-i18n="btn_aset_major">₿ BTC / Emas</button>
+        <button type="button" id="aset-alt" data-i18n="btn_aset_alt">🪙 Altcoin</button>
+      </div>
+      <div class="hidden" id="aset-alt-note" style="font-size:0.78rem; opacity:0.8; margin-top:6px;" data-i18n="note_aset_alt">Altcoin: exposure SEPARUH &amp; cuma boleh LONG (aturan Kaela -- alt jatuhnya barengan &amp; lebih liar).</div>
+    </div>
+
+    <div class="field">
       <label data-i18n="label_arah">Arah Posisi</label>
       <div class="mode-toggle">
         <button type="button" id="arah-long" class="active" data-i18n="btn_arah_long">🟢 Long</button>
@@ -142,11 +151,14 @@
     // TAPI kalau nanti mau nyamain/refactor salah satu, JANGAN asal copy-paste kondisinya -- cek
     // literal exact-nya dulu, gak ada error yang bakal muncul kalau salah (exposure short diam2
     // berhenti dibagi 2).
-    function hitung(modal, nyawaPct, direction) {
+    // (5 Okt 2026) SAMAIN calculator.js server: leverage maks 50x (MAX_LEVERAGE), altcoin exposure /2 (aturan Olan 3 Okt)
+    const MAX_LEVERAGE = 50;
+    function hitung(modal, nyawaPct, direction, isAlt) {
       let exposure = getExposure(modal);
       if (direction === 'short') exposure /= 2;
+      if (isAlt) exposure /= 2;
       const nilaiPosisi = modal * exposure;
-      const leverage = Math.floor(100 / nyawaPct);
+      const leverage = Math.max(1, Math.min(MAX_LEVERAGE, Math.floor(100 / nyawaPct)));
       const margin = nilaiPosisi / leverage;
       const marginPct = margin / modal * 100;
       const warning = assessMarginRisk(marginPct);
@@ -179,6 +191,18 @@
     const arahLongBtn = document.getElementById('arah-long');
     const arahShortBtn = document.getElementById('arah-short');
     let arah = 'long';
+    let isAlt = false;
+    const asetMajorBtn = document.getElementById('aset-major');
+    const asetAltBtn = document.getElementById('aset-alt');
+    asetMajorBtn.onclick = () => {
+      isAlt = false; asetMajorBtn.classList.add('active'); asetAltBtn.classList.remove('active');
+      arahShortBtn.disabled = false; document.getElementById('aset-alt-note').classList.add('hidden');
+    };
+    asetAltBtn.onclick = () => {
+      isAlt = true; asetAltBtn.classList.add('active'); asetMajorBtn.classList.remove('active');
+      arah = 'long'; arahLongBtn.classList.add('active'); arahShortBtn.classList.remove('active'); arahShortBtn.disabled = true; // alt = long doang
+      document.getElementById('aset-alt-note').classList.remove('hidden');
+    };
     arahLongBtn.onclick = () => {
       arah = 'long';
       arahLongBtn.classList.add('active');
@@ -230,7 +254,7 @@
         nyawaPct = nyawaFromEntrySL(entry, sl);
       }
 
-      const r = hitung(modalAktif, nyawaPct, arah);
+      const r = hitung(modalAktif, nyawaPct, arah, isAlt);
       const modalAktifRow = document.getElementById('r-modal-aktif-row');
       if (strategi === 'nyopet') {
         document.getElementById('r-modal-aktif').textContent = fmt(modalAktif);
@@ -269,6 +293,10 @@
     I18N_META.btn_strategi_sniper = { id: '🎯 Sniper', en: '🎯 Sniper' };
     I18N_META.btn_strategi_nyopet = { id: '🏹 Ranger', en: '🏹 Ranger' };
     I18N_META.label_arah = { id: 'Arah Posisi', en: 'Position Direction' };
+    I18N_META.label_aset = { id: 'Aset', en: 'Asset' };
+    I18N_META.btn_aset_major = { id: '₿ BTC / Emas', en: '₿ BTC / Gold' };
+    I18N_META.btn_aset_alt = { id: '🪙 Altcoin', en: '🪙 Altcoin' };
+    I18N_META.note_aset_alt = { id: 'Altcoin: exposure SEPARUH &amp; cuma boleh LONG (aturan Kaela -- alt jatuhnya barengan &amp; lebih liar).', en: 'Altcoin: HALF exposure &amp; LONG only (Kaela rule -- alts crash together &amp; are wilder).' };
     I18N_META.btn_arah_long = { id: '🟢 Long', en: '🟢 Long' };
     I18N_META.btn_arah_short = { id: '🔴 Short', en: '🔴 Short' };
     I18N_META.r_modal_aktif_label = { id: 'Modal Aktif (dipakai kalkulator)', en: 'Active Capital (used by calculator)' };

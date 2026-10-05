@@ -165,8 +165,8 @@
     lose: { id: 'KALAH', en: 'LOSS' },
     ninja_positions_open: { id: 'posisi Ninja lagi terbuka', en: 'Ninja position(s) currently open' },
     no_ninja_open: { id: 'Gak ada posisi Ninja yang lagi terbuka.', en: 'No open Ninja positions right now.' },
-    ninja_home_disclaimer: { id: '🥷 Ninja -- deteksi breakout channel candle 5-menit, BingX (Demo VST + Real berbarengan).', en: '🥷 Ninja -- 5-minute channel breakout detection, on BingX (Demo VST + Real running together).' },
-    ninja_jurnal_disclaimer: { id: '🥷 Ninja Market -- breakout dari channel konsolidasi (candle 5-menit BTCUSDT), di BingX. Sekarang cuma jalan 1 varian (Trailing). Statistik TP Tetap di bawah DIBEKUKAN (dihentikan 26 Sep 2026, kalah telak dari Trailing di backtest 2 tahun) -- ditampilin apa adanya sbg arsip, bukan data live.', en: '🥷 Ninja Market -- breakout from a consolidation channel (5-minute BTCUSDT candles), on BingX. Only 1 variant runs now (Trailing). The Fixed-TP stats below are FROZEN (discontinued Sep 26, 2026, after losing decisively to Trailing in a 2-year backtest) -- shown as-is for archival purposes, not live data.' },
+    ninja_home_disclaimer: { id: '🥷 Ninja -- BingX: Mean Reversion 15 menit (TP di rata-rata SMA20) + uji demo Exhaustion & News.', en: '🥷 Ninja -- BingX: 15-minute Mean Reversion (TP at the SMA20 mean) + demo trials of Exhaustion & News.' },
+    ninja_jurnal_disclaimer: { id: '🥷 Ninja (ARSIP Channel Breakout 5 menit, dimatiin 30 Sep 2026 -- angka backtest lamanya ternyata artefak). Ninja yang jalan sekarang (Mean Reversion, Exhaustion, News) ada di Buku Besar di atas.', en: '🥷 Ninja (ARCHIVE of the 5-minute Channel Breakout, switched off Sep 30, 2026 -- its old backtest numbers turned out to be an artefact). The Ninja running now (Mean Reversion, Exhaustion, News) is in the Ledger above.' },
     ninja_discontinued_note: { id: '🗄️ Dihentikan 26 Sep 2026 -- kalah telak dari Trailing di backtest 2 tahun (PF 2,97 vs 11,67). Angka di bawah beku, gak nambah lagi.', en: '🗄️ Discontinued Sep 26, 2026 -- lost decisively to Trailing in a 2-year backtest (PF 2.97 vs 11.67). The numbers below are frozen, no longer updating.' },
     position_open_now: { id: 'Ada posisi lagi terbuka', en: 'Position currently open' },
     no_position_open_now: { id: 'Gak ada posisi lagi terbuka.', en: 'No open position right now.' },
@@ -382,7 +382,7 @@
 
   function liquidationPrice(o) {
     if (!o.leverage || !o.entryPrice) return null;
-    const distPct = 100 / o.leverage;
+    const distPct = Math.max(0, 100 / o.leverage - 0.5); // - maintenance margin (5 Okt 2026, samain darkKaelaLog.js)
     return o.direction === 'buy' ? o.entryPrice * (1 - distPct / 100) : o.entryPrice * (1 + distPct / 100);
   }
 
@@ -393,14 +393,14 @@
   // terjemahan lagi, SATU nama = ticker asli, sama persis kayak yang keliatan di app Binance.
   const ASSETS_WEB = {
     btc: { symbol: 'BTCUSDT', label: 'BTCUSDT', emoji: '🟧' },
-    xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
+    xau: { symbol: 'PAXGUSDT', label: 'XAUUSDT', emoji: '🟡' }, // symbol = sumber harga Binance, label gaya Binance (aturan Olan: jangan token literal)
   };
   // Mirror TERPISAH khusus Ranger -- Ranger BTC pakai wallet USDC (ticker BTCUSDC), BEDA dari
   // Sniper (BTCUSDT) -- pakai ASSETS_WEB biasa bikin kartu Ranger salah nunjukkin ticker (dan
   // salah poll harga live-nya, sniper-orders-widget.js baca data-symbol dari sini).
   const RANGER_ASSETS_WEB = {
     btc: { symbol: 'BTCUSDC', label: 'BTCUSDC', emoji: '🟧' },
-    xau: { symbol: 'PAXGUSDT', label: 'PAXGUSDT', emoji: '🟡' },
+    xau: { symbol: 'PAXGUSDT', label: 'XAUUSDT', emoji: '🟡' }, // symbol = sumber harga Binance, label gaya Binance (aturan Olan: jangan token literal)
     // Ranger ROTASI 8 koin (3 Okt 2026, rangerRotation.js -- BingX demo) -- harga hidup kartu dipoll dari Binance spot
     // pakai `symbol` ini (sniper-orders-widget.js). Tanpa entri ini kartu SOL dkk jatuh ke fallback BTC (label+harga salah).
     sol: { symbol: 'SOLUSDT', label: 'SOLUSDT', emoji: '🟣' },
@@ -529,8 +529,8 @@
     // aset x 2 mode deteksi, buy-only, exit 2 tahap) -- bukan karangan baru.
     const en = lang() === 'en';
     const introHtml = en
-      ? `<p class="strategy-intro">🎯 Sniper is a <strong>supplementary signal</strong> (not Kaela's main strategy) that detects <strong>Chart Patterns</strong> (Bull/Bear Flag, Falling/Rising Wedge) and <strong>Fair Value Gaps</strong> on BTC + Gold (PAXG), checked on every daily candle close. BTC trades both directions depending on the market window (long in bull, short in bear), Gold stays long-only. 2-stage exit (partial take-profit at 2x risk, the rest trailed with a daily SMA10). <a href="metodologi-sniper.html">Read the full methodology →</a></p>`
-      : `<p class="strategy-intro">🎯 Sniper adalah <strong>sinyal pelengkap</strong> (bukan strategi utama Kaela) yang mendeteksi <strong>Pola Chart</strong> (Bull/Bear Flag, Falling/Rising Wedge) dan <strong>Fair Value Gap</strong> di BTC + Emas (PAXG), dicek tiap candle harian closing. BTC dua arah tergantung window pasar (long pas bull, short pas bear), Emas tetap long-only. Exit 2 tahap (partial TP di 2x risiko, sisanya di-trail SMA10 harian). <a href="metodologi-sniper.html">Baca metodologi lengkap →</a></p>`;
+      ? `<p class="strategy-intro">🎯 Sniper is a <strong>supplementary signal</strong> (not Kaela's main strategy) that detects <strong>Chart Patterns</strong> (Bull/Bear Flag, Falling/Rising Wedge) and <strong>Fair Value Gaps</strong> on BTC + Gold (XAUUSDT), checked on every daily candle close. BTC trades both directions depending on the market window (long in bull, short in bear, half short exposure), Gold stays long-only. BTC exit: <strong>3× invalidation trailing stop</strong> (stop only moves up), demo + real side by side. <a href="metodologi-sniper.html">Read the full methodology →</a></p>`
+      : `<p class="strategy-intro">🎯 Sniper adalah <strong>sinyal pelengkap</strong> (bukan strategi utama Kaela) yang mendeteksi <strong>Pola Chart</strong> (Bull/Bear Flag, Falling/Rising Wedge) dan <strong>Fair Value Gap</strong> di BTC + Emas (XAUUSDT), dicek tiap candle harian closing. BTC dua arah tergantung window pasar (long pas bull, short pas bear, exposure short separuh), Emas tetap long-only. Exit BTC: <strong>trailing 3× jarak invalidasi</strong> (stop cuma naik), demo + real jalan barengan. <a href="metodologi-sniper.html">Baca metodologi lengkap →</a></p>`;
     return `<div class="sniper-orders-panel">
       ${introHtml}
       <p class="order-disclaimer">${rt('sniper_disclaimer')}</p>
@@ -1170,7 +1170,7 @@
     const en = lang() === 'en';
     const wallet1Label = (opts && opts.wallet1Label) || (en ? 'Demo Balance BTCUSDC' : 'Saldo Demo BTCUSDC');
     const wallet1Value = (opts && opts.wallet1Value !== undefined) ? opts.wallet1Value : (rangerState.balanceUsdc || 0);
-    const wallet2Label = (opts && opts.wallet2Label) || (en ? 'Demo Balance PAXGUSDT' : 'Saldo Demo PAXGUSDT');
+    const wallet2Label = (opts && opts.wallet2Label) || (en ? 'Demo Balance XAUUSDT' : 'Saldo Demo XAUUSDT');
     const wallet2Value = (opts && opts.wallet2Value !== undefined) ? opts.wallet2Value : (rangerState.balanceUsdt || 0);
     // 🐛 FIX 19 Sep 2026 (audit -- "orang bisa salah kira SELURUH saldo ini kepakai") -- Ranger
     // cuma pakai 1/5 saldo penuh sbg modal aktif buat sizing posisi (`MODAL_ACTIVE_FRACTION`,
@@ -1180,8 +1180,8 @@
     const modalAktifNote = (val) => `<br><span style="font-size:0.75em;opacity:0.65;font-weight:400;">${en ? 'active capital' : 'modal aktif'}: ${fmtUsdOrder(val / 5)}</span>`;
     const saldoCell = cell(wallet1Label + modalAktifNote(wallet1Value), fmtUsdOrder(wallet1Value)) + cell(wallet2Label + modalAktifNote(wallet2Value), fmtUsdOrder(wallet2Value));
     const disclaimer = (opts && opts.disclaimer) || (en
-      ? '🏹 Ranger Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo. 2-stage exit: partial at 2R then trail to breakeven, same as Sniper.'
-      : '🏹 Ranger Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo. Exit 2 tahap: partial di 2R lalu trail ke breakeven, sama kayak Sniper.');
+      ? '🏹 Ranger (legacy journal) -- Chart Pattern + FVG on 4-hour candles. Now: BTC demo + real (3 slots: Pattern, FVG, ICT Sweep) with 3× trailing exit, Gold XAUUSDT on MEXC (long only, partial at 3R then SMA60), Fed Dovish Grid, and an 8-coin Rotation on Bybit -- complete per-method results in the Ledger.'
+      : '🏹 Ranger (jurnal lama) -- Pola Chart + FVG candle 4 jam. Sekarang: BTC demo + real (3 slot: Pola, FVG, ICT Sweep) exit trailing 3×, Emas XAUUSDT di MEXC (long doang, ambil separuh di 3R lalu SMA60), Fed Dovish Grid, plus Rotasi 8 koin di Bybit -- hasil lengkap per metode ada di Buku Besar.');
 
     // 12 Sep 2026 -- gerbangnya `closed.length` (SEMUA yang pernah ditutup, termasuk
     // closed_untracked), BUKAN `!stats` lagi -- posisi untracked TETAP harus tampil di tabel
@@ -1242,8 +1242,8 @@
       ${renderPnlCalendar(statsEligible, now)}`;
 
     const disclaimerFull = (opts && opts.disclaimerFull) || (en
-      ? '🏹 Ranger Market -- Chart Pattern + FVG (same engine as Sniper), 4-hour timeframe, BTC long+short depending on window/Gold long-only, on Binance Demo (BTC in USDC, PAXG on USDT). 2-stage exit: partial at 2R then trail to breakeven. Profit and loss shown as-is.'
-      : '🏹 Ranger Market -- Pola Chart + FVG (mesin sama kayak Sniper), timeframe 4 jam, BTC long+short tergantung window/Emas long-only, di Binance Demo (BTC di USDC, PAXG numpang USDT). Exit 2 tahap: partial di 2R lalu trail ke breakeven. Profit maupun loss ditampilin apa adanya.');
+      ? '🏹 Ranger (legacy journal) -- Chart Pattern + FVG on 4-hour candles. Now: BTC demo + real (3 slots: Pattern, FVG, ICT Sweep) with 3× trailing exit, Gold XAUUSDT on MEXC (long only, partial at 3R then SMA60), Fed Dovish Grid, and an 8-coin Rotation on Bybit -- complete per-method results in the Ledger.'
+      : '🏹 Ranger (jurnal lama) -- Pola Chart + FVG candle 4 jam. Sekarang: BTC demo + real (3 slot: Pola, FVG, ICT Sweep) exit trailing 3×, Emas XAUUSDT di MEXC (long doang, ambil separuh di 3R lalu SMA60), Fed Dovish Grid, plus Rotasi 8 koin di Bybit -- hasil lengkap per metode ada di Buku Besar.');
     // `opts.hideHistoryList` -- lihat catatan panjang di renderJurnalPanel (Sniper) di atas, alasan
     // sama persis, dipakai bareng buat riwayat gabungan Sniper+Ranger.
     const historyBlock = (opts && opts.hideHistoryList) ? '' : `
@@ -1410,7 +1410,75 @@
     _kcStartObserverOnce();
   });
 
+  // ============ Panel dari BUKU BESAR (5 Okt 2026) -- trade-ledger.json (tradeLedger.js, tiap 15 menit di VPS) ============
+  // Satu sumber kebenaran SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). Dulu web baca jurnal LAMA
+  // (sniper-orders/nyopet-journal/channel-breakout-journal) -- Ninja MR/Exhaustion/News, Ranger dual+Sweep+Rotasi gak keliatan.
+  const LEDGER_INTRO = {
+    sniper: { id: '🎯 Sniper -- pola chart (flag/pennant/wedge) + Fair Value Gap di candle <strong>HARIAN</strong> BTC (Binance), demo + real jalan barengan. Window siklus halving: bull = long, bear = short (exposure short separuh). Exit: <strong>trailing 3× jarak invalidasi</strong> (stop cuma naik, untung dibiarin lari).',
+      en: '🎯 Sniper -- chart patterns (flag/pennant/wedge) + Fair Value Gap on <strong>DAILY</strong> BTC candles (Binance), demo + real side by side. Halving-cycle window: bull = long, bear = short (half short exposure). Exit: <strong>3× invalidation trailing stop</strong>.' },
+    ranger: { id: '🏹 Ranger -- candle <strong>4 JAM</strong>: BTC (Binance, 3 slot independen: Pola Chart, FVG, ICT Liquidity Sweep), Fed Dovish Grid, Emas XAUUSDT (MEXC, long doang), plus <strong>Rotasi 8 koin</strong> di Bybit (alt long doang, exposure separuh). Exit BTC trailing 3×, Emas & alt ambil sebagian lalu trailing SMA60.',
+      en: '🏹 Ranger -- <strong>4-HOUR</strong> candles: BTC (Binance, 3 independent slots: Chart Pattern, FVG, ICT Liquidity Sweep), Fed Dovish Grid, Gold XAUUSDT (MEXC, long only), plus an <strong>8-coin Rotation</strong> on Bybit (alts long only, half exposure). BTC exits 3× trailing, gold & alts take partial then SMA60 trailing.' },
+    ninja: { id: '🥷 Ninja -- BTC di BingX, timeframe pendek: <strong>Mean Reversion 15 menit</strong> (masuk pas harga nyimpang ekstrem searah tren, keluar pas balik ke rata-rata SMA20) + uji demo <strong>Exhaustion</strong> (likuidasi kehabisan tenaga, target 100 trade) & <strong>News</strong> (rilis data ekonomi, dolar per detik, target 30 rilis).',
+      en: '🥷 Ninja -- BTC on BingX, short timeframe: <strong>15-minute Mean Reversion</strong> (enter on extreme deviation in the trend direction, exit back at the SMA20 mean) + demo trials of <strong>Exhaustion</strong> (liquidation burst running out of steam, 100-trade target) & <strong>News</strong> (economic releases, per-second dollar, 30-release target).' },
+  };
+  function _ledgerMethod(t) {
+    const p = String(t.patternType || '');
+    const map = { mean_reversion: 'Mean Reversion', exhaustion_fade: 'Exhaustion', news_dxy: 'News', ict_sweep: 'ICT Liquidity Sweep', fed_dovish_grid: 'Fed Dovish Grid', econ_reaction: 'Scalp Rilis Data' };
+    if (map[p]) return map[p];
+    if (p.startsWith('fvg')) return 'Fair Value Gap';
+    if (!p || p === 'unknown' || p === 'manual') return lang() === 'en' ? 'Manual/adopted position' : 'Posisi manual/adopsi';
+    return (lang() === 'en' ? 'Chart Pattern' : 'Pola Chart') + ' (' + p.replace(/_/g, ' ') + ')';
+  }
+  function _ledgerPx(v) { return v === null || v === undefined ? '?' : (v >= 100 ? '$' + Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }) : '$' + (+Number(v).toPrecision(6))); }
+  function _ledgerWita(s) { return s ? new Date(new Date(s).getTime() + 8 * 3600e3).toISOString().replace('T', ' ').slice(0, 16) + ' WITA' : '?'; }
+
+  function renderLedgerPanel(ledger, systemKey, opts) {
+    const o = opts || {};
+    const en = lang() === 'en';
+    const trades = ((ledger && ledger.trades) || []).filter((t) => t.systemKey === systemKey);
+    const intro = LEDGER_INTRO[systemKey] ? `<p class="strategy-intro">${en ? LEDGER_INTRO[systemKey].en : LEDGER_INTRO[systemKey].id}</p>` : '';
+    const open = trades.filter((t) => t.status === 'terbuka');
+    const closed = trades.filter((t) => t.status === 'tutup');
+    // statistik per metode + akun + exchange (trade tutup, PnL yang kebaca doang)
+    const groups = {};
+    closed.forEach((t) => {
+      const k = `${_ledgerMethod(t)} · ${t.account} · ${t.exchange}`;
+      const g = groups[k] || (groups[k] = { n: 0, win: 0, net: 0 });
+      if (t.netUsd === null || t.netUsd === undefined) return;
+      g.n += 1; g.net += t.netUsd; if (t.netUsd >= 0) g.win += 1;
+    });
+    const cell = (l, v, cls) => `<div class="journal-stat"><div class="journal-stat-label">${escapeHtml(l)}</div><div class="journal-stat-value ${cls || ''}">${v}</div></div>`;
+    const statsHtml = Object.keys(groups).sort().map((k) => {
+      const g = groups[k];
+      return g.n ? cell(k, `${(g.win / g.n * 100).toFixed(0)}% (${g.win}/${g.n}) · ${fmtSignedUsd(g.net)}`, g.net >= 0 ? 'up' : 'down') : '';
+    }).join('');
+    const openHtml = open.length
+      ? open.map((t) => `<div class="empty">📡 <strong>${escapeHtml(_ledgerMethod(t))}</strong> · ${escapeHtml(t.account)} · ${escapeHtml(t.exchange)} -- ${escapeHtml(t.asset)} ${t.direction === 'LONG' ? '🟢 LONG' : '🔴 SHORT'} @ ${_ledgerPx(t.entry)}${t.sl ? ` (SL ${_ledgerPx(t.sl)})` : ''} · ${en ? 'since' : 'sejak'} ${_ledgerWita(t.openedAt)}</div>`).join('')
+      : `<div class="empty">${en ? 'No open position right now.' : 'Belum ada posisi terbuka sekarang.'}</div>`;
+    const recent = closed.slice(0, o.limit || 5).map((t) => {
+      const res = t.netUsd === null || t.netUsd === undefined ? (en ? 'PnL unreadable' : 'PnL gak kebaca') : fmtSignedUsd(t.netUsd);
+      const cls = t.netUsd === null || t.netUsd === undefined ? '' : (t.netUsd >= 0 ? 'up' : 'down');
+      return `<div class="order-card" style="margin-top:8px;">
+        <div><strong>${t.signalId ? '#' + escapeHtml(t.signalId) + ' · ' : ''}${escapeHtml(_ledgerMethod(t))}</strong> · ${escapeHtml(t.account)} · ${escapeHtml(t.exchange)}</div>
+        <div style="font-size:0.85em;">${escapeHtml(t.asset)} ${t.direction === 'LONG' ? '🟢 LONG' : '🔴 SHORT'} ${_ledgerPx(t.entry)} → ${_ledgerPx(t.exit)} · <span class="${cls}">${res}</span></div>
+        <div style="font-size:0.8em; opacity:0.85;">${en ? 'Open' : 'Alasan buka'}: ${escapeHtml(t.reasonOpen || '-')}</div>
+        <div style="font-size:0.8em; opacity:0.85;">${en ? 'Close' : 'Alasan tutup'}: ${escapeHtml(t.reasonClose || '-')} · ${_ledgerWita(t.closedAt)}</div>
+      </div>`;
+    }).join('');
+    const updated = ledger && ledger.updatedAt ? `<p class="order-disclaimer">${en ? 'Auto ledger, updated' : 'Buku besar otomatis, diperbarui'} ${_ledgerWita(ledger.updatedAt)}.</p>` : '';
+    return `<div class="sniper-orders-panel">
+      ${o.hideIntro ? '' : intro}
+      <div class="journal-section-title">📡 ${en ? 'Open positions' : 'Posisi terbuka'} (${open.length})</div>
+      ${openHtml}
+      ${statsHtml ? `<div class="journal-section-title">📊 ${en ? 'Results per method' : 'Hasil per metode'}</div><div class="journal-stats-grid">${statsHtml}</div>` : ''}
+      <div class="journal-section-title">🧾 ${en ? 'Latest closed trades' : 'Trade terakhir'}</div>
+      ${recent || `<div class="empty">${en ? 'No closed trade yet.' : 'Belum ada trade yang tutup.'}</div>`}
+      ${updated}
+    </div>`;
+  }
+
   global.KaelaRender = {
+    renderLedgerPanel,
     WINDOW_START, WINDOW_END, HALVING_DATE, daysToHalving,
     renderSiklusHalvingPanel, renderSniperOrdersPanel, renderOrderCard,
     renderJurnalPanel, computeFundReport, renderSpotJurnalPanel,

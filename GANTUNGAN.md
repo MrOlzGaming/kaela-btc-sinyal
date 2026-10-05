@@ -20,7 +20,8 @@ Keputusan Olan 3 Okt 2026 malam:
    ganti posisi sendiri. Rencana riset mulai 20 Okt 2026 (akhir window bear).
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
-6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang.
+6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. Antri: `web/js/kaela-render.js` liquidationPrice
+   masih rumus lama 100/leverage (tanpa maintenance margin, 5 Okt) -- disamain sama darkKaelaLog.js pas deploy berikutnya.
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 
@@ -48,6 +49,11 @@ Keputusan Olan 3 Okt 2026 malam:
 - Kandidat riset baru lainnya ada di STRATEGY-CATALOG.md bagian "IDE YANG BELUM DICOBA".
 
 ## ✅ SELESAI (terbaru di atas)
+
+- 5 Okt 2026 siang — FIX Ninja MR nol trade (0057, limit dari harga Binance spot ditolak BingX) -> trade pertama #2026100501
+  LONG demo kebuka normal (SL native + limit TP terverifikasi di BingX). Likuidasi di pesan sekarang angka asli exchange / rumus
+  + maintenance margin (review Olan: pesan $84.009 vs BingX $84.388,6). Selisih harga antar bursa diukur (semua < 0,1%) --
+  Sniper/Ranger aman. Paritas Sniper dual-exec: trailing 3x sesuai validasi.
 
 - 5 Okt 2026 — Filter DXY Ranger BTC DICABUT (Olan: "ikut saranmu"; uji ulang exit live: filter motong untung dua era); Emas
   tetap. Alarm palsu whale timeout dibereskan (fetchWithRetry timeout 30 dtk + alarm cuma kalau scan ketinggalan > 72 blok).

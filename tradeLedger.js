@@ -22,7 +22,7 @@ const OLAN = '6281299303888';
 const readJson = (rel) => { try { return JSON.parse(fs.readFileSync(path.join(SRC, rel), 'utf8')); } catch { return null; } };
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
 const iso = (v) => { if (v === null || v === undefined || v === '') return null; const d = new Date(typeof v === 'number' || /^\d+$/.test(String(v)) ? Number(v) : v); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };
-const dirOf = (d) => (String(d).toLowerCase() === 'long' || String(d).toLowerCase() === 'buy' ? 'LONG' : 'SHORT');
+const dirOf = (d) => (d === null || d === undefined || d === '' ? null : String(d).toLowerCase() === 'long' || String(d).toLowerCase() === 'buy' ? 'LONG' : 'SHORT'); // arah gak dicatat -> null (bukan nebak), 5 Okt 2026
 
 const SYSTEM = { sniper: '🎯 Sniper', ranger: '🏹 Ranger', ninja: '🥷 Ninja' };
 const EXCHANGE = { binance: 'Binance', mexc: 'MEXC', bingx: 'BingX', bybit: 'Bybit', bitget: 'Bitget' };
@@ -125,7 +125,7 @@ function collect() {
   for (const [file, pt] of [['ninja-exhaustion-journal.json', 'exhaustion_fade'], ['ninja-news-journal.json', 'news_dxy']]) {
     const j = readJson(file); if (!j) continue;
     for (const h of j.history || []) {
-      out.push(rec({ systemKey: 'ninja', id: h.id || `${pt}-${h.at}`, signalId: h.signalId, account: acct(h.mode), mode: h.mode, exchange: 'bingx', patternType: pt, direction: h.dir || 'long', openedAt: h.openedAt, reasonText: h.reasonText },
+      out.push(rec({ systemKey: 'ninja', id: h.id || `${pt}-${h.at}`, signalId: h.signalId, account: acct(h.mode), mode: h.mode, exchange: 'bingx', patternType: pt, direction: h.dir || null, openedAt: h.openedAt, reasonText: h.reasonText },
         { entryPrice: h.entry, exitPrice: h.exit, sl: h.sl, netUsd: h.net, grossUsd: h.grossUsd, feeUsd: h.feeUsd, exitReason: h.reason, openedAt: h.openedAt, closedAt: h.at }, { ...(h.label ? { event: h.label } : {}), context: ctxOf(h) }));
     }
     const f = j.floating;
@@ -139,6 +139,14 @@ function collect() {
   // dedup (key sama -> yang paling lengkap/terbaru menang, seed kalah sama data jurnal asli)
   const byKey = new Map();
   for (const r of out) { const prev = byKey.get(r.key); if (!prev || (prev.seed && !r.seed) || (!prev.closedAt && r.closedAt)) byKey.set(r.key, r); }
+  // Tambalan (5 Okt 2026): trade dari jurnal LAMA yang riwayatnya cuma {at, net} -- field yang KOSONG diisi dari log/pesan WA
+  // (seed.patches[{key, set}]). Gak pernah nimpa data jurnal yang udah ada.
+  for (const p of (seed && seed.patches) || []) {
+    const r = byKey.get(p.key); if (!r) continue;
+    for (const [k, v] of Object.entries(p.set || {})) if (r[k] === null || r[k] === undefined) r[k] = v;
+    if (p.set && p.set.reasonCloseCode && !r.reasonClose) r.reasonClose = reasonClose(p.set.reasonCloseCode);
+    r.patched = true;
+  }
   return [...byKey.values()].sort((a, b) => String(b.openedAt || '').localeCompare(String(a.openedAt || '')));
 }
 
@@ -179,12 +187,12 @@ function toMarkdown(trades, now) {
   const open = trades.filter((t) => t.status === 'terbuka');
   L.push('', `## Posisi terbuka (${open.length})`, '');
   if (!open.length) L.push('- Gak ada.');
-  for (const r of open) L.push(`- ${r.system} · ${methodName(r)} · ${r.account} · ${r.exchange} · ${r.asset} ${r.direction} @ ${px(r.entry)} (SL ${px(r.sl)}) sejak ${wita(r.openedAt)}`);
+  for (const r of open) L.push(`- ${r.system} · ${methodName(r)} · ${r.account} · ${r.exchange} · ${r.asset} ${r.direction || "?"} @ ${px(r.entry)} (SL ${px(r.sl)}) sejak ${wita(r.openedAt)}`);
   const closed = trades.filter((t) => t.status === 'tutup').slice(0, 60);
   L.push('', `## Trade terakhir (${closed.length} terbaru)`, '');
   for (const r of closed) {
     L.push(`### ${r.signalId ? '#' + r.signalId + ' — ' : ''}${r.system} · ${methodName(r)} · ${r.account} · ${r.exchange}${r.slot ? ' · slot ' + r.slot : ''}`);
-    L.push(`- Buka: ${wita(r.openedAt)} — ${r.asset} ${r.direction} @ ${px(r.entry)}${r.sl !== null ? ` (SL ${px(r.sl)})` : ''}${r.leverage ? `, ${r.leverage}x` : ''}${r.event ? ` — rilis: ${r.event}` : ''}`);
+    L.push(`- Buka: ${wita(r.openedAt)} — ${r.asset} ${r.direction || "?"} @ ${px(r.entry)}${r.sl !== null ? ` (SL ${px(r.sl)})` : ''}${r.leverage ? `, ${r.leverage}x` : ''}${r.event ? ` — rilis: ${r.event}` : ''}`);
     L.push(`- Alasan buka: ${r.reasonOpen}`);
     const ctx = Object.entries(r.context || {}).filter(([k]) => !CTX_HIDE.has(k)).slice(0, 12);
     if (ctx.length) L.push(`- Konteks entry: ${ctx.map(([k, v]) => `${k}=${typeof v === 'number' ? +v.toPrecision(8) : v}`).join(', ')}`);

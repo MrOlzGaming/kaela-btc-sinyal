@@ -218,7 +218,8 @@ Terakhir diperbarui: **3 Okt 2026**.
 ## 🗒️ IDE YANG BELUM DICOBA (dari RESEARCH-LOG)
 
 - ~~Donchian sbg pengganti window bull/bear Emas~~ -- DITES 4 Okt, ditolak (lihat bagian RANGER).
-- ~~Fear & Greed sbg konfirmasi~~ -- DITES 4 Okt: berguna CUMA buat blok short sweep pas takut ekstrem (dipasang). Real yield belum.
+- ~~Fear & Greed sbg konfirmasi~~ -- DITES 4 Okt: berguna CUMA buat blok short sweep pas takut ekstrem (dipasang).
+- ~~Real yield (TIPS 10th) buat Emas~~ -- UDAH dicek 15 Sep (RESEARCH-LOG): cocok 2020-22 tapi DECOUPLE 2023-26 (yield naik, Emas +140%, borongan bank sentral) -> gak dipakai.
 
 ---
 

@@ -1,16 +1,48 @@
 {
-  "_note": "Trade yang TUTUP sebelum jurnalnya nyimpen riwayat (tradeLedger.js mulai 5 Okt 2026). Dipulihin dari pesan WA + log channel-breakout.log + snapshot git jurnal. Kalau jurnal asli punya key yang sama, data jurnal yang menang.",
+  "_note": "Trade yang TUTUP sebelum jurnalnya nyimpen riwayat (tradeLedger.js mulai 5 Okt 2026). Dipulihin dari pesan WA + log channel-breakout.log + snapshot git jurnal. Kalau jurnal asli punya key yang sama, data jurnal yang menang. | patches (5 Okt): isi field KOSONG trade jurnal lama (riwayat cuma {at,net}) dari log, gak nimpa data jurnal.",
   "trades": [
     {
       "key": "ninja|seed-2026100501|demo",
-      "system": "🥷 Ninja", "systemKey": "ninja", "id": "seed-2026100501", "signalId": "2026100501",
-      "account": "Kaela Demo", "mode": "demo", "exchange": "BingX", "asset": "BTC",
-      "patternType": "mean_reversion", "direction": "LONG",
-      "entry": 85723.3, "sl": 84820.0, "exit": 86044.9, "qty": 0.0349, "leverage": 50, "marginUsd": 59.84,
-      "openedAt": "2026-10-05T04:31:06.700Z", "closedAt": "2026-10-05T06:48:14.000Z",
-      "status": "tutup", "grossUsd": 11.22, "feeUsd": 1.20, "netUsd": 10.02,
+      "system": "🥷 Ninja",
+      "systemKey": "ninja",
+      "id": "seed-2026100501",
+      "signalId": "2026100501",
+      "account": "Kaela Demo",
+      "mode": "demo",
+      "exchange": "BingX",
+      "asset": "BTC",
+      "patternType": "mean_reversion",
+      "direction": "LONG",
+      "entry": 85723.3,
+      "sl": 84820,
+      "exit": 86044.9,
+      "qty": 0.0349,
+      "leverage": 50,
+      "marginUsd": 59.84,
+      "openedAt": "2026-10-05T04:31:06.700Z",
+      "closedAt": "2026-10-05T06:48:14.000Z",
+      "status": "tutup",
+      "grossUsd": 11.22,
+      "feeUsd": 1.2,
+      "netUsd": 10.02,
       "reasonOpen": "Mean Reversion searah tren -- harga keluar Bollinger Band lawan arah tren EMA200, masuk balik ke arah tren (beli saat turun / jual saat naik)",
-      "reasonCloseCode": "MR_MEAN", "reasonClose": "Target tercapai -- harga balik ke rata-rata SMA20"
+      "reasonCloseCode": "MR_MEAN",
+      "reasonClose": "Target tercapai -- harga balik ke rata-rata SMA20"
+    }
+  ],
+  "patches": [
+    {
+      "key": "ninja|exhaustion_fade-1791163147123|demo",
+      "_sumber": "channel-breakout.log VPS: [NinjaEX] BUKA SHORT #2026100501 demo @ 85933.6 SL 86792.9 (05:42 WITA) / TUTUP 86802.2 EX_SL net -16.62 (09:19 WITA)",
+      "set": {
+        "signalId": "2026100501",
+        "direction": "SHORT",
+        "entry": 85933.6,
+        "sl": 86792.9,
+        "exit": 86802.2,
+        "openedAt": "2026-10-04T21:42:11.000Z",
+        "reasonCloseCode": "EX_SL"
+      }
     }
   ]
 }

@@ -377,7 +377,17 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
 
   for (const [orderId, o] of Object.entries(journal.orders)) {
     const activeLegs = ['demo', 'real'].filter((m) => o[m] && !o[m].closedAt);
-    if (activeLegs.length === 0) continue;
+    if (activeLegs.length === 0) {
+      // (5 Okt 2026, audit sinkron web) catatan order di sniper-orders.json (dibaca web/Kaela Access) dulu GAK PERNAH ditutup modul
+      // ini -- status 'floating' selamanya / ditutup simulasi exit LAMA sniperOrderMonitor.js (beda dari hasil trailing asli).
+      // Sekarang ditutup pakai hasil ASLI leg demo (leg yang selalu ada), sekali aja.
+      if (!o.shadowClosed) {
+        const L = o.demo || o.real;
+        updateOrder(orderId, { status: 'closed_live', closedAt: L.closedAt || new Date().toISOString(), exitPrice: L.exitPrice, pnlUsd: L.pnlUsd, closeReason: L.closeReason || null, liveClosedFrom: 'sniperBtcDualExec' });
+        o.shadowClosed = true; touched = true;
+      }
+      continue;
+    }
     touched = true;
 
     for (const mode of activeLegs) {

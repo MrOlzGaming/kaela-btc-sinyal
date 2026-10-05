@@ -247,7 +247,10 @@ async function processAsset(assetKey, ordersThisAsset, now, idrRate, getTodaysPn
 // field `asset` dianggap 'btc', backward-compat), proses tiap grup pakai candle aset itu sendiri.
 async function main() {
   const now = new Date();
-  const active = getActiveOrders();
+  // (5 Okt 2026) order yang dieksekusi sniperBtcDualExec.js (liveExecution.wibowoRoute) DILEWATI TOTAL -- dulu tetap disimulasi
+  // pakai exit LAMA (partial 2R + SMA10) + nyentuh bankroll bayangan, hasilnya beda dari trailing 3x yang beneran kejadian.
+  // Catatan order itu sekarang ditutup modul dual-exec sendiri pakai hasil asli (status 'closed_live').
+  const active = getActiveOrders().filter((o) => !isSilentOrder(o) || o.silentTest);
   if (active.length === 0) {
     console.log('[SniperOrderMonitor]', now.toISOString(), '— gak ada order aktif, skip.');
     return;

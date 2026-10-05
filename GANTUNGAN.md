@@ -20,8 +20,7 @@ Keputusan Olan 3 Okt 2026 malam:
    ganti posisi sendiri. Rencana riset mulai 20 Okt 2026 (akhir window bear).
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
-6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. Antri (6 Okt): `web/metodologi-ninja.html` bagian
-   News (siap-siap + level Boss, laporan 30 mnt, ISM rekam doang) -- udah di-commit, tinggal `deploy-daily.yml`.
+6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)
 7. **Push GAS Kaela Access** (5 Okt) — semua siap lokal (7 koneksi exchange + passphrase Bitget + jalur AdminView). Token OAuth
    udah bisa Kaela ambil, tapi perintah push yang bawa token DIBLOK penjaga izin aplikasi Claude -> Olan perlu izinin skrip
    `push-gas.ps1`/`deploy-gas-version.ps1` di pengaturan izin, ATAU jalanin sendiri. Abis itu: masking workflow + isi 7 API key.

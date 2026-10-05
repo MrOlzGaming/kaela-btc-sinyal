@@ -156,7 +156,9 @@ async function runDetector(deps) {
   // 3) eksekusi
   if (dir) {
     const busy = deps.busyReason();
-    if (busy) { rec.trade = { skipped: busy }; log(`Akun BingX lagi dipegang (${busy}) -- gak entry.`); }
+    // ev.trade === false (5 Okt 2026, backtest/newsMediumStudy.js) -- rilis "rekam doang": sinyal dicatat, gak buka posisi
+    if (ev.trade === false) { rec.trade = { skipped: 'rilis ini mode rekam doang (historis gak untung buat Ninja)' }; log('Mode rekam doang -- sinyal dicatat, gak entry.'); }
+    else if (busy) { rec.trade = { skipped: busy }; log(`Akun BingX lagi dipegang (${busy}) -- gak entry.`); }
     else rec.trade = await trade(dir, sigPrice);
   }
 

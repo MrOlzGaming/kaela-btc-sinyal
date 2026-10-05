@@ -41,8 +41,9 @@ function ninjaNewsHeadsUpLines(e) {
   try {
     const cfg = ninjaNews.loadConfig();
     if (!cfg.enabled) return [];
-    const hit = ninjaNews.loadSchedule().some((ev) => Math.abs(ev.timeMs - e.timeMs) <= 2 * 60 * 1000);
+    const hit = ninjaNews.loadSchedule().find((ev) => Math.abs(ev.timeMs - e.timeMs) <= 2 * 60 * 1000);
     if (!hit) return [];
+    if (hit.trade === false) return ['🥷 *Ninja News: rekam doang*', 'Rilis ini cuma direkam reaksinya (historis gak untung buat dicopet). Laporan 30 menit tetap keluar.'];
     const pct = (v) => String(v).replace('.', ',');
     return [
       `🥷 *Ninja News siaga (${cfg.allowReal ? 'Demo + Real' : 'Demo'})*`,

@@ -5,7 +5,7 @@
 > bagian "Selesai" paling bawah (tanggal + 1 baris). Permintaan Olan 3 Okt 2026: "catat sebagai gantungan/waiting list
 > biar gak lupa". Katalog strategi ada di `STRATEGY-CATALOG.md`.
 
-Terakhir diperbarui: **3 Okt 2026**.
+Terakhir diperbarui: **5 Okt 2026**.
 
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 
@@ -20,16 +20,18 @@ Keputusan Olan 3 Okt 2026 malam:
    ganti posisi sendiri. Rencana riset mulai 20 Okt 2026 (akhir window bear).
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
-6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. Antri: `web/js/kaela-render.js` liquidationPrice
-   masih rumus lama 100/leverage (tanpa maintenance margin, 5 Okt) -- disamain sama darkKaelaLog.js pas deploy berikutnya.
+6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian liquidationPrice kaela-render.js udah ikut
+   deploy 5 Okt.)
+7. **Push GAS Kaela Access** (5 Okt) — semua siap lokal (7 koneksi exchange + passphrase Bitget + jalur AdminView). Token OAuth
+   udah bisa Kaela ambil, tapi perintah push yang bawa token DIBLOK penjaga izin aplikasi Claude -> Olan perlu izinin skrip
+   `push-gas.ps1`/`deploy-gas-version.ps1` di pengaturan izin, ATAU jalanin sendiri. Abis itu: masking workflow + isi 7 API key.
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 
-- **Senin 5 Okt 2026 22:00 WITA** — rilis pertama Ninja News = ISM Services PMI (ditambah 5 Okt atas pertanyaan Olan; ISM
-  Manufaktur/Jasa juga 2/4 Nov & 1/3 Des). Lalu Jobless Claims Kamis 8 Okt 20:30 WITA, CPI 14 Okt.
-  ➜ Abis rilis ISM: cek reaksi EUR/BTC di `ninja-news-research-log.json`. Kalau reaksinya lumayan, usulin ke Olan masukin
-  event MEDIUM lain ke pesan siap-siap + jadwal uji (arahan Olan 5 Okt). Level dampak di pesan: SEDANG/TINGGI/👑 FINAL BOSS (FOMC). Di demo: cek `ninja-news.log` + `ninja-news-research-log.json`,
-  pastikan detektor nyala & datanya kerekam. Lanjut tiap rilis di `news-schedule.json`.
+- **Ninja News rilis berikutnya** — Jobless Claims Kamis 8 Okt 20:30 WITA (laporan otomatis 21:00), CPI 14 Okt. Cek
+  `ninja-news.log` + `ninja-news-research-log.json` + laporan 30 menit ke grup beneran keluar.
+  ISM 5 Okt (rilis pertama): detektor jalan normal, dolar cuma gerak 0,018%/menit -> gak entry (hasil ~sesuai perkiraan).
+  Event MEDIUM lain masuk jadwal uji Ninja News atau gak -> diputusin dari riset `backtest/newsMediumStudy.js` (5 Okt).
 - **Ninja News** — evaluasi setelah 1-2 bulan demo (target 30 rilis): naik real kalau hasil bagus.
 - **Ninja Exhaustion** — evaluasi di **100 transaksi demo**: real kalau PF bersih > 1,2 dan gak ada paruh PF < 1.
 - **Ninja MR 15M** — demo jalan; real cuma kalau demo berbulan-bulan jauh di atas impas.

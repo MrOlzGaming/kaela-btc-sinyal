@@ -114,6 +114,10 @@ Terakhir diperbarui: **3 Okt 2026**.
   >= 0,10% dalam 5-10 dtk: PF 1,14-1,21 (n=27-48, tipis). Selalu lebih bagus dari ikut BTC sendiri. Setting dikalibrasi: jendela
   10 dtk, ambang 0,10%, SL 0,8%, trailing 0,4% aktif +0,6%, maks 30 mnt. Uji demo 1-2 bulan. + Jobless Claims mingguan (Kamis)
   biar cepet keuji: rilis pertama Kamis 8 Okt 20:30 WITA.
+  **Event MEDIUM** (5 Okt, `newsMediumStudy.js`, 260 rilis 2023-26, aturan live persis): dolar >= 0,10% dlm 10 dtk cuma ISM 9% /
+  Claims 4% rilis. ISM Manufaktur+Jasa 8 trade PF 0,03/0,24 ❌ -> ISM jadi **rekam doang** (`trade:false`, tetap siap-siap +
+  laporan 30 mnt). Claims n=7 PF 2,56 tapi paruh2 0,90 -> tetap trade (demo, tipis). Event Medium lain GAK ditambah ke jadwal
+  uji (jarang gerakin dolar). Live ISM 5 Okt: dolar 0,018%/mnt, gak entry -- konsisten sama riset.
 - ❌ **ICT Sweep di timeframe Ninja (1H / 2H BTC)** (3 Okt) — gak beda dari entry acak (p 0,15-1,0), >=2023 mayoritas rugi.
   Edge sweep CUMA muncul >= 4H (`ict-sweep-ninja-output.log`).
 - ❌ **ICT Sweep 4H di ALT** (21 koin, long doang) — gabungan lebih jelek dari acak (p 0,63-1,0); pilih koin pakai <2023 ->

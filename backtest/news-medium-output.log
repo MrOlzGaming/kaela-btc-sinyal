@@ -1,0 +1,21 @@
+Event medium: 260 (2023+) | aturan live: EUR >= 0.1% dalam 10 dtk, SL 0.8 trail 0.4 aktif +0.6, maks 30m, biaya 0.12%
+Data lengkap: 260 event
+
+=== ISM Manufaktur (n=46) ===
+  Gerak dolar terbesar 10 dtk: median 0.034% | >=0,05%: 28% event | >=0,10%: 9% event
+  BTC gerak 5 menit (abs): median 0.165%
+  Trade aturan LIVE (>=0,10%): n=4 win=25% avg=-0.336% PF=0.03 | paruh1 n=2 win=0% avg=-0.232% PF=0.00 | paruh2 n=2 win=50% avg=-0.440% PF=0.04
+  Info ambang longgar (>=0,05%): n=13 win=38% avg=-0.119% PF=0.47
+
+=== Jobless Claims (n=168) ===
+  Gerak dolar terbesar 10 dtk: median 0.017% | >=0,05%: 14% event | >=0,10%: 4% event
+  BTC gerak 5 menit (abs): median 0.124%
+  Trade aturan LIVE (>=0,10%): n=7 win=43% avg=0.220% PF=2.56 | paruh1 n=3 win=33% avg=0.531% PF=4.30 | paruh2 n=4 win=50% avg=-0.013% PF=0.90
+  Info ambang longgar (>=0,05%): n=23 win=48% avg=0.033% PF=1.22
+
+=== ISM Jasa (n=46) ===
+  Gerak dolar terbesar 10 dtk: median 0.034% | >=0,05%: 33% event | >=0,10%: 9% event
+  BTC gerak 5 menit (abs): median 0.139%
+  Trade aturan LIVE (>=0,10%): n=4 win=25% avg=-0.216% PF=0.24 | paruh1 n=2 win=50% avg=0.089% PF=2.77 | paruh2 n=2 win=0% avg=-0.521% PF=0.00
+  Info ambang longgar (>=0,05%): n=15 win=47% avg=-0.128% PF=0.59
+

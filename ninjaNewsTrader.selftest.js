@@ -102,6 +102,16 @@ test('akun BingX lagi dipegang Ninja lain -> sinyal dicatat, gak entry', async (
   assert.strictEqual(rec.trade.skipped, 'Ninja MR floating');
 });
 
+test('rilis mode rekam doang (trade:false) -> sinyal dicatat, gak buka posisi, laporan tetap keluar', async () => {
+  const h = harness({ eurPath: (s) => (s < 3 ? 1.1 : 1.1 * 1.0015), btcPath: () => 80000 });
+  h.deps.event = { ...h.deps.event, trade: false };
+  const rec = await runDetector(h.deps);
+  assert.strictEqual(rec.signal.dir, 'long');
+  assert(/rekam doang/.test(rec.trade.skipped));
+  assert.strictEqual(h.st.pos, null, 'gak boleh ada posisi');
+  assert(h.st.wa.some((m) => /LAPORAN RILIS/.test(m) && /rekam doang/.test(m)));
+});
+
 // 5 Okt 2026 (arahan Olan "walau demo, yang realistis tetep siapkan"): net realistis + cek kesiapan real (baca doang)
 test('net REALISTIS <= net demo & kecatat di riwayat; kesiapan real kebaca tanpa buka order real', async () => {
   const eur = (s) => (s < 3 ? 1.1 : 1.1 * 1.0008);

@@ -3053,5 +3053,10 @@
     "type": "econ-calendar",
     "date": "2026-10-05T12:01:07.064Z",
     "content": "⬜ 📅 JADWAL EKONOMI MENDATANG (peringatan dini)\n(event USD penting dalam 48 jam ke depan -- paling relevan buat BTC lewat sentimen risiko)\n\n🕐 HARI INI, 22:00 WITA — PMI Jasa ISM\n   Dampak: 🟡 SEDANG\n   Forecast: 55.1 | Sebelumnya: 55.4\n   📐 PMI (Manufaktur/Jasa) (keyakinan: sedang):\n      • Kalau ACTUAL > forecast -> 📉 BTC cenderung TERTEKAN\n      • Kalau ACTUAL < forecast -> 📈 BTC cenderung MENGUAT\n\nLevel dampak: 🟡 SEDANG · 🔴 TINGGI · 👑 FINAL BOSS (efek brutal) = keputusan suku bunga FOMC\n⚠️ Perkiraan arah di atas itu LOGIKA MAKRO UMUM (sebab-akibat standar), BUKAN backtest data historis kayak sinyal Sniper/Musiman -- level keyakinannya beda, jangan disamakan. Murni informasi -- gak pengaruhi sinyal Sniper atau keputusan Musim Tanam/Panen.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "econ-calendar-headsup",
+    "date": "2026-10-05T13:55:02.164Z",
+    "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 22:00 WITA\n\n📰 *ISM Services PMI*\n🇺🇸 Institute for Supply Management Services Purchasing Managers' Index\n🇮🇩 Survei manajer pembelian perusahaan JASA AS: di atas 50 = tumbuh, di bawah 50 = menyusut\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 55,1 · Sebelumnya: 55,4\nArah BTC (logika makro, keyakinan sedang):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n🥷 *Ninja News siaga (Demo)*\nDolar gerak ≥0,1% di 10 detik pertama → Kaela nyopet BTC arah KEBALIKAN dolar.\nSL 0,8% · trailing aktif +0,6% · maks 30 menit. Dolar adem = gak entry."
   }
 ]

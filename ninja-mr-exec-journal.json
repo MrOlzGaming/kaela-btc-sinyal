@@ -1,7 +1,35 @@
 {
-  "lastProcessedCloseTime": 1791173699999,
+  "lastProcessedCloseTime": 1791174599999,
   "pendingEntry": null,
-  "floating": null,
+  "floating": {
+    "id": "04ef71dc-2196-4f92-b987-d57747863254",
+    "signalId": "2026100501",
+    "dir": "long",
+    "slDistPct": 1.053689723628587,
+    "sma20AtSignal": 86471.156,
+    "openedAt": 1791174666700,
+    "legs": {
+      "demo": {
+        "entryPrice": 85723.3,
+        "quantity": 0.0349,
+        "leverage": 50,
+        "margin": 59.84432220000001,
+        "nilaiPosisi": 2991.74317,
+        "entryCommission": 0.598349,
+        "openedAt": 1791174666700,
+        "sl": 84820.0423971447,
+        "stopOrderId": "2106965380370620416",
+        "exitOrderId": "2106965380816703488",
+        "exitLimitPrice": 86391.82096488419
+      },
+      "real": null
+    },
+    "wibowoRoute": "demo",
+    "notified": {
+      "demo": true,
+      "wibowo": true
+    }
+  },
   "closedCount": 0,
   "missedEntries": 0,
   "stats": {
@@ -17,7 +45,7 @@
     }
   },
   "dailySignalSeq": {
-    "dayKey": null,
-    "count": 0
+    "dayKey": "20261005",
+    "count": 1
   }
 }

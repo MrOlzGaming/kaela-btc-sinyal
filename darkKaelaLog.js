@@ -178,9 +178,14 @@ function patternReason(mode) { return PATTERN_REASON_LABEL[mode] || patternTag(m
 // deket/sama: margin abis kalau harga gerak 100/leverage% lawan posisi. SL biasanya kena DULUAN
 // (floor(leverage) di calculator.js ngasih buffer kecil), tapi titik likuidasi sesungguhnya tetap
 // ditampilkan terpisah, jangan disamain sama SL biar gak nyesatin.
+// (5 Okt 2026, review Olan atas pesan Ninja MR pertama: tertulis $84.009, BingX asli $84.388,6) -- rumus polos 100/leverage
+// LUPA maintenance margin exchange (BTC tier awal ~0,4-0,45%), jadi likuidasi KELIATAN lebih jauh dari aslinya (50x: 2% vs
+// asli 1,56%). Dikurangi MAINT_MARGIN_PCT (sengaja dibulatin ke atas 0,5% = perkiraan konservatif, likuidasi keliatan sedikit
+// LEBIH DEKAT, bukan lebih jauh). Kalau caller punya angka ASLI exchange, formatAutoOpen pakai itu (pos.liquidationPrice).
+const MAINT_MARGIN_PCT = 0.5;
 function liquidationPrice(entryPrice, leverage, direction) {
   if (!leverage || !entryPrice) return null;
-  const distPct = 100 / leverage;
+  const distPct = Math.max(0, 100 / leverage - MAINT_MARGIN_PCT);
   return direction === 'sell' ? entryPrice * (1 + distPct / 100) : entryPrice * (1 - distPct / 100);
 }
 
@@ -301,7 +306,7 @@ function _tpLine(pos) {
 function formatAutoOpen(pos, now, dxyLine, isDemo, idrRate, smartMoneyLine, todaysPnl, exchangeBadge, system) {
   const dirLabel = pos.direction === 'buy' ? '🟢 *LONG*' : '🔴 *SHORT*';
   const alasan = _isManual(pos) ? (pos.manualReason || 'Manual Olan (gak diisi alasan)') : patternReason(pos.patternType || pos.mode);
-  const liqPrice = liquidationPrice(pos.entryPrice, pos.leverage, pos.direction);
+  const liqPrice = Number(pos.liquidationPrice) > 0 ? Number(pos.liquidationPrice) : liquidationPrice(pos.entryPrice, pos.leverage, pos.direction);
   return `${_rangerBadge(pos, isDemo, exchangeBadge, system)}
 ${shortId(pos.id, pos.signalId)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}

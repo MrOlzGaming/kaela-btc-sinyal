@@ -318,9 +318,13 @@ async function main() {
   // dan terlengkap") -- Sniper/Ranger/Ninja SEKARANG reuse formatAutoOpen/Partial/Closed yang SAMA
   // dari darkKaelaLog.js. Ground-truth: harga likuidasi LONG di bawah entry, SHORT di atas entry
   // (rumus 100/leverage%, sama persis yang tadinya cuma dipakai Sniper).
-  await test('liquidationPrice: LONG di bawah entry, SHORT di atas entry, null kalau data kosong', () => {
-    assert.strictEqual(liquidationPrice(100, 10, 'buy'), 90);
-    assert.ok(Math.abs(liquidationPrice(100, 10, 'sell') - 110) < 1e-9, 'SHORT harus ~110 (toleransi floating-point)');
+  // (5 Okt 2026) rumus dikurangi maintenance margin 0,5% -- 10x: jarak 9,5% (bukan 10%). Angka asli BingX 50x: entry 85.723,3
+  // -> likuidasi 84.388,6 (jarak 1,557%); rumus baru 1,5% (84.437, sedikit lebih DEKAT = konservatif), rumus lama 2% (84.009).
+  await test('liquidationPrice: LONG di bawah entry, SHORT di atas entry, null kalau data kosong, + maintenance margin', () => {
+    assert.ok(Math.abs(liquidationPrice(100, 10, 'buy') - 90.5) < 1e-9);
+    assert.ok(Math.abs(liquidationPrice(100, 10, 'sell') - 109.5) < 1e-9, 'SHORT harus ~109,5 (toleransi floating-point)');
+    const real = 84388.6, est = liquidationPrice(85723.3, 50, 'buy');
+    assert.ok(est > real && est - real < 0.001 * real, `50x: perkiraan ${est} harus sedikit di ATAS likuidasi asli ${real} (konservatif, selisih < 0,1%)`);
     assert.strictEqual(liquidationPrice(100, 0, 'buy'), null);
     assert.strictEqual(liquidationPrice(null, 10, 'buy'), null);
   });
@@ -334,6 +338,9 @@ async function main() {
     const pos = { id: 'x', direction: 'buy', entryPrice: 100, tp: 110, sl: 90, leverage: 10, marginUsd: 10, nilaiPosisi: 100, mode: 'sniper', patternType: 'flag_bull', assetLabel: 'BTC' };
     const msg = formatAutoOpen(pos, new Date(), '', false, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.SNIPER);
     assert.ok(msg.includes('Likuidasi: $90'), `Harus nampilin harga likuidasi, malah:\n${msg}`);
+    // angka ASLI exchange (kalau caller ngasih) menang drpd rumus
+    const msgReal = formatAutoOpen({ ...pos, liquidationPrice: 91.23 }, new Date(), '', false, null, '', null, EXCHANGE_BADGE.binance, SYSTEM_LABEL.SNIPER);
+    assert.ok(msgReal.includes('Likuidasi: $91.23'), `Harus pakai likuidasi asli exchange:\n${msgReal}`);
     assert.ok(msg.includes('Bull Flag'), `Alasan harus dari patternType (flag_bull), bukan mode ('sniper'):\n${msg}`);
   });
 

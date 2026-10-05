@@ -111,7 +111,7 @@ function createTrader(deps) {
 
   // ---------- pesan WA ----------
   function openMsg(f, leg, isDemo, idrRate) {
-    const pos = { id: f.id, signalId: f.signalId, direction: execDirOf(f.dir), entryPrice: leg.entryPrice, tp: leg.exitLimitPrice || f.sma20AtSignal, tpFull: true, sl: leg.sl, marginUsd: leg.margin, nilaiPosisi: leg.nilaiPosisi, leverage: leg.leverage, mode: 'mean_reversion', assetLabel: 'BTC' };
+    const pos = { id: f.id, signalId: f.signalId, direction: execDirOf(f.dir), entryPrice: leg.entryPrice, tp: leg.exitLimitPrice || f.sma20AtSignal, tpFull: true, sl: leg.sl, liquidationPrice: leg.liquidationPrice, marginUsd: leg.margin, nilaiPosisi: leg.nilaiPosisi, leverage: leg.leverage, mode: 'mean_reversion', assetLabel: 'BTC' };
     return formatAutoOpen(pos, new Date(now()), '', isDemo, idrRate, '', null, EXCHANGE_BADGE, SYSTEM_LABEL.NINJA);
   }
   function closeMsg(f, leg, isDemo, idrRate) {
@@ -210,6 +210,9 @@ function createTrader(deps) {
     leg.sl = f.dir === 'long' ? leg.entryPrice * (1 - f2) : leg.entryPrice * (1 + f2);
     const stop = await safe(`STOP_MARKET ${mode}`, () => exec.placeStopMarketClose({ symbol: EXEC_SYMBOL, direction: execDirOf(f.dir), quantity: leg.quantity, stopPrice: leg.sl }));
     leg.stopOrderId = stop ? stop.orderId : null;
+    // likuidasi ASLI exchange buat pesan buka (5 Okt 2026: rumus polos nampilin $84.009, BingX asli $84.388,6)
+    const posNow = await safe(`posisi ${mode} (likuidasi)`, () => exec.getPositionBySide(EXEC_SYMBOL, positionSideOf(f.dir)));
+    leg.liquidationPrice = posNow ? num(posNow.liquidationPrice) : null;
     await placeExitLimit(exec, f, leg, mode, ind.sma20[i], null, spotRef);
     deps.kaelaJournal.record(mode, { entryId: `${f.id}-${mode}`, strategy: 'ninja', asset: 'btc', direction: f.dir, entryPrice: leg.entryPrice, sl: leg.sl, tp: leg.exitLimitPrice || null, status: 'open', openedAt: new Date(now()).toISOString(), note: 'mean-reversion' });
   }

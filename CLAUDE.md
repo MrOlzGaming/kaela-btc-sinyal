@@ -4,6 +4,13 @@ Katalog SEMUA strategi yang pernah dipelajari + hasil backtest terakhir + status
 ❌ ditolak) + alasannya. Kalau idenya udah ada di situ -> presentasikan langsung dari situ, JANGAN riset/backtest ulang
 (permintaan Olan 3 Okt 2026). Riset baru (lolos maupun gagal) WAJIB ditambah ke katalog.
 
+# Review hasil trading / "trade kemarin gimana" / evaluasi metode? Buka [`TRADE-LEDGER.md`](TRADE-LEDGER.md)
+
+Buku besar OTOMATIS (tradeLedger.js, tiap siklus VPS 15 menit) -- SEMUA trade Sniper/Ranger/Ninja, demo & real, semua
+exchange: alasan buka & tutup (teks sama persis pesan WA), harga, SL, PnL kotor/fee/bersih, konteks entry lengkap. Data
+mesin di `trade-ledger.json`. Permintaan Olan 5 Okt 2026: "catatan rapi & lengkap biar review & update gak kekurangan data".
+Sistem/metode BARU wajib ikut kebaca di tradeLedger.js (jurnalnya WAJIB nyimpen riwayat trade yang udah tutup).
+
 # Olan nanya "gantungan apa aja / apa yang belum"? Buka [`GANTUNGAN.md`](GANTUNGAN.md)
 
 Waiting list: yang nunggu Olan, nunggu tanggal/data, dan antrian kerja Kaela. Kerjaan ketunda WAJIB dicatat di situ.

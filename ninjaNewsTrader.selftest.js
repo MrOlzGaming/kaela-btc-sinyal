@@ -68,7 +68,9 @@ test('DXY turun (EUR naik) detik ke-3 -> BTC LONG, BTC nyusul naik lalu balik ->
   assert(rec.trade.demo.netUsd > 0, 'harus untung');
   assert.strictEqual(h.j.stats.demo.wins, 1);
   assert.strictEqual(h.j.floating, null);
-  assert.strictEqual(h.st.wa.length, 4);
+  assert.strictEqual(h.st.wa.length, 6, 'buka+tutup (2 grup) + laporan rilis (2 grup)');
+  const lap = h.st.wa[h.st.wa.length - 1];
+  assert(/LAPORAN RILIS/.test(lap) && /Ninja News \(Demo\): LONG/.test(lap) && /realistis/.test(lap), lap);
   assert(rec.btc.m15 !== undefined, 'gerak menit ke-15 harus kerekam');
 });
 
@@ -87,6 +89,10 @@ test('dolar diem -> gak entry, tetap kerekam buat riset', async () => {
   const rec = await runDetector(h.deps);
   assert(rec.signal.none && !rec.trade);
   assert.strictEqual(h.st.closed, 0);
+  // 5 Okt 2026 (permintaan Olan): laporan tetap dikirim walau gak open posisi
+  assert.strictEqual(h.st.wa.length, 2, 'laporan rilis ke 2 grup walau gak entry');
+  assert(/LAPORAN RILIS/.test(h.st.wa[0]) && /gak entry -- dolar adem/.test(h.st.wa[0]) && /\+0,000%/.test(h.st.wa[0]), h.st.wa[0]);
+  assert(!/hawkish|dovish|NETRAL/i.test(h.st.wa[0]), 'laporan gak boleh nyimpulin hawkish/dovish (insiden 19 Sep)');
 });
 
 test('akun BingX lagi dipegang Ninja lain -> sinyal dicatat, gak entry', async () => {

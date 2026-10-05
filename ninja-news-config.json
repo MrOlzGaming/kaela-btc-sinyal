@@ -9,7 +9,7 @@
   "trailActPct": 0.6,
   "trailPct": 0.4,
   "maxHoldMin": 30,
-  "recordMin": 15,
+  "recordMin": 30,
   "targetTrades": 30,
   "realisticCostRtPct": 0.12,
   "_realistis": "5 Okt 2026 (arahan Olan: walau demo, yang realistis tetep siapkan -- kalo data bagus tinggal ON) -- tiap transaksi demo juga dicatat net REALISTIS (biaya pulang-pergi realisticCostRtPct% = fee+selip, sama asumsi backtest), rapor/tonggak trialReport.js nilai pakai angka itu. Tiap rilis detektor juga cek kesiapan real (key ada? saldo cukup? -- BACA doang). Nyalain real = allowReal true.",

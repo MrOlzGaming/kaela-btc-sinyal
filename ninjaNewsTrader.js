@@ -141,6 +141,8 @@ async function runDetector(deps) {
     const sec = Math.round((now() - ev.timeMs) / 1000);
     if (p) {
       for (const mk of marks) if (sec >= mk && rec.eur[`s${mk}`] === undefined) { rec.eur[`s${mk}`] = p.eur; rec.btc[`s${mk}`] = p.btc; }
+      const mvNow = (p.eur - base.eur) / base.eur * 100; // gerak dolar TERBESAR di jendela -- buat laporan 30 menit (5 Okt 2026)
+      if (rec.eurMaxMovePct === undefined || Math.abs(mvNow) > Math.abs(rec.eurMaxMovePct)) rec.eurMaxMovePct = mvNow;
       if (!dir) {
         const d = decideSignal({ eurBase: base.eur, eurNow: p.eur, btcBase: base.btc, btcNow: p.btc }, cfg);
         if (d && d.skip) { rec.signal = { skip: d.skip, sec }; log(`Sinyal di-skip: ${d.skip}`); break; }
@@ -158,13 +160,29 @@ async function runDetector(deps) {
     else rec.trade = await trade(dir, sigPrice);
   }
 
+  // Fase trading selesai -> lepas tanda "lagi jaga rilis" (ninjaBusy.js) biar Ninja MR/Exhaustion gak ketahan selama sisa
+  // rekaman+laporan 30 menit (itu cuma baca harga publik). Detektor dobel tetap dicegah kunci /tmp + handled[key].
+  if (j.active) { j.active = null; save(); }
+
   // 4) rekam gerak BTC sampai recordMin menit (buat kalibrasi), kalau belum lewat
   const endRec = ev.timeMs + cfg.recordMin * 60000;
-  for (const mn of [1, 2, 5, 10, 15]) {
+  for (const mn of [1, 2, 5, 10, 15, 30]) {
     if (mn > cfg.recordMin) continue;
     while (now() < ev.timeMs + mn * 60000 && now() < endRec) await deps.sleep(Math.min(5000, ev.timeMs + mn * 60000 - now()));
+    if (rec.eur[`m${mn}`] !== undefined) continue;
     const p = await safe('harga', () => deps.prices());
     if (p) { rec.eur[`m${mn}`] = p.eur; rec.btc[`m${mn}`] = p.btc; }
+  }
+
+  // 5) LAPORAN ~30 menit setelah rilis (5 Okt 2026, permintaan Olan: "buat laporannya walau ga open posisi, tepat 30 menit
+  //    setelah news, otomatis") -- MURNI fakta gerak harga + hasil Ninja. SENGAJA tanpa angka "actual" & label hawkish/dovish
+  //    (insiden 19 Sep: feed actual gratis suka telat/salah + label NETRAL disalahartikan -> pesan HASIL dulu dihapus).
+  if (deps.notify) {
+    const range = deps.candles ? await safe('candle 30 menit', () => deps.candles(ev.timeMs, ev.timeMs + cfg.recordMin * 60000)) : null;
+    const msg = formatReleaseReport({ rec, ev, cfg, journal: j, range });
+    await safe('WA laporan Sniper Club', () => deps.notify.sniperClub(msg));
+    await safe('WA laporan Wibowo', () => deps.notify.wibowo(msg));
+    rec.reportSentAt = now();
   }
   return rec;
 
@@ -309,6 +327,50 @@ async function runDetector(deps) {
   }
 }
 
+// ================= Laporan 30 menit setelah rilis (pure, dites di selftest) =================
+const pctTxt = (v, d = 2) => (Number.isFinite(v) ? `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(d).replace('.', ',')}%` : '-');
+const usdTxt = (v) => `$${Math.round(v).toLocaleString('id-ID')}`;
+function formatReleaseReport({ rec, ev, cfg, journal, range }) {
+  const { IMPACT_LEVELS } = require('./econCalendar');
+  const lvl = ev.level ? (IMPACT_LEVELS.find((l) => l.key === ev.level) || {}).badge : null;
+  const jam = new Date(ev.timeMs + 8 * 3600e3).toISOString().slice(11, 16);
+  const mv = (o, k) => (o && Number.isFinite(o.base) && Number.isFinite(o[k]) ? (o[k] - o.base) / o.base * 100 : null);
+  const lastMin = [30, 15, 10, 5].find((m) => mv(rec.btc, `m${m}`) !== null);
+  const lines = [
+    '⬜ 📋 *LAPORAN RILIS · 30 menit setelah*',
+    `📰 *${ev.label}* · ${jam} WITA`,
+    ...(lvl ? [`Level: ${lvl}`] : []),
+    '',
+    '💵 Dolar (EURUSDT, kebalikan DXY):',
+    `• ${cfg.windowSec} detik pertama: gerak terbesar ${pctTxt(rec.eurMaxMovePct, 3)} (ambang Ninja ${String(cfg.thrPct).replace('.', ',')}%)`,
+    `• 1 menit ${pctTxt(mv(rec.eur, 'm1'), 3)} · 5 menit ${pctTxt(mv(rec.eur, 'm5'), 3)}${lastMin ? ` · ${lastMin} menit ${pctTxt(mv(rec.eur, `m${lastMin}`), 3)}` : ''}`,
+    '₿ BTC:',
+    `• 1 menit ${pctTxt(mv(rec.btc, 'm1'))} · 5 menit ${pctTxt(mv(rec.btc, 'm5'))}${lastMin ? ` · ${lastMin} menit ${pctTxt(mv(rec.btc, `m${lastMin}`))}` : ''}`,
+  ];
+  if (range && Number.isFinite(range.btcHigh) && Number.isFinite(range.btcLow)) {
+    lines.push(`• Rentang ${cfg.recordMin} menit: ${usdTxt(range.btcLow)} – ${usdTxt(range.btcHigh)} (${((range.btcHigh - range.btcLow) / range.btcLow * 100).toFixed(2).replace('.', ',')}%)`);
+  }
+  lines.push('');
+  const s = rec.signal || {};
+  const t = rec.trade;
+  if (t && t.demo) {
+    const L = t.demo;
+    const h = (journal.history || []).filter((x) => x.key === ev.key && x.mode === 'demo').pop();
+    const net = (v) => `${v >= 0 ? '+' : '−'}$${Math.abs(v).toFixed(2)}`;
+    lines.push(`🥷 Ninja News (Demo): ${L.dir === 'long' ? 'LONG' : 'SHORT'} ${usdTxt(L.entry)} → ${usdTxt(L.exit)} (${L.reason}, ${Math.round(L.holdSec / 60)} menit)`);
+    lines.push(`   Bersih ${net(L.netUsd)}${h && Number.isFinite(h.netRealistic) ? ` · realistis (+selip) ${net(h.netRealistic)}` : ''}`);
+    if (t.real) lines.push(`🥷 Real: ${usdTxt(t.real.entry)} → ${usdTxt(t.real.exit)} · bersih ${net(t.real.netUsd)}`);
+  } else if (t && t.skipped) lines.push(`🥷 Ninja News: sinyal ada tapi gak entry -- ${t.skipped}`);
+  else if (t && t.error) lines.push(`🥷 Ninja News: sinyal ada tapi gagal buka posisi (${t.error})`);
+  else if (s.skip) lines.push(`🥷 Ninja News: gak entry -- ${s.skip}`);
+  else lines.push(`🥷 Ninja News: gak entry -- dolar adem (gerak ${pctTxt(rec.eurMaxMovePct, 3)} < ambang ${String(cfg.thrPct).replace('.', ',')}%). Sesuai aturan, gak maksa masuk.`);
+  const st = (journal.stats && journal.stats.demo) || {};
+  lines.push(`🧪 Uji demo: ${Object.keys(journal.handled || {}).length} rilis dijaga · ${(st.wins || 0) + (st.losses || 0)}/${cfg.targetTrades} transaksi`);
+  if (rec.realReady) lines.push(`🔌 Kesiapan real: ${rec.realReady.ok ? 'siap' : 'belum'} -- ${rec.realReady.note}`);
+  lines.push('', '— Kaela');
+  return lines.join('\n');
+}
+
 // ================= Wiring produksi =================
 function pidAlive(pid) { try { process.kill(pid, 0); return true; } catch { return false; } }
 
@@ -327,6 +389,13 @@ function prodDeps(cfg, journal, ev, { quiet } = {}) {
       return { eur: m.EURUSDT, btc: m.BTCUSDT };
     },
     sleep: (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms))),
+    // rentang harga BTC (high/low candle 1 menit) buat laporan 30 menit -- data publik, tanpa key
+    candles: async (startMs, endMs) => {
+      const res = await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1m&startTime=${startMs}&endTime=${endMs}&limit=60`, { signal: AbortSignal.timeout(5000) });
+      const k = await res.json();
+      if (!Array.isArray(k) || !k.length) throw new Error('candle kosong');
+      return { btcHigh: Math.max(...k.map((x) => Number(x[2]))), btcLow: Math.min(...k.map((x) => Number(x[3]))) };
+    },
     execFor: (testnet) => old.execFor('trailing', testnet),
     strayCheck: (exec) => old.checkAndClearStrayPosition(exec, null),
     busyReason: () => ninjaBusyReason('news'),
@@ -411,4 +480,4 @@ if (require.main === module) {
   p.catch((e) => { console.error('[NinjaNews] ERROR:', e.message); process.exit(1); });
 }
 
-module.exports = { runDetector, decideSignal, updateTrail, eventTimeMs, loadSchedule, freshJournal, loadConfig };
+module.exports = { runDetector, decideSignal, updateTrail, eventTimeMs, loadSchedule, freshJournal, loadConfig, formatReleaseReport };

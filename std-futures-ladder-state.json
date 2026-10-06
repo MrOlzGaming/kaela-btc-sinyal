@@ -1,6 +1,6 @@
 {
   "seeded": true,
-  "nextNo": 7,
+  "nextNo": 8,
   "layers": {
     "BTCUSDT|LONG|1791263564000|85680.55": {
       "key": "BTCUSDT|LONG|1791263564000|85680.55",
@@ -10,14 +10,16 @@
       "lev": 3,
       "margin": 2,
       "openedAt": 1791263564000,
-      "lastPrice": 85577.33,
+      "lastPrice": 85851.57,
       "liqEst": 57548.76941666668,
       "no": 1,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791263587062,
       "notional0": 6,
       "collAlert": 0,
-      "effLev": 3
+      "effLev": 3,
+      "closedAt": 1791274146756,
+      "closePrice": 85824.84
     },
     "BTCUSDT|LONG|1791263571000|85692.38": {
       "key": "BTCUSDT|LONG|1791263571000|85692.38",
@@ -27,14 +29,16 @@
       "lev": 3,
       "margin": 2,
       "openedAt": 1791263571000,
-      "lastPrice": 85577.33,
+      "lastPrice": 85851.57,
       "liqEst": 57556.71523333334,
       "no": 2,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791263587070,
       "notional0": 6,
       "collAlert": 0,
-      "effLev": 3
+      "effLev": 3,
+      "closedAt": 1791274146786,
+      "closePrice": 85824.84
     },
     "BTCUSDT|LONG|1791263576000|85679.85": {
       "key": "BTCUSDT|LONG|1791263576000|85679.85",
@@ -44,14 +48,16 @@
       "lev": 3,
       "margin": 2,
       "openedAt": 1791263576000,
-      "lastPrice": 85577.33,
+      "lastPrice": 85851.57,
       "liqEst": 57548.29925000001,
       "no": 3,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791263587071,
       "notional0": 6,
       "collAlert": 0,
-      "effLev": 3
+      "effLev": 3,
+      "closedAt": 1791274146820,
+      "closePrice": 85824.84
     },
     "BTCUSDT|LONG|1791263582000|85679.85": {
       "key": "BTCUSDT|LONG|1791263582000|85679.85",
@@ -61,14 +67,16 @@
       "lev": 3,
       "margin": 2,
       "openedAt": 1791263582000,
-      "lastPrice": 85577.33,
+      "lastPrice": 85851.57,
       "liqEst": 57548.29925000001,
       "no": 4,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791263587071,
       "notional0": 6,
       "collAlert": 0,
-      "effLev": 3
+      "effLev": 3,
+      "closedAt": 1791274146846,
+      "closePrice": 85824.84
     },
     "BTCUSDT|LONG|1791263586000|85679.85": {
       "key": "BTCUSDT|LONG|1791263586000|85679.85",
@@ -78,14 +86,16 @@
       "lev": 3,
       "margin": 2,
       "openedAt": 1791263586000,
-      "lastPrice": 85577.33,
+      "lastPrice": 85851.57,
       "liqEst": 57548.29925000001,
       "no": 5,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791263587071,
       "notional0": 6,
       "collAlert": 0,
-      "effLev": 3
+      "effLev": 3,
+      "closedAt": 1791274146878,
+      "closePrice": 85824.84
     },
     "BTCUSDT|LONG|1791263592000|85679.87": {
       "key": "BTCUSDT|LONG|1791263592000|85679.87",
@@ -95,24 +105,51 @@
       "lev": 3,
       "margin": 2,
       "openedAt": 1791263592000,
-      "lastPrice": 85577.33,
+      "lastPrice": 85851.57,
       "liqEst": 57548.31268333334,
       "no": 6,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791263684059,
       "notional0": 6,
       "collAlert": 0,
-      "effLev": 3
+      "effLev": 3,
+      "closedAt": 1791274146908,
+      "closePrice": 85824.84
+    },
+    "BTCUSDT|SHORT|1791274222000|85773.09": {
+      "key": "BTCUSDT|SHORT|1791274222000|85773.09",
+      "symbol": "BTCUSDT",
+      "side": "SHORT",
+      "entry": 85773.09,
+      "lev": 150,
+      "margin": 27.83,
+      "openedAt": 1791274222000,
+      "lastPrice": 85775.17,
+      "liqEst": 85916.04515,
+      "no": 7,
+      "status": "open",
+      "firstSeenAt": 1791274266589,
+      "notional0": 4174.5,
+      "collAlert": 0,
+      "effLev": 150
     }
   },
   "totals": {
     "liqCount": 0,
     "liqLossUsd": 0,
-    "closedCount": 0,
-    "closedPnlUsd": 0
+    "closedCount": 6,
+    "closedPnlUsd": 0.0599909606938028
   },
   "apiFail": {
     "count": 0,
     "alerted": false
-  }
+  },
+  "usedOrders": [
+    "1624911399650193400",
+    "1624911424618885000",
+    "1624911437537341400",
+    "1624911475090968600",
+    "1624911475102081000",
+    "1624911524963414000"
+  ]
 }

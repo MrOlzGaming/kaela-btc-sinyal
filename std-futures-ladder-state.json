@@ -392,16 +392,18 @@
       "lastPrice": 85511.78,
       "liqEst": 85699.15426666666,
       "no": 21,
-      "status": "open",
+      "status": "liquidated",
       "firstSeenAt": 1791324126079,
       "notional0": 300,
       "collAlert": 0,
-      "effLev": 150
+      "effLev": 150,
+      "closedAt": 1791325085991,
+      "closePrice": 85511.78
     }
   },
   "totals": {
-    "liqCount": 5,
-    "liqLossUsd": 44.65,
+    "liqCount": 6,
+    "liqLossUsd": 46.65,
     "closedCount": 15,
     "closedPnlUsd": -0.5023905620938591
   },
@@ -429,6 +431,7 @@
     "1625062298708209700",
     "1625084842483003400",
     "1625089133273804800",
-    "1625093159164469200"
+    "1625093159164469200",
+    "1625165246575042600"
   ]
 }

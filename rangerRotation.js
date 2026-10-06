@@ -245,7 +245,8 @@ function createRotation(deps) {
     let real = null;
     if (cfg.allowReal && deps.legs.real) {
       try { real = await openLeg('real', coin, sig, live); }
-      catch (e) { log(e.insufficient ? `${coin} real skip -- ${e.message}` : `${coin} real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`); }
+      // qty 0 / notional di bawah minimum exchange = saldo kurang juga (6 Okt 2026: saldo real $0 ke-log "BUKAN saldo kurang")
+      catch (e) { const kurang = e.insufficient || /kekecilan|Quantity kehitung 0|min(imum)? (order|notional)/i.test(e.message); log(kurang ? `${coin} real skip (saldo kurang buat ukuran minimum) -- ${e.message}` : `${coin} real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`); }
     }
     const d = new Date(now());
     if (!j.dailySignalSeq || j.dailySignalSeq.dayKey !== dayKeyOf(d)) j.dailySignalSeq = { dayKey: dayKeyOf(d), count: 0 };

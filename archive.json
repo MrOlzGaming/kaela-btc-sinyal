@@ -3128,5 +3128,10 @@
     "type": "econ-calendar",
     "date": "2026-10-06T12:31:03.285Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Kamis, 8 Okt · 20:30 WITA\n📰 *Unemployment Claims*\n🇺🇸 Initial Jobless Claims\n🇮🇩 Jumlah warga AS yang BARU ngajuin tunjangan pengangguran minggu ini\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 200K · Sebelumnya: 197K\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📈 BTC cenderung menguat\n• Di bawah perkiraan → 📉 BTC cenderung tertekan\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-10-06T16:01:20.936Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-10-07\n5 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 6.528,48 BTC berpindah (~$560,078,512 / ~Rp10.021.251.557.873)\nTerbesar: 2.486,66 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 5 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

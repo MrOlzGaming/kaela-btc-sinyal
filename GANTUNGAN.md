@@ -17,7 +17,8 @@ Keputusan Olan 3 Okt 2026 malam:
    independen, berlapis-lapis). `spot-live-config.json realBudgetUsd` TETAP 0 (leg real spot DCA diem). Catatan: Rp50rb ≈
    $2,80 (kurs 17.883) x3 = $8,39 < min 0,0001 BTC (~$8,48) -> saran margin >= ~Rp55rb.
 4. **DCA Tangga** — Kaela CUMA mantau (`stdFuturesLadderMonitor.js`, tiap menit): posisi kelikuidasi -> DM WA Olan, Olan
-   ganti posisi sendiri. Rencana riset mulai 20 Okt 2026 (akhir window bear).
+   ganti posisi sendiri. **UDAH JALAN** (6 Okt): dihitung dari 1 Okt, $2 x3/posisi, 6 posisi kebaca monitor (entry ~$85.680,
+   liq ~$57.550). Ninja Perpetual real diisi $15,79 (6 Okt) -- real Ninja ON.
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
 6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)

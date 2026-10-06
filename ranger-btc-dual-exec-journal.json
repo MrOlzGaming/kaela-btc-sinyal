@@ -1,0 +1,85 @@
+{
+  "pattern": {
+    "floating": {
+      "id": "ranger-btc-dual-1791259210044",
+      "signalId": "2026100601",
+      "direction": "sell",
+      "patternType": "wedge_rising",
+      "sl": 87832.64834999999,
+      "partialTp": 80883.51330000004,
+      "wibowoRoute": "demo",
+      "trailR": 3,
+      "manualReason": null,
+      "triggeredAt": "2026-10-06T04:00:10.045Z",
+      "demo": {
+        "entryPrice": 85909.5,
+        "qty": 0.008,
+        "leverage": 36,
+        "margin": 20.833333333333332,
+        "nilaiPosisi": 750,
+        "currentSl": 87832.64834999999,
+        "partialDone": false,
+        "remainingFraction": 1,
+        "realizedPnlUsd": 0
+      },
+      "real": null
+    },
+    "closedCount": 0,
+    "stats": {
+      "demo": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      },
+      "real": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      }
+    },
+    "dailySignalSeq": {
+      "dayKey": "20261006",
+      "count": 1
+    }
+  },
+  "fvg": {
+    "floating": null,
+    "closedCount": 0,
+    "stats": {
+      "demo": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      },
+      "real": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      }
+    },
+    "dailySignalSeq": {
+      "dayKey": null,
+      "count": 0
+    }
+  },
+  "sweep": {
+    "floating": null,
+    "closedCount": 0,
+    "stats": {
+      "demo": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      },
+      "real": {
+        "wins": 0,
+        "losses": 0,
+        "totalPnlUsd": 0
+      }
+    },
+    "dailySignalSeq": {
+      "dayKey": null,
+      "count": 0
+    }
+  }
+}

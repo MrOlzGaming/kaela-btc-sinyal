@@ -408,5 +408,12 @@
     "price": 85848.01,
     "burstUsd": 415887.6277,
     "burstCount": 9
+  },
+  {
+    "timestamp": "2026-10-06T10:01:04.909Z",
+    "type": "exhaustion",
+    "side": "long",
+    "price": 85984,
+    "peakUsd": 415887.6277
   }
 ]

@@ -1,6 +1,6 @@
 {
   "seeded": true,
-  "nextNo": 15,
+  "nextNo": 16,
   "layers": {
     "BTCUSDT|LONG|1791263564000|85680.55": {
       "key": "BTCUSDT|LONG|1791263564000|85680.55",
@@ -256,20 +256,40 @@
       "lev": 1,
       "margin": 42.22,
       "openedAt": 1791289004000,
-      "lastPrice": 0.09565,
+      "lastPrice": 0.09569,
       "liqEst": 0.00047825,
       "no": 14,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791289025939,
       "notional0": 42.22,
-      "collAlert": 0
+      "collAlert": 0,
+      "effLev": 1,
+      "closedAt": 1791289326849,
+      "closePrice": 0.0956
+    },
+    "DOGEUSDT|LONG|1791289371000|0.09564": {
+      "key": "DOGEUSDT|LONG|1791289371000|0.09564",
+      "symbol": "DOGEUSDT",
+      "side": "LONG",
+      "entry": 0.09564,
+      "lev": 2,
+      "margin": 42.18,
+      "openedAt": 1791289371000,
+      "lastPrice": 0.09553,
+      "liqEst": 0.0482982,
+      "no": 15,
+      "status": "open",
+      "firstSeenAt": 1791289386568,
+      "notional0": 84.36,
+      "collAlert": 0,
+      "effLev": 2
     }
   },
   "totals": {
     "liqCount": 2,
     "liqLossUsd": 38.65,
-    "closedCount": 11,
-    "closedPnlUsd": -7.889736616957025
+    "closedCount": 12,
+    "closedPnlUsd": -7.911806664003547
   },
   "apiFail": {
     "count": 0,
@@ -288,6 +308,7 @@
     "1624972287680852000",
     "1624976603784278000",
     "1624978391567577000",
-    "1625017812663718000"
+    "1625017812663718000",
+    "1625018102030921700"
   ]
 }

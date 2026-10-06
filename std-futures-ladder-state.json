@@ -1,6 +1,6 @@
 {
   "seeded": true,
-  "nextNo": 13,
+  "nextNo": 15,
   "layers": {
     "BTCUSDT|LONG|1791263564000|85680.55": {
       "key": "BTCUSDT|LONG|1791263564000|85680.55",
@@ -200,14 +200,16 @@
       "lev": 20,
       "margin": 25.99,
       "openedAt": 1791279111000,
-      "lastPrice": 86249.87,
+      "lastPrice": 86367.61,
       "liqEst": 89686.57115000002,
       "no": 11,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791279125877,
       "notional0": 519.8,
       "collAlert": 0,
-      "effLev": 20
+      "effLev": 20,
+      "closedAt": 1791288967749,
+      "closePrice": 86360.79
     },
     "BTCUSDT|SHORT|1791279535000|85918.51": {
       "key": "BTCUSDT|SHORT|1791279535000|85918.51",
@@ -217,21 +219,57 @@
       "lev": 20,
       "margin": 22.27,
       "openedAt": 1791279535000,
-      "lastPrice": 86249.87,
+      "lastPrice": 86367.61,
       "liqEst": 89784.84295,
       "no": 12,
-      "status": "open",
+      "status": "closed",
       "firstSeenAt": 1791279546795,
       "notional0": 445.4,
       "collAlert": 0,
-      "effLev": 20
+      "effLev": 20,
+      "closedAt": 1791288967793,
+      "closePrice": 86360.79
+    },
+    "DOGEUSDT|LONG|1791288942000|0.09572": {
+      "key": "DOGEUSDT|LONG|1791288942000|0.09572",
+      "symbol": "DOGEUSDT",
+      "side": "LONG",
+      "entry": 0.09572,
+      "lev": 2,
+      "margin": 42.29,
+      "openedAt": 1791288942000,
+      "lastPrice": 0.09566,
+      "liqEst": 0.0483386,
+      "no": 13,
+      "status": "closed",
+      "firstSeenAt": 1791288967675,
+      "notional0": 84.58,
+      "collAlert": 0,
+      "closedAt": 1791289025989,
+      "closePrice": 0.09569
+    },
+    "DOGEUSDT|LONG|1791289004000|0.09565": {
+      "key": "DOGEUSDT|LONG|1791289004000|0.09565",
+      "symbol": "DOGEUSDT",
+      "side": "LONG",
+      "entry": 0.09565,
+      "lev": 1,
+      "margin": 42.22,
+      "openedAt": 1791289004000,
+      "lastPrice": 0.09565,
+      "liqEst": 0.00047825,
+      "no": 14,
+      "status": "open",
+      "firstSeenAt": 1791289025939,
+      "notional0": 42.22,
+      "collAlert": 0
     }
   },
   "totals": {
     "liqCount": 2,
     "liqLossUsd": 38.65,
-    "closedCount": 8,
-    "closedPnlUsd": -2.322208854181126
+    "closedCount": 11,
+    "closedPnlUsd": -7.889736616957025
   },
   "apiFail": {
     "count": 0,
@@ -247,6 +285,9 @@
     "1624956106246348800",
     "1624962700259938300",
     "1624960711926100000",
-    "1624972287680852000"
+    "1624972287680852000",
+    "1624976603784278000",
+    "1624978391567577000",
+    "1625017812663718000"
   ]
 }

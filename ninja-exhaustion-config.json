@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "allowReal": false,
+  "allowReal": true,
   "entryEnabled": true,
   "burstUsd": 800000,
   "ratio": 0.3,
@@ -10,5 +10,6 @@
   "maxHoldMin": 480,
   "targetTrades": 100,
   "_note": "NINJA EXHAUSTION (ninjaExhaustionTrader.js) -- uji DEMO BingX sinyal radar likuidasi sendiri: ledakan likuidasi 1 sisi >= burstUsd/30 menit lalu kecepatannya turun <= ratio x puncak -> FADE (long-liq kering -> LONG, short-liq kering -> SHORT). SL slPct% (stop exchange), trailing trailPct% aktif begitu untung >= trailActPct%, maks maxHoldMin menit. Size kalkulator exposure (short separuh). allowReal=false: REAL BARU boleh dinyalain kalau uji demo targetTrades transaksi hasilnya bagus (PF > 1,2 setelah fee). Aturan DIKUNCI selama uji -- jangan diutak-atik di tengah.",
-  "_status": "3 Okt 2026 -- AKTIF demo (arahan Olan: \"uji di demo misal 100 transaksi\"). Backtest ~3 minggu: ambang $300rb rugi, $800rb ~impas (n=12) -- belum ada bukti edge, makanya demo dulu."
+  "_status": "3 Okt 2026 -- AKTIF demo (arahan Olan: \"uji di demo misal 100 transaksi\"). Backtest ~3 minggu: ambang $300rb rugi, $800rb ~impas (n=12) -- belum ada bukti edge, makanya demo dulu.",
+  "_real": "6 Okt 2026 -- REAL DINYALAIN atas perintah eksplisit Olan (\"semua mode ninja nyalain aja semua biar realistic -- Sniper Club tetep demo, Hedgefund pake saldo asli\"), walau uji demo belum tuntas (override aturan 3 Okt, keputusan Olan). Demo TETAP jalan (Sniper Club), real tambahan (Wibowo) kalau saldo BingX Perpetual cukup; saldo kurang -> real skip aman, Wibowo dapet demo."
 }

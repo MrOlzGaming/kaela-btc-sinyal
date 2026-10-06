@@ -39,7 +39,9 @@ const TRAIL_SMA_LEN_4H = 60;
 const PARTIAL_RR = 2;
 const MODAL_ACTIVE_FRACTION = 1 / 5;
 const CANDLES_NEEDED_4H = 1560 + 260;
-const SYSTEM = { emoji: '🏹', name: 'RANGER ROTASI' };
+// 6 Okt 2026 (Olan: 'pesannya belum konsisten, templated please') -- header SAMA kayak Ranger BTC (SYSTEM_LABEL.RANGER);
+// pembeda rotasi pindah ke 'Alasan buka' (Rotasi 8 koin) + badge exchange 🟠 Bybit.
+const SYSTEM = { emoji: '🏹', name: 'RANGER' };
 const MASTER_NOMOR = '6281299303888';
 const MODES = ['demo', 'real'];
 
@@ -225,7 +227,11 @@ function createRotation(deps) {
       try { await exec.setPositionStopLoss(s, sig.sl); nativeSl = true; }
       catch (e) { log(`${mode}: SL native ${s} GAGAL dipasang (cuma andelin polling): ${e.message}`); }
     }
-    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, risk: Math.abs((Number(order.avgPrice) || live) - sig.sl), peak: Number(order.avgPrice) || live, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0, nativeSl };
+    // Harga likuidasi ASLI dari exchange (6 Okt 2026, review Olan: pesan nampilin rumus isolated $87.451 padahal akun Bybit
+    // CROSS -- likuidasi cross ditentuin saldo akun, bukan margin posisi). Kosong (cross UTA sering gak ngisi) -> catatan cross.
+    const posNow = await exec.getPositionRisk(s).catch(() => null);
+    const liqPx = posNow && Number(posNow.liqPrice) > 0 ? Number(posNow.liqPrice) : null;
+    return { entryPrice: Number(order.avgPrice) || live, qty, remainingQty: qty, sl: sig.sl, risk: Math.abs((Number(order.avgPrice) || live) - sig.sl), peak: Number(order.avgPrice) || live, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, partialDone: false, realizedPnlUsd: 0, nativeSl, liquidationPrice: liqPx, crossMargin: true };
   }
 
   async function open(coin, sig) {
@@ -337,11 +343,11 @@ function buildVenues(exchange, secrets) {
 }
 
 function messageFormatters(badge) {
-  const { formatAutoOpen, formatAutoPartial, formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, KAELA_ACCESS_URL } = require('./darkKaelaLog');
+  const { formatAutoOpen, formatAutoPartial, formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, KAELA_ACCESS_URL, patternReason } = require('./darkKaelaLog');
   const label = (f) => `${f.coin}USDT`;
   const isDemo = (mode) => mode !== 'real';
   return {
-    open: (f, mode) => { const L = f.legs[mode]; return formatAutoOpen({ id: f.id, signalId: f.signalId, direction: f.direction, entryPrice: L.entryPrice, sl: f.sl, tp: f.partialTp, marginUsd: L.margin, leverage: L.leverage, nilaiPosisi: L.nilaiPosisi, patternType: f.patternType, mode: f.patternType, assetLabel: label(f) }, new Date(), '', isDemo(mode), null, '', null, badge, SYSTEM); },
+    open: (f, mode) => { const L = f.legs[mode]; return formatAutoOpen({ id: f.id, signalId: f.signalId, direction: f.direction, entryPrice: L.entryPrice, sl: f.sl, tp: f.partialTp, marginUsd: L.margin, leverage: L.leverage, nilaiPosisi: L.nilaiPosisi, patternType: f.patternType, mode: f.patternType, assetLabel: label(f), reasonText: `Rotasi 8 koin (${f.coin}) -- ${patternReason(f.patternType)}`, liquidationPrice: L.liquidationPrice, liquidationNote: L.crossMargin && !L.liquidationPrice ? 'cross margin -- jauh di belakang SL (SL native terpasang)' : null }, new Date(), '', isDemo(mode), null, '', null, badge, SYSTEM); },
     partial: (f, mode) => { const L = f.legs[mode]; return formatAutoPartial({ id: f.id, signalId: f.signalId, realizedPnlUsd: L.realizedPnlUsd, entryPrice: L.entryPrice, assetLabel: label(f), patternType: f.patternType, mode: f.patternType, trailSmaLen: TRAIL_SMA_LEN_4H }, new Date(), isDemo(mode), null, null, badge, SYSTEM); },
     closed: (f, mode, reason, stats) => {
       const L = f.legs[mode];

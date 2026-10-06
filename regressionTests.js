@@ -1305,6 +1305,23 @@ async function main() {
     assert.deepStrictEqual(got, ['ISM Services PMI', 'ISM Manufacturing PMI']);
   });
 
+  // 6 Okt 2026 (review Olan pesan Ranger Rotasi: likuidasi $87.451 DULUAN dari SL $87.833) -- kalkulator wajib nyisain
+  // penyangga maintenance margin: harga likuidasi (rumus tampilan, MM 0,5%) SELALU di belakang SL, long maupun short.
+  await test('Kalkulator: likuidasi selalu di belakang SL (penyangga maintenance margin)', async () => {
+    const c = require('./calculator');
+    const { liquidationPrice } = require('./darkKaelaLog');
+    for (const nyawa of [0.3, 0.8, 1.2, 1.9, 2.24, 2.72, 3.5, 5, 8, 15]) {
+      for (const d of ['buy', 'sell']) {
+        const entry = 85000, sl = d === 'buy' ? entry * (1 - nyawa / 100) : entry * (1 + nyawa / 100);
+        const r = c.hitung({ modal: 1000, entry, stopLoss: sl, direction: d });
+        const liq = liquidationPrice(entry, r.leverage, d);
+        assert.ok(d === 'buy' ? liq <= sl + 1e-6 : liq >= sl - 1e-6, `nyawa ${nyawa}% ${d}: lev ${r.leverage} liq ${liq.toFixed(1)} vs SL ${sl.toFixed(1)}`);
+      }
+    }
+    const web = fs.readFileSync(require('path').join(__dirname, 'web', 'kalkulator.html'), 'utf8');
+    assert.ok(/LIQ_BUFFER_PCT = 0\.5/.test(web) && /100 \/ \(nyawaPct \+ LIQ_BUFFER_PCT\)/.test(web), 'web/kalkulator.html wajib rumus sama');
+  });
+
   // 5 Okt 2026 (permintaan Olan): level dampak di pesan -- SEDANG/TINGGI/FINAL BOSS (cuma keputusan suku bunga FOMC).
   await test('Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener', async () => {
     const { impactLevelOf } = require('./econCalendar');

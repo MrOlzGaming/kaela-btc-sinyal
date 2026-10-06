@@ -23,6 +23,14 @@
 // (margin = nilaiPosisi/leverage, leverage dibatasin kecil = margin lebih gede) -- jaring
 // pengaman marginPct 20% di caller (sniperAutoAnalysis.js dkk) tetap jalan normal di atas ini.
 const MAX_LEVERAGE = 50;
+// Penyangga likuidasi (6 Okt 2026, review Olan atas pesan Ranger Rotasi: "SL $87.833, Likuidasi $87.451" -- likuidasi
+// DULUAN dari SL). Rumus lama floor(100/nyawa) naruh likuidasi TEORITIS pas di SL, tapi exchange beneran nyisain
+// maintenance margin (~0,4-0,5% BTC) -> likuidasi asli ~0,5% LEBIH DEKET dari SL -> stop jadi lebih sempit dari invalidasi
+// pola (beda dari backtest) + kena fee likuidasi. Sekarang leverage = floor(100/(nyawa + 0,5)) -> likuidasi SELALU di
+// belakang SL. Nilai posisi (exposure) TETAP SAMA, rugi pas SL TETAP SAMA -- cuma margin yang dikunci sedikit lebih gede.
+// Angka 0,5 SAMA dengan MAINT_MARGIN_PCT darkKaelaLog.js (rumus tampilan harga likuidasi). WAJIB identik di web/kalkulator.html.
+const LIQ_BUFFER_PCT = 0.5;
+const leverageFor = (nyawaPct, cap = MAX_LEVERAGE) => Math.max(1, Math.min(cap, Math.floor(100 / (nyawaPct + LIQ_BUFFER_PCT))));
 
 function getExposure(modal) {
   if (modal < 1) modal = 1;
@@ -79,7 +87,7 @@ function hitung({ modal, nyawa, entry, stopLoss, maxLeverage, direction, exposur
   if (direction === 'sell') exposure /= 2;
   const nilaiPosisi = modal * exposure;
   const cap = maxLeverage !== undefined ? maxLeverage : MAX_LEVERAGE;
-  const leverage = Math.max(1, Math.min(cap, Math.floor(100 / nyawaPct)));
+  const leverage = leverageFor(nyawaPct, cap);
   const margin = nilaiPosisi / leverage;
   const marginPct = margin / modal * 100;
   const warning = assessMarginRisk(marginPct);
@@ -96,7 +104,7 @@ function hitung({ modal, nyawa, entry, stopLoss, maxLeverage, direction, exposur
 // keseimbangan return-vs-drawdown.
 function hitungFixedRisk({ modal, targetRiskPct, nyawa, entry, stopLoss }) {
   const nyawaPct = nyawa !== undefined ? nyawa : nyawaFromEntrySL(entry, stopLoss);
-  const leverage = Math.max(1, Math.min(MAX_LEVERAGE, Math.floor(100 / nyawaPct)));
+  const leverage = leverageFor(nyawaPct);
   const margin = modal * (targetRiskPct / 100);
   const nilaiPosisi = margin * leverage;
   const exposure = nilaiPosisi / modal;

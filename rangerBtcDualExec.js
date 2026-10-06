@@ -243,7 +243,11 @@ async function openRangerBtcDual({ sig, livePrice }) {
     const entryOrder = await exec.placeMarketEntry({ symbol: SYMBOL, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice });
     const qty = parseFloat(entryOrder.executedQty);
     const entryPrice = parseFloat(entryOrder.avgPrice);
-    return { entryPrice, qty, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, currentSl: sig.sl, partialDone: false, remainingFraction: 1, realizedPnlUsd: 0 };
+    // refEntryPrice/venueGapPct (6 Okt 2026, review Olan: demo Binance kebuka $85.910 padahal harga pasar asli ~$85.520 --
+    // order book TESTNET Binance beda sendiri, +0,46%). Dicatat biar hasil demo bisa dinilai jujur (bukan dari harga palsu).
+    const venueGapPct = livePrice ? (entryPrice - livePrice) / livePrice * 100 : null;
+    if (venueGapPct !== null && Math.abs(venueGapPct) >= 0.2) console.log(`[RangerBtcDual/${slotKey}] ⚠️ ${mode} kebuka ${venueGapPct.toFixed(2)}% dari harga pasar asli (${livePrice}) -- harga venue ${mode} melenceng.`);
+    return { entryPrice, qty, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, currentSl: sig.sl, partialDone: false, remainingFraction: 1, realizedPnlUsd: 0, refEntryPrice: livePrice, venueGapPct };
   }
 
   let demoResult = null;

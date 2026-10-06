@@ -313,7 +313,7 @@ ${shortId(pos.id, pos.signalId)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 ${_tpLine(pos)}
-SL: ${fmtUsd(pos.sl)}${liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
+SL: ${fmtUsd(pos.sl)}${pos.liquidationNote ? `\nLikuidasi: ${pos.liquidationNote}` : liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
 Alasan buka: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}${_todaysPnlLine(todaysPnl, idrRate)}

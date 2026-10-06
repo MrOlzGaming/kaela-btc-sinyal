@@ -153,12 +153,14 @@
     // berhenti dibagi 2).
     // (5 Okt 2026) SAMAIN calculator.js server: leverage maks 50x (MAX_LEVERAGE), altcoin exposure /2 (aturan Olan 3 Okt)
     const MAX_LEVERAGE = 50;
+    // (6 Okt 2026) SAMAIN calculator.js: penyangga likuidasi 0,5% (maintenance margin exchange) -- likuidasi selalu di belakang SL
+    const LIQ_BUFFER_PCT = 0.5;
     function hitung(modal, nyawaPct, direction, isAlt) {
       let exposure = getExposure(modal);
       if (direction === 'short') exposure /= 2;
       if (isAlt) exposure /= 2;
       const nilaiPosisi = modal * exposure;
-      const leverage = Math.max(1, Math.min(MAX_LEVERAGE, Math.floor(100 / nyawaPct)));
+      const leverage = Math.max(1, Math.min(MAX_LEVERAGE, Math.floor(100 / (nyawaPct + LIQ_BUFFER_PCT))));
       const margin = nilaiPosisi / leverage;
       const marginPct = margin / modal * 100;
       const warning = assessMarginRisk(marginPct);

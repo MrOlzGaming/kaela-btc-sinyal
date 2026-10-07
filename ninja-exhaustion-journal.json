@@ -1,12 +1,30 @@
 {
-  "episode": {
-    "side": "long",
-    "startedAt": 1791380346489,
-    "peakUsd": 3489076.592699998
+  "episode": null,
+  "floating": {
+    "id": "70e1249c-bbcb-4a0d-be2e-5decd524b7c1",
+    "signalId": "2026100703",
+    "dir": "long",
+    "peakUsd": 3489076.592699998,
+    "openedAt": 1791382627613,
+    "legs": {
+      "demo": {
+        "entryPrice": 83101,
+        "quantity": 0.0359,
+        "sl": 82269.99,
+        "stopOrderId": "2107837629390741504",
+        "best": 83101,
+        "trailed": false,
+        "leverage": 50,
+        "margin": 59.7225618,
+        "nilaiPosisi": 2983.3259000000003,
+        "entryCommission": null,
+        "openedAt": 1791382627259
+      },
+      "real": null
+    }
   },
-  "floating": null,
   "closedCount": 4,
-  "signals": 4,
+  "signals": 5,
   "skipped": 0,
   "stats": {
     "demo": {
@@ -26,7 +44,7 @@
   },
   "dailySignalSeq": {
     "dayKey": "20261007",
-    "count": 2
+    "count": 3
   },
   "history": [
     {

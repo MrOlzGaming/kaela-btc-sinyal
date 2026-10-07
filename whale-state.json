@@ -1,5 +1,5 @@
 {
-  "lastProcessedHeight": 970347,
+  "lastProcessedHeight": 970349,
   "lastDigest": {
     "dateKey": "2026-10-07",
     "totalBtc": 6528.48247771,
@@ -1104,6 +1104,86 @@
         "totalBtc": 421.04000689,
         "direction": null,
         "exchange": null
+      },
+      {
+        "totalBtc": 879.0875896,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1199.60952188,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 691.13140195,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 707.27245705,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1080.10366158,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 367.21500062,
+        "direction": "TO_EXCHANGE",
+        "exchange": "Kraken"
+      },
+      {
+        "totalBtc": 451.1994747,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 569.59899685,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 358.96786045,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1374.6765821,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 1580.47083931,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 590.72080367,
+        "direction": "TO_EXCHANGE",
+        "exchange": "Kraken"
+      },
+      {
+        "totalBtc": 675.99122931,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 404.70075519,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 2487.12347376,
+        "direction": null,
+        "exchange": null
+      },
+      {
+        "totalBtc": 476.76897277,
+        "direction": "FROM_EXCHANGE",
+        "exchange": "Kraken"
       }
     ]
   }

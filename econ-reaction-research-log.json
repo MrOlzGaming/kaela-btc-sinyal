@@ -128,5 +128,31 @@
       "binanceGlobalLongPct": 62.37,
       "topVsGlobalGap": 0.27
     }
+  },
+  {
+    "recordedAt": "2026-10-07T18:05:03.567Z",
+    "key": "2026-10-07T14:00:00-04:00__FOMC Meeting Minutes",
+    "title": "FOMC Meeting Minutes",
+    "timeMs": 1791396000000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": -0.0059,
+    "btcBefore": 83094,
+    "btcAfter": 83323.3,
+    "btcReactionPct": 0.276,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000105223619028,
+      "openInterest": 30291.209200000114,
+      "longAccountPct": 61.83,
+      "shortAccountPct": 38.17,
+      "fearGreed": 71,
+      "binanceTopLongPct": 62.66,
+      "binanceGlobalLongPct": 62.28,
+      "topVsGlobalGap": 0.38
+    }
   }
 ]

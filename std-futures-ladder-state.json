@@ -671,13 +671,14 @@
       "lev": 150,
       "margin": 10,
       "openedAt": 1791360094000,
-      "lastPrice": 84054.26,
+      "lastPrice": 83948.84,
       "liqEst": 83892.38593333334,
       "no": 36,
       "status": "open",
       "firstSeenAt": 1791360127234,
       "notional0": 1500,
-      "collAlert": 0
+      "collAlert": 0,
+      "effLev": 150
     }
   },
   "totals": {

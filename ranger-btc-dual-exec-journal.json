@@ -81,6 +81,7 @@
     "dailySignalSeq": {
       "dayKey": null,
       "count": 0
-    }
+    },
+    "lastSignalCandleT": 1791360000000
   }
 }

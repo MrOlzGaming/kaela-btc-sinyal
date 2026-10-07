@@ -1,42 +1,38 @@
 {
-  "episode": {
-    "side": "long",
-    "startedAt": 1791367686447,
-    "peakUsd": 1008233.7639
-  },
+  "episode": null,
   "floating": {
-    "id": "ce1f81f7-ef6a-4a3d-a398-8f9ac84b7a21",
-    "signalId": "2026100701",
+    "id": "1eeb24b9-adb3-48a5-ae64-318f5916aa12",
+    "signalId": "2026100702",
     "dir": "long",
-    "peakUsd": 11912550.09329999,
-    "openedAt": 1791340327153,
+    "peakUsd": 1008233.7639,
+    "openedAt": 1791369486689,
     "legs": {
       "demo": {
-        "entryPrice": 83834.7,
-        "quantity": 0.0357,
-        "sl": 82996.353,
-        "stopOrderId": "2107660208553156608",
-        "best": 84329.1,
+        "entryPrice": 83664.9,
+        "quantity": 0.0358,
+        "sl": 82828.25099999999,
+        "stopOrderId": "2107782512486473728",
+        "best": 83680,
         "trailed": false,
         "leverage": 50,
-        "margin": 59.97201360000001,
-        "nilaiPosisi": 2992.89879,
+        "margin": 59.921769000000005,
+        "nilaiPosisi": 2995.20342,
         "entryCommission": null,
-        "openedAt": 1791340326835
+        "openedAt": 1791369486362
       },
       "real": null
     }
   },
-  "closedCount": 2,
-  "signals": 3,
+  "closedCount": 3,
+  "signals": 4,
   "skipped": 0,
   "stats": {
     "demo": {
       "wins": 1,
-      "losses": 1,
-      "totalPnlUsd": -5.240478820000254,
+      "losses": 2,
+      "totalPnlUsd": -13.335925060000255,
       "grossWinUsd": 11.375962499999593,
-      "grossLossUsd": 16.616441319999847
+      "grossLossUsd": 24.711887559999848
     },
     "real": {
       "wins": 0,
@@ -48,7 +44,7 @@
   },
   "dailySignalSeq": {
     "dayKey": "20261007",
-    "count": 1
+    "count": 2
   },
   "history": [
     {
@@ -73,6 +69,24 @@
       "notionalUsd": 2994.8485000000005,
       "openedAt": 1791212646674,
       "peakLiqUsd": 1890132.7677
+    },
+    {
+      "at": 1791369186604,
+      "mode": "demo",
+      "net": -8.095446240000001,
+      "id": "ce1f81f7-ef6a-4a3d-a398-8f9ac84b7a21",
+      "signalId": "2026100701",
+      "dir": "long",
+      "entry": 83834.7,
+      "exit": 83691.7,
+      "sl": 82996.353,
+      "reason": "EX_TIME",
+      "grossUsd": -5.1051,
+      "feeUsd": 2.99034624,
+      "netRealistic": -8.696578548,
+      "notionalUsd": 2992.89879,
+      "openedAt": 1791340326835,
+      "peakLiqUsd": 11912550.09329999
     }
   ]
 }

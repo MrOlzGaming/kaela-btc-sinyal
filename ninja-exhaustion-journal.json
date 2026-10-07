@@ -1,38 +1,16 @@
 {
   "episode": null,
-  "floating": {
-    "id": "70e1249c-bbcb-4a0d-be2e-5decd524b7c1",
-    "signalId": "2026100703",
-    "dir": "long",
-    "peakUsd": 3489076.592699998,
-    "openedAt": 1791382627613,
-    "legs": {
-      "demo": {
-        "entryPrice": 83101,
-        "quantity": 0.0359,
-        "sl": 82269.99,
-        "stopOrderId": "2107837629390741504",
-        "best": 83604.6,
-        "trailed": false,
-        "leverage": 50,
-        "margin": 59.7225618,
-        "nilaiPosisi": 2983.3259000000003,
-        "entryCommission": null,
-        "openedAt": 1791382627259
-      },
-      "real": null
-    }
-  },
-  "closedCount": 4,
+  "floating": null,
+  "closedCount": 5,
   "signals": 5,
   "skipped": 0,
   "stats": {
     "demo": {
       "wins": 1,
-      "losses": 3,
-      "totalPnlUsd": -46.53837777000015,
+      "losses": 4,
+      "totalPnlUsd": -47.04943042500036,
       "grossWinUsd": 11.375962499999593,
-      "grossLossUsd": 57.91434026999974
+      "grossLossUsd": 58.42539292499995
     },
     "real": {
       "wins": 0,
@@ -105,6 +83,24 @@
       "notionalUsd": 2995.20342,
       "openedAt": 1791369486362,
       "peakLiqUsd": 1008233.7639
+    },
+    {
+      "at": 1791411486882,
+      "mode": "demo",
+      "net": -0.5110526550002095,
+      "id": "70e1249c-bbcb-4a0d-be2e-5decd524b7c1",
+      "signalId": "2026100703",
+      "dir": "long",
+      "entry": 83101,
+      "exit": 83169.9,
+      "sl": 82269.99,
+      "reason": "EX_TIME",
+      "grossUsd": 2.473509999999791,
+      "feeUsd": 2.9845626550000004,
+      "netRealistic": -1.1064810800002096,
+      "notionalUsd": 2983.3259000000003,
+      "openedAt": 1791382627259,
+      "peakLiqUsd": 3489076.592699998
     }
   ]
 }

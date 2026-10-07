@@ -102,5 +102,31 @@
       "binanceGlobalLongPct": 49.95,
       "topVsGlobalGap": 14.56
     }
+  },
+  {
+    "recordedAt": "2026-10-07T17:05:03.535Z",
+    "key": "2026-10-07T13:00:00-04:00__President Trump Speaks",
+    "title": "President Trump Speaks",
+    "timeMs": 1791392400000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": -0.0137,
+    "btcBefore": 83357,
+    "btcAfter": 83455.1,
+    "btcReactionPct": 0.1177,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000099175150887,
+      "openInterest": 30509.647900000124,
+      "longAccountPct": 62.12,
+      "shortAccountPct": 37.88,
+      "fearGreed": 71,
+      "binanceTopLongPct": 62.64,
+      "binanceGlobalLongPct": 62.37,
+      "topVsGlobalGap": 0.27
+    }
   }
 ]

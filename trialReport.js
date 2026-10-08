@@ -92,7 +92,7 @@ function formatWeekly(systems) {
     systems.map(systemBlock).join('\n\n'),
     '',
     // 6 Okt 2026: Olan nyalain real SEMUA mode Ninja (demo tetap jalan) -- rapor ini tetap nilai dari DEMO (sampel lebih banyak).
-    'Angka di atas dari akun DEMO (sampel uji). Ninja juga jalan REAL sejak 6 Okt 2026 (keputusan Olan) -- hasil real dilapor tiap posisi.',
+    'Semua di akun DEMO (uji). Naik ke real cuma kalau target uji tercapai & hasil realistis lolos, dan tetap nunggu keputusan Olan.',
     '',
     '— Kaela',
   ].join('\n');

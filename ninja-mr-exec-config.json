@@ -1,11 +1,11 @@
 {
   "enabled": true,
-  "allowReal": true,
+  "allowReal": false,
   "entryEnabled": true,
   "tf": "15m",
   "k": 4,
   "_note": "Eksekutor NINJA Mean Reversion di BingX (ninjaMrTrader.js) -- DEMO (VST) selalu jalan selama enabled:true, REAL cuma tambahan kalau allowReal:true DAN saldo cukup (kalau gak cukup: real skip diam-diam, Wibowo Hedgefund dapet notif DEMO pengganti -- logika SAMA Ninja lama). entryEnabled:false = gak buka posisi baru tapi posisi yang ada tetap dikelola sampai tutup. Akun BingX SAMA dengan Ninja lama (BINGX_API_KEY di secrets.js). Strategi: 15M, tren EMA200, entry Bollinger 2,5 lawan tren, SL 4x ATR14, exit balik ke SMA20 (limit maker). Fee: commission exchange kalau kebaca, fallback 0,05%/sisi.",
   "_status": "30 Sep 2026 -- AKTIF atas permintaan Olan (\"pake yang terbaik dan jalankan demo, jalankan real\"). Endpoint LIMIT/STOP BingX belum diverifikasi empiris dari VPS -- pantau channel-breakout.log siklus pertama.",
   "_noteReal": "3 Okt 2026 (Kaela, mandat Olan \"tentukan sendiri yang the best\"): allowReal DIMATIIN -- koreksi model exit (BACKTEST-REGISTRY \"Koreksi model exit Ninja MR\") nunjukin ekspektasi ~IMPAS setelah fee (2019-24 -8%, 2024-26 +3%). Demo tetap jalan ngumpulin bukti nyata; nyalain real lagi kalau demo terbukti untung setelah fee (>= 30 trade).",
-  "_real": "6 Okt 2026 -- REAL DINYALAIN atas perintah eksplisit Olan (\"semua mode ninja nyalain aja semua biar realistic -- Sniper Club tetep demo, Hedgefund pake saldo asli\"), walau uji demo belum tuntas (override aturan 3 Okt, keputusan Olan). Demo TETAP jalan (Sniper Club), real tambahan (Wibowo) kalau saldo BingX Perpetual cukup; saldo kurang -> real skip aman, Wibowo dapet demo."
+  "_real": "8 Okt 2026 -- REAL DIMATIIN LAGI (Olan: \"ninja belum siap live pake uang asli, masih minus, jalan secara test\"). Demo per 8 Okt: Exhaustion 5 trade 1 menang -$47,05, MR 1 trade +$10,02, News 0 trade. Balik ke aturan 3 Okt: real cuma setelah uji demo lolos (PF bersih realistis > 1,2). Sebelumnya: 6 Okt real ON atas perintah Olan, gak ada trade real yang sempat kebuka."
 }

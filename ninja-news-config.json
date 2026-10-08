@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "allowReal": true,
+  "allowReal": false,
   "armBeforeSec": 120,
   "windowSec": 10,
   "thrPct": 0.1,
@@ -16,5 +16,5 @@
   "_note": "NINJA NEWS (ninjaNewsTrader.js) -- copet rilis data ekonomi (jadwal news-schedule.json). Dolar per detik pakai EURUSDT Binance (kebalikan DXY). Dalam windowSec detik pertama EUR gerak >= thrPct% -> BTC arah KEBALIKAN dolar (EUR naik = LONG). Skip kalau BTC udah lari >= maxChasePct%. SL slPct% (stop exchange) + trailing trailPct% aktif begitu untung >= trailActPct%, maks maxHoldMin menit, 1 transaksi per rilis. allowReal=false: real BARU dinyalain kalau uji demo 1-2 bulan (targetTrades rilis) bagus. Ambang awal dari teori (backtest per detik belum dijalanin) -- dikalibrasi dari ninja-news-research-log.json.",
   "_status": "3 Okt 2026 -- AKTIF demo (arahan Olan: \"kalo backtest gagal jangan nyerah, tetep buat, trial pake demo sebulan-2 bulan, kalo bisa dimanfaatin baru real\"). Rilis pertama yang kejaga: CPI 14 Okt 20:30 WITA.",
   "_kalibrasi": "3 Okt 2026 -- backtest per detik (backtest/newsDxyLeadStudy.js, 164 rilis CPI/PPI/NFP/FOMC 2023-2026, fee+selip 0,12%): arah EUR di 5-10 detik pertama searah BTC 5 menit kemudian 63-64% (n=73-104); dibaca di detik 30-60 cuma ~50% (lempar koin). Edge cuma di gerak EUR BESAR+CEPAT: >=0,10% dalam 5 dtk n=27 PF 1,21 (SL 0,8 trail 0,4 aktif +0,6, 30 mnt) / dalam 10 dtk n=48 PF 1,14. Selalu lebih bagus dari ikut arah BTC sendiri. Masih tipis + sampel kecil -> tetap DEMO. Setting lama (jendela 90 dtk, ambang 0,05%) = lempar koin, diganti.",
-  "_real": "6 Okt 2026 -- REAL DINYALAIN atas perintah eksplisit Olan (\"semua mode ninja nyalain aja semua biar realistic -- Sniper Club tetep demo, Hedgefund pake saldo asli\"), walau uji demo belum tuntas (override aturan 3 Okt, keputusan Olan). Demo TETAP jalan (Sniper Club), real tambahan (Wibowo) kalau saldo BingX Perpetual cukup; saldo kurang -> real skip aman, Wibowo dapet demo."
+  "_real": "8 Okt 2026 -- REAL DIMATIIN LAGI (Olan: \"ninja belum siap live pake uang asli, masih minus, jalan secara test\"). Demo per 8 Okt: Exhaustion 5 trade 1 menang -$47,05, MR 1 trade +$10,02, News 0 trade. Balik ke aturan 3 Okt: real cuma setelah uji demo lolos (PF bersih realistis > 1,2). Sebelumnya: 6 Okt real ON atas perintah Olan, gak ada trade real yang sempat kebuka."
 }

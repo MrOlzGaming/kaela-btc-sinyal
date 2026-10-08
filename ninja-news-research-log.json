@@ -32,5 +32,45 @@
       "leverage": 50,
       "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu"
     }
+  },
+  {
+    "key": "2026-10-08T08:30",
+    "label": "Jobless Claims (mingguan)",
+    "timeMs": 1791462600000,
+    "eur": {
+      "base": 1.1202,
+      "s5": 1.1201,
+      "s10": 1.1201,
+      "m1": 1.1198,
+      "m2": 1.12,
+      "m5": 1.12,
+      "m10": 1.1196,
+      "m15": 1.1192,
+      "m30": 1.1188
+    },
+    "btc": {
+      "base": 82472,
+      "s5": 82454,
+      "s10": 82448.01,
+      "m1": 82382.01,
+      "m2": 82431.81,
+      "m5": 82350.01,
+      "m10": 82351.01,
+      "m15": 82356.01,
+      "m30": 82310.01
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu"
+    },
+    "eurMaxMovePct": -0.00892697732547661,
+    "reportSentAt": 1791464403367
   }
 ]

@@ -154,5 +154,31 @@
       "binanceGlobalLongPct": 62.28,
       "topVsGlobalGap": 0.38
     }
+  },
+  {
+    "recordedAt": "2026-10-08T08:35:03.819Z",
+    "key": "2026-10-08T04:30:00-04:00__FOMC Member Waller Speaks",
+    "title": "FOMC Member Waller Speaks",
+    "timeMs": 1791448200000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0215,
+    "btcBefore": 82855,
+    "btcAfter": 82766,
+    "btcReactionPct": -0.1074,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": -0.0000085845242881,
+      "openInterest": 31257.339200000155,
+      "longAccountPct": 62.12,
+      "shortAccountPct": 37.88,
+      "fearGreed": 64,
+      "binanceTopLongPct": 61.5,
+      "binanceGlobalLongPct": 64.17,
+      "topVsGlobalGap": -2.67
+    }
   }
 ]

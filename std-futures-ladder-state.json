@@ -1,6 +1,6 @@
 {
   "seeded": true,
-  "nextNo": 63,
+  "nextNo": 64,
   "layers": {
     "BTCUSDT|LONG|1791263564000|85680.55": {
       "key": "BTCUSDT|LONG|1791263564000|85680.55",
@@ -1176,6 +1176,23 @@
       "effLev": 100,
       "closedAt": 1791437107556,
       "closePrice": 82929.01
+    },
+    "BTCUSDT|SHORT|1791437735000|82940.29": {
+      "key": "BTCUSDT|SHORT|1791437735000|82940.29",
+      "symbol": "BTCUSDT",
+      "side": "SHORT",
+      "entry": 82940.29,
+      "lev": 150,
+      "margin": 4.79,
+      "openedAt": 1791437735000,
+      "lastPrice": 82803.51,
+      "liqEst": 83078.52381666667,
+      "no": 63,
+      "status": "open",
+      "firstSeenAt": 1791437767584,
+      "notional0": 718.5,
+      "collAlert": 0,
+      "effLev": 150
     }
   },
   "totals": {

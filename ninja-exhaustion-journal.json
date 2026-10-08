@@ -1,5 +1,9 @@
 {
-  "episode": null,
+  "episode": {
+    "side": "long",
+    "startedAt": 1791466987336,
+    "peakUsd": 2976898.2482999996
+  },
   "floating": {
     "id": "c8e19c43-c0d9-4f1e-87c0-c363856a5f6d",
     "signalId": "2026100802",

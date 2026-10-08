@@ -1,6 +1,6 @@
 {
   "seeded": true,
-  "nextNo": 75,
+  "nextNo": 77,
   "layers": {
     "BTCUSDT|LONG|1791263564000|85680.55": {
       "key": "BTCUSDT|LONG|1791263564000|85680.55",
@@ -1395,19 +1395,55 @@
       "lev": 150,
       "margin": 2,
       "openedAt": 1791464245000,
-      "lastPrice": 82329.21,
+      "lastPrice": 82038.41,
       "liqEst": 82128.04141666666,
       "no": 74,
-      "status": "open",
+      "status": "liquidated",
       "firstSeenAt": 1791464467202,
+      "notional0": 300,
+      "collAlert": 0,
+      "effLev": 150,
+      "closedAt": 1791466868224,
+      "closePrice": 81966.98
+    },
+    "BTCUSDT|LONG|1791466817000|82007.52": {
+      "key": "BTCUSDT|LONG|1791466817000|82007.52",
+      "symbol": "BTCUSDT",
+      "side": "LONG",
+      "entry": 82007.52,
+      "lev": 150,
+      "margin": 2,
+      "openedAt": 1791466817000,
+      "lastPrice": 81973.45,
+      "liqEst": 81870.8408,
+      "no": 75,
+      "status": "open",
+      "firstSeenAt": 1791466868148,
+      "notional0": 300,
+      "collAlert": 0,
+      "effLev": 150
+    },
+    "BTCUSDT|LONG|1791466959000|81758.48": {
+      "key": "BTCUSDT|LONG|1791466959000|81758.48",
+      "symbol": "BTCUSDT",
+      "side": "LONG",
+      "entry": 81758.48,
+      "lev": 150,
+      "margin": 2,
+      "openedAt": 1791466959000,
+      "lastPrice": 81973.45,
+      "liqEst": 81622.21586666667,
+      "no": 76,
+      "status": "open",
+      "firstSeenAt": 1791466988028,
       "notional0": 300,
       "collAlert": 0,
       "effLev": 150
     }
   },
   "totals": {
-    "liqCount": 31,
-    "liqLossUsd": 217.29000000000002,
+    "liqCount": 32,
+    "liqLossUsd": 219.29000000000002,
     "closedCount": 42,
     "closedPnlUsd": 32.422651346182974
   },
@@ -1486,6 +1522,7 @@
     "1625706223530303500",
     "1625716390875521000",
     "1625730396505297000",
-    "1625743142803353600"
+    "1625743142803353600",
+    "1625753107920203800"
   ]
 }

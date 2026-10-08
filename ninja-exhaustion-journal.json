@@ -1,9 +1,5 @@
 {
-  "episode": {
-    "side": "long",
-    "startedAt": 1791475626314,
-    "peakUsd": 3001211.807100001
-  },
+  "episode": null,
   "floating": {
     "id": "a3d45a3e-1250-46f0-a250-4fd19e0cdf68",
     "signalId": "2026100901",
@@ -16,7 +12,7 @@
         "quantity": 0.0367,
         "sl": 80176.932,
         "stopOrderId": "2108227451812929536",
-        "best": 81361.4,
+        "best": 81389.3,
         "trailed": false,
         "leverage": 50,
         "margin": 59.4510114,

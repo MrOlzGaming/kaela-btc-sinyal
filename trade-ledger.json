@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-08T16:47:26.086Z",
+ "updatedAt": "2026-10-08T17:02:15.722Z",
  "count": 35,
  "trades": [
   {
@@ -1670,7 +1670,7 @@
    "patternType": "wedge_rising",
    "direction": "SHORT",
    "entry": 85909.5,
-   "sl": 86736.24504999997,
+   "sl": 86670.84504999996,
    "exit": null,
    "qty": 0.008,
    "leverage": 36,

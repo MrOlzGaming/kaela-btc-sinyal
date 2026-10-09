@@ -108,30 +108,43 @@ async function runOnce(deps) {
     await ex.setCrossMargin(sym).catch((e) => log(`set cross: ${e.message}`));
     await ex.setLeverage(sym, cfg.leverage, 'LONG').catch((e) => log(`set leverage: ${e.message}`));
   }
-  if (lvl <= cy.filledLvl) { j.cycle = cy.qty > 0 ? cy : (opening ? null : cy); deps.save(); return { idle: 'level sama' }; }
-  // tanam semua level baru (pertama kali: level 1..lvl sekaligus = dd%)
-  let addUnit = cy.pendingUsd, addVol = cy.pendingVol;
-  for (let lv = cy.filledLvl + 1; lv <= lvl; lv++) { const unit = cy.cycleCap * cfg.k / 100 * cfg.step; addUnit += unit; addVol += unit * multAt(cfg, lv * cfg.step); }
+  // Top up / tarik modal di tengah siklus (10 Okt 2026, Olan: "sistem nyesuaiin modalku -- top up langsung buka lagi seolah
+  // modal udah ada dari awal, jadi aku bisa nyicil"). Saldo wallet (TANPA PnL mengambang) naik > 2% = top up -> modal grid naik
+  // & porsi dikejar SEKARANG. Turun > 10% = ditarik -> acuan turun (gak jual apa-apa, cuma gak nambah).
+  let topUp = null;
+  if (!opening) {
+    const wallet = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
+    if (wallet > cy.cycleCap * 1.02) { topUp = { from: cy.cycleCap, to: wallet }; cy.cycleCap = wallet; (cy.topUps = cy.topUps || []).push({ at: now, from: topUp.from, to: wallet }); }
+    else if (wallet > 0 && wallet < cy.cycleCap * 0.9) cy.cycleCap = wallet;
+  }
+  // TARGET porsi = level terdalam yang pernah kesentuh siklus ini x k% x modal grid SEKARANG. Beli kekurangannya: rebuy level baru,
+  // kejar top up, dan sisa yang dulu ketumpuk (di bawah minimum order) -- semua otomatis lewat 1 hitungan ini.
+  const levelHit = Math.max(lvl, cy.filledLvl);
+  const target = levelHit * cfg.step * cfg.k / 100 * cy.cycleCap;
+  const deficit = target - cy.planted;
+  if (deficit < cy.cycleCap * 0.001) { cy.filledLvl = levelHit; j.cycle = cy.qty > 0 ? cy : (opening ? null : cy); deps.save(); return { idle: 'porsi udah pas' }; }
+  const addVol = deficit * multAt(cfg, levelHit * cfg.step);
   const equity = cy.cycleCap + (cy.qty > 0 ? cy.qty * px - cy.cost : 0);
   if ((cy.qty * px + addVol) / Math.max(equity, 1e-9) > cfg.capExposure) {
-    log(`eksposur bakal > ${cfg.capExposure}x ekuitas -- level ${lvl} gak ditambah`);
-    cy.filledLvl = lvl; j.cycle = cy.qty > 0 ? cy : null; deps.save(); return { capped: true };
+    log(`eksposur bakal > ${cfg.capExposure}x ekuitas -- level ${levelHit} gak ditambah`);
+    cy.filledLvl = levelHit; j.cycle = cy.qty > 0 ? cy : null; deps.save(); return { capped: true };
   }
   const info = await ex.getSymbolInfo(sym);
   const qty = ex.roundToStepSize ? ex.roundToStepSize(addVol / px, info.stepSize, info.quantityPrecision) : Math.floor(addVol / px / info.stepSize) * info.stepSize;
   if (!(qty > 0) || qty * px < (info.minNotionalUsd || 0)) {
-    cy.pendingUsd = addUnit; cy.pendingVol = addVol; cy.filledLvl = lvl; j.cycle = cy.qty > 0 || cy.pendingUsd > 0 ? cy : null; deps.save();
-    log(`level ${lvl}: volume ${fmt$(addVol)} di bawah minimum order -- ditumpuk ke level berikutnya`);
+    cy.filledLvl = levelHit; j.cycle = cy; deps.save(); // siklus tetap disimpan biar kekurangannya kebawa
+    if (!cy.lastPendingLog || now - cy.lastPendingLog > 3600e3) { log(`kurang ${fmt$(addVol)} di bawah minimum order -- ditumpuk sampai cukup`); cy.lastPendingLog = now; deps.save(); }
     return { pending: addVol };
   }
+  const firstFill = cy.qty === 0; // posisi pertama siklus (termasuk siklus yang nunggu modal cukup lewat top up) -> pesan Buka Posisi
   const order = await ex.placeMarketEntry({ symbol: sym, direction: 'buy', notionalUsd: qty * px * 1.0000001, livePrice: px });
   const fillPx = parseFloat(order.avgPrice) || px, fillQty = parseFloat(order.executedQty) || qty;
-  cy.qty += fillQty; cy.cost += fillQty * fillPx; cy.feeOpen += fillQty * fillPx * TAKER; cy.planted += addUnit * (fillQty * fillPx) / addVol;
-  cy.layers += 1; cy.filledLvl = lvl; cy.pendingUsd = 0; cy.pendingVol = 0; cy.lastDd = dd;
+  cy.qty += fillQty; cy.cost += fillQty * fillPx; cy.feeOpen += fillQty * fillPx * TAKER; cy.planted += deficit * (fillQty * fillPx) / addVol;
+  cy.layers += 1; cy.filledLvl = levelHit; cy.lastDd = dd;
   j.cycle = cy; deps.save();
-  log(`${opening ? 'BUKA' : 'TAMBAH'} siklus ${cy.signalId}: ${fillQty} BTC @ ${fillPx} (dd ${dd.toFixed(1)}%, level ${lvl}) -- ditanam ${fmt$(cy.planted)}, posisi ${fmt$(cy.cost)}`);
-  await deps.notify(opening ? openMsg(cy, dd, fillPx, deps) : addMsg(cy, dd, fillPx, fillQty, deps));
-  return { bought: { opening, qty: fillQty, px: fillPx, lvl } };
+  log(`${opening ? 'BUKA' : topUp ? 'TOP UP' : 'TAMBAH'} siklus ${cy.signalId}: ${fillQty} BTC @ ${fillPx} (dd ${dd.toFixed(1)}%, level ${levelHit}) -- ditanam ${fmt$(cy.planted)} / modal ${fmt$(cy.cycleCap)}`);
+  await deps.notify(firstFill ? openMsg(cy, dd, fillPx, deps) : addMsg(cy, dd, fillPx, fillQty, deps, topUp));
+  return { bought: { opening: firstFill, topUp: !!topUp, qty: fillQty, px: fillPx, lvl: levelHit } };
 }
 
 function summary(c) { return { id: c.id, signalId: c.signalId, openedAt: c.startedAt, entry: c.qty > 0 ? c.cost / c.qty : null, qty: c.qty, planted: c.planted, layers: c.layers, cycleCap: c.cycleCap, athAtStart: c.athAtStart }; }
@@ -146,11 +159,13 @@ function openMsg(cy, dd, fillPx, deps) {
     reasonText: `Grid ATH: BTC di ATH -${dd.toFixed(1)}% (ATH ${fmt$(cy.athAtStart)}, syarat <= -${deps.cfg.minDd}% terpenuhi) -- tanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid (${fmt$(cy.planted)} dari ${fmt$(cy.cycleCap)})`,
   }, new Date(), '', false, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
-function addMsg(cy, dd, fillPx, fillQty, deps) {
+function addMsg(cy, dd, fillPx, fillQty, deps, topUp) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   return formatAutoAddLayer({
     id: cy.id, signalId: cy.signalId, layers: cy.layers, entryPrice: cy.cost / cy.qty, marginUsd: cy.planted, leverage: Math.max(1, Math.round(cy.cost / Math.max(cy.planted, 1e-9) * 10) / 10), nilaiPosisi: cy.cost, assetLabel: 'BTCUSDC',
-    reasonText: `BTC turun ke ATH -${dd.toFixed(1)}% -> rebuy ${fillQty} BTC @ ${fmt$(fillPx)} (total ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid)`,
+    reasonText: topUp
+      ? `Top up modal grid kebaca ${fmt$(topUp.from)} -> ${fmt$(topUp.to)} -- porsi dikejar seolah modal udah ada dari awal: beli ${fillQty} BTC @ ${fmt$(fillPx)} (ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal, BTC di ATH -${dd.toFixed(1)}%)`
+      : `BTC turun ke ATH -${dd.toFixed(1)}% -> rebuy ${fillQty} BTC @ ${fmt$(fillPx)} (total ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid)`,
   }, new Date(), false, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function closeMsg(rec, j, deps) {

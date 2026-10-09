@@ -73,7 +73,44 @@ test('modal kecil: level di bawah minimum order ditumpuk ke level berikutnya', a
   const h = harness({ wallet: 20 }); h.st.px = 66000; // 34% x $20 = $6,8 < 0,0001 BTC ($6,6)? -> 1 lot kebeli; rebuy 1% = $0,2 ditumpuk
   await runOnce(h.deps);
   h.st.px = 65000; const r = await runOnce(h.deps);
-  assert(r.pending > 0, JSON.stringify(r)); assert(h.j.cycle.pendingVol > 0);
+  assert(r.pending > 0, JSON.stringify(r)); assert(h.j.cycle.filledLvl === 35);
+});
+
+// 10 Okt 2026 (Olan: "kalo aku ada $95 langsung kebuka? sistem nyesuaiin modal, top up langsung buka lagi seolah modal udah ada")
+test('modal $95 di ATH -34% -> langsung kebuka (~$32 ditanam)', async () => {
+  const h = harness({ wallet: 95, ath: 126200 }); h.st.px = 82800;
+  const r = await runOnce(h.deps);
+  assert(r.bought && r.bought.opening, JSON.stringify(r));
+  assert(h.j.cycle.planted > 20 && h.j.cycle.planted <= 32.4, `ditanam ${h.j.cycle.planted}`);
+});
+
+test('top up di tengah siklus -> modal grid naik, porsi dikejar SEKARANG (pesan Top up)', async () => {
+  const h = harness({ wallet: 95, ath: 126200 }); h.st.px = 82800; await runOnce(h.deps);
+  const before = h.j.cycle.planted;
+  h.st.wallet += 400; // Olan setor $400
+  const r = await runOnce(h.deps);
+  assert(r.bought && r.bought.topUp, JSON.stringify(r));
+  assert(Math.abs(h.j.cycle.cycleCap - 495) < 1, `modal ${h.j.cycle.cycleCap}`);
+  assert(h.j.cycle.planted > before * 3, `ditanam ${before} -> ${h.j.cycle.planted}`);
+  assert(/Top up modal grid kebaca/.test(h.st.wa[h.st.wa.length - 1]));
+});
+
+test('harga mantul naik (masih di bawah -15%) -> gak jual, gak nambah', async () => {
+  const h = harness(); h.st.px = 66000; await runOnce(h.deps);
+  const n = h.st.orders.length; h.st.px = 70000;
+  const r = await runOnce(h.deps);
+  assert(h.st.orders.length === n && !r.bought, JSON.stringify(r));
+});
+
+test('nyicil: setor $10 dulu (belum cukup min order) lalu top up $85 -> dihitung ulang, kebuka sebagai Buka Posisi pertama', async () => {
+  const h = harness({ wallet: 10, ath: 126200 }); h.st.px = 82800;
+  const r1 = await runOnce(h.deps);
+  assert(r1.pending > 0 && h.st.orders.length === 0, JSON.stringify(r1));
+  h.st.wallet += 85;
+  const r2 = await runOnce(h.deps);
+  assert(r2.bought && r2.bought.opening && r2.bought.topUp, JSON.stringify(r2));
+  assert(Math.abs(h.j.cycle.cycleCap - 95) < 0.5);
+  assert(/Buka Posisi/.test(h.st.wa[0]), h.st.wa[0]);
 });
 
 test('ATH baru kebaca -> acuan ATH naik', async () => {

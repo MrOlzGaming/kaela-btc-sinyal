@@ -199,6 +199,9 @@ const CLOSE_REASON_LABEL = {
   // (5 Sep 2026, Fed Dovish Grid) -- TP/SL di sini beda dari chart-pattern (agregat % modal dari
   // basket, bukan harga tunggal) tapi teksnya sengaja tetap simpel/sama gaya biar konsisten dibaca.
   TP: 'Take Profit agregat kena', TIMEOUT_GRID: 'Hold maksimal 7 hari kesentuh, tutup basket',
+  // (10 Okt 2026) Grid ATH (gridTrader.js)
+  GRID_TP: 'Target siklus kena -- untung >= 15% dari modal yang ditanam, siklus ditutup & langsung mulai lagi dari acuan ATH',
+  GRID_GONE: 'Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset',
   REVERSAL: 'Sinyal balik arah (hawkish) muncul, tutup duluan biar aman',
   // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long lagi, tutup walau rugi..
   // takut kena bom bear" / "saat window bear habis jangan short, tutup walau rugi.. takut kena
@@ -251,6 +254,7 @@ const SYSTEM_LABEL = {
   SNIPER: { emoji: '🎯', name: 'SNIPER' },
   RANGER: { emoji: '🏹', name: 'RANGER' },
   NINJA: { emoji: '🥷', name: 'NINJA' },
+  GRID: { emoji: '🕸️', name: 'GRID' }, // 10 Okt 2026 -- Grid ATH BTC-USDC BingX (gridTrader.js)
 };
 
 // (12 Sep 2026, permintaan Olan: "Manual (Olan) / Auto (Kaela)" -- badge auto sekarang eksplisit
@@ -296,6 +300,7 @@ function _rangerBadge(pos, isDemo, exchangeBadge, system = { emoji: '🥷', name
 // (pos.tp = target partial, sisanya di-trail). Trailing murni (pos.tp null) gak punya tahap 1:
 // posisi ditutup SEKALI di level invalidasi yang ratchet ngikutin harga.
 function _tpLine(pos) {
+  if (pos.tpText) return `TP: ${pos.tpText}`; // teks bebas (10 Okt 2026, Grid: TP dari % modal ditanam, bukan harga tetap)
   // `tpFull` (30 Sep 2026, Ninja Mean Reversion) -- target PENUH (bukan tahap 1), levelnya rata-rata SMA20 yang geser tiap candle.
   if (pos.tp != null && pos.tpFull) return `TP: ${fmtUsd(pos.tp)} (target penuh -- rata-rata SMA20, bergerak tiap candle)`;
   if (pos.tp != null) return `TP1: ${fmtUsd(pos.tp)}`;
@@ -313,7 +318,7 @@ ${shortId(pos.id, pos.signalId)} — *Buka Posisi*
 ${dirLabel} @ ${fmtUsd(pos.entryPrice)}
 
 ${_tpLine(pos)}
-SL: ${fmtUsd(pos.sl)}${pos.liquidationNote ? `\nLikuidasi: ${pos.liquidationNote}` : liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
+SL: ${pos.slText || fmtUsd(pos.sl)}${pos.liquidationNote ? `\nLikuidasi: ${pos.liquidationNote}` : liqPrice != null ? `\nLikuidasi: ${fmtUsd(liqPrice)}` : ''}
 Margin: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}
 Alasan buka: ${alasan}${dxyLine ? '\n' + dxyLine : ''}${smartMoneyLine ? '\n' + smartMoneyLine : ''}${_todaysPnlLine(todaysPnl, idrRate)}
@@ -331,7 +336,7 @@ ${shortId(pos.id, pos.signalId)} — *Nambah Posisi* (Layer ${pos.layers})
 
 Margin total: ${fmtUsdWithIdr(pos.marginUsd, idrRate)} (${pos.leverage}x)
 Nilai Investasi: ${fmtUsdWithIdr(pos.nilaiPosisi, idrRate)}${_todaysPnlLine(todaysPnl, idrRate)}
-Alasan nambah: Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam batas SL agregat)
+Alasan nambah: ${pos.reasonText || 'Harga bergerak lawan arah, nyicil sesuai rencana stacking (masih dalam batas SL agregat)'}
 
 🔗 ${KAELA_ACCESS_URL}`;
 }

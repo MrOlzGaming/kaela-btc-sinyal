@@ -47,6 +47,10 @@ exh_output=$(timeout -k 5 50 node ninjaExhaustionTrader.js 2>&1)
 # detektor DXY/EURUSDT per detik (proses terpisah, log ninja-news.log). Saklar: ninja-news-config.json.
 nws_output=$(timeout -k 5 20 node ninjaNewsTrader.js 2>&1)
 [ -n "$nws_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $nws_output" >> "$LOG_FILE"
+# GRID ATH (10 Okt 2026, gridTrader.js) -- BTC-USDC BingX Perpetual REAL (saldo USDC), cek tiap menit: entry/rebuy tiap BTC
+# turun 1% di bawah ATH -15%, TP semua di +15% modal ditanam, ulang siklus. Saklar: grid-config.json.
+grid_output=$(timeout -k 5 45 node gridTrader.js 2>&1)
+[ -n "$grid_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $grid_output" >> "$LOG_FILE"
 # Pengawas likuidasi DCA Tangga Leverage di BingX STANDARD FUTURES (1 Okt 2026) -- MURNI BACA, gak pernah
 # kirim order; posisi kena likuidasi -> DM WA Olan + saran leverage pengganti (lihat stdFuturesLadderMonitor.js).
 std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)

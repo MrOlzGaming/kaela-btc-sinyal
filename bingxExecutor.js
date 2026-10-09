@@ -118,6 +118,11 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     return bal ? parseFloat(bal.balance) : 0;
   }
 
+  // Grid (10 Okt 2026) butuh CROSS -- seluruh saldo jadi jaminan 1 posisi numpuk (eksposur dijaga <= cap lewat volume).
+  async function setCrossMargin(symbol) {
+    return signedRequest('POST', '/openApi/swap/v2/trade/marginType', { symbol, marginType: 'CROSSED' });
+  }
+
   async function setIsolatedMargin(symbol) {
     return signedRequest('POST', '/openApi/swap/v2/trade/marginType', { symbol, marginType: 'ISOLATED' });
   }
@@ -265,7 +270,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   }
 
   return {
-    getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry,
+    getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, setCrossMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
     emergencyCloseMarket, wasLastEntryOrderByKaela,
     placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide,

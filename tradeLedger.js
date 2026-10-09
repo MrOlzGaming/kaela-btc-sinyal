@@ -24,7 +24,7 @@ const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; 
 const iso = (v) => { if (v === null || v === undefined || v === '') return null; const d = new Date(typeof v === 'number' || /^\d+$/.test(String(v)) ? Number(v) : v); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };
 const dirOf = (d) => (d === null || d === undefined || d === '' ? null : String(d).toLowerCase() === 'long' || String(d).toLowerCase() === 'buy' ? 'LONG' : 'SHORT'); // arah gak dicatat -> null (bukan nebak), 5 Okt 2026
 
-const SYSTEM = { sniper: '🎯 Sniper', ranger: '🏹 Ranger', ninja: '🥷 Ninja' };
+const SYSTEM = { sniper: '🎯 Sniper', ranger: '🏹 Ranger', ninja: '🥷 Ninja', grid: '🕸️ Grid' };
 const EXCHANGE = { binance: 'Binance', mexc: 'MEXC', bingx: 'BingX', bybit: 'Bybit', bitget: 'Bitget' };
 
 // posisi yang diadopsi (manual Olan / nyasar di exchange, bukan sinyal Kaela) -- patternType 'unknown'/'manual'/kosong
@@ -121,6 +121,21 @@ function collect() {
     const L = f.legs && f.legs[mode]; if (!L) continue;
     out.push(rec({ systemKey: 'ninja', id: f.id, signalId: f.signalId, account: acct(mode), mode, exchange: 'bingx', patternType: 'mean_reversion', direction: f.dir, openedAt: f.openedAt }, L, { context: ctxOf(f) }));
   }
+  // 🕸️ Grid ATH (BingX BTC-USDC, real) -- 1 siklus = 1 trade (10 Okt 2026)
+  const gj = readJson('grid-journal.json');
+  if (gj) {
+    const gridRec = (c, closed) => ({
+      key: `grid|${c.id}|real`, system: SYSTEM.grid, systemKey: 'grid', id: c.id, signalId: c.signalId || null, account: 'Olan Real', mode: 'real', exchange: EXCHANGE.bingx, asset: 'BTCUSDC',
+      patternType: 'grid_ath', direction: 'LONG', entry: num(c.entry != null ? c.entry : (c.qty > 0 ? c.cost / c.qty : null)), sl: null, exit: closed ? num(c.exit) : null, qty: num(c.qty), leverage: null,
+      marginUsd: num(c.planted), openedAt: iso(c.openedAt || c.startedAt), closedAt: closed ? iso(c.closedAt) : null, status: closed ? 'tutup' : 'terbuka',
+      grossUsd: closed ? num(c.grossUsd) : null, feeUsd: closed ? num(c.feeUsd) : null, netUsd: closed ? num(c.net) : null,
+      reasonOpen: 'Grid ATH: BTC <= ATH -15%, porsi = kedalaman dari ATH, rebuy tiap turun 1%, TP +15% modal ditanam',
+      reasonCloseCode: closed ? c.reason : null, reasonClose: closed ? reasonClose(c.reason) : null,
+      context: { layers: c.layers, ditanam: num(c.planted), modalGrid: num(c.cycleCap), athAwal: num(c.athAtStart), returnModalDitanamPct: num(c.retPlantedPct) },
+    });
+    for (const h of gj.history || []) out.push(gridRec(h, true));
+    if (gj.cycle && gj.cycle.qty > 0) out.push(gridRec(gj.cycle, false));
+  }
   // 🥷 Ninja Exhaustion & News (BingX) -- history (detail lengkap mulai 5 Okt) + posisi yang lagi jalan
   for (const [file, pt] of [['ninja-exhaustion-journal.json', 'exhaustion_fade'], ['ninja-news-journal.json', 'news_dxy']]) {
     const j = readJson(file); if (!j) continue;
@@ -187,7 +202,7 @@ const px = (v) => (v === null || v === undefined ? '?' : v >= 100 ? v.toLocaleSt
 const wita = (s) => (s ? new Date(new Date(s).getTime() + 8 * 3600e3).toISOString().replace('T', ' ').slice(0, 16) + ' WITA' : '?');
 const methodName = (r) => {
   const p = String(r.patternType || '');
-  const map = { mean_reversion: 'Mean Reversion', exhaustion_fade: 'Exhaustion', news_dxy: 'News (dolar per detik)', ict_sweep: 'ICT Liquidity Sweep', fed_dovish_grid: 'Fed Dovish Grid', econ_reaction: 'Scalp Rilis Data' };
+  const map = { mean_reversion: 'Mean Reversion', exhaustion_fade: 'Exhaustion', news_dxy: 'News (dolar per detik)', ict_sweep: 'ICT Liquidity Sweep', fed_dovish_grid: 'Fed Dovish Grid', econ_reaction: 'Scalp Rilis Data', grid_ath: 'Grid ATH' };
   if (map[p]) return map[p];
   if (isAdopted(p)) return 'Posisi manual/adopsi';
   if (p.startsWith('fvg')) return 'Fair Value Gap';

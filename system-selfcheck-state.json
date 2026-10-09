@@ -1,18 +1,18 @@
 {
   "regression": {
-    "dateKey": "2026-10-09",
-    "at": "2026-10-08T19:00:57.137Z",
+    "dateKey": "2026-10-10",
+    "at": "2026-10-09T19:00:57.659Z",
     "passed": 109,
     "failed": 0,
     "ok": true,
     "summary": "109 lolos, 0 gagal",
     "exitCode": 0,
     "durationSec": 6,
-    "tail": "  OK   Kalkulator: likuidasi selalu di belakang SL (penyangga maintenance margin)\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n109 lolos, 0 gagal (dari 2026-10-08 test run)\n"
+    "tail": "  OK   Kalkulator: likuidasi selalu di belakang SL (penyangga maintenance margin)\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n109 lolos, 0 gagal (dari 2026-10-09 test run)\n"
   },
   "bingxApi": {
     "lastRunDateKey": null,
-    "at": "2026-10-09T18:46:39.403Z",
+    "at": "2026-10-09T19:00:57.659Z",
     "ok": false,
     "executorHash": "8408fa0830cb7852",
     "verifiedAt": "2026-10-05T23:16:03.413Z",
@@ -21,6 +21,6 @@
     "failedNames": null,
     "aborted": true,
     "exitCode": 3,
-    "tail": "DEMO VST -- harga 82442.2, saldo 9901.7083 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: SHORT 0.0179\n"
+    "tail": "DEMO VST -- harga 82407, saldo 9901.7083 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: SHORT 0.0179\n"
   }
 }

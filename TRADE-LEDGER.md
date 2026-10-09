@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-09 08:03 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-09 08:16 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -8,16 +8,22 @@ Diperbarui otomatis: 2026-10-09 08:03 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - **🏹 Ranger · Posisi manual/adopsi · Kaela Demo (Binance)**: 1 trade, menang 0/0, bersih ? (1 PnL gak kebaca)
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (MEXC)**: 3 trade, menang 1/1 (100%), bersih +$0.00 (2 PnL gak kebaca)
-- **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 7 trade, menang 1/7 (14%), bersih -$91.20
+- **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 8 trade, menang 2/8 (25%), bersih -$66.62
 - **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$10.02
 
-## Posisi terbuka (3)
+## Posisi terbuka (2)
 
-- 🥷 Ninja · Exhaustion · Kaela Demo · BingX · BTC LONG @ 80,986.8 (SL 81,490.3) sejak 2026-10-09 00:06 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · BTC SHORT @ 85,503.9 (SL 87,661.1) sejak 2026-10-06 12:00 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · BTC SHORT @ 85,909.5 (SL 86,405.4) sejak ?
 
-## Trade terakhir (32 terbaru)
+## Trade terakhir (33 terbaru)
+
+### #2026100901 — 🥷 Ninja · Exhaustion · Kaela Demo · BingX
+- Buka: 2026-10-09 00:06 WITA — BTC LONG @ 80,986.8 (SL 81,490.3)
+- Alasan buka: Forced-flow kehabisan tenaga -- ledakan likuidasi besar (>= $800rb/30 menit) ngerem drastis, Kaela ambil arah BALIK (long-liq kering -> LONG, short-liq kering -> SHORT)
+- Konteks entry: netRealistic=23.998711, notionalUsd=2972.2156, peakLiqUsd=18584515
+- Tutup: 2026-10-09 08:07 WITA @ 81,737.9 — Alasan tutup: Batas waktu tahan habis -- ditutup paksa (momen balik arah udah lewat)
+- Hasil: bersih +$24.58 (kotor +$27.57, fee $2.99)
 
 ### #2026100802 — 🥷 Ninja · Exhaustion · Kaela Demo · BingX
 - Buka: 2026-10-08 21:21 WITA — BTC LONG @ 82,553.3 (SL 81,727.8)

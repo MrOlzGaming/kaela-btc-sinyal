@@ -99214,5 +99214,86 @@
     "qty": 8.647,
     "notionalUsd": 714286.2997000001,
     "distPct": 0.052142600625835846
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "BID",
+    "price": 82590,
+    "qty": 8.689,
+    "notionalUsd": 717624.51,
+    "distPct": -0.000060539980303814304
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "BID",
+    "price": 82554.6,
+    "qty": 7.539,
+    "notionalUsd": 622379.1294,
+    "distPct": -0.042922846032902376
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "BID",
+    "price": 82550.2,
+    "qty": 8.648,
+    "notionalUsd": 713894.1296,
+    "distPct": -0.0482503642993385
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "ASK",
+    "price": 82590.1,
+    "qty": 8.619,
+    "notionalUsd": 711844.0719,
+    "distPct": 0.000060539980303814304
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "ASK",
+    "price": 82619.5,
+    "qty": 7.504,
+    "notionalUsd": 619976.728,
+    "distPct": 0.03565804839686752
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "ASK",
+    "price": 82619.6,
+    "qty": 12.244,
+    "notionalUsd": 1011594.3824,
+    "distPct": 0.035779128357475154
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "ASK",
+    "price": 82622.2,
+    "qty": 13.81,
+    "notionalUsd": 1141012.582,
+    "distPct": 0.03892720733307969
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "ASK",
+    "price": 82626.3,
+    "qty": 8.648,
+    "notionalUsd": 714552.2424,
+    "distPct": 0.043891485717710545
+  },
+  {
+    "timestamp": "2026-10-09T22:49:25.224Z",
+    "midPrice": 82590.05,
+    "side": "ASK",
+    "price": 82645.9,
+    "qty": 6.193,
+    "notionalUsd": 511826.05869999994,
+    "distPct": 0.06762315799541381
   }
 ]

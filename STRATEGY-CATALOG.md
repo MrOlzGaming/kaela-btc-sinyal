@@ -183,6 +183,11 @@ Terakhir diperbarui: **3 Okt 2026**.
   **Aturan Olan revisi** (TP SEMUA di +15% modal ditanam = target bersih ~10%, ulang LANGSUNG dari acuan ATH, modal siklus = ekuitas):
   106 titik mulai: median x2,10, DD median 42% (terburuk 54%), rugi 5/106, nyangkut tanpa TP terlama 773 hari (bear 2022). TP 10/15/20%
   hasilnya mirip (x2,11/2,10/2,19). Mulai ATH Nov 2021 x1,51 (B&H x1,21); mulai ATH Okt 2025 x0,98 (B&H x0,65), sekarang megang 52% di -3%.
+  **+ Leverage** (9 Okt, Olan: "ketahan lama pake leverage, coba 2x"; `backtest/athDrawdownGridLev.js`, Binance futures harian 2017-26,
+  funding asli, likuidasi pakai LOW, 94 titik mulai): 1x futures median x1,76 DD 43% nyangkut 755 hr rugi 6/94. 2x ISOLATED per level +
+  TP dari posisi yang masih kebuka: median x2,32, nyangkut terlama 442 hr (lebih cepet), rugi 6/94 TAPI DD median 66% terburuk 80%.
+  2x NUMPUK 1 posisi (perp biasa, yang bisa otomatis): median x2,34 DD median 78% terburuk 94% (4x hangus semua kalau mulai ATH 2017).
+  TP dihitung dari SEMUA modal (termasuk yang kelikuidasi) = nyangkut selamanya abis bear 2018. ISO cuma bisa di BingX Std Futures (manual).
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

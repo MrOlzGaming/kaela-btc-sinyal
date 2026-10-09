@@ -13,12 +13,11 @@ Keputusan Olan 3 Okt 2026 malam:
 1. **Saldo real Bybit** — nanti (belum ada dana). Ranger Rotasi real nunggu ini.
 2. **Bitget** — demo GAK dikejar lagi. Nanti langsung REAL begitu Olan isi saldo (key real udah tersambung, saldo $0,58).
    Key demo tetap tersimpan kalau suatu saat saldo demo baru bisa diisi.
-3. **DCA real** — BUKAN spot DCA. Olan DCA sendiri BTC long x3 di **BingX Standard Futures** ~Rp50.000/hari (tiap posisi
-   independen, berlapis-lapis). `spot-live-config.json realBudgetUsd` TETAP 0 (leg real spot DCA diem). Catatan: Rp50rb ≈
-   $2,80 (kurs 17.883) x3 = $8,39 < min 0,0001 BTC (~$8,48) -> saran margin >= ~Rp55rb.
-4. **DCA Tangga** — Kaela CUMA mantau (`stdFuturesLadderMonitor.js`, tiap menit): posisi kelikuidasi -> DM WA Olan, Olan
-   ganti posisi sendiri. **UDAH JALAN** (6 Okt): dihitung dari 1 Okt, $2 x3/posisi, 6 posisi kebaca monitor (entry ~$85.680,
-   liq ~$57.550). Ninja Perpetual real diisi $15,79 (6 Okt) -- real Ninja ON.
+3. **🕸️ GRID ATH (LIVE 9 Okt, real tanpa demo -- keputusan Olan)** — `gridTrader.js`, BingX Perpetual **BTC-USDC**. Nunggu Olan
+   setor **USDC** ke BingX Perpetual (akun USDC-M). Begitu masuk: langsung tanam ~dd% (BTC lagi ATH -34%). Modal >= ~$820 biar
+   tiap level 1% kebeli sendiri-sendiri; di bawah itu level ditumpuk (tetap jalan). Cek pesan Buka Posisi GRID pertama + Buku Besar.
+4. ~~DCA Tangga~~ — DIBATALIN 9 Okt (diganti grid), monitor mati. Posisi Standard Futures sisa diurus Olan sendiri.
+   Ninja real dimatiin lagi 8 Okt (balik uji demo).
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
 6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)

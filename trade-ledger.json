@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-09T19:48:29.916Z",
+ "updatedAt": "2026-10-09T20:03:32.700Z",
  "count": 37,
  "trades": [
   {
@@ -15,7 +15,7 @@
    "patternType": "exhaustion_fade",
    "direction": "SHORT",
    "entry": 83205.1,
-   "sl": 82732.203,
+   "sl": 82659.23999999999,
    "exit": null,
    "qty": 0.0179,
    "leverage": 50,

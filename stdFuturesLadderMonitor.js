@@ -234,7 +234,15 @@ function makeBingxReader() {
   };
 }
 
+// Saklar (9 Okt 2026, Olan: "matikan dulu tangga dca bingx, kita batalin -- ada strategi baru grid trading"). File
+// std-futures-ladder-config.json {enabled:false} -> monitor diam total (gak baca API, gak kirim WA). Gak ada file = jalan.
+const CONFIG_PATH = path.join(__dirname, 'std-futures-ladder-config.json');
+function isEnabled() {
+  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')).enabled !== false; } catch { return true; }
+}
+
 async function main() {
+  if (!isEnabled()) return; // dimatiin Olan -- diam (gak nyampah log tiap menit)
   const st = loadState();
   const reader = makeBingxReader();
   const { sendWhatsApp } = require('./fonnte');

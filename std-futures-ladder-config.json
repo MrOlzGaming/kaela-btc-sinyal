@@ -1,0 +1,5 @@
+{
+  "enabled": false,
+  "_note": "Saklar pengawas DCA Tangga Leverage (stdFuturesLadderMonitor.js, BingX STANDARD Futures, murni baca + WA likuidasi/collateral). enabled:false = diam total.",
+  "_status": "9 Okt 2026 -- DIMATIIN, strategi DCA Tangga DIBATALIN (Olan: 'matikan dulu tangga dca bingx, ada strategi baru grid trading, nanti dibahas bareng'). Posisi yang masih kebuka di Standard Futures ditutup/diurus Olan sendiri (API std cuma baca). State terakhir tetap di std-futures-ladder-state.json."
+}

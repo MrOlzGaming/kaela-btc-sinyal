@@ -173,6 +173,13 @@ Terakhir diperbarui: **3 Okt 2026**.
   margin >= Rp55rb biar lolos min 0,0001 BTC), gantiin spot DCA real (anggaran spot tetap 0).
   Monitor juga ngingetin TAMBAH COLLATERAL (Std Futures bisa) pas posisi minus >= 50% / 75% margin -> pengingat UMUM "cek posisi" ke grup Wibowo
   Hedgefund (tanpa angka minus/kata likuidasi/sebut collateral, biar anggota gak panik). Likuidasi beneran tetap DM Olan (3 Okt).
+  ⏸️ **DIBATALIN 9 Okt 2026** (Olan: ganti strategi grid) -- monitor dimatiin (`std-futures-ladder-config.json enabled:false`).
+- 🔬 **Grid "porsi = jarak dari ATH" tanpa leverage** (9 Okt, ide Olan modif prompt grid; `backtest/athDrawdownGrid.js`, spot harian
+  2014-2026, fee 0,1%): porsi modal di BTC = dd% dari ATH (step 1%). Varian HOLD_ATH (jual semua pas ATH baru): mulai ATH Des 2017
+  x6,25 DD 54% (buy&hold x4,27 DD 83%), mulai ATH Nov 2021 x2,03 DD 41% (B&H x1,21 DD 77%), mulai ATH Okt 2025 x0,98 (B&H x0,65);
+  106 titik mulai bulanan: median x3,24 vs B&H x4,06, DD median 41% vs 77%, rugi 3/106 (B&H 11/106). REBALANCE (jual tiap naik 1%)
+  gak pernah rugi (0/106) tapi median x2,03. TP20 (jual +20%) paling jelek (median x1,36). Catatan: cuma 3 siklus besar BTC,
+  close harian (belum intraday). STATUS: bahan diskusi, BELUM diterapin (Olan: "bahas dulu").
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

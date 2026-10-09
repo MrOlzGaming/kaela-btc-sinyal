@@ -1,5 +1,5 @@
 {
-  "lastProcessedCloseTime": 1791519299999,
+  "lastProcessedCloseTime": 1791520199999,
   "pendingEntry": null,
   "floating": {
     "id": "85c7c042-4926-46c2-a4ec-02d9236a8adc",
@@ -20,8 +20,8 @@
         "sl": 83106.2057066292,
         "stopOrderId": "2108403610454417408",
         "liquidationPrice": 83632.7,
-        "exitOrderId": "2108410905143283712",
-        "exitLimitPrice": 81955.84629973282
+        "exitOrderId": "2108414691316338688",
+        "exitLimitPrice": 81978.77120569187
       },
       "real": null
     },

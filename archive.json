@@ -3313,5 +3313,10 @@
     "type": "daily-checklist-report",
     "date": "2026-10-09T12:01:06.595Z",
     "content": "🧪 *Vector [QA Tester]* lapor ke Kaela, checklist otomatisasi harian 2026-10-09 udah dicek:\n\n✅ Berita Pagi\n✅ Berita Siang\n✅ Berita Sore\n✅ Anomaly Scanner\n✅ Bloomberg Mini (laporan pribadi Olan)\n✅ Bloomberg Mini (laporan grup WA)\n✅ Sniper Analisa Harian\n✅ Ucapan Ulang Tahun\n✅ Whale Daily Digest\n\nSemua tugas harian beres. 🎉\n\n🔍 Kesehatan Mandor (jalan beneran + gak spam):\n⚠️ Whale scan KETINGGALAN 65 blok (~10.8 jam) -- cek run-vultr-executor.sh/log, kemungkinan kegate/macet lagi.\n✅ Econ-calendar-live jalan (state terakhir 1 menit lalu).\n⏸️ Ninja MR paper 5M: dimatikan lewat config (sengaja).\n✅ Ninja MR eksekutor BingX 15M jalan (candle terakhir 1 menit lalu).\n✅ Regression test hari ini: 109 lolos, 0 gagal (6s, salinan bersih repo).\n✅ Endpoint order BingX terverifikasi di demo (2026-10-05, 14/14).\n✅ Gak ada dobel-kirim ke 7 tipe harian + 1 prefix dinamis (cek 7 hari terakhir).\n\n— Kaela"
+  },
+  {
+    "type": "econ-calendar-headsup",
+    "date": "2026-10-09T13:55:01.531Z",
+    "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 22:00 WITA\n\n📰 *Prelim UoM Consumer Sentiment*\n🇺🇸 University of Michigan Consumer Sentiment\n🇮🇩 Survei suasana hati konsumen AS versi Universitas Michigan\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 47,5 · Sebelumnya: 47,8\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n📰 *Prelim UoM Inflation Expectations*\n🇺🇸 University of Michigan Inflation Expectations\n🇮🇩 Perkiraan inflasi setahun ke depan menurut warga AS\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: - · Sebelumnya: 4,6%\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat"
   }
 ]

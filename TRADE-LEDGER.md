@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-09 16:03 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-09 16:18 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -9,15 +9,21 @@ Diperbarui otomatis: 2026-10-09 16:03 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (MEXC)**: 3 trade, menang 1/1 (100%), bersih +$0.00 (2 PnL gak kebaca)
 - **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 8 trade, menang 2/8 (25%), bersih -$66.62
-- **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$10.02
+- **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 2 trade, menang 1/2 (50%), bersih +$3.72
 
-## Posisi terbuka (3)
+## Posisi terbuka (2)
 
-- 🥷 Ninja · Mean Reversion · Kaela Demo · BingX · BTC SHORT @ 82,361.8 (SL 83,106.2) sejak 2026-10-09 11:46 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · BTC SHORT @ 85,503.9 (SL 87,661.1) sejak 2026-10-06 12:00 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · BTC SHORT @ 85,909.5 (SL 86,405.4) sejak ?
 
-## Trade terakhir (33 terbaru)
+## Trade terakhir (34 terbaru)
+
+### #2026100901 — 🥷 Ninja · Mean Reversion · Kaela Demo · BingX
+- Buka: 2026-10-09 11:46 WITA — BTC SHORT @ 82,361.8 (SL 83,106.2), 50x
+- Alasan buka: Mean Reversion searah tren -- harga keluar Bollinger Band lawan arah tren EMA200, masuk balik ke arah tren (beli saat turun / jual saat naik)
+- Konteks entry: slDistPct=0.90382399, sma20AtSignal=81935.047, wibowoRoute=demo
+- Tutup: 2026-10-09 16:11 WITA @ 82,653.8 — Alasan tutup: Posisi ditutup di luar sistem (manual/exchange) -- dicatat apa adanya dari harga terakhir
+- Hasil: bersih -$6.30 (kotor -$5.26, fee $1.04)
 
 ### #2026100901 — 🥷 Ninja · Exhaustion · Kaela Demo · BingX
 - Buka: 2026-10-09 00:06 WITA — BTC LONG @ 80,986.8 (SL 81,490.3)

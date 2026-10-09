@@ -1,43 +1,14 @@
 {
-  "lastProcessedCloseTime": 1791532799999,
+  "lastProcessedCloseTime": 1791533699999,
   "pendingEntry": null,
-  "floating": {
-    "id": "85c7c042-4926-46c2-a4ec-02d9236a8adc",
-    "signalId": "2026100901",
-    "dir": "short",
-    "slDistPct": 0.9038239895548649,
-    "sma20AtSignal": 81935.04699999999,
-    "openedAt": 1791517567492,
-    "legs": {
-      "demo": {
-        "entryPrice": 82361.8,
-        "quantity": 0.018,
-        "leverage": 50,
-        "margin": 29.798343900000006,
-        "nilaiPosisi": 1482.5123999999998,
-        "entryCommission": 0.296502,
-        "openedAt": 1791517567492,
-        "sl": 83106.2057066292,
-        "stopOrderId": "2108403610454417408",
-        "liquidationPrice": 83632.7,
-        "exitOrderId": "2108463752539017216",
-        "exitLimitPrice": 82363.51478240936
-      },
-      "real": null
-    },
-    "wibowoRoute": "demo",
-    "notified": {
-      "demo": true,
-      "wibowo": true
-    }
-  },
-  "closedCount": 1,
+  "floating": null,
+  "closedCount": 2,
   "missedEntries": 0,
   "stats": {
     "demo": {
       "wins": 1,
-      "losses": 0,
-      "totalPnlUsd": 10.024897999999695
+      "losses": 1,
+      "totalPnlUsd": 3.728511799999696
     },
     "real": {
       "wins": 0,
@@ -48,5 +19,46 @@
   "dailySignalSeq": {
     "dayKey": "20261009",
     "count": 1
-  }
+  },
+  "history": [
+    {
+      "id": "85c7c042-4926-46c2-a4ec-02d9236a8adc",
+      "signalId": "2026100901",
+      "dir": "short",
+      "slDistPct": 0.9038239895548649,
+      "sma20AtSignal": 81935.04699999999,
+      "openedAt": 1791517567492,
+      "legs": {
+        "demo": {
+          "entryPrice": 82361.8,
+          "quantity": 0.018,
+          "leverage": 50,
+          "margin": 29.798343900000006,
+          "nilaiPosisi": 1482.5123999999998,
+          "entryCommission": 0.296502,
+          "openedAt": 1791517567492,
+          "sl": 83106.2057066292,
+          "stopOrderId": "2108403610454417408",
+          "liquidationPrice": 83632.7,
+          "exitOrderId": "2108463752539017216",
+          "exitLimitPrice": 82363.51478240936,
+          "exitPrice": 82653.8,
+          "exitReason": "MR_MANUAL",
+          "exitCommission": null,
+          "closedAt": 1791533466503,
+          "grossUsd": -5.255999999999999,
+          "feeUsd": 1.0403862,
+          "feeSource": "campur",
+          "netUsd": -6.296386199999999
+        },
+        "real": null
+      },
+      "wibowoRoute": "demo",
+      "notified": {
+        "demo": true,
+        "wibowo": true
+      },
+      "closedAt": 1791533479546
+    }
+  ]
 }

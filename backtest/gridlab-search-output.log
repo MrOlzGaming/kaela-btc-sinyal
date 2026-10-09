@@ -1,0 +1,53 @@
+BTCUSDT 1j 2017-08-17..2026-10-09 (80042 candle)
+3456 konfigurasi x 9 titik mulai = 31104 simulasi, 292 dtk
+
+=== TERBAIK: gak pernah hangus, gak pernah rugi, DD terburuk <= 50% ===
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 30% cap 1.5x | CAGR median 14% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 30% cap 2x | CAGR median 14% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 30% cap 3x | CAGR median 14% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 30% cap - | CAGR median 14% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol halus1+d/50 TP 10% cap 1.5x | CAGR median 14% | terburuk x1.01 | DD terburuk 50% | hangus 0 | nyangkut 740 hr | TP 44x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol halus1+d/50 TP 10% cap 2x | CAGR median 14% | terburuk x1.01 | DD terburuk 50% | hangus 0 | nyangkut 740 hr | TP 44x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol halus1+d/50 TP 10% cap 3x | CAGR median 14% | terburuk x1.01 | DD terburuk 50% | hangus 0 | nyangkut 740 hr | TP 44x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol halus1+d/50 TP 10% cap - | CAGR median 14% | terburuk x1.01 | DD terburuk 50% | hangus 0 | nyangkut 740 hr | TP 44x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 1% k 0.5 vol 1>3@50      TP 10% cap 1.5x | CAGR median 12% | terburuk x1.01 | DD terburuk 44% | hangus 0 | nyangkut 616 hr | TP 35x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 1% k 0.5 vol 1>3@50      TP 10% cap 2x | CAGR median 12% | terburuk x1.01 | DD terburuk 44% | hangus 0 | nyangkut 616 hr | TP 35x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 1% k 0.5 vol 1>3@50      TP 10% cap 3x | CAGR median 12% | terburuk x1.01 | DD terburuk 44% | hangus 0 | nyangkut 616 hr | TP 35x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 1% k 0.5 vol 1>3@50      TP 10% cap - | CAGR median 12% | terburuk x1.01 | DD terburuk 44% | hangus 0 | nyangkut 616 hr | TP 35x rata2 +10.0%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 20% cap 1.5x | CAGR median 11% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 733 hr | TP 15x rata2 +17.8%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 20% cap 2x | CAGR median 11% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 733 hr | TP 15x rata2 +17.8%/tanam | eksposur maks 0.8x
+  CYCLE step 2% k 0.5 vol 1>3@50      TP 20% cap 3x | CAGR median 11% | terburuk x1.01 | DD terburuk 47% | hangus 0 | nyangkut 733 hr | TP 15x rata2 +17.8%/tanam | eksposur maks 0.8x
+
+=== TERBAIK: gak pernah hangus, gak pernah rugi, DD terburuk <= 65% ===
+  LOT   step 1% k 1 vol 2>1@50      TP 20% cap 1.5x | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 541x rata2 +20.0%/tanam | eksposur maks 1.0x
+  LOT   step 1% k 1 vol 2>1@50      TP 20% cap 2x | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 541x rata2 +20.0%/tanam | eksposur maks 1.0x
+  LOT   step 1% k 1 vol 2>1@50      TP 20% cap 3x | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 541x rata2 +20.0%/tanam | eksposur maks 1.0x
+  LOT   step 1% k 1 vol 2>1@50      TP 20% cap - | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 541x rata2 +20.0%/tanam | eksposur maks 1.0x
+  LOT   step 2% k 1 vol 1>2@40      TP 30% cap 1.5x | CAGR median 14% | terburuk x1.05 | DD terburuk 58% | hangus 0 | nyangkut 1371 hr | TP 169x rata2 +30.0%/tanam | eksposur maks 1.1x
+  LOT   step 2% k 1 vol 1>2@40      TP 30% cap 2x | CAGR median 14% | terburuk x1.05 | DD terburuk 58% | hangus 0 | nyangkut 1371 hr | TP 169x rata2 +30.0%/tanam | eksposur maks 1.1x
+  LOT   step 2% k 1 vol 1>2@40      TP 30% cap 3x | CAGR median 14% | terburuk x1.05 | DD terburuk 58% | hangus 0 | nyangkut 1371 hr | TP 169x rata2 +30.0%/tanam | eksposur maks 1.1x
+  LOT   step 2% k 1 vol 1>2@40      TP 30% cap - | CAGR median 14% | terburuk x1.05 | DD terburuk 58% | hangus 0 | nyangkut 1371 hr | TP 169x rata2 +30.0%/tanam | eksposur maks 1.1x
+  LOT   step 2% k 1 vol 1>3@50      TP 20% cap 1.5x | CAGR median 14% | terburuk x1.02 | DD terburuk 63% | hangus 0 | nyangkut 1096 hr | TP 236x rata2 +20.0%/tanam | eksposur maks 1.5x
+  LOT   step 2% k 1 vol 1>3@50      TP 20% cap 2x | CAGR median 14% | terburuk x1.02 | DD terburuk 63% | hangus 0 | nyangkut 1096 hr | TP 236x rata2 +20.0%/tanam | eksposur maks 1.5x
+  LOT   step 2% k 1 vol 1>3@50      TP 20% cap 3x | CAGR median 14% | terburuk x1.02 | DD terburuk 63% | hangus 0 | nyangkut 1096 hr | TP 236x rata2 +20.0%/tanam | eksposur maks 1.5x
+  LOT   step 2% k 1 vol 1>3@50      TP 20% cap - | CAGR median 14% | terburuk x1.02 | DD terburuk 63% | hangus 0 | nyangkut 1096 hr | TP 236x rata2 +20.0%/tanam | eksposur maks 1.5x
+  LOT   step 0.5% k 1 vol 2>1@50      TP 20% cap 1.5x | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 1071x rata2 +20.0%/tanam | eksposur maks 1.0x
+  LOT   step 0.5% k 1 vol 2>1@50      TP 20% cap 2x | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 1071x rata2 +20.0%/tanam | eksposur maks 1.0x
+  LOT   step 0.5% k 1 vol 2>1@50      TP 20% cap 3x | CAGR median 14% | terburuk x1.03 | DD terburuk 60% | hangus 0 | nyangkut 1070 hr | TP 1071x rata2 +20.0%/tanam | eksposur maks 1.0x
+
+=== TERBAIK TANPA BATAS DD (tetap gak hangus) ===
+  CYCLE step 2% k 1 vol halus1+d/50 TP 10% cap - | CAGR median 29% | terburuk x1.01 | DD terburuk 98% | hangus 0 | nyangkut 740 hr | TP 44x rata2 +10.0%/tanam | eksposur maks 30.3x
+  CYCLE step 0.5% k 1 vol halus1+d/50 TP 10% cap - | CAGR median 29% | terburuk x1.01 | DD terburuk 99% | hangus 0 | nyangkut 740 hr | TP 45x rata2 +10.0%/tanam | eksposur maks 47.5x
+  CYCLE step 0.5% k 1 vol 1>3@50      TP 30% cap - | CAGR median 28% | terburuk x0.99 | DD terburuk 91% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 7.5x
+  CYCLE step 1% k 1 vol 1>3@50      TP 30% cap - | CAGR median 28% | terburuk x1.00 | DD terburuk 91% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 7.8x
+  CYCLE step 1% k 1 vol halus1+d/50 TP 10% cap - | CAGR median 28% | terburuk x1.01 | DD terburuk 98% | hangus 0 | nyangkut 740 hr | TP 45x rata2 +10.0%/tanam | eksposur maks 39.2x
+  CYCLE step 2% k 1 vol 1>3@50      TP 30% cap - | CAGR median 28% | terburuk x1.01 | DD terburuk 92% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 8.3x
+  CYCLE step 0.5% k 1 vol 1>3@50      TP 30% cap 3x | CAGR median 28% | terburuk x0.99 | DD terburuk 90% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 5.6x
+  CYCLE step 1% k 1 vol 1>3@50      TP 30% cap 3x | CAGR median 28% | terburuk x1.00 | DD terburuk 90% | hangus 0 | nyangkut 738 hr | TP 11x rata2 +26.7%/tanam | eksposur maks 5.9x
+  CYCLE step 2% k 1 vol halus1+d/50 TP 15% cap - | CAGR median 27% | terburuk x0.98 | DD terburuk 98% | hangus 0 | nyangkut 748 hr | TP 27x rata2 +13.3%/tanam | eksposur maks 32.2x
+  CYCLE step 1% k 1 vol 1>3@50      TP 10% cap 3x | CAGR median 26% | terburuk x1.02 | DD terburuk 87% | hangus 0 | nyangkut 616 hr | TP 35x rata2 +10.0%/tanam | eksposur maks 4.8x
+  CYCLE step 1% k 1 vol 1>3@50      TP 10% cap - | CAGR median 26% | terburuk x1.02 | DD terburuk 87% | hangus 0 | nyangkut 616 hr | TP 35x rata2 +10.0%/tanam | eksposur maks 5.7x
+  CYCLE step 0.5% k 1 vol halus1+d/50 TP 15% cap - | CAGR median 26% | terburuk x0.97 | DD terburuk 99% | hangus 0 | nyangkut 739 hr | TP 26x rata2 +13.3%/tanam | eksposur maks 49.8x
+  CYCLE step 1% k 1 vol 2>1@50      TP 15% cap - | CAGR median 26% | terburuk x0.97 | DD terburuk 99% | hangus 0 | nyangkut 782 hr | TP 37x rata2 +15.0%/tanam | eksposur maks 47.3x
+  CYCLE step 1% k 1 vol halus1+d/50 TP 15% cap - | CAGR median 26% | terburuk x0.97 | DD terburuk 99% | hangus 0 | nyangkut 739 hr | TP 25x rata2 +13.3%/tanam | eksposur maks 43.9x
+  LOT   step 2% k 2 vol x2          TP 20% cap 1.5x | CAGR median 26% | terburuk x1.06 | DD terburuk 98% | hangus 0 | nyangkut 1067 hr | TP 241x rata2 +20.0%/tanam | eksposur maks 18.8x

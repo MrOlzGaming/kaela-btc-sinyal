@@ -196,6 +196,13 @@ Terakhir diperbarui: **3 Okt 2026**.
   level akun (LOW), entry >= ATH -15%, TP 15% modal ditanam. 94 titik mulai, GAK ADA yang hangus/rugi: 1x rata median x1,49 DD terburuk
   47% nyangkut 757 hr; **1x s/d -40% lalu 2x** median x1,88 DD terburuk 68% nyangkut 516 hr; 1x s/d -50% lalu 2x x1,67 DD 61% 623 hr;
   2x rata x2,18 DD 86% 574 hr. Kandidat terbaik buat dibahas: pengali 2x mulai -40% (atau -50% kalau mau DD lebih kecil).
+  **LAB GRID MANDIRI** (10 Okt, `backtest/gridLab.js`, data 1 JAM 2017-26, 1 posisi cross, funding asli, maker/taker, likuidasi akun LOW,
+  compound terus, entry >= ATH -15%; 3.456 + 1.620 konfigurasi, divalidasi 94 titik mulai + uji 2 era): versi AMAN (gak hangus, gak
+  ada titik mulai rugi) cuma CAGR median ~9-14%/th vs buy&hold 33% (DD B&H 77-84%). Juara seimbang: mode LOT (TP per lot), jarak 2%,
+  entry 1% modal per 1% turun, volume 1,5x, TP 30% modal ditanam (= harga +20%) -> CAGR 13,6% (era1 15% era2 9%), DD terburuk 58%,
+  eksposur maks 1,06x. Paling aman: jarak 3%, entry 0,75%, volume 1x->1,5x mulai -40%, TP 30% -> CAGR 9,1% DD terburuk 38%.
+  Versi agresif (volume naik terus tanpa batas) CAGR ~28% tapi DD 87-99% = nyaris hangus. Modal minimal: BTC min 0,0001 (~$8) di
+  Bitget/BingX -> ekuitas >= ~$300 (Bybit min 0,001 BTC -> ~$2.700).
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

@@ -36,6 +36,51 @@ Data 2014-09-17 .. 2026-10-08 (4405 hari) | BTC terakhir $81754 | ATH $124753 (d
   REBALANCE  x3.23 (CAGR 19%) DD maks 42% | modal kepake maks 76% | siklus 0 | transaksi 1618
   BUYHOLD    x11.34 (CAGR 43%) DD maks 77% | modal kepake maks 100% | siklus 0 | transaksi 1
 
+
+######## ATURAN OLAN: porsi = dd% dari ATH, TP semua di +X% modal ditanam, ulang langsung (modal siklus = ekuitas) ########
+
+=== Mulai ATH Des 2017 (2017-12-17, BTC $19141, dd 2%) ===
+  TP 10%  x3.63 (CAGR 16%) DD maks 52% | modal kepake maks 84% | TP 38x, median 21 hari, nyangkut terlama 736 hari | fee $46 | sekarang megang 52% (-3.0%)
+  TP 15%  x3.50 (CAGR 15%) DD maks 54% | modal kepake maks 84% | TP 27x, median 30 hari, nyangkut terlama 773 hari | fee $34 | sekarang megang 52% (-2.9%)
+  TP 20%  x4.10 (CAGR 17%) DD maks 54% | modal kepake maks 85% | TP 19x, median 32 hari, nyangkut terlama 779 hari | fee $32 | sekarang megang 53% (-1.7%)
+  B&H     x4.27 (CAGR 18%) DD maks 83% | modal kepake maks 100% | siklus 0 | transaksi 1
+
+=== Mulai ATH Nov 2021 (2021-11-08, BTC $67567, dd 0%) ===
+  TP 10%  x1.50 (CAGR 9%) DD maks 41% | modal kepake maks 78% | TP 14x, median 37 hari, nyangkut terlama 736 hari | fee $10 | sekarang megang 52% (-3.0%)
+  TP 15%  x1.51 (CAGR 9%) DD maks 41% | modal kepake maks 78% | TP 10x, median 49 hari, nyangkut terlama 753 hari | fee $8 | sekarang megang 52% (-2.9%)
+  TP 20%  x1.52 (CAGR 9%) DD maks 41% | modal kepake maks 79% | TP 6x, median 180 hari, nyangkut terlama 755 hari | fee $6 | sekarang megang 53% (-1.7%)
+  B&H     x1.21 (CAGR 4%) DD maks 77% | modal kepake maks 100% | siklus 0 | transaksi 1
+
+=== Mulai Bottom Nov 2022 (2022-11-21, BTC $15787, dd 77%) ===
+  TP 10%  x2.52 (CAGR 27%) DD maks 16% | modal kepake maks 78% | TP 21x, median 31 hari, nyangkut terlama 367 hari | fee $28 | sekarang megang 52% (-3.0%)
+  TP 15%  x2.50 (CAGR 27%) DD maks 17% | modal kepake maks 78% | TP 14x, median 43 hari, nyangkut terlama 452 hari | fee $20 | sekarang megang 52% (-2.9%)
+  TP 20%  x2.60 (CAGR 28%) DD maks 18% | modal kepake maks 79% | TP 9x, median 54 hari, nyangkut terlama 516 hari | fee $17 | sekarang megang 53% (-1.7%)
+  B&H     x5.17 (CAGR 53%) DD maks 53% | modal kepake maks 100% | siklus 0 | transaksi 1
+
+=== Mulai ATH Mar 2024 (2024-03-14, BTC $71397, dd 2%) ===
+  TP 10%  x1.13 (CAGR 5%) DD maks 16% | modal kepake maks 54% | TP 8x, median 67 hari, nyangkut terlama 367 hari | fee $3 | sekarang megang 52% (-3.0%)
+  TP 15%  x1.12 (CAGR 4%) DD maks 17% | modal kepake maks 54% | TP 5x, median 66 hari, nyangkut terlama 452 hari | fee $2 | sekarang megang 52% (-2.9%)
+  TP 20%  x1.11 (CAGR 4%) DD maks 18% | modal kepake maks 54% | TP 2x, median 237 hari, nyangkut terlama 516 hari | fee $2 | sekarang megang 53% (-1.7%)
+  B&H     x1.14 (CAGR 5%) DD maks 53% | modal kepake maks 100% | siklus 0 | transaksi 1
+
+=== Mulai ATH terbaru 2025 (2025-10-06, BTC $124753, dd 0%) ===
+  TP 10%  x0.98 (CAGR -2%) DD maks 16% | modal kepake maks 54% | TP 0x, median - hari, nyangkut terlama 367 hari | fee $1 | sekarang megang 52% (-3.0%)
+  TP 15%  x0.98 (CAGR -2%) DD maks 16% | modal kepake maks 54% | TP 0x, median - hari, nyangkut terlama 367 hari | fee $1 | sekarang megang 52% (-3.0%)
+  TP 20%  x0.98 (CAGR -2%) DD maks 16% | modal kepake maks 54% | TP 0x, median - hari, nyangkut terlama 367 hari | fee $1 | sekarang megang 52% (-3.0%)
+  B&H     x0.65 (CAGR -34%) DD maks 53% | modal kepake maks 100% | siklus 0 | transaksi 1
+
+=== Mulai Jan 2020 (2020-01-01, BTC $7200, dd 63%) ===
+  TP 10%  x3.64 (CAGR 21%) DD maks 41% | modal kepake maks 78% | TP 38x, median 21 hari, nyangkut terlama 736 hari | fee $47 | sekarang megang 52% (-3.0%)
+  TP 15%  x3.80 (CAGR 22%) DD maks 42% | modal kepake maks 78% | TP 28x, median 30 hari, nyangkut terlama 773 hari | fee $38 | sekarang megang 52% (-2.9%)
+  TP 20%  x3.98 (CAGR 23%) DD maks 42% | modal kepake maks 79% | TP 19x, median 32 hari, nyangkut terlama 779 hari | fee $31 | sekarang megang 53% (-1.7%)
+  B&H     x11.34 (CAGR 43%) DD maks 77% | modal kepake maks 100% | siklus 0 | transaksi 1
+
+=== Aturan Olan, mulai TIAP AWAL BULAN 2017-01 .. 2025-10 ===
+  TP10                   median x2.11 | DD maks median 41% terburuk 52% | terburuk x0.98 | rugi 3/106 | nyangkut terlama 736 hari | TP median 21x
+  TP15                   median x2.10 | DD maks median 42% terburuk 54% | terburuk x0.98 | rugi 5/106 | nyangkut terlama 773 hari | TP median 14x
+  TP20                   median x2.19 | DD maks median 42% terburuk 54% | terburuk x0.98 | rugi 5/106 | nyangkut terlama 783 hari | TP median 9x
+  TP15 modal tetap $1000 median x1.78 | DD maks median 27% terburuk 52% | terburuk x0.98 | rugi 5/106 | nyangkut terlama 773 hari | TP median 14x
+
 === Mulai TIAP AWAL BULAN 2017-01 .. 2025-10 (s/d hari ini) -- median / terburuk ===
   HOLD_ATH   n=106 | median x3.24 DD maks median 41% | terburuk x0.99 | rugi di 3/106 titik mulai | DD maks terburuk 58%
   TP20       n=106 | median x1.36 DD maks median 19% | terburuk x0.98 | rugi di 5/106 titik mulai | DD maks terburuk 54%

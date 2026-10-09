@@ -38,6 +38,34 @@ async function loadSeries() {
   return rows;
 }
 
+// Aturan Olan (9 Okt 2026, revisi): porsi = dd% dari ATH (ATH -1% -> 1% modal, -25% -> 25% modal; mulai di tengah = langsung
+// kerahkan dd%), TP SEMUA begitu modal yang ditanam untung >= tpPct (Olan: target bersih 10%, ambil 15% buat nanggung biaya),
+// abis TP sistem DIULANG LANGSUNG dari acuan ATH (beli lagi dd% saat itu, minimal ATH -1%). Modal siklus = ekuitas saat itu.
+function runOlan(rows, startIdx, tpPct, { fixedCapital = false } = {}) {
+  let cash = CAPITAL, btc = 0, invested = 0, filled = 0, cycleCap = CAPITAL, cycles = 0, trades = 0, cycleStart = startIdx;
+  let peakEq = CAPITAL, maxDd = 0, maxDeployed = 0, longestDays = 0, feesPaid = 0;
+  const durations = [];
+  const buy = (usd, px) => { usd = Math.min(usd, cash); if (usd <= 0.01) return; cash -= usd; btc += usd * (1 - FEE) / px; feesPaid += usd * FEE; invested += usd; trades++; };
+  for (let i = startIdx; i < rows.length; i++) {
+    const { c, dd, t } = rows[i];
+    if (btc > 0 && btc * c * (1 - FEE) >= invested * (1 + tpPct / 100)) {
+      const v = btc * c; cash += v * (1 - FEE); feesPaid += v * FEE; btc = 0; invested = 0; filled = 0; trades++; cycles++;
+      durations.push((t - rows[cycleStart].t) / 864e5); cycleStart = i;
+      cycleCap = fixedCapital ? CAPITAL : cash;
+    }
+    const level = Math.min(100, Math.floor(dd));
+    if (level >= 1 && level > filled) { buy((level - filled) / 100 * cycleCap, c); filled = level; }
+    const eq = cash + btc * c;
+    peakEq = Math.max(peakEq, eq); maxDd = Math.max(maxDd, (1 - eq / peakEq) * 100);
+    maxDeployed = Math.max(maxDeployed, btc * c / eq * 100);
+    longestDays = Math.max(longestDays, (t - rows[cycleStart].t) / 864e5);
+  }
+  const last = rows[rows.length - 1], eq = cash + btc * last.c;
+  const years = (last.t - rows[startIdx].t) / (365.25 * 864e5);
+  const sd = [...durations].sort((a, b) => a - b);
+  return { eq, mult: eq / CAPITAL, cagr: years > 0.5 ? (Math.pow(eq / CAPITAL, 1 / years) - 1) * 100 : null, maxDd, maxDeployed, cycles, trades, years, medDays: sd.length ? sd[Math.floor(sd.length / 2)] : null, longestDays, feesPaid, openNow: btc > 0 ? { pnlPct: (btc * last.c / invested - 1) * 100, deployedPct: btc * last.c / eq * 100 } : null };
+}
+
 function run(rows, startIdx, variant) {
   let cash = CAPITAL, btc = 0, cycleCap = CAPITAL, filled = 0, invested = 0, waitBelow = null, cycles = 0, trades = 0;
   let peakEq = CAPITAL, maxDd = 0, maxDeployed = 0, cycleAth = rows[startIdx].ath;
@@ -93,6 +121,24 @@ const fmt = (r) => `x${r.mult.toFixed(2)} (CAGR ${r.cagr === null ? '-' : r.cagr
     console.log(`\n=== Mulai ${name} (${new Date(rows[idx].t).toISOString().slice(0, 10)}, BTC $${rows[idx].c.toFixed(0)}, dd dari ATH ${rows[idx].dd.toFixed(0)}%) s/d hari ini ===`);
     for (const v of VARS) console.log(`  ${v.padEnd(10)} ${fmt(run(rows, idx, v))}`);
   }
+  // ===== Aturan Olan revisi: TP semua di +X% dari modal yang ditanam, ulang langsung dari acuan ATH =====
+  const fmtO = (r) => `x${r.mult.toFixed(2)} (CAGR ${r.cagr === null ? '-' : r.cagr.toFixed(0) + '%'}) DD maks ${r.maxDd.toFixed(0)}% | modal kepake maks ${r.maxDeployed.toFixed(0)}% | TP ${r.cycles}x, median ${r.medDays === null ? '-' : r.medDays.toFixed(0)} hari, nyangkut terlama ${r.longestDays.toFixed(0)} hari | fee $${r.feesPaid.toFixed(0)}${r.openNow ? ` | sekarang megang ${r.openNow.deployedPct.toFixed(0)}% (${r.openNow.pnlPct >= 0 ? '+' : ''}${r.openNow.pnlPct.toFixed(1)}%)` : ''}`;
+  console.log('\n\n######## ATURAN OLAN: porsi = dd% dari ATH, TP semua di +X% modal ditanam, ulang langsung (modal siklus = ekuitas) ########');
+  for (const [name, iso] of starts) {
+    const idx = iso ? at(iso) : athIdx;
+    if (idx < 0) continue;
+    console.log(`\n=== Mulai ${name} (${new Date(rows[idx].t).toISOString().slice(0, 10)}, BTC $${rows[idx].c.toFixed(0)}, dd ${rows[idx].dd.toFixed(0)}%) ===`);
+    for (const tp of [10, 15, 20]) console.log(`  TP ${String(tp).padStart(2)}%  ${fmtO(runOlan(rows, idx, tp))}`);
+    console.log(`  B&H     ${fmt(run(rows, idx, 'BUYHOLD'))}`);
+  }
+  console.log('\n=== Aturan Olan, mulai TIAP AWAL BULAN 2017-01 .. 2025-10 ===');
+  for (const [tp, opt, lbl] of [[10, {}, 'TP10'], [15, {}, 'TP15'], [20, {}, 'TP20'], [15, { fixedCapital: true }, 'TP15 modal tetap $1000']]) {
+    const rs = [];
+    for (let y = 2017; y <= 2025; y++) for (let m = 0; m < 12; m++) { if (y === 2025 && m > 9) break; const i = at(new Date(Date.UTC(y, m, 1)).toISOString()); if (i >= 0) rs.push(runOlan(rows, i, tp, opt)); }
+    const med = (k) => { const s = rs.map((r) => r[k]).filter((x) => x !== null).sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+    console.log(`  ${lbl.padEnd(22)} median x${med('mult').toFixed(2)} | DD maks median ${med('maxDd').toFixed(0)}% terburuk ${Math.max(...rs.map((r) => r.maxDd)).toFixed(0)}% | terburuk x${Math.min(...rs.map((r) => r.mult)).toFixed(2)} | rugi ${rs.filter((r) => r.mult < 1).length}/${rs.length} | nyangkut terlama ${Math.max(...rs.map((r) => r.longestDays)).toFixed(0)} hari | TP median ${med('cycles')}x`);
+  }
+
   // ketahanan: mulai tiap awal bulan 2017-2025, horizon s/d hari ini
   console.log('\n=== Mulai TIAP AWAL BULAN 2017-01 .. 2025-10 (s/d hari ini) -- median / terburuk ===');
   for (const v of VARS) {

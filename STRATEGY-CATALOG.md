@@ -180,6 +180,9 @@ Terakhir diperbarui: **3 Okt 2026**.
   106 titik mulai bulanan: median x3,24 vs B&H x4,06, DD median 41% vs 77%, rugi 3/106 (B&H 11/106). REBALANCE (jual tiap naik 1%)
   gak pernah rugi (0/106) tapi median x2,03. TP20 (jual +20%) paling jelek (median x1,36). Catatan: cuma 3 siklus besar BTC,
   close harian (belum intraday). STATUS: bahan diskusi, BELUM diterapin (Olan: "bahas dulu").
+  **Aturan Olan revisi** (TP SEMUA di +15% modal ditanam = target bersih ~10%, ulang LANGSUNG dari acuan ATH, modal siklus = ekuitas):
+  106 titik mulai: median x2,10, DD median 42% (terburuk 54%), rugi 5/106, nyangkut tanpa TP terlama 773 hari (bear 2022). TP 10/15/20%
+  hasilnya mirip (x2,11/2,10/2,19). Mulai ATH Nov 2021 x1,51 (B&H x1,21); mulai ATH Okt 2025 x0,98 (B&H x0,65), sekarang megang 52% di -3%.
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

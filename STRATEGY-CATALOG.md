@@ -188,6 +188,9 @@ Terakhir diperbarui: **3 Okt 2026**.
   TP dari posisi yang masih kebuka: median x2,32, nyangkut terlama 442 hr (lebih cepet), rugi 6/94 TAPI DD median 66% terburuk 80%.
   2x NUMPUK 1 posisi (perp biasa, yang bisa otomatis): median x2,34 DD median 78% terburuk 94% (4x hangus semua kalau mulai ATH 2017).
   TP dihitung dari SEMUA modal (termasuk yang kelikuidasi) = nyangkut selamanya abis bear 2018. ISO cuma bisa di BingX Std Futures (manual).
+  Olan konfirmasi TP 15% = dari modal yang MASIH ditanam (modal $10 di BTC -> ambil $1,5). Syarat entry minimal ATH -15% (9 Okt):
+  efek kecil -- 2x ISO median x2,32 -> x2,49, DD terburuk tetap 80%; 2x numpuk DD terburuk 94% -> 86%; nyangkut terlama 442 -> 534 hr.
+  -10..-20% sedikit lebih bagus dari -1%, -25% mulai jelek. Rugi 6/94 = titik mulai 2025 yang masih nyangkut sekarang.
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

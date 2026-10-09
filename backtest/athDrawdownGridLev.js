@@ -43,7 +43,8 @@ async function loadDaily() {
 
 // tpBasis 'all' = modal ditanam siklus TERMASUK margin yang udah kelikuidasi (jujur, tapi bisa nyangkut selamanya abis rugi gede);
 // 'open' = cuma margin posisi yang MASIH kebuka (bacaan lain kalimat Olan 'modal yang ditanam ngasih return 15%').
-function runLev(rows, startIdx, { lev, tp = 15, model = 'ISO', replace = false, tpBasis = 'all' }) {
+// minDd (9 Okt, Olan: 'kasih syarat, btc ath -15% boleh entry') -- entry pertama cuma kalau dd >= minDd (lalu porsi = dd%).
+function runLev(rows, startIdx, { lev, tp = 15, model = 'ISO', replace = false, tpBasis = 'all', minDd = 1 }) {
   let cash = CAPITAL, cycleCap = CAPITAL, filled = 0, investedCycle = 0, cycles = 0, cycleStart = startIdx;
   let pos = []; // {entry, qty, margin}
   let peakEq = CAPITAL, maxDd = 0, maxNotionalX = 0, liqCount = 0, liqLoss = 0, fundPaid = 0, feePaid = 0, longest = 0, ruined = false, aggLiqs = 0;
@@ -85,7 +86,7 @@ function runLev(rows, startIdx, { lev, tp = 15, model = 'ISO', replace = false, 
     }
     // 4) entry level baru
     const level = Math.min(100, Math.floor(dd));
-    if (level >= 1 && level > filled) { open((level - filled) / 100 * cycleCap, c); filled = level; }
+    if (level >= Math.max(1, minDd) && level > filled) { open((level - filled) / 100 * cycleCap, c); filled = level; }
     const eq = eqNow(c);
     if (eq < CAPITAL * 0.05) ruined = true;
     peakEq = Math.max(peakEq, eq); maxDd = Math.max(maxDd, (1 - eq / peakEq) * 100);
@@ -122,5 +123,13 @@ const fmt = (r) => `x${r.mult.toFixed(2)} (CAGR ${r.cagr === null ? '-' : r.cagr
     for (let y = 2018; y <= 2025; y++) for (let m = 0; m < 12; m++) { if (y === 2025 && m > 9) break; const i = at(new Date(Date.UTC(y, m, 1)).toISOString()); if (i >= 0) rs.push(runLev(rows, i, cfg)); }
     const med = (k) => { const s = rs.map((r) => r[k]).filter((x) => x !== null).sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
     console.log(`  ${lbl.padEnd(26)} median x${med('mult').toFixed(2)} | terburuk x${Math.min(...rs.map((r) => r.mult)).toFixed(2)} | rugi ${rs.filter((r) => r.mult < 1).length}/${rs.length} | DD median ${med('maxDd').toFixed(0)}% terburuk ${Math.max(...rs.map((r) => r.maxDd)).toFixed(0)}% | nyangkut terlama ${Math.max(...rs.map((r) => r.longest)).toFixed(0)} hr (median ${med('longest').toFixed(0)}) | modal habis ${rs.filter((r) => r.ruined).length}/${rs.length}`);
+  }
+  // ===== Syarat entry minimal (Olan 9 Okt): TP 15% dari modal yang MASIH ditanam, entry baru boleh mulai ATH -X% =====
+  console.log('\n######## SYARAT ENTRY MINIMAL (TP 15% dari posisi yang masih kebuka) -- mulai tiap awal bulan 2018-01..2025-10 ########');
+  for (const lev of [1, 1.5, 2]) for (const model of lev === 1 ? ['ISO'] : ['ISO', 'AGG']) for (const minDd of [1, 10, 15, 20, 25]) {
+    const cfg = { lev, model, tpBasis: 'open', minDd }, rs = [];
+    for (let y = 2018; y <= 2025; y++) for (let m = 0; m < 12; m++) { if (y === 2025 && m > 9) break; const i = at(new Date(Date.UTC(y, m, 1)).toISOString()); if (i >= 0) rs.push(runLev(rows, i, cfg)); }
+    const med = (k) => { const v = rs.map((r) => r[k]).filter((x) => x !== null).sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };
+    console.log(`  ${(lev + 'x ' + model).padEnd(8)} entry >= ATH -${String(minDd).padStart(2)}% | median x${med('mult').toFixed(2)} terburuk x${Math.min(...rs.map((r) => r.mult)).toFixed(2)} | rugi ${rs.filter((r) => r.mult < 1).length}/${rs.length} | DD median ${med('maxDd').toFixed(0)}% terburuk ${Math.max(...rs.map((r) => r.maxDd)).toFixed(0)}% | nyangkut terlama ${Math.max(...rs.map((r) => r.longest)).toFixed(0)} hr | likuidasi median ${med('liqCount')}`);
   }
 })().catch((e) => { console.error('ERROR', e.message); process.exit(1); });

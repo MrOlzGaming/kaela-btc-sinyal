@@ -83,3 +83,30 @@ Data Binance BTCUSDT harian 2017-08-17..2026-10-08 | BTC $81754 ATH $124659 | fe
   2x AGG (perp numpuk)       median x2.20 | terburuk x0.17 | rugi 20/94 | DD median 66% terburuk 84% | nyangkut terlama 3198 hr (median 846) | modal habis 0/94
   3x ISO                     median x2.14 | terburuk x0.17 | rugi 23/94 | DD median 70% terburuk 84% | nyangkut terlama 3198 hr (median 829) | modal habis 0/94
   3x AGG (perp numpuk)       median x0.79 | terburuk x0.17 | rugi 63/94 | DD median 76% terburuk 85% | nyangkut terlama 3198 hr (median 1795) | modal habis 0/94
+
+######## SYARAT ENTRY MINIMAL (TP 15% dari posisi yang masih kebuka) -- mulai tiap awal bulan 2018-01..2025-10 ########
+  1x ISO   entry >= ATH - 1% | median x1.76 terburuk x0.97 | rugi 6/94 | DD median 43% terburuk 56% | nyangkut terlama 775 hr | likuidasi median 0
+  1x ISO   entry >= ATH -10% | median x1.71 terburuk x0.97 | rugi 6/94 | DD median 43% terburuk 56% | nyangkut terlama 775 hr | likuidasi median 0
+  1x ISO   entry >= ATH -15% | median x1.79 terburuk x0.98 | rugi 6/94 | DD median 43% terburuk 56% | nyangkut terlama 783 hr | likuidasi median 0
+  1x ISO   entry >= ATH -20% | median x1.82 terburuk x0.98 | rugi 6/94 | DD median 43% terburuk 56% | nyangkut terlama 788 hr | likuidasi median 0
+  1x ISO   entry >= ATH -25% | median x1.77 terburuk x0.99 | rugi 6/94 | DD median 43% terburuk 57% | nyangkut terlama 788 hr | likuidasi median 0
+  1.5x ISO entry >= ATH - 1% | median x1.82 terburuk x0.95 | rugi 6/94 | DD median 61% terburuk 74% | nyangkut terlama 555 hr | likuidasi median 12
+  1.5x ISO entry >= ATH -10% | median x1.86 terburuk x0.95 | rugi 6/94 | DD median 60% terburuk 74% | nyangkut terlama 555 hr | likuidasi median 11
+  1.5x ISO entry >= ATH -15% | median x1.90 terburuk x0.97 | rugi 6/94 | DD median 61% terburuk 74% | nyangkut terlama 555 hr | likuidasi median 10
+  1.5x ISO entry >= ATH -20% | median x1.87 terburuk x0.97 | rugi 6/94 | DD median 61% terburuk 74% | nyangkut terlama 555 hr | likuidasi median 8
+  1.5x ISO entry >= ATH -25% | median x1.71 terburuk x0.99 | rugi 6/94 | DD median 61% terburuk 74% | nyangkut terlama 555 hr | likuidasi median 7
+  1.5x AGG entry >= ATH - 1% | median x2.23 terburuk x0.95 | rugi 6/94 | DD median 64% terburuk 84% | nyangkut terlama 779 hr | likuidasi median 0
+  1.5x AGG entry >= ATH -10% | median x2.24 terburuk x0.95 | rugi 6/94 | DD median 64% terburuk 84% | nyangkut terlama 762 hr | likuidasi median 0
+  1.5x AGG entry >= ATH -15% | median x2.30 terburuk x0.97 | rugi 6/94 | DD median 64% terburuk 84% | nyangkut terlama 778 hr | likuidasi median 0
+  1.5x AGG entry >= ATH -20% | median x2.26 terburuk x0.97 | rugi 6/94 | DD median 64% terburuk 83% | nyangkut terlama 788 hr | likuidasi median 0
+  1.5x AGG entry >= ATH -25% | median x2.00 terburuk x0.99 | rugi 6/94 | DD median 63% terburuk 84% | nyangkut terlama 787 hr | likuidasi median 0
+  2x ISO   entry >= ATH - 1% | median x2.32 terburuk x0.90 | rugi 6/94 | DD median 66% terburuk 80% | nyangkut terlama 442 hr | likuidasi median 22
+  2x ISO   entry >= ATH -10% | median x2.40 terburuk x0.94 | rugi 6/94 | DD median 66% terburuk 80% | nyangkut terlama 449 hr | likuidasi median 17
+  2x ISO   entry >= ATH -15% | median x2.49 terburuk x0.95 | rugi 6/94 | DD median 66% terburuk 80% | nyangkut terlama 534 hr | likuidasi median 16
+  2x ISO   entry >= ATH -20% | median x2.52 terburuk x0.96 | rugi 6/94 | DD median 67% terburuk 80% | nyangkut terlama 534 hr | likuidasi median 14
+  2x ISO   entry >= ATH -25% | median x2.09 terburuk x0.99 | rugi 6/94 | DD median 67% terburuk 81% | nyangkut terlama 544 hr | likuidasi median 13
+  2x AGG   entry >= ATH - 1% | median x2.34 terburuk x0.93 | rugi 6/94 | DD median 78% terburuk 94% | nyangkut terlama 408 hr | likuidasi median 23
+  2x AGG   entry >= ATH -10% | median x2.33 terburuk x0.94 | rugi 6/94 | DD median 78% terburuk 94% | nyangkut terlama 408 hr | likuidasi median 20
+  2x AGG   entry >= ATH -15% | median x2.39 terburuk x0.95 | rugi 6/94 | DD median 78% terburuk 86% | nyangkut terlama 534 hr | likuidasi median 19
+  2x AGG   entry >= ATH -20% | median x2.23 terburuk x0.96 | rugi 6/94 | DD median 81% terburuk 86% | nyangkut terlama 534 hr | likuidasi median 20
+  2x AGG   entry >= ATH -25% | median x1.72 terburuk x0.99 | rugi 6/94 | DD median 81% terburuk 86% | nyangkut terlama 544 hr | likuidasi median 19

@@ -191,6 +191,11 @@ Terakhir diperbarui: **3 Okt 2026**.
   Olan konfirmasi TP 15% = dari modal yang MASIH ditanam (modal $10 di BTC -> ambil $1,5). Syarat entry minimal ATH -15% (9 Okt):
   efek kecil -- 2x ISO median x2,32 -> x2,49, DD terburuk tetap 80%; 2x numpuk DD terburuk 94% -> 86%; nyangkut terlama 442 -> 534 hr.
   -10..-20% sedikit lebih bagus dari -1%, -25% mulai jelek. Rugi 6/94 = titik mulai 2025 yang masih nyangkut sekarang.
+  **Versi VOLUME** (9 Okt, Olan: "exchange gak bisa ubah leverage per posisi -- fokus volume, bukan margin"; `backtest/athDrawdownGridVolume.js`):
+  1 posisi CROSS numpuk (bisa otomatis di perp biasa), tiap level tetap tanam 1% modal tapi VOLUME dikali pengali kedalaman, likuidasi
+  level akun (LOW), entry >= ATH -15%, TP 15% modal ditanam. 94 titik mulai, GAK ADA yang hangus/rugi: 1x rata median x1,49 DD terburuk
+  47% nyangkut 757 hr; **1x s/d -40% lalu 2x** median x1,88 DD terburuk 68% nyangkut 516 hr; 1x s/d -50% lalu 2x x1,67 DD 61% 623 hr;
+  2x rata x2,18 DD 86% 574 hr. Kandidat terbaik buat dibahas: pengali 2x mulai -40% (atau -50% kalau mau DD lebih kecil).
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 

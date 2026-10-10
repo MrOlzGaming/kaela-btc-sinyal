@@ -99979,5 +99979,86 @@
     "qty": 6.351,
     "notionalUsd": 524764.7121,
     "distPct": 0.0620641507171891
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "BID",
+    "price": 82548,
+    "qty": 26.487,
+    "notionalUsd": 2186448.8759999997,
+    "distPct": -0.00006057078271735114
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "BID",
+    "price": 82513.4,
+    "qty": 8.662,
+    "notionalUsd": 714731.0708,
+    "distPct": -0.04197555242069162
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "BID",
+    "price": 82500,
+    "qty": 7.491,
+    "notionalUsd": 618007.5,
+    "distPct": -0.05820852218798979
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "ASK",
+    "price": 82569.9,
+    "qty": 10.251,
+    "notionalUsd": 846424.0448999999,
+    "distPct": 0.02646943204593115
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "ASK",
+    "price": 82570,
+    "qty": 20.054,
+    "notionalUsd": 1655858.7799999998,
+    "distPct": 0.02659057361136585
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "ASK",
+    "price": 82580,
+    "qty": 21.61,
+    "notionalUsd": 1784553.8,
+    "distPct": 0.038704730154130944
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "ASK",
+    "price": 82589.4,
+    "qty": 8.666,
+    "notionalUsd": 715719.7404,
+    "distPct": 0.05009203730432308
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "ASK",
+    "price": 82590,
+    "qty": 20.003,
+    "notionalUsd": 1652047.77,
+    "distPct": 0.05081888669689604
+  },
+  {
+    "timestamp": "2026-10-10T03:19:22.731Z",
+    "midPrice": 82548.05,
+    "side": "ASK",
+    "price": 82600,
+    "qty": 20.34,
+    "notionalUsd": 1680084,
+    "distPct": 0.06293304323966112
   }
 ]

@@ -196,6 +196,7 @@ Terakhir diperbarui: **3 Okt 2026**.
   level akun (LOW), entry >= ATH -15%, TP 15% modal ditanam. 94 titik mulai, GAK ADA yang hangus/rugi: 1x rata median x1,49 DD terburuk
   47% nyangkut 757 hr; **1x s/d -40% lalu 2x** median x1,88 DD terburuk 68% nyangkut 516 hr; 1x s/d -50% lalu 2x x1,67 DD 61% 623 hr;
   2x rata x2,18 DD 86% 574 hr. Kandidat terbaik buat dibahas: pengali 2x mulai -40% (atau -50% kalau mau DD lebih kecil).
+  **GRID MANUAL TAHAN -90%** (11 Okt, `backtest/gridCrashScenario.js`): isolated 5x margin 8% tiap -17% ✅ DIPAKAI -- tahan crash -90%, x2,31 terburuk x0,94 DD 65% rungkad 0/94. Aturan lama 10%/-15% modar di -90% (modal habis di -80%). 2x/10%/-21%: x1,65 DD 50% (paling kalem).
   **GRID MANUAL OLAN** (11 Okt, `backtest/gridManualStudy.js`, 94 titik mulai 2018-25): ISOLATED 5x margin 10%, tambah tiap -15%, TP = margin kelikuidasi + 20% margin masuk -> median x2,55, rungkad 0/94, DD 80% ✅ (dipakai manual Olan). Isolated 5% -> x1,61 DD 41%. Isolated 3x x2,24. Jarak -10% rungkad 52/94 ❌. CROSS 5x (6 posisi) rungkad 51/94 ❌ -- isolated menang karena rugi per posisi kekunci & modal sisa tetap utuh.
   **MINIMAL CAP** (10 Okt, `backtest/gridMinCapStudy.js`): porsi dari max(modal, $830). Modal $100 (8,3x): cap 2x hangus 41/94 ❌, cap 1x hangus 0/94 CAGR median 25% DD 89% ✅ DIPAKAI. Modal >= $830 = gak ada efek.
   **LAB GRID MANDIRI** (10 Okt, `backtest/gridLab.js`, data 1 JAM 2017-26, 1 posisi cross, funding asli, maker/taker, likuidasi akun LOW,

@@ -44,7 +44,8 @@ function run(D, i0, cfg) {
   return { mult: eq, cycles, rungkad, maxDd };
 }
 let lastE = 0;
-(async () => {
+module.exports = { run };
+if (require.main === module) (async () => {
   const D = await loadHourly();
   const starts = []; for (let y = 2018; y <= 2025; y++) for (let mo = 1; mo <= 12; mo++) { if (y === 2025 && mo > 10) break; starts.push(idxAt(D, `${y}-${String(mo).padStart(2, '0')}-01`)); }
   const cfgs = [

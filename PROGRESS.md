@@ -13,6 +13,10 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 08:30** — SKENARIO CRASH -90% (backtest/gridCrashScenario.js): aturan Olan (5x, 10%, -15%) MODAR di -90% (modal habis di -80%).
+  Pemenang baru: **isolated 5x, margin 8% ($48), tambah tiap -17%** -> tahan -90% (12 posisi sampai -89%), data asli x2,31 (vs 2,55),
+  terburuk x0,94, DD 65% (vs 80%), rungkad 0/94. Level dari ATH: -15/-29,5/-41,4/-51,4/-59,7/-66,5/-72,2/-76,9/-80,9/-84,1/-86,8/-89,1.
+
 - **11 Okt 08:00** — RISET GRID MANUAL (backtest/gridManualStudy.js, 94 titik mulai): aturan ASLI Olan MENANG -- ISOLATED 5x,
   margin 10% modal, tambah tiap -15%, TP = margin yang udah kelikuidasi + 20% total margin masuk: median x2,55, rungkad 0/94,
   DD terburuk 80%. Saran Kaela sebelumnya (CROSS $40) SALAH: rungkad 51/94 -> dibatalin. Versi kalem: margin 5% x1,61 DD 41%.

@@ -75,6 +75,13 @@ test('peluru habis + semua kelikuidasi -> RUNGKAD dicatat, alert', async () => {
   h.deps.cfg = CFG;
 });
 
+test('posisi hilang padahal harga jauh di atas liq -> dianggap tutup manual + alert, bukan likuidasi', async () => {
+  const h = harness(); h.st.px = 83033; await runOnce(h.deps);
+  h.st.px = 80000; h.st.qty = 0; const r = await runOnce(h.deps);
+  assert(h.j.cycle.pos === null && h.j.cycle.liqs === 0 && h.j.cycle.realized > -20, JSON.stringify(h.j.cycle));
+  assert(h.st.alerts.some((m) => /Ditutup manual/.test(m)));
+});
+
 test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async () => {
   const h = harness(); h.st.qty = 0.01; h.st.px = 83033; const r = await runOnce(h.deps);
   assert(r.stopped === 'stray' && h.st.orders.length === 0);

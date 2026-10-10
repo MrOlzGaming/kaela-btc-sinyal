@@ -188,10 +188,18 @@ async function runLadder(deps, log, now) {
   }
   // posisi hilang = kena likuidasi exchange (isolated) -> margin bet itu hangus, siklus lanjut (nunggu tangga berikutnya)
   if (jQty > 0 && exQty === 0) {
-    const p = c.pos; c.realized -= p.mg; c.liqs = (c.liqs || 0) + 1; c.pos = null;
-    log(`posisi ${c.signalId} kena likuidasi (entry ${fmt$(p.e)}, margin ${fmt$(p.mg)} hangus) -- total rugi terealisasi ${fmt$(-c.realized)}`);
-    await deps.notify(`🕸️ GRID (Real) — Likuidasi bet ${c.signalId}\n\nPosisi isolated entry ${fmt$(p.e)} kena likuidasi di sekitar ${fmt$(px)}, margin ${fmt$(p.mg)} hangus.\nAlasan: sesuai rencana tangga -- bet berikutnya kebuka kalau BTC turun ${gap}% dari entry terakhir (${fmt$(c.lastE * (1 - gap / 100))}), target berikutnya nutup rugi ini + untung ${tpPct}% dari total bet.`);
-    deps.save();
+    const p = c.pos;
+    // harga masih jauh di atas harga liq -> bukan likuidasi (kemungkinan ditutup manual) -> PnL ditaksir di harga sekarang + lapor
+    if (px > p.liq * 1.03) {
+      const est = p.qty * (px - p.e) - p.qty * px * TAKER; c.realized += est; c.fees += p.qty * px * TAKER; c.pos = null; deps.save();
+      log(`posisi ${c.signalId} hilang padahal harga ${fmt$(px)} jauh di atas liq ${fmt$(p.liq)} -- dianggap ditutup manual (taksiran ${fmt$(est)})`);
+      await deps.alert(`⚠️ Grid Tangga: posisi ${c.signalId} hilang dari BingX padahal belum nyentuh harga liq (${fmt$(p.liq)}). Ditutup manual? PnL ditaksir ${fmt$(est)} di harga ${fmt$(px)}, tangga lanjut.`, 'manualclose');
+    } else {
+      c.realized -= p.mg; c.liqs = (c.liqs || 0) + 1; c.pos = null;
+      log(`posisi ${c.signalId} kena likuidasi (entry ${fmt$(p.e)}, margin ${fmt$(p.mg)} hangus) -- total rugi terealisasi ${fmt$(-c.realized)}`);
+      await deps.notify(`🕸️ GRID (Real) — Likuidasi bet ${c.signalId}\n\nPosisi isolated entry ${fmt$(p.e)} kena likuidasi di sekitar ${fmt$(px)}, margin ${fmt$(p.mg)} hangus.\nAlasan: sesuai rencana tangga -- bet berikutnya kebuka kalau BTC turun ${gap}% dari entry terakhir (${fmt$(c.lastE * (1 - gap / 100))}), target berikutnya nutup rugi ini + untung ${tpPct}% dari total bet.`);
+      deps.save();
+    }
   }
 
   // ---- TP: rugi terealisasi + floating bersih >= tpPct% x total bet ----

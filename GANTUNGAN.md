@@ -5,7 +5,7 @@
 > bagian "Selesai" paling bawah (tanggal + 1 baris). Permintaan Olan 3 Okt 2026: "catat sebagai gantungan/waiting list
 > biar gak lupa". Katalog strategi ada di `STRATEGY-CATALOG.md`.
 
-Terakhir diperbarui: **5 Okt 2026**.
+Terakhir diperbarui: **10 Okt 2026**.
 
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 
@@ -14,8 +14,8 @@ Keputusan Olan 3 Okt 2026 malam:
 2. **Bitget** — demo GAK dikejar lagi. Nanti langsung REAL begitu Olan isi saldo (key real udah tersambung, saldo $0,58).
    Key demo tetap tersimpan kalau suatu saat saldo demo baru bisa diisi.
 3. **🕸️ GRID ATH (LIVE 9 Okt, real tanpa demo -- keputusan Olan)** — `gridTrader.js`, BingX Perpetual **BTC-USDC**. Nunggu Olan
-   setor **USDC** ke BingX Perpetual (akun USDC-M). Begitu masuk: langsung tanam ~dd% (BTC lagi ATH -34%). Modal >= ~$820 biar
-   tiap level 1% kebeli sendiri-sendiri; di bawah itu level ditumpuk (tetap jalan). Cek pesan Buka Posisi GRID pertama + Buku Besar.
+   setor **USDC** ke BingX Perpetual (akun USDC-M). Begitu masuk: langsung tanam ~dd% (BTC lagi ATH -34%). Sejak 10 Okt malam: MINIMAL CAP
+   $830 (porsi dari max(modal, $830), dipotong di 2x ekuitas) -> rebuy tetap tiap 1% walau setor kecil. Cek pesan Buka Posisi GRID pertama + Buku Besar.
 4. ~~DCA Tangga~~ — DIBATALIN 9 Okt (diganti grid), monitor mati. Posisi Standard Futures sisa diurus Olan sendiri.
    Ninja real dimatiin lagi 8 Okt (balik uji demo).
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di

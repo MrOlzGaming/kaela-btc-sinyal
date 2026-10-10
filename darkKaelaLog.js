@@ -202,8 +202,8 @@ const CLOSE_REASON_LABEL = {
   // (10 Okt 2026) Grid ATH (gridTrader.js)
   GRID_TP: 'Target siklus kena -- untung >= 15% dari modal yang ditanam, siklus ditutup & langsung mulai lagi dari acuan ATH',
   GRID_GONE: 'Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset',
-  GRID_LADDER_TP: 'Target tangga kena -- untung >= 20% dari total bet (rugi bet yang kelikuidasi udah ketutup), siklus diulang pakai saldo terbaru',
-  GRID_LADDER_RUNGKAD: 'Semua bet tangga kelikuidasi & peluru habis -- siklus ditutup rugi, mulai lagi dari saldo sisa',
+  GRID_LADDER_TP: 'Target tangga kena -- untung >= 20% dari total modal masuk (rugi tangga yang kelikuidasi udah ketutup), siklus diulang pakai saldo terbaru',
+  GRID_LADDER_RUNGKAD: 'Semua tangga kelikuidasi & peluru habis -- siklus ditutup rugi, mulai lagi dari saldo sisa',
   REVERSAL: 'Sinyal balik arah (hawkish) muncul, tutup duluan biar aman',
   // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long lagi, tutup walau rugi..
   // takut kena bom bear" / "saat window bear habis jangan short, tutup walau rugi.. takut kena

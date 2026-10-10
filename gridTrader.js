@@ -197,7 +197,7 @@ async function runLadder(deps, log, now) {
     } else {
       c.realized -= p.mg; c.liqs = (c.liqs || 0) + 1; c.pos = null;
       log(`posisi ${c.signalId} kena likuidasi (entry ${fmt$(p.e)}, margin ${fmt$(p.mg)} hangus) -- total rugi terealisasi ${fmt$(-c.realized)}`);
-      await deps.notify(`🕸️ GRID (Real) — Likuidasi bet ${c.signalId}\n\nPosisi isolated entry ${fmt$(p.e)} kena likuidasi di sekitar ${fmt$(px)}, margin ${fmt$(p.mg)} hangus.\nAlasan: sesuai rencana tangga -- bet berikutnya kebuka kalau BTC turun ${gap}% dari entry terakhir (${fmt$(c.lastE * (1 - gap / 100))}), target berikutnya nutup rugi ini + untung ${tpPct}% dari total bet.`);
+      await deps.notify(`🕸️ GRID (Real) — Likuidasi tangga ${c.signalId}\n\nPosisi isolated entry ${fmt$(p.e)} kena likuidasi di sekitar ${fmt$(px)}, margin ${fmt$(p.mg)} hangus.\nAlasan: sesuai rencana tangga -- tangga berikutnya kebuka kalau BTC turun ${gap}% dari entry terakhir (${fmt$(c.lastE * (1 - gap / 100))}), target berikutnya nutup rugi ini + untung ${tpPct}% dari total modal masuk.`);
       deps.save();
     }
   }
@@ -215,7 +215,7 @@ async function runLadder(deps, log, now) {
       j.history.push(rec); if (j.history.length > 500) j.history = j.history.slice(-500);
       j.stats.cycles += 1; j.stats.totalPnlUsd += n2; if (n2 >= 0) j.stats.wins += 1; else j.stats.losses += 1;
       j.cycle = null; deps.save();
-      log(`TP ladder ${rec.signalId}: ${c.bets} bet, total bet ${fmt$(c.putIn)} -> net ${fmt$(n2)} (+${rec.retPlantedPct.toFixed(1)}% dari total bet)`);
+      log(`TP ladder ${rec.signalId}: ${c.bets} tangga, total modal masuk ${fmt$(c.putIn)} -> net ${fmt$(n2)} (+${rec.retPlantedPct.toFixed(1)}% dari total modal masuk)`);
       await deps.notify(closeMsg(rec, j, deps));
       return { tp: rec };
     }
@@ -228,7 +228,7 @@ async function runLadder(deps, log, now) {
     const unit = wallet * betPct / 100;
     const info = await ex.getSymbolInfo(sym);
     if (!(unit * L >= Math.max(info.minNotionalUsd || 0, px * info.stepSize) * 1.05)) {
-      if (!j.noBalLogAt || now - j.noBalLogAt > 6 * 3600e3) { log(`saldo ${cfg.marginAsset} ${wallet} -- bet ${betPct}% kekecilan buat minimum order (syarat entry udah terpenuhi: ATH -${dd.toFixed(1)}%)`); j.noBalLogAt = now; }
+      if (!j.noBalLogAt || now - j.noBalLogAt > 6 * 3600e3) { log(`saldo ${cfg.marginAsset} ${wallet} -- modal per tangga ${betPct}% kekecilan buat minimum order (syarat entry udah terpenuhi: ATH -${dd.toFixed(1)}%)`); j.noBalLogAt = now; }
       deps.save(); return { idle: 'no-balance' };
     }
     if (!j.seq || j.seq.day !== new Date(now).toISOString().slice(0, 10)) j.seq = { day: new Date(now).toISOString().slice(0, 10), n: 0 };
@@ -242,7 +242,7 @@ async function runLadder(deps, log, now) {
     if (!c.pos) { // peluru habis + semua kelikuidasi = rungkad -> catat, siklus baru mulai dari saldo sisa
       const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: null, qty: 0, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_LADDER_RUNGKAD' };
       j.history.push(rec); j.stats.cycles += 1; j.stats.losses += 1; j.stats.totalPnlUsd += c.realized; j.cycle = null; deps.save();
-      await deps.alert(`⚠️ Grid ladder ${c.signalId} RUNGKAD: semua ${c.bets} bet kelikuidasi (${fmt$(c.putIn)}). Siklus baru mulai dari saldo sisa.`, 'rungkad');
+      await deps.alert(`⚠️ Grid ladder ${c.signalId} RUNGKAD: semua ${c.bets} tangga kelikuidasi (${fmt$(c.putIn)}). Siklus baru mulai dari saldo sisa.`, 'rungkad');
       return { rungkad: rec };
     }
     deps.save(); return { idle: 'peluru habis, nunggu mantul' };
@@ -269,27 +269,27 @@ async function runLadder(deps, log, now) {
   c.realized -= feeIn; c.fees += feeIn; c.putIn += c.unit; c.bets += 1; c.lastE = fillPx; if (!c.firstE) c.firstE = fillPx;
   j.cycle = c; deps.save();
   const tpPx = c.pos.e + (c.putIn * tpPct / 100 - c.realized) / (c.pos.qty * (1 - TAKER));
-  log(`${c.bets === 1 ? 'BUKA' : 'TAMBAH'} ladder ${c.signalId} bet #${c.bets}: ${fillQty} BTC @ ${fillPx} margin ${fmt$(c.pos.mg)} (${L}x isolated, liq ~${fmt$(c.pos.liq)}) -- total bet ${fmt$(c.putIn)}, target ${fmt$(tpPx)}`);
+  log(`${c.bets === 1 ? 'BUKA' : 'TAMBAH'} ladder ${c.signalId} tangga #${c.bets}: ${fillQty} BTC @ ${fillPx} margin ${fmt$(c.pos.mg)} (${L}x isolated, liq ~${fmt$(c.pos.liq)}) -- total modal masuk ${fmt$(c.putIn)}, target ${fmt$(tpPx)}`);
   await deps.notify(c.bets === 1 ? ladderOpenMsg(c, dd, tpPx, deps) : ladderAddMsg(c, dd, tpPx, closedOld, deps));
   return { bought: { opening: c.bets === 1, bet: c.bets, qty: fillQty, px: fillPx, mg: c.pos.mg, tpPx } };
 }
 function ladderReason(c, dd, tpPx, deps) {
   const cfg = deps.cfg, gap = cfg.gapPct || 20, tpPct = cfg.ladderTpPct || 20;
-  return `Grid Tangga: BTC di ATH -${dd.toFixed(1)}% (syarat <= -${cfg.minDd}%). Bet #${c.bets} = ${cfg.betPct || 8}% saldo (${fmt$(c.unit)}), total bet ${fmt$(c.putIn)}. `
-    + `Target ${fmt$(tpPx)} = untung ${tpPct}% dari total bet (${fmt$(c.putIn * tpPct / 100)})${c.realized + c.fees < -0.01 ? ` + nutup rugi bet yang kelikuidasi ${fmt$(-(c.realized + c.fees))}` : ''}. Bet berikutnya kalau BTC turun ${gap}% lagi (${fmt$(c.lastE * (1 - gap / 100))}).`;
+  return `Grid Tangga: BTC di ATH -${dd.toFixed(1)}% (syarat <= -${cfg.minDd}%). Tangga #${c.bets} = ${cfg.betPct || 8}% saldo (${fmt$(c.unit)}), total modal masuk ${fmt$(c.putIn)}. `
+    + `Target ${fmt$(tpPx)} = untung ${tpPct}% dari total modal masuk (${fmt$(c.putIn * tpPct / 100)})${c.realized + c.fees < -0.01 ? ` + nutup rugi tangga yang kelikuidasi ${fmt$(-(c.realized + c.fees))}` : ''}. Tangga berikutnya kalau BTC turun ${gap}% lagi (${fmt$(c.lastE * (1 - gap / 100))}).`;
 }
 function ladderOpenMsg(c, dd, tpPx, deps) {
   const { formatAutoOpen, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   return formatAutoOpen({
     id: c.id, signalId: c.signalId, direction: 'buy', entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e,
-    tpText: `${fmt$(tpPx)} (+${deps.cfg.ladderTpPct || 20}% dari total bet, tutup semua lalu ulang pakai saldo terbaru)`,
-    slText: `tanpa SL -- isolated, likuidasi ~${fmt$(c.pos.liq)} cuma ngabisin margin bet ini; tangga berikutnya nutup rugi itu`,
+    tpText: `${fmt$(tpPx)} (+${deps.cfg.ladderTpPct || 20}% dari total modal masuk, tutup semua lalu ulang pakai saldo terbaru)`,
+    slText: `tanpa SL -- isolated, likuidasi ~${fmt$(c.pos.liq)} cuma ngabisin margin tangga ini; tangga berikutnya nutup rugi itu`,
     liquidationNote: `isolated ~${fmt$(c.pos.liq)}`, assetLabel: 'BTCUSDC', reasonText: ladderReason(c, dd, tpPx, deps),
   }, new Date(), '', false, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function ladderAddMsg(c, dd, tpPx, closedOld, deps) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
-  const pre = closedOld ? `Posisi lama (entry ${fmt$(closedOld.e)}) ditutup di ${fmt$(closedOld.exit)} (${closedOld.pnl >= 0 ? '+' : ''}${fmt$(closedOld.pnl)}), sisa marginnya digabung bet baru. ` : '';
+  const pre = closedOld ? `Posisi lama (entry ${fmt$(closedOld.e)}) ditutup di ${fmt$(closedOld.exit)} (${closedOld.pnl >= 0 ? '+' : ''}${fmt$(closedOld.pnl)}), sisa marginnya digabung modal tangga baru. ` : '';
   return formatAutoAddLayer({
     id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: 'BTCUSDC',
     reasonText: pre + ladderReason(c, dd, tpPx, deps),
@@ -319,7 +319,7 @@ function addMsg(cy, dd, fillPx, fillQty, deps, topUp) {
 }
 function closeMsg(rec, j, deps) {
   const { formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, EXCHANGE_BADGE, SYSTEM_LABEL, KAELA_ACCESS_URL } = require('./darkKaelaLog');
-  const base = formatAutoClosed({ id: rec.id, signalId: rec.signalId, direction: 'long', entryPrice: rec.entry, exitPrice: rec.exit, pnlUsd: rec.grossUsd, feeUsd: rec.feeUsd, pnlPct: rec.retPlantedPct, assetLabel: 'BTCUSDC' }, new Date(), false, `${CLOSE_REASON_LABEL[rec.reason] || CLOSE_REASON_LABEL.GRID_TP} (${rec.layers} ${rec.mode === 'LADDER' ? 'bet' : 'layer'})`, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  const base = formatAutoClosed({ id: rec.id, signalId: rec.signalId, direction: 'long', entryPrice: rec.entry, exitPrice: rec.exit, pnlUsd: rec.grossUsd, feeUsd: rec.feeUsd, pnlPct: rec.retPlantedPct, assetLabel: 'BTCUSDC' }, new Date(), false, `${CLOSE_REASON_LABEL[rec.reason] || CLOSE_REASON_LABEL.GRID_TP} (${rec.layers} ${rec.mode === 'LADDER' ? 'tangga' : 'layer'})`, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
   return base.replace(`🔗 ${KAELA_ACCESS_URL}`, formatWinRateLines(j.stats, rec.mode === 'LADDER' ? 'Grid Tangga (Real)' : 'Grid ATH (Real)', null) + `🔗 ${KAELA_ACCESS_URL}`);
 }
 

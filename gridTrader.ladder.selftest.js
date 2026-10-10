@@ -47,7 +47,7 @@ test('bet #1 kelikuidasi -> rugi $80 tercatat, pesan likuidasi, bet #2 di -20% t
   const h = harness(); h.st.px = 83033; await runOnce(h.deps);
   h.st.px = 66800; h.liquidate(); const r1 = await runOnce(h.deps);
   assert(r1.idle && h.j.cycle.pos === null && Math.abs(h.j.cycle.realized + 80.2) < 1, `realized ${h.j.cycle.realized}`);
-  assert(h.st.wa.some((m) => /Likuidasi bet/.test(m)));
+  assert(h.st.wa.some((m) => /Likuidasi tangga/.test(m)));
   h.st.px = 66400; const r2 = await runOnce(h.deps);
   assert(r2.bought && r2.bought.bet === 2 && Math.abs(r2.bought.mg - 80) < 1);
   // butuh untung ~80 rugi + 32 target = ~112 dari posisi $400 -> naik ~28%

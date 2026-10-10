@@ -13,6 +13,9 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 09:00** — Olan mulai grid manual dari $83.033 (paper $600, 5x isolated, margin 8% saldo TERBARU, tiap -17%, TP 20% margin
+  masuk, COMPOUND). Backtest compound per tahun mulai: 2018 x8,07 (27%/th) .. 2022 x1,72 (12%/th) .. 2025 x1,08; TP ~6-16x/th.
+
 - **11 Okt 08:30** — SKENARIO CRASH -90% (backtest/gridCrashScenario.js): aturan Olan (5x, 10%, -15%) MODAR di -90% (modal habis di -80%).
   Pemenang baru: **isolated 5x, margin 8% ($48), tambah tiap -17%** -> tahan -90% (12 posisi sampai -89%), data asli x2,31 (vs 2,55),
   terburuk x0,94, DD 65% (vs 80%), rungkad 0/94. Level dari ATH: -15/-29,5/-41,4/-51,4/-59,7/-66,5/-72,2/-76,9/-80,9/-84,1/-86,8/-89,1.

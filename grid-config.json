@@ -8,9 +8,9 @@
   "k": 1,
   "tp": 15,
   "volMult": [{ "fromDd": 0, "x": 1 }],
-  "capExposure": 2,
+  "capExposure": 1,
   "minCap": 830,
-  "_minCapNote": "10 Okt 2026 (Olan: ada minimal cap) -- porsi dihitung dari max(modal grid, minCap). $830 = modal minimal biar tiap level 1% lolos min order 0,0001 BTC. Selama modal < minCap, volume dipotong di capExposure (2x ekuitas).",
+  "_minCapNote": "10 Okt 2026 (Olan: ada minimal cap) -- porsi dihitung dari max(modal grid, minCap $830), volume dipotong pas di capExposure. RISET backtest/gridMinCapStudy.js (94 titik mulai 2018-25, modal $100 = minCap 8,3x): cap 2x HANGUS 41/94 (BAHAYA, eksposur bengkak pas harga turun) -> cap 1x: CAGR median 25%, hangus 0/94, DD terburuk 89%, akhir terburuk x0,75. Tanpa minCap: 15%, DD 59%. Begitu modal >= $830 efeknya hilang (eksposur alami <= 0,92x).",
   "leverage": 5,
   "_note": "GRID ATH (gridTrader.js) -- aturan Olan persis: ATH terakhir BTC, entry kalau harga <= ATH -minDd%, porsi = kedalaman (k% modal grid per step% turun, mulai di tengah langsung tanam dd%), turun tiap step% auto rebuy, TP SEMUA begitu untung bersih >= tp% dari modal yang DITANAM, siklus diulang langsung (modal grid = ekuitas akun -> compound). volMult = pengali volume per kedalaman (1x = tanpa leverage berlebih). capExposure = batas volume/ekuitas. leverage = setting exchange (headroom cross, eksposur asli dijaga volume). Akun: BingX Perpetual REAL saldo USDC (BTC-USDC, gak tabrakan Ninja yang BTC-USDT).",
   "_status": "10 Okt 2026 -- AKTIF REAL tanpa demo (keputusan Olan: 'grid gak usah demo, backtest cukup'). Backtest (backtest/gridLab.js CYCLE step1 k1 x1 TP15, data 1 jam 2017-26, 94 titik mulai): CAGR median ~15%/th, DD terburuk ~59%, gak pernah hangus. Modal minimal biar tiap level 1% lolos min order 0,0001 BTC: ~$800; di bawah itu level kecil DITUMPUK ke level berikutnya (tetap jalan)."

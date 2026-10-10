@@ -52,7 +52,9 @@ async function loadHourly() {
 
 // cfg: { mode:'CYCLE'|'LOT', step, k, mult(ddPct)->x, tp, minDd, cap }
 function sim(D, i0, i1, cfg) {
-  const { mode, step, k, mult, tp, minDd = 15, cap = 99 } = cfg;
+  const { mode, step, k, mult, tp, minDd = 15, cap = 99, minBaseX = 0, clip = false } = cfg;
+  // minBaseX = minCap / modal awal (live 10 Okt: porsi dari max(modal, minCap)); clip = volume dipotong pas di batas cap (live), bukan dilewati
+  const base = () => Math.max(cycleCap, minBaseX * CAPITAL);
   let wallet = CAPITAL, qty = 0, cost = 0; // posisi gabungan (cross)
   let lots = []; // LOT: {entry, qty, unit, target, lvl, bornAt}
   let planted = 0, cycleCap = CAPITAL, filledLvl = 0, cycles = 0, cycleStart = i0, wipes = 0, tradesTp = 0;
@@ -80,16 +82,20 @@ function sim(D, i0, i1, cfg) {
             const ddPct = lv * step;
             if (ddPct < minDd) { continue; }
             const px = Math.min(ath * (1 - ddPct / 100), o);
-            const unit = cycleCap * k / 100 * step; // k% modal per 1% turun
+            let unit = base() * k / 100 * step; // k% modal per 1% turun
             const vol = unit * mult(ddPct);
-            if ((qty * px + vol) / Math.max(eqAt(px), 1e-9) > cap) break;
+            if ((qty * px + vol) / Math.max(eqAt(px), 1e-9) > cap) {
+              const room = cap * eqAt(px) - qty * px;
+              if (clip && room > 0) { unit = room / mult(ddPct); addBuy(px, unit, mult(ddPct), MAKER); }
+              break;
+            }
             // level < minDd yang "kelewat" (mulai di tengah) ikut ditanam sekaligus di level pertama yang diizinkan -- aturan Olan dd%
             addBuy(px, unit, mult(ddPct), filledLvl === 0 && lv === Math.ceil(minDd / step) ? TAKER : MAKER);
           }
           if (filledLvl === 0 && lowLvl * step >= minDd) {
             // tanam level 1..minDd sekaligus (porsi = dd%) pas pertama masuk
             const extra = Math.ceil(minDd / step) - 1;
-            if (extra > 0) { const px = Math.min(ath * (1 - minDd / 100), o); for (let lv = 1; lv <= extra; lv++) { const unit = cycleCap * k / 100 * step; if ((qty * px + unit * mult(minDd)) / Math.max(eqAt(px), 1e-9) > cap) break; addBuy(px, unit, mult(minDd), TAKER); } }
+            if (extra > 0) { const px = Math.min(ath * (1 - minDd / 100), o); for (let lv = 1; lv <= extra; lv++) { const unit = base() * k / 100 * step; if ((qty * px + unit * mult(minDd)) / Math.max(eqAt(px), 1e-9) > cap) { const room = cap * eqAt(px) - qty * px; if (clip && room > 0) addBuy(px, room / mult(minDd), mult(minDd), TAKER); break; } addBuy(px, unit, mult(minDd), TAKER); } }
           }
           filledLvl = Math.max(filledLvl, lowLvl);
         }

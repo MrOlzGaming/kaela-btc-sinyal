@@ -3318,5 +3318,10 @@
     "type": "econ-calendar-headsup",
     "date": "2026-10-09T13:55:01.531Z",
     "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 22:00 WITA\n\n📰 *Prelim UoM Consumer Sentiment*\n🇺🇸 University of Michigan Consumer Sentiment\n🇮🇩 Survei suasana hati konsumen AS versi Universitas Michigan\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 47,5 · Sebelumnya: 47,8\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n📰 *Prelim UoM Inflation Expectations*\n🇺🇸 University of Michigan Inflation Expectations\n🇮🇩 Perkiraan inflasi setahun ke depan menurut warga AS\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: - · Sebelumnya: 4,6%\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat"
+  },
+  {
+    "type": "whale-daily",
+    "date": "2026-10-10T00:32:00.684Z",
+    "content": "🟨 🐋 REKAP WHALE HARIAN — 2026-10-10\n3 transaksi besar (>=1000 BTC) ke-konfirmasi dalam ~24 jam terakhir.\nTotal: 7.462,58 BTC berpindah (~$616,254,015 / ~Rp11.024.576.985.236)\nTerbesar: 2.487,9 BTC dalam 1 transaksi.\n\n⚪ Gak teridentifikasi: 3 transaksi (bukan berarti pasti wallet biasa -- ada exchange yang gak ke-cluster WalletExplorer, lihat metodologi).\n\n⚠️ Rekap on-chain 24 jam terakhir, BUKAN real-time -- konfirmasi blockchain bisa telat beberapa jam dari kejadian aslinya. Bukan ajakan aksi apapun.\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

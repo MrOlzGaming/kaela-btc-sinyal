@@ -1,14 +1,14 @@
 {
   "regression": {
-    "dateKey": "2026-10-10",
-    "at": "2026-10-09T19:00:57.659Z",
+    "dateKey": "2026-10-11",
+    "at": "2026-10-10T19:00:56.237Z",
     "passed": 109,
     "failed": 0,
     "ok": true,
     "summary": "109 lolos, 0 gagal",
     "exitCode": 0,
     "durationSec": 6,
-    "tail": "  OK   Kalkulator: likuidasi selalu di belakang SL (penyangga maintenance margin)\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n109 lolos, 0 gagal (dari 2026-10-09 test run)\n"
+    "tail": "  OK   Kalkulator: likuidasi selalu di belakang SL (penyangga maintenance margin)\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n109 lolos, 0 gagal (dari 2026-10-10 test run)\n"
   },
   "bingxApi": {
     "lastRunDateKey": "2026-10-10",

@@ -7,11 +7,14 @@
 ## 🎯 SEKARANG LAGI DI MANA
 
 - **Topik aktif:** Grid ATH BTC-USDC (BingX Perpetual REAL, `gridTrader.js`)
-- **Status:** LIVE + minimal cap $830 terpasang. Nunggu saldo USDC masuk (BTC ±−34% dari ATH $126.199)
+- **Status:** LIVE, minimal cap $830 + batas eksposur **1x** (aman, hasil riset). Nunggu saldo USDC masuk (BTC ±−34% dari ATH)
 - **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
-- **Langkah berikutnya:** begitu USDC masuk, cek pesan "Buka Posisi" + log `volume dipotong ke batas 2x` di VPS
+- **Langkah berikutnya:** cek VPS udah narik capExposure 1 (siklus 22:30). Begitu USDC masuk: cek pesan "Buka Posisi" + eksposur <= 1x
 
 ## 📜 LOG (terbaru di atas)
+
+- **10 Okt 22:20** — RISET minimal cap (`backtest/gridMinCapStudy.js`, 94 titik mulai): cap 2x HANGUS 41/94 (bahaya!) -> diganti
+  **cap 1x**: CAGR median 25%, hangus 0/94, DD terburuk 89%. Tanpa minCap 15%/DD 59%. Grid belum pegang posisi pas diganti.
 
 - **10 Okt malam** — Grid: MINIMAL CAP. Porsi = max(modal grid, minCap $830) biar rebuy tetap tiap 1% walau saldo kecil.
   Pengaman: volume dipotong pas di capExposure 2x ekuitas (dulu level dilewati). Config: `grid-config.json` minCap.

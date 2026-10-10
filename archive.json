@@ -3348,5 +3348,15 @@
     "type": "anomaly",
     "date": "2026-10-10T22:31:03.551Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 2 indikator lagi gak biasa dibanding histori kita sendiri:\n\n🐋 Total BTC Pindah Transaksi Raksasa (harian): 407167.64 -- JAUH DI ATAS kebiasaan historis kita (median 20248.67, z-score 19.0)\n🐋 Jumlah Transaksi Raksasa (harian): 211.00 -- JAUH DI ATAS kebiasaan historis kita (median 15.00, z-score 16.5)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n🐋 Total BTC Pindah Transaksi Raksasa (harian)\nIni total BTC yang \"pindah tangan\" dalam transaksi RAKSASA (di atas 1000 BTC/transaksi) hari ini. Jumlahnya LEBIH BANYAK dari kebiasaan kita -- bisa berarti exchange/institusi besar lagi mindahin dana gede (rebalancing, pindah cold wallet, atau beneran whale beraksi). BUKAN otomatis berarti jual/beli -- banyak transaksi segede ini cuma pindah dari 1 dompet ke dompet LAIN milik orang yang SAMA.\n\n🐋 Jumlah Transaksi Raksasa (harian)\nIni ngitung BERAPA KALI ada transaksi raksasa (>=1000 BTC) hari ini. Lebih SERING dari biasanya -- banyak pihak besar gerak bareng dalam waktu singkat, kadang nemenin naiknya volatilitas harga."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-10-10T23:15:50.799Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-10-11\nHarga sekarang: $83,055.42 (📈 +1.6% dari kemarin)\n⏳ Halving berikutnya: 551 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.59 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.00 (Normal)\n\n💵 DXY: 102.2 (STABIL)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (26 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.44 (normal)\n🛢️ Minyak WTI: $96.2/barel (STABIL)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🐋 Whale netflow (24 jam): 🔴 3903 BTC masuk exchange · 🟢 1645 BTC keluar exchange\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-10-10T23:15:50.799Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-10-11\nHarga sekarang: $4,186/oz (≈Rp74.886.132) atau $134.58/gram (≈Rp2.407.645) (📈 +0.9% dari kemarin)\n💵 DXY: 102.2 (STABIL)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (26 bps / 90 hari)\n📉 Real Yield 10Y: 2.87% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.44 (normal)\n🛢️ Minyak WTI: $96.2/barel (STABIL)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

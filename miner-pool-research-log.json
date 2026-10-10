@@ -369,12 +369,13 @@
     "poolCounts": {
       "F2Pool": 18,
       "OCEAN": 3,
-      "AntPool": 20,
-      "Foundry USA": 24,
+      "AntPool": 21,
+      "Foundry USA": 30,
       "unidentified": 16,
       "ViaBTC": 9,
       "Luxor": 4,
-      "SpiderPool": 10
+      "SpiderPool": 10,
+      "WhitePool": 1
     }
   }
 ]

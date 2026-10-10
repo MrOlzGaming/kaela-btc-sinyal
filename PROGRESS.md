@@ -13,7 +13,9 @@
 
 ## 📜 LOG (terbaru di atas)
 
-- **10 Okt 22:40** — Olan grid MANUAL ($600, 5x, $60/level, -15% harga). Saran: TP GABUNGAN 20% margin ditanam, maks 4 level.
+- **11 Okt 07:30** — RENCANA GRID MANUAL OLAN dibenerin (BTC $83.033, ATH -34%): modal $600 CROSS, 5x, margin $40 (bukan $60),
+  tambah tiap harga -15%, maks 6 posisi, TP GABUNGAN = $8 x jumlah posisi. Level: 83.033/70.578/59.991/50.993/43.344/36.842,
+  likuidasi pas 6 posisi ~$26.752 (ATH -79%). Versi Olan ($60, target $84/$156..) likuidasi ~ATH -72% & target kejauhan.
 
 - **10 Okt 22:20** — RISET minimal cap (`backtest/gridMinCapStudy.js`, 94 titik mulai): cap 2x HANGUS 41/94 (bahaya!) -> diganti
   **cap 1x**: CAGR median 25%, hangus 0/94, DD terburuk 89%. Tanpa minCap 15%/DD 59%. Grid belum pegang posisi pas diganti.

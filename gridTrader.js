@@ -25,7 +25,7 @@ const TAKER = 0.0005;
 const OLAN_PRIBADI = '6282134510686';
 
 function loadConfig() {
-  const def = { enabled: false, allowReal: false, symbol: 'BTC-USDC', marginAsset: 'USDC', minDd: 15, step: 1, k: 1, tp: 15, volMult: [{ fromDd: 0, x: 1 }], capExposure: 2, leverage: 5 };
+  const def = { enabled: false, allowReal: false, symbol: 'BTC-USDC', marginAsset: 'USDC', minDd: 15, step: 1, k: 1, tp: 15, volMult: [{ fromDd: 0, x: 1 }], capExposure: 2, leverage: 5, minCap: 0 };
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
 function freshJournal() { return { ath: null, athAt: null, cycle: null, history: [], stats: { cycles: 0, wins: 0, losses: 0, totalPnlUsd: 0 }, seq: { day: null, n: 0 }, alerts: {} }; }
@@ -120,12 +120,18 @@ async function runOnce(deps) {
   // TARGET porsi = level terdalam yang pernah kesentuh siklus ini x k% x modal grid SEKARANG. Beli kekurangannya: rebuy level baru,
   // kejar top up, dan sisa yang dulu ketumpuk (di bawah minimum order) -- semua otomatis lewat 1 hitungan ini.
   const levelHit = Math.max(lvl, cy.filledLvl);
-  const target = levelHit * cfg.step * cfg.k / 100 * cy.cycleCap;
+  // MODAL PATOKAN MINIMAL (10 Okt 2026, Olan: "jangan mengacu pada modal ku yang masih kecil tapi mengacu juga modal minimal,
+  // jadi ada minimal cap"). Porsi dihitung dari max(modal grid, minCap) biar rebuy tetap rapat walau saldo kecil; pengamannya
+  // tetap capExposure (volume dipotong pas di batas, bukan dilewati).
+  const sizeBase = Math.max(cy.cycleCap, cfg.minCap || 0);
+  const target = levelHit * cfg.step * cfg.k / 100 * sizeBase;
   const deficit = target - cy.planted;
   if (deficit < cy.cycleCap * 0.001) { cy.filledLvl = levelHit; j.cycle = cy.qty > 0 ? cy : (opening ? null : cy); deps.save(); return { idle: 'porsi udah pas' }; }
-  const addVol = deficit * multAt(cfg, levelHit * cfg.step);
+  let addVol = deficit * multAt(cfg, levelHit * cfg.step);
   const equity = cy.cycleCap + (cy.qty > 0 ? cy.qty * px - cy.cost : 0);
-  if ((cy.qty * px + addVol) / Math.max(equity, 1e-9) > cfg.capExposure) {
+  const room = cfg.capExposure * Math.max(equity, 0) - cy.qty * px; // sisa ruang eksposur
+  if (addVol > room && room > 0) { addVol = room; if (!cy.lastCapLog || now - cy.lastCapLog > 3600e3) { log(`volume dipotong ke batas ${cfg.capExposure}x ekuitas (${fmt$(room)})`); cy.lastCapLog = now; } }
+  if ((cy.qty * px + addVol) / Math.max(equity, 1e-9) > cfg.capExposure + 1e-9) {
     log(`eksposur bakal > ${cfg.capExposure}x ekuitas -- level ${levelHit} gak ditambah`);
     cy.filledLvl = levelHit; j.cycle = cy.qty > 0 ? cy : null; deps.save(); return { capped: true };
   }

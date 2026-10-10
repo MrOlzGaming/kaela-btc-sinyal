@@ -7,14 +7,14 @@
 ## 🎯 SEKARANG LAGI DI MANA
 
 - **Topik aktif:** Grid ATH BTC-USDC (BingX Perpetual REAL, `gridTrader.js`)
-- **Status:** LIVE, nunggu saldo USDC masuk (BTC ±−34% dari ATH $126.199)
-- **Pertanyaan terbuka ke Olan:** "minimal cap" maksudnya yang mana?
-  - A = porsi dihitung dari `max(modal asli, modal patokan minimal)` → rebuy tetap tiap 1%, efeknya kayak leverage selama modal < patokan
-  - B = ukuran order minimal per tangga (misal $10), jatah bisa habis sebelum harga turun sampai bawah
-  - C = modal minimal buat mulai, grid nunggu sampai saldo ≥ X
-- **Langkah berikutnya:** Olan jawab A/B/C (+ angka) → ubah `gridTrader.js` + `grid-config.json` → commit
+- **Status:** LIVE + minimal cap $830 terpasang. Nunggu saldo USDC masuk (BTC ±−34% dari ATH $126.199)
+- **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
+- **Langkah berikutnya:** begitu USDC masuk, cek pesan "Buka Posisi" + log `volume dipotong ke batas 2x` di VPS
 
 ## 📜 LOG (terbaru di atas)
+
+- **10 Okt malam** — Grid: MINIMAL CAP. Porsi = max(modal grid, minCap $830) biar rebuy tetap tiap 1% walau saldo kecil.
+  Pengaman: volume dipotong pas di capExposure 2x ekuitas (dulu level dilewati). Config: `grid-config.json` minCap.
 
 - **10 Okt 22:xx WITA** — Chat KAELA (TRADER) mentok kuota (7.529 pesan). Bikin sistem irit: file PROGRESS.md ini + aturan
   handoff ke chat baru. Chat TRADER lama dipensiunin.

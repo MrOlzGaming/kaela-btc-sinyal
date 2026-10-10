@@ -126,15 +126,15 @@ function collect() {
   if (gj) {
     const gridRec = (c, closed) => ({
       key: `grid|${c.id}|real`, system: SYSTEM.grid, systemKey: 'grid', id: c.id, signalId: c.signalId || null, account: 'Olan Real', mode: 'real', exchange: EXCHANGE.bingx, asset: 'BTCUSDC',
-      patternType: 'grid_ath', direction: 'LONG', entry: num(c.entry != null ? c.entry : (c.qty > 0 ? c.cost / c.qty : null)), sl: null, exit: closed ? num(c.exit) : null, qty: num(c.qty), leverage: null,
+      patternType: c.mode === 'LADDER' ? 'grid_tangga' : 'grid_ath', direction: 'LONG', entry: num(c.entry != null ? c.entry : (c.qty > 0 ? c.cost / c.qty : null)), sl: null, exit: closed ? num(c.exit) : null, qty: num(c.qty), leverage: null,
       marginUsd: num(c.planted), openedAt: iso(c.openedAt || c.startedAt), closedAt: closed ? iso(c.closedAt) : null, status: closed ? 'tutup' : 'terbuka',
       grossUsd: closed ? num(c.grossUsd) : null, feeUsd: closed ? num(c.feeUsd) : null, netUsd: closed ? num(c.net) : null,
-      reasonOpen: 'Grid ATH: BTC <= ATH -15%, porsi = kedalaman dari ATH, rebuy tiap turun 1%, TP +15% modal ditanam',
+      reasonOpen: c.mode === 'LADDER' ? 'Grid Tangga: BTC <= ATH -15%, bet 8% saldo terbaru isolated 5x, tambah tiap turun 20%, TP = rugi bet kelikuidasi + 20% total bet' : 'Grid ATH: BTC <= ATH -15%, porsi = kedalaman dari ATH, rebuy tiap turun 1%, TP +15% modal ditanam',
       reasonCloseCode: closed ? c.reason : null, reasonClose: closed ? reasonClose(c.reason) : null,
       context: { layers: c.layers, ditanam: num(c.planted), modalGrid: num(c.cycleCap), athAwal: num(c.athAtStart), returnModalDitanamPct: num(c.retPlantedPct) },
     });
     for (const h of gj.history || []) out.push(gridRec(h, true));
-    if (gj.cycle && gj.cycle.qty > 0) out.push(gridRec(gj.cycle, false));
+    if (gj.cycle && (gj.cycle.qty > 0 || gj.cycle.pos)) out.push(gridRec(gj.cycle.pos ? { ...gj.cycle, qty: gj.cycle.pos.qty, entry: gj.cycle.firstE, planted: gj.cycle.putIn, layers: gj.cycle.bets } : gj.cycle, false));
   }
   // 🥷 Ninja Exhaustion & News (BingX) -- history (detail lengkap mulai 5 Okt) + posisi yang lagi jalan
   for (const [file, pt] of [['ninja-exhaustion-journal.json', 'exhaustion_fade'], ['ninja-news-journal.json', 'news_dxy']]) {

@@ -6,12 +6,16 @@
 
 ## 🎯 SEKARANG LAGI DI MANA
 
-- **Topik aktif:** Grid ATH BTC-USDC (BingX Perpetual REAL, `gridTrader.js`)
-- **Status:** LIVE, minimal cap $830 + batas eksposur **1x** (aman, hasil riset). Nunggu saldo USDC masuk (BTC ±−34% dari ATH)
+- **Topik aktif:** Grid TANGGA otomatis (gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated)
+- **Status:** LIVE (11 Okt). Bet 8% saldo terbaru, 5x isolated, tambah tiap -20%, TP = rugi kelikuidasi + 20% total bet. Nunggu saldo USDC masuk
 - **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
-- **Langkah berikutnya:** cek VPS udah narik capExposure 1 (siklus 22:30). Begitu USDC masuk: cek pesan "Buka Posisi" + eksposur <= 1x
+- **Langkah berikutnya:** begitu USDC masuk: cek pesan Buka Posisi GRID + margin mode ISOLATED di BingX + TRADE-LEDGER kebaca
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt 10:00** — GRID TANGGA OTOMATIS: riset eksekusi 1 simbol (backtest/gridLotModeStudy.js): MERGE (tutup + buka lagi sisa
+  margin + bet baru) x2,40 > lot virtual x2,31. Sweep -> 8%/jarak 20%/5x (x2,22, DD 60%, tahan sampai ATH -93%). Mode LADDER di
+  gridTrader.js + selftest 7/7 (gridTrader.ladder.selftest.js), tradeLedger kenal grid_tangga. Mode ATH lama tetap ada (mode: ATH).
 
 - **11 Okt 09:00** — Olan mulai grid manual dari $83.033 (paper $600, 5x isolated, margin 8% saldo TERBARU, tiap -17%, TP 20% margin
   masuk, COMPOUND). Backtest compound per tahun mulai: 2018 x8,07 (27%/th) .. 2022 x1,72 (12%/th) .. 2025 x1,08; TP ~6-16x/th.

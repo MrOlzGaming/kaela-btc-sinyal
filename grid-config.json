@@ -1,5 +1,10 @@
 {
   "enabled": true,
+  "mode": "LADDER",
+  "betPct": 8,
+  "gapPct": 20,
+  "ladderTpPct": 20,
+  "_ladderNote": "11 Okt 2026 -- MODE LADDER (Grid Tangga isolated, versi otomatis grid manual Olan): bet = betPct% saldo TERBARU, mulai BTC <= ATH -minDd%, tambah tiap turun gapPct% dari entry terakhir, TP = rugi bet yang kelikuidasi + ladderTpPct% total bet. Eksekusi MERGE (tutup lama + buka lagi sisa margin + bet baru, 1 posisi ISOLATED leverage x). Riset backtest/gridLotModeStudy.js: 8%/20%/5x x2,22 DD 60% rungkad 0/94, tahan crash sampai ATH -93%. mode ATH (lama) = minDd/step/k/tp/minCap/capExposure di bawah.",
   "allowReal": true,
   "symbol": "BTC-USDC",
   "marginAsset": "USDC",

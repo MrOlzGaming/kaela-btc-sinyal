@@ -13,6 +13,8 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **10 Okt 22:40** — Olan grid MANUAL ($600, 5x, $60/level, -15% harga). Saran: TP GABUNGAN 20% margin ditanam, maks 4 level.
+
 - **10 Okt 22:20** — RISET minimal cap (`backtest/gridMinCapStudy.js`, 94 titik mulai): cap 2x HANGUS 41/94 (bahaya!) -> diganti
   **cap 1x**: CAGR median 25%, hangus 0/94, DD terburuk 89%. Tanpa minCap 15%/DD 59%. Grid belum pegang posisi pas diganti.
 

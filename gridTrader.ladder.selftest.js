@@ -80,6 +80,28 @@ test('posisi hilang padahal harga jauh di atas liq -> tutup manual: siklus diakh
   assert(h.st.alerts.some((m) => /Ditutup manual/.test(m)));
 });
 
+test('top up di tengah siklus -> modal per tangga ikut saldo terbaru (tangga berikutnya lebih gede)', async () => {
+  const h = harness(); h.st.px = 83033; await runOnce(h.deps);
+  h.st.wallet += 500; h.st.px = 80000; const r = await runOnce(h.deps);
+  assert(r.idle === 'nunggu tangga' && Math.abs(h.j.cycle.unit - 120) < 1.5, `unit ${h.j.cycle.unit}`);
+  h.st.px = 66000; const r2 = await runOnce(h.deps);
+  assert(r2.bought && r2.bought.bet === 2 && r2.bought.mg > 120, JSON.stringify(r2)); // 120 + sisa margin tangga #1
+});
+
+test('funding/fee kecil gak dianggap top up', async () => {
+  const h = harness(); h.st.px = 83033; await runOnce(h.deps);
+  h.st.wallet -= 1.5; await runOnce(h.deps);
+  assert(Math.abs(h.j.cycle.unit - 80) < 0.01 && !(h.j.cycle.capChanges || []).length);
+});
+
+test('saldo lewat batas $1.000 -> grid pakai $1.000, Olan dikabarin lebihnya (sekali)', async () => {
+  const h = harness({ wallet: 3000 }); h.deps.cfg = { ...CFG, maxCapUsd: 1000 }; h.st.px = 83033;
+  const r = await runOnce(h.deps);
+  assert(r.bought && Math.abs(r.bought.mg - 80) < 1, `margin ${r.bought && r.bought.mg}`);
+  assert(h.st.alerts.filter((m) => /lewat batas modal grid/.test(m) && /\$2,000/.test(m)).length === 1, h.st.alerts.join(' | '));
+  await runOnce(h.deps); assert(h.st.alerts.filter((m) => /lewat batas/.test(m)).length === 1);
+});
+
 test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async () => {
   const h = harness(); h.st.qty = 0.01; h.st.px = 83033; const r = await runOnce(h.deps);
   assert(r.stopped === 'stray' && h.st.orders.length === 0);

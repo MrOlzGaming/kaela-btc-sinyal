@@ -13,6 +13,10 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 09:00** — Grid Tangga: modal per tangga SELALU dari saldo terbaru (top up/tarik di tengah siklus kebaca, selisih > max($5, 2%)),
+  dipotong di maxCapUsd $1.000 (kebijakan cap $1000/dompet). Saldo > $1.050 -> DM Olan (maks 1x/7 hari) lebihnya bisa dipindah ke
+  Sniper/Ranger/Ranger Rotasi (Kaela gak mindahin dana sendiri). Selftest 11/11.
+
 - **11 Okt sore** — UJI BARENG LONG+SHORT (gridLifetimeStudy.js sweep 2.000+ kombinasi + validasi per jam): pilih long 6%/-15%/TP 30%
   (LIVE) + short 10%/+5%/TP10% (antrian 2029). Seumur hidup $1.000 -> $90.239 (32%/th, DD 74%, terendah $321); mulai 2018 $10.370 (31%/th).
   TP 50-70% & short 15% lebih gede di seumur hidup tapi per jam gak lebih bagus / DD short 55% -> ditolak (overfit).

@@ -225,11 +225,44 @@ async function runLadder(deps, log, now) {
     }
   }
 
+  // ---- SALDO TERBARU + BATAS MODAL (11 Okt 2026, Olan: "bet selalu pake saldo terbaru.. saldo aku tambah2, aku lepas kalo dah
+  // 1000 dolar, jadi modal yang masuk bisa buat strategi lain") ----
+  // Acuan modal tangga = saldo wallet USDC terbaru, dipotong di maxCapUsd. Top up / tarik di tengah siklus kebaca (saldo beda dari
+  // perkiraan jurnal > max($5, 2%)) -> modal per tangga langsung ikut. Rugi tangga siklus ini sendiri GAK ngecilin acuan (sama
+  // kayak backtest). Saldo lewat batas -> Olan dikabarin (maks 1x/7 hari) biar lebihnya dipindah ke Sniper/Ranger -- Kaela GAK
+  // mindahin dana sendiri.
+  const maxCap = cfg.maxCapUsd || 0;
+  const capOf = (w) => (maxCap > 0 ? Math.min(w, maxCap) : w);
+  const overCap = async (w) => {
+    if (!(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
+    j.overCapAt = now; deps.save();
+    await deps.alert(`💰 Grid Tangga: saldo USDC BingX udah ${fmt$(w)}, lewat batas modal grid ${fmt$(maxCap)}. Grid tetap jalan pakai ${fmt$(maxCap)}; lebihnya ${fmt$(w - maxCap)} bisa kamu pindahin ke Sniper / Ranger / Ranger Rotasi.`, 'overcap');
+  };
+  if (c) {
+    const w = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
+    if (w > 0) {
+      if (c.anchor == null) c.anchor = c.cycleCap - c.realized; // jurnal sebelum fitur ini
+      const expected = c.anchor + c.realized, d = w - expected;
+      c.anchor += d; // selisih kecil (funding dll) diserap, selisih besar = top up / tarik
+      if (Math.abs(d) > Math.max(5, Math.abs(expected) * 0.02)) {
+        const from = c.cycleCap, to = capOf(c.anchor);
+        if (Math.abs(to - from) > 0.01) {
+          c.cycleCap = to; c.unit = to * betPct / 100; (c.capChanges = c.capChanges || []).push({ at: now, from, to, wallet: w });
+          log(`${d > 0 ? 'top up' : 'tarik'} kebaca (${fmt$(d)}) -> acuan modal tangga ${fmt$(from)} -> ${fmt$(to)}, modal per tangga ${fmt$(c.unit)}`);
+        }
+      }
+      deps.save();
+      await overCap(w);
+    }
+  }
+
   // ---- entry / rebuy ----
   if (!c) {
     if (dd < cfg.minDd) { deps.save(); return { idle: `dd ${dd.toFixed(1)}% < ${cfg.minDd}%` }; }
     if (j.manualPauseAt && now - j.manualPauseAt < 24 * 3600e3) { deps.save(); return { idle: 'jeda 24 jam abis tutup manual' }; }
-    const wallet = await ex.getWalletBalance(cfg.marginAsset);
+    const walletAll = await ex.getWalletBalance(cfg.marginAsset);
+    await overCap(walletAll);
+    const wallet = capOf(walletAll);
     const unit = wallet * betPct / 100;
     const info = await ex.getSymbolInfo(sym);
     if (!(unit * L >= Math.max(info.minNotionalUsd || 0, px * info.stepSize) * 1.05)) {
@@ -238,7 +271,7 @@ async function runLadder(deps, log, now) {
     }
     if (!j.seq || j.seq.day !== new Date(now).toISOString().slice(0, 10)) j.seq = { day: new Date(now).toISOString().slice(0, 10), n: 0 };
     j.seq.n += 1;
-    c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
+    c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, anchor: walletAll, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
     await ex.setIsolatedMargin(sym).catch((e) => log(`set isolated: ${e.message}`));
     await ex.setLeverage(sym, L, 'LONG').catch((e) => log(`set leverage: ${e.message}`));
   } else if (c.pos && !(px <= c.lastE * (1 - gap / 100))) { deps.save(); return { idle: 'nunggu tangga' }; }

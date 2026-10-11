@@ -11,7 +11,7 @@ function merge(D, i0, { m, L, g, tp = 0.2 }) {
     const ath = D.ATH[i], l = D.L[i], h = D.H[i], c = D.C[i], o = D.O[i];
     if (!p && putIn === 0 && l <= ath * 0.85) unit = wallet * m;
     if (unit > 0) {
-      const trig = putIn === 0 ? Math.min(ath * 0.85, o) : lastE * (1 - g);
+      const trig = putIn === 0 ? Math.min(ath * 0.85, o) : (p ? lastE * (1 - g) : Infinity); // abis liq -> langsung buka lagi
       const free = wallet - (p ? p.mg : 0);
       if (l <= trig && free >= unit * 0.999) {
         const e = Math.min(trig, o); let mg = unit;

@@ -43,13 +43,11 @@ test('belum turun 20% -> gak nambah', async () => {
   assert(r.idle === 'nunggu tangga' && h.st.orders.length === 1);
 });
 
-test('bet #1 kelikuidasi -> rugi $80 tercatat, pesan likuidasi, bet #2 di -20% target nutup rugi + 20% total bet', async () => {
+test('tangga #1 kelikuidasi -> rugi tercatat, pesan likuidasi, tangga #2 LANGSUNG kebuka, target nutup rugi + 20% total masuk', async () => {
   const h = harness(); h.st.px = 83033; await runOnce(h.deps);
-  h.st.px = 66800; h.liquidate(); const r1 = await runOnce(h.deps);
-  assert(r1.idle && h.j.cycle.pos === null && Math.abs(h.j.cycle.realized + 80.2) < 1, `realized ${h.j.cycle.realized}`);
+  h.st.px = 66400; h.liquidate(); const r2 = await runOnce(h.deps);
   assert(h.st.wa.some((m) => /Likuidasi tangga/.test(m)));
-  h.st.px = 66400; const r2 = await runOnce(h.deps);
-  assert(r2.bought && r2.bought.bet === 2 && Math.abs(r2.bought.mg - 80) < 1);
+  assert(r2.bought && r2.bought.bet === 2 && Math.abs(r2.bought.mg - 80) < 1, JSON.stringify(r2));
   // butuh untung ~80 rugi + 32 target = ~112 dari posisi $400 -> naik ~28%
   assert(r2.bought.tpPx > 84500 && r2.bought.tpPx < 85500, `target ${r2.bought.tpPx}`);
   assert(/Nambah Posisi/.test(h.st.wa[h.st.wa.length - 1]));
@@ -57,8 +55,7 @@ test('bet #1 kelikuidasi -> rugi $80 tercatat, pesan likuidasi, bet #2 di -20% t
 
 test('target kena -> tutup semua, untung bersih >= 20% total bet, siklus baru pakai saldo terbaru', async () => {
   const h = harness(); h.st.px = 83033; await runOnce(h.deps);
-  h.st.px = 66800; h.liquidate(); await runOnce(h.deps);
-  h.st.px = 66400; await runOnce(h.deps);
+  h.st.px = 66400; h.liquidate(); await runOnce(h.deps);
   h.st.px = 85500; const r = await runOnce(h.deps);
   assert(r.tp && r.tp.net >= 32 - 0.5, JSON.stringify(r.tp));
   assert.strictEqual(h.j.cycle, null); assert(/Tutup Posisi/.test(h.st.wa[h.st.wa.length - 1]) && /Target tangga kena/.test(h.st.wa[h.st.wa.length - 1]));
@@ -75,10 +72,11 @@ test('peluru habis + semua kelikuidasi -> RUNGKAD dicatat, alert', async () => {
   h.deps.cfg = CFG;
 });
 
-test('posisi hilang padahal harga jauh di atas liq -> dianggap tutup manual + alert, bukan likuidasi', async () => {
+test('posisi hilang padahal harga jauh di atas liq -> tutup manual: siklus diakhiri + alert + jeda 24 jam (gak langsung buka)', async () => {
   const h = harness(); h.st.px = 83033; await runOnce(h.deps);
   h.st.px = 80000; h.st.qty = 0; const r = await runOnce(h.deps);
-  assert(h.j.cycle.pos === null && h.j.cycle.liqs === 0 && h.j.cycle.realized > -20, JSON.stringify(h.j.cycle));
+  assert(r.manual && h.j.cycle === null && r.manual.net > -20, JSON.stringify(r));
+  const r2 = await runOnce(h.deps); assert(r2.idle && /jeda/.test(r2.idle) && h.st.orders.length === 1, JSON.stringify(r2));
   assert(h.st.alerts.some((m) => /Ditutup manual/.test(m)));
 });
 

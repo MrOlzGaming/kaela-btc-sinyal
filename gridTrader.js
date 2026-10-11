@@ -193,7 +193,11 @@ async function runLadder(deps, log, now) {
     if (px > p.liq * 1.03) {
       const est = p.qty * (px - p.e) - p.qty * px * TAKER; c.realized += est; c.fees += p.qty * px * TAKER; c.pos = null; deps.save();
       log(`posisi ${c.signalId} hilang padahal harga ${fmt$(px)} jauh di atas liq ${fmt$(p.liq)} -- dianggap ditutup manual (taksiran ${fmt$(est)})`);
-      await deps.alert(`⚠️ Grid Tangga: posisi ${c.signalId} hilang dari BingX padahal belum nyentuh harga liq (${fmt$(p.liq)}). Ditutup manual? PnL ditaksir ${fmt$(est)} di harga ${fmt$(px)}, tangga lanjut.`, 'manualclose');
+      // ditutup di luar sistem -> siklus diakhiri (bukan dilanjut), biar tangga gak langsung buka lagi nimpa keputusan manual itu
+      const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: px, qty: p.qty, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs || 0, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_GONE' };
+      j.history.push(rec); j.cycle = null; j.manualPauseAt = now; deps.save();
+      await deps.alert(`⚠️ Grid Tangga: posisi ${c.signalId} hilang dari BingX padahal belum nyentuh harga liq (${fmt$(p.liq)}). Ditutup manual? PnL ditaksir ${fmt$(est)} di harga ${fmt$(px)}. Siklus diakhiri; siklus baru mulai lagi dalam 24 jam kalau syarat terpenuhi (matiin di grid-config.json kalau mau berhenti).`, 'manualclose');
+      return { manual: rec };
     } else {
       c.realized -= p.mg; c.liqs = (c.liqs || 0) + 1; c.pos = null;
       log(`posisi ${c.signalId} kena likuidasi (entry ${fmt$(p.e)}, margin ${fmt$(p.mg)} hangus) -- total rugi terealisasi ${fmt$(-c.realized)}`);
@@ -224,6 +228,7 @@ async function runLadder(deps, log, now) {
   // ---- entry / rebuy ----
   if (!c) {
     if (dd < cfg.minDd) { deps.save(); return { idle: `dd ${dd.toFixed(1)}% < ${cfg.minDd}%` }; }
+    if (j.manualPauseAt && now - j.manualPauseAt < 24 * 3600e3) { deps.save(); return { idle: 'jeda 24 jam abis tutup manual' }; }
     const wallet = await ex.getWalletBalance(cfg.marginAsset);
     const unit = wallet * betPct / 100;
     const info = await ex.getSymbolInfo(sym);
@@ -236,7 +241,10 @@ async function runLadder(deps, log, now) {
     c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
     await ex.setIsolatedMargin(sym).catch((e) => log(`set isolated: ${e.message}`));
     await ex.setLeverage(sym, L, 'LONG').catch((e) => log(`set leverage: ${e.message}`));
-  } else if (!(px <= c.lastE * (1 - gap / 100))) { deps.save(); return { idle: 'nunggu tangga' }; }
+  } else if (c.pos && !(px <= c.lastE * (1 - gap / 100))) { deps.save(); return { idle: 'nunggu tangga' }; }
+  // posisi terakhir udah kelikuidasi (c.pos kosong) -> tangga berikutnya LANGSUNG dibuka di harga sekarang. Dulu nunggu -gap% dari
+  // entry terakhir: kalau harga mantul di antara harga liq (-19,5%) & -20%, siklus MACET selamanya tanpa posisi (backtest seumur
+  // hidup: macet 2020-09 .. 2026, ketemu 11 Okt 2026).
 
   if (c.putIn + c.unit > c.cycleCap * 1.0001) {
     if (!c.pos) { // peluru habis + semua kelikuidasi = rungkad -> catat, siklus baru mulai dari saldo sisa

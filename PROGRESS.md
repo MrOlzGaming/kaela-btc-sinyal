@@ -13,6 +13,11 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 12:00** — BACKTEST SEUMUR HIDUP (backtest/gridLifetimeStudy.js, harian 2010-08..2026-10, $1.000): KETEMU BUG LIVE -- abis
+  likuidasi, tangga nunggu -20% dari entry; kalau harga mantul di antara -19,5% & -20% siklus MACET tanpa posisi (backtest macet
+  2020-09..2026). FIX: abis liq tangga berikutnya LANGSUNG dibuka; tutup manual = siklus diakhiri + jeda 24 jam. Hasil: LONG+SHORT
+  $1.000 -> $25.790 (22%/th, DD 85% di 2011, saldo terendah $175), LONG doang $17.151, SHORT doang $1.695. Sweep per jam gak berubah (8/20/5x).
+
 - **11 Okt 11:00** — RISET TANGGA SHORT 1x + window halving (backtest/gridShortStudy.js): dipilih VERSI PELIT 5%/tangga tiap +10% (x1,66 DD 14%); versi +5%
   TP 10%, window hari 520-900 sejak halving -> x2,54, DD 25%, tiap bear untung. Window 2024 UDAH HABIS (6 Okt 2026) -> dipasang
   nanti (GANTUNGAN), window berikutnya ~Sep 2029. Sekarang hari ke-904 = zona dasar historis (777-924) -> fase tangga LONG.

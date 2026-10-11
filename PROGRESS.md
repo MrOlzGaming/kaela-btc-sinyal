@@ -13,7 +13,7 @@
 
 ## 📜 LOG (terbaru di atas)
 
-- **11 Okt 11:00** — RISET TANGGA SHORT 1x + window halving (backtest/gridShortStudy.js): pemenang 5%/tangga, tambah tiap +5%,
+- **11 Okt 11:00** — RISET TANGGA SHORT 1x + window halving (backtest/gridShortStudy.js): dipilih VERSI PELIT 5%/tangga tiap +10% (x1,66 DD 14%); versi +5%
   TP 10%, window hari 520-900 sejak halving -> x2,54, DD 25%, tiap bear untung. Window 2024 UDAH HABIS (6 Okt 2026) -> dipasang
   nanti (GANTUNGAN), window berikutnya ~Sep 2029. Sekarang hari ke-904 = zona dasar historis (777-924) -> fase tangga LONG.
 

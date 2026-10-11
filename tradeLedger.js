@@ -122,10 +122,11 @@ function collect() {
     out.push(rec({ systemKey: 'ninja', id: f.id, signalId: f.signalId, account: acct(mode), mode, exchange: 'bingx', patternType: 'mean_reversion', direction: f.dir, openedAt: f.openedAt }, L, { context: ctxOf(f) }));
   }
   // 🕸️ Grid ATH (BingX BTC-USDC, real) -- 1 siklus = 1 trade (10 Okt 2026)
-  const gj = readJson('grid-journal.json');
+  for (const [gfile, gmode] of [['grid-journal.json', 'real'], ['grid-demo-journal.json', 'demo']]) { // 11 Okt: + Farmer demo
+  const gj = readJson(gfile);
   if (gj) {
     const gridRec = (c, closed) => ({
-      key: `grid|${c.id}|real`, system: SYSTEM.grid, systemKey: 'grid', id: c.id, signalId: c.signalId || null, account: 'Olan Real', mode: 'real', exchange: EXCHANGE.bingx, asset: 'BTCUSDC',
+      key: `grid|${c.id}|${gmode}`, system: SYSTEM.grid, systemKey: 'grid', id: c.id, signalId: c.signalId || null, account: gmode === 'demo' ? 'Olan Demo' : 'Olan Real', mode: gmode, exchange: EXCHANGE.bingx, asset: gmode === 'demo' ? 'BTCUSDT' : 'BTCUSDC',
       patternType: c.mode === 'LADDER' ? 'grid_tangga' : 'grid_ath', direction: 'LONG', entry: num(c.entry != null ? c.entry : (c.qty > 0 ? c.cost / c.qty : null)), sl: null, exit: closed ? num(c.exit) : null, qty: num(c.qty), leverage: null,
       marginUsd: num(c.planted), openedAt: iso(c.openedAt || c.startedAt), closedAt: closed ? iso(c.closedAt) : null, status: closed ? 'tutup' : 'terbuka',
       grossUsd: closed ? num(c.grossUsd) : null, feeUsd: closed ? num(c.feeUsd) : null, netUsd: closed ? num(c.net) : null,
@@ -135,6 +136,7 @@ function collect() {
     });
     for (const h of gj.history || []) out.push(gridRec(h, true));
     if (gj.cycle && (gj.cycle.qty > 0 || gj.cycle.pos)) out.push(gridRec(gj.cycle.pos ? { ...gj.cycle, qty: gj.cycle.pos.qty, entry: gj.cycle.firstE, planted: gj.cycle.putIn, layers: gj.cycle.bets } : gj.cycle, false));
+  }
   }
   // 🥷 Ninja Exhaustion & News (BingX) -- history (detail lengkap mulai 5 Okt) + posisi yang lagi jalan
   for (const [file, pt] of [['ninja-exhaustion-journal.json', 'exhaustion_fade'], ['ninja-news-journal.json', 'news_dxy']]) {

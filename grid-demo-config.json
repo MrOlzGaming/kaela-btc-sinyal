@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "mode": "LADDER",
+  "betPct": 6,
+  "gapPct": 15,
+  "ladderTpPct": 30,
+  "maxCapUsd": 1000,
+  "_ladderNote": "11 Okt sore: TP 20% -> 30% total modal masuk (uji bareng long+short: per jam 94 titik x2,10 vs 2,05, terburuk x0,99 vs 0,97; seumur hidup long+short $90.239 vs $20.751). 11 Okt siang: GANTI ke 6%/jarak 15% (= cara manual Olan: tangga baru pas posisi -75%, sisa 25% margin ditumpuk) -- backtest seumur hidup $1.000 -> $20.751 DD 74% saldo terendah $299, per jam x2,05 DD 60%, peluru sampai ATH -96%; rebuy SEBELUM likuidasi. (8%/20%: $25.790 DD 85% terendah $175; 8%/15%: $46.529 tapi DD 99% terendah $15 = hampir rungkad 2011). 11 Okt 2026 -- MODE LADDER (Grid Tangga isolated, versi otomatis grid manual Olan): bet = betPct% saldo TERBARU, mulai BTC <= ATH -minDd%, tambah tiap turun gapPct% dari entry terakhir, TP = rugi bet yang kelikuidasi + ladderTpPct% total bet. Eksekusi MERGE (tutup lama + buka lagi sisa margin + bet baru, 1 posisi ISOLATED leverage x). Riset backtest/gridLotModeStudy.js: 8%/20%/5x x2,22 DD 60% rungkad 0/94, tahan crash sampai ATH -93%. mode ATH (lama) = minDd/step/k/tp/minCap/capExposure di bawah.",
+  "allowReal": true,
+  "symbol": "BTC-USDT",
+  "marginAsset": "VST",
+  "minDd": 15,
+  "step": 1,
+  "k": 1,
+  "tp": 15,
+  "volMult": [
+    {
+      "fromDd": 0,
+      "x": 1
+    }
+  ],
+  "capExposure": 1,
+  "minCap": 830,
+  "_minCapNote": "10 Okt 2026 (Olan: ada minimal cap) -- porsi dihitung dari max(modal grid, minCap $830), volume dipotong pas di capExposure. RISET backtest/gridMinCapStudy.js (94 titik mulai 2018-25, modal $100 = minCap 8,3x): cap 2x HANGUS 41/94 (BAHAYA, eksposur bengkak pas harga turun) -> cap 1x: CAGR median 25%, hangus 0/94, DD terburuk 89%, akhir terburuk x0,75. Tanpa minCap: 15%, DD 59%. Begitu modal >= $830 efeknya hilang (eksposur alami <= 0,92x).",
+  "leverage": 5,
+  "_note": "GRID ATH (gridTrader.js) -- aturan Olan persis: ATH terakhir BTC, entry kalau harga <= ATH -minDd%, porsi = kedalaman (k% modal grid per step% turun, mulai di tengah langsung tanam dd%), turun tiap step% auto rebuy, TP SEMUA begitu untung bersih >= tp% dari modal yang DITANAM, siklus diulang langsung (modal grid = ekuitas akun -> compound). volMult = pengali volume per kedalaman (1x = tanpa leverage berlebih). capExposure = batas volume/ekuitas. leverage = setting exchange (headroom cross, eksposur asli dijaga volume). Akun: BingX Perpetual REAL saldo USDC (BTC-USDC, gak tabrakan Ninja yang BTC-USDT).",
+  "_status": "10 Okt 2026 -- AKTIF REAL tanpa demo (keputusan Olan: 'grid gak usah demo, backtest cukup'). Backtest (backtest/gridLab.js CYCLE step1 k1 x1 TP15, data 1 jam 2017-26, 94 titik mulai): CAGR median ~15%/th, DD terburuk ~59%, gak pernah hangus. Modal minimal biar tiap level 1% lolos min order 0,0001 BTC: ~$800; di bawah itu level kecil DITUMPUK ke level berikutnya (tetap jalan).",
+  "overCapAlert": false,
+  "_demoNote": "11 Okt 2026 -- 🌾 FARMER DEMO (node gridTrader.js demo): akun BingX demo VST, BTC-USDT (demo gak punya BTC-USDC). Aturan SAMA PERSIS sama real (mode/betPct/gapPct/ladderTpPct/leverage/maxCapUsd $1.000 biar ukurannya kayak real). Ninja demo dimatiin hari yang sama (Olan: gak cocok) -> akun demo bebas. Jurnal grid-demo-journal.json."
+}

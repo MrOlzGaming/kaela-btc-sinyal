@@ -19,8 +19,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const CONFIG_PATH = path.join(__dirname, 'grid-config.json');
-const JOURNAL_PATH = path.join(__dirname, 'grid-journal.json');
+// 11 Okt 2026: `node gridTrader.js demo` = Farmer DEMO di akun BingX VST (BTC-USDT, config/jurnal sendiri), sesuai disiplin demo.
+const DEMO = process.argv[2] === 'demo';
+const CONFIG_PATH = path.join(__dirname, DEMO ? 'grid-demo-config.json' : 'grid-config.json');
+const JOURNAL_PATH = path.join(__dirname, DEMO ? 'grid-demo-journal.json' : 'grid-journal.json');
 const TAKER = 0.0005;
 const OLAN_PRIBADI = '6282134510686';
 
@@ -234,7 +236,7 @@ async function runLadder(deps, log, now) {
   const maxCap = cfg.maxCapUsd || 0;
   const capOf = (w) => (maxCap > 0 ? Math.min(w, maxCap) : w);
   const overCap = async (w) => {
-    if (!(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
+    if (cfg.overCapAlert === false || !(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
     j.overCapAt = now; deps.save();
     await deps.alert(`💰 🌾 Farmer: saldo USDC BingX udah ${fmt$(w)}, lewat batas modal grid ${fmt$(maxCap)}. Grid tetap jalan pakai ${fmt$(maxCap)}; lebihnya ${fmt$(w - maxCap)} bisa kamu pindahin ke Sniper / Ranger / Ranger Rotasi.`, 'overcap');
   };
@@ -318,7 +320,7 @@ function ladderLiqMsg(c, p, px, deps) {
   const { formatAutoClosed, CLOSE_REASON_LABEL, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   const gap = deps.cfg.gapPct || 15;
   const alasan = `${CLOSE_REASON_LABEL.GRID_LADDER_LIQ} (tangga #${c.bets}, margin ${fmt$(p.mg)}). Total rugi siklus ini ${fmt$(-(c.realized + c.fees))}, total modal masuk ${fmt$(c.putIn)}. Tangga berikutnya: sekarang (${fmt$(px)}), jarak tiap ${gap}%.`;
-  return formatAutoClosed({ id: c.id, signalId: c.signalId, direction: 'long', entryPrice: p.e, exitPrice: px, pnlUsd: -p.mg, pnlPct: -100, assetLabel: 'BTCUSDC' }, new Date(), false, alasan, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  return formatAutoClosed({ id: c.id, signalId: c.signalId, direction: 'long', entryPrice: p.e, exitPrice: px, pnlUsd: -p.mg, pnlPct: -100, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', '') }, new Date(), !!deps.isDemo, alasan, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function ladderReason(c, dd, tpPx, deps) {
   const cfg = deps.cfg, gap = cfg.gapPct || 20, tpPct = cfg.ladderTpPct || 20;
@@ -331,16 +333,16 @@ function ladderOpenMsg(c, dd, tpPx, deps) {
     id: c.id, signalId: c.signalId, direction: 'buy', entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e,
     tpText: `${fmt$(tpPx)} (+${deps.cfg.ladderTpPct || 20}% dari total modal masuk, tutup semua lalu ulang pakai saldo terbaru)`,
     slText: `tanpa SL -- isolated, likuidasi ~${fmt$(c.pos.liq)} cuma ngabisin margin tangga ini; tangga berikutnya nutup rugi itu`,
-    liquidationNote: `isolated ~${fmt$(c.pos.liq)}`, assetLabel: 'BTCUSDC', reasonText: ladderReason(c, dd, tpPx, deps),
-  }, new Date(), '', false, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+    liquidationNote: `isolated ~${fmt$(c.pos.liq)}`, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''), reasonText: ladderReason(c, dd, tpPx, deps),
+  }, new Date(), '', !!deps.isDemo, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function ladderAddMsg(c, dd, tpPx, closedOld, deps) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   const pre = closedOld ? `Posisi lama (entry ${fmt$(closedOld.e)}) ditutup di ${fmt$(closedOld.exit)} (${closedOld.pnl >= 0 ? '+' : ''}${fmt$(closedOld.pnl)}), sisa marginnya digabung modal tangga baru. ` : '';
   return formatAutoAddLayer({
-    id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: 'BTCUSDC',
+    id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''),
     reasonText: pre + ladderReason(c, dd, tpPx, deps),
-  }, new Date(), false, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 
 function summary(c) { return { id: c.id, signalId: c.signalId, openedAt: c.startedAt, entry: c.qty > 0 ? c.cost / c.qty : null, qty: c.qty, planted: c.planted, layers: c.layers, cycleCap: c.cycleCap, athAtStart: c.athAtStart }; }
@@ -351,33 +353,33 @@ function openMsg(cy, dd, fillPx, deps) {
     id: cy.id, signalId: cy.signalId, direction: 'buy', entryPrice: fillPx, marginUsd: cy.planted, leverage: Math.max(1, Math.round(cy.cost / Math.max(cy.planted, 1e-9) * 10) / 10), nilaiPosisi: cy.cost,
     tpText: `+${deps.cfg.tp}% dari modal yang ditanam (tutup semua, siklus diulang dari acuan ATH)`,
     slText: 'tanpa SL -- grid nambah tiap BTC turun 1%, eksposur dijaga maks ' + deps.cfg.capExposure + 'x modal grid',
-    liquidationNote: 'cross margin -- jauh (eksposur rendah)', assetLabel: 'BTCUSDC',
+    liquidationNote: 'cross margin -- jauh (eksposur rendah)', assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''),
     reasonText: `Grid ATH: BTC di ATH -${dd.toFixed(1)}% (ATH ${fmt$(cy.athAtStart)}, syarat <= -${deps.cfg.minDd}% terpenuhi) -- tanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid (${fmt$(cy.planted)} dari ${fmt$(cy.cycleCap)})`,
-  }, new Date(), '', false, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), '', !!deps.isDemo, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function addMsg(cy, dd, fillPx, fillQty, deps, topUp) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   return formatAutoAddLayer({
-    id: cy.id, signalId: cy.signalId, layers: cy.layers, entryPrice: cy.cost / cy.qty, marginUsd: cy.planted, leverage: Math.max(1, Math.round(cy.cost / Math.max(cy.planted, 1e-9) * 10) / 10), nilaiPosisi: cy.cost, assetLabel: 'BTCUSDC',
+    id: cy.id, signalId: cy.signalId, layers: cy.layers, entryPrice: cy.cost / cy.qty, marginUsd: cy.planted, leverage: Math.max(1, Math.round(cy.cost / Math.max(cy.planted, 1e-9) * 10) / 10), nilaiPosisi: cy.cost, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''),
     reasonText: topUp
       ? `Top up modal grid kebaca ${fmt$(topUp.from)} -> ${fmt$(topUp.to)} -- porsi dikejar seolah modal udah ada dari awal: beli ${fillQty} BTC @ ${fmt$(fillPx)} (ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal, BTC di ATH -${dd.toFixed(1)}%)`
       : `BTC turun ke ATH -${dd.toFixed(1)}% -> rebuy ${fillQty} BTC @ ${fmt$(fillPx)} (total ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid)`,
-  }, new Date(), false, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function closeMsg(rec, j, deps) {
   const { formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, EXCHANGE_BADGE, SYSTEM_LABEL, KAELA_ACCESS_URL } = require('./darkKaelaLog');
-  const base = formatAutoClosed({ id: rec.id, signalId: rec.signalId, direction: 'long', entryPrice: rec.entry, exitPrice: rec.exit, pnlUsd: rec.grossUsd, feeUsd: rec.feeUsd, pnlPct: rec.retPlantedPct, assetLabel: 'BTCUSDC' }, new Date(), false, `${CLOSE_REASON_LABEL[rec.reason] || CLOSE_REASON_LABEL.GRID_TP} (${rec.layers} ${rec.mode === 'LADDER' ? 'tangga' : 'layer'})`, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
-  return base.replace(`🔗 ${KAELA_ACCESS_URL}`, formatWinRateLines(j.stats, rec.mode === 'LADDER' ? 'Farmer (Real)' : 'Grid ATH (Real)', null) + `🔗 ${KAELA_ACCESS_URL}`);
+  const base = formatAutoClosed({ id: rec.id, signalId: rec.signalId, direction: 'long', entryPrice: rec.entry, exitPrice: rec.exit, pnlUsd: rec.grossUsd, feeUsd: rec.feeUsd, pnlPct: rec.retPlantedPct, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', '') }, new Date(), false, `${CLOSE_REASON_LABEL[rec.reason] || CLOSE_REASON_LABEL.GRID_TP} (${rec.layers} ${rec.mode === 'LADDER' ? 'tangga' : 'layer'})`, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  return base.replace(`🔗 ${KAELA_ACCESS_URL}`, formatWinRateLines(j.stats, rec.mode === 'LADDER' ? `Farmer (${deps.isDemo ? 'Demo' : 'Real'})` : 'Grid ATH (Real)', null) + `🔗 ${KAELA_ACCESS_URL}`);
 }
 
 // ================= Wiring produksi =================
 function prodDeps(cfg, journal) {
   const { createBingxClient, loadSecrets } = require('./bingxExecutor');
   const s = loadSecrets();
-  const exec = s.BINGX_API_KEY && s.BINGX_API_SECRET ? createBingxClient({ apiKey: s.BINGX_API_KEY, apiSecret: s.BINGX_API_SECRET, testnet: false }) : null;
+  const exec = s.BINGX_API_KEY && s.BINGX_API_SECRET ? createBingxClient({ apiKey: s.BINGX_API_KEY, apiSecret: s.BINGX_API_SECRET, testnet: DEMO }) : null;
   const alerts = journal.alerts || (journal.alerts = {});
   return {
-    cfg, journal, exec,
+    cfg, journal, exec, isDemo: DEMO,
     price: async () => {
       const r = await (await fetch(`https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${cfg.symbol}`, { signal: AbortSignal.timeout(8000) })).json();
       return parseFloat(r && r.data && r.data.price);
@@ -402,7 +404,7 @@ function prodDeps(cfg, journal) {
     alert: async (msg, kind) => {
       const last = alerts[kind] || 0; if (Date.now() - last < 6 * 3600e3) return;
       alerts[kind] = Date.now();
-      try { await require('./fonnte').sendWhatsApp(`${msg}\n\n— Kaela`, OLAN_PRIBADI); } catch (e) { console.log('[Grid] WA alert gagal:', e.message); }
+      try { await require('./fonnte').sendWhatsApp(`${DEMO ? '(Demo) ' : ''}${msg}\n\n— Kaela`, OLAN_PRIBADI); } catch (e) { console.log('[Grid] WA alert gagal:', e.message); }
     },
     log: (m) => console.log(`[${new Date().toISOString()}] [Grid] ${m}`),
     save: () => saveJournal(journal),

@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "allowReal": false,
-  "entryEnabled": true,
+  "entryEnabled": false,
   "burstUsd": 800000,
   "ratio": 0.3,
   "slPct": 1,
@@ -11,5 +11,6 @@
   "targetTrades": 100,
   "_note": "NINJA EXHAUSTION (ninjaExhaustionTrader.js) -- uji DEMO BingX sinyal radar likuidasi sendiri: ledakan likuidasi 1 sisi >= burstUsd/30 menit lalu kecepatannya turun <= ratio x puncak -> FADE (long-liq kering -> LONG, short-liq kering -> SHORT). SL slPct% (stop exchange), trailing trailPct% aktif begitu untung >= trailActPct%, maks maxHoldMin menit. Size kalkulator exposure (short separuh). allowReal=false: REAL BARU boleh dinyalain kalau uji demo targetTrades transaksi hasilnya bagus (PF > 1,2 setelah fee). Aturan DIKUNCI selama uji -- jangan diutak-atik di tengah.",
   "_status": "3 Okt 2026 -- AKTIF demo (arahan Olan: \"uji di demo misal 100 transaksi\"). Backtest ~3 minggu: ambang $300rb rugi, $800rb ~impas (n=12) -- belum ada bukti edge, makanya demo dulu.",
-  "_real": "8 Okt 2026 -- REAL DIMATIIN LAGI (Olan: \"ninja belum siap live pake uang asli, masih minus, jalan secara test\"). Demo per 8 Okt: Exhaustion 5 trade 1 menang -$47,05, MR 1 trade +$10,02, News 0 trade. Balik ke aturan 3 Okt: real cuma setelah uji demo lolos (PF bersih realistis > 1,2). Sebelumnya: 6 Okt real ON atas perintah Olan, gak ada trade real yang sempat kebuka."
+  "_real": "8 Okt 2026 -- REAL DIMATIIN LAGI (Olan: \"ninja belum siap live pake uang asli, masih minus, jalan secara test\"). Demo per 8 Okt: Exhaustion 5 trade 1 menang -$47,05, MR 1 trade +$10,02, News 0 trade. Balik ke aturan 3 Okt: real cuma setelah uji demo lolos (PF bersih realistis > 1,2). Sebelumnya: 6 Okt real ON atas perintah Olan, gak ada trade real yang sempat kebuka.",
+  "_offNote": "11 Okt 2026: entry DIMATIIN (Olan: \"mode ninja aku ga cocok semua, mungkin ninja kita ga bisa pake\"). Akun BingX demo dipakai Farmer demo. Nyalain lagi: entryEnabled true."
 }

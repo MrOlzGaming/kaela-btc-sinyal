@@ -51,6 +51,9 @@ nws_output=$(timeout -k 5 20 node ninjaNewsTrader.js 2>&1)
 # turun 1% di bawah ATH -15%, TP semua di +15% modal ditanam, ulang siklus. Saklar: grid-config.json.
 grid_output=$(timeout -k 5 45 node gridTrader.js 2>&1)
 [ -n "$grid_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $grid_output" >> "$LOG_FILE"
+# 🌾 FARMER DEMO (11 Okt 2026) -- aturan sama persis Farmer real, akun BingX demo VST BTC-USDT. Saklar: grid-demo-config.json.
+gridd_output=$(timeout -k 5 45 node gridTrader.js demo 2>&1)
+[ -n "$gridd_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [demo] $gridd_output" >> "$LOG_FILE"
 # Pengawas likuidasi DCA Tangga Leverage di BingX STANDARD FUTURES (1 Okt 2026) -- MURNI BACA, gak pernah
 # kirim order; posisi kena likuidasi -> DM WA Olan + saran leverage pengganti (lihat stdFuturesLadderMonitor.js).
 std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)

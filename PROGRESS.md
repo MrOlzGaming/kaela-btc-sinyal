@@ -13,6 +13,10 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 10:00** — 🌾 FARMER DEMO jalan (node gridTrader.js demo, grid-demo-config.json, BingX demo VST BTC-USDT, aturan sama persis real,
+  maxCap $1.000, saldo demo 400.323 VST -- Olan sebelumnya grid manual brutal 100k -> 300k+). NINJA dimatiin semua (MR/Exhaustion entryEnabled
+  false, News enabled false; Olan: "gak cocok"), gak ada posisi kebuka. Ledger kenal Farmer demo (Olan Demo).
+
 - **11 Okt 09:30** — Grid dinamain **🌾 FARMER** (tanam modal tiap tangga, panen, tanam ulang). Semua pesan pakai template darkKaelaLog
   (Buka/Nambah/Tutup), likuidasi tangga sekarang pesan "Tutup Posisi" standar + alasan. Selftest 11/11 + 12/12.
 

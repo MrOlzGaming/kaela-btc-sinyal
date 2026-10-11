@@ -148,6 +148,19 @@ test('dompet pribadi: BingX $94 + dompet $500 + bank $346 -> acuan $940; top up 
   assert(Math.abs(h.j.cycle.cycleCap - 940) < 3, `acuan ${h.j.cycle.cycleCap}`);
 });
 
+test('BIBIT: panen -> 50% untung disisihin & dikunci, siklus baru gak pakai bibit, DM Olan; ditarik -> bibit berkurang, acuan gak kepotong', async () => {
+  const h = harness(); h.deps.cfg = { ...CFG, bibitPct: 50 }; h.st.px = 83033; const r1 = await runOnce(h.deps);
+  h.st.px = r1.bought.tpPx + 100; const r = await runOnce(h.deps);
+  assert(r.tp && r.tp.net > 0 && Math.abs(r.tp.bibit - r.tp.net / 2) < 0.02, JSON.stringify(r.tp));
+  assert(Math.abs(h.j.bibitPending - r.tp.net / 2) < 0.02 && h.st.alerts.some((m) => /bibit/.test(m) && /DOMPET SENDIRI/.test(m)));
+  const walletAfterTp = h.st.wallet;
+  const r2 = await runOnce(h.deps); // siklus baru: acuan = saldo - bibit
+  assert(r2.bought && Math.abs(h.j.cycle.cycleCap - (walletAfterTp - h.j.bibitPending)) < 1, 'acuan ' + h.j.cycle.cycleCap + ' vs ' + (walletAfterTp - h.j.bibitPending));
+  const cap0 = h.j.cycle.cycleCap, bib = h.j.bibitPending;
+  h.st.wallet -= bib; await runOnce(h.deps); // Olan narik bibit
+  assert(h.j.bibitPending < 0.01 && Math.abs(h.j.cycle.cycleCap - cap0) < 1, 'bibit ' + h.j.bibitPending + ' acuan ' + h.j.cycle.cycleCap + ' vs ' + cap0);
+});
+
 test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async () => {
   const h = harness(); h.st.qty = 0.01; h.st.px = 83033; const r = await runOnce(h.deps);
   assert(r.stopped === 'stray' && h.st.orders.length === 0);

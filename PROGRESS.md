@@ -9,9 +9,12 @@
 - **Topik aktif:** 🌾 FARMER (dulu "Grid Tangga") -- gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated
 - **Status:** LIVE (11 Okt). Tangga 6% saldo terbaru, 5x isolated, tambah tiap -15% (pas posisi -75%, sisa margin ditumpuk), TP = rugi + 30% total masuk. Nunggu saldo USDC
 - **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
-- **Langkah berikutnya:** (1) nunggu izin Olan: push GAS Kaela Access (kartu Dompet Farmer + Farmer di jurnal) & deploy Netlify web Sniper; (2) Olan isi alamat dompet + saldo bank di kartu Dompet Farmer
+- **Langkah berikutnya:** cek kartu Dompet Farmer + jurnal Farmer di Kaela Access (Olan); deploy Netlify web Sniper NUNGGU izin Olan
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt 10:25** — Kaela Access GAS v246+v247 LIVE (OAuth lewat Chrome Browser 2 / olz.gaming.master): kartu Dompet Farmer, jurnal Farmer,
+  Ninja disembunyiin. Dompet Farmer diisi Manual $940 lewat setFarmerFundsForExecutor.
 
 - **11 Okt 09:20-10:00** — Farmer REAL tangga #1 dibuka ulang $56,38 (acuan BingX $94 + cadangan bank $846). Fitur: cadangan bank, baca dompet
   kripto pribadi (selfCustodyWallet.js, alamat publik, 7 jaringan, kecek pakai alamat publik nyata), kartu "🌾 Dompet Farmer" di Kaela Access

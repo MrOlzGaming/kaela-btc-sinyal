@@ -3,7 +3,7 @@
 // Fee spot 0,1% per transaksi. Data 1 jam BTCUSDT 2017-08..sekarang, 94 titik mulai bulanan 2018-2025 + 1 jalur penuh.
 // Jalanin: node backtest/gridSpotStudy.js
 const { loadHourly, idxAt } = require('./gridLab');
-const FEE = 0.001;
+let FEE = 0.001; // spot taker; setFee() buat uji ketahanan fee
 
 function run(D, i0, { unit = 0.01, step = 0.025, tp = 0.02, minDd = 0, growth = 1, yieldApy = 0, ddScale = 0 }) {
   // yieldApy = bunga uang nganggur (USDC Earn), ddScale = tangga digedein sesuai jarak dari ATH (base x (1 + ddScale x dd))
@@ -35,7 +35,7 @@ function run(D, i0, { unit = 0.01, step = 0.025, tp = 0.02, minDd = 0, growth = 
   const eq = eqAt(D.C[D.n - 1]), yrs = (D.T[D.n - 1] - D.T[i0]) / (365.25 * 864e5);
   return { mult: eq, cagr: (Math.pow(eq, 1 / yrs) - 1) * 100, cycles, maxDd, maxIn, stuckMax, yrs };
 }
-module.exports = { run };
+module.exports = { run, setFee: (f) => { FEE = f; } };
 
 if (require.main === module) (async () => {
   const D = await loadHourly();

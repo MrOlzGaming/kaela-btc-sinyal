@@ -7,7 +7,7 @@
 // Data: candle HARIAN Binance spot (data-api.binance.vision), cache backtest/<SYM>-1d-cache.json (gitignored).
 // Urutan dalam 1 candle KONSERVATIF buat long: open (TP kalau udah lewat) -> low dulu (DCA + likuidasi) -> baru high (TP).
 // Funding: long BAYAR, asumsi rata2 +0,01%/8 jam dari nilai posisi (data funding Binance futures diblok dari server US).
-// Jalanin: node backtest/altLongStudy.js [ETHUSDT]   (server cloud Kaela diblok Binance -> jalanin lewat
+// Jalanin: node backtest/altLongStudy.js [ETHUSDT] [bet, mis. 0.06]   (server cloud Kaela diblok Binance -> jalanin lewat
 // .github/workflows/research-backtest.yml atau dari VPS)
 const fs = require('fs');
 const path = require('path');
@@ -114,6 +114,8 @@ module.exports = { loadDaily, run, btcIndex, DEF };
 
 if (require.main === module) (async () => {
   const SYM = process.argv[2] || 'ETHUSDT';
+  if (process.argv[3]) DEF.bet = Number(process.argv[3]); // bet per posisi, mis. 0.06 = 6% (default 1%)
+  console.log(`BET ${(DEF.bet * 100).toFixed(1)}% saldo per posisi`);
   // BTC: Binance mulai Agu 2017 -> ATH sebelumnya (Des 2013 ~$1.150) gak relevan karena harga Agu 2017 udah di atasnya.
   const [C, B] = await Promise.all([loadDaily(SYM), loadDaily('BTCUSDT')]);
   const btc = btcIndex(B);
@@ -146,7 +148,7 @@ if (require.main === module) (async () => {
   console.log(`  ${st.n} titik: terburuk x${st.worst.toFixed(2)}, median x${st.med.toFixed(2)}, terbaik x${st.best.toFixed(2)}, rugi ${st.lose}/${st.n}, DD terburuk ${pct(st.dd)}`);
 
   console.log('\n=== 4) SENSITIVITAS (mulai halving 2020, 1 parameter diubah) ===');
-  const vary = [['leverage', 'L', [1, 2, 3, 5]], ['jarak DCA', 'step', [0.05, 0.10, 0.15, 0.20]], ['bet', 'bet', [0.01, 0.02, 0.03, 0.05]],
+  const vary = [['leverage', 'L', [1, 2, 3, 5]], ['jarak DCA', 'step', [0.05, 0.10, 0.15, 0.20]], ['bet', 'bet', [0.01, 0.02, 0.03, 0.04, 0.06]],
     ['TP dari tanam', 'tp', [0.05, 0.10, 0.20, 0.30]], ['ganti liq', 'rep', [1, 1.25, 1.5]], ['zona BTC', 'btcZone', [0, 0.15, 0.30]]];
   for (const [n, k, vals] of vary) for (const v of vals) {
     const s = startStats({ [k]: v });

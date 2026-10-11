@@ -13,6 +13,9 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 10:35** — Dompet Farmer = SALDO PENAMBAH (GAS v248): modal Farmer = saldo BingX asli + saldo eksternal (boleh kosong).
+  Diisi $846 (total $940). Top up ngurangin angka di web otomatis. Pesan buka/nambah nampilin rincian modal. Antrian: pindah exchange.
+
 - **11 Okt 10:25** — Kaela Access GAS v246+v247 LIVE (OAuth lewat Chrome Browser 2 / olz.gaming.master): kartu Dompet Farmer, jurnal Farmer,
   Ninja disembunyiin. Dompet Farmer diisi Manual $940 lewat setFarmerFundsForExecutor.
 

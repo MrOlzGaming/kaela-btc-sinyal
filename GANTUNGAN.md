@@ -49,6 +49,10 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
+- **🌾 Farmer pindah exchange kalau BingX rungkad** (Olan 11 Okt: "kalo BingX rungkad kita bisa lanjutin tangga ke exchange lain").
+  Jurnal Farmer udah nyimpen state tangga (entry terakhir, total modal masuk, rugi terealisasi) -> butuh adapter eksekusi exchange lain
+  (Bybit/Binance/MEXC udah punya executor) + saklar exchange di grid-config.json. Prioritas: siapin sebelum saldo Farmer gede.
+
 - **Tangga SHORT 1x (window halving)** -- riset beres 11 Okt (STRATEGY-CATALOG), aturan FINAL (uji bareng long, 11 Okt sore): 10%/tangga, tambah tiap +5%, TP 10%, hari 520-900 (per jam x6,05, DD 47% di window 2018; versi pelit 5%/+10% x1,66 DD 14%). Pasang sebagai mode SHORT di gridTrader.js
   (hedge mode BingX, positionSide SHORT) SEBELUM window berikutnya: halving ~Apr 2028 (verifikasi tanggal pasti) + 520 hari = ~Sep 2029.
   Uji demo dulu (BingX demo BTC-USDT). Cek ulang riset pakai data siklus 2024-26 yang udah lengkap (dasar 2024 belum pasti).

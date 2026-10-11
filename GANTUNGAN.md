@@ -49,7 +49,7 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-- **TANGGA KEKAYAAN** (Olan 11 Okt, FINAL): 🌾 Farmer futures CAP $10.000 -> lebihnya bibit BTC spot -> grid SPOT BingX CAP $100.000 -> lebihnya beli DOGE -> DOGE ditarik Olan ke wallet pribadi tiap kali. Kaela nanti: (1) notif JUAL DOGE di waktu terbaik (riset siklus DOGE vs halving), (2) siapin exchange buat DCA DOGE lagi, (3) baca saldo DOGE wallet (selfCustodyWallet belum dukung jaringan Dogecoin -- tambah pas waktunya). Pagar: cuma untung, bertahap, siap nol.
+- **TANGGA KEKAYAAN** (Olan 11 Okt, FINAL): 🌾 Farmer futures CAP $10.000 -> lebihnya bibit BTC spot -> grid SPOT BingX CAP $100.000 -> lebihnya beli DOGE -> DOGE ditarik Olan ke wallet pribadi tiap kali. Kaela nanti: (1) notif JUAL DOGE di waktu terbaik (riset siklus DOGE vs halving), (2) siapin exchange buat DCA DOGE lagi, (3) baca saldo DOGE wallet (selfCustodyWallet belum dukung jaringan Dogecoin -- tambah pas waktunya). Pagar: cuma untung, bertahap, siap nol. TRANSISI BTC spot -> grid spot ($10rb): JANGAN asal jual semua -- riset dulu bagi INTI BTC ditahan vs modal grid (50/50, 70/30, jual semua), BTC yang ada bisa jadi tangga pertama grid (hemat fee, gak ketinggalan bull).
 
 - **MODE BANGKIT "kejar jumlah BTC"** (Olan 11 Okt): kalau Farmer rungkad & BTC masih jauh di bawah ATH -> setoran bulanan dipakai numpuk BTC spot (DCA tahan menang jauh dari grid, STRATEGY-CATALOG). RISET BERES 11 Okt: numpuk pas <= ATH -30% & DITAHAN (gak dijual) paling bagus; setoran balik ke Farmer begitu BTC di atas ATH -30%. Dijalanin manual-terarah (Kaela ngabarin, Olan beli BTC ke dompet sendiri) pas kejadian.
 

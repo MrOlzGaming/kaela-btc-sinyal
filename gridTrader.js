@@ -349,7 +349,7 @@ async function runLadder(deps, log, now) {
   const overCap = async (w) => {
     if (cfg.overCapAlert === false || !(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
     j.overCapAt = now; deps.save();
-    await deps.alert(`💰 🌾 Farmer: saldo USDC BingX udah ${fmt$(w)}, lewat batas modal grid ${fmt$(maxCap)}. Grid tetap jalan pakai ${fmt$(maxCap)}; lebihnya ${fmt$(w - maxCap)} bisa kamu pindahin ke Sniper / Ranger / Ranger Rotasi.`, 'overcap');
+    await deps.alert(`💰 🌾 Farmer: saldo USDC BingX udah ${fmt$(w)}, lewat batas modal grid ${fmt$(maxCap)}. Farmer tetap jalan pakai ${fmt$(maxCap)}; sesuai kebijakan kita, lebihnya (${fmt$(w - maxCap)}) waktunya mulai dibangun jadi DCA Grid Spot (kebal crash) -- bilang Kaela buat nyiapin.`, 'overcap');
   };
   if (c) {
     const w = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);

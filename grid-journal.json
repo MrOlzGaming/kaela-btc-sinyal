@@ -3,28 +3,51 @@
   "athAt": 1791559207573,
   "cycle": {
     "mode": "LADDER",
-    "id": "grid-1791681066047",
-    "signalId": "G2026101101",
-    "startedAt": 1791681066047,
+    "id": "grid-1791681485073",
+    "signalId": "G2026101102",
+    "startedAt": 1791681485073,
     "athAtStart": 126199.63,
-    "cycleCap": 94.371,
-    "anchor": 94.37093191000001,
-    "unit": 5.66226,
-    "putIn": 5.66226,
-    "realized": -0.01243191,
-    "fees": 0.01243191,
+    "cycleCap": 940.3586,
+    "anchor": 94.35856145000001,
+    "unit": 56.421516000000004,
+    "putIn": 56.421516000000004,
+    "realized": -0.14096145,
+    "fees": 0.14096145,
     "bets": 1,
     "liqs": 0,
     "pos": {
-      "e": 82879.4,
-      "qty": 0.0003,
-      "mg": 4.9728,
-      "liq": 66589.9
+      "e": 82918.5,
+      "qty": 0.0034,
+      "mg": 56.3846,
+      "liq": 66621.3
     },
-    "lastE": 82879.4,
-    "firstE": 82879.4
+    "lastE": 82918.5,
+    "firstE": 82918.5,
+    "waitTopUpSince": null
   },
-  "history": [],
+  "history": [
+    {
+      "id": "grid-1791681066047",
+      "signalId": "G2026101101",
+      "mode": "LADDER",
+      "openedAt": 1791681066047,
+      "entry": 82879.4,
+      "exit": null,
+      "qty": 0.0003,
+      "planted": 5.66226,
+      "layers": 1,
+      "cycleCap": 940.37093191,
+      "athAtStart": 126199.63,
+      "liqs": 0,
+      "closedAt": 1791681447926,
+      "grossUsd": null,
+      "feeUsd": null,
+      "net": null,
+      "retPlantedPct": null,
+      "reason": "GRID_GONE",
+      "note": "reset: tangga #1 $4,97 (cuma dari saldo BingX) ditutup, mulai ulang pakai modal BingX + cadangan bank (Olan 11 Okt)"
+    }
+  ],
   "stats": {
     "cycles": 0,
     "wins": 0,
@@ -33,8 +56,13 @@
   },
   "seq": {
     "day": "2026-10-11",
-    "n": 1
+    "n": 2
   },
   "alerts": {},
-  "noBalLogAt": 1791667327729
+  "noBalLogAt": 1791667327729,
+  "reserveCfg": 846,
+  "bankReserve": 845.7824,
+  "lastWallet": 94.2176,
+  "reserveKey": "manual:940:undefined:config",
+  "custody": null
 }

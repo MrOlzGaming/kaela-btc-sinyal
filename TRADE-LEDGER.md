@@ -1,10 +1,11 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-11 09:16 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-11 09:31 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
 - **🌾 Farmer · Pola Chart (grid tangga) · Olan Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
+- **🌾 Farmer · Pola Chart (grid tangga) · Olan Real (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
 - **🏹 Ranger · Fair Value Gap · Olan Real (Binance)**: 2 trade, menang 2/2 (100%), bersih +$1.04
 - **🏹 Ranger · Posisi manual/adopsi · Kaela Demo (Binance)**: 1 trade, menang 0/0, bersih ? (1 PnL gak kebaca)
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
@@ -14,12 +15,19 @@ Diperbarui otomatis: 2026-10-11 09:16 WITA -- dari jurnal SEMUA sistem (Sniper/R
 
 ## Posisi terbuka (4)
 
-- 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX · BTCUSDC LONG @ 82,879.4 (SL ?) sejak 2026-10-11 09:11 WITA
+- 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX · BTCUSDC LONG @ 82,918.5 (SL ?) sejak 2026-10-11 09:18 WITA
 - 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX · BTCUSDT LONG @ 82,919.3 (SL ?) sejak 2026-10-11 09:01 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · BTC SHORT @ 85,503.9 (SL 87,661.1) sejak 2026-10-06 12:00 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · BTC SHORT @ 85,909.5 (SL 86,405.4) sejak ?
 
-## Trade terakhir (36 terbaru)
+## Trade terakhir (37 terbaru)
+
+### #G2026101101 — 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX
+- Buka: 2026-10-11 09:11 WITA — BTCUSDC LONG @ 82,879.4
+- Alasan buka: Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (maks $1.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk
+- Konteks entry: layers=1, ditanam=5.66226, modalGrid=940.37093, athAwal=126199.63, returnModalDitanamPct=0
+- Tutup: 2026-10-11 09:17 WITA @ 0 — Alasan tutup: Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset
+- Hasil: bersih +$0.00 (kotor +$0.00, fee $0.00)
 
 ### #G2026101101 — 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX
 - Buka: 2026-10-11 08:46 WITA — BTCUSDT LONG @ 82,923.5

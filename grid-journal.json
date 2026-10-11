@@ -7,9 +7,9 @@
     "signalId": "G2026101102",
     "startedAt": 1791681485073,
     "athAtStart": 126199.63,
-    "cycleCap": 940.3586,
-    "anchor": 94.29247604999999,
-    "unit": 56.421516000000004,
+    "cycleCap": 903.36687605,
+    "anchor": 57.36687605,
+    "unit": 54.202012563,
     "putIn": 56.421516000000004,
     "realized": -0.61277605,
     "fees": 0.7045760500000001,
@@ -49,7 +49,20 @@
       }
     ],
     "tpLock": 88026.55123444075,
-    "extBase": 0
+    "extBase": 0,
+    "capBreak": {
+      "bingx": 56.7541,
+      "ext": 846,
+      "capped": false
+    },
+    "capChanges": [
+      {
+        "at": 1791720008705,
+        "from": 940.3586,
+        "to": 903.36687605,
+        "wallet": 56.7541
+      }
+    ]
   },
   "history": [
     {
@@ -88,11 +101,11 @@
   "noBalLogAt": 1791667327729,
   "reserveCfg": 846,
   "bankReserve": 846,
-  "lastWallet": 93.6797,
+  "lastWallet": 56.7541,
   "reserveKey": "bank:null:846:2026-10-11T02:35:22.114Z",
   "custody": null,
   "webFunds": {
-    "at": 1791718626161,
+    "at": 1791719886017,
     "mode": "extra",
     "totalUsd": null,
     "extraUsd": 846,

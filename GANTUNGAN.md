@@ -49,7 +49,7 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-- **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): 2%/-2,5%/x1,1/TP1,5%. KEBIJAKAN Olan 11 Okt: Farmer (leverage) buat modal $0-$10.000, DI ATAS $10.000 pindah ke grid spot ini.
+- **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): 2%/-2,5%/x1,1/TP1,5%. KEBIJAKAN Olan 11 Okt: Farmer (leverage) buat modal $0-$10.000, DI ATAS $10.000 pindah ke grid spot ini, lalu boleh mulai Farmer leverage BARU pakai modal kecil (mis. $1.000) -- Farmer = kantong pemula yang "lulus" ke spot.
 
 - **🌾 Farmer pindah exchange kalau BingX rungkad** (Olan 11 Okt: "kalo BingX rungkad kita bisa lanjutin tangga ke exchange lain").
   Jurnal Farmer udah nyimpen state tangga (entry terakhir, total modal masuk, rugi terealisasi) -> butuh adapter eksekusi exchange lain

@@ -13,6 +13,10 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt malam** — RISET 📈 LONG DCA ETH (`backtest/altLongStudy.js`, data Binance ASLI, jalan mulus) ❌: aturan 3x/-10%/TP 10% gak ada bet aman
+  (6% x0,72 DD 97%; 1% DD 88% di stress 2018). Cari parameter aman (`altLongGridSearch.js`): terbaik ETH 2x/-10%/2%/TP 5% x1,93 DD 30% --
+  kalah jauh HODL ETH x13. SOL x3,74 (vs HODL x38, gak ada data 2018), BNB x7,36 DD 23% (token exchange, risiko FTT). Output: backtest/alt-long-*-output.log.
+
 - **11 Okt 19:xx** — RISET 🛡️ SHORT TAHAN BULL (ide Olan, `backtest/shortCounterStudy.js`): zona ATH..-40%, 1x, 1%, DCA +10%, TP 10% tanam, liq diganti x1,25 -> **x0,69 DD 46% (2020-26), 1x TP** ❌. Varian ATH segar <= 365 hr aman (DD 11%) tapi ~0,6%/th. Detail STRATEGY-CATALOG. Data: btc-history.json + tambalan harga archive/orderbook (Binance diblok di server cloud).
 
 - **11 Okt malam** — Semua gantungan masa depan DIBANGUN & dijadwalkan: halving.js (tanggal halving otomatis dari tinggi blok, berikutnya

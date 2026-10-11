@@ -49,6 +49,8 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
+- **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): 2%/-2,5%/x1,1/TP1,5%. Pasang pas modal Olan udah gede (Olan yang bilang kapan).
+
 - **🌾 Farmer pindah exchange kalau BingX rungkad** (Olan 11 Okt: "kalo BingX rungkad kita bisa lanjutin tangga ke exchange lain").
   Jurnal Farmer udah nyimpen state tangga (entry terakhir, total modal masuk, rugi terealisasi) -> butuh adapter eksekusi exchange lain
   (Bybit/Binance/MEXC udah punya executor) + saklar exchange di grid-config.json. Prioritas: siapin sebelum saldo Farmer gede.

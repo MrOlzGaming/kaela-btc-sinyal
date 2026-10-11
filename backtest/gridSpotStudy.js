@@ -5,19 +5,20 @@
 const { loadHourly, idxAt } = require('./gridLab');
 const FEE = 0.001;
 
-function run(D, i0, { unit = 0.01, step = 0.025, tp = 0.02, minDd = 0 }) {
-  let cash = 1, btc = 0, invested = 0, lastBuy = 0, unitUsd = 0, cycles = 0, peak = 1, maxDd = 0, maxIn = 0, stuckMax = 0, cycleStart = i0, ath = 0;
+function run(D, i0, { unit = 0.01, step = 0.025, tp = 0.02, minDd = 0, growth = 1 }) {
+  let cash = 1, btc = 0, invested = 0, lastBuy = 0, unitUsd = 0, nBuy = 0, base = 0, cycles = 0, peak = 1, maxDd = 0, maxIn = 0, stuckMax = 0, cycleStart = i0, ath = 0;
   const eqAt = (p) => cash + btc * p;
   for (let i = i0; i < D.n; i++) {
     const o = D.O[i], h = D.H[i], l = D.L[i], c = D.C[i];
     ath = Math.max(ath, D.ATH[i]);
     // mulai siklus: beli pertama di harga open (opsional syarat ATH -minDd)
     if (invested === 0 && (minDd === 0 || o <= ath * (1 - minDd))) {
-      unitUsd = eqAt(o) * unit;
+      base = eqAt(o) * unit; unitUsd = base; nBuy = 1;
       if (cash >= unitUsd) { btc += unitUsd * (1 - FEE) / o; cash -= unitUsd; invested = unitUsd; lastBuy = o; cycleStart = i; }
     }
     // DCA tiap turun step% dari beli terakhir
-    while (invested > 0 && l <= lastBuy * (1 - step) && cash >= unitUsd * 0.999) {
+    while (invested > 0 && l <= lastBuy * (1 - step) && cash > base * 0.05) {
+      unitUsd = Math.min(cash, base * Math.pow(growth, nBuy)); nBuy++;
       const px = Math.min(lastBuy * (1 - step), o);
       btc += unitUsd * (1 - FEE) / px; cash -= unitUsd; invested += unitUsd; lastBuy = px;
     }

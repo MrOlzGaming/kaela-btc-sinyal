@@ -20,7 +20,7 @@ function merge(D, i0, { m, L, g, tp = 0.2 }) {
       }
     }
     if (p && l <= p.e * (1 - 1 / L + MM)) { wallet -= p.mg; realized -= p.mg; p = null; if (wallet - 0 < unit * 0.999) { rungkad++; putIn = 0; realized = 0; unit = 0; if (wallet < 0.01) break; } }
-    if (p) { const tpPx = p.e + (0.2 * putIn - realized) / p.q; if (h >= tpPx) { wallet += p.q * (tpPx - p.e) - p.q * tpPx * FEE; p = null; putIn = 0; realized = 0; unit = 0; cycles++; } }
+    if (p) { const tpPx = p.e + (tp * putIn - realized) / p.q; if (h >= tpPx) { wallet += p.q * (tpPx - p.e) - p.q * tpPx * FEE; p = null; putIn = 0; realized = 0; unit = 0; cycles++; } }
     const eq = wallet + (p ? p.q * (c - p.e) : 0); if (eq > peak) peak = eq; maxDd = Math.max(maxDd, 1 - eq / peak);
   }
   return { mult: wallet + (p ? p.q * (D.C[D.n - 1] - p.e) : 0), rungkad, maxDd, cycles };

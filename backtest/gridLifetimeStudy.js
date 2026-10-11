@@ -33,7 +33,7 @@ async function loadDaily() {
 }
 const daysSinceHalving = (t) => { let h = null; for (const x of HALVINGS) if (x <= t) h = x; return h == null ? -1 : (t - h) / DAY; };
 
-function sim(rows, { long = true, short = true, start = 1000, gap = 0.20, betL = 0.08 } = {}) {
+function sim(rows, { long = true, short = true, start = 1000, gap = 0.20, betL = 0.08, betS = 0.05, gapS = 0.10, tpS = 0.10, tpL = 0.2, winA = 520, winB = 900 } = {}) {
   let wallet = start, ath = 0, peak = start, maxDd = 0, minEq = start;
   const L = { pos: null, putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0, tp: 0, liqs: 0, rungkad: 0 };
   const S = { lots: [], putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0, tp: 0, liqs: 0, forced: 0 };
@@ -60,20 +60,20 @@ function sim(rows, { long = true, short = true, start = 1000, gap = 0.20, betL =
         wallet -= L.pos.mg; L.realized -= L.pos.mg; L.pos = null; L.liqs++;
         if (L.putIn + L.unit > L.cap * 1.0001) { L.rungkad++; L.putIn = 0; L.realized = 0; L.unit = 0; }
       }
-      if (L.pos) { const tpPx = L.pos.e + (0.2 * L.putIn - L.realized) / L.pos.q; if (h >= tpPx) { wallet += L.pos.q * (tpPx - L.pos.e) - L.pos.q * tpPx * FEE; L.pos = null; L.putIn = 0; L.realized = 0; L.unit = 0; L.tp++; } }
+      if (L.pos) { const tpPx = L.pos.e + (tpL * L.putIn - L.realized) / L.pos.q; if (h >= tpPx) { wallet += L.pos.q * (tpPx - L.pos.e) - L.pos.q * tpPx * FEE; L.pos = null; L.putIn = 0; L.realized = 0; L.unit = 0; L.tp++; } }
     }
     // ================= SHORT (1x, window halving) =================
     if (short) {
-      const d = daysSinceHalving(t), bear = d >= 520 && d < 900;
+      const d = daysSinceHalving(t), bear = d >= winA && d < winB;
       const closeAll = (px) => { for (const p of S.lots) wallet += p.q * (p.e - px) - p.q * px * FEE; S.lots = []; S.putIn = 0; S.realized = 0; S.unit = 0; };
       if (!bear && S.lots.length) { closeAll(o); S.forced++; }
       if (bear) {
-        if (S.putIn === 0) { S.cap = wallet; S.unit = wallet * 0.05; S.lots.push({ e: o, q: S.unit / o, mg: S.unit }); wallet -= S.unit * FEE; S.putIn = S.unit; S.lastE = o; }
-        while (h >= S.lastE * 1.1 && S.putIn + S.unit <= S.cap * 1.0001) { const e = Math.max(S.lastE * 1.1, o); S.lots.push({ e, q: S.unit / e, mg: S.unit }); wallet -= S.unit * FEE; S.putIn += S.unit; S.lastE = e; }
+        if (S.putIn === 0) { S.cap = wallet; S.unit = wallet * betS; S.lots.push({ e: o, q: S.unit / o, mg: S.unit }); wallet -= S.unit * FEE; S.putIn = S.unit; S.lastE = o; }
+        while (h >= S.lastE * (1 + gapS) && S.putIn + S.unit <= S.cap * 1.0001) { const e = Math.max(S.lastE * (1 + gapS), o); S.lots.push({ e, q: S.unit / e, mg: S.unit }); wallet -= S.unit * FEE; S.putIn += S.unit; S.lastE = e; }
         const keep = []; for (const p of S.lots) { if (h >= p.e * (2 - MM)) { wallet -= p.mg; S.realized -= p.mg; S.liqs++; } else keep.push(p); } S.lots = keep;
         if (S.lots.length) {
           const Q = S.lots.reduce((s, p) => s + p.q, 0), cost = S.lots.reduce((s, p) => s + p.q * p.e, 0);
-          const tpPx = (cost - (0.1 * S.putIn - S.realized)) / Q;
+          const tpPx = (cost - (tpS * S.putIn - S.realized)) / Q;
           if (l <= tpPx) { closeAll(tpPx); S.tp++; }
         }
       }

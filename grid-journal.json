@@ -48,7 +48,8 @@
         "liqNew": 66542.4
       }
     ],
-    "tpLock": 88026.55123444075
+    "tpLock": 88026.55123444075,
+    "extBase": 0
   },
   "history": [
     {
@@ -91,7 +92,7 @@
   "reserveKey": "bank:null:846:2026-10-11T02:35:22.114Z",
   "custody": null,
   "webFunds": {
-    "at": 1791711546355,
+    "at": 1791712926230,
     "mode": "extra",
     "totalUsd": null,
     "extraUsd": 846,

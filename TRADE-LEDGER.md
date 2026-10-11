@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-11 17:46 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-11 18:01 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -24,14 +24,14 @@ Diperbarui otomatis: 2026-10-11 17:46 WITA -- dari jurnal SEMUA sistem (Sniper/R
 
 ### #G2026101101 — 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX
 - Buka: 2026-10-11 09:11 WITA — BTCUSDC LONG @ 82,879.4
-- Alasan buka: Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (maks $1.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk
+- Alasan buka: Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (modal maks $10.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk
 - Konteks entry: layers=1, ditanam=5.66226, modalGrid=940.37093, athAwal=126199.63, returnModalDitanamPct=0
 - Tutup: 2026-10-11 09:17 WITA @ 0 — Alasan tutup: Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset
 - Hasil: bersih +$0.00 (kotor +$0.00, fee $0.00)
 
 ### #G2026101101 — 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX
 - Buka: 2026-10-11 08:46 WITA — BTCUSDT LONG @ 82,923.5
-- Alasan buka: Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (maks $1.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk
+- Alasan buka: Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (modal maks $10.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk
 - Konteks entry: layers=1, ditanam=60, modalGrid=400323.44, athAwal=126199.63, returnModalDitanamPct=0
 - Tutup: 2026-10-11 09:00 WITA @ 0 — Alasan tutup: Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset
 - Hasil: bersih +$0.00 (kotor +$0.00, fee $0.00)

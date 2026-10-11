@@ -11,16 +11,16 @@
     "tail": "  OK   Kalkulator: likuidasi selalu di belakang SL (penyangga maintenance margin)\n  OK   Kalender: level dampak SEDANG/TINGGI/FINAL BOSS kebaca bener\n  OK   Kalender: Medium masuk + kamus nama/kepanjangan/arti + pesan rapi\n\n109 lolos, 0 gagal (dari 2026-10-10 test run)\n"
   },
   "bingxApi": {
-    "lastRunDateKey": "2026-10-10",
-    "at": "2026-10-09T20:31:00.456Z",
-    "ok": true,
-    "executorHash": "8408fa0830cb7852",
+    "lastRunDateKey": null,
+    "at": "2026-10-11T03:15:53.879Z",
+    "ok": false,
+    "executorHash": "cacbc7d46ac4ccbe",
     "verifiedAt": "2026-10-09T20:31:00.456Z",
-    "okCount": 14,
-    "total": 14,
+    "okCount": null,
+    "total": null,
     "failedNames": null,
-    "aborted": false,
-    "exitCode": 0,
-    "tail": "Bersih-bersih:\n  ✅ cancel stop\n  ✅ cancel limit close\n  ✅ emergencyCloseMarket -- {\"orderId\":\"2108656510381854720\",\"positionSide\":\"LONG\",\"side\":\"SELL\",\"type\":\"MARKET\",\"price\":0,\"stopPrice\":0,\"clientOrderId\":\"kaela-1791577863612\",\"timeInForce\":\"GTC\",\"status\":\"FILLED\",\"avgPrice\":\"82333.9\",\"executedQty\":\"0.0001\"}\n  ✅ posisi bersih setelah tutup\n\n14/14 OK. Semua endpoint yang dipakai ninjaMrTrader.js terbukti jalan di demo.\n"
+    "aborted": true,
+    "exitCode": 3,
+    "tail": "DEMO VST -- harga 82936.6, saldo 376243.6915 VST, stepSize 0.0001, minNotional $2, pricePrecision 1\n⛔ Akun demo lagi ada posisi -- berhenti, jangan campur. Posisi: LONG 1.4483\n"
   }
 }

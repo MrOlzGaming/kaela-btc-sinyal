@@ -220,7 +220,7 @@ async function runLadder(deps, log, now) {
         closedAt: now, grossUsd: n2 + c.fees + fee, feeUsd: c.fees + fee, net: n2, retPlantedPct: n2 / c.putIn * 100, reason: 'GRID_LADDER_TP' };
       j.history.push(rec); if (j.history.length > 500) j.history = j.history.slice(-500);
       j.stats.cycles += 1; j.stats.totalPnlUsd += n2; if (n2 >= 0) j.stats.wins += 1; else j.stats.losses += 1;
-      j.cycle = null; deps.save();
+      j.cycle = null; j.lastWallet = await ex.getWalletBalance(cfg.marginAsset).catch(() => j.lastWallet); deps.save();
       log(`TP ladder ${rec.signalId}: ${c.bets} tangga, total modal masuk ${fmt$(c.putIn)} -> net ${fmt$(n2)} (+${rec.retPlantedPct.toFixed(1)}% dari total modal masuk)`);
       await deps.notify(closeMsg(rec, j, deps));
       return { tp: rec };
@@ -235,6 +235,13 @@ async function runLadder(deps, log, now) {
   // mindahin dana sendiri.
   const maxCap = cfg.maxCapUsd || 0;
   const capOf = (w) => (maxCap > 0 ? Math.min(w, maxCap) : w);
+  // CADANGAN BANK (11 Okt 2026, Olan: "saldo di BingX buat mewakili seluruh saldo.. aku mau meresikokan uang yang ada di bank..
+  // USDC sekarang cuma 94 dolar, itu 10% uangku aja"). Modal acuan = saldo BingX + cadangan bank (bankReserveUsd di config).
+  // Top up dari bank kebaca -> cadangan otomatis berkurang segitu (total gak dobel). Ganti angka di config = cadangan di-set ulang.
+  // Tangga yang marginnya belum ada di BingX -> GAK dibuka kecil diem2: Olan dikabarin top up berapa (DM, maks 1x/6 jam).
+  if (j.reserveCfg !== (cfg.bankReserveUsd || 0)) { j.reserveCfg = cfg.bankReserveUsd || 0; j.bankReserve = j.reserveCfg; }
+  const reserve = () => Math.max(0, j.bankReserve || 0);
+  const useDeposit = (d) => { if (d > 0 && reserve() > 0) { const used = Math.min(d, reserve()); j.bankReserve = reserve() - used; log(`top up ${fmt$(d)} dianggap dari bank -> cadangan bank sisa ${fmt$(j.bankReserve)}`); } };
   const overCap = async (w) => {
     if (cfg.overCapAlert === false || !(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
     j.overCapAt = now; deps.save();
@@ -246,7 +253,9 @@ async function runLadder(deps, log, now) {
       if (c.anchor == null) c.anchor = c.cycleCap - c.realized; // jurnal sebelum fitur ini
       const expected = c.anchor + c.realized, d = w - expected;
       c.anchor += d; // selisih kecil (funding dll) diserap, selisih besar = top up / tarik
-      const from = c.cycleCap, to = capOf(c.anchor);
+      if (d > Math.max(5, Math.abs(expected) * 0.02)) useDeposit(d);
+      j.lastWallet = w;
+      const from = c.cycleCap, to = capOf(c.anchor + reserve());
       if (Math.abs(d) > Math.max(5, Math.abs(expected) * 0.02) || Math.abs(to - from) > Math.max(5, from * 0.02)) {
         if (Math.abs(to - from) > 0.01) {
           c.cycleCap = to; c.unit = to * betPct / 100; (c.capChanges = c.capChanges || []).push({ at: now, from, to, wallet: w });
@@ -263,8 +272,10 @@ async function runLadder(deps, log, now) {
     if (dd < cfg.minDd) { deps.save(); return { idle: `dd ${dd.toFixed(1)}% < ${cfg.minDd}%` }; }
     if (j.manualPauseAt && now - j.manualPauseAt < 24 * 3600e3) { deps.save(); return { idle: 'jeda 24 jam abis tutup manual' }; }
     const walletAll = await ex.getWalletBalance(cfg.marginAsset);
+    if (j.lastWallet > 0 && walletAll - j.lastWallet > Math.max(5, j.lastWallet * 0.02)) useDeposit(walletAll - j.lastWallet); // top up di antara siklus
+    j.lastWallet = walletAll;
     await overCap(walletAll);
-    const wallet = capOf(walletAll);
+    const wallet = capOf(walletAll + reserve());
     const unit = wallet * betPct / 100;
     const info = await ex.getSymbolInfo(sym);
     if (!(unit * L >= Math.max(info.minNotionalUsd || 0, px * info.stepSize) * 1.05)) {
@@ -289,6 +300,19 @@ async function runLadder(deps, log, now) {
       return { rungkad: rec };
     }
     deps.save(); return { idle: 'peluru habis, nunggu mantul' };
+  }
+  // margin tangga baru harus udah ada di BingX (saldo bebas = saldo - margin posisi lama) -- kalau kurang: kabarin top up, tunggu
+  {
+    const wNow = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
+    const free = wNow != null ? wNow - (c.pos ? c.pos.mg : 0) : null;
+    if (free != null && free < c.unit * 0.99) {
+      const need = c.unit - free;
+      log(`tangga #${c.bets + 1} butuh margin ${fmt$(c.unit)}, saldo bebas BingX cuma ${fmt$(free)} -- nunggu top up ${fmt$(need)}`);
+      await deps.alert(`🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo BingX kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan bank tercatat: ${fmt$(reserve())}.`, 'topup');
+      if (!c.pos) c.waitTopUpSince = c.waitTopUpSince || now;
+      deps.save(); return { idle: 'nunggu top up', need };
+    }
+    c.waitTopUpSince = null;
   }
   // MERGE: tutup posisi lama dulu, sisa margin + bet baru dibuka lagi jadi 1 posisi isolated (leverage tetap)
   let carry = 0, closedOld = null;

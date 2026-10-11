@@ -102,6 +102,19 @@ test('saldo lewat batas $1.000 -> grid pakai $1.000, Olan dikabarin lebihnya (se
   await runOnce(h.deps); assert(h.st.alerts.filter((m) => /lewat batas/.test(m)).length === 1);
 });
 
+test('cadangan bank: BingX $94 + bank $846 -> tangga 8% x $940; margin kurang -> DM top up, gak order; top up masuk -> tangga kebuka, cadangan berkurang', async () => {
+  const h = harness({ wallet: 94 }); h.deps.cfg = { ...CFG, bankReserveUsd: 846, maxCapUsd: 1000 }; h.st.px = 83033;
+  const r1 = await runOnce(h.deps);
+  assert(r1.bought && Math.abs(r1.bought.mg - 75.2) < 1.5, `tangga #1 ${r1.bought && r1.bought.mg}`);
+  h.st.px = 66000; const r2 = await runOnce(h.deps);
+  assert(r2.idle === 'nunggu top up' && h.st.orders.length === 1, JSON.stringify(r2));
+  assert(h.st.alerts.some((m) => /Top up minimal/.test(m)), h.st.alerts.join(' | '));
+  h.st.wallet += 100; const r3 = await runOnce(h.deps);
+  assert(r3.bought && r3.bought.bet === 2, JSON.stringify(r3));
+  assert(Math.abs(h.j.bankReserve - 746) < 0.5, `cadangan ${h.j.bankReserve}`);
+  assert(Math.abs(h.j.cycle.cycleCap - 940) < 3, `acuan ${h.j.cycle.cycleCap}`);
+});
+
 test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async () => {
   const h = harness(); h.st.qty = 0.01; h.st.px = 83033; const r = await runOnce(h.deps);
   assert(r.stopped === 'stray' && h.st.orders.length === 0);

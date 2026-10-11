@@ -161,6 +161,16 @@ test('BIBIT: panen -> 50% untung disisihin & dikunci, siklus baru gak pakai bibi
   assert(h.j.bibitPending < 0.01 && Math.abs(h.j.cycle.cycleCap - cap0) < 1, 'bibit ' + h.j.bibitPending + ' acuan ' + h.j.cycle.cycleCap + ' vs ' + cap0);
 });
 
+test('BIBIT CAP $1.000: modal di bawah cap -> untung compound semua; di atas cap -> kelebihannya jadi bibit', async () => {
+  const lo = harness({ wallet: 900 }); lo.deps.cfg = { ...CFG, bibitPct: 50, bibitCapUsd: 1000 }; lo.st.px = 83033; const a1 = await runOnce(lo.deps);
+  lo.st.px = a1.bought.tpPx + 100; const a = await runOnce(lo.deps);
+  assert(a.tp && a.tp.net > 0 && !(lo.j.bibitPending > 0), 'di bawah cap harusnya gak ada bibit: ' + lo.j.bibitPending);
+  const hi = harness({ wallet: 990 }); hi.deps.cfg = { ...CFG, bibitPct: 50, bibitCapUsd: 1000 }; hi.st.px = 83033; const b1 = await runOnce(hi.deps);
+  hi.st.px = b1.bought.tpPx + 100; const b = await runOnce(hi.deps);
+  const expect = Math.min(b.tp.net, hi.j.history[hi.j.history.length - 1].cycleCap + b.tp.net - 1000);
+  assert(b.tp && Math.abs(hi.j.bibitPending - Math.floor(expect * 100) / 100) < 0.02, 'bibit ' + hi.j.bibitPending + ' vs ' + expect);
+});
+
 test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async () => {
   const h = harness(); h.st.qty = 0.01; h.st.px = 83033; const r = await runOnce(h.deps);
   assert(r.stopped === 'stray' && h.st.orders.length === 0);

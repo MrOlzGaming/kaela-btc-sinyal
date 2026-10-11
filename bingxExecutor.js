@@ -264,6 +264,20 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   }
 
   // Hedge mode bisa pegang LONG dan SHORT sekaligus -- getPositionRisk cuma ambil [0], ambigu. Ini ambil sisi spesifik.
+  // (11 Okt 2026) BIBIT Farmer -- SPOT + TRANSFER ANTAR AKUN SENDIRI (izin API Olan: Spot Trading + Transfer Universal; Penarikan MATI).
+  // Endpoint dari referensi resmi bingx-api/api-ai-skills: POST /openApi/api/asset/v1/transfer (fromAccount/toAccount: fund, spot,
+  // stdFutures, coinMPerp, USDTMPerp), GET /openApi/spot/v1/account/balance, POST /openApi/spot/v1/trade/order (MARKET + quoteOrderQty).
+  async function transferAsset({ fromAccount, toAccount, asset, amount }) {
+    return signedRequest('POST', '/openApi/api/asset/v1/transfer', { fromAccount, toAccount, asset, amount: Number(amount).toFixed(4) });
+  }
+  async function getSpotBalances() {
+    const d = await signedRequest('GET', '/openApi/spot/v1/account/balance', {});
+    return (d && d.balances) || [];
+  }
+  async function spotMarketBuy({ symbol, quoteQty }) {
+    return signedRequest('POST', '/openApi/spot/v1/trade/order', { symbol, side: 'BUY', type: 'MARKET', quoteOrderQty: Number(quoteQty).toFixed(4), newClientOrderId: ('kaelabibit' + Date.now()).slice(0, 40) });
+  }
+
   // (11 Okt 2026) atur margin posisi ISOLATED -- type 1 = tambah, 2 = kurangin (penjaga posisi Farmer: biar harga likuidasi
   // posisi yang dibuka ulang sama persis kayak sebelumnya). Endpoint BingX Swap V2 /trade/positionMargin.
   async function adjustIsolatedMargin({ symbol, positionSide, amount, type }) {
@@ -279,7 +293,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, setCrossMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
     emergencyCloseMarket, wasLastEntryOrderByKaela,
-    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide, adjustIsolatedMargin,
+    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide, adjustIsolatedMargin, transferAsset, getSpotBalances, spotMarketBuy,
   };
 }
 

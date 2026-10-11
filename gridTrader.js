@@ -175,6 +175,7 @@ async function runLadder(deps, log, now) {
   const dd = (1 - px / j.ath) * 100;
   let c = j.cycle;
   const bibit = () => Math.max(0, j.bibitPending || 0); // saldo bibit yang dikunci (belum ditarik Olan)
+  if (!deps.isDemo && cfg.bibitAuto && j.bibitBuyPending && ex.getSpotBalances && (!j.bibitRetryAt || now - j.bibitRetryAt > 3600e3)) { j.bibitRetryAt = now; await bibitBuy(j, cfg, deps, log, now, null); }
   if (c && c.mode !== 'LADDER') { log('siklus lama bukan LADDER -- STOP, cek manual'); await deps.alert('⚠️ 🌾 Farmer: jurnal masih nyimpen siklus mode lama, ladder gak jalan. Cek manual.', 'mode'); return { stopped: 'mode' }; }
 
   // ---- rekonsiliasi ----
@@ -200,7 +201,7 @@ async function runLadder(deps, log, now) {
       if (px >= tpBefore * 0.998) { // ketutup pas udah di target -> anggap panen biasa
         const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: px, qty: p.qty, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs || 0, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_LADDER_TP' };
         j.history.push(rec); j.stats.cycles += 1; j.stats.totalPnlUsd += c.realized; if (c.realized >= 0) j.stats.wins += 1; else j.stats.losses += 1; j.cycle = null;
-        rec.bibit = await recordBibit(j, cfg, c.realized, px, deps, log, now); deps.save();
+        rec.bibit = await recordBibit(j, cfg, c.realized, px, deps, log, now, c.cycleCap + c.realized); deps.save();
         await deps.alert(`🌾 Farmer: posisi ${c.signalId} ketutup di luar sistem pas harga udah di target (${fmt$(px)}) -- dicatat sebagai panen (${fmt$(c.realized)}). Siklus baru jalan normal.`, `guardtp:${now}`);
         return { tp: rec };
       }
@@ -280,7 +281,7 @@ async function runLadder(deps, log, now) {
         closedAt: now, grossUsd: n2 + c.fees + fee, feeUsd: c.fees + fee, net: n2, retPlantedPct: n2 / c.putIn * 100, reason: 'GRID_LADDER_TP' };
       j.history.push(rec); if (j.history.length > 500) j.history = j.history.slice(-500);
       j.stats.cycles += 1; j.stats.totalPnlUsd += n2; if (n2 >= 0) j.stats.wins += 1; else j.stats.losses += 1;
-      rec.bibit = await recordBibit(j, cfg, n2, exit, deps, log, now);
+      rec.bibit = await recordBibit(j, cfg, n2, exit, deps, log, now, c.cycleCap + n2);
       j.cycle = null; j.lastWallet = await ex.getWalletBalance(cfg.marginAsset).catch(() => j.lastWallet); deps.save();
       log(`TP ladder ${rec.signalId}: ${c.bets} tangga, total modal masuk ${fmt$(c.putIn)} -> net ${fmt$(n2)} (+${rec.retPlantedPct.toFixed(1)}% dari total modal masuk)`);
       await deps.notify(closeMsg(rec, j, deps));
@@ -461,17 +462,52 @@ async function runLadder(deps, log, now) {
 // DITAHAN (gak dijual) bikin Farmer ikut bull besar (jalur 2017: x5,61 -> x8,89 di 50%). Biar sesuai prinsip Olan "uang dipegang
 // sendiri" (dan Kaela gak mindahin dana), bibit dikunci di saldo BingX (gak dipake margin, gak ikut acuan) + Olan dikabarin narik &
 // beliin BTC ke dompet sendiri. Begitu saldo turun (ditarik), bibit tertunda berkurang segitu.
-async function recordBibit(j, cfg, profit, px, deps, log, now) {
+async function recordBibit(j, cfg, profit, px, deps, log, now, capAfter) {
   const pct = cfg.bibitPct || 0;
   if (!(pct > 0) || !(profit > 0)) return 0;
-  const amt = Math.round(profit * pct) / 100;
+  // (11 Okt 2026, Olan: "biarin saldo di futures kena cap $1000 dulu, baru nanti profit2nya buang ke spot") -- bibitCapUsd: selama
+  // modal acuan Farmer < cap, untung 100% di-compound; begitu lewat cap, KELEBIHANNYA (maks seluruh untung siklus) jadi bibit.
+  const cap = cfg.bibitCapUsd || 0;
+  const amt = cap > 0 ? Math.floor(Math.max(0, Math.min(profit, (capAfter || 0) - cap)) * 100) / 100 : Math.round(profit * pct) / 100;
+  if (!(amt > 0.009)) { if (cap > 0) log(`panen ${fmt$(profit)} -- modal Farmer ${fmt$(capAfter || 0)} belum lewat ${fmt$(cap)}, untung di-compound semua`); return 0; }
   j.bibitPending = Math.round(((j.bibitPending || 0) + amt) * 100) / 100;
   j.bibitTotal = Math.round(((j.bibitTotal || 0) + amt) * 100) / 100;
   (j.bibitLog = j.bibitLog || []).push({ at: now, amt, px, btc: amt / px });
   if (j.bibitLog.length > 300) j.bibitLog = j.bibitLog.slice(-300);
   log(`BIBIT ${fmt$(amt)} (${pct}% untung ${fmt$(profit)}) disisihin -- tertunda ${fmt$(j.bibitPending)}`);
-  if (!deps.isDemo) await deps.alert(`🌱 Farmer panen! Untung ${fmt$(profit)} -- bibit ${pct}% = ${fmt$(amt)} udah disisihin & dikunci (gak dipakai trading).\n\nTarik ${fmt$(j.bibitPending)} USDC dari BingX, beliin BTC, simpan di DOMPET SENDIRI ya -- ditahan, jangan dijual. Total bibit sejauh ini: ${fmt$(j.bibitTotal)}.`, `bibit:${now}`);
+  // OTOMATIS (real, cfg.bibitAuto): transfer ke Spot + beli BTC spot. Gagal -> balik ke mode kabarin manual di bawah.
+  if (!deps.isDemo && cfg.bibitAuto && deps.exec && deps.exec.transferAsset) {
+    try {
+      await deps.exec.transferAsset({ fromAccount: 'USDTMPerp', toAccount: 'spot', asset: cfg.marginAsset || 'USDC', amount: amt });
+      j.bibitPending = Math.max(0, Math.round((j.bibitPending - amt) * 100) / 100); j.bibitBuyPending = true;
+      log(`BIBIT ${fmt$(amt)} ditransfer ke akun Spot`);
+      await bibitBuy(j, cfg, deps, log, now, `🌱 Farmer panen! Untung ${fmt$(profit)} -- bibit ${fmt$(amt)} udah otomatis dipindah ke Spot`);
+      return amt;
+    } catch (e) { log(`transfer bibit gagal (${e.message}) -- balik ke mode kabarin manual`); }
+  }
+  if (!deps.isDemo) await deps.alert(`🌱 Farmer panen! Untung ${fmt$(profit)} -- bibit ${fmt$(amt)} udah disisihin & dikunci (gak dipakai trading).\n\nTarik ${fmt$(j.bibitPending)} USDC dari BingX, beliin BTC, simpan di DOMPET SENDIRI ya -- ditahan, jangan dijual. Total bibit sejauh ini: ${fmt$(j.bibitTotal)}.`, `bibit:${now}`);
   return amt;
+}
+
+// beli BTC spot pakai SEMUA USDC di akun Spot (kantong bibit). Minimal order spot BingX $5 -- kurang dari itu ditumpuk dulu.
+async function bibitBuy(j, cfg, deps, log, now, head) {
+  const ex = deps.exec, asset = cfg.marginAsset || 'USDC', sym = `BTC-${asset}`;
+  try {
+    const bal = await ex.getSpotBalances();
+    const usd = Number((bal.find((b) => b.asset === asset) || {}).free) || 0;
+    if (usd < 5.5) { log(`kantong bibit Spot ${fmt$(usd)} -- belum sampai minimal order $5, ditumpuk`); if (head) await deps.alert(`${head}. Saldo Spot ${fmt$(usd)} belum sampai minimal beli $5 -- ditumpuk, kebeli otomatis di panen berikutnya.`, `bibit:${now}`); return; }
+    const qq = Math.floor(usd * 0.995 * 100) / 100;
+    const o = await ex.spotMarketBuy({ symbol: sym, quoteQty: qq });
+    const btc = Number(o && (o.executedQty || o.origQty)) || 0;
+    j.bibitBuyPending = false; j.bibitBtc = Math.round(((j.bibitBtc || 0) + btc) * 1e8) / 1e8;
+    (j.bibitLog = j.bibitLog || []).push({ at: now, buyUsd: qq, btc, auto: true });
+    const allBtc = Number(((await ex.getSpotBalances().catch(() => [])).find((b) => b.asset === 'BTC') || {}).free) || j.bibitBtc;
+    log(`BIBIT dibeliin ${btc} BTC (${fmt$(qq)}) -- kantong bibit ${allBtc} BTC`);
+    await deps.alert(`${head || '🌱 Kantong bibit Farmer'}: dibeliin ${btc} BTC (${fmt$(qq)}) di Spot BingX, DITAHAN (gak dijual).\nKantong bibit sekarang: ${allBtc} BTC.${allBtc * (o && Number(o.price) || 0) > 500 ? '\n\nUdah lumayan gede -- pertimbangin tarik BTC-nya ke dompet sendiri ya (penarikan tetap di tangan kamu).' : ''}`, `bibitbuy:${now}`);
+  } catch (e) {
+    log(`beli BTC bibit gagal: ${e.message} -- dicoba lagi siklus berikutnya`);
+    if (head) await deps.alert(`${head}, tapi beli BTC-nya gagal (${e.message}). USDC aman di Spot, dicoba lagi otomatis.`, `bibitfail:${now}`);
+  }
 }
 
 function ladderLiqMsg(c, p, px, deps) {

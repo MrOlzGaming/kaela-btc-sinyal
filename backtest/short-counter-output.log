@@ -1,0 +1,77 @@
+DATA: 2014-09-17 .. 2026-10-11 (4406 hari), hari 2026-08-07+ = TAMBALAN (high/low perkiraan)
+
+=== 1) ATURAN OLAN, mulai halving 11 Mei 2020, modal $1.000 ===
+bet 1% saldo tiap awal siklus      akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+bet 1% modal awal ($10 tetap)      akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $540 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.3% ekuitas | gagal tambah 0/ganti 0
++ funding 0,01%/8 jam (asumsi)     akhir     $836 (x0.84, -2.8%/th) | DD 36.7% | terendah $652 | TP 1x | liq 30 | maks posisi 24 | margin maks 50.0% ekuitas | gagal tambah 0/ganti 0
+  fee total $0, rugi likuidasi total $342
+  posisi masih kebuka di akhir data: 24 lot, tanam $668, floating $33, rugi liq siklus ini -$342
+  per tahun (ekuitas awal -> akhir tahun):
+    2020: $1,000 -> $949 (-5.1%)
+    2021: $947 -> $863 (-8.9%)
+    2022: $857 -> $990 (15.5%)
+    2023: $990 -> $880 (-11.1%)
+    2024: $872 -> $663 (-24.0%)
+    2025: $659 -> $676 (2.5%)
+    2026: $672 -> $692 (3.0%)
+
+  daftar siklus (mulai -> tutup | hari | ditanam | hasil bersih | liq | maks posisi):
+    2020-08-18 -> 2020-09-03 |   16 hr |    $10 |    $1 | 0 | 1
+
+=== 2) PER SIKLUS HALVING (modal $1.000 di awal tiap siklus) ===
+halving 2020 -> 2024               akhir     $788 (x0.79, -5.9%/th) | DD 25.5% | terendah $746 | TP 1x | liq 15 | maks posisi 18 | margin maks 29.5% ekuitas | gagal tambah 0/ganti 0
+halving 2024 -> sekarang           akhir   $1,019 (x1.02, 0.8%/th) | DD 5.7% | terendah $950 | TP 5x | liq 2 | maks posisi 9 | margin maks 10.1% ekuitas | gagal tambah 0/ganti 0
+
+=== 3) TITIK MULAI BEDA-BEDA (tiap tanggal 1, Mei 2020 .. Sep 2026, jalan s/d sekarang) ===
+  77 titik mulai | hasil: terburuk x0.69, median x0.99, terbaik x1.02 | rugi 49/77
+  DD: median 9.6%, terburuk 46.1%
+    terburuk: mulai 2020-09-01 -> x0.69, DD 46.1%, liq 30
+    terburuk: mulai 2020-10-01 -> x0.69, DD 46.1%, liq 30
+    terburuk: mulai 2020-05-01 -> x0.69, DD 46.1%, liq 30
+    terburuk: mulai 2020-06-01 -> x0.69, DD 46.1%, liq 30
+    terburuk: mulai 2020-07-01 -> x0.69, DD 46.1%, liq 30
+
+=== 4) SENSITIVITAS (mulai halving 2020, 1 parameter diubah, sisanya aturan Olan) ===
+jarak DCA = 5.0%                   akhir     $348 (x0.35, -15.2%/th) | DD 85.0% | terendah $151 | TP 1x | liq 56 | maks posisi 41 | margin maks 243.1% ekuitas | gagal tambah 3/ganti 14
+jarak DCA = 10.0%                  akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+jarak DCA = 15.0%                  akhir     $801 (x0.80, -3.4%/th) | DD 29.8% | terendah $703 | TP 1x | liq 19 | maks posisi 15 | margin maks 29.0% ekuitas | gagal tambah 0/ganti 0
+jarak DCA = 20.0%                  akhir     $846 (x0.85, -2.6%/th) | DD 21.2% | terendah $788 | TP 1x | liq 14 | maks posisi 8 | margin maks 15.4% ekuitas | gagal tambah 0/ganti 0
+bet = 0.5%                         akhir     $846 (x0.85, -2.6%/th) | DD 23.1% | terendah $770 | TP 1x | liq 30 | maks posisi 24 | margin maks 21.1% ekuitas | gagal tambah 0/ganti 0
+bet = 1.0%                         akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+bet = 2.0%                         akhir     $296 (x0.30, -17.3%/th) | DD 87.4% | terendah $126 | TP 1x | liq 30 | maks posisi 21 | margin maks 242.5% ekuitas | gagal tambah 3/ganti 9
+bet = 5.0%                         akhir      $40 (x0.04, -39.4%/th) | DD 96.5% | terendah $35 | TP 8x | liq 18 | maks posisi 12 | margin maks 356.3% ekuitas | gagal tambah 8/ganti 13
+TP dari tanam = 5.0%               akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+TP dari tanam = 10.0%              akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+TP dari tanam = 20.0%              akhir     $678 (x0.68, -5.9%/th) | DD 48.2% | terendah $519 | TP 0x | liq 30 | maks posisi 24 | margin maks 62.7% ekuitas | gagal tambah 0/ganti 0
+TP dari tanam = 30.0%              akhir     $678 (x0.68, -5.9%/th) | DD 48.2% | terendah $519 | TP 0x | liq 30 | maks posisi 24 | margin maks 62.7% ekuitas | gagal tambah 0/ganti 0
+ganti likuidasi = x1               akhir     $723 (x0.72, -4.9%/th) | DD 39.2% | terendah $609 | TP 1x | liq 30 | maks posisi 24 | margin maks 39.5% ekuitas | gagal tambah 0/ganti 0
+ganti likuidasi = x1.25            akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+ganti likuidasi = x1.5             akhir     $662 (x0.66, -6.2%/th) | DD 54.6% | terendah $461 | TP 1x | liq 30 | maks posisi 24 | margin maks 94.2% ekuitas | gagal tambah 0/ganti 0
+ganti likuidasi = x2               akhir   $1,029 (x1.03, 0.4%/th) | DD 30.2% | terendah $699 | TP 3x | liq 20 | maks posisi 18 | margin maks 53.0% ekuitas | gagal tambah 0/ganti 0
+zona dari ATH = 20.0%              akhir     $777 (x0.78, -3.9%/th) | DD 37.4% | terendah $640 | TP 0x | liq 21 | maks posisi 21 | margin maks 41.7% ekuitas | gagal tambah 0/ganti 0
+zona dari ATH = 30.0%              akhir     $726 (x0.73, -4.9%/th) | DD 42.0% | terendah $582 | TP 0x | liq 27 | maks posisi 23 | margin maks 52.5% ekuitas | gagal tambah 0/ganti 0
+zona dari ATH = 40.0%              akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+zona dari ATH = 50.0%              akhir     $609 (x0.61, -7.4%/th) | DD 56.9% | terendah $432 | TP 2x | liq 36 | maks posisi 26 | margin maks 84.6% ekuitas | gagal tambah 0/ganti 0
+zona dari ATH = tanpa zona         akhir     $539 (x0.54, -9.2%/th) | DD 65.4% | terendah $347 | TP 0x | liq 42 | maks posisi 28 | margin maks 116.4% ekuitas | gagal tambah 0/ganti 0
+
+=== 6) VARIAN (mulai halving 2020 + stress 2016) ===
+aturan Olan (pembanding)           akhir     $692 (x0.69, -5.6%/th) | DD 46.1% | terendah $539 | TP 1x | liq 30 | maks posisi 24 | margin maks 60.4% ekuitas | gagal tambah 0/ganti 0
+   ..stress mulai 2016             akhir       $7 (x0.01, -38.7%/th) | DD 99.5% | terendah $5 | TP 13x | liq 106 | maks posisi 29 | margin maks 308.2% ekuitas | gagal tambah 7/ganti 30
+   ..77 titik mulai: terburuk x0.69, median x0.99, rugi 49/77
+ATH segar <= 365 hr                akhir   $1,040 (x1.04, 0.6%/th) | DD 10.8% | terendah $892 | TP 6x | liq 8 | maks posisi 13 | margin maks 16.3% ekuitas | gagal tambah 0/ganti 0
+   ..stress mulai 2016             akhir      $10 (x0.01, -36.2%/th) | DD 99.1% | terendah $9 | TP 15x | liq 84 | maks posisi 29 | margin maks 308.2% ekuitas | gagal tambah 7/ganti 30
+   ..77 titik mulai: terburuk x1.00, median x1.02, rugi 4/77
+ATH segar <= 180 hr                akhir   $1,039 (x1.04, 0.6%/th) | DD 10.8% | terendah $892 | TP 5x | liq 8 | maks posisi 13 | margin maks 16.3% ekuitas | gagal tambah 0/ganti 0
+   ..stress mulai 2016             akhir      $10 (x0.01, -36.2%/th) | DD 99.1% | terendah $9 | TP 14x | liq 84 | maks posisi 29 | margin maks 308.2% ekuitas | gagal tambah 7/ganti 30
+   ..77 titik mulai: terburuk x1.00, median x1.02, rugi 0/77
+TP per posisi 10%                  akhir     $906 (x0.91, -1.5%/th) | DD 12.4% | terendah $877 | TP 16x | liq 14 | maks posisi 10 | margin maks 12.1% ekuitas | gagal tambah 0/ganti 0
+   ..stress mulai 2016             akhir     $741 (x0.74, -2.9%/th) | DD 28.4% | terendah $717 | TP 22x | liq 37 | maks posisi 11 | margin maks 14.0% ekuitas | gagal tambah 0/ganti 0
+   ..77 titik mulai: terburuk x0.90, median x1.00, rugi 39/77
+TP per posisi + ATH segar 365      akhir     $982 (x0.98, -0.3%/th) | DD 5.0% | terendah $950 | TP 13x | liq 6 | maks posisi 7 | margin maks 7.5% ekuitas | gagal tambah 0/ganti 0
+   ..stress mulai 2016             akhir     $801 (x0.80, -2.1%/th) | DD 22.7% | terendah $774 | TP 16x | liq 29 | maks posisi 11 | margin maks 14.0% ekuitas | gagal tambah 0/ganti 0
+   ..77 titik mulai: terburuk x0.98, median x1.00, rugi 13/77
+
+=== 5) STRESS DI LUAR PERIODE (BTC "belum dewasa") ===
+mulai halving 9 Jul 2016           akhir       $7 (x0.01, -38.7%/th) | DD 99.5% | terendah $5 | TP 13x | liq 106 | maks posisi 29 | margin maks 308.2% ekuitas | gagal tambah 7/ganti 30
+mulai 1 Jan 2017 (sebelum bull 20x) akhir      $10 (x0.01, -37.9%/th) | DD 99.1% | terendah $9 | TP 14x | liq 84 | maks posisi 29 | margin maks 610.9% ekuitas | gagal tambah 7/ganti 30
+mulai awal data Sep 2014           akhir       $2 (x0.00, -40.9%/th) | DD 99.9% | terendah $1 | TP 20x | liq 106 | maks posisi 29 | margin maks 710.2% ekuitas | gagal tambah 7/ganti 30

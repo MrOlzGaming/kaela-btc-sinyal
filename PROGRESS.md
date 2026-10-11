@@ -13,6 +13,8 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 19:xx** — RISET 🛡️ SHORT TAHAN BULL (ide Olan, `backtest/shortCounterStudy.js`): zona ATH..-40%, 1x, 1%, DCA +10%, TP 10% tanam, liq diganti x1,25 -> **x0,69 DD 46% (2020-26), 1x TP** ❌. Varian ATH segar <= 365 hr aman (DD 11%) tapi ~0,6%/th. Detail STRATEGY-CATALOG. Data: btc-history.json + tambalan harga archive/orderbook (Binance diblok di server cloud).
+
 - **11 Okt malam** — Semua gantungan masa depan DIBANGUN & dijadwalkan: halving.js (tanggal halving otomatis dari tinggi blok, berikutnya
   ~12 Apr 2028), 🐻 FARMER SHORT shortLadderTrader.js (siaga s/d 14 Sep 2029, cron tiap menit real+demo, terdaftar di penutup posisi asing &
   buku besar, PnL-nya gak ganggu hitungan setor/tarik Farmer), 🐕 DOGE di spotGridTrader.js (lewat cap $100rb -> DCA DOGE). Selftest:

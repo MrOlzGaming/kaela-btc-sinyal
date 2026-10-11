@@ -238,14 +238,27 @@ async function runLadder(deps, log, now) {
     try { const ff = await deps.fetchFarmerFunds(); if (ff && ff.updatedAt) j.webFunds = { at: now, ...ff }; else if (j.webFunds) j.webFunds.at = now; }
     catch (e) { log(`baca Dompet Farmer dari web gagal (pakai yang terakhir/config): ${e.message}`); }
   }
-  if (j.webFunds && j.webFunds.updatedAt) { cfg.bankReserveUsd = j.webFunds.bankUsd || 0; cfg.selfCustodyWallets = j.webFunds.wallets || []; }
+  // MODE SALDO (11 Okt 2026, Olan: "fitur saldo otomatis pake saldo bingx, terus manual isi sendiri.. kamu isi manual 940"):
+  //   auto   = modal acuan saldo BingX (+ dompet kripto pribadi kalau diisi)
+  //   manual = modal acuan TOTAL yang Olan isi (mis. $940 padahal BingX cuma $94) -> selisihnya jadi cadangan di luar BingX
+  //   bank   = format lama (bankReserveUsd)
+  const fundsSrc = j.webFunds && j.webFunds.updatedAt ? j.webFunds
+    : { mode: cfg.farmerBalanceMode, totalUsd: cfg.manualTotalUsd, bankUsd: cfg.bankReserveUsd, wallets: cfg.selfCustodyWallets, updatedAt: 'config' };
+  const fMode = fundsSrc.mode || (fundsSrc.bankUsd ? 'bank' : 'auto');
+  cfg.selfCustodyWallets = fMode !== 'manual' ? (fundsSrc.wallets || []) : []; // manual = total udah termasuk semuanya
   const maxCap = cfg.maxCapUsd || 0;
   const capOf = (w) => (maxCap > 0 ? Math.min(w, maxCap) : w);
   // CADANGAN BANK (11 Okt 2026, Olan: "saldo di BingX buat mewakili seluruh saldo.. aku mau meresikokan uang yang ada di bank..
   // USDC sekarang cuma 94 dolar, itu 10% uangku aja"). Modal acuan = saldo BingX + cadangan bank (bankReserveUsd di config).
   // Top up dari bank kebaca -> cadangan otomatis berkurang segitu (total gak dobel). Ganti angka di config = cadangan di-set ulang.
   // Tangga yang marginnya belum ada di BingX -> GAK dibuka kecil diem2: Olan dikabarin top up berapa (DM, maks 1x/6 jam).
-  if (j.reserveCfg !== (cfg.bankReserveUsd || 0)) { j.reserveCfg = cfg.bankReserveUsd || 0; j.bankReserve = j.reserveCfg; }
+  const fKey = `${fMode}:${fundsSrc.totalUsd}:${fundsSrc.bankUsd}:${fundsSrc.updatedAt}`;
+  if (j.reserveKey !== fKey) { // angka baru dari web/config -> cadangan di-set ulang
+    if (fMode === 'manual') {
+      const wNow = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
+      if (wNow != null) { j.bankReserve = Math.max(0, (Number(fundsSrc.totalUsd) || 0) - wNow); j.reserveKey = fKey; log(`mode saldo MANUAL ${fmt$(fundsSrc.totalUsd)}: BingX ${fmt$(wNow)} + di luar BingX ${fmt$(j.bankReserve)}`); }
+    } else { j.bankReserve = fMode === 'bank' ? (Number(fundsSrc.bankUsd) || 0) : 0; j.reserveKey = fKey; }
+  }
   // DOMPET PRIBADI (11 Okt 2026, Olan: "baca dompet kripto misal Trust Wallet.. BingX bisa rungkad kayak MtGox/FTX, mending nganggur
   // tapi aman di dompet sendiri") -- stablecoin di alamat publik cfg.selfCustodyWallets (selfCustodyWallet.js) ikut jadi modal acuan.
   // Dibaca tiap 10 menit; gagal baca -> pakai angka terakhir (maks 6 jam), lewat itu gak dihitung + Olan dikabarin.

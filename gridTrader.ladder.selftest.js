@@ -103,7 +103,7 @@ test('saldo lewat batas $1.000 -> grid pakai $1.000, Olan dikabarin lebihnya (se
 });
 
 test('cadangan bank: BingX $94 + bank $846 -> tangga 8% x $940; margin kurang -> DM top up, gak order; top up masuk -> tangga kebuka, cadangan berkurang', async () => {
-  const h = harness({ wallet: 94 }); h.deps.cfg = { ...CFG, bankReserveUsd: 846, maxCapUsd: 1000 }; h.st.px = 83033;
+  const h = harness({ wallet: 94 }); h.deps.cfg = { ...CFG, farmerBalanceMode: "manual", manualTotalUsd: 940, maxCapUsd: 1000 }; h.st.px = 83033;
   const r1 = await runOnce(h.deps);
   assert(r1.bought && Math.abs(r1.bought.mg - 75.2) < 1.5, `tangga #1 ${r1.bought && r1.bought.mg}`);
   h.st.px = 66000; const r2 = await runOnce(h.deps);
@@ -117,7 +117,7 @@ test('cadangan bank: BingX $94 + bank $846 -> tangga 8% x $940; margin kurang ->
 
 test('dompet pribadi: BingX $94 + dompet $500 + bank $346 -> acuan $940; top up dari dompet gak ngurangin cadangan bank', async () => {
   const h = harness({ wallet: 94 }); let custody = 500;
-  h.deps.cfg = { ...CFG, bankReserveUsd: 346, maxCapUsd: 1000, selfCustodyWallets: [{ chain: 'bsc', address: '0x' + '1'.repeat(40) }] };
+  h.deps.cfg = { ...CFG, bankReserveUsd: 346, farmerBalanceMode: "bank", maxCapUsd: 1000, selfCustodyWallets: [{ chain: 'bsc', address: '0x' + '1'.repeat(40) }] };
   h.deps.readCustody = async () => ({ total: custody, detail: [] });
   h.st.px = 83033; const r1 = await runOnce(h.deps);
   assert(r1.bought && Math.abs(h.j.cycle.cycleCap - 940) < 2, `acuan ${h.j.cycle.cycleCap}`);

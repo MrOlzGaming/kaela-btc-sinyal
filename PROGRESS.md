@@ -13,6 +13,10 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 11:00** — RISET TANGGA SHORT 1x + window halving (backtest/gridShortStudy.js): pemenang 5%/tangga, tambah tiap +5%,
+  TP 10%, window hari 520-900 sejak halving -> x2,54, DD 25%, tiap bear untung. Window 2024 UDAH HABIS (6 Okt 2026) -> dipasang
+  nanti (GANTUNGAN), window berikutnya ~Sep 2029. Sekarang hari ke-904 = zona dasar historis (777-924) -> fase tangga LONG.
+
 - **11 Okt 10:00** — GRID TANGGA OTOMATIS: riset eksekusi 1 simbol (backtest/gridLotModeStudy.js): MERGE (tutup + buka lagi sisa
   margin + bet baru) x2,40 > lot virtual x2,31. Sweep -> 8%/jarak 20%/5x (x2,22, DD 60%, tahan sampai ATH -93%). Mode LADDER di
   gridTrader.js + selftest 7/7 (gridTrader.ladder.selftest.js), tradeLedger kenal grid_tangga. Mode ATH lama tetap ada (mode: ATH).

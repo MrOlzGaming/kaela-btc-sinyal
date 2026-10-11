@@ -49,6 +49,10 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
+- **Tangga SHORT 1x (window halving)** -- riset beres 11 Okt (STRATEGY-CATALOG). Pasang sebagai mode SHORT di gridTrader.js
+  (hedge mode BingX, positionSide SHORT) SEBELUM window berikutnya: halving ~Apr 2028 (verifikasi tanggal pasti) + 520 hari = ~Sep 2029.
+  Uji demo dulu (BingX demo BTC-USDT). Cek ulang riset pakai data siklus 2024-26 yang udah lengkap (dasar 2024 belum pasti).
+
 - Kandidat riset baru lainnya ada di STRATEGY-CATALOG.md bagian "IDE YANG BELUM DICOBA".
 
 ## ✅ SELESAI (terbaru di atas)

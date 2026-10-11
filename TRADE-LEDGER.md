@@ -1,9 +1,10 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-11 08:48 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-11 09:01 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
+- **🌾 Farmer · Pola Chart (grid tangga) · Olan Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
 - **🏹 Ranger · Fair Value Gap · Olan Real (Binance)**: 2 trade, menang 2/2 (100%), bersih +$1.04
 - **🏹 Ranger · Posisi manual/adopsi · Kaela Demo (Binance)**: 1 trade, menang 0/0, bersih ? (1 PnL gak kebaca)
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
@@ -13,11 +14,18 @@ Diperbarui otomatis: 2026-10-11 08:48 WITA -- dari jurnal SEMUA sistem (Sniper/R
 
 ## Posisi terbuka (3)
 
-- 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX · BTCUSDT LONG @ 82,923.5 (SL ?) sejak 2026-10-11 08:46 WITA
+- 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX · BTCUSDT LONG @ 82,919.3 (SL ?) sejak 2026-10-11 09:01 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · BTC SHORT @ 85,503.9 (SL 87,661.1) sejak 2026-10-06 12:00 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · BTC SHORT @ 85,909.5 (SL 86,405.4) sejak ?
 
-## Trade terakhir (35 terbaru)
+## Trade terakhir (36 terbaru)
+
+### #G2026101101 — 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX
+- Buka: 2026-10-11 08:46 WITA — BTCUSDT LONG @ 82,923.5
+- Alasan buka: Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (maks $1.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk
+- Konteks entry: layers=1, ditanam=60, modalGrid=400323.44, athAwal=126199.63, returnModalDitanamPct=0
+- Tutup: 2026-10-11 09:00 WITA @ 0 — Alasan tutup: Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset
+- Hasil: bersih +$0.00 (kotor +$0.00, fee $0.00)
 
 ### #2026100902 — 🥷 Ninja · Exhaustion · Kaela Demo · BingX
 - Buka: 2026-10-09 20:17 WITA — BTC SHORT @ 83,205.1 (SL 82,659.2)

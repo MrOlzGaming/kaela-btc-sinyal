@@ -1,0 +1,61 @@
+{
+  "ath": 126199.63,
+  "athAt": 1791679568454,
+  "cycle": {
+    "mode": "LADDER",
+    "id": "grid-1791680468438",
+    "signalId": "G2026101102",
+    "startedAt": 1791680468438,
+    "athAtStart": 126199.63,
+    "cycleCap": 400323.142,
+    "anchor": 400323.142,
+    "unit": 24019.38852,
+    "putIn": 24019.38852,
+    "realized": -60.046011095000004,
+    "fees": 60.046011095000004,
+    "bets": 1,
+    "liqs": 0,
+    "pos": {
+      "e": 82919.3,
+      "qty": 1.4483,
+      "mg": 24018.4044,
+      "liq": 66635.3
+    },
+    "lastE": 82919.3,
+    "firstE": 82919.3
+  },
+  "history": [
+    {
+      "id": "grid-1791679568454",
+      "signalId": "G2026101101",
+      "mode": "LADDER",
+      "openedAt": 1791679568454,
+      "entry": 82923.5,
+      "exit": null,
+      "qty": 0.0036,
+      "planted": 60,
+      "layers": 1,
+      "cycleCap": 400323.4390623,
+      "athAtStart": 126199.63,
+      "liqs": 0,
+      "closedAt": 1791680412113,
+      "grossUsd": null,
+      "feeUsd": null,
+      "net": null,
+      "retPlantedPct": null,
+      "reason": "GRID_GONE",
+      "note": "reset demo: tangga #1 $60 (batas $1.000) ditutup, mulai ulang pakai seluruh saldo demo (Olan 11 Okt)"
+    }
+  ],
+  "stats": {
+    "cycles": 0,
+    "wins": 0,
+    "losses": 0,
+    "totalPnlUsd": 0
+  },
+  "seq": {
+    "day": "2026-10-11",
+    "n": 2
+  },
+  "alerts": {}
+}

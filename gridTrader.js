@@ -370,7 +370,9 @@ async function runLadder(deps, log, now) {
     const w = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
     if (w > 0) {
       if (c.anchor == null) c.anchor = c.cycleCap - c.realized; // jurnal sebelum fitur ini
-      const expected = c.anchor + c.realized, d = w - expected;
+      // untung/rugi 🐻 tangga short (akun sama) bukan top up/tarik -- dikeluarin dari hitungan (11 Okt 2026)
+      const ext = deps.extPnl ? Number(deps.extPnl()) || 0 : 0; if (c.extBase == null) c.extBase = ext;
+      const expected = c.anchor + c.realized + (ext - c.extBase), d = w - expected;
       c.anchor += d; // selisih kecil (funding dll) diserap, selisih besar = top up / tarik
       if (d > Math.max(5, Math.abs(expected) * 0.02)) await useDeposit(d);
       const bibitLike = (x) => bibit() > 0 && x > 0.5 && x >= bibit() * 0.9 - 0.5; // penarikan sebesar bibit (walau di bawah ambang top up/tarik)
@@ -406,7 +408,7 @@ async function runLadder(deps, log, now) {
     }
     if (!j.seq || j.seq.day !== new Date(now).toISOString().slice(0, 10)) j.seq = { day: new Date(now).toISOString().slice(0, 10), n: 0 };
     j.seq.n += 1;
-    c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, anchor: walletAll, capBreak: { bingx: walletAll, ext: reserve(), capped: walletAll + reserve() > wallet + 0.01 }, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
+    c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, anchor: walletAll, capBreak: { bingx: walletAll, ext: reserve(), capped: walletAll + reserve() > wallet + 0.01 }, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null, extBase: deps.extPnl ? Number(deps.extPnl()) || 0 : 0 };
     await ex.setIsolatedMargin(sym).catch((e) => log(`set isolated: ${e.message}`));
     await ex.setLeverage(sym, L, 'LONG').catch((e) => log(`set leverage: ${e.message}`));
   } else if (c.guard) { deps.save(); return { idle: 'penjaga belum beres' }; }
@@ -593,6 +595,7 @@ function prodDeps(cfg, journal) {
   const alerts = journal.alerts || (journal.alerts = {});
   return {
     cfg, journal, exec, isDemo: DEMO,
+    extPnl: () => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, DEMO ? 'short-ladder-demo-journal.json' : 'short-ladder-journal.json'), 'utf8')).stats.pnlUsd; } catch { return 0; } },
     fetchFarmerFunds: DEMO ? null : () => require('./kaelaProTraderClient').getFarmerFunds(),
     saveFarmerFunds: DEMO ? null : (f) => require('./kaelaProTraderClient').setFarmerFunds(f),
     price: async () => {

@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "allowReal": true,
+  "symbol": "BTC-USDC",
+  "marginAsset": "USDC",
+  "betPct": 10,
+  "gapPct": 5,
+  "tpPct": 10,
+  "leverage": 1,
+  "winFrom": 520,
+  "winTo": 900,
+  "marginCapPct": 70,
+  "remindDays": 30,
+  "_note": "11 Okt 2026 -- 🐻 FARMER SHORT (shortLadderTrader.js): tangga short 1x isolated cuma di MUSIM BEAR hari 520-900 sejak halving (halving.js otomatis dari tinggi blok; berikutnya ~14 Sep 2029). 10% saldo/tangga, tambah tiap BTC naik 5% (maks 10), TP 10% total masuk, total margin long+short maks 70% ekuitas, akhir musim ditutup paksa. Olan dikabarin 30 hari sebelum mulai. Olan 11 Okt: \"bangun dulu dan jadwalkan auto run saat siap\"."
+}

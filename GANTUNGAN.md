@@ -50,7 +50,7 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-- **TANGGA KEKAYAAN** (Olan 11 Okt, FINAL): 🌾 Farmer futures CAP $10.000 -> lebihnya bibit BTC spot -> grid SPOT BingX CAP $100.000 -> lebihnya beli DOGE -> DOGE ditarik Olan ke wallet pribadi tiap kali. Kaela nanti: (1) notif JUAL DOGE di waktu terbaik (riset siklus DOGE vs halving), (2) siapin exchange buat DCA DOGE lagi, (3) baca saldo DOGE wallet (selfCustodyWallet belum dukung jaringan Dogecoin -- tambah pas waktunya). Pagar: cuma untung, bertahap, siap nol. TRANSISI BTC spot -> grid spot ($10rb): RISET BERES 11 Okt -> 30% BTC tetap DITAHAN (inti) + 70% jadi modal grid spot (19%/th, rugi cuma 5/94 titik, DD ~51%).
+- **TANGGA KEKAYAAN** (Olan 11 Okt, FINAL): 🌾 Farmer futures CAP $10.000 -> lebihnya bibit BTC spot -> grid SPOT BingX CAP $100.000 -> lebihnya beli DOGE -> DOGE ditarik Olan ke wallet pribadi tiap kali. ✅ DIBANGUN 11 Okt (spotGridTrader.js + spot-grid-config.json "doge"): grid spot lewat $100rb -> USDC lebihnya OTOMATIS dibeliin DOGE-USDC spot BingX (DCA maks $1.000/hari, sisain peluru 3 tangga grid), Olan dikabarin buat tarik DOGE ke dompet sendiri; musim puncak halving (hari 400-600) -> DM saran jual bertahap. Sisa (nunggu kejadian): baca saldo DOGE di dompet pribadi (selfCustodyWallet belum dukung Dogecoin -- tambah pas Olan udah punya DOGE). Pagar: cuma untung, bertahap, siap nol. TRANSISI BTC spot -> grid spot ($10rb): RISET BERES 11 Okt -> 30% BTC tetap DITAHAN (inti) + 70% jadi modal grid spot (19%/th, rugi cuma 5/94 titik, DD ~51%).
 
 - **MODE BANGKIT "kejar jumlah BTC"** (Olan 11 Okt): kalau Farmer rungkad & BTC masih jauh di bawah ATH -> setoran bulanan dipakai numpuk BTC spot (DCA tahan menang jauh dari grid, STRATEGY-CATALOG). RISET BERES 11 Okt: numpuk pas <= ATH -30% & DITAHAN (gak dijual) paling bagus; setoran balik ke Farmer begitu BTC di atas ATH -30%. Dijalanin manual-terarah (Kaela ngabarin, Olan beli BTC ke dompet sendiri) pas kejadian.
 
@@ -61,7 +61,10 @@ Keputusan Olan 3 Okt 2026 malam:
   berturut-turut -> Olan dapet DM saran pindah. Sisa (nunggu kejadian): saldo Binance harus diisi dulu; bibit otomatis cuma di BingX
   (di Binance balik ke notif manual). BELUM pernah dites live di Binance (selftest exchange palsu doang).
 
-- **Tangga SHORT 1x (window halving)** -- riset beres 11 Okt (STRATEGY-CATALOG), aturan FINAL (uji bareng long, 11 Okt sore): 10%/tangga, tambah tiap +5%, TP 10%, hari 520-900 + PENGAMAN: short gak dibuka/ditambah kalau total margin long+short > 70% ekuitas (11 Okt, gantiin ide zona ATH -30% Olan: zona -30% untung dari 2018 cuma $4.948 DD 58% vs batas margin 70% $9.654 DD 48%, margin maks 72%) (per jam x6,05, DD 47% di window 2018; versi pelit 5%/+10% x1,66 DD 14%). Pasang sebagai mode SHORT di gridTrader.js
+- ✅ **Tangga SHORT 1x = 🐻 FARMER SHORT -- DIBANGUN & DIJADWALKAN 11 Okt** (shortLadderTrader.js, real + demo, cron tiap menit, siaga sampai musim bear
+  14 Sep 2029; Olan dikabarin 30 hari sebelumnya; selftest 10 lolos). Tanggal halving otomatis dari tinggi blok (halving.js) -- "verifikasi
+  tanggal halving 2028" BERES (perkiraan 12 Apr 2028, tanggal asli diambil sendiri pas blok 1.050.000 ketambang). Sisa: belum pernah order
+  live (nunggu musim). Riset aslinya: -- riset beres 11 Okt (STRATEGY-CATALOG), aturan FINAL (uji bareng long, 11 Okt sore): 10%/tangga, tambah tiap +5%, TP 10%, hari 520-900 + PENGAMAN: short gak dibuka/ditambah kalau total margin long+short > 70% ekuitas (11 Okt, gantiin ide zona ATH -30% Olan: zona -30% untung dari 2018 cuma $4.948 DD 58% vs batas margin 70% $9.654 DD 48%, margin maks 72%) (per jam x6,05, DD 47% di window 2018; versi pelit 5%/+10% x1,66 DD 14%). Pasang sebagai mode SHORT di gridTrader.js
   (hedge mode BingX, positionSide SHORT) SEBELUM window berikutnya: halving ~Apr 2028 (verifikasi tanggal pasti) + 520 hari = ~Sep 2029.
   Uji demo dulu (BingX demo BTC-USDT). Cek ulang riset pakai data siklus 2024-26 yang udah lengkap (dasar 2024 belum pasti).
 

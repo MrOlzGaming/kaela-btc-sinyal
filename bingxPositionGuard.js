@@ -27,6 +27,10 @@ function kaelaPositionsFromJournals(read = readJson) {
     const c = j && j.cycle;
     if (c && (c.pos || c.guard)) out.push({ mode, symbol: cfg.symbol || (mode === 'demo' ? 'BTC-USDT' : 'BTC-USDC'), side: 'LONG', qty: c.pos ? c.pos.qty : (c.guard ? c.guard.qty : null), owner: '🌾 Farmer' });
   }
+  for (const [file, mode, cfgFile] of [['short-ladder-journal.json', 'real', 'short-ladder-config.json'], ['short-ladder-demo-journal.json', 'demo', 'short-ladder-demo-config.json']]) { // 🐻 Farmer Short (11 Okt 2026)
+    const c = (read(file) || {}).cycle, cfg = read(cfgFile) || {};
+    if (c) out.push({ mode, symbol: cfg.symbol || (mode === 'demo' ? 'BTC-USDT' : 'BTC-USDC'), side: 'SHORT', qty: c.qty || null, owner: '🐻 Farmer Short' });
+  }
   for (const [file, owner] of [['ninja-mr-exec-journal.json', '🥷 Ninja MR'], ['ninja-exhaustion-journal.json', '🥷 Ninja Exhaustion'], ['ninja-news-journal.json', '🥷 Ninja News']]) {
     const f = (read(file) || {}).floating;
     if (f && f.legs) for (const mode of ['demo', 'real']) { const L = f.legs[mode]; if (L && !L.closedAt) out.push({ mode, symbol: f.symbol || 'BTC-USDT', side: sideOf(f.dir || L.direction), qty: null, owner }); }

@@ -51,4 +51,24 @@ test('SIKLUS INTI: musim puncak (hari 450) inti dijual 1/5, USDC-nya gak kepake 
   assert(h.st.wa.some((m) => /Inti dibeli balik/.test(m)));
 });
 
+test('🐕 DOGE: grid lewat cap $100rb -> USDC lebihnya dibeliin DOGE (DCA maks $1000/hari), DM suruh tarik ke dompet', async () => {
+  const h = harness({ btc: 0.11, px: 100000 }); await runOnce(h.deps);
+  h.st.usdc += 100000; // grid ngegede lewat cap
+  const buyDoge = h.deps.exec.spotMarketBuy;
+  h.deps.exec.spotMarketBuy = async (a) => { if (a.symbol === 'DOGE-USDC') { h.st.usdc -= a.quoteQty; h.st.orders.push({ side: 'BUY', symbol: 'DOGE', quoteQty: a.quoteQty }); return { executedQty: String(a.quoteQty / 0.2) }; } return buyDoge(a); };
+  const r = await runOnce(h.deps);
+  assert(r.doge && r.doge.amt === 1000 && h.j.doge.qty === 5000, JSON.stringify(r));
+  assert(h.st.alerts.some((m) => /DOMPET DOGE/.test(m)) && h.st.wa.some((m) => /DOGE MOONSHOT/.test(m)));
+  const r2 = await runOnce(h.deps); assert(!r2.doge, 'sehari maks 1x');
+  h.deps.now = () => 1e12 + 21 * 3600e3; const r3 = await runOnce(h.deps); assert(r3.doge, 'besoknya DCA lagi');
+});
+test('🐕 DOGE: musim puncak halving -> DM saran jual (1x per siklus); di bawah cap gak beli', async () => {
+  const h = harness({ btc: 0.11, px: 100000 }); await runOnce(h.deps);
+  h.j.doge = { qty: 5000, costUsd: 1000, buys: 1, lastBuy: 0 };
+  h.deps.now = () => Date.parse('2024-04-20') + 450 * 864e5;
+  const r = await runOnce(h.deps); assert(!r.doge);
+  assert.strictEqual(h.st.alerts.filter((m) => /MUSIM PUNCAK DOGE/.test(m)).length, 1, h.st.alerts.join('|'));
+  await runOnce(h.deps); assert.strictEqual(h.st.alerts.filter((m) => /MUSIM PUNCAK DOGE/.test(m)).length, 1);
+});
+
 (async () => { let ok = 0, fail = 0; for (const [n, f] of tests) { try { await f(); ok++; console.log(`  OK   ${n}`); } catch (e) { fail++; console.log(`  GAGAL ${n}\n       ${e.message}`); } } console.log(`\n${ok} lolos, ${fail} gagal`); if (fail) process.exitCode = 1; })();

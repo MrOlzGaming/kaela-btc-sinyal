@@ -205,6 +205,10 @@ const CLOSE_REASON_LABEL = {
   GRID_LADDER_TP: 'Target tangga kena -- untung >= 20% dari total modal masuk (rugi tangga yang kelikuidasi udah ketutup), siklus diulang pakai saldo terbaru',
   GRID_LADDER_LIQ: 'Tangga ini kena likuidasi (isolated, cuma margin tangga ini yang hangus) -- siklus LANJUT: tangga berikutnya langsung dibuka & targetnya nutup rugi ini',
   SPOTGRID_TP: 'Target grid spot kena -- untung >= 1,5% dari total modal masuk, BTC grid dijual (inti 30% tetap ditahan), siklus diulang',
+  SHORT_LADDER_TP: 'Target tangga short kena -- untung >= 10% dari total modal masuk, siklus diulang pakai saldo terbaru',
+  SHORT_LADDER_WINDOW: 'Musim bear habis (hari 900 sejak halving) -- sisa short ditutup paksa, Farmer long tetap jalan',
+  SHORT_LADDER_LIQ: 'Tangga short kena likuidasi (1x isolated) -- siklus ditutup',
+  SHORT_LADDER_EXT: 'Posisi short ketutup di luar sistem -- dicatat tutup',
   GRID_LADDER_RUNGKAD: 'Semua tangga kelikuidasi & peluru habis -- siklus ditutup rugi, mulai lagi dari saldo sisa',
   REVERSAL: 'Sinyal balik arah (hawkish) muncul, tutup duluan biar aman',
   // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long lagi, tutup walau rugi..
@@ -259,6 +263,7 @@ const SYSTEM_LABEL = {
   RANGER: { emoji: '🏹', name: 'RANGER' },
   NINJA: { emoji: '🥷', name: 'NINJA' },
   GRID: { emoji: '🌾', name: 'FARMER' },
+  SHORTLADDER: { emoji: '🐻', name: 'FARMER SHORT' }, // 11 Okt 2026 -- shortLadderTrader.js, tangga short 1x musim bear (hari 520-900 sejak halving)
   SPOTGRID: { emoji: '🪙', name: 'GRID SPOT' }, // 11 Okt 2026 -- spotGridTrader.js (BingX spot, tanpa leverage) // 10 Okt 2026 -- Grid BTC-USDC BingX (gridTrader.js); 11 Okt dinamain FARMER (Olan: 'grid ini belum ada nama') -- tanam modal tiap tangga, panen, tanam ulang (compound)
 };
 

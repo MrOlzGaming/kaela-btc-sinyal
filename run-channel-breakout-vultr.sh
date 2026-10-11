@@ -54,6 +54,12 @@ grid_output=$(timeout -k 5 45 node gridTrader.js 2>&1)
 # 🌾 FARMER DEMO (11 Okt 2026) -- aturan sama persis Farmer real, akun BingX demo VST BTC-USDT. Saklar: grid-demo-config.json.
 gridd_output=$(timeout -k 5 45 node gridTrader.js demo 2>&1)
 [ -n "$gridd_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [demo] $gridd_output" >> "$LOG_FILE"
+# 🐻 FARMER SHORT (11 Okt 2026, shortLadderTrader.js) -- tangga short 1x musim bear (hari 520-900 sejak halving, ~Sep 2029), real + demo.
+# Di luar musim cuma siaga (gak order). Saklar: short-ladder-config.json / short-ladder-demo-config.json.
+short_output=$(timeout -k 5 40 node shortLadderTrader.js 2>&1)
+[ -n "$short_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $short_output" >> "$LOG_FILE"
+shortd_output=$(timeout -k 5 40 node shortLadderTrader.js demo 2>&1)
+[ -n "$shortd_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [demo] $shortd_output" >> "$LOG_FILE"
 # 🚫 PENUTUP POSISI ASING BingX (11 Okt 2026, bingxPositionGuard.js) -- SETELAH semua sistem BingX jalan (jurnal udah ke-update), posisi
 # yang bukan punya Kaela ditutup paksa (Olan dilarang trading sendiri). Saklar: bingx-guard-config.json.
 guard_output=$(timeout -k 5 50 node bingxPositionGuard.js 2>&1)

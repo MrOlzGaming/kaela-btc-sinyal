@@ -188,6 +188,16 @@ test('PINDAH EXCHANGE (BingX rungkad -> Binance): tangga dilanjut VOLUME SAMA di
   assert(h2.st.alerts.some((m) => /pindah exchange: BINGX -> BINANCE/.test(m)), h2.st.alerts.join('|'));
 });
 
+test('🐻 untung/rugi tangga SHORT (akun sama) gak kebaca top up/tarik Farmer', async () => {
+  const h = harness(); let ext = 0; h.deps.extPnl = () => ext; h.st.px = 83033; await runOnce(h.deps);
+  const cap0 = h.j.cycle.cycleCap;
+  ext = 60; h.st.wallet += 60; await runOnce(h.deps); // short panen +$60
+  assert.strictEqual(h.j.cycle.cycleCap, cap0, 'cap gak boleh naik gara2 short');
+  ext = -100; h.st.wallet -= 160; await runOnce(h.deps); // short ditutup paksa rugi
+  assert.strictEqual(h.j.cycle.cycleCap, cap0, 'cap gak boleh turun gara2 short');
+  assert(!h.st.alerts.some((m) => /top up|tarik/i.test(m)), h.st.alerts.join('|'));
+});
+
 (async () => {
   let ok = 0, fail = 0;
   for (const [n, f] of tests) { try { await f(); ok++; console.log(`  OK   ${n}`); } catch (e) { fail++; console.log(`  GAGAL ${n}\n       ${e.message}`); } }

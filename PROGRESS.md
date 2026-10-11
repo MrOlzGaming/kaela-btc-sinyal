@@ -9,9 +9,14 @@
 - **Topik aktif:** TANGGA KEKAYAAN -- 🌾 Farmer (LIVE) -> 🌱 bibit BTC (otomatis di atas $10rb) -> 🪙 grid spot (SIAGA $10rb, inti ikut siklus halving) -> 🐕 DOGE (rencana, di atas $100rb)
 - **Status:** Farmer real tangga #1 0,0034 BTC @ $82.822 (modal $940 = BingX $94 + penambah $846), demo tangga #1 1,4483 BTC. Penjaga posisi + penutup posisi asing LIVE.
 - **Nunggu Olan:** izin deploy Netlify web Sniper (Farmer + metodologi-farmer.html).
-- **Antrian Kaela:** DOGE; tangga short (2029); verifikasi tanggal halving 2028.
+- **Antrian Kaela:** kosong -- DOGE, tangga short (14 Sep 2029) & tanggal halving udah dibangun + jalan otomatis nunggu waktunya.
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt malam** — Semua gantungan masa depan DIBANGUN & dijadwalkan: halving.js (tanggal halving otomatis dari tinggi blok, berikutnya
+  ~12 Apr 2028), 🐻 FARMER SHORT shortLadderTrader.js (siaga s/d 14 Sep 2029, cron tiap menit real+demo, terdaftar di penutup posisi asing &
+  buku besar, PnL-nya gak ganggu hitungan setor/tarik Farmer), 🐕 DOGE di spotGridTrader.js (lewat cap $100rb -> DCA DOGE). Selftest:
+  Farmer 19, short 10, spot 7, guard 7 -- semua lolos.
 
 - **11 Okt 17:40** — Kaela Access GAS v249 LIVE: kartu Dompet Farmer "maks $10.000".
 

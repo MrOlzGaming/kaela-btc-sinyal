@@ -16,9 +16,9 @@ const FEE = 0.001;
 // coreTrailStudy.js: BTC inti dijual bertahap 5x di hari 400-600 sejak halving (musim puncak), dibeli balik bertahap 5x di hari
 // 780-950 (musim dasar). Ngalahin tahan terus di semua titik mulai 2013-2021 (+306% s/d +1.872%); ide "beli <= ATH -50% + trailing"
 // diuji juga -- gak konsisten (kena koreksi tengah bull), gak dipakai. USDC hasil jual inti DIPISAH dari peluru grid (coreUsd).
-const HALVINGS = ['2012-11-28', '2016-07-09', '2020-05-11', '2024-04-20', '2028-04-17'].map((d) => Date.parse(d)); // 2028 = perkiraan, verifikasi pas deket
-const daysSinceHalving = (t) => { let h = null; for (const x of HALVINGS) if (x <= t) h = x; return h == null ? -1 : (t - h) / 864e5; };
-const halvingIdx = (t) => HALVINGS.filter((x) => x <= t).length;
+// Tanggal halving dari halving.js (11 Okt 2026): halving berikutnya diperkirakan otomatis dari tinggi blok, tanggal asli diambil
+// sendiri begitu bloknya ketambang -- gak ada lagi tanggal 2028 yang ditulis tangan.
+const { daysSinceHalving, halvingIdx } = require('./halving');
 const fmt$ = (v) => `$${Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
 function loadConfig() {
@@ -97,10 +97,8 @@ async function runOnce(deps) {
   const gridBtc = Math.max(0, btcAll - j.coreBtc);
   let c = j.cycle;
   const gridEq = gridBtc * px + cash;
-  if (cfg.capUsd > 0 && gridEq > cfg.capUsd * 1.02 && (!j.alerts.cap || now - j.alerts.cap > 7 * 864e5)) {
-    j.alerts.cap = now; deps.save();
-    await deps.alert(`🪙 Grid spot udah ${fmt$(gridEq)}, lewat batas ${fmt$(cfg.capUsd)}. Rencana kita: lebihnya ditanam ke DOGE (moonshot) -- fiturnya disiapin Kaela begitu kamu siap.`, 'spotcap');
-  }
+  const dg = await dogeMoonshot({ deps, j, cfg, ex, gridEq, cash, c, now, log });
+  if (dg) return dg;
   if (!c || !(c.btc > 0)) { // mulai siklus baru: tangga #1
     const unit = Math.min(cfg.capUsd > 0 ? cfg.capUsd : Infinity, gridEq) * cfg.unitPct / 100;
     if (cash < Math.max(unit, cfg.minOrderUsd)) { deps.save(); return { idle: 'peluru kurang' }; }
@@ -139,7 +137,36 @@ async function runOnce(deps) {
   return { idle: 'nunggu' };
 }
 
+// 🐕 DOGE MOONSHOT (11 Okt 2026, Olan: "spot grid cap 100k, lebihnya DOGE, DCA, simpan di wallet pribadi, notif buat jual").
+// Grid spot lewat capUsd -> USDC nganggur (yang gak dipakai siklus grid) di atas cap dibeliin DOGE spot BingX, dicicil maks
+// cfg.doge.maxBuyUsd per hari (DCA). DOGE yang kebeli = punya Olan: dikabarin buat DITARIK ke dompet sendiri (API gak punya izin
+// tarik). Jual DOGE = keputusan Olan di dompetnya; Kaela cuma ngingetin pas MUSIM PUNCAK siklus halving (hari sellFrom-sellTo,
+// sama kayak inti BTC) -- DOGE historis puncak barengan puncak bull BTC (2017/18, 2021).
+async function dogeMoonshot({ deps, j, cfg, ex, gridEq, cash, c, now, log }) {
+  const dc = { enabled: true, symbol: 'DOGE-USDC', maxBuyUsd: 1000, minBuyUsd: 50, ...(cfg.doge || {}) };
+  if (!dc.enabled || !(cfg.capUsd > 0)) return null;
+  const dj = j.doge || (j.doge = { qty: 0, costUsd: 0, buys: 0, lastBuy: 0, notifiedSeason: null });
+  const cc = cfg.coreCycle || {};
+  const d = daysSinceHalving(now), hk = halvingIdx(now);
+  if (dj.qty > 0 && cc.sellFrom != null && d >= cc.sellFrom && d < cc.sellTo && dj.notifiedSeason !== hk) {
+    dj.notifiedSeason = hk; deps.save();
+    await deps.alert(`🐕 MUSIM PUNCAK DOGE! Hari ke-${Math.round(d)} sejak halving -- musim puncak bull (hari ${cc.sellFrom}-${cc.sellTo}), DOGE biasanya meledak barengan BTC.\nTotal DOGE yang Kaela beliin: ${dj.qty.toLocaleString('en-US')} DOGE (modal ${fmt$(dj.costUsd)}).\n\nSaran: jual BERTAHAP di dompetmu selama musim ini (mis. 5x), jangan nunggu pucuk persis. Keputusan di kamu.`, `dogeseason:${hk}`);
+  }
+  const over = gridEq - cfg.capUsd;
+  const free = cash - (c && c.btc > 0 ? Math.max(0, c.base * Math.pow(cfg.growth, c.n) * 3) : cfg.capUsd * cfg.unitPct / 100); // sisain peluru 3 tangga berikutnya
+  const amt = Math.floor(Math.min(over, free, dc.maxBuyUsd) * 100) / 100;
+  if (over < dc.minBuyUsd || amt < Math.max(dc.minBuyUsd, cfg.minOrderUsd) || now - (dj.lastBuy || 0) < 20 * 3600e3) return null;
+  const o = await ex.spotMarketBuy({ symbol: dc.symbol, quoteQty: amt });
+  const q = Number(o && o.executedQty) || 0;
+  dj.qty += q; dj.costUsd += amt; dj.buys += 1; dj.lastBuy = now; deps.save();
+  log(`DOGE: grid lewat cap ${fmt$(over)} -> beli ${q} DOGE (${fmt$(amt)})`);
+  await deps.notify(`🐕 DOGE MOONSHOT — DCA #${dj.buys}\n\nGrid spot ${fmt$(gridEq)} lewat batas ${fmt$(cfg.capUsd)} -> lebihnya ${fmt$(amt)} dibeliin ${q.toLocaleString('en-US')} DOGE.\nTotal DOGE: ${dj.qty.toLocaleString('en-US')} (modal ${fmt$(dj.costUsd)}).\n\n— Kaela`);
+  await deps.alert(`🐕 Kaela beliin ${q.toLocaleString('en-US')} DOGE (${fmt$(amt)}) dari kelebihan grid spot. Tarik DOGE-nya dari Spot BingX ke DOMPET DOGE pribadimu ya -- itu tabungan moonshot, dijual pas musim puncak (Kaela ingetin).`, `dogebuy:${now}`);
+  return { doge: { q, amt } };
+}
+
 async function main() {
+  try { const r = await require('./halving').refresh(); if (r && r.actual && r.changedDays === 0 && !(loadJournal().alerts || {})[`halving:${r.block}`]) console.log(`[SpotGrid] halving blok ${r.block} kejadian ${r.date}`); } catch (e) { console.log('[SpotGrid] cek halving gagal (pakai cache):', e.message); }
   const cfg = loadConfig();
   if (!cfg.enabled) return;
   const j = loadJournal();

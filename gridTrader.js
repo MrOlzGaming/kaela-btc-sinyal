@@ -403,7 +403,12 @@ function prodDeps(cfg, journal) {
       const k = await (await fetch('https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=3', { signal: AbortSignal.timeout(8000) })).json();
       return Math.max(...k.map((x) => +x[2]));
     },
-    notify: async (msg) => { try { await require('./wibowoNotify').sendWhatsAppToWibowo(msg); } catch (e) { console.log('[Grid] WA Wibowo gagal:', e.message); } },
+    notify: async (msg) => {
+      // 11 Okt 2026, Olan: "demo itu gpp boleh jalan di grup sniper" -> Farmer DEMO juga ke Sniper Club (link diganti web Sniper,
+      // pola sama Ninja demo). Aturan lintas sistem: apa pun yang ke Sniper Club WAJIB juga ke Wibowo (tetap di bawah). Real = Wibowo doang.
+      if (DEMO) { try { const { toSniperClubLink } = require('./darkKaelaLog'); await require('./fonnte').sendWhatsAppToSniperClub(toSniperClubLink(msg)); } catch (e) { console.log('[Grid] WA Sniper Club gagal:', e.message); } }
+      try { await require('./wibowoNotify').sendWhatsAppToWibowo(msg); } catch (e) { console.log('[Grid] WA Wibowo gagal:', e.message); }
+    },
     // peringatan (gak beres) -> DM Olan HP utama, maks 1x/6 jam per jenis (anti-spam)
     alert: async (msg, kind) => {
       const last = alerts[kind] || 0; if (Date.now() - last < 6 * 3600e3) return;

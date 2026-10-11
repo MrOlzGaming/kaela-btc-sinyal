@@ -240,8 +240,28 @@ async function runLadder(deps, log, now) {
   // Top up dari bank kebaca -> cadangan otomatis berkurang segitu (total gak dobel). Ganti angka di config = cadangan di-set ulang.
   // Tangga yang marginnya belum ada di BingX -> GAK dibuka kecil diem2: Olan dikabarin top up berapa (DM, maks 1x/6 jam).
   if (j.reserveCfg !== (cfg.bankReserveUsd || 0)) { j.reserveCfg = cfg.bankReserveUsd || 0; j.bankReserve = j.reserveCfg; }
-  const reserve = () => Math.max(0, j.bankReserve || 0);
-  const useDeposit = (d) => { if (d > 0 && reserve() > 0) { const used = Math.min(d, reserve()); j.bankReserve = reserve() - used; log(`top up ${fmt$(d)} dianggap dari bank -> cadangan bank sisa ${fmt$(j.bankReserve)}`); } };
+  // DOMPET PRIBADI (11 Okt 2026, Olan: "baca dompet kripto misal Trust Wallet.. BingX bisa rungkad kayak MtGox/FTX, mending nganggur
+  // tapi aman di dompet sendiri") -- stablecoin di alamat publik cfg.selfCustodyWallets (selfCustodyWallet.js) ikut jadi modal acuan.
+  // Dibaca tiap 10 menit; gagal baca -> pakai angka terakhir (maks 6 jam), lewat itu gak dihitung + Olan dikabarin.
+  const wallets = cfg.selfCustodyWallets || [];
+  const refreshCustody = async (force) => {
+    if (!wallets.length) { j.custody = null; return; }
+    if (!force && j.custody && now - j.custody.at < 10 * 60e3) return;
+    try { const r = await (deps.readCustody || require('./selfCustodyWallet').readTotalStable)(wallets); j.custody = { at: now, total: r.total, detail: r.detail }; }
+    catch (e) {
+      log(`baca dompet pribadi gagal: ${e.message}`);
+      if (!j.custody || now - j.custody.at > 6 * 3600e3) await deps.alert(`⚠️ 🌾 Farmer: saldo dompet pribadi gak kebaca > 6 jam (${e.message}). Sementara modal acuan cuma BingX + cadangan bank.`, 'custody');
+    }
+  };
+  const custodyTotal = () => (j.custody && now - j.custody.at <= 6 * 3600e3 ? j.custody.total : 0);
+  await refreshCustody(false);
+  const reserve = () => Math.max(0, j.bankReserve || 0) + custodyTotal();
+  const useDeposit = async (d) => {
+    if (!(d > 0)) return;
+    const before = custodyTotal(); await refreshCustody(true); const drop = before - custodyTotal();
+    if (drop >= d * 0.8) { log(`top up ${fmt$(d)} dari dompet pribadi (dompet turun ${fmt$(drop)})`); return; }
+    if ((j.bankReserve || 0) > 0) { const used = Math.min(d, j.bankReserve); j.bankReserve -= used; log(`top up ${fmt$(d)} dianggap dari bank -> cadangan bank sisa ${fmt$(j.bankReserve)}`); }
+  };
   const overCap = async (w) => {
     if (cfg.overCapAlert === false || !(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
     j.overCapAt = now; deps.save();
@@ -253,7 +273,7 @@ async function runLadder(deps, log, now) {
       if (c.anchor == null) c.anchor = c.cycleCap - c.realized; // jurnal sebelum fitur ini
       const expected = c.anchor + c.realized, d = w - expected;
       c.anchor += d; // selisih kecil (funding dll) diserap, selisih besar = top up / tarik
-      if (d > Math.max(5, Math.abs(expected) * 0.02)) useDeposit(d);
+      if (d > Math.max(5, Math.abs(expected) * 0.02)) await useDeposit(d);
       j.lastWallet = w;
       const from = c.cycleCap, to = capOf(c.anchor + reserve());
       if (Math.abs(d) > Math.max(5, Math.abs(expected) * 0.02) || Math.abs(to - from) > Math.max(5, from * 0.02)) {
@@ -272,7 +292,7 @@ async function runLadder(deps, log, now) {
     if (dd < cfg.minDd) { deps.save(); return { idle: `dd ${dd.toFixed(1)}% < ${cfg.minDd}%` }; }
     if (j.manualPauseAt && now - j.manualPauseAt < 24 * 3600e3) { deps.save(); return { idle: 'jeda 24 jam abis tutup manual' }; }
     const walletAll = await ex.getWalletBalance(cfg.marginAsset);
-    if (j.lastWallet > 0 && walletAll - j.lastWallet > Math.max(5, j.lastWallet * 0.02)) useDeposit(walletAll - j.lastWallet); // top up di antara siklus
+    if (j.lastWallet > 0 && walletAll - j.lastWallet > Math.max(5, j.lastWallet * 0.02)) await useDeposit(walletAll - j.lastWallet); // top up di antara siklus
     j.lastWallet = walletAll;
     await overCap(walletAll);
     const wallet = capOf(walletAll + reserve());
@@ -308,7 +328,7 @@ async function runLadder(deps, log, now) {
     if (free != null && free < c.unit * 0.99) {
       const need = c.unit - free;
       log(`tangga #${c.bets + 1} butuh margin ${fmt$(c.unit)}, saldo bebas BingX cuma ${fmt$(free)} -- nunggu top up ${fmt$(need)}`);
-      await deps.alert(`🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo BingX kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan bank tercatat: ${fmt$(reserve())}.`, 'topup');
+      await deps.alert(`🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo BingX kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan tercatat: bank ${fmt$(j.bankReserve || 0)}${wallets.length ? ` + dompet pribadi ${fmt$(custodyTotal())}` : ''}.`, 'topup');
       if (!c.pos) c.waitTopUpSince = c.waitTopUpSince || now;
       deps.save(); return { idle: 'nunggu top up', need };
     }

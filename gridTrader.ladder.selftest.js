@@ -115,6 +115,17 @@ test('cadangan bank: BingX $94 + bank $846 -> tangga 8% x $940; margin kurang ->
   assert(Math.abs(h.j.cycle.cycleCap - 940) < 3, `acuan ${h.j.cycle.cycleCap}`);
 });
 
+test('dompet pribadi: BingX $94 + dompet $500 + bank $346 -> acuan $940; top up dari dompet gak ngurangin cadangan bank', async () => {
+  const h = harness({ wallet: 94 }); let custody = 500;
+  h.deps.cfg = { ...CFG, bankReserveUsd: 346, maxCapUsd: 1000, selfCustodyWallets: [{ chain: 'bsc', address: '0x' + '1'.repeat(40) }] };
+  h.deps.readCustody = async () => ({ total: custody, detail: [] });
+  h.st.px = 83033; const r1 = await runOnce(h.deps);
+  assert(r1.bought && Math.abs(h.j.cycle.cycleCap - 940) < 2, `acuan ${h.j.cycle.cycleCap}`);
+  custody -= 100; h.st.wallet += 100; h.st.px = 80000; await runOnce(h.deps);
+  assert(Math.abs(h.j.bankReserve - 346) < 0.01, `bank ${h.j.bankReserve}`);
+  assert(Math.abs(h.j.cycle.cycleCap - 940) < 3, `acuan ${h.j.cycle.cycleCap}`);
+});
+
 test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async () => {
   const h = harness(); h.st.qty = 0.01; h.st.px = 83033; const r = await runOnce(h.deps);
   assert(r.stopped === 'stray' && h.st.orders.length === 0);

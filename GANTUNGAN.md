@@ -49,6 +49,8 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
+- **TANGGA KEKAYAAN** (Olan 11 Okt): 🌾 Farmer futures (±$1rb) -> bibit BTC spot -> kantong spot tembus $10rb = GRID SPOT aktif (dapet dari dirinya sendiri + kiriman Farmer) -> UNTUNG grid spot sebagian ke kantong MOONSHOT (mis. DOGE). Pagar saran: cuma untung, maks ±10% total kekayaan, masuk bertahap, siap nol. Riset dulu pas kantong spot mendekati $10rb (DOGE vs SOL dll, DCA tahan vs grid, porsi).
+
 - **MODE BANGKIT "kejar jumlah BTC"** (Olan 11 Okt): kalau Farmer rungkad & BTC masih jauh di bawah ATH -> setoran bulanan dipakai numpuk BTC spot (DCA tahan menang jauh dari grid, STRATEGY-CATALOG). RISET BERES 11 Okt: numpuk pas <= ATH -30% & DITAHAN (gak dijual) paling bagus; setoran balik ke Farmer begitu BTC di atas ATH -30%. Dijalanin manual-terarah (Kaela ngabarin, Olan beli BTC ke dompet sendiri) pas kejadian.
 
 - **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): FINAL TANPA BUNGA 2%/-3%/x1,15/TP1,5% (±9-10%/th, DD 39%, tahan fee) -- Olan gak mau Earn/deposito/obligasi; cash dipegang sendiri, pakai pola saldo penambah. KEBIJAKAN Olan 11 Okt: Farmer (leverage) buat modal $0-$10.000, DI ATAS $10.000 pindah ke grid spot ini, lalu boleh mulai Farmer leverage BARU pakai modal kecil (mis. $1.000) -- Farmer = kantong pemula yang "lulus" ke spot.

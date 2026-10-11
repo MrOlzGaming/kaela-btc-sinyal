@@ -9,9 +9,12 @@
 - **Topik aktif:** 🌾 FARMER (dulu "Grid Tangga") -- gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated
 - **Status:** LIVE (11 Okt). Tangga 6% saldo terbaru, 5x isolated, tambah tiap -15% (pas posisi -75%, sisa margin ditumpuk), TP = rugi + 30% total masuk. Nunggu saldo USDC
 - **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
-- **Langkah berikutnya:** begitu USDC masuk: cek pesan Buka Posisi GRID + margin mode ISOLATED di BingX + TRADE-LEDGER kebaca
+- **Langkah berikutnya:** pantau Farmer DEMO (tangga #1 kebuka 11 Okt 08:46 @ $82.923, isolated 5x, liq BingX $66.639, target $87.967). Real nunggu USDC
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt 08:46** — Farmer DEMO tangga #1 KEBUKA (G2026101101): 0,0036 BTC @ $82.923,5, margin $59,70, isolated 5x terverifikasi di BingX.
+  Olan dikabarin WA pribadi 6282134510686.
 
 - **11 Okt 10:00** — 🌾 FARMER DEMO jalan (node gridTrader.js demo, grid-demo-config.json, BingX demo VST BTC-USDT, aturan sama persis real,
   maxCap $1.000, saldo demo 400.323 VST -- Olan sebelumnya grid manual brutal 100k -> 300k+). NINJA dimatiin semua (MR/Exhaustion entryEnabled

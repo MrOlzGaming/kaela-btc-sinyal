@@ -110,7 +110,8 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     const lotSizeFilter = info.filters.find((f) => f.filterType === 'LOT_SIZE');
     const stepSize = parseFloat(lotSizeFilter.stepSize);
     const quantityPrecision = info.quantityPrecision;
-    return { stepSize, quantityPrecision, pricePrecision: info.pricePrecision };
+    const mn = info.filters.find((f) => f.filterType === 'MIN_NOTIONAL');
+    return { stepSize, quantityPrecision, pricePrecision: info.pricePrecision, minNotionalUsd: mn ? parseFloat(mn.notional) : 0 };
   }
 
   // asset param (23 Agu 2026, "usdt untuk sniper, usdc untuk nyopet" -- 2 wallet margin TERPISAH,
@@ -276,7 +277,21 @@ function createBinanceClient({ apiKey, apiSecret, testnet }) {
     return signedRequest('GET', '/fapi/v1/openAlgoOrders', symbol ? { symbol } : {});
   }
 
+  // (11 Okt 2026) ADAPTOR FARMER -- biar gridTrader.js bisa jalan di Binance sebagai EXCHANGE CADANGAN BingX (Olan: "kalo BingX rungkad
+  // lanjutin tangga ke exchange lain"). Binance one-way mode: posisi LONG = positionAmt > 0. Isolated margin diatur lewat
+  // /fapi/v1/positionMargin (type 1 tambah, 2 kurang) -- sama fungsinya kayak BingX.
+  async function getPositionBySide(symbol, side) {
+    const p = await getPositionRisk(symbol);
+    const amt = p ? parseFloat(p.positionAmt) : 0;
+    if (!(side === 'LONG' ? amt > 0 : amt < 0)) return null;
+    return { positionAmt: String(Math.abs(amt)), liquidationPrice: p.liquidationPrice, margin: p.isolatedWallet || p.isolatedMargin, avgPrice: p.entryPrice };
+  }
+  async function adjustIsolatedMargin({ symbol, amount, type }) {
+    return signedRequest('POST', '/fapi/v1/positionMargin', { symbol, amount: Number(amount).toFixed(4), type });
+  }
+
   return {
+    getPositionBySide, adjustIsolatedMargin,
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, placeMarketEntry, placeStopLoss, placeTakeProfit,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize, emergencyCloseMarket, getIncomeHistory,
     wasLastEntryOrderByKaela, wasLastReduceOnlyOrderByKaela, getOpenAlgoOrders,

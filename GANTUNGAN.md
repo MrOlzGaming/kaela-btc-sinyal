@@ -56,9 +56,10 @@ Keputusan Olan 3 Okt 2026 malam:
 
 - **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): FINAL TANPA BUNGA 2%/-3%/x1,15/TP1,5% (±9-10%/th, DD 39%, tahan fee) -- Olan gak mau Earn/deposito/obligasi; cash dipegang sendiri, pakai pola saldo penambah. KEBIJAKAN Olan 11 Okt: Farmer (leverage) cap $10.000, untung di atasnya ngalir ke spot; grid spot ini cap $100.000 (lebihnya -> DOGE), lalu boleh mulai Farmer leverage BARU pakai modal kecil (mis. $1.000) -- Farmer = kantong pemula yang "lulus" ke spot.
 
-- **🌾 Farmer pindah exchange kalau BingX rungkad** (Olan 11 Okt: "kalo BingX rungkad kita bisa lanjutin tangga ke exchange lain").
-  Jurnal Farmer udah nyimpen state tangga (entry terakhir, total modal masuk, rugi terealisasi) -> butuh adapter eksekusi exchange lain
-  (Bybit/Binance/MEXC udah punya executor) + saklar exchange di grid-config.json. Prioritas: siapin sebelum saldo Farmer gede.
+- ~~🌾 Farmer pindah exchange kalau BingX rungkad~~ ✅ BERES 11 Okt sore: saklar `"exchange": "bingx" | "binance"` di grid-config.json.
+  Ganti ke binance -> penjaga buka ulang tangga VOLUME SAMA di Binance (BTCUSDC), target tetap. BingX gagal diakses 30 menit
+  berturut-turut -> Olan dapet DM saran pindah. Sisa (nunggu kejadian): saldo Binance harus diisi dulu; bibit otomatis cuma di BingX
+  (di Binance balik ke notif manual). BELUM pernah dites live di Binance (selftest exchange palsu doang).
 
 - **Tangga SHORT 1x (window halving)** -- riset beres 11 Okt (STRATEGY-CATALOG), aturan FINAL (uji bareng long, 11 Okt sore): 10%/tangga, tambah tiap +5%, TP 10%, hari 520-900 + PENGAMAN: short gak dibuka/ditambah kalau total margin long+short > 70% ekuitas (11 Okt, gantiin ide zona ATH -30% Olan: zona -30% untung dari 2018 cuma $4.948 DD 58% vs batas margin 70% $9.654 DD 48%, margin maks 72%) (per jam x6,05, DD 47% di window 2018; versi pelit 5%/+10% x1,66 DD 14%). Pasang sebagai mode SHORT di gridTrader.js
   (hedge mode BingX, positionSide SHORT) SEBELUM window berikutnya: halving ~Apr 2028 (verifikasi tanggal pasti) + 520 hari = ~Sep 2029.

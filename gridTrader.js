@@ -26,9 +26,15 @@ const JOURNAL_PATH = path.join(__dirname, DEMO ? 'grid-demo-journal.json' : 'gri
 const TAKER = 0.0005;
 const OLAN_PRIBADI = '6282134510686';
 
+// EXCHANGE (11 Okt 2026): cfg.exchange "bingx" (utama) | "binance" (cadangan). Simbol per exchange dari cfg.symbols.
+const EXN = (cfg) => ({ bingx: 'BingX', binance: 'Binance' }[cfg && cfg.exchange] || 'BingX');
+const EXCHANGE_SYMBOL_DEFAULT = { bingx: { real: 'BTC-USDC', demo: 'BTC-USDT' }, binance: { real: 'BTCUSDC', demo: 'BTCUSDC' } };
 function loadConfig() {
   const def = { enabled: false, allowReal: false, symbol: 'BTC-USDC', marginAsset: 'USDC', minDd: 15, step: 1, k: 1, tp: 15, volMult: [{ fromDd: 0, x: 1 }], capExposure: 2, leverage: 5, minCap: 0 };
-  try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
+  let cfg; try { cfg = { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { cfg = def; }
+  cfg.exchange = cfg.exchange || 'bingx';
+  if (cfg.exchange !== 'bingx') { const m = (cfg.symbols && cfg.symbols[cfg.exchange]) || EXCHANGE_SYMBOL_DEFAULT[cfg.exchange]; if (m) cfg.symbol = DEMO ? m.demo : m.real; }
+  return cfg;
 }
 function freshJournal() { return { ath: null, athAt: null, cycle: null, history: [], stats: { cycles: 0, wins: 0, losses: 0, totalPnlUsd: 0 }, seq: { day: null, n: 0 }, alerts: {} }; }
 function loadJournal() { try { return { ...freshJournal(), ...JSON.parse(fs.readFileSync(JOURNAL_PATH, 'utf8')) }; } catch { return freshJournal(); } }
@@ -174,6 +180,11 @@ async function runLadder(deps, log, now) {
   if (!(j.ath > 0) || cand > j.ath) { j.ath = cand; j.athAt = now; }
   const dd = (1 - px / j.ath) * 100;
   let c = j.cycle;
+  if (j.exchange && j.exchange !== cfg.exchange) {
+    log(`PINDAH EXCHANGE ${j.exchange} -> ${cfg.exchange}${c && c.pos ? ` -- posisi ${c.pos.qty} BTC di ${j.exchange} dianggap ilang, penjaga buka ulang volume sama di ${cfg.exchange}` : ''}`);
+    await deps.alert(`🏦 🌾 Farmer pindah exchange: ${j.exchange.toUpperCase()} -> ${cfg.exchange.toUpperCase()}.${c && c.pos ? ` Tangga #${c.bets} (${c.pos.qty} BTC) dibuka ulang di ${cfg.exchange.toUpperCase()} begitu saldonya ada -- target & harga likuidasi dijaga sama.` : ' Siklus baru mulai di sana begitu saldo ada.'}`, `exch:${now}`);
+  }
+  j.exchange = cfg.exchange;
   const bibit = () => Math.max(0, j.bibitPending || 0); // saldo bibit yang dikunci (belum ditarik Olan)
   if (!deps.isDemo && cfg.bibitAuto && j.bibitBuyPending && ex.getSpotBalances && (!j.bibitRetryAt || now - j.bibitRetryAt > 3600e3)) { j.bibitRetryAt = now; await bibitBuy(j, cfg, deps, log, now, null); }
   if (c && c.mode !== 'LADDER') { log('siklus lama bukan LADDER -- STOP, cek manual'); await deps.alert('⚠️ 🌾 Farmer: jurnal masih nyimpen siklus mode lama, ladder gak jalan. Cek manual.', 'mode'); return { stopped: 'mode' }; }
@@ -231,8 +242,8 @@ async function runLadder(deps, log, now) {
       const wNow = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
       const mgUse = mgNeed; // total margin akhir (margin awal leverage + tambahan)
       if (wNow != null && wNow - bibit() < mgUse * 1.01) {
-        log(`PENJAGA: butuh margin ${fmt$(mgUse)} buat buka ulang ${gd.qty} BTC, saldo BingX ${fmt$(wNow)} -- nunggu top up`);
-        await deps.alert(`🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo BingX cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, 'guardtopup');
+        log(`PENJAGA: butuh margin ${fmt$(mgUse)} buat buka ulang ${gd.qty} BTC, saldo ${EXN(cfg)} ${fmt$(wNow)} -- nunggu top up`);
+        await deps.alert(`🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo ${EXN(cfg)} cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, 'guardtopup');
         deps.save(); return { idle: 'penjaga nunggu top up' };
       }
       await ex.setLeverage(sym, levNeed, 'LONG').catch((e) => log(`set leverage penjaga: ${e.message}`));
@@ -262,7 +273,7 @@ async function runLadder(deps, log, now) {
       log(`PENJAGA: buka ulang ${fillQty} BTC @ ${fillPx} (${levNeed}x isolated, margin ${fmt$(c.pos.mg)}, liq ${fmt$(c.pos.liq)} vs lama ${fmt$(gd.liq)}) -- target ${fmt$(tpNow)} (lama ${fmt$(gd.tpPx)})`);
       const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
       await deps.notify(formatAutoAddLayer({ id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: levNeed, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: assetOf(deps),
-        reasonText: `🛡️ Penjaga posisi: tangga #${c.bets} ketutup di luar sistem @ ${fmt$(gd.closedPx)} (${gd.closedPnl >= 0 ? '+' : ''}${fmt$(gd.closedPnl)}), dibuka lagi volume sama ${fillQty} BTC. Target tetap ${fmt$(tpNow)}, likuidasi ${fmt$(c.pos.liq)}.` }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID));
+        reasonText: `🛡️ Penjaga posisi: tangga #${c.bets} ketutup di luar sistem @ ${fmt$(gd.closedPx)} (${gd.closedPnl >= 0 ? '+' : ''}${fmt$(gd.closedPnl)}), dibuka lagi volume sama ${fillQty} BTC. Target tetap ${fmt$(tpNow)}, likuidasi ${fmt$(c.pos.liq)}.` }, new Date(), !!deps.isDemo, null, null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID));
       await deps.alert(`🛡️ 🌾 Farmer${deps.isDemo ? ' (Demo)' : ''}: posisi ${c.signalId} ketutup di luar sistem @ ${fmt$(gd.closedPx)} -> udah dibuka lagi ${fillQty} BTC @ ${fmt$(fillPx)}. Target tetap ${fmt$(tpNow)} (sebelumnya ${fmt$(gd.tpPx)}), likuidasi ${fmt$(c.pos.liq)} (sebelumnya ${fmt$(gd.liq)}).`, `guard:${now}`);
       return { guarded: { qty: fillQty, px: fillPx, lev: levNeed, tpPx: tpNow, liq: c.pos.liq } };
     }
@@ -319,7 +330,7 @@ async function runLadder(deps, log, now) {
   if (j.reserveKey !== fKey) { // angka baru dari web/config -> cadangan di-set ulang
     if (fMode === 'manual') {
       const wNow = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
-      if (wNow != null) { j.bankReserve = Math.max(0, (Number(fundsSrc.totalUsd) || 0) - wNow); j.reserveKey = fKey; log(`mode saldo MANUAL ${fmt$(fundsSrc.totalUsd)}: BingX ${fmt$(wNow)} + di luar BingX ${fmt$(j.bankReserve)}`); }
+      if (wNow != null) { j.bankReserve = Math.max(0, (Number(fundsSrc.totalUsd) || 0) - wNow); j.reserveKey = fKey; log(`mode saldo MANUAL ${fmt$(fundsSrc.totalUsd)}: ${EXN(cfg)} ${fmt$(wNow)} + di luar ${EXN(cfg)} ${fmt$(j.bankReserve)}`); }
     } else { j.bankReserve = fMode === 'bank' ? (Number(fundsSrc.bankUsd) || 0) : 0; j.reserveKey = fKey; }
   }
   // DOMPET PRIBADI (11 Okt 2026, Olan: "baca dompet kripto misal Trust Wallet.. BingX bisa rungkad kayak MtGox/FTX, mending nganggur
@@ -332,7 +343,7 @@ async function runLadder(deps, log, now) {
     try { const r = await (deps.readCustody || require('./selfCustodyWallet').readTotalStable)(wallets); j.custody = { at: now, total: r.total, detail: r.detail }; }
     catch (e) {
       log(`baca dompet pribadi gagal: ${e.message}`);
-      if (!j.custody || now - j.custody.at > 6 * 3600e3) await deps.alert(`⚠️ 🌾 Farmer: saldo dompet pribadi gak kebaca > 6 jam (${e.message}). Sementara modal acuan cuma BingX + cadangan bank.`, 'custody');
+      if (!j.custody || now - j.custody.at > 6 * 3600e3) await deps.alert(`⚠️ 🌾 Farmer: saldo dompet pribadi gak kebaca > 6 jam (${e.message}). Sementara modal acuan cuma ${EXN(cfg)} + cadangan bank.`, 'custody');
     }
   };
   const custodyTotal = () => (j.custody && now - j.custody.at <= 6 * 3600e3 ? j.custody.total : 0);
@@ -353,7 +364,7 @@ async function runLadder(deps, log, now) {
   const overCap = async (w) => {
     if (cfg.overCapAlert === false || !(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
     j.overCapAt = now; deps.save();
-    await deps.alert(`💰 🌾 Farmer: saldo USDC BingX udah ${fmt$(w)}, lewat batas modal grid ${fmt$(maxCap)}. Farmer tetap jalan pakai ${fmt$(maxCap)}; sesuai kebijakan kita, lebihnya (${fmt$(w - maxCap)}) waktunya mulai dibangun jadi DCA Grid Spot (kebal crash) -- bilang Kaela buat nyiapin.`, 'overcap');
+    await deps.alert(`💰 🌾 Farmer: saldo USDC ${EXN(cfg)} udah ${fmt$(w)}, lewat batas modal grid ${fmt$(maxCap)}. Farmer tetap jalan pakai ${fmt$(maxCap)}; sesuai kebijakan kita, lebihnya (${fmt$(w - maxCap)}) waktunya mulai dibangun jadi DCA Grid Spot (kebal crash) -- bilang Kaela buat nyiapin.`, 'overcap');
   };
   if (c) {
     const w = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
@@ -419,8 +430,8 @@ async function runLadder(deps, log, now) {
     const free = wNow != null ? wNow - (c.pos ? c.pos.mg : 0) - bibit() : null;
     if (free != null && free < c.unit * 0.99) {
       const need = c.unit - free;
-      log(`tangga #${c.bets + 1} butuh margin ${fmt$(c.unit)}, saldo bebas BingX cuma ${fmt$(free)} -- nunggu top up ${fmt$(need)}`);
-      await deps.alert(`🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo BingX kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan tercatat: bank ${fmt$(j.bankReserve || 0)}${wallets.length ? ` + dompet pribadi ${fmt$(custodyTotal())}` : ''}.`, 'topup');
+      log(`tangga #${c.bets + 1} butuh margin ${fmt$(c.unit)}, saldo bebas ${EXN(cfg)} cuma ${fmt$(free)} -- nunggu top up ${fmt$(need)}`);
+      await deps.alert(`🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo ${EXN(cfg)} kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan tercatat: bank ${fmt$(j.bankReserve || 0)}${wallets.length ? ` + dompet pribadi ${fmt$(custodyTotal())}` : ''}.`, 'topup');
       if (!c.pos) c.waitTopUpSince = c.waitTopUpSince || now;
       deps.save(); return { idle: 'nunggu top up', need };
     }
@@ -485,7 +496,7 @@ async function recordBibit(j, cfg, profit, px, deps, log, now, capAfter) {
       return amt;
     } catch (e) { log(`transfer bibit gagal (${e.message}) -- balik ke mode kabarin manual`); }
   }
-  if (!deps.isDemo) await deps.alert(`🌱 Farmer panen! Untung ${fmt$(profit)} -- bibit ${fmt$(amt)} udah disisihin & dikunci (gak dipakai trading).\n\nTarik ${fmt$(j.bibitPending)} USDC dari BingX, beliin BTC, simpan di DOMPET SENDIRI ya -- ditahan, jangan dijual. Total bibit sejauh ini: ${fmt$(j.bibitTotal)}.`, `bibit:${now}`);
+  if (!deps.isDemo) await deps.alert(`🌱 Farmer panen! Untung ${fmt$(profit)} -- bibit ${fmt$(amt)} udah disisihin & dikunci (gak dipakai trading).\n\nTarik ${fmt$(j.bibitPending)} USDC dari ${EXN(cfg)}, beliin BTC, simpan di DOMPET SENDIRI ya -- ditahan, jangan dijual. Total bibit sejauh ini: ${fmt$(j.bibitTotal)}.`, `bibit:${now}`);
   return amt;
 }
 
@@ -514,13 +525,13 @@ async function bibitBuy(j, cfg, deps, log, now, head) {
 function ladderLiqMsg(c, p, px, deps) {
   const { formatAutoClosed, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   const alasan = `tangga #${c.bets} kena likuidasi (cuma margin tangga ini). Siklus lanjut: tangga berikutnya langsung dibuka, targetnya nutup rugi ini.`;
-  return formatAutoClosed({ id: c.id, signalId: c.signalId, direction: 'long', entryPrice: p.e, exitPrice: px, pnlUsd: -p.mg, pnlPct: -100, assetLabel: assetOf(deps) }, new Date(), !!deps.isDemo, alasan, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  return formatAutoClosed({ id: c.id, signalId: c.signalId, direction: 'long', entryPrice: p.e, exitPrice: px, pnlUsd: -p.mg, pnlPct: -100, assetLabel: assetOf(deps) }, new Date(), !!deps.isDemo, alasan, null, null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID);
 }
 const assetOf = (deps) => String(deps.cfg.symbol || 'BTC-USDC').replace('-', '');
 function ladderReason(c, dd, deps) {
   const gap = deps.cfg.gapPct || 15;
   const b = c.capBreak;
-  const modal = b && b.ext > 0.5 ? ` Modal ${fmt$(c.cycleCap)} = BingX ${fmt$(b.bingx)} + saldo eksternal ${fmt$(b.ext)}${b.capped ? ' (dipotong batas)' : ''}.` : '';
+  const modal = b && b.ext > 0.5 ? ` Modal ${fmt$(c.cycleCap)} = ${EXN(deps.cfg)} ${fmt$(b.bingx)} + saldo eksternal ${fmt$(b.ext)}${b.capped ? ' (dipotong batas)' : ''}.` : '';
   return `BTC di ATH -${dd.toFixed(0)}%. Tangga #${c.bets} (${deps.cfg.betPct || 6}% modal = ${fmt$(c.unit)}).${modal} Tangga berikutnya di ${fmt$(c.lastE * (1 - gap / 100))}.`;
 }
 function ladderTpText(c, tpPx, deps) {
@@ -532,14 +543,14 @@ function ladderOpenMsg(c, dd, tpPx, deps) {
     id: c.id, signalId: c.signalId, direction: 'buy', entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e,
     tpText: ladderTpText(c, tpPx, deps), slText: 'tanpa SL (isolated)', liquidationNote: fmt$(c.pos.liq),
     assetLabel: assetOf(deps), reasonText: ladderReason(c, dd, deps),
-  }, new Date(), '', !!deps.isDemo, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), '', !!deps.isDemo, null, '', null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID);
 }
 function ladderAddMsg(c, dd, tpPx, closedOld, deps) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   return formatAutoAddLayer({
     id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: assetOf(deps),
     reasonText: `${ladderReason(c, dd, deps)} Target ${ladderTpText(c, tpPx, deps)}. Likuidasi ${fmt$(c.pos.liq)}.${closedOld ? ' Sisa margin tangga lama digabung.' : ''}`,
-  }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), !!deps.isDemo, null, null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID);
 }
 
 function summary(c) { return { id: c.id, signalId: c.signalId, openedAt: c.startedAt, entry: c.qty > 0 ? c.cost / c.qty : null, qty: c.qty, planted: c.planted, layers: c.layers, cycleCap: c.cycleCap, athAtStart: c.athAtStart }; }
@@ -552,7 +563,7 @@ function openMsg(cy, dd, fillPx, deps) {
     slText: 'tanpa SL -- grid nambah tiap BTC turun 1%, eksposur dijaga maks ' + deps.cfg.capExposure + 'x modal grid',
     liquidationNote: 'cross margin -- jauh (eksposur rendah)', assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''),
     reasonText: `Grid ATH: BTC di ATH -${dd.toFixed(1)}% (ATH ${fmt$(cy.athAtStart)}, syarat <= -${deps.cfg.minDd}% terpenuhi) -- tanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid (${fmt$(cy.planted)} dari ${fmt$(cy.cycleCap)})`,
-  }, new Date(), '', !!deps.isDemo, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), '', !!deps.isDemo, null, '', null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID);
 }
 function addMsg(cy, dd, fillPx, fillQty, deps, topUp) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
@@ -561,11 +572,11 @@ function addMsg(cy, dd, fillPx, fillQty, deps, topUp) {
     reasonText: topUp
       ? `Top up modal grid kebaca ${fmt$(topUp.from)} -> ${fmt$(topUp.to)} -- porsi dikejar seolah modal udah ada dari awal: beli ${fillQty} BTC @ ${fmt$(fillPx)} (ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal, BTC di ATH -${dd.toFixed(1)}%)`
       : `BTC turun ke ATH -${dd.toFixed(1)}% -> rebuy ${fillQty} BTC @ ${fmt$(fillPx)} (total ditanam ${(cy.planted / cy.cycleCap * 100).toFixed(0)}% modal grid)`,
-  }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  }, new Date(), !!deps.isDemo, null, null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID);
 }
 function closeMsg(rec, j, deps) {
   const { formatAutoClosed, formatWinRateLines, CLOSE_REASON_LABEL, EXCHANGE_BADGE, SYSTEM_LABEL, KAELA_ACCESS_URL } = require('./darkKaelaLog');
-  const base = formatAutoClosed({ id: rec.id, signalId: rec.signalId, direction: 'long', entryPrice: rec.entry, exitPrice: rec.exit, pnlUsd: rec.grossUsd, feeUsd: rec.feeUsd, pnlPct: rec.retPlantedPct, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', '') }, new Date(), false, `${CLOSE_REASON_LABEL[rec.reason] || CLOSE_REASON_LABEL.GRID_TP} (${rec.layers} ${rec.mode === 'LADDER' ? 'tangga' : 'layer'})`, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  const base = formatAutoClosed({ id: rec.id, signalId: rec.signalId, direction: 'long', entryPrice: rec.entry, exitPrice: rec.exit, pnlUsd: rec.grossUsd, feeUsd: rec.feeUsd, pnlPct: rec.retPlantedPct, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', '') }, new Date(), false, `${CLOSE_REASON_LABEL[rec.reason] || CLOSE_REASON_LABEL.GRID_TP} (${rec.layers} ${rec.mode === 'LADDER' ? 'tangga' : 'layer'})`, null, null, (EXCHANGE_BADGE[deps.cfg.exchange] || EXCHANGE_BADGE.bingx), SYSTEM_LABEL.GRID);
   return base.replace(`🔗 ${KAELA_ACCESS_URL}`, formatWinRateLines(j.stats, rec.mode === 'LADDER' ? `Farmer (${deps.isDemo ? 'Demo' : 'Real'})` : 'Grid ATH (Real)', null) + `🔗 ${KAELA_ACCESS_URL}`);
 }
 
@@ -573,13 +584,19 @@ function closeMsg(rec, j, deps) {
 function prodDeps(cfg, journal) {
   const { createBingxClient, loadSecrets } = require('./bingxExecutor');
   const s = loadSecrets();
-  const exec = s.BINGX_API_KEY && s.BINGX_API_SECRET ? createBingxClient({ apiKey: s.BINGX_API_KEY, apiSecret: s.BINGX_API_SECRET, testnet: DEMO }) : null;
+  let exec = null;
+  if (cfg.exchange === 'binance') {
+    const { createBinanceClient } = require('./binanceExecutor');
+    const k = DEMO ? s.BINANCE_API_KEY : s.BINANCE_API_KEY_REAL, sc = DEMO ? s.BINANCE_API_SECRET : s.BINANCE_API_SECRET_REAL;
+    exec = k && sc ? createBinanceClient({ apiKey: k, apiSecret: sc, testnet: DEMO }) : null;
+  } else exec = s.BINGX_API_KEY && s.BINGX_API_SECRET ? createBingxClient({ apiKey: s.BINGX_API_KEY, apiSecret: s.BINGX_API_SECRET, testnet: DEMO }) : null;
   const alerts = journal.alerts || (journal.alerts = {});
   return {
     cfg, journal, exec, isDemo: DEMO,
     fetchFarmerFunds: DEMO ? null : () => require('./kaelaProTraderClient').getFarmerFunds(),
     saveFarmerFunds: DEMO ? null : (f) => require('./kaelaProTraderClient').setFarmerFunds(f),
     price: async () => {
+      if (cfg.exchange === 'binance') { const r = await (await fetch(`https://fapi.binance.com/fapi/v1/ticker/price?symbol=${cfg.symbol}`, { signal: AbortSignal.timeout(8000) })).json(); return parseFloat(r && r.price); }
       const r = await (await fetch(`https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${cfg.symbol}`, { signal: AbortSignal.timeout(8000) })).json();
       return parseFloat(r && r.data && r.data.price);
     },
@@ -620,8 +637,10 @@ async function main() {
   if (!cfg.enabled) return;
   const j = loadJournal();
   const deps = prodDeps(cfg, j);
-  try { await runOnce(deps); }
+  try { await runOnce(deps); if (j.apiFail) { if (j.apiFail.n >= 30) await deps.alert(`✅ 🌾 Farmer: ${cfg.exchange.toUpperCase()} udah bisa diakses lagi (sempat gagal ${j.apiFail.n} menit).`, `apiok:${Date.now()}`); j.apiFail = null; saveJournal(j); } }
   catch (e) {
+    j.apiFail = { n: ((j.apiFail && j.apiFail.n) || 0) + 1, since: (j.apiFail && j.apiFail.since) || Date.now(), last: e.message };
+    if (j.apiFail.n === 30 || j.apiFail.n % 360 === 0) await deps.alert(`🚨 🌾 Farmer${DEMO ? ' (Demo)' : ''}: ${cfg.exchange.toUpperCase()} gagal diakses ${j.apiFail.n} menit berturut-turut (${e.message}). Kalau exchange-nya bermasalah beneran (kayak FTX), bilang ke Kaela "pindah Farmer ke Binance" -- tangga dilanjut di sana pakai saldo baru.`, `apidown:${j.apiFail.n}`);
     deps.log(`GAGAL: ${e.message}`);
     await deps.alert(`⚠️ Grid GAGAL jalan: ${e.message}`, `err:${String(e.message).slice(0, 40)}`);
     saveJournal(j);

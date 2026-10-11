@@ -176,6 +176,18 @@ test('posisi nyasar di exchange tapi jurnal kosong -> STOP, gak order', async ()
   assert(r.stopped === 'stray' && h.st.orders.length === 0);
 });
 
+test('PINDAH EXCHANGE (BingX rungkad -> Binance): tangga dilanjut VOLUME SAMA di exchange baru, target tetap, Olan dikabari', async () => {
+  const h = harness(); h.deps.cfg = { ...CFG, exchange: 'bingx' }; h.st.px = 83033; const r1 = await runOnce(h.deps);
+  const q0 = h.j.cycle.pos.qty, tp0 = r1.bought.tpPx; assert.strictEqual(h.j.exchange, 'bingx');
+  const h2 = harness({ wallet: 900 }); h2.st.px = 82000; // akun Binance: saldo baru, belum ada posisi
+  const deps2 = { ...h2.deps, cfg: { ...CFG, exchange: 'binance', symbol: 'BTCUSDC' }, journal: h.j };
+  const r = await runOnce(deps2);
+  assert(r.guarded && Math.abs(r.guarded.qty - q0) < 1e-9, JSON.stringify(r));
+  assert(Math.abs(r.guarded.tpPx - tp0) < 15, 'target ' + r.guarded.tpPx + ' vs ' + tp0);
+  assert.strictEqual(h.j.exchange, 'binance'); assert(h2.st.qty > 0 && h.st.qty > 0, 'posisi baru di Binance (posisi BingX lama gak disentuh)');
+  assert(h2.st.alerts.some((m) => /pindah exchange: BINGX -> BINANCE/.test(m)), h2.st.alerts.join('|'));
+});
+
 (async () => {
   let ok = 0, fail = 0;
   for (const [n, f] of tests) { try { await f(); ok++; console.log(`  OK   ${n}`); } catch (e) { fail++; console.log(`  GAGAL ${n}\n       ${e.message}`); } }

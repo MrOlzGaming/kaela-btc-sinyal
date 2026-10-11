@@ -9,9 +9,13 @@
 - **Topik aktif:** TANGGA KEKAYAAN -- 🌾 Farmer (LIVE) -> 🌱 bibit BTC (otomatis di atas $10rb) -> 🪙 grid spot (SIAGA $10rb, inti ikut siklus halving) -> 🐕 DOGE (rencana, di atas $100rb)
 - **Status:** Farmer real tangga #1 0,0034 BTC @ $82.822 (modal $940 = BingX $94 + penambah $846), demo tangga #1 1,4483 BTC. Penjaga posisi + penutup posisi asing LIVE.
 - **Nunggu Olan:** izin deploy Netlify web Sniper (Farmer + metodologi-farmer.html).
-- **Antrian Kaela:** teks kartu Dompet Farmer "maks $1.000" -> $10.000 (butuh push GAS, OAuth Browser 2); Farmer pindah exchange; DOGE; tangga short (2029); verifikasi tanggal halving 2028.
+- **Antrian Kaela:** teks kartu Dompet Farmer "maks $1.000" -> $10.000 (butuh push GAS, OAuth Browser 2); DOGE; tangga short (2029); verifikasi tanggal halving 2028.
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt sore** — 🏦 FARMER BISA PINDAH EXCHANGE: grid-config.json `"exchange"` bingx|binance. binanceExecutor dapet getPositionBySide +
+  adjustIsolatedMargin + minNotional. Pindah -> penjaga buka ulang volume sama di exchange baru. BingX error 30 menit berturut -> DM Olan.
+  Selftest 18 lolos (+1 pindah exchange). Belum dites live di Binance.
 
 - **11 Okt 12:02** — 🚫 PENUTUP POSISI ASING BingX LIVE (bingxPositionGuard.js): ETH-USDC LONG 0,01 tes Olan (real) ditutup paksa, Farmer aman.
   Penjaga Farmer dites Olan 11:20 (demo) & 11:26 (real): volume & target sama; margin sekarang DITAMBAH (BingX nolak dikurangin).

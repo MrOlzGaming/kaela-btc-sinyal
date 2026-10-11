@@ -1,5 +1,7 @@
 {
   "enabled": true,
+  "exchange": "bingx",
+  "_exchange_note": "Saklar exchange Farmer (11 Okt 2026): bingx (utama) | binance (cadangan kalau BingX rungkad). Ganti ke binance -> tangga yang lagi jalan dibuka ulang VOLUME SAMA di Binance (penjaga), target tetap. Saldo Binance harus ada dulu.",
   "mode": "LADDER",
   "betPct": 6,
   "gapPct": 15,

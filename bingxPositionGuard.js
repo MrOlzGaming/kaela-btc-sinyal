@@ -8,14 +8,13 @@
 //      Rotasi kalau exchange-nya BingX) -- simbol + arah, dan qty-nya gak lebih dari jurnal (kelebihan = ditambahin Olan -> dipotong).
 //   2. ATAU order pembuka terakhir simbol itu bertag clientOrderId Kaela ("kaela-...", wasLastEntryOrderByKaela).
 // Posisi asing ditutup baru kalau KEBACA ASING 2x berturut2 (jarak >= 50 detik) -- jaga2 sistem Kaela lain lagi di tengah buka posisi.
-// Cuma Perpetual Futures (swap). Standard Futures / spot gak disentuh. Tiap penutupan: DM Olan + log. Saklar: bingx-guard-config.json.
+// Cuma Perpetual Futures (swap). Standard Futures / spot gak disentuh. Tiap penutupan: lapor ke grup Wibowo Hedgefund + log. Saklar: bingx-guard-config.json.
 // Uji: node bingxPositionGuard.selftest.js (exchange palsu).
 
 const fs = require('fs');
 const path = require('path');
 const STATE_PATH = path.join(__dirname, 'bingx-guard-state.json');
 const CONFIG_PATH = path.join(__dirname, 'bingx-guard-config.json');
-const OLAN_PRIBADI = '6282134510686';
 
 const readJson = (f) => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8')); } catch { return null; } };
 const sideOf = (dir) => (String(dir || '').toLowerCase().startsWith('s') ? 'SHORT' : 'LONG');
@@ -78,7 +77,7 @@ async function guardAccount(deps) {
       log(`DITUTUP PAKSA ${key} ${closeQty}${pnlTxt} -- ${why}`);
       (state.history = state.history || []).push({ at: now, mode, symbol, side, qty: closeQty, why, orderId: order && order.orderId });
       if (state.history.length > 300) state.history = state.history.slice(-300);
-      await deps.alert(`🚫 Kaela nutup posisi BingX ${mode === 'demo' ? '(Demo)' : '(Real)'}: ${symbol} ${side} ${closeQty}${pnlTxt}.\nAlasan: ${why}.\n\nAturan kita: semua akun trading dikelola Kaela 100%, posisi yang bukan dibuka Kaela ditutup otomatis. Ini demi kamu sendiri 💛`);
+      await deps.alert(`🚫 Posisi di luar sistem ditutup -- BingX ${mode === 'demo' ? '(Demo)' : '(Real)'}\n\n${symbol} ${side} ${closeQty}${pnlTxt}\nAlasan: ${why}.\n\nAturan: semua akun trading dikelola Kaela 100%, posisi yang bukan dibuka sistem Kaela ditutup otomatis.`);
       results.push({ key, closed: closeQty });
     } catch (e) {
       log(`GAGAL nutup ${key}: ${e.message}`);
@@ -101,7 +100,8 @@ async function main() {
   let state = {}; try { state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')); } catch {}
   const save = () => fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
   const owned = kaelaPositionsFromJournals();
-  const alert = async (msg) => { try { await require('./fonnte').sendWhatsApp(`${msg}\n\n— Kaela`, OLAN_PRIBADI); } catch (e) { console.log('[BingxGuard] WA gagal:', e.message); } };
+  // (11 Okt 2026, Olan) laporan penutupan ke GRUP Wibowo Hedgefund, bukan DM
+  const alert = async (msg) => { try { await require('./wibowoNotify').sendWhatsAppToWibowo(`${msg}\n\n— Kaela`); } catch (e) { console.log('[BingxGuard] WA grup gagal:', e.message); } };
   for (const mode of cfg.modes) {
     const exec = createBingxClient({ apiKey: s.BINGX_API_KEY, apiSecret: s.BINGX_API_SECRET, testnet: mode === 'demo' });
     try { await guardAccount({ mode, exec, owned, state, now: Date.now(), alert, save, dryRun: cfg.dryRun, log: (m) => console.log(`[${new Date().toISOString()}] [BingxGuard] ${m}`) }); }

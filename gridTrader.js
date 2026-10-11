@@ -191,15 +191,21 @@ async function runLadder(deps, log, now) {
   // posisi hilang = kena likuidasi exchange (isolated) -> margin bet itu hangus, siklus lanjut (nunggu tangga berikutnya)
   if (jQty > 0 && exQty === 0) {
     const p = c.pos;
-    // harga masih jauh di atas harga liq -> bukan likuidasi (kemungkinan ditutup manual) -> PnL ditaksir di harga sekarang + lapor
+    // harga masih jauh di atas harga liq -> BUKAN likuidasi: ketutup gak sengaja (kepencet / ditutup BingX).
     if (px > p.liq * 1.03) {
-      const est = p.qty * (px - p.e) - p.qty * px * TAKER; c.realized += est; c.fees += p.qty * px * TAKER; c.pos = null; deps.save();
-      log(`posisi ${c.signalId} hilang padahal harga ${fmt$(px)} jauh di atas liq ${fmt$(p.liq)} -- dianggap ditutup manual (taksiran ${fmt$(est)})`);
-      // ditutup di luar sistem -> siklus diakhiri (bukan dilanjut), biar tangga gak langsung buka lagi nimpa keputusan manual itu
-      const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: px, qty: p.qty, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs || 0, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_GONE' };
-      j.history.push(rec); j.cycle = null; j.manualPauseAt = now; deps.save();
-      await deps.alert(`⚠️ 🌾 Farmer: posisi ${c.signalId} hilang dari BingX padahal belum nyentuh harga liq (${fmt$(p.liq)}). Ditutup manual? PnL ditaksir ${fmt$(est)} di harga ${fmt$(px)}. Siklus diakhiri; siklus baru mulai lagi dalam 24 jam kalau syarat terpenuhi (matiin di grid-config.json kalau mau berhenti).`, 'manualclose');
-      return { manual: rec };
+      const fee = p.qty * px * TAKER, est = p.qty * (px - p.e) - fee;
+      const tpBefore = p.e + (c.putIn * tpPct / 100 - c.realized) / (p.qty * (1 - TAKER));
+      c.realized += est; c.fees += fee; c.pos = null; deps.save();
+      if (px >= tpBefore * 0.998) { // ketutup pas udah di target -> anggap panen biasa
+        const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: px, qty: p.qty, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs || 0, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_LADDER_TP' };
+        j.history.push(rec); j.stats.cycles += 1; j.stats.totalPnlUsd += c.realized; if (c.realized >= 0) j.stats.wins += 1; else j.stats.losses += 1; j.cycle = null; deps.save();
+        await deps.alert(`🌾 Farmer: posisi ${c.signalId} ketutup di luar sistem pas harga udah di target (${fmt$(px)}) -- dicatat sebagai panen (${fmt$(c.realized)}). Siklus baru jalan normal.`, `guardtp:${now}`);
+        return { tp: rec };
+      }
+      // PENJAGA: catat volume + likuidasi lama, buka lagi di bawah (untung/rugi tutup tadi masuk siklus -> target tetap sama)
+      c.guard = { qty: p.qty, liq: p.liq, e0: p.e, mg0: p.mg, closedPx: px, closedPnl: est, at: now, tpPx: tpBefore };
+      log(`PENJAGA: posisi ${c.signalId} ketutup di luar sistem @ ~${fmt$(px)} (${fmt$(est)}) -- buka lagi ${p.qty} BTC, target ${fmt$(tpBefore)}, liq ${fmt$(p.liq)}`);
+      deps.save();
     } else {
       c.realized -= p.mg; c.liqs = (c.liqs || 0) + 1; c.pos = null;
       log(`posisi ${c.signalId} kena likuidasi (entry ${fmt$(p.e)}, margin ${fmt$(p.mg)} hangus) -- total rugi terealisasi ${fmt$(-c.realized)}`);
@@ -208,10 +214,61 @@ async function runLadder(deps, log, now) {
     }
   }
 
+  // ---- PENJAGA POSISI: buka ulang volume yang sama, margin diatur biar harga likuidasi tetap sama ----
+  if (c && !c.pos && c.guard) {
+    const gd = c.guard;
+    if (px <= gd.liq * 1.01) { // harga keburu turun ke likuidasi lama -> sama aja kayak kena liq: tangga ini hangus, tangga berikutnya jalan normal
+      log(`PENJAGA: harga ${fmt$(px)} udah nyentuh liq lama ${fmt$(gd.liq)} sebelum sempat dibuka ulang -- diperlakuin kayak likuidasi`);
+      c.guard = null; c.liqs = (c.liqs || 0) + 1; deps.save();
+    } else {
+      const mmr = 0.005, mgNeed = gd.qty * (px - gd.liq * (1 - mmr)); // margin isolated biar liq = liq lama
+      const levNeed = Math.max(1, Math.min(125, Math.floor((gd.qty * px) / Math.max(mgNeed, 1e-9))));
+      const wNow = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
+      const mgUse = (gd.qty * px) / levNeed; // leverage dibuletin ke bawah -> margin >= kebutuhan -> liq sama / sedikit lebih aman
+      if (wNow != null && wNow < mgUse * 1.01) {
+        log(`PENJAGA: butuh margin ${fmt$(mgUse)} buat buka ulang ${gd.qty} BTC, saldo BingX ${fmt$(wNow)} -- nunggu top up`);
+        await deps.alert(`🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo BingX cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, 'guardtopup');
+        deps.save(); return { idle: 'penjaga nunggu top up' };
+      }
+      await ex.setLeverage(sym, levNeed, 'LONG').catch((e) => log(`set leverage penjaga: ${e.message}`));
+      const order = await ex.placeMarketEntry({ symbol: sym, direction: 'buy', notionalUsd: gd.qty * px * 1.0000001, livePrice: px });
+      const fillPx = parseFloat(order.avgPrice) || px, fillQty = parseFloat(order.executedQty) || gd.qty;
+      const feeIn = fillQty * fillPx * TAKER;
+      c.pos = { e: fillPx, qty: fillQty, mg: fillQty * fillPx / levNeed, liq: fillPx * (1 - 1 / levNeed + mmr), lev: levNeed };
+      const exPos = await ex.getPositionBySide(sym, 'LONG').catch(() => null);
+      const exLiq = exPos ? parseFloat(exPos.liquidationPrice) : NaN, exMg = exPos ? parseFloat(exPos.initialMargin || exPos.margin) : NaN;
+      if (exLiq > 0 && exLiq < fillPx) c.pos.liq = exLiq;
+      if (exMg > 0) c.pos.mg = exMg;
+      // leverage dibuletin ke bawah = margin kelebihan dikit -> liq lebih rendah dari liq lama. Kurangin margin isolated selisihnya
+      // biar liq balik SAMA (adjustIsolatedMargin, diuji di BingX demo 11 Okt: +1/-1 VST geser liq sesuai).
+      if (ex.adjustIsolatedMargin && c.pos.liq < gd.liq * 0.999) {
+        const reduce = fillQty * (gd.liq - c.pos.liq) * 0.98;
+        if (reduce > 0.01) {
+          await ex.adjustIsolatedMargin({ symbol: sym, positionSide: 'LONG', amount: reduce, type: 2 }).catch((e) => log(`kurangin margin penjaga gagal: ${e.message}`));
+          const p2 = await ex.getPositionBySide(sym, 'LONG').catch(() => null);
+          const l2 = p2 ? parseFloat(p2.liquidationPrice) : NaN, m2 = p2 ? parseFloat(p2.initialMargin || p2.margin) : NaN;
+          if (l2 > 0 && l2 < fillPx) c.pos.liq = l2; else c.pos.liq += reduce / fillQty;
+          c.pos.mg = m2 > 0 ? m2 : c.pos.mg - reduce;
+        }
+      }
+      c.realized -= feeIn; c.fees += feeIn; c.guard = null; (c.guardLog = c.guardLog || []).push({ at: now, closedPx: gd.closedPx, closedPnl: gd.closedPnl, reopenPx: fillPx, qty: fillQty, lev: levNeed, liqOld: gd.liq, liqNew: c.pos.liq });
+      j.cycle = c; deps.save();
+      c.tpLock = gd.tpPx; deps.save();
+      const tpNow = gd.tpPx;
+      log(`PENJAGA: buka ulang ${fillQty} BTC @ ${fillPx} (${levNeed}x isolated, margin ${fmt$(c.pos.mg)}, liq ${fmt$(c.pos.liq)} vs lama ${fmt$(gd.liq)}) -- target ${fmt$(tpNow)} (lama ${fmt$(gd.tpPx)})`);
+      const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
+      await deps.notify(formatAutoAddLayer({ id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: levNeed, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: assetOf(deps),
+        reasonText: `🛡️ Penjaga posisi: tangga #${c.bets} ketutup di luar sistem @ ${fmt$(gd.closedPx)} (${gd.closedPnl >= 0 ? '+' : ''}${fmt$(gd.closedPnl)}), dibuka lagi volume sama ${fillQty} BTC. Target tetap ${fmt$(tpNow)}, likuidasi ${fmt$(c.pos.liq)}.` }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID));
+      await deps.alert(`🛡️ 🌾 Farmer${deps.isDemo ? ' (Demo)' : ''}: posisi ${c.signalId} ketutup di luar sistem @ ${fmt$(gd.closedPx)} -> udah dibuka lagi ${fillQty} BTC @ ${fmt$(fillPx)}. Target tetap ${fmt$(tpNow)} (sebelumnya ${fmt$(gd.tpPx)}), likuidasi ${fmt$(c.pos.liq)} (sebelumnya ${fmt$(gd.liq)}).`, `guard:${now}`);
+      return { guarded: { qty: fillQty, px: fillPx, lev: levNeed, tpPx: tpNow, liq: c.pos.liq } };
+    }
+  }
+
   // ---- TP: rugi terealisasi + floating bersih >= tpPct% x total bet ----
   if (c && c.pos) {
     const p = c.pos, net = c.realized + p.qty * (px - p.e) - p.qty * px * TAKER;
-    if (net >= c.putIn * tpPct / 100) {
+    // tpLock = harga target yang dikunci penjaga posisi (fee tutup+buka ulang gak ngegeser target, permintaan Olan "target tetep sama")
+    if (net >= c.putIn * tpPct / 100 || (c.tpLock && px >= c.tpLock)) {
       const o = await ex.emergencyCloseMarket({ symbol: sym, direction: 'buy', quantity: p.qty });
       const order = o && o.order ? o.order : o;
       const exit = parseFloat(order && order.avgPrice) || px;
@@ -333,7 +390,8 @@ async function runLadder(deps, log, now) {
     c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, anchor: walletAll, capBreak: { bingx: walletAll, ext: reserve(), capped: walletAll + reserve() > wallet + 0.01 }, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
     await ex.setIsolatedMargin(sym).catch((e) => log(`set isolated: ${e.message}`));
     await ex.setLeverage(sym, L, 'LONG').catch((e) => log(`set leverage: ${e.message}`));
-  } else if (c.pos && !(px <= c.lastE * (1 - gap / 100))) { deps.save(); return { idle: 'nunggu tangga' }; }
+  } else if (c.guard) { deps.save(); return { idle: 'penjaga belum beres' }; }
+  else if (c.pos && !(px <= c.lastE * (1 - gap / 100))) { deps.save(); return { idle: 'nunggu tangga' }; }
   // posisi terakhir udah kelikuidasi (c.pos kosong) -> tangga berikutnya LANGSUNG dibuka di harga sekarang. Dulu nunggu -gap% dari
   // entry terakhir: kalau harga mantul di antara harga liq (-19,5%) & -20%, siklus MACET selamanya tanpa posisi (backtest seumur
   // hidup: macet 2020-09 .. 2026, ketemu 11 Okt 2026).
@@ -374,6 +432,7 @@ async function runLadder(deps, log, now) {
   const wallet = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
   const mg = Math.min(carry + c.unit, wallet > 0 ? wallet * 0.98 : carry + c.unit);
   const info = await ex.getSymbolInfo(sym);
+  if (c.pos == null && (c.guardLog || []).length) await ex.setLeverage(sym, L, 'LONG').catch((e) => log(`set leverage: ${e.message}`)); // abis penjaga
   const qty = ex.roundToStepSize ? ex.roundToStepSize(mg * L / px, info.stepSize, info.quantityPrecision) : Math.floor(mg * L / px / info.stepSize) * info.stepSize;
   const order = await ex.placeMarketEntry({ symbol: sym, direction: 'buy', notionalUsd: qty * px * 1.0000001, livePrice: px });
   const fillPx = parseFloat(order.avgPrice) || px, fillQty = parseFloat(order.executedQty) || qty;
@@ -383,6 +442,7 @@ async function runLadder(deps, log, now) {
   const exLiq = exPos ? parseFloat(exPos.liquidationPrice) : NaN, exMg = exPos ? parseFloat(exPos.initialMargin || exPos.margin) : NaN;
   if (exLiq > 0 && exLiq < fillPx) c.pos.liq = exLiq;
   if (exMg > 0) c.pos.mg = exMg;
+  c.tpLock = null; // tangga baru -> target dihitung ulang normal
   c.realized -= feeIn; c.fees += feeIn; c.putIn += c.unit; c.bets += 1; c.lastE = fillPx; if (!c.firstE) c.firstE = fillPx;
   j.cycle = c; deps.save();
   const tpPx = c.pos.e + (c.putIn * tpPct / 100 - c.realized) / (c.pos.qty * (1 - TAKER));

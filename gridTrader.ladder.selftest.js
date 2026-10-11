@@ -8,12 +8,13 @@ const CFG = { enabled: true, allowReal: true, mode: 'LADDER', symbol: 'BTC-USDC'
 function harness({ wallet = 1000, ath = 126200 } = {}) {
   const st = { wallet, qty: 0, entry: 0, mg: 0, orders: [], wa: [], alerts: [], px: ath, margin: null };
   const exec = {
-    getPositionBySide: async () => (st.qty > 0 ? { positionAmt: String(st.qty) } : null),
+    getPositionBySide: async () => (st.qty > 0 ? { positionAmt: String(st.qty), liquidationPrice: String((st.entry - st.mg / st.qty) / (1 - 0.005)), margin: String(st.mg) } : null),
+    adjustIsolatedMargin: async ({ amount, type }) => { st.mg += type === 1 ? amount : -amount; st.adj = (st.adj || 0) + 1; return {}; },
     getWalletBalance: async () => st.wallet,
-    setIsolatedMargin: async () => { st.margin = 'ISOLATED'; }, setCrossMargin: async () => { st.margin = 'CROSSED'; }, setLeverage: async () => ({}),
+    setIsolatedMargin: async () => { st.margin = 'ISOLATED'; }, setCrossMargin: async () => { st.margin = 'CROSSED'; }, setLeverage: async (sym, lev) => { st.lev = lev; return {}; },
     getSymbolInfo: async () => ({ stepSize: 0.0001, quantityPrecision: 4, minNotionalUsd: 2 }),
     roundToStepSize: (q, s, p) => parseFloat((Math.floor(q / s + 1e-9) * s).toFixed(p)),
-    placeMarketEntry: async ({ notionalUsd, livePrice }) => { const q = Math.floor(notionalUsd / livePrice / 0.0001 + 1e-9) * 0.0001; st.qty = q; st.entry = livePrice; st.mg = q * livePrice / 5; st.wallet -= q * livePrice * 0.0005; st.orders.push({ side: 'buy', q, px: livePrice }); return { avgPrice: String(livePrice), executedQty: String(q) }; },
+    placeMarketEntry: async ({ notionalUsd, livePrice }) => { const q = Math.floor(notionalUsd / livePrice / 0.0001 + 1e-9) * 0.0001; st.qty = q; st.entry = livePrice; st.mg = q * livePrice / (st.lev || 5); st.wallet -= q * livePrice * 0.0005; st.orders.push({ side: 'buy', q, px: livePrice }); return { avgPrice: String(livePrice), executedQty: String(q) }; },
     emergencyCloseMarket: async ({ quantity }) => { st.wallet += quantity * (st.px - st.entry) - quantity * st.px * 0.0005; st.qty = 0; st.orders.push({ side: 'sell', q: quantity, px: st.px }); return { avgPrice: String(st.px) }; },
   };
   const liquidate = () => { st.wallet -= st.mg; st.qty = 0; };
@@ -72,12 +73,33 @@ test('peluru habis + semua kelikuidasi -> RUNGKAD dicatat, alert', async () => {
   h.deps.cfg = CFG;
 });
 
-test('posisi hilang padahal harga jauh di atas liq -> tutup manual: siklus diakhiri + alert + jeda 24 jam (gak langsung buka)', async () => {
-  const h = harness(); h.st.px = 83033; await runOnce(h.deps);
-  h.st.px = 80000; h.st.qty = 0; const r = await runOnce(h.deps);
-  assert(r.manual && h.j.cycle === null && r.manual.net > -20, JSON.stringify(r));
-  const r2 = await runOnce(h.deps); assert(r2.idle && /jeda/.test(r2.idle) && h.st.orders.length === 1, JSON.stringify(r2));
-  assert(h.st.alerts.some((m) => /Ditutup manual/.test(m)));
+test('PENJAGA: ketutup gak sengaja pas rugi -> buka lagi VOLUME SAMA, target & likuidasi tetap', async () => {
+  const h = harness(); h.st.px = 83033; const r1 = await runOnce(h.deps);
+  const q0 = h.j.cycle.pos.qty, tp0 = r1.bought.tpPx, liq0 = h.j.cycle.pos.liq;
+  h.st.px = 75000; h.st.wallet += h.st.qty * (75000 - h.st.entry); h.st.qty = 0; // kepencet close
+  const r = await runOnce(h.deps);
+  assert(r.guarded && Math.abs(r.guarded.qty - q0) < 1e-9, JSON.stringify(r));
+  assert(Math.abs(r.guarded.tpPx - tp0) < 15, 'target ' + r.guarded.tpPx + ' vs ' + tp0);
+  assert(Math.abs(r.guarded.liq - liq0) / liq0 < 0.003, 'liq ' + r.guarded.liq + ' vs ' + liq0);
+  assert(h.st.alerts.some((m) => /Penjaga|PENJAGA|dibuka lagi/.test(m)) && h.st.wa.some((m) => /Penjaga posisi/.test(m)));
+});
+
+test('PENJAGA: ketutup gak sengaja pas untung -> volume sama, margin lebih gede, target tetap', async () => {
+  const h = harness(); h.st.px = 83033; const r1 = await runOnce(h.deps);
+  const q0 = h.j.cycle.pos.qty, tp0 = r1.bought.tpPx, liq0 = h.j.cycle.pos.liq;
+  h.st.px = 86000; h.st.wallet += h.st.qty * (86000 - h.st.entry); h.st.qty = 0;
+  const r = await runOnce(h.deps);
+  assert(r.guarded && Math.abs(r.guarded.qty - q0) < 1e-9 && Math.abs(r.guarded.tpPx - tp0) < 15 && Math.abs(r.guarded.liq - liq0) / liq0 < 0.003, JSON.stringify(r) + ' liq0 ' + liq0);
+  // abis itu tangga reguler balik ke leverage normal
+  h.st.px = 66000; h.liquidate(); const r3 = await runOnce(h.deps);
+  assert(r3.bought && h.st.lev === 5, JSON.stringify(r3) + ' lev ' + h.st.lev);
+});
+
+test('PENJAGA: ketutup di luar sistem pas udah di target -> dicatat panen', async () => {
+  const h = harness(); h.st.px = 83033; const r1 = await runOnce(h.deps);
+  h.st.px = r1.bought.tpPx + 50; h.st.wallet += h.st.qty * (h.st.px - h.st.entry); h.st.qty = 0;
+  const r = await runOnce(h.deps);
+  assert(r.tp && h.j.cycle === null, JSON.stringify(r));
 });
 
 test('top up di tengah siklus -> modal per tangga ikut saldo terbaru (tangga berikutnya lebih gede)', async () => {

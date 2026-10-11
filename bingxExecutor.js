@@ -264,6 +264,12 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
   }
 
   // Hedge mode bisa pegang LONG dan SHORT sekaligus -- getPositionRisk cuma ambil [0], ambigu. Ini ambil sisi spesifik.
+  // (11 Okt 2026) atur margin posisi ISOLATED -- type 1 = tambah, 2 = kurangin (penjaga posisi Farmer: biar harga likuidasi
+  // posisi yang dibuka ulang sama persis kayak sebelumnya). Endpoint BingX Swap V2 /trade/positionMargin.
+  async function adjustIsolatedMargin({ symbol, positionSide, amount, type }) {
+    return signedRequest('POST', '/openApi/swap/v2/trade/positionMargin', { symbol, positionSide, amount: Number(amount).toFixed(4), type });
+  }
+
   async function getPositionBySide(symbol, positionSide) {
     const positions = await signedRequest('GET', '/openApi/swap/v2/user/positions', { symbol });
     return (positions || []).find((p) => p.positionSide === positionSide && Math.abs(parseFloat(p.positionAmt)) > 0) || null;
@@ -273,7 +279,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, setCrossMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
     emergencyCloseMarket, wasLastEntryOrderByKaela,
-    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide,
+    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide, adjustIsolatedMargin,
   };
 }
 

@@ -77,5 +77,6 @@
   "bankReserve": 0,
   "lastWallet": 400109.0252,
   "reserveKey": "auto:undefined:undefined:config",
-  "custody": null
+  "custody": null,
+  "exchange": "bingx"
 }

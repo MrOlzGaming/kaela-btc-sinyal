@@ -106,6 +106,12 @@ async function getWibowoBroadcastEnabled() {
   }
 }
 
+// 11 Okt 2026 -- 🌾 Dompet Farmer dari Kaela Access (owner isi di tab Developer). Gagal -> lempar (caller pakai cache/config).
+async function getFarmerFunds() {
+  const data = await callGas('getFarmerFundsForExecutor', {}, 2);
+  return data.funds || null;
+}
+
 // 28 Agu 2026 -- antrian tutup posisi manual (member sendiri ATAU owner bantu member lain, lihat
 // Sheet.gs requestClosePosition). Fail-safe: kalau gagal, anggap KOSONG (bukan fatal, coba lagi
 // siklus berikutnya -- permintaan gak ilang krn GAS baru NGOSONGIN abis berhasil dibaca).
@@ -263,4 +269,4 @@ async function resolveManualOpenRequest(requestId, status, resultMessage) {
   return callGas('resolveManualOpenRequest', { requestId, status, resultMessage: resultMessage || '' });
 }
 
-module.exports = { getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, recordExtraBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };
+module.exports = { getFarmerFunds, getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, recordExtraBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };

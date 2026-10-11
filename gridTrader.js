@@ -233,6 +233,12 @@ async function runLadder(deps, log, now) {
   // perkiraan jurnal > max($5, 2%)) -> modal per tangga langsung ikut. Rugi tangga siklus ini sendiri GAK ngecilin acuan (sama
   // kayak backtest). Saldo lewat batas -> Olan dikabarin (maks 1x/7 hari) biar lebihnya dipindah ke Sniper/Ranger -- Kaela GAK
   // mindahin dana sendiri.
+  // Dompet Farmer dari web (Kaela Access, owner) nimpa bankReserveUsd + selfCustodyWallets di config -- REAL doang, cache 10 menit.
+  if (!deps.isDemo && deps.fetchFarmerFunds && (!j.webFunds || now - j.webFunds.at > 10 * 60e3)) {
+    try { const ff = await deps.fetchFarmerFunds(); if (ff && ff.updatedAt) j.webFunds = { at: now, ...ff }; else if (j.webFunds) j.webFunds.at = now; }
+    catch (e) { log(`baca Dompet Farmer dari web gagal (pakai yang terakhir/config): ${e.message}`); }
+  }
+  if (j.webFunds && j.webFunds.updatedAt) { cfg.bankReserveUsd = j.webFunds.bankUsd || 0; cfg.selfCustodyWallets = j.webFunds.wallets || []; }
   const maxCap = cfg.maxCapUsd || 0;
   const capOf = (w) => (maxCap > 0 ? Math.min(w, maxCap) : w);
   // CADANGAN BANK (11 Okt 2026, Olan: "saldo di BingX buat mewakili seluruh saldo.. aku mau meresikokan uang yang ada di bank..
@@ -428,6 +434,7 @@ function prodDeps(cfg, journal) {
   const alerts = journal.alerts || (journal.alerts = {});
   return {
     cfg, journal, exec, isDemo: DEMO,
+    fetchFarmerFunds: DEMO ? null : () => require('./kaelaProTraderClient').getFarmerFunds(),
     price: async () => {
       const r = await (await fetch(`https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${cfg.symbol}`, { signal: AbortSignal.timeout(8000) })).json();
       return parseFloat(r && r.data && r.data.price);

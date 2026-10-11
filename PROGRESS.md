@@ -13,6 +13,9 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **11 Okt 12:02** — 🚫 PENUTUP POSISI ASING BingX LIVE (bingxPositionGuard.js): ETH-USDC LONG 0,01 tes Olan (real) ditutup paksa, Farmer aman.
+  Penjaga Farmer dites Olan 11:20 (demo) & 11:26 (real): volume & target sama; margin sekarang DITAMBAH (BingX nolak dikurangin).
+
 - **11 Okt 10:35** — Dompet Farmer = SALDO PENAMBAH (GAS v248): modal Farmer = saldo BingX asli + saldo eksternal (boleh kosong).
   Diisi $846 (total $940). Top up ngurangin angka di web otomatis. Pesan buka/nambah nampilin rincian modal. Antrian: pindah exchange.
 

@@ -1,0 +1,32 @@
+{
+  "suspects": {},
+  "history": [
+    {
+      "at": 1791691329288,
+      "mode": "real",
+      "symbol": "ETH-USDC",
+      "side": "LONG",
+      "qty": 0.01,
+      "why": "bukan posisi sistem Kaela (gak ada di jurnal, order pembuka bukan Kaela)",
+      "orderId": "2109132420947365888"
+    },
+    {
+      "at": 1791691448177,
+      "mode": "real",
+      "symbol": "SOL-USDC",
+      "side": "LONG",
+      "qty": 0.1,
+      "why": "bukan posisi sistem Kaela (gak ada di jurnal, order pembuka bukan Kaela)",
+      "orderId": "2109132919591391232"
+    },
+    {
+      "at": 1791692168132,
+      "mode": "real",
+      "symbol": "SOL-USDC",
+      "side": "SHORT",
+      "qty": 0.1,
+      "why": "bukan posisi sistem Kaela (gak ada di jurnal, order pembuka bukan Kaela)",
+      "orderId": "2109135939725152256"
+    }
+  ]
+}

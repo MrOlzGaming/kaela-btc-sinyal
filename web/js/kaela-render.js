@@ -1414,6 +1414,8 @@
   // Satu sumber kebenaran SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). Dulu web baca jurnal LAMA
   // (sniper-orders/nyopet-journal/channel-breakout-journal) -- Ninja MR/Exhaustion/News, Ranger dual+Sweep+Rotasi gak keliatan.
   const LEDGER_INTRO = {
+    grid: { id: '🌾 Farmer -- BTC di BingX: begitu BTC <strong>15% di bawah ATH</strong>, tanam 6% saldo terbaru per tangga (isolated 5x), tambah tangga tiap turun 15%, <strong>panen</strong> begitu untung 30% dari total modal masuk (rugi tangga yang kena likuidasi ikut ketutup), lalu tanam ulang pakai saldo baru (compound). Tahan crash sampai ATH -96%. <a href="metodologi-farmer.html">Metodologi →</a>',
+      en: '🌾 Farmer -- BTC on BingX: once BTC is <strong>15% below ATH</strong>, plant 6% of the latest balance per rung (isolated 5x), add a rung every 15% drop, <strong>harvest</strong> at +30% of total capital in (losses of liquidated rungs included), then replant with the new balance (compounding). Survives crashes down to ATH -96%. <a href="metodologi-farmer.html">Methodology →</a>' },
     sniper: { id: '🎯 Sniper -- pola chart (flag/pennant/wedge) + Fair Value Gap di candle <strong>HARIAN</strong> BTC (Binance), demo + real jalan barengan. Window siklus halving: bull = long, bear = short (exposure short separuh). Exit: <strong>trailing 3× jarak invalidasi</strong> (stop cuma naik, untung dibiarin lari).',
       en: '🎯 Sniper -- chart patterns (flag/pennant/wedge) + Fair Value Gap on <strong>DAILY</strong> BTC candles (Binance), demo + real side by side. Halving-cycle window: bull = long, bear = short (half short exposure). Exit: <strong>3× invalidation trailing stop</strong>.' },
     ranger: { id: '🏹 Ranger -- candle <strong>4 JAM</strong>: BTC (Binance, 3 slot independen: Pola Chart, FVG, ICT Liquidity Sweep), Fed Dovish Grid, Emas XAUUSDT (MEXC, long doang), plus <strong>Rotasi 8 koin</strong> di Bybit (alt long doang, exposure separuh). Exit BTC trailing 3×, Emas & alt ambil sebagian lalu trailing SMA60.',
@@ -1423,7 +1425,7 @@
   };
   function _ledgerMethod(t) {
     const p = String(t.patternType || '');
-    const map = { mean_reversion: 'Mean Reversion', exhaustion_fade: 'Exhaustion', news_dxy: 'News', ict_sweep: 'ICT Liquidity Sweep', fed_dovish_grid: 'Fed Dovish Grid', econ_reaction: 'Scalp Rilis Data' };
+    const map = { grid_tangga: 'Tangga', grid_ath: 'Grid ATH', mean_reversion: 'Mean Reversion', exhaustion_fade: 'Exhaustion', news_dxy: 'News', ict_sweep: 'ICT Liquidity Sweep', fed_dovish_grid: 'Fed Dovish Grid', econ_reaction: 'Scalp Rilis Data' };
     if (map[p]) return map[p];
     if (p.startsWith('fvg')) return 'Fair Value Gap';
     if (!p || p === 'unknown' || p === 'manual') return lang() === 'en' ? 'Manual/adopted position' : 'Posisi manual/adopsi';

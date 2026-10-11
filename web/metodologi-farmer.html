@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
+<title>Metodologi Farmer — Kaela BTC Sinyal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1fae6c">
+<meta name="description" content="Metodologi Farmer — tangga BTC di bawah ATH, isolated 5x, panen 30% total modal masuk, compound. Eksekusi BingX.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<link rel="stylesheet" href="css/variables.css">
+<style>
+  h1 { font-size: 1.4rem; border-bottom: 2px solid var(--clr-border); padding-bottom: 12px; }
+  h2 { font-size: 1.1rem; color: var(--clr-primary); margin-top: 32px; }
+  nav { margin: 14px 0; }
+  .tagline { color: var(--clr-text-muted); font-style: italic; font-size: 0.9rem; }
+  ul.limits { padding-left: 20px; }
+  ul.limits li { margin-bottom: 10px; }
+  .footer-note { color: var(--clr-text-muted); font-size: 0.8rem; text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
+  strong { color: var(--clr-text); }
+  .back-note { background: var(--clr-bg-elevated); border-left: 3px solid var(--clr-primary); padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--clr-text-muted); }
+  .risk-banner { background: rgba(248,81,73,0.1); border: 1px solid var(--clr-danger); border-radius: var(--radius-md); padding: 16px; margin: 20px 0; }
+  .risk-banner-title { color: var(--clr-danger); font-weight: 800; font-size: 1rem; margin-bottom: 8px; }
+  .risk-banner p { margin: 0; font-size: 0.9rem; line-height: 1.6; }
+  code { background: var(--clr-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+  .lang-toggle-row { display: flex; justify-content: flex-end; margin: 10px 0 -6px; }
+  .lang-toggle-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); border: 1px solid var(--clr-border); background: var(--clr-bg-elevated); color: var(--clr-text-muted); cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark"><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="kg" x1="0" y1="0" x2="40" y2="40"><stop offset="0" stop-color="#f7931a"/><stop offset="1" stop-color="#ffc266"/></linearGradient></defs><circle cx="20" cy="20" r="16.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="8.5" stroke="url(#kg)" stroke-width="2"/><circle cx="20" cy="20" r="2.3" fill="url(#kg)"/><line x1="20" y1="1.5" x2="20" y2="7.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="32.5" x2="20" y2="38.5" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="1.5" y1="20" x2="7.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/><line x1="32.5" y1="20" x2="38.5" y2="20" stroke="url(#kg)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <h1>Kaela BTC Sinyal — Metodologi</h1>
+  </div>
+  <p class="tagline" data-i18n="tagline">Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.</p>
+
+  <div class="lang-toggle-row"><button type="button" class="lang-toggle-btn" id="metaLangBtn" onclick="toggleMetaLang()">🇬🇧 English</button></div>
+
+  <p class="back-note" data-i18n="back_note">Ini halaman pelengkap. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-musiman.html">🌾 Musiman</a> buat metodologi intinya.</p>
+
+  <div class="risk-banner">
+    <div class="risk-banner-title">🚨 RISIKO TINGGI — BACA DULU SEBELUM LANJUT</div>
+    <p>Farmer <strong>buka posisi BENERAN di akun BingX</strong> (Perpetual Futures BTC, isolated 5x, tanpa SL). Tiap tangga bisa kena likuidasi -- yang hangus cuma margin tangga itu, tapi di crash dalam saldo bisa turun jauh dulu (backtest: penurunan terdalam ±74%) sebelum balik. Demo (VST) jalan barengan sama real.</p>
+  </div>
+
+  <h2>🌾 Kenapa "Farmer"?</h2>
+  <p>Sniper nembak tepat, Ranger jelajah, Ninja gesit. Farmer kerjanya kayak petani: <strong>tanam</strong> modal sedikit-sedikit waktu harga BTC lagi murah (di bawah ATH), <strong>sabar</strong> nunggu walau lewat crash, <strong>panen</strong> begitu untungnya cukup, lalu <strong>tanam ulang</strong> pakai hasil panen -- kekuatannya ada di compounding.</p>
+
+  <h2>Cara kerja</h2>
+  <ul class="limits">
+    <li><strong>Syarat tanam:</strong> BTC minimal <strong>15% di bawah ATH</strong> terakhir.</li>
+    <li><strong>Satu tangga = 6% saldo TERBARU</strong> (isolated 5x). Saldo naik (untung / top up) → tangga berikutnya ikut gede; akun real dibatasi acuan maks $1.000 (lebihnya dikabarin buat dipindah ke strategi lain).</li>
+    <li><strong>Tambah tangga tiap BTC turun 15%</strong> dari tangga terakhir (= pas posisi minus ±75%). Sisa margin tangga lama digabung ke tangga baru. Kalau sempat kena likuidasi duluan, tangga berikutnya langsung dibuka.</li>
+    <li><strong>Panen:</strong> tutup semua begitu untung bersih = <strong>30% dari total modal yang udah masuk</strong> siklus itu -- rugi tangga yang kena likuidasi ikut ketutup dulu. Kasus terburuk (semua tangga kebuka) tetap ambil 30% dari semuanya.</li>
+    <li><strong>Peluru cukup sampai BTC -96% dari ATH</strong> (16 tangga). Habis panen, siklus baru langsung mulai pakai saldo terbaru.</li>
+  </ul>
+
+  <h2>🔬 Hasil riset (jujur, apa adanya)</h2>
+  <ul class="limits">
+    <li><strong>Seumur hidup BTC</strong> (data harian 2010-2026, modal $1.000): Farmer long + tangga short musim bear → <strong>±$90.000</strong> (±32%/tahun), gak pernah rungkad, saldo terendah ±$321 (crash 2011 -93%). Data 2010-2014 cuma harga harian, jadi era itu agak optimis.</li>
+    <li><strong>Data per jam 2018-2025</strong> (94 titik mulai beda): modal median jadi ±2x, paling apes ±0,97x, nol rungkad.</li>
+    <li>Yang <strong>ditolak</strong>: tangga lebih tebal (8-10%) -- untung lebih gede di atas kertas tapi 2011 saldo tinggal $15 / hancur; target panen 50-70% -- gak lebih bagus di data per jam (kebetulan bull era awal).</li>
+    <li>Ketemu &amp; dibenerin dari riset: bug "macet abis likuidasi" (siklus nyangkut tanpa posisi) -- sekarang tangga berikutnya langsung kebuka.</li>
+  </ul>
+
+  <h2>Saran cara pakai</h2>
+  <ul class="limits">
+    <li><strong>Ini eksekusi Kaela sendiri</strong> (Demo + Real) -- bukan ajakan ikut-ikutan buta. Strategi tanpa SL = harus kuat mental lihat saldo turun dalam pas crash.</li>
+    <li>Selalu lihat <strong>PnL bersih</strong> di Buku Besar (Jurnal → 🌾 Farmer).</li>
+  </ul>
+
+  <p class="footer-note">Farmer aktif sejak 11 Oktober 2026 (demo BingX VST + real BingX USDC). Halaman ini diperbarui 11 Oktober 2026.</p>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <script src="js/i18n-meta.js"></script>
+  <script>
+    I18N_META.tagline = { id: 'Bukan nasihat finansial. Berdasar riset &amp; data historis. Keputusan tetap di tangan masing-masing.', en: 'Not financial advice. Based on research &amp; historical data. The decision always stays with you.' };
+    I18N_META.back_note = { id: 'Ini halaman pelengkap. Strategi utama Kaela tetap Siklus Halving (CAGR 73,8%/tahun) — lihat tab <a href="metodologi-musiman.html">🌾 Musiman</a> buat metodologi intinya.', en: 'This is a supplementary page. Kaela\'s main strategy is still the Halving Cycle (CAGR 73.8%/year) — see the <a href="metodologi-musiman.html">🌾 Seasonal</a> tab for the core methodology.' };
+    I18N_META.nav_dashboard = { id: 'Dashboard', en: 'Dashboard' };
+    I18N_META.nav_jurnal = { id: 'Jurnal', en: 'Journal' };
+    I18N_META.nav_analis = { id: 'Analis', en: 'Analyst' };
+    I18N_META.nav_kalkulator = { id: 'Kalkulator', en: 'Calculator' };
+    I18N_META.nav_metodologi = { id: 'Metodologi', en: 'Methodology' };
+    applyMetaLang();
+  </script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3l8.5 7.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.5V20a1 1 0 001 1h11a1 1 0 001-1V9.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6a1 1 0 011-1h3a1 1 0 011 1v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="jurnal.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V4" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 16.5l3.5-4 3 2.5L18.5 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_jurnal">Jurnal</span></a>
+    <a href="analis.html"><span class="icon">📊</span><span data-i18n="nav_analis">Analis</span></a>
+    <a href="kalkulator.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="2.5" width="14" height="19" rx="2" stroke-width="1.8"/><line x1="8" y1="6.5" x2="16" y2="6.5" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.3" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11.3" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="18.7" r="1" fill="currentColor" stroke="none"/></svg></span><span data-i18n="nav_kalkulator">Kalkulator</span></a>
+    <a href="metodologi-musiman.html"><span class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 19H6a2 2 0 00-2 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="nav_metodologi">Metodologi</span></a>
+  </nav>
+</body>
+</html>

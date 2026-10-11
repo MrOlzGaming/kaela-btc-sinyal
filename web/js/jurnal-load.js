@@ -70,6 +70,9 @@
     if (rangerEl) rangerEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ranger', { limit: 30 }) + archiveWrap(KaelaRender.renderRangerJurnalPanel(rangerState, now));
 
     // Ninja (26 Sep 2026, permintaan Olan "pastikan web kita dah terupdate sistem ninja bingx").
+    // (11 Okt 2026) panel Ninja disembunyiin -> 🌾 Farmer (systemKey 'grid'). Ninja di bawah gak ketemu elemennya = gak dirender.
+    const farmerEl = document.querySelector('[data-panel="farmer"]');
+    if (farmerEl) farmerEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'grid', { limit: 30 });
     const ninjaEl = document.querySelector('[data-panel="ninja"]');
     if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ninja', { limit: 30 }) + archiveWrap(KaelaRender.renderNinjaJurnalPanel(ninjaJournal, now));
   }

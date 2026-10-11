@@ -57,8 +57,9 @@
 
     // Ninja muncul di Home juga (26 Sep 2026, permintaan Olan "pastikan web kita dah terupdate
     // sistem ninja bingx") -- pola sama kayak Ranger di atas.
-    const ninjaEl = document.getElementById('ninja-container');
-    if (ninjaEl) ninjaEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'ninja'); // (5 Okt) dulu renderNinjaHomePanel(channel-breakout-journal) -- Channel Breakout udah mati
+    // (11 Okt 2026) Ninja disembunyiin (Olan: "gak cocok", semua entry dimatiin) -> diganti 🌾 Farmer (gridTrader.js, systemKey 'grid')
+    const farmerEl = document.getElementById('farmer-container');
+    if (farmerEl) farmerEl.innerHTML = KaelaRender.renderLedgerPanel(ledger, 'grid'); // (5 Okt) dulu renderNinjaHomePanel(channel-breakout-journal) -- Channel Breakout udah mati
   }
 
   main();

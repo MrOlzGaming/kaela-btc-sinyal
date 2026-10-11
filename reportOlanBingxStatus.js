@@ -32,11 +32,21 @@ const MASTER_NOMOR = '6281299303888';
 function rotationFloating() {
   try { return require('./rangerRotation').loadJournal().floating || null; } catch { return null; }
 }
+// (11 Okt 2026) 🌾 Farmer (gridTrader.js) -- posisi LONG di simbol Farmer (demo BTC-USDT / real BTC-USDC) yang lagi dipegang
+// jurnal Farmer = 'farmer' (bawa target/liq/tangga). Ninja udah dimatiin, sisa posisi lain tetap 'ninja'.
+function farmerCycle(isDemo) {
+  try { const j = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, isDemo ? 'grid-demo-journal.json' : 'grid-journal.json'), 'utf8')); return j.cycle && j.cycle.pos ? j.cycle : null; } catch { return null; }
+}
+function farmerSymbol(isDemo) {
+  try { return JSON.parse(require('fs').readFileSync(require('path').join(__dirname, isDemo ? 'grid-demo-config.json' : 'grid-config.json'), 'utf8')).symbol; } catch { return isDemo ? 'BTC-USDT' : 'BTC-USDC'; }
+}
 function normalizePositions(rawPositions, isDemo) {
   const rot = isDemo ? rotationFloating() : null;
+  const farm = farmerCycle(isDemo), farmSym = farmerSymbol(isDemo);
   return (rawPositions || []).map((p) => {
     const direction = p.positionSide === 'SHORT' ? 'sell' : 'buy';
     const isRot = !!(rot && p.symbol === `${rot.coin}-USDT` && direction === rot.direction);
+    const isFarm = !isRot && !!farm && p.symbol === farmSym && direction === 'buy';
     return {
       symbol: p.symbol,
       direction,
@@ -46,7 +56,8 @@ function normalizePositions(rawPositions, isDemo) {
       marginUsd: Number(p.margin) || 0,
       notionalUsd: Math.abs(Number(p.positionValue) || 0),
       unrealizedPnlUsd: Number(p.unrealizedProfit) || 0,
-      system: isRot ? 'rotasi' : 'ninja',
+      system: isRot ? 'rotasi' : (isFarm ? 'farmer' : 'ninja'),
+      ...(isFarm ? { signalId: farm.signalId, openedAt: farm.startedAt, rung: farm.bets, totalIn: farm.putIn, liq: farm.pos.liq } : {}),
       ...(isRot ? { sl: rot.sl, tp: rot.partialTp, signalId: rot.signalId, patternType: rot.patternType, openedAt: rot.openedAt, partialDone: !!rot.partialDone, realizedPnlUsd: rot.realizedPnlUsd || 0 } : {}),
     };
   });
@@ -66,7 +77,7 @@ async function main() {
   // margin isolated lagi kekunci di posisi terbuka, wallet balance mentah yang bener buat NAV.
   const [demoBalance, realBalance, demoPositionsRaw, realPositionsRaw] = await Promise.all([
     demoClient.getWalletBalance('VST').catch((e) => { console.log('[ReportOlanBingxStatus] getWalletBalance VST gagal:', e.message); return null; }),
-    realClient.getWalletBalance('USDT').catch((e) => { console.log('[ReportOlanBingxStatus] getWalletBalance USDT gagal:', e.message); return null; }),
+    Promise.all([realClient.getWalletBalance('USDT'), realClient.getWalletBalance('USDC').catch(() => 0)]).then(([a, b]) => a + b).catch((e) => { console.log('[ReportOlanBingxStatus] getWalletBalance USDT+USDC gagal:', e.message); return null; }), // (11 Okt) + USDC Farmer
     demoClient.getAllPositions().catch((e) => { console.log('[ReportOlanBingxStatus] getAllPositions demo gagal:', e.message); return null; }),
     realClient.getAllPositions().catch((e) => { console.log('[ReportOlanBingxStatus] getAllPositions real gagal:', e.message); return null; }),
   ]);
@@ -77,7 +88,7 @@ async function main() {
   }
   if (realBalance != null) {
     await kaela.recordBingxBalance(MASTER_NOMOR, 'real', realBalance, realPositionsRaw != null ? normalizePositions(realPositionsRaw, false) : undefined);
-    console.log(`[ReportOlanBingxStatus] OK real -- $${realBalance.toFixed(2)} USDT, ${realPositionsRaw ? realPositionsRaw.length : '?'} posisi.`);
+    console.log(`[ReportOlanBingxStatus] OK real -- $${realBalance.toFixed(2)} USDT+USDC, ${realPositionsRaw ? realPositionsRaw.length : '?'} posisi.`);
   }
 }
 

@@ -107,6 +107,10 @@ async function getWibowoBroadcastEnabled() {
 }
 
 // 11 Okt 2026 -- 🌾 Dompet Farmer dari Kaela Access (owner isi di tab Developer). Gagal -> lempar (caller pakai cache/config).
+async function setFarmerFunds({ mode, totalUsd, extraUsd, wallets }) {
+  const data = await callGas('setFarmerFundsForExecutor', { mode, totalUsd: String(totalUsd || 0), extraUsd: String(extraUsd || 0), wallets: JSON.stringify(wallets || []) }, 2);
+  return data.funds || null;
+}
 async function getFarmerFunds() {
   const data = await callGas('getFarmerFundsForExecutor', {}, 2);
   return data.funds || null;
@@ -269,4 +273,4 @@ async function resolveManualOpenRequest(requestId, status, resultMessage) {
   return callGas('resolveManualOpenRequest', { requestId, status, resultMessage: resultMessage || '' });
 }
 
-module.exports = { getFarmerFunds, getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, recordExtraBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };
+module.exports = { getFarmerFunds, setFarmerFunds, getTradingAccounts, recordJournalEntry, updateJournalEntry, notifyMember, getAllAccountsWithKeys, recordBalanceReport, claimLeadership, recordMemberStatus, recordBingxBalance, recordExtraBalance, getAdminNotifySettings, getWibowoBroadcastEnabled, getPendingCloseRequests, setTradingToggleForExecutor, setAllTogglesForExecutor, reportCycleErrors, checkAndClearForceSyncRequest, getUsdIdrRate, getPendingManualOpenRequests, resolveManualOpenRequest };

@@ -244,7 +244,8 @@ async function runLadder(deps, log, now) {
   //   bank   = format lama (bankReserveUsd)
   const fundsSrc = j.webFunds && j.webFunds.updatedAt ? j.webFunds
     : { mode: cfg.farmerBalanceMode, totalUsd: cfg.manualTotalUsd, bankUsd: cfg.bankReserveUsd, wallets: cfg.selfCustodyWallets, updatedAt: 'config' };
-  const fMode = fundsSrc.mode || (fundsSrc.bankUsd ? 'bank' : 'auto');
+  const fMode = fundsSrc.mode === 'extra' ? 'bank' : (fundsSrc.mode || (fundsSrc.bankUsd ? 'bank' : 'auto')); // 'extra' (saldo penambah dari web) = logika bank
+  if (fundsSrc.mode === 'extra') fundsSrc.bankUsd = fundsSrc.extraUsd;
   cfg.selfCustodyWallets = fMode !== 'manual' ? (fundsSrc.wallets || []) : []; // manual = total udah termasuk semuanya
   const maxCap = cfg.maxCapUsd || 0;
   const capOf = (w) => (maxCap > 0 ? Math.min(w, maxCap) : w);
@@ -279,7 +280,13 @@ async function runLadder(deps, log, now) {
     if (!(d > 0)) return;
     const before = custodyTotal(); await refreshCustody(true); const drop = before - custodyTotal();
     if (drop >= d * 0.8) { log(`top up ${fmt$(d)} dari dompet pribadi (dompet turun ${fmt$(drop)})`); return; }
-    if ((j.bankReserve || 0) > 0) { const used = Math.min(d, j.bankReserve); j.bankReserve -= used; log(`top up ${fmt$(d)} dianggap dari bank -> cadangan bank sisa ${fmt$(j.bankReserve)}`); }
+    if ((j.bankReserve || 0) > 0) {
+      const used = Math.min(d, j.bankReserve); j.bankReserve -= used; log(`top up ${fmt$(d)} dianggap dari saldo eksternal -> sisa ${fmt$(j.bankReserve)}`);
+      // angka di web ikut diperbarui biar kolom saldo penambah selalu sesuai kenyataan (best effort)
+      if (deps.saveFarmerFunds && j.webFunds && j.webFunds.mode === 'extra') {
+        try { const r = await deps.saveFarmerFunds({ mode: 'extra', extraUsd: Math.round(j.bankReserve * 100) / 100, wallets: j.webFunds.wallets || [] }); if (r && r.updatedAt) { j.webFunds = { at: now, ...r }; j.reserveKey = `bank:${r.totalUsd}:${r.extraUsd}:${r.updatedAt}`; } } catch (e) { log(`update saldo penambah di web gagal: ${e.message}`); }
+      }
+    }
   };
   const overCap = async (w) => {
     if (cfg.overCapAlert === false || !(maxCap > 0 && w > maxCap * 1.05) || (j.overCapAt && now - j.overCapAt < 7 * 864e5)) return;
@@ -297,7 +304,7 @@ async function runLadder(deps, log, now) {
       const from = c.cycleCap, to = capOf(c.anchor + reserve());
       if (Math.abs(d) > Math.max(5, Math.abs(expected) * 0.02) || Math.abs(to - from) > Math.max(5, from * 0.02)) {
         if (Math.abs(to - from) > 0.01) {
-          c.cycleCap = to; c.unit = to * betPct / 100; (c.capChanges = c.capChanges || []).push({ at: now, from, to, wallet: w });
+          c.cycleCap = to; c.unit = to * betPct / 100; c.capBreak = { bingx: w, ext: reserve(), capped: c.anchor + reserve() > to + 0.01 }; (c.capChanges = c.capChanges || []).push({ at: now, from, to, wallet: w });
           log(`${Math.abs(d) > 5 ? (d > 0 ? 'top up' : 'tarik') + ' kebaca (' + fmt$(d) + ')' : 'batas modal di config berubah'} -> acuan modal tangga ${fmt$(from)} -> ${fmt$(to)}, modal per tangga ${fmt$(c.unit)}`);
         }
       }
@@ -323,7 +330,7 @@ async function runLadder(deps, log, now) {
     }
     if (!j.seq || j.seq.day !== new Date(now).toISOString().slice(0, 10)) j.seq = { day: new Date(now).toISOString().slice(0, 10), n: 0 };
     j.seq.n += 1;
-    c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, anchor: walletAll, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
+    c = { mode: 'LADDER', id: `grid-${now}`, signalId: `G${j.seq.day.replace(/-/g, '')}${String(j.seq.n).padStart(2, '0')}`, startedAt: now, athAtStart: j.ath, cycleCap: wallet, anchor: walletAll, capBreak: { bingx: walletAll, ext: reserve(), capped: walletAll + reserve() > wallet + 0.01 }, unit, putIn: 0, realized: 0, fees: 0, bets: 0, liqs: 0, pos: null, lastE: null, firstE: null };
     await ex.setIsolatedMargin(sym).catch((e) => log(`set isolated: ${e.message}`));
     await ex.setLeverage(sym, L, 'LONG').catch((e) => log(`set leverage: ${e.message}`));
   } else if (c.pos && !(px <= c.lastE * (1 - gap / 100))) { deps.save(); return { idle: 'nunggu tangga' }; }
@@ -391,7 +398,9 @@ function ladderLiqMsg(c, p, px, deps) {
 const assetOf = (deps) => String(deps.cfg.symbol || 'BTC-USDC').replace('-', '');
 function ladderReason(c, dd, deps) {
   const gap = deps.cfg.gapPct || 15;
-  return `BTC di ATH -${dd.toFixed(0)}%. Tangga #${c.bets} (${deps.cfg.betPct || 6}% saldo). Tangga berikutnya di ${fmt$(c.lastE * (1 - gap / 100))}.`;
+  const b = c.capBreak;
+  const modal = b && b.ext > 0.5 ? ` Modal ${fmt$(c.cycleCap)} = BingX ${fmt$(b.bingx)} + saldo eksternal ${fmt$(b.ext)}${b.capped ? ' (dipotong batas)' : ''}.` : '';
+  return `BTC di ATH -${dd.toFixed(0)}%. Tangga #${c.bets} (${deps.cfg.betPct || 6}% modal = ${fmt$(c.unit)}).${modal} Tangga berikutnya di ${fmt$(c.lastE * (1 - gap / 100))}.`;
 }
 function ladderTpText(c, tpPx, deps) {
   return `${fmt$(tpPx)} (+${deps.cfg.ladderTpPct || 30}% total modal ${fmt$(c.putIn)}${c.realized + c.fees < -0.01 ? ', udah nutup rugi tangga sebelumnya' : ''})`;
@@ -448,6 +457,7 @@ function prodDeps(cfg, journal) {
   return {
     cfg, journal, exec, isDemo: DEMO,
     fetchFarmerFunds: DEMO ? null : () => require('./kaelaProTraderClient').getFarmerFunds(),
+    saveFarmerFunds: DEMO ? null : (f) => require('./kaelaProTraderClient').setFarmerFunds(f),
     price: async () => {
       const r = await (await fetch(`https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${cfg.symbol}`, { signal: AbortSignal.timeout(8000) })).json();
       return parseFloat(r && r.data && r.data.price);

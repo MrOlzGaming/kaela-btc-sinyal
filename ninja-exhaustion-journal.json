@@ -1,12 +1,8 @@
 {
-  "episode": {
-    "side": "short",
-    "startedAt": 1791733265165,
-    "peakUsd": 3152693.901
-  },
+  "episode": null,
   "floating": null,
   "closedCount": 9,
-  "signals": 9,
+  "signals": 10,
   "skipped": 0,
   "stats": {
     "demo": {

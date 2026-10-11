@@ -34,7 +34,7 @@ test('ATH -34% -> bet #1 = 8% saldo ($80) isolated 5x, target +$16', async () =>
   assert(r.bought && r.bought.opening && h.st.margin === 'ISOLATED');
   assert(Math.abs(r.bought.mg - 80) < 1, `margin ${r.bought.mg}`);
   assert(r.bought.tpPx > 86000 && r.bought.tpPx < 86800, `target ${r.bought.tpPx}`);
-  assert(/Buka Posisi/.test(h.st.wa[0]) && /Farmer/.test(h.st.wa[0]) && /\(Real\)/.test(h.st.wa[0]), h.st.wa[0]);
+  assert(/Buka Posisi/.test(h.st.wa[0]) && /🌾 FARMER/.test(h.st.wa[0]) && /\(Real\)/.test(h.st.wa[0]), h.st.wa[0]);
 });
 
 test('belum turun 20% -> gak nambah', async () => {

@@ -246,11 +246,11 @@ async function runLadder(deps, log, now) {
       if (c.anchor == null) c.anchor = c.cycleCap - c.realized; // jurnal sebelum fitur ini
       const expected = c.anchor + c.realized, d = w - expected;
       c.anchor += d; // selisih kecil (funding dll) diserap, selisih besar = top up / tarik
-      if (Math.abs(d) > Math.max(5, Math.abs(expected) * 0.02)) {
-        const from = c.cycleCap, to = capOf(c.anchor);
+      const from = c.cycleCap, to = capOf(c.anchor);
+      if (Math.abs(d) > Math.max(5, Math.abs(expected) * 0.02) || Math.abs(to - from) > Math.max(5, from * 0.02)) {
         if (Math.abs(to - from) > 0.01) {
           c.cycleCap = to; c.unit = to * betPct / 100; (c.capChanges = c.capChanges || []).push({ at: now, from, to, wallet: w });
-          log(`${d > 0 ? 'top up' : 'tarik'} kebaca (${fmt$(d)}) -> acuan modal tangga ${fmt$(from)} -> ${fmt$(to)}, modal per tangga ${fmt$(c.unit)}`);
+          log(`${Math.abs(d) > 5 ? (d > 0 ? 'top up' : 'tarik') + ' kebaca (' + fmt$(d) + ')' : 'batas modal di config berubah'} -> acuan modal tangga ${fmt$(from)} -> ${fmt$(to)}, modal per tangga ${fmt$(c.unit)}`);
         }
       }
       deps.save();
@@ -309,6 +309,10 @@ async function runLadder(deps, log, now) {
   const fillPx = parseFloat(order.avgPrice) || px, fillQty = parseFloat(order.executedQty) || qty;
   const feeIn = fillQty * fillPx * TAKER;
   c.pos = { e: fillPx, qty: fillQty, mg: fillQty * fillPx / L, liq: fillPx * (1 - 1 / L + 0.005) };
+  const exPos = await ex.getPositionBySide(sym, 'LONG').catch(() => null);
+  const exLiq = exPos ? parseFloat(exPos.liquidationPrice) : NaN, exMg = exPos ? parseFloat(exPos.initialMargin || exPos.margin) : NaN;
+  if (exLiq > 0 && exLiq < fillPx) c.pos.liq = exLiq;
+  if (exMg > 0) c.pos.mg = exMg;
   c.realized -= feeIn; c.fees += feeIn; c.putIn += c.unit; c.bets += 1; c.lastE = fillPx; if (!c.firstE) c.firstE = fillPx;
   j.cycle = c; deps.save();
   const tpPx = c.pos.e + (c.putIn * tpPct / 100 - c.realized) / (c.pos.qty * (1 - TAKER));
@@ -317,31 +321,31 @@ async function runLadder(deps, log, now) {
   return { bought: { opening: c.bets === 1, bet: c.bets, qty: fillQty, px: fillPx, mg: c.pos.mg, tpPx } };
 }
 function ladderLiqMsg(c, p, px, deps) {
-  const { formatAutoClosed, CLOSE_REASON_LABEL, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
-  const gap = deps.cfg.gapPct || 15;
-  const alasan = `${CLOSE_REASON_LABEL.GRID_LADDER_LIQ} (tangga #${c.bets}, margin ${fmt$(p.mg)}). Total rugi siklus ini ${fmt$(-(c.realized + c.fees))}, total modal masuk ${fmt$(c.putIn)}. Tangga berikutnya: sekarang (${fmt$(px)}), jarak tiap ${gap}%.`;
-  return formatAutoClosed({ id: c.id, signalId: c.signalId, direction: 'long', entryPrice: p.e, exitPrice: px, pnlUsd: -p.mg, pnlPct: -100, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', '') }, new Date(), !!deps.isDemo, alasan, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
+  const { formatAutoClosed, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
+  const alasan = `tangga #${c.bets} kena likuidasi (cuma margin tangga ini). Siklus lanjut: tangga berikutnya langsung dibuka, targetnya nutup rugi ini.`;
+  return formatAutoClosed({ id: c.id, signalId: c.signalId, direction: 'long', entryPrice: p.e, exitPrice: px, pnlUsd: -p.mg, pnlPct: -100, assetLabel: assetOf(deps) }, new Date(), !!deps.isDemo, alasan, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
-function ladderReason(c, dd, tpPx, deps) {
-  const cfg = deps.cfg, gap = cfg.gapPct || 20, tpPct = cfg.ladderTpPct || 20;
-  return `Farmer: BTC di ATH -${dd.toFixed(1)}% (syarat <= -${cfg.minDd}%). Tangga #${c.bets} = ${cfg.betPct || 8}% saldo (${fmt$(c.unit)}), total modal masuk ${fmt$(c.putIn)}. `
-    + `Target ${fmt$(tpPx)} = untung ${tpPct}% dari total modal masuk (${fmt$(c.putIn * tpPct / 100)})${c.realized + c.fees < -0.01 ? ` + nutup rugi tangga sebelumnya ${fmt$(-(c.realized + c.fees))}` : ''}. Tangga berikutnya kalau BTC turun ${gap}% lagi (${fmt$(c.lastE * (1 - gap / 100))}).`;
+const assetOf = (deps) => String(deps.cfg.symbol || 'BTC-USDC').replace('-', '');
+function ladderReason(c, dd, deps) {
+  const gap = deps.cfg.gapPct || 15;
+  return `BTC di ATH -${dd.toFixed(0)}%. Tangga #${c.bets} (${deps.cfg.betPct || 6}% saldo). Tangga berikutnya di ${fmt$(c.lastE * (1 - gap / 100))}.`;
+}
+function ladderTpText(c, tpPx, deps) {
+  return `${fmt$(tpPx)} (+${deps.cfg.ladderTpPct || 30}% total modal ${fmt$(c.putIn)}${c.realized + c.fees < -0.01 ? ', udah nutup rugi tangga sebelumnya' : ''})`;
 }
 function ladderOpenMsg(c, dd, tpPx, deps) {
   const { formatAutoOpen, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
   return formatAutoOpen({
     id: c.id, signalId: c.signalId, direction: 'buy', entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e,
-    tpText: `${fmt$(tpPx)} (+${deps.cfg.ladderTpPct || 20}% dari total modal masuk, tutup semua lalu ulang pakai saldo terbaru)`,
-    slText: `tanpa SL -- isolated, likuidasi ~${fmt$(c.pos.liq)} cuma ngabisin margin tangga ini; tangga berikutnya nutup rugi itu`,
-    liquidationNote: `isolated ~${fmt$(c.pos.liq)}`, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''), reasonText: ladderReason(c, dd, tpPx, deps),
+    tpText: ladderTpText(c, tpPx, deps), slText: 'tanpa SL (isolated)', liquidationNote: fmt$(c.pos.liq),
+    assetLabel: assetOf(deps), reasonText: ladderReason(c, dd, deps),
   }, new Date(), '', !!deps.isDemo, null, '', null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 function ladderAddMsg(c, dd, tpPx, closedOld, deps) {
   const { formatAutoAddLayer, EXCHANGE_BADGE, SYSTEM_LABEL } = require('./darkKaelaLog');
-  const pre = closedOld ? `Posisi lama (entry ${fmt$(closedOld.e)}) ditutup di ${fmt$(closedOld.exit)} (${closedOld.pnl >= 0 ? '+' : ''}${fmt$(closedOld.pnl)}), sisa marginnya digabung modal tangga baru. ` : '';
   return formatAutoAddLayer({
-    id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: String(deps.cfg.symbol || 'BTC-USDC').replace('-', ''),
-    reasonText: pre + ladderReason(c, dd, tpPx, deps),
+    id: c.id, signalId: c.signalId, layers: c.bets, entryPrice: c.pos.e, marginUsd: c.pos.mg, leverage: deps.cfg.leverage, nilaiPosisi: c.pos.qty * c.pos.e, assetLabel: assetOf(deps),
+    reasonText: `${ladderReason(c, dd, deps)} Target ${ladderTpText(c, tpPx, deps)}. Likuidasi ${fmt$(c.pos.liq)}.${closedOld ? ' Sisa margin tangga lama digabung.' : ''}`,
   }, new Date(), !!deps.isDemo, null, null, EXCHANGE_BADGE.bingx, SYSTEM_LABEL.GRID);
 }
 

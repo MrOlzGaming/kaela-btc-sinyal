@@ -20,7 +20,8 @@ Keputusan Olan 3 Okt 2026 malam:
    Ninja real dimatiin lagi 8 Okt (balik uji demo).
 5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
    luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
-6. **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)
+6. **NETLIFY BELUM DIBAYAR (11 Okt)** -- akun Netlify "Restricted Team" (kredit habis), deploy ditolak ("Method Not Allowed"). Begitu Olan isi kredit: trigger deploy-daily.yml SEKALI buat semua perubahan numpuk: web Sniper (Farmer di dashboard+jurnal, metodologi-farmer.html, Ninja disembunyiin) + masking Kaela Access (dashboard.html: kartu Dompet Farmer, tombol metodologi Farmer). Kode udah di GitHub.
+   (lama) **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)
 7. ~~Push GAS Kaela Access~~ -- BERES 6 Okt: GAS v245 live, 7 koneksi tersimpan, AdminView jalan, masking workflow dibenerin
    (YAML rusak sejak ~20 Sep); tampilan baru TAYANG 6 Okt 04:17 WITA lewat Netlify API langsung (GitHub Actions lagi gangguan).
 

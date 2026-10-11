@@ -34,7 +34,7 @@ async function loadDaily() {
 const daysSinceHalving = (t) => { let h = null; for (const x of HALVINGS) if (x <= t) h = x; return h == null ? -1 : (t - h) / DAY; };
 
 function sim(rows, { long = true, short = true, start = 1000, gap = 0.20, betL = 0.08, betS = 0.05, gapS = 0.10, tpS = 0.10, tpL = 0.2, winA = 520, winB = 900 } = {}) {
-  let wallet = start, ath = 0, peak = start, maxDd = 0, minEq = start;
+  let wallet = start, ath = 0, peak = start, maxDd = 0, minEq = start, maxUsed = 0, bothDays = 0; // maxUsed = margin long+short / ekuitas
   const L = { pos: null, putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0, tp: 0, liqs: 0, rungkad: 0 };
   const S = { lots: [], putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0, tp: 0, liqs: 0, forced: 0 };
   const yearly = {}; let lastYear = null;
@@ -79,11 +79,12 @@ function sim(rows, { long = true, short = true, start = 1000, gap = 0.20, betL =
       }
     }
     ath = Math.max(ath, h);
+    { const used = (L.pos ? L.pos.mg : 0) + S.lots.reduce((a, p) => a + p.mg, 0), e0 = eqAt(c); if (e0 > 0) maxUsed = Math.max(maxUsed, used / e0); if (L.pos && S.lots.length) bothDays++; }
     const eq = eqAt(c); if (eq > peak) peak = eq; maxDd = Math.max(maxDd, 1 - eq / peak); minEq = Math.min(minEq, eq);
     if (eq <= 0.01) break;
   }
   const last = rows[rows.length - 1]; yearly[lastYear].end = eqAt(last[4]);
-  return { end: eqAt(last[4]), maxDd, minEq, L, S, yearly };
+  return { end: eqAt(last[4]), maxDd, minEq, L, S, yearly, maxUsed, bothDays };
 }
 module.exports = { loadDaily, sim };
 if (require.main === module) (async () => {

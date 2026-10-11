@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "symbol": "BTC-USDC",
+  "quote": "USDC",
+  "activateAtUsd": 10000,
+  "capUsd": 100000,
+  "holdPct": 30,
+  "unitPct": 2,
+  "stepPct": 3,
+  "growth": 1.15,
+  "tpPct": 1.5,
+  "minOrderUsd": 5.5,
+  "_note": "11 Okt 2026 -- 🪙 GRID SPOT BingX REAL (spotGridTrader.js), SIAGA sampai kantong spot (BTC bibit + USDC) >= activateAtUsd. Aktif: 30% BTC jadi INTI ditahan, sisanya jadi peluru grid (2%/-3%/x1,15/TP1,5%). Cap \$100.000 -> lebihnya DOGE (belum dibangun). ⚠️ BingX GAK punya spot demo: endpoint spot di host VST ngebalikin akun spot REAL (kebukti 11 Okt) -- JANGAN pernah jalanin grid spot 'demo' di BingX."
+}

@@ -204,6 +204,7 @@ const CLOSE_REASON_LABEL = {
   GRID_GONE: 'Posisi grid udah gak ada di exchange (ditutup manual/likuidasi) -- PnL gak kebaca, siklus direset',
   GRID_LADDER_TP: 'Target tangga kena -- untung >= 20% dari total modal masuk (rugi tangga yang kelikuidasi udah ketutup), siklus diulang pakai saldo terbaru',
   GRID_LADDER_LIQ: 'Tangga ini kena likuidasi (isolated, cuma margin tangga ini yang hangus) -- siklus LANJUT: tangga berikutnya langsung dibuka & targetnya nutup rugi ini',
+  SPOTGRID_TP: 'Target grid spot kena -- untung >= 1,5% dari total modal masuk, BTC grid dijual (inti 30% tetap ditahan), siklus diulang',
   GRID_LADDER_RUNGKAD: 'Semua tangga kelikuidasi & peluru habis -- siklus ditutup rugi, mulai lagi dari saldo sisa',
   REVERSAL: 'Sinyal balik arah (hawkish) muncul, tutup duluan biar aman',
   // (13 Sep 2026, permintaan Olan: "saat window bull habis jangan long lagi, tutup walau rugi..
@@ -257,7 +258,8 @@ const SYSTEM_LABEL = {
   SNIPER: { emoji: '🎯', name: 'SNIPER' },
   RANGER: { emoji: '🏹', name: 'RANGER' },
   NINJA: { emoji: '🥷', name: 'NINJA' },
-  GRID: { emoji: '🌾', name: 'FARMER' }, // 10 Okt 2026 -- Grid BTC-USDC BingX (gridTrader.js); 11 Okt dinamain FARMER (Olan: 'grid ini belum ada nama') -- tanam modal tiap tangga, panen, tanam ulang (compound)
+  GRID: { emoji: '🌾', name: 'FARMER' },
+  SPOTGRID: { emoji: '🪙', name: 'GRID SPOT' }, // 11 Okt 2026 -- spotGridTrader.js (BingX spot, tanpa leverage) // 10 Okt 2026 -- Grid BTC-USDC BingX (gridTrader.js); 11 Okt dinamain FARMER (Olan: 'grid ini belum ada nama') -- tanam modal tiap tangga, panen, tanam ulang (compound)
 };
 
 // (12 Sep 2026, permintaan Olan: "Manual (Olan) / Auto (Kaela)" -- badge auto sekarang eksplisit

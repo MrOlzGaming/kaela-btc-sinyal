@@ -492,6 +492,7 @@ async function recordBibit(j, cfg, profit, px, deps, log, now, capAfter) {
 // beli BTC spot pakai SEMUA USDC di akun Spot (kantong bibit). Minimal order spot BingX $5 -- kurang dari itu ditumpuk dulu.
 async function bibitBuy(j, cfg, deps, log, now, head) {
   const ex = deps.exec, asset = cfg.marginAsset || 'USDC', sym = `BTC-${asset}`;
+  try { const sg = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'spot-grid-journal.json'), 'utf8')); if (sg && sg.active) { j.bibitBuyPending = false; log('grid spot udah aktif -- USDC bibit jadi peluru grid, gak dibeliin BTC'); return; } } catch {}
   try {
     const bal = await ex.getSpotBalances();
     const usd = Number((bal.find((b) => b.asset === asset) || {}).free) || 0;

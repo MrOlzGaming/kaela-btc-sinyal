@@ -274,8 +274,11 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     const d = await signedRequest('GET', '/openApi/spot/v1/account/balance', {});
     return (d && d.balances) || [];
   }
+  async function spotMarketSell({ symbol, quantity }) {
+    return signedRequest('POST', '/openApi/spot/v1/trade/order', { symbol, side: 'SELL', type: 'MARKET', quantity: Number(quantity).toFixed(6), newClientOrderId: ('kaelaspot' + Date.now()).slice(0, 40) });
+  }
   async function spotMarketBuy({ symbol, quoteQty }) {
-    return signedRequest('POST', '/openApi/spot/v1/trade/order', { symbol, side: 'BUY', type: 'MARKET', quoteOrderQty: Number(quoteQty).toFixed(4), newClientOrderId: ('kaelabibit' + Date.now()).slice(0, 40) });
+    return signedRequest('POST', '/openApi/spot/v1/trade/order', { symbol, side: 'BUY', type: 'MARKET', quoteOrderQty: Number(quoteQty).toFixed(4), newClientOrderId: ('kaelaspot' + Date.now()).slice(0, 40) });
   }
 
   // (11 Okt 2026) atur margin posisi ISOLATED -- type 1 = tambah, 2 = kurangin (penjaga posisi Farmer: biar harga likuidasi
@@ -293,7 +296,7 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, setCrossMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
     emergencyCloseMarket, wasLastEntryOrderByKaela,
-    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide, adjustIsolatedMargin, transferAsset, getSpotBalances, spotMarketBuy,
+    placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide, adjustIsolatedMargin, transferAsset, getSpotBalances, spotMarketBuy, spotMarketSell,
   };
 }
 

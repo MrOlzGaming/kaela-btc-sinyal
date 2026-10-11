@@ -58,6 +58,9 @@ gridd_output=$(timeout -k 5 45 node gridTrader.js demo 2>&1)
 # yang bukan punya Kaela ditutup paksa (Olan dilarang trading sendiri). Saklar: bingx-guard-config.json.
 guard_output=$(timeout -k 5 50 node bingxPositionGuard.js 2>&1)
 [ -n "$guard_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $guard_output" >> "$LOG_FILE"
+# 🪙 GRID SPOT BingX REAL (11 Okt 2026, spotGridTrader.js) -- siaga sampai kantong spot >= $10rb. Saklar: spot-grid-config.json.
+spot_output=$(timeout -k 5 40 node spotGridTrader.js 2>&1)
+[ -n "$spot_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $spot_output" >> "$LOG_FILE"
 # Pengawas likuidasi DCA Tangga Leverage di BingX STANDARD FUTURES (1 Okt 2026) -- MURNI BACA, gak pernah
 # kirim order; posisi kena likuidasi -> DM WA Olan + saran leverage pengganti (lihat stdFuturesLadderMonitor.js).
 std_output=$(timeout -k 5 40 node stdFuturesLadderMonitor.js 2>&1)

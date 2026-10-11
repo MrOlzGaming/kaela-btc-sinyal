@@ -53,7 +53,7 @@ Keputusan Olan 3 Okt 2026 malam:
   Jurnal Farmer udah nyimpen state tangga (entry terakhir, total modal masuk, rugi terealisasi) -> butuh adapter eksekusi exchange lain
   (Bybit/Binance/MEXC udah punya executor) + saklar exchange di grid-config.json. Prioritas: siapin sebelum saldo Farmer gede.
 
-- **Tangga SHORT 1x (window halving)** -- riset beres 11 Okt (STRATEGY-CATALOG), aturan FINAL (uji bareng long, 11 Okt sore): 10%/tangga, tambah tiap +5%, TP 10%, hari 520-900 (per jam x6,05, DD 47% di window 2018; versi pelit 5%/+10% x1,66 DD 14%). Pasang sebagai mode SHORT di gridTrader.js
+- **Tangga SHORT 1x (window halving)** -- riset beres 11 Okt (STRATEGY-CATALOG), aturan FINAL (uji bareng long, 11 Okt sore): 10%/tangga, tambah tiap +5%, TP 10%, hari 520-900 + PENGAMAN: short gak dibuka/ditambah kalau total margin long+short > 70% ekuitas (11 Okt, gantiin ide zona ATH -30% Olan: zona -30% untung dari 2018 cuma $4.948 DD 58% vs batas margin 70% $9.654 DD 48%, margin maks 72%) (per jam x6,05, DD 47% di window 2018; versi pelit 5%/+10% x1,66 DD 14%). Pasang sebagai mode SHORT di gridTrader.js
   (hedge mode BingX, positionSide SHORT) SEBELUM window berikutnya: halving ~Apr 2028 (verifikasi tanggal pasti) + 520 hari = ~Sep 2029.
   Uji demo dulu (BingX demo BTC-USDT). Cek ulang riset pakai data siklus 2024-26 yang udah lengkap (dasar 2024 belum pasti).
 

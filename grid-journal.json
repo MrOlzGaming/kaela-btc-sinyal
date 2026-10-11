@@ -8,18 +8,18 @@
     "startedAt": 1791681485073,
     "athAtStart": 126199.63,
     "cycleCap": 940.3586,
-    "anchor": 94.25583182999999,
+    "anchor": 94.29137605,
     "unit": 56.421516000000004,
     "putIn": 56.421516000000004,
-    "realized": -0.7598318299999901,
-    "fees": 0.4225518300000001,
+    "realized": -0.61277605,
+    "fees": 0.7045760500000001,
     "bets": 1,
     "liqs": 0,
     "pos": {
-      "e": 82822.1,
+      "e": 82948.3,
       "qty": 0.0034,
-      "mg": 56.319,
-      "liq": 66543.8,
+      "mg": 56.4048,
+      "liq": 66542.4,
       "lev": 5
     },
     "lastE": 82918.5,
@@ -36,9 +36,19 @@
         "lev": 5,
         "liqOld": 66621.3,
         "liqNew": 66543.8
+      },
+      {
+        "at": 1791703566059,
+        "closedPx": 82948.3,
+        "closedPnl": 0.2880678899999901,
+        "reopenPx": 82948.3,
+        "qty": 0.0034,
+        "lev": 5,
+        "liqOld": 66543.8,
+        "liqNew": 66542.4
       }
     ],
-    "tpLock": 87940.83947856282
+    "tpLock": 88026.55123444075
   },
   "history": [
     {
@@ -77,11 +87,11 @@
   "noBalLogAt": 1791667327729,
   "reserveCfg": 846,
   "bankReserve": 846,
-  "lastWallet": 93.496,
+  "lastWallet": 93.6786,
   "reserveKey": "bank:null:846:2026-10-11T02:35:22.114Z",
   "custody": null,
   "webFunds": {
-    "at": 1791702725940,
+    "at": 1791703385872,
     "mode": "extra",
     "totalUsd": null,
     "extraUsd": 846,

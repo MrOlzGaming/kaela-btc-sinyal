@@ -27,6 +27,15 @@
       "qty": 0.1,
       "why": "bukan posisi sistem Kaela (gak ada di jurnal, order pembuka bukan Kaela)",
       "orderId": "2109135939725152256"
+    },
+    {
+      "at": 1791703810201,
+      "mode": "real",
+      "symbol": "ETH-USDC",
+      "side": "LONG",
+      "qty": 0.01,
+      "why": "bukan posisi sistem Kaela (gak ada di jurnal, order pembuka bukan Kaela)",
+      "orderId": "2109184769690685440"
     }
   ]
 }

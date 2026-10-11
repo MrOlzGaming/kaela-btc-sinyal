@@ -7,7 +7,8 @@
 const { loadDaily } = require('./gridLifetimeStudy');
 const FEE_F = 0.0005, FEE_S = 0.001, MM = 0.005, FUND = 0.0003, LEV = 5;
 
-function sim(rows, { grad = 10000, seed = 1000, mode = 'A', from = 0, startFarmer = seed, startSpot = 0 } = {}) {
+function sim(rows, { grad = 10000, seed = 1000, mode = 'A', from = 0, startFarmer = seed, startSpot = 0, monthly = 0 } = {}) {
+  let lastMonth = null; // monthly = setoran rutin ke Farmer tiap awal bulan (mis. $100 dari gaji)
   let ath = 0, deposits = startFarmer + startSpot, grads = 0;
   // Farmer pocket
   const F = { w: startFarmer, pos: null, putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0 };
@@ -18,6 +19,9 @@ function sim(rows, { grad = 10000, seed = 1000, mode = 'A', from = 0, startFarme
   const sEq = (px) => S.cash + S.btc * px;
   for (const [t, o, h, l, c] of rows) {
     if (t < from) { ath = Math.max(ath, h); continue; }
+    const mon = new Date(t).toISOString().slice(0, 7);
+    if (monthly > 0 && lastMonth !== null && mon !== lastMonth) { F.w += monthly; deposits += monthly; }
+    lastMonth = mon;
     // ---------- Farmer ----------
     if (F.pos) F.w -= F.pos.q * o * FUND;
     if (!F.pos && F.putIn === 0 && ath > 0 && l <= ath * 0.85) { F.cap = Math.min(F.w, grad); F.unit = F.cap * 0.06; }

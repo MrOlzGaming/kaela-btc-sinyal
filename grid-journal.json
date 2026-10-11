@@ -1,7 +1,29 @@
 {
   "ath": 126199.63,
   "athAt": 1791559207573,
-  "cycle": null,
+  "cycle": {
+    "mode": "LADDER",
+    "id": "grid-1791681066047",
+    "signalId": "G2026101101",
+    "startedAt": 1791681066047,
+    "athAtStart": 126199.63,
+    "cycleCap": 94.371,
+    "anchor": 94.37093191000001,
+    "unit": 5.66226,
+    "putIn": 5.66226,
+    "realized": -0.01243191,
+    "fees": 0.01243191,
+    "bets": 1,
+    "liqs": 0,
+    "pos": {
+      "e": 82879.4,
+      "qty": 0.0003,
+      "mg": 4.9728,
+      "liq": 66589.9
+    },
+    "lastE": 82879.4,
+    "firstE": 82879.4
+  },
   "history": [],
   "stats": {
     "cycles": 0,
@@ -10,8 +32,8 @@
     "totalPnlUsd": 0
   },
   "seq": {
-    "day": null,
-    "n": 0
+    "day": "2026-10-11",
+    "n": 1
   },
   "alerts": {},
   "noBalLogAt": 1791667327729

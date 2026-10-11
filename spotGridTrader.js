@@ -12,10 +12,17 @@ const path = require('path');
 const CONFIG_PATH = path.join(__dirname, 'spot-grid-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'spot-grid-journal.json');
 const FEE = 0.001;
+// SIKLUS INTI (11 Okt 2026, Olan: "kalo gak pernah jual BTC kita lewatin peak bull market") -- riset backtest/coreCycleStudy.js +
+// coreTrailStudy.js: BTC inti dijual bertahap 5x di hari 400-600 sejak halving (musim puncak), dibeli balik bertahap 5x di hari
+// 780-950 (musim dasar). Ngalahin tahan terus di semua titik mulai 2013-2021 (+306% s/d +1.872%); ide "beli <= ATH -50% + trailing"
+// diuji juga -- gak konsisten (kena koreksi tengah bull), gak dipakai. USDC hasil jual inti DIPISAH dari peluru grid (coreUsd).
+const HALVINGS = ['2012-11-28', '2016-07-09', '2020-05-11', '2024-04-20', '2028-04-17'].map((d) => Date.parse(d)); // 2028 = perkiraan, verifikasi pas deket
+const daysSinceHalving = (t) => { let h = null; for (const x of HALVINGS) if (x <= t) h = x; return h == null ? -1 : (t - h) / 864e5; };
+const halvingIdx = (t) => HALVINGS.filter((x) => x <= t).length;
 const fmt$ = (v) => `$${Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
 function loadConfig() {
-  const def = { enabled: false, symbol: 'BTC-USDC', quote: 'USDC', activateAtUsd: 10000, capUsd: 100000, holdPct: 30, unitPct: 2, stepPct: 3, growth: 1.15, tpPct: 1.5, minOrderUsd: 5.5 };
+  const def = { enabled: false, symbol: 'BTC-USDC', quote: 'USDC', activateAtUsd: 10000, capUsd: 100000, holdPct: 30, unitPct: 2, stepPct: 3, growth: 1.15, tpPct: 1.5, minOrderUsd: 5.5, coreCycle: { enabled: true, sellFrom: 400, sellTo: 600, buyFrom: 780, buyTo: 950, slices: 5 } };
   try { return { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { return def; }
 }
 function freshJournal() { return { active: false, activatedAt: null, coreBtc: 0, cycle: null, history: [], stats: { cycles: 0, totalPnlUsd: 0 }, alerts: {} }; }
@@ -32,7 +39,7 @@ async function runOnce(deps) {
   if (!(px > 0)) return { skipped: 'no-price' };
   const bals = await ex.getSpotBalances();
   const free = (a) => Number((bals.find((b) => b.asset === a) || {}).free) || 0;
-  const btcAll = free(base), cash = free(cfg.quote);
+  const btcAll = free(base), cash = Math.max(0, free(cfg.quote) - (j.coreUsd || 0)); // USDC hasil jual inti bukan peluru grid
 
   // ---- SIAGA: tunggu kantong spot tembus activateAtUsd ----
   if (!j.active) {
@@ -54,6 +61,36 @@ async function runOnce(deps) {
     log(`AKTIF -- inti ${core} ${base} dikunci, jual ${sellQty} ${base} jadi peluru grid, tangga #1 = ${keepBtc} ${base} @ ${fmt$(px)}`);
     await deps.alert(`🪙 GRID SPOT AKTIF! Kantong spot udah ${fmt$(total)}.\n• ${core} ${base} (30%) dikunci jadi INTI -- ditahan, gak pernah dijual\n• ${sellQty} ${base} dijual jadi peluru grid (USDC)\n• Grid: beli tiap BTC turun ${cfg.stepPct}%, panen tiap untung ${cfg.tpPct}% dari modal masuk.`, `spotact:${now}`);
     return { activated: { core, sellQty, keepBtc } };
+  }
+
+  // ---- SIKLUS INTI: jual bertahap di musim puncak, beli balik bertahap di musim dasar ----
+  const cc = cfg.coreCycle || {};
+  if (cc.enabled) {
+    const d = daysSinceHalving(now), hk = halvingIdx(now), slices = cc.slices || 5;
+    const ci = j.coreCycle || (j.coreCycle = {});
+    const gapMs = (a, b) => (b - a) / slices * 864e5;
+    if (d >= cc.sellFrom && d < cc.sellTo && j.coreBtc > 0) {
+      if (ci.sellHalving !== hk) { ci.sellHalving = hk; ci.sellLeft = slices; ci.lastSell = 0; }
+      const q = ci.sellLeft > 0 ? Math.floor(j.coreBtc / ci.sellLeft * 1e6) / 1e6 : 0;
+      if (q > 0 && now - (ci.lastSell || 0) >= gapMs(cc.sellFrom, cc.sellTo) && q * px >= cfg.minOrderUsd) {
+        const o = await ex.spotMarketSell({ symbol: cfg.symbol, quantity: q });
+        const got = Number(o && o.cummulativeQuoteQty) || q * px * (1 - FEE);
+        j.coreBtc = Math.max(0, j.coreBtc - q); j.coreUsd = (j.coreUsd || 0) + got; ci.sellLeft -= 1; ci.lastSell = now; deps.save();
+        log(`INTI jual ${q} ${base} @ ${fmt$(px)} (musim puncak, hari ke-${Math.round(d)}) -- sisa inti ${j.coreBtc}, USDC inti ${fmt$(j.coreUsd)}`);
+        await deps.notify(`🪙 GRID SPOT — Inti dijual bertahap (${slices - ci.sellLeft}/${slices})\n\n${q} ${base} @ ${fmt$(px)} = ${fmt$(got)}\nAlasan: musim PUNCAK siklus halving (hari ke-${Math.round(d)}). Dibeli balik bertahap di musim dasar (hari ${cc.buyFrom}-${cc.buyTo}).\nSisa inti: ${j.coreBtc} ${base} | USDC inti: ${fmt$(j.coreUsd)}\n\n— Kaela`);
+      }
+    }
+    if (d >= cc.buyFrom && d < cc.buyTo && (j.coreUsd || 0) > cfg.minOrderUsd) {
+      if (ci.buyHalving !== hk) { ci.buyHalving = hk; ci.buyLeft = slices; ci.lastBuy = 0; }
+      const u = ci.buyLeft > 0 ? Math.floor(j.coreUsd / ci.buyLeft * 100) / 100 : 0;
+      if (u >= cfg.minOrderUsd && now - (ci.lastBuy || 0) >= gapMs(cc.buyFrom, cc.buyTo)) {
+        const o = await ex.spotMarketBuy({ symbol: cfg.symbol, quoteQty: u });
+        const q = Number(o && o.executedQty) || u * (1 - FEE) / px;
+        j.coreBtc += q; j.coreUsd = Math.max(0, j.coreUsd - u); ci.buyLeft -= 1; ci.lastBuy = now; deps.save();
+        log(`INTI beli balik ${q} ${base} @ ${fmt$(px)} (musim dasar, hari ke-${Math.round(d)})`);
+        await deps.notify(`🪙 GRID SPOT — Inti dibeli balik bertahap (${slices - ci.buyLeft}/${slices})\n\n${q} ${base} @ ${fmt$(px)} (${fmt$(u)})\nAlasan: musim DASAR siklus halving (hari ke-${Math.round(d)}).\nInti sekarang: ${j.coreBtc} ${base}\n\n— Kaela`);
+      }
+    }
   }
 
   // ---- AKTIF: grid jalan di BTC di luar inti ----

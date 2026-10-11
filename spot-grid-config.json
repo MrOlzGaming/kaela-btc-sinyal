@@ -10,5 +10,14 @@
   "growth": 1.15,
   "tpPct": 1.5,
   "minOrderUsd": 5.5,
-  "_note": "11 Okt 2026 -- 🪙 GRID SPOT BingX REAL (spotGridTrader.js), SIAGA sampai kantong spot (BTC bibit + USDC) >= activateAtUsd. Aktif: 30% BTC jadi INTI ditahan, sisanya jadi peluru grid (2%/-3%/x1,15/TP1,5%). Cap \$100.000 -> lebihnya DOGE (belum dibangun). ⚠️ BingX GAK punya spot demo: endpoint spot di host VST ngebalikin akun spot REAL (kebukti 11 Okt) -- JANGAN pernah jalanin grid spot 'demo' di BingX."
+  "_note": "11 Okt 2026 -- 🪙 GRID SPOT BingX REAL (spotGridTrader.js), SIAGA sampai kantong spot (BTC bibit + USDC) >= activateAtUsd. Aktif: 30% BTC jadi INTI ditahan, sisanya jadi peluru grid (2%/-3%/x1,15/TP1,5%). Cap $100.000 -> lebihnya DOGE (belum dibangun). ⚠️ BingX GAK punya spot demo: endpoint spot di host VST ngebalikin akun spot REAL (kebukti 11 Okt) -- JANGAN pernah jalanin grid spot 'demo' di BingX.",
+  "coreCycle": {
+    "enabled": true,
+    "sellFrom": 400,
+    "sellTo": 600,
+    "buyFrom": 780,
+    "buyTo": 950,
+    "slices": 5
+  },
+  "_coreCycleNote": "11 Okt 2026: BTC INTI ikut siklus halving -- jual bertahap 5x hari 400-600 sejak halving, beli balik 5x hari 780-950 (coreCycleStudy.js). Ide trailing diuji, kalah/gak konsisten."
 }

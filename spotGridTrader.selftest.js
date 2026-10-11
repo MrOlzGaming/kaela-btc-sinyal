@@ -1,7 +1,7 @@
 // Uji spotGridTrader.js -- exchange PALSU. node spotGridTrader.selftest.js
 const assert = require('assert');
 const { runOnce, freshJournal } = require('./spotGridTrader');
-const CFG = { enabled: true, symbol: 'BTC-USDC', quote: 'USDC', activateAtUsd: 10000, capUsd: 100000, holdPct: 30, unitPct: 2, stepPct: 3, growth: 1.15, tpPct: 1.5, minOrderUsd: 5.5 };
+const CFG = { enabled: true, symbol: 'BTC-USDC', quote: 'USDC', activateAtUsd: 10000, capUsd: 100000, holdPct: 30, unitPct: 2, stepPct: 3, growth: 1.15, tpPct: 1.5, minOrderUsd: 5.5, coreCycle: { enabled: true, sellFrom: 400, sellTo: 600, buyFrom: 780, buyTo: 950, slices: 5 } };
 function harness({ btc = 0, usdc = 0, px = 100000 } = {}) {
   const st = { btc, usdc, px, orders: [], wa: [], alerts: [] };
   const exec = {
@@ -36,4 +36,19 @@ test('abis panen -> siklus baru dari peluru USDC', async () => {
   const h = harness({ btc: 0.11, px: 100000 }); await runOnce(h.deps); h.st.px = 101800; await runOnce(h.deps);
   const r = await runOnce(h.deps); assert(r.bought && r.bought.n === 1, JSON.stringify(r));
 });
+test('SIKLUS INTI: musim puncak (hari 450) inti dijual 1/5, USDC-nya gak kepake grid; musim dasar (hari 800) dibeli balik', async () => {
+  const h = harness({ btc: 0.11, px: 100000 }); await runOnce(h.deps); // aktif
+  const core0 = h.j.coreBtc, H24 = Date.parse('2024-04-20');
+  h.deps.now = () => H24 + 450 * 864e5; h.st.px = 120000;
+  await runOnce(h.deps);
+  assert(Math.abs(h.j.coreBtc - core0 * 0.8) < 1e-6 && h.j.coreUsd > 0, 'inti ' + h.j.coreBtc + ' usd ' + h.j.coreUsd);
+  assert(h.st.wa.some((m) => /Inti dijual bertahap \(1\/5\)/.test(m)));
+  const coreUsd = h.j.coreUsd;
+  h.deps.now = () => H24 + 451 * 864e5; await runOnce(h.deps); // jarak kurang dari 40 hari -> gak jual lagi
+  assert(Math.abs(h.j.coreUsd - coreUsd) < 0.01);
+  h.deps.now = () => H24 + 800 * 864e5; h.st.px = 50000; await runOnce(h.deps);
+  assert(h.j.coreUsd < coreUsd && h.j.coreBtc > core0 * 0.8, 'beli balik: inti ' + h.j.coreBtc);
+  assert(h.st.wa.some((m) => /Inti dibeli balik/.test(m)));
+});
+
 (async () => { let ok = 0, fail = 0; for (const [n, f] of tests) { try { await f(); ok++; console.log(`  OK   ${n}`); } catch (e) { fail++; console.log(`  GAGAL ${n}\n       ${e.message}`); } } console.log(`\n${ok} lolos, ${fail} gagal`); if (fail) process.exitCode = 1; })();

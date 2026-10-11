@@ -49,6 +49,8 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
+- **MODE BANGKIT "kejar jumlah BTC"** (Olan 11 Okt): kalau Farmer rungkad & BTC masih jauh di bawah ATH -> setoran bulanan dipakai numpuk BTC spot (DCA tahan menang jauh dari grid, STRATEGY-CATALOG). Riset lanjutan: aturan JUAL (mis. pas BTC balik ke zona ATH -15% -> lanjut Farmer) + target jumlah BTC.
+
 - **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): FINAL TANPA BUNGA 2%/-3%/x1,15/TP1,5% (±9-10%/th, DD 39%, tahan fee) -- Olan gak mau Earn/deposito/obligasi; cash dipegang sendiri, pakai pola saldo penambah. KEBIJAKAN Olan 11 Okt: Farmer (leverage) buat modal $0-$10.000, DI ATAS $10.000 pindah ke grid spot ini, lalu boleh mulai Farmer leverage BARU pakai modal kecil (mis. $1.000) -- Farmer = kantong pemula yang "lulus" ke spot.
 
 - **🌾 Farmer pindah exchange kalau BingX rungkad** (Olan 11 Okt: "kalo BingX rungkad kita bisa lanjutin tangga ke exchange lain").

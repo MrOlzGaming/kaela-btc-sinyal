@@ -34,7 +34,7 @@ test('mulai di ATH -34% -> langsung tanam 34% modal (1 order), pesan Buka Posisi
   assert(r.bought && r.bought.opening);
   assert(Math.abs(h.j.cycle.planted - 340) < 7, `ditanam ${h.j.cycle.planted}`);
   assert.strictEqual(h.st.orders.length, 1);
-  assert(/🕸️ GRID/.test(h.st.wa[0]) && /Buka Posisi/.test(h.st.wa[0]) && /ATH -34/.test(h.st.wa[0]) && /\(Real\)/.test(h.st.wa[0]), h.st.wa[0]);
+  assert(/🌾 FARMER/.test(h.st.wa[0]) && /Buka Posisi/.test(h.st.wa[0]) && /ATH -34/.test(h.st.wa[0]) && /\(Real\)/.test(h.st.wa[0]), h.st.wa[0]);
 });
 
 test('turun 2 level lagi -> rebuy 2% modal, pesan Nambah Posisi', async () => {

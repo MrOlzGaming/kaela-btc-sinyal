@@ -6,12 +6,15 @@
 
 ## 🎯 SEKARANG LAGI DI MANA
 
-- **Topik aktif:** Grid TANGGA otomatis (gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated)
+- **Topik aktif:** 🌾 FARMER (dulu "Grid Tangga") -- gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated
 - **Status:** LIVE (11 Okt). Tangga 6% saldo terbaru, 5x isolated, tambah tiap -15% (pas posisi -75%, sisa margin ditumpuk), TP = rugi + 30% total masuk. Nunggu saldo USDC
 - **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
 - **Langkah berikutnya:** begitu USDC masuk: cek pesan Buka Posisi GRID + margin mode ISOLATED di BingX + TRADE-LEDGER kebaca
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt 09:30** — Grid dinamain **🌾 FARMER** (tanam modal tiap tangga, panen, tanam ulang). Semua pesan pakai template darkKaelaLog
+  (Buka/Nambah/Tutup), likuidasi tangga sekarang pesan "Tutup Posisi" standar + alasan. Selftest 11/11 + 12/12.
 
 - **11 Okt 09:00** — Grid Tangga: modal per tangga SELALU dari saldo terbaru (top up/tarik di tengah siklus kebaca, selisih > max($5, 2%)),
   dipotong di maxCapUsd $1.000 (kebijakan cap $1000/dompet). Saldo > $1.050 -> DM Olan (maks 1x/7 hari) lebihnya bisa dipindah ke

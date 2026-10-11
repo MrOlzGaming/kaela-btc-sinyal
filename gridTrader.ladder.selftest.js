@@ -34,7 +34,7 @@ test('ATH -34% -> bet #1 = 8% saldo ($80) isolated 5x, target +$16', async () =>
   assert(r.bought && r.bought.opening && h.st.margin === 'ISOLATED');
   assert(Math.abs(r.bought.mg - 80) < 1, `margin ${r.bought.mg}`);
   assert(r.bought.tpPx > 86000 && r.bought.tpPx < 86800, `target ${r.bought.tpPx}`);
-  assert(/Buka Posisi/.test(h.st.wa[0]) && /Grid Tangga/.test(h.st.wa[0]) && /\(Real\)/.test(h.st.wa[0]), h.st.wa[0]);
+  assert(/Buka Posisi/.test(h.st.wa[0]) && /Farmer/.test(h.st.wa[0]) && /\(Real\)/.test(h.st.wa[0]), h.st.wa[0]);
 });
 
 test('belum turun 20% -> gak nambah', async () => {
@@ -46,7 +46,7 @@ test('belum turun 20% -> gak nambah', async () => {
 test('tangga #1 kelikuidasi -> rugi tercatat, pesan likuidasi, tangga #2 LANGSUNG kebuka, target nutup rugi + 20% total masuk', async () => {
   const h = harness(); h.st.px = 83033; await runOnce(h.deps);
   h.st.px = 66400; h.liquidate(); const r2 = await runOnce(h.deps);
-  assert(h.st.wa.some((m) => /Likuidasi tangga/.test(m)));
+  assert(h.st.wa.some((m) => /kena likuidasi/.test(m)));
   assert(r2.bought && r2.bought.bet === 2 && Math.abs(r2.bought.mg - 80) < 1, JSON.stringify(r2));
   // butuh untung ~80 rugi + 32 target = ~112 dari posisi $400 -> naik ~28%
   assert(r2.bought.tpPx > 84500 && r2.bought.tpPx < 85500, `target ${r2.bought.tpPx}`);
@@ -85,7 +85,7 @@ test('top up di tengah siklus -> modal per tangga ikut saldo terbaru (tangga ber
   h.st.wallet += 500; h.st.px = 80000; const r = await runOnce(h.deps);
   assert(r.idle === 'nunggu tangga' && Math.abs(h.j.cycle.unit - 120) < 1.5, `unit ${h.j.cycle.unit}`);
   h.st.px = 66000; const r2 = await runOnce(h.deps);
-  assert(r2.bought && r2.bought.bet === 2 && r2.bought.mg > 120, JSON.stringify(r2)); // 120 + sisa margin tangga #1
+  assert(r2.bought && r2.bought.bet === 2 && r2.bought.mg > 110, JSON.stringify(r2)); // ~120 (dibulatin ke 0,0001 BTC), tanpa top up cuma 80
 });
 
 test('funding/fee kecil gak dianggap top up', async () => {

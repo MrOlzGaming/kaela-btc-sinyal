@@ -1,10 +1,10 @@
 {
   "enabled": true,
   "mode": "LADDER",
-  "betPct": 8,
-  "gapPct": 20,
+  "betPct": 6,
+  "gapPct": 15,
   "ladderTpPct": 20,
-  "_ladderNote": "11 Okt 2026 -- MODE LADDER (Grid Tangga isolated, versi otomatis grid manual Olan): bet = betPct% saldo TERBARU, mulai BTC <= ATH -minDd%, tambah tiap turun gapPct% dari entry terakhir, TP = rugi bet yang kelikuidasi + ladderTpPct% total bet. Eksekusi MERGE (tutup lama + buka lagi sisa margin + bet baru, 1 posisi ISOLATED leverage x). Riset backtest/gridLotModeStudy.js: 8%/20%/5x x2,22 DD 60% rungkad 0/94, tahan crash sampai ATH -93%. mode ATH (lama) = minDd/step/k/tp/minCap/capExposure di bawah.",
+  "_ladderNote": "11 Okt siang: GANTI ke 6%/jarak 15% (= cara manual Olan: tangga baru pas posisi -75%, sisa 25% margin ditumpuk) -- backtest seumur hidup $1.000 -> $20.751 DD 74% saldo terendah $299, per jam x2,05 DD 60%, peluru sampai ATH -96%; rebuy SEBELUM likuidasi. (8%/20%: $25.790 DD 85% terendah $175; 8%/15%: $46.529 tapi DD 99% terendah $15 = hampir rungkad 2011). 11 Okt 2026 -- MODE LADDER (Grid Tangga isolated, versi otomatis grid manual Olan): bet = betPct% saldo TERBARU, mulai BTC <= ATH -minDd%, tambah tiap turun gapPct% dari entry terakhir, TP = rugi bet yang kelikuidasi + ladderTpPct% total bet. Eksekusi MERGE (tutup lama + buka lagi sisa margin + bet baru, 1 posisi ISOLATED leverage x). Riset backtest/gridLotModeStudy.js: 8%/20%/5x x2,22 DD 60% rungkad 0/94, tahan crash sampai ATH -93%. mode ATH (lama) = minDd/step/k/tp/minCap/capExposure di bawah.",
   "allowReal": true,
   "symbol": "BTC-USDC",
   "marginAsset": "USDC",

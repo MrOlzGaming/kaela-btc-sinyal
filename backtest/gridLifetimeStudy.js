@@ -33,7 +33,7 @@ async function loadDaily() {
 }
 const daysSinceHalving = (t) => { let h = null; for (const x of HALVINGS) if (x <= t) h = x; return h == null ? -1 : (t - h) / DAY; };
 
-function sim(rows, { long = true, short = true, start = 1000 } = {}) {
+function sim(rows, { long = true, short = true, start = 1000, gap = 0.20, betL = 0.08 } = {}) {
   let wallet = start, ath = 0, peak = start, maxDd = 0, minEq = start;
   const L = { pos: null, putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0, tp: 0, liqs: 0, rungkad: 0 };
   const S = { lots: [], putIn: 0, realized: 0, unit: 0, cap: 0, lastE: 0, tp: 0, liqs: 0, forced: 0 };
@@ -47,9 +47,9 @@ function sim(rows, { long = true, short = true, start = 1000 } = {}) {
     // ================= LONG (merge, isolated 5x) =================
     if (long) {
       const lev = 5;
-      if (!L.pos && L.putIn === 0 && ath > 0 && l <= ath * 0.85) { L.cap = wallet; L.unit = wallet * 0.08; L.lastE = 0; }
+      if (!L.pos && L.putIn === 0 && ath > 0 && l <= ath * 0.85) { L.cap = wallet; L.unit = wallet * betL; L.lastE = 0; }
       if (L.unit > 0) {
-        const trig = L.putIn === 0 ? Math.min(ath * 0.85, o) : (L.pos ? L.lastE * 0.8 : Infinity); // abis liq -> langsung buka lagi
+        const trig = L.putIn === 0 ? Math.min(ath * 0.85, o) : (L.pos ? L.lastE * (1 - gap) : Infinity); // abis liq -> langsung buka lagi
         if (l <= trig && L.putIn + L.unit <= L.cap * 1.0001) {
           const e = Math.min(trig, o); let mg = L.unit;
           if (L.pos) { const pnl = L.pos.q * (e - L.pos.e); L.realized += pnl; wallet += pnl - L.pos.q * e * FEE; mg += Math.max(0, L.pos.mg + pnl); L.pos = null; }

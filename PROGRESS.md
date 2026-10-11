@@ -7,11 +7,14 @@
 ## 🎯 SEKARANG LAGI DI MANA
 
 - **Topik aktif:** Grid TANGGA otomatis (gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated)
-- **Status:** LIVE (11 Okt). Bet 8% saldo terbaru, 5x isolated, tambah tiap -20%, TP = rugi kelikuidasi + 20% total bet. Nunggu saldo USDC masuk
+- **Status:** LIVE (11 Okt). Tangga 6% saldo terbaru, 5x isolated, tambah tiap -15% (pas posisi -75%, sisa margin ditumpuk), TP = rugi + 20% total masuk. Nunggu saldo USDC
 - **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
 - **Langkah berikutnya:** begitu USDC masuk: cek pesan Buka Posisi GRID + margin mode ISOLATED di BingX + TRADE-LEDGER kebaca
 
 ## 📜 LOG (terbaru di atas)
+
+- **11 Okt 12:30** — Setting LIVE diganti 6%/jarak 15% (cara manual Olan rebuy di -75%): seumur hidup $20.751 DD 74% terendah $299,
+  peluru sampai ATH -96%. 8%/15% ($46.529) ditolak: 2011 saldo tinggal $15 (DD 99%). 10%/15% hancur.
 
 - **11 Okt 12:00** — BACKTEST SEUMUR HIDUP (backtest/gridLifetimeStudy.js, harian 2010-08..2026-10, $1.000): KETEMU BUG LIVE -- abis
   likuidasi, tangga nunggu -20% dari entry; kalau harga mantul di antara -19,5% & -20% siklus MACET tanpa posisi (backtest macet

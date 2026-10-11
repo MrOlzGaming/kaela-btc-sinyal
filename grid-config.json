@@ -4,8 +4,8 @@
   "betPct": 6,
   "gapPct": 15,
   "ladderTpPct": 30,
-  "maxCapUsd": 1000,
-  "_maxCapNote": "11 Okt 2026 (final, Olan): FUTURES grid (Farmer) cap $1.000 -- untung di atasnya jadi bibit BTC spot (bibitCapUsd). Grid SPOT BingX cap $10.000; untung di atas itu -> DOGE, ditarik Olan ke wallet pribadi. (Sempat $10.000 hari yang sama, direvisi.)",
+  "maxCapUsd": 10000,
+  "_maxCapNote": "11 Okt 2026 (final, koreksi Olan): FUTURES grid (Farmer) cap $10.000 -- untung di atasnya jadi BTC spot (bibitCapUsd). Grid SPOT BingX cap $100.000; lebihnya -> DOGE, ditarik Olan ke wallet pribadi.",
   "farmerBalanceMode": "manual",
   "manualTotalUsd": 940,
   "_balanceModeNote": "11 Okt 2026 (Olan): mode saldo Farmer -- auto = saldo BingX (+ dompet kripto pribadi), manual = total isi sendiri (Olan: $940, padahal BingX cuma ~$94; sisanya di bank/dompet sendiri, dipindah ke BingX pas tangga butuh -> Olan dikabarin top up). Kalau Olan ngisi kartu Dompet Farmer di Kaela Access, angka web nimpa ini.",
@@ -32,5 +32,5 @@
   "bibitPct": 50,
   "_bibitNote": "11 Okt 2026 -- BIBIT: 50% untung tiap panen disisihin & dikunci (gak dipake margin, gak ikut acuan modal); real: Olan dikabarin narik & beliin BTC ke dompet sendiri (ditahan). Riset farmerUpgradeStudy.js: jalur 2017 x5,61 -> x8,89, DD 65% -> 70%. | 11 Okt: bibitAuto true (Olan \"gas bibit otomatis\") -- bibit langsung transfer USDTMPerp->spot + beli BTC-USDC spot (min $5, ditumpuk kalau kurang), ditahan. Gagal -> mode kabarin manual.",
   "bibitAuto": true,
-  "bibitCapUsd": 1000
+  "bibitCapUsd": 10000
 }

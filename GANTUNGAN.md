@@ -49,11 +49,11 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 🛠️ KAELA KERJAIN (antrian)
 
-- **TANGGA KEKAYAAN** (Olan 11 Okt, FINAL): 🌾 Farmer futures CAP $1.000 -> lebihnya bibit BTC spot -> grid SPOT BingX CAP $10.000 -> lebihnya beli DOGE -> DOGE ditarik Olan ke wallet pribadi tiap kali. Kaela nanti: (1) notif JUAL DOGE di waktu terbaik (riset siklus DOGE vs halving), (2) siapin exchange buat DCA DOGE lagi, (3) baca saldo DOGE wallet (selfCustodyWallet belum dukung jaringan Dogecoin -- tambah pas waktunya). Pagar: cuma untung, bertahap, siap nol.
+- **TANGGA KEKAYAAN** (Olan 11 Okt, FINAL): 🌾 Farmer futures CAP $10.000 -> lebihnya bibit BTC spot -> grid SPOT BingX CAP $100.000 -> lebihnya beli DOGE -> DOGE ditarik Olan ke wallet pribadi tiap kali. Kaela nanti: (1) notif JUAL DOGE di waktu terbaik (riset siklus DOGE vs halving), (2) siapin exchange buat DCA DOGE lagi, (3) baca saldo DOGE wallet (selfCustodyWallet belum dukung jaringan Dogecoin -- tambah pas waktunya). Pagar: cuma untung, bertahap, siap nol.
 
 - **MODE BANGKIT "kejar jumlah BTC"** (Olan 11 Okt): kalau Farmer rungkad & BTC masih jauh di bawah ATH -> setoran bulanan dipakai numpuk BTC spot (DCA tahan menang jauh dari grid, STRATEGY-CATALOG). RISET BERES 11 Okt: numpuk pas <= ATH -30% & DITAHAN (gak dijual) paling bagus; setoran balik ke Farmer begitu BTC di atas ATH -30%. Dijalanin manual-terarah (Kaela ngabarin, Olan beli BTC ke dompet sendiri) pas kejadian.
 
-- **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): FINAL TANPA BUNGA 2%/-3%/x1,15/TP1,5% (±9-10%/th, DD 39%, tahan fee) -- Olan gak mau Earn/deposito/obligasi; cash dipegang sendiri, pakai pola saldo penambah. KEBIJAKAN Olan 11 Okt: Farmer (leverage) buat modal $0-$10.000, DI ATAS $10.000 pindah ke grid spot ini, lalu boleh mulai Farmer leverage BARU pakai modal kecil (mis. $1.000) -- Farmer = kantong pemula yang "lulus" ke spot.
+- **DCA GRID SPOT** (riset beres 11 Okt, STRATEGY-CATALOG): FINAL TANPA BUNGA 2%/-3%/x1,15/TP1,5% (±9-10%/th, DD 39%, tahan fee) -- Olan gak mau Earn/deposito/obligasi; cash dipegang sendiri, pakai pola saldo penambah. KEBIJAKAN Olan 11 Okt: Farmer (leverage) cap $10.000, untung di atasnya ngalir ke spot; grid spot ini cap $100.000 (lebihnya -> DOGE), lalu boleh mulai Farmer leverage BARU pakai modal kecil (mis. $1.000) -- Farmer = kantong pemula yang "lulus" ke spot.
 
 - **🌾 Farmer pindah exchange kalau BingX rungkad** (Olan 11 Okt: "kalo BingX rungkad kita bisa lanjutin tangga ke exchange lain").
   Jurnal Farmer udah nyimpen state tangga (entry terakhir, total modal masuk, rugi terealisasi) -> butuh adapter eksekusi exchange lain

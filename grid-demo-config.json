@@ -29,5 +29,5 @@
   "_demoNote": "11 Okt 2026 -- 🌾 FARMER DEMO (node gridTrader.js demo): akun BingX demo VST, BTC-USDT (demo gak punya BTC-USDC). Aturan SAMA PERSIS sama real, KECUALI modal: demo pakai SELURUH saldo demo (maxCapUsd 0, Olan: \"modalnya 400k dolar loh\"); real dibatasi $1.000. Ninja demo dimatiin hari yang sama. Jurnal grid-demo-journal.json.",
   "bibitPct": 50,
   "_bibitNote": "11 Okt 2026 -- BIBIT: 50% untung tiap panen disisihin & dikunci (gak dipake margin, gak ikut acuan modal); real: Olan dikabarin narik & beliin BTC ke dompet sendiri (ditahan). Riset farmerUpgradeStudy.js: jalur 2017 x5,61 -> x8,89, DD 65% -> 70%.",
-  "bibitCapUsd": 1000
+  "bibitCapUsd": 10000
 }

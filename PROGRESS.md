@@ -6,10 +6,10 @@
 
 ## 🎯 SEKARANG LAGI DI MANA
 
-- **Topik aktif:** 🌾 FARMER (dulu "Grid Tangga") -- gridTrader.js mode LADDER, BingX BTC-USDC REAL isolated
-- **Status:** LIVE (11 Okt). Tangga 6% saldo terbaru, 5x isolated, tambah tiap -15% (pas posisi -75%, sisa margin ditumpuk), TP = rugi + 30% total masuk. Nunggu saldo USDC
-- **Pertanyaan terbuka ke Olan:** gak ada. Angka minCap/capExposure boleh diubah Olan kapan aja.
-- **Langkah berikutnya:** cek kartu Dompet Farmer + jurnal Farmer di Kaela Access (Olan); deploy Netlify web Sniper NUNGGU izin Olan
+- **Topik aktif:** TANGGA KEKAYAAN -- 🌾 Farmer (LIVE) -> 🌱 bibit BTC (otomatis di atas $10rb) -> 🪙 grid spot (SIAGA $10rb, inti ikut siklus halving) -> 🐕 DOGE (rencana, di atas $100rb)
+- **Status:** Farmer real tangga #1 0,0034 BTC @ $82.822 (modal $940 = BingX $94 + penambah $846), demo tangga #1 1,4483 BTC. Penjaga posisi + penutup posisi asing LIVE.
+- **Nunggu Olan:** izin deploy Netlify web Sniper (Farmer + metodologi-farmer.html).
+- **Antrian Kaela:** teks kartu Dompet Farmer "maks $1.000" -> $10.000 (butuh push GAS, OAuth Browser 2); Farmer pindah exchange; DOGE; tangga short (2029); verifikasi tanggal halving 2028.
 
 ## 📜 LOG (terbaru di atas)
 

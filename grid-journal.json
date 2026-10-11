@@ -63,6 +63,13 @@
   "reserveCfg": 846,
   "bankReserve": 845.7824,
   "lastWallet": 94.2176,
-  "reserveKey": "manual:940:undefined:config",
-  "custody": null
+  "reserveKey": "manual:940:undefined:2026-10-11T02:24:06.585Z",
+  "custody": null,
+  "webFunds": {
+    "at": 1791685446518,
+    "mode": "manual",
+    "totalUsd": 940,
+    "wallets": [],
+    "updatedAt": "2026-10-11T02:24:06.585Z"
+  }
 }

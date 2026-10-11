@@ -222,9 +222,11 @@ async function runLadder(deps, log, now) {
       c.guard = null; c.liqs = (c.liqs || 0) + 1; deps.save();
     } else {
       const mmr = 0.005, mgNeed = gd.qty * (px - gd.liq * (1 - mmr)); // margin isolated biar liq = liq lama
-      const levNeed = Math.max(1, Math.min(125, Math.floor((gd.qty * px) / Math.max(mgNeed, 1e-9))));
+      // leverage dibuletin ke ATAS (margin awal <= kebutuhan) lalu margin DITAMBAH sampai liq = liq lama. BingX nolak ngurangin margin
+      // di bawah margin awal leverage (code 101253 "Adjustable margin is insufficient", kejadian tes Olan 11 Okt 11:20 & 11:26).
+      const levNeed = Math.max(1, Math.min(125, Math.ceil((gd.qty * px) / Math.max(mgNeed, 1e-9))));
       const wNow = await ex.getWalletBalance(cfg.marginAsset).catch(() => null);
-      const mgUse = (gd.qty * px) / levNeed; // leverage dibuletin ke bawah -> margin >= kebutuhan -> liq sama / sedikit lebih aman
+      const mgUse = mgNeed; // total margin akhir (margin awal leverage + tambahan)
       if (wNow != null && wNow < mgUse * 1.01) {
         log(`PENJAGA: butuh margin ${fmt$(mgUse)} buat buka ulang ${gd.qty} BTC, saldo BingX ${fmt$(wNow)} -- nunggu top up`);
         await deps.alert(`🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo BingX cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, 'guardtopup');
@@ -239,16 +241,15 @@ async function runLadder(deps, log, now) {
       const exLiq = exPos ? parseFloat(exPos.liquidationPrice) : NaN, exMg = exPos ? parseFloat(exPos.initialMargin || exPos.margin) : NaN;
       if (exLiq > 0 && exLiq < fillPx) c.pos.liq = exLiq;
       if (exMg > 0) c.pos.mg = exMg;
-      // leverage dibuletin ke bawah = margin kelebihan dikit -> liq lebih rendah dari liq lama. Kurangin margin isolated selisihnya
-      // biar liq balik SAMA (adjustIsolatedMargin, diuji di BingX demo 11 Okt: +1/-1 VST geser liq sesuai).
-      if (ex.adjustIsolatedMargin && c.pos.liq < gd.liq * 0.999) {
-        const reduce = fillQty * (gd.liq - c.pos.liq) * 0.98;
-        if (reduce > 0.01) {
-          await ex.adjustIsolatedMargin({ symbol: sym, positionSide: 'LONG', amount: reduce, type: 2 }).catch((e) => log(`kurangin margin penjaga gagal: ${e.message}`));
+      // tambah margin isolated sampai harga likuidasi balik SAMA kayak sebelum ketutup (adjustIsolatedMargin type 1, diuji di BingX demo)
+      if (ex.adjustIsolatedMargin && c.pos.liq > gd.liq * 1.0005) {
+        const add = fillQty * (c.pos.liq - gd.liq) * 1.01;
+        if (add > 0.01) {
+          await ex.adjustIsolatedMargin({ symbol: sym, positionSide: 'LONG', amount: add, type: 1 }).catch((e) => log(`tambah margin penjaga gagal: ${e.message}`));
           const p2 = await ex.getPositionBySide(sym, 'LONG').catch(() => null);
           const l2 = p2 ? parseFloat(p2.liquidationPrice) : NaN, m2 = p2 ? parseFloat(p2.initialMargin || p2.margin) : NaN;
-          if (l2 > 0 && l2 < fillPx) c.pos.liq = l2; else c.pos.liq += reduce / fillQty;
-          c.pos.mg = m2 > 0 ? m2 : c.pos.mg - reduce;
+          if (l2 > 0 && l2 < fillPx) c.pos.liq = l2; else c.pos.liq -= add / fillQty;
+          c.pos.mg = m2 > 0 ? m2 : c.pos.mg + add;
         }
       }
       c.realized -= feeIn; c.fees += feeIn; c.guard = null; (c.guardLog = c.guardLog || []).push({ at: now, closedPx: gd.closedPx, closedPnl: gd.closedPnl, reopenPx: fillPx, qty: fillQty, lev: levNeed, liqOld: gd.liq, liqNew: c.pos.liq });

@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "modes": ["demo", "real"],
+  "dryRun": false,
+  "_note": "11 Okt 2026 -- bingxPositionGuard.js: posisi BingX Perpetual yang BUKAN dibuka Kaela ditutup paksa (demo + real). Aturan Olan: Olan dilarang trading sendiri, semua akun trading dikelola Kaela 100% (revenge trading, pernah hilang ~Rp100 juta / $7.600). Posisi milik Kaela = cocok jurnal sistem (Farmer/Ninja/Channel Breakout/Rotasi) atau order pembukanya bertag kaela-. Ditutup setelah kebaca asing 2x berturut-turut (>= 50 detik)."
+}

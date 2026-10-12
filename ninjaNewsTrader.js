@@ -413,11 +413,37 @@ function prodDeps(cfg, journal, ev, { quiet } = {}) {
   };
 }
 
+// (12 Okt 2026, Olan: "ninja nyopet news gak perlu notif 24 jam, paling 1 jam sebelum news info dulu biar ada saldo") -- 1 jam sebelum rilis,
+// KALAU real dinyalain (allowReal) & saldo real BingX gak cukup -> 1 notif ke grup Hedgefund + saldo minimal. Real mati = diem (gak relevan).
+async function preNewsBalanceCheck(cfg, j, t) {
+  if (!cfg.allowReal) return;
+  const done = j.preNotified || (j.preNotified = {});
+  const ev = loadSchedule().find((e) => !done[e.key] && e.timeMs - t <= 3600e3 && e.timeMs - t > cfg.armBeforeSec * 1000);
+  if (!ev) return;
+  done[ev.key] = new Date(t).toISOString(); saveJournal(j);
+  const { createBingxClient, loadSecrets } = require('./bingxExecutor');
+  const sec = loadSecrets(); if (!sec.BINGX_API_KEY) return;
+  const exec = createBingxClient({ apiKey: sec.BINGX_API_KEY, apiSecret: sec.BINGX_API_SECRET, testnet: false });
+  const balance = Number(await exec.getAccountBalance('USDT').catch(() => 0)) || 0;
+  const calc = hitungExposure({ modal: balance * MODAL_ACTIVE_FRACTION, nyawa: cfg.slPct, direction: 'buy' });
+  if (calc.nilaiPosisi >= REAL_MIN_NOTIONAL_USD) return;
+  const minBal = require('./balanceAlert').minBalanceForNotional({ calcArgs: { nyawa: cfg.slPct, direction: 'buy' }, minNotionalUsd: REAL_MIN_NOTIONAL_USD, activeFraction: MODAL_ACTIVE_FRACTION });
+  const jam = new Date(ev.timeMs + 8 * 3600e3).toISOString().slice(11, 16);
+  const msg = `📰 Ninja News — 1 jam lagi rilis ${ev.label} (${jam} WITA)
+
+Saldo Real BingX (USDT Perpetual) sekarang $${balance.toFixed(2)} -- belum cukup buat nyopet di Real. Isi minimal ~$${minBal} USDT sebelum ${jam} WITA biar Kaela bisa buka posisi Real pas rilis. Kalau gak diisi, Demo tetap jalan.
+
+— Kaela`;
+  await require('./wibowoNotify').sendWhatsAppToWibowo(msg).catch((e) => console.log('[NinjaNews] WA pengingat saldo gagal:', e.message));
+  console.log(`[NinjaNews] pengingat saldo 1 jam sebelum ${ev.label} dikirim (saldo $${balance.toFixed(2)}, minimal ~$${minBal}).`);
+}
+
 // cron tiap menit: nyalain detektor kalau rilis udah deket
-function armIfDue() {
+async function armIfDue() {
   const cfg = loadConfig();
   if (!cfg.enabled) return;
   const j = loadJournal();
+  await preNewsBalanceCheck(cfg, j, Date.now()).catch((e) => console.log('[NinjaNews] cek saldo pra-rilis gagal:', e.message));
   if (j.active && j.active.pid && pidAlive(j.active.pid)) return; // detektor lagi jalan
   const t = Date.now();
   const ev = loadSchedule().find((e) => !j.handled[e.key] && e.timeMs - t <= cfg.armBeforeSec * 1000 && t < e.timeMs + 30000);
@@ -479,7 +505,7 @@ async function mechanicsTest() {
 
 if (require.main === module) {
   const a = process.argv.slice(2);
-  const p = a[0] === '--live' ? live(a[1]) : a[0] === '--mechanics-test' ? mechanicsTest() : Promise.resolve(armIfDue());
+  const p = a[0] === '--live' ? live(a[1]) : a[0] === '--mechanics-test' ? mechanicsTest() : armIfDue();
   p.catch((e) => { console.error('[NinjaNews] ERROR:', e.message); process.exit(1); });
 }
 

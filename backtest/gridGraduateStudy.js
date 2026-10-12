@@ -7,7 +7,7 @@
 const { loadDaily } = require('./gridLifetimeStudy');
 const FEE_F = 0.0005, FEE_S = 0.001, MM = 0.005, FUND = 0.0003;
 
-function sim(rows, { grad = 10000, seed = 1000, mode = 'A', from = 0, startFarmer = seed, startSpot = 0, monthly = 0, lev = 5, spotShare = 0 } = {}) {
+function sim(rows, { grad = 10000, seed = 1000, mode = 'A', from = 0, startFarmer = seed, startSpot = 0, monthly = 0, lev = 5, spotShare = 0, onDay = null } = {}) {
   const LEV = lev; // leverage Farmer (default 5x); spotShare = porsi setoran bulanan yang masuk ke grid spot (sisanya ke Farmer)
   let lastMonth = null; // monthly = setoran rutin ke Farmer tiap awal bulan (mis. $100 dari gaji)
   let ath = 0, deposits = startFarmer + startSpot, grads = 0;
@@ -50,6 +50,7 @@ function sim(rows, { grad = 10000, seed = 1000, mode = 'A', from = 0, startFarme
     }
     ath = Math.max(ath, h);
     const tot = fEq(c) + sEq(c);
+    if (onDay) onDay(t, tot, deposits);
     if (tot > peak) peak = tot; maxDd = Math.max(maxDd, 1 - tot / peak);
   }
   const last = rows[rows.length - 1][4];

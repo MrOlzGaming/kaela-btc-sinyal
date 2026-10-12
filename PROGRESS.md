@@ -14,6 +14,8 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **12 Okt siang** — ⛏️ BIAYA PRODUKSI BTC (ide Olan) masuk laporan harian BTC grup (`minerCost.js`, selftest 4): ~$53rb listrik/~$75rb all-in, harga 1,57x. Cek sejarah: dasar bear 2018/2020/2022 di 1,05-1,24x biaya listrik (zona, bukan sinyal). Patroli lama Channel Breakout dilewatin (spam log).
+
 - **11 Okt malam** — RISET 📈 LONG DCA ETH (`backtest/altLongStudy.js`, data Binance ASLI, jalan mulus) ❌: aturan 3x/-10%/TP 10% gak ada bet aman
   (6% x0,72 DD 97%; 1% DD 88% di stress 2018). Cari parameter aman (`altLongGridSearch.js`): terbaik ETH 2x/-10%/2%/TP 5% x1,93 DD 30% --
   kalah jauh HODL ETH x13. SOL x3,74 (vs HODL x38, gak ada data 2018), BNB x7,36 DD 23% (token exchange, risiko FTT). Output: backtest/alt-long-*-output.log.

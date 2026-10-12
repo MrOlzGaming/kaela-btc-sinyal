@@ -224,10 +224,12 @@ async function main() {
       safe(fetchBinancePositioning, 'Binance Positioning (Smart Money)'),
     ]);
     advancedMacro = await safe(fetchAdvancedMacroContext, 'Advanced Macro (DVOL/Stablecoin/YieldCurve/M2)');
+    const minerCost = await safe(require('./minerCost').fetchMinerCost, 'Biaya Produksi BTC');
     items.push({
       type: 'report-daily',
       content: generateGroupDaily(now, priceToday, priceYesterday, {
         onchain,
+        minerCost,
         macroPackage: formatMacroPackageLines({ dxy: goldMacro?.dxy || null, fedRate: advancedMacro?.fedRate || null, yieldCurve: advancedMacro?.yieldCurve || null, oil: advancedMacro?.oil || null }),
         whaleDigest: readWhaleLastDigest(),
         binancePositioning,

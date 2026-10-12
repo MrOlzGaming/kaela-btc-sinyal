@@ -230,6 +230,8 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 🔬 INDIKATOR & DATA (dikumpulin / dipelajari, belum jadi sinyal)
 
+- ℹ️ **⛏️ BIAYA PRODUKSI BTC** (12 Okt 2026, ide Olan, `minerCost.js` + `miner-cost-config.json`, tampil di laporan harian BTC grup): hashrate asli (mempool.space) x efisiensi (asumsi 17/20/25 J/TH) x listrik ($0,04/0,05/0,07) / BTC per hari. 12 Okt: ~$53rb listrik / ~$75rb all-in (x1,4), harga 1,57x. **Cek sejarah** (hashrate 2017-26, kurva efisiensi kasar 110->20 J/TH, listrik $0,05): dasar bear 2018 1,22x, crash Mar 2020 1,24x, dasar 2022 1,05-1,14x -> semua di **1,0-1,25x biaya listrik**. TAPI 1,0-1,25x juga kesentuh di luar dasar (Sep 2024 1,11x, Des 2025 1,14x, Jun 2026 1,02x) dan puncak makin kecil rasionya (2017 19x, 2021 6,5x, 2025 cuma 1,8x) -> ZONA murah, BUKAN sinyal titik dasar/puncak. Info doang, gak dipakai sistem. Hasilnya sangat tergantung asumsi efisiensi (kurva tahunan = tebakan).
+
 - ❌ **FVG Order Blocks [BigBeluga]** — long ~sama dgn acak, gak ada edge.
 - ⏸️ **Smart Money Concepts AI [DefinedEdge]** — "AI"-nya tabel poin tetap; tapi LONG pullback ke FVG searah tren konsisten di atas
   acak 2 era (edge kecil). Belum dipasang terpisah (mirip FVG Ranger yang udah jalan).

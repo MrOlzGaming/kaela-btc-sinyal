@@ -1,0 +1,18 @@
+{
+  "scenarios": {
+    "murah": {
+      "effJTH": 17,
+      "kwhUsd": 0.04
+    },
+    "rata2": {
+      "effJTH": 20,
+      "kwhUsd": 0.05
+    },
+    "mahal": {
+      "effJTH": 25,
+      "kwhUsd": 0.07
+    }
+  },
+  "allInMult": 1.4,
+  "_note": "12 Okt 2026 -- asumsi biaya produksi BTC (minerCost.js). effJTH = efisiensi rata2 mesin jaringan (J/TH), kwhUsd = tarif listrik. PERBARUI tiap tahun (mesin makin efisien: 2026 campuran S21 ~17 J/TH & S19 ~30 J/TH). allInMult = listrik -> all-in (mesin/gaji/sewa)."
+}

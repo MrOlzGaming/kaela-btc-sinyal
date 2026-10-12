@@ -104,6 +104,8 @@ function generateGroupDaily(now, priceToday, priceYesterday, opts = {}) {
   lines.push(`Harga sekarang: $${priceToday.toLocaleString('en-US')} (${fmtPct(change)} dari kemarin)`);
   lines.push(halvingLine(now));
   lines.push(...onchainCycleLines(opts.onchain));
+  // 12 Okt 2026 (Olan) -- biaya produksi BTC perkiraan (minerCost.js), null-safe
+  lines.push(...require('./minerCost').minerCostLines(opts.minerCost, priceToday));
   // 30 Agu 2026, permintaan Olan: "info dxy berpaket dengan suku bunga, yield, dsb" -- DXY+Fed
   // Rate+Yield Curve SEKARANG masuk laporan HARIAN BTC juga (dulu cuma Emas yang punya DXY, dan
   // Fed Rate/Yield Curve cuma di laporan mingguan) -- lihat advancedMacro.js formatMacroPackageLines.

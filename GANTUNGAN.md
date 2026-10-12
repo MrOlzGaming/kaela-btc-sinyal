@@ -13,13 +13,10 @@ Keputusan Olan 3 Okt 2026 malam:
 1. **Saldo real Bybit** — nanti (belum ada dana). Ranger Rotasi real nunggu ini.
 2. **Bitget** — demo GAK dikejar lagi. Nanti langsung REAL begitu Olan isi saldo (key real udah tersambung, saldo $0,58).
    Key demo tetap tersimpan kalau suatu saat saldo demo baru bisa diisi.
-3. **🕸️ GRID ATH (LIVE 9 Okt, real tanpa demo -- keputusan Olan)** — `gridTrader.js`, BingX Perpetual **BTC-USDC**. Nunggu Olan
-   setor **USDC** ke BingX Perpetual (akun USDC-M). Begitu masuk: langsung tanam ~dd% (BTC lagi ATH -34%). Sejak 10 Okt malam: MINIMAL CAP
-   $830 (porsi dari max(modal, $830), dipotong di 2x ekuitas) -> rebuy tetap tiap 1% walau setor kecil. Cek pesan Buka Posisi GRID pertama + Buku Besar.
+3. ~~GRID ATH nunggu setoran USDC~~ -- BERES: sekarang 🌾 FARMER LIVE real (tangga #1 0,0034 BTC, modal $940 = BingX $94 + penambah $846). Setoran berikutnya kapan aja: top up kebaca otomatis.
 4. ~~DCA Tangga~~ — DIBATALIN 9 Okt (diganti grid), monitor mati. Posisi Standard Futures sisa diurus Olan sendiri.
    Ninja real dimatiin lagi 8 Okt (balik uji demo).
-5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). Sementara Olan trading manual di
-   luar sistem (BC.Game, fee 0, copet news) -- Kaela gak perlu ngurusin itu.
+5. **Saldo real Binance** — Olan nabung dulu (dashboard nyebut minimal ~$1.250 buat Sniper). (11 Okt: Olan DILARANG trading manual -- semua akun dikelola Kaela.)
 6. **NETLIFY BELUM DIBAYAR (11 Okt)** -- akun Netlify "Restricted Team" (kredit habis), deploy ditolak ("Method Not Allowed"). Begitu Olan isi kredit: trigger deploy-daily.yml SEKALI buat semua perubahan numpuk: web Sniper (Farmer di dashboard+jurnal, metodologi-farmer.html, Ninja disembunyiin) + masking Kaela Access (dashboard.html: kartu Dompet Farmer, tombol metodologi Farmer). Kode udah di GitHub.
    (lama) **Izin deploy Netlify** — tiap update tampilan yang butuh upload ulang. (Antrian kosong -- metodologi-ninja News tayang 6 Okt.)
 7. ~~Push GAS Kaela Access~~ -- BERES 6 Okt: GAS v245 live, 7 koneksi tersimpan, AdminView jalan, masking workflow dibenerin
@@ -27,7 +24,7 @@ Keputusan Olan 3 Okt 2026 malam:
 
 ## 📅 NUNGGU TANGGAL / DATA (Kaela cek sendiri pas waktunya)
 
-- **Ninja News rilis berikutnya** — Jobless Claims Kamis 8 Okt 20:30 WITA (laporan otomatis 21:00), CPI 14 Okt. Cek
+- **Ninja News rilis berikutnya** — NYALA LAGI 11 Okt malam (demo doang, eksperimen). CPI Rabu 14 Okt 20:30 WITA, lalu Jobless Claims tiap Kamis. Cek
   `ninja-news.log` + `ninja-news-research-log.json` + laporan 30 menit ke grup beneran keluar.
   ISM 5 Okt (rilis pertama): detektor jalan normal, dolar cuma gerak 0,018%/menit -> gak entry (hasil ~sesuai perkiraan).
   Event MEDIUM lain masuk jadwal uji Ninja News atau gak -> diputusin dari riset `backtest/newsMediumStudy.js` (5 Okt).

@@ -490,7 +490,12 @@ async function processVariant(variant, journal, cfg, candles, lastCandle) {
   // 'unsafe' (gak bisa dipastikan aman ATAU emang ternyata punya Kaela sendiri) di sini CUMA log,
   // gak nge-block apapun (return di bawah bukan krn ini) -- entry beneran tetap kena cek ULANG di
   // titik breakout-konfirmasi (idempoten, aman dipanggil dobel).
-  {
+  // (12 Okt 2026) Patroli ini DIGANTI bingxPositionGuard.js (kenal SEMUA jurnal Kaela -- Farmer, Ninja, Rotasi -- + konfirmasi 2x
+  // sebelum nutup). Selama guard itu nyala, patroli lama ini dilewatin: dia cuma lihat "order terakhir" (gak kenal jurnal) dan
+  // nulis log "posisi nyasar punya Kaela" TIAP MENIT gara2 posisi Farmer demo (4.091 baris sejak 7 Okt).
+  let guardOn = false;
+  try { guardOn = JSON.parse(fs.readFileSync(path.join(__dirname, 'bingx-guard-config.json'), 'utf8')).enabled === true; } catch {}
+  if (!guardOn) {
     const idrRateForPatrol = await getUsdIdrRate().catch(() => null);
     await checkAndClearStrayPosition(demoExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli demo error:`, e.message));
     if (realExec) await checkAndClearStrayPosition(realExec, idrRateForPatrol).catch((e) => console.log(`[ChannelBreakout/${variant}] Patroli real error:`, e.message));

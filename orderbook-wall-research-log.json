@@ -111139,5 +111139,86 @@
     "qty": 6.098,
     "notionalUsd": 503261.842,
     "distPct": 0.047217815966891875
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "BID",
+    "price": 82050,
+    "qty": 8.883,
+    "notionalUsd": 728850.1499999999,
+    "distPct": -0.054753672424426955
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "BID",
+    "price": 82045.3,
+    "qty": 8.647,
+    "notionalUsd": 709445.7091000001,
+    "distPct": -0.060478750519970086
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "BID",
+    "price": 82044.7,
+    "qty": 7.498,
+    "notionalUsd": 615171.1606,
+    "distPct": -0.06120961155345122
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "BID",
+    "price": 82035.6,
+    "qty": 10.08,
+    "notionalUsd": 826918.8480000001,
+    "distPct": -0.07229433722779693
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "ASK",
+    "price": 82095,
+    "qty": 12.587,
+    "notionalUsd": 1033329.765,
+    "distPct": 0.00006090508612638217
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "ASK",
+    "price": 82116.4,
+    "qty": 7.248,
+    "notionalUsd": 595179.6672,
+    "distPct": 0.026128281946693543
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "ASK",
+    "price": 82126,
+    "qty": 9.262,
+    "notionalUsd": 760651.012,
+    "distPct": 0.03782205848228534
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "ASK",
+    "price": 82134.3,
+    "qty": 7.358,
+    "notionalUsd": 604344.1794,
+    "distPct": 0.04793230277867983
+  },
+  {
+    "timestamp": "2026-10-12T23:01:51.476Z",
+    "midPrice": 82094.95,
+    "side": "ASK",
+    "price": 82151.9,
+    "qty": 7.099,
+    "notionalUsd": 583196.3380999999,
+    "distPct": 0.06937089309390783
   }
 ]

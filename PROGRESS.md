@@ -10,6 +10,7 @@
 - **Status:** Farmer real tangga #1 0,0034 BTC @ $82.822 (modal $940 = BingX $94 + penambah $846), demo tangga #1 1,4483 BTC. Penjaga posisi + penutup posisi asing LIVE.
 - **Nunggu Olan:** izin deploy Netlify web Sniper (Farmer + metodologi-farmer.html).
 - **Arah (Olan 11 Okt malam):** pelan tapi pasti -- bangun saldo dari Farmer dulu -> saldo tebal: gedein Sniper & Ranger -> lalu Ranger Rotasi. Riset alt baru DISTOP dulu.
+- **ATURAN SETORAN BARU (Olan 12 Okt):** tiap $100 -> beli BTC spot & tahan; Farmer jalan sendiri; BTC GAK dijual/dijaminin buat Farmer (fundingMixStudy.js). Nunggu Olan: $846 penambah tetap cadangan Farmer atau jadi BTC? BTC disimpan di dompet pribadi atau BingX Spot (inti)?
 - **Antrian Kaela:** kosong -- DOGE, tangga short (14 Sep 2029) & tanggal halving udah dibangun + jalan otomatis nunggu waktunya.
 
 ## 📜 LOG (terbaru di atas)

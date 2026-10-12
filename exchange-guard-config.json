@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "bybit": [
+    "demo",
+    "real"
+  ],
+  "bitget": [
+    "real"
+  ],
+  "dryRun": true,
+  "_note": "12 Okt 2026 -- exchangePositionGuard.js: penutup posisi asing Bybit (demo+real) & Bitget (real), aturan sama bingxPositionGuard (jurnal Kaela / order kaela- / konfirmasi 2x). Olan: \"tiap exchange kasih keamanan biar aku ga buka posisi apapun di futures\". dryRun true = cuma log yang BAKAL ditutup (cek dulu di VPS), ganti false buat beneran nutup."
+}

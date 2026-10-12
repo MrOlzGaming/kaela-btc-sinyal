@@ -42,7 +42,7 @@ const { sma } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const { isBtcBearWindow, isBtcApproachingWindowFlip } = require('./halvingBearWindow');
-const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, minBalanceForNotional, insufficientBalanceError } = require('./balanceAlert');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatManualOpenAutoClosed, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -230,6 +230,11 @@ async function openRangerBtcDual({ sig, livePrice }) {
     const balance = await exec.getAccountBalance(MARGIN_ASSET).catch(() => 0);
     const modal = (balance || 0) * MODAL_ACTIVE_FRACTION;
     const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
+    if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal, bukan skip diam
+      const info = await exec.getSymbolInfo(SYMBOL).catch(() => null);
+      const minN = (info && info.minNotionalUsd) || 50;
+      if (!(calc.nilaiPosisi >= minN)) throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: livePrice, stopLoss: sig.sl, direction: sig.direction }, minNotionalUsd: minN, activeFraction: MODAL_ACTIVE_FRACTION }) });
+    }
     if (calc.nilaiPosisi <= 0) return null;
     // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
     // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi
@@ -273,7 +278,7 @@ async function openRangerBtcDual({ sig, livePrice }) {
         if (isInsufficientBalanceError(e.message)) {
           const alertKey = 'ranger-btc-dual-real';
           if (shouldAlertInsufficientBalance(alertKey)) {
-            await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Ranger BTC (Real)', assetLabel: ASSET_LABEL, direction: sig.direction, entry: livePrice, tp: partialTp })).catch(() => {});
+            await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Ranger BTC (Real)', assetLabel: ASSET_LABEL, direction: sig.direction, entry: livePrice, tp: partialTp, details: e.details ? { ...e.details, exchange: 'Binance' } : null })).catch(() => {});
           }
           console.log(`[RangerBtcDual/${slotKey}] Real skip -- saldo kurang.`);
         } else {

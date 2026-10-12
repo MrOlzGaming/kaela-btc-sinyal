@@ -46,12 +46,15 @@ function kaelaPositionsFromJournals(read = readJson) {
 async function guardAccount(deps) {
   const { mode, exec, state, now } = deps;
   const log = deps.log || ((m) => console.log(`[BingxGuard] ${m}`));
-  const positions = ((await exec.getAllPositions()) || []).filter((p) => Math.abs(parseFloat(p.positionAmt)) > 0);
+  // (12 Okt 2026) dipakai ulang buat Bybit/Bitget (exchangePositionGuard.js): deps.norm = bentuk posisi per exchange, deps.exLabel = nama
+  const norm = deps.norm || ((p) => ({ symbol: p.symbol, side: p.positionSide === 'SHORT' ? 'SHORT' : 'LONG', qty: Math.abs(parseFloat(p.positionAmt)), upnl: p.unrealizedProfit }));
+  const EX = deps.exLabel || 'BingX';
+  const positions = ((await exec.getAllPositions()) || []).filter((p) => norm(p).qty > 0);
   const seen = state.suspects || (state.suspects = {});
   const results = [];
   const liveKeys = new Set();
   for (const p of positions) {
-    const symbol = p.symbol, side = p.positionSide === 'SHORT' ? 'SHORT' : 'LONG', qty = Math.abs(parseFloat(p.positionAmt));
+    const { symbol, side, qty, upnl } = norm(p);
     const key = `${mode}|${symbol}|${side}`; liveKeys.add(key);
     const own = deps.owned.find((o) => o.mode === mode && o.symbol === symbol && o.side === side);
     let unwantedQty = 0, why = '';
@@ -77,15 +80,15 @@ async function guardAccount(deps) {
       const o = await exec.emergencyCloseMarket({ symbol, direction: side === 'SHORT' ? 'sell' : 'buy', quantity: closeQty });
       const order = o && o.order ? o.order : o;
       delete seen[key];
-      const pnlTxt = p.unrealizedProfit != null ? ` (PnL ±${Number(p.unrealizedProfit).toFixed(2)})` : '';
+      const pnlTxt = upnl != null ? ` (PnL ±${Number(upnl).toFixed(2)})` : '';
       log(`DITUTUP PAKSA ${key} ${closeQty}${pnlTxt} -- ${why}`);
       (state.history = state.history || []).push({ at: now, mode, symbol, side, qty: closeQty, why, orderId: order && order.orderId });
       if (state.history.length > 300) state.history = state.history.slice(-300);
-      await deps.alert(`🚫 Posisi di luar sistem ditutup -- BingX ${mode === 'demo' ? '(Demo)' : '(Real)'}\n\n${symbol} ${side} ${closeQty}${pnlTxt}\nAlasan: ${why}.\n\nAturan: semua akun trading dikelola Kaela 100%, posisi yang bukan dibuka sistem Kaela ditutup otomatis.`);
+      await deps.alert(`🚫 Posisi di luar sistem ditutup -- ${EX} ${mode === 'demo' ? '(Demo)' : '(Real)'}\n\n${symbol} ${side} ${closeQty}${pnlTxt}\nAlasan: ${why}.\n\nAturan: semua akun trading dikelola Kaela 100%, posisi yang bukan dibuka sistem Kaela ditutup otomatis.`);
       results.push({ key, closed: closeQty });
     } catch (e) {
       log(`GAGAL nutup ${key}: ${e.message}`);
-      await deps.alert(`⚠️ Kaela gagal nutup posisi asing BingX ${mode}: ${symbol} ${side} ${closeQty} -- ${e.message}. Dicoba lagi tiap menit.`);
+      await deps.alert(`⚠️ Kaela gagal nutup posisi asing ${EX} ${mode}: ${symbol} ${side} ${closeQty} -- ${e.message}. Dicoba lagi tiap menit.`);
       results.push({ key, error: e.message });
     }
   }

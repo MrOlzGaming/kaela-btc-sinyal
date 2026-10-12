@@ -215,6 +215,11 @@ function createRotation(deps) {
     // Backtest (rangerExitResearch.js, rotasi 8 koin, exit 33%@2R): 2019-22 DD 81% -> 55% (CAGR 90 -> 84%), 2023-26 DD 41 -> 37%.
     const halfSize = sig.direction === 'sell' || coin !== 'BTC';
     const calc = hitungExposure({ modal: (balance || 0) * MODAL_ACTIVE_FRACTION, entry: live, stopLoss: sig.sl, direction: halfSize ? 'sell' : 'buy' });
+    if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal
+      const info = await exec.getSymbolInfo(s).catch(() => null);
+      const minN = (info && info.minNotionalUsd) || 5;
+      if (!(calc.nilaiPosisi >= minN)) { const { insufficientBalanceError, minBalanceForNotional } = require('./balanceAlert'); throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: live, stopLoss: sig.sl, direction: halfSize ? 'sell' : 'buy' }, minNotionalUsd: minN, activeFraction: MODAL_ACTIVE_FRACTION }) }); }
+    }
     if (!(calc.nilaiPosisi > 0)) { const e = new Error(`${mode}: saldo kurang (${(balance || 0).toFixed(2)})`); e.insufficient = true; throw e; }
     await exec.setIsolatedMargin(s, calc.leverage).catch(() => {});
     await exec.setLeverage(s, calc.leverage, sideOf(sig.direction)).catch(() => {});
@@ -246,7 +251,12 @@ function createRotation(deps) {
     if (cfg.allowReal && deps.legs.real) {
       try { real = await openLeg('real', coin, sig, live); }
       // qty 0 / notional di bawah minimum exchange = saldo kurang juga (6 Okt 2026: saldo real $0 ke-log "BUKAN saldo kurang")
-      catch (e) { const kurang = e.insufficient || /kekecilan|Quantity kehitung 0|min(imum)? (order|notional)/i.test(e.message); log(kurang ? `${coin} real skip (saldo kurang buat ukuran minimum) -- ${e.message}` : `${coin} real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`); }
+      catch (e) {
+        const kurang = e.insufficient || /kekecilan|Quantity kehitung 0|min(imum)? (order|notional)/i.test(e.message);
+        log(kurang ? `${coin} real skip (saldo kurang buat ukuran minimum) -- ${e.message}` : `${coin} real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`);
+        // (12 Okt 2026) notif saldo kurang + saldo minimal, maks 1x/hari -- deps.balanceAlert cuma dipasang di produksi (selftest gak nyentuh state)
+        if (kurang && deps.balanceAlert) await deps.balanceAlert({ strategy: 'Ranger Rotasi (Real)', assetLabel: `${coin}USDT`, direction: sig.direction, entry: live, sl: sig.sl, details: e.details ? { ...e.details, exchange: 'Bybit' } : null });
+      }
     }
     const d = new Date(now());
     if (!j.dailySignalSeq || j.dailySignalSeq.dayKey !== dayKeyOf(d)) j.dailySignalSeq = { dayKey: dayKeyOf(d), count: 0 };
@@ -384,6 +394,7 @@ async function main() {
   const rot = createRotation({
     cfg, journal, legs: venues.legs, symbolOf: venues.symbolOf,
     fetchCandles: fetchCandles4h,
+    balanceAlert: async (a) => { const { shouldAlertInsufficientBalance, formatInsufficientBalanceAlert } = require('./balanceAlert'); if (shouldAlertInsufficientBalance('ranger-rotasi-real')) await sendWhatsAppToWibowo(formatInsufficientBalanceAlert(a)).catch((e) => console.log('[RangerRotasi] WA saldo kurang gagal:', e.message)); },
     notify: {
       sniperClub: (m) => sendWhatsAppToSniperClub(toSniperClubLink(m)).catch((e) => console.log('[RangerRotasi] WA Sniper Club gagal:', e.message)),
       wibowo: (m) => sendWhatsAppToWibowo(m).catch((e) => console.log('[RangerRotasi] WA Wibowo gagal:', e.message)),

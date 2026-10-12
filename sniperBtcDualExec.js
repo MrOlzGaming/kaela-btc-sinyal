@@ -50,7 +50,7 @@ const { sma } = require('./technicalAnalysis');
 const { fetchCandles } = require('./technicalAnalysis');
 const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
-const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance } = require('./balanceAlert');
+const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, minBalanceForNotional, insufficientBalanceError } = require('./balanceAlert');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatManualOpenAutoClosed, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -203,6 +203,11 @@ async function openSniperBtcDual({ order, livePrice }) {
   async function openLeg(exec, mode) {
     const balance = await exec.getAccountBalance(MARGIN_ASSET).catch(() => 0);
     const calc = hitungExposure({ modal: balance || 0, entry: livePrice, stopLoss: order.sl, direction: order.direction });
+    if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal, bukan skip diam
+      const info = await exec.getSymbolInfo(SYMBOL).catch(() => null);
+      const minN = (info && info.minNotionalUsd) || 100;
+      if (!(calc.nilaiPosisi >= minN)) throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: livePrice, stopLoss: order.sl, direction: order.direction }, minNotionalUsd: minN }) });
+    }
     if (calc.nilaiPosisi <= 0) return null;
     // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
     // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi aman.
@@ -256,7 +261,7 @@ async function openSniperBtcDual({ order, livePrice }) {
         if (isInsufficientBalanceError(e.message)) {
           const alertKey = 'sniper-btc-dual-real';
           if (shouldAlertInsufficientBalance(alertKey)) {
-            await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Sniper BTC (Real)', assetLabel: ASSET_LABEL, direction: order.direction, entry: livePrice, tp: order.tp })).catch(() => {});
+            await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Sniper BTC (Real)', assetLabel: ASSET_LABEL, direction: order.direction, entry: livePrice, tp: order.tp, details: e.details ? { ...e.details, exchange: 'Binance' } : null })).catch(() => {});
           }
           console.log('[SniperBtcDual] Real skip -- saldo kurang.');
         } else {

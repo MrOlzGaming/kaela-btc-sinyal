@@ -76,8 +76,26 @@ function isInsufficientBalanceError(message) {
   return INSUFFICIENT_BALANCE_PATTERNS.some((re) => re.test(m));
 }
 
-// { strategy: 'Sniper'|'Nyopet', assetLabel, direction: 'buy'|'sell', entry, tp, sl }
-function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry, tp, sl }) {
+// SALDO MINIMAL (12 Okt 2026) -- saldo terkecil biar kalkulator exposure (calculator.js hitung, aturan SAMA kayak live) ngasih nilai
+// posisi >= minimum order exchange. calcArgs = argumen hitung() TANPA modal; activeFraction = porsi saldo yang dipakai (mis. 1/5).
+function minBalanceForNotional({ calcArgs, minNotionalUsd, activeFraction = 1 }) {
+  const { hitung } = require('./calculator');
+  const ok = (bal) => { try { return hitung({ ...calcArgs, modal: bal * activeFraction }).nilaiPosisi >= minNotionalUsd; } catch { return false; } };
+  let hi = 1; while (!ok(hi) && hi < 1e7) hi *= 2;
+  if (!ok(hi)) return null;
+  let lo = hi / 2; if (hi === 1) lo = 0;
+  for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (ok(m)) hi = m; else lo = m; }
+  return Math.ceil(hi);
+}
+// error "saldo kurang" bawa angka -- message nyocok INSUFFICIENT_BALANCE_PATTERNS (/insufficient/)
+function insufficientBalanceError({ balance, minBalance, minNotionalUsd, notional }) {
+  const e = new Error(`saldo real kurang (insufficient): saldo $${Number(balance || 0).toFixed(2)} -> posisi $${Number(notional || 0).toFixed(2)} < minimum order $${minNotionalUsd}${minBalance ? `, butuh saldo minimal ~$${minBalance}` : ''}`);
+  e.insufficient = true; e.details = { balance: Number(balance || 0), minBalance, minNotionalUsd };
+  return e;
+}
+
+// { strategy: 'Sniper'|'Nyopet', assetLabel, direction: 'buy'|'sell', entry, tp, sl, details?: { balance, minBalance, minNotionalUsd, exchange } }
+function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry, tp, sl, details }) {
   const dirLabel = direction === 'buy' ? 'LONG' : 'SHORT';
   const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }));
   const levels = [`Arah: *${dirLabel}*`, `Entry sekitar: *$${fmt(entry)}*`];
@@ -86,6 +104,7 @@ function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry
 
   return `🔔 *Sinyal ${strategy} ${assetLabel} kelewat -- saldo Real kurang*\n\n`
     + `Sinyal *${dirLabel}* baru muncul, tapi Kaela *gak bisa buka otomatis* di akun Real kamu -- saldo kurang buat nutup margin minimum.\n\n`
+    + (details && details.minBalance ? `💰 Saldo Real${details.exchange ? ` ${details.exchange}` : ''} sekarang: *$${Number(details.balance || 0).toFixed(2)}* -- minimal *~$${Number(details.minBalance).toLocaleString('en-US')}* biar posisi ini bisa kebuka (dihitung kalkulator exposure, minimum order exchange $${details.minNotionalUsd}).\n\n` : '')
     // (3 Okt 2026, Olan: "ga ada lagi manual") -- gak ngajak buka manual lagi; level cuma buat catatan.
     + `ℹ️ Posisi DEMO tetap jalan otomatis. Level sinyal (catatan, BUKAN ajakan buka manual):\n`
     + levels.map((l) => `- ${l}`).join('\n') + '\n\n'
@@ -102,4 +121,4 @@ function isMexcNotConfiguredError(message) {
   return /MEXC belum disetup buat member/i.test(String(message || ''));
 }
 
-module.exports = { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError };
+module.exports = { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, isMexcNotConfiguredError, minBalanceForNotional, insufficientBalanceError };

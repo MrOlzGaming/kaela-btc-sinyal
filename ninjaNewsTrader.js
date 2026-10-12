@@ -204,7 +204,8 @@ async function runDetector(deps) {
     const balance = num(await exec.getAccountBalance('USDT')) || 0;
     const calc = hitungExposure({ modal: balance * MODAL_ACTIVE_FRACTION, nyawa: cfg.slPct, direction: 'buy' });
     const ok = calc.nilaiPosisi >= REAL_MIN_NOTIONAL_USD;
-    return { ok, balance, notional: calc.nilaiPosisi, leverage: calc.leverage, note: `saldo real $${balance.toFixed(2)} -> posisi $${calc.nilaiPosisi.toFixed(2)} (lev ${calc.leverage}x)${ok ? '' : `, di bawah minimum $${REAL_MIN_NOTIONAL_USD} -- perlu setoran dulu`}` };
+    const minBal = ok ? null : require('./balanceAlert').minBalanceForNotional({ calcArgs: { nyawa: cfg.slPct, direction: 'buy' }, minNotionalUsd: REAL_MIN_NOTIONAL_USD, activeFraction: MODAL_ACTIVE_FRACTION }); // 12 Okt 2026
+    return { ok, balance, minBalance: minBal, notional: calc.nilaiPosisi, leverage: calc.leverage, note: `saldo real $${balance.toFixed(2)} -> posisi $${calc.nilaiPosisi.toFixed(2)} (lev ${calc.leverage}x)${ok ? '' : `, di bawah minimum $${REAL_MIN_NOTIONAL_USD} -- perlu setoran dulu${minBal ? ` (saldo minimal ~$${minBal})` : ""}`}` };
   }
 
   // ---------- trade ----------

@@ -64,6 +64,10 @@ shortd_output=$(timeout -k 5 40 node shortLadderTrader.js demo 2>&1)
 # yang bukan punya Kaela ditutup paksa (Olan dilarang trading sendiri). Saklar: bingx-guard-config.json.
 guard_output=$(timeout -k 5 50 node bingxPositionGuard.js 2>&1)
 [ -n "$guard_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $guard_output" >> "$LOG_FILE"
+# 🚫 PENUTUP POSISI ASING Bybit (demo+real) & Bitget (real) (12 Okt 2026, exchangePositionGuard.js) -- aturan sama kayak BingX.
+# Saklar: exchange-guard-config.json.
+xguard_output=$(timeout -k 5 50 node exchangePositionGuard.js 2>&1)
+[ -n "$xguard_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $xguard_output" >> "$LOG_FILE"
 # 🪙 GRID SPOT BingX REAL (11 Okt 2026, spotGridTrader.js) -- siaga sampai kantong spot >= $10rb. Saklar: spot-grid-config.json.
 spot_output=$(timeout -k 5 40 node spotGridTrader.js 2>&1)
 [ -n "$spot_output" ] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] $spot_output" >> "$LOG_FILE"

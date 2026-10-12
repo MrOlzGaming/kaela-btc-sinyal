@@ -182,7 +182,9 @@ async function main() {
     log: (m) => console.log(`[${new Date().toISOString()}] [SpotGrid] ${m}`),
     save: () => fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null, 2)),
   };
-  try { await runOnce(deps); } catch (e) { deps.log(`GAGAL: ${e.message}`); await deps.alert(`⚠️ Grid spot error: ${e.message}`, `err:${String(e.message).slice(0, 40)}`); deps.save(); }
+  // 12 Okt 2026: gangguan sesaat BingX (100500 "network issue", 1 menit doang) gak perlu DM -- kabarin kalau gagal >= 5 menit berturut
+  try { await runOnce(deps); if (j.failStreak) { j.failStreak = 0; deps.save(); } }
+  catch (e) { j.failStreak = (j.failStreak || 0) + 1; deps.log(`GAGAL (${j.failStreak}x berturut): ${e.message}`); if (j.failStreak >= 5) await deps.alert(`⚠️ Grid spot error ${j.failStreak} menit berturut-turut: ${e.message}`, `err:${String(e.message).slice(0, 40)}`); deps.save(); }
 }
 if (require.main === module) main();
 module.exports = { runOnce, freshJournal, loadConfig };

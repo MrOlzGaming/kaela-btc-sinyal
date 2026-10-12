@@ -160,8 +160,8 @@ async function main() {
     log: (m) => console.log(`[${new Date().toISOString()}] [ShortLadder${DEMO ? ' demo' : ''}] ${m}`),
     save: () => fs.writeFileSync(JOURNAL_PATH, JSON.stringify(j, null, 2)),
   };
-  try { const r = await runOnce(deps); if (r && r.idle === 'di luar musim bear' && (!j.lastIdleLog || Date.now() - j.lastIdleLog > 7 * 864e5)) { j.lastIdleLog = Date.now(); deps.log(`siaga -- hari ke-${r.day} sejak halving, musim bear berikutnya mulai ${fmtD(nextWindowStart(cfg.winFrom, cfg.winTo))} (hari ${cfg.winFrom} sejak halving)`); deps.save(); } }
-  catch (e) { deps.log(`GAGAL: ${e.message}`); await deps.alert(`⚠️ Tangga SHORT error: ${e.message}`, `err:${String(e.message).slice(0, 40)}`); deps.save(); process.exitCode = 1; }
+  try { const r = await runOnce(deps); if (j.failStreak) { j.failStreak = 0; deps.save(); } if (r && r.idle === 'di luar musim bear' && (!j.lastIdleLog || Date.now() - j.lastIdleLog > 7 * 864e5)) { j.lastIdleLog = Date.now(); deps.log(`siaga -- hari ke-${r.day} sejak halving, musim bear berikutnya mulai ${fmtD(nextWindowStart(cfg.winFrom, cfg.winTo))} (hari ${cfg.winFrom} sejak halving)`); deps.save(); } }
+  catch (e) { j.failStreak = (j.failStreak || 0) + 1; deps.log(`GAGAL (${j.failStreak}x berturut): ${e.message}`); if (j.failStreak >= 5) await deps.alert(`⚠️ Tangga SHORT error ${j.failStreak} menit berturut-turut: ${e.message}`, `err:${String(e.message).slice(0, 40)}`); deps.save(); process.exitCode = 1; }
 }
 if (require.main === module) main();
 module.exports = { runOnce, freshJournal, loadConfig };

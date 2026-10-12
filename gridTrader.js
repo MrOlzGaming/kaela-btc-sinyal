@@ -645,7 +645,7 @@ async function main() {
     j.apiFail = { n: ((j.apiFail && j.apiFail.n) || 0) + 1, since: (j.apiFail && j.apiFail.since) || Date.now(), last: e.message };
     if (j.apiFail.n === 30 || j.apiFail.n % 360 === 0) await deps.alert(`🚨 🌾 Farmer${DEMO ? ' (Demo)' : ''}: ${cfg.exchange.toUpperCase()} gagal diakses ${j.apiFail.n} menit berturut-turut (${e.message}). Kalau exchange-nya bermasalah beneran (kayak FTX), bilang ke Kaela "pindah Farmer ke Binance" -- tangga dilanjut di sana pakai saldo baru.`, `apidown:${j.apiFail.n}`);
     deps.log(`GAGAL: ${e.message}`);
-    await deps.alert(`⚠️ Grid GAGAL jalan: ${e.message}`, `err:${String(e.message).slice(0, 40)}`);
+    if (j.apiFail.n >= 5) await deps.alert(`⚠️ 🌾 Farmer gagal jalan ${j.apiFail.n} menit berturut-turut: ${e.message}`, `err:${String(e.message).slice(0, 40)}`); // 12 Okt: gangguan sesaat (1-4 menit) cukup log
     saveJournal(j);
     process.exitCode = 1;
   }

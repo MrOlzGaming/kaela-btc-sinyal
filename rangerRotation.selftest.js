@@ -221,6 +221,31 @@ function setup({ signals = {}, bear = false, prices = {}, closeTime, realBalance
     await s2.rot.runCycle();
     assert.strictEqual(s2.j.floating, null);
   });
+  await t('COBA ULANG REAL (12 Okt): saldo real kurang -> notif hari-1 + saran saldo minimal; saldo diisi -> real NYUSUL, Wibowo dapet pesan REAL', async () => {
+    const s = setup({ signals: { DOGE: { direction: 'buy', sl: 0.09, patternType: 'fvg_bounce' } } });
+    let T = Date.UTC(2026, 9, 3, 12, 5); const alerts = [];
+    const rot = createRotation({ ...s.deps, now: () => T, balanceAlert: async (a) => alerts.push(a) });
+    await rot.runCycle();
+    assert(s.j.floating.realRetry && alerts.length === 1 && /2026-10-05/.test(alerts[0].extraNote), JSON.stringify(alerts));
+    assert(alerts[0].details && alerts[0].details.minBalance > 0, 'saldo minimal dihitung');
+    T += 3600e3; await rot.runCycle(); assert.strictEqual(alerts.length, 1, 'hari yg sama gak notif lagi');
+    s.realEx.balance = 5000; T += 3600e3; await rot.runCycle();
+    assert(s.j.floating.legs.real && s.j.floating.wibowoRoute === 'real' && s.sent.wibowo.includes('OPEN real DOGE'), JSON.stringify(s.sent.wibowo));
+  });
+  await t('COBA ULANG REAL: hari-2 notif 1x lagi, lewat 2x24 jam berhenti nyoba & diem; harga lari jauh -> berhenti', async () => {
+    const s = setup({ signals: { DOGE: { direction: 'buy', sl: 0.09, patternType: 'fvg_bounce' } } });
+    let T = Date.UTC(2026, 9, 3, 12, 5); const alerts = [];
+    const rot = createRotation({ ...s.deps, now: () => T, balanceAlert: async (a) => alerts.push(a) });
+    await rot.runCycle();
+    T += 25 * 3600e3; await rot.runCycle(); T += 3600e3; await rot.runCycle();
+    assert.strictEqual(alerts.length, 2); assert(/Hari ke-2/.test(alerts[1].extraNote));
+    T += 23 * 3600e3; await rot.runCycle(); await rot.runCycle();
+    assert(s.j.floating.realRetry.expired && alerts.length === 2 && !s.j.floating.legs.real);
+    const s2 = setup({ signals: { DOGE: { direction: 'buy', sl: 0.09, patternType: 'fvg_bounce' } } });
+    const rot2 = createRotation({ ...s2.deps, balanceAlert: async () => {} });
+    await rot2.runCycle(); s2.st.prices.DOGE = 0.109; s2.realEx.balance = 5000; await rot2.runCycle();
+    assert(s2.j.floating.realRetry.expired && !s2.j.floating.legs.real, 'harga udah lari > 0,5R -> gak masuk real');
+  });
   console.log(`\n${passed} lolos, ${failed} gagal`);
   process.exit(failed ? 1 : 0);
 })();

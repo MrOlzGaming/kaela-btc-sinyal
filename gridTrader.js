@@ -29,6 +29,19 @@ const OLAN_PRIBADI = '6282134510686';
 // EXCHANGE (11 Okt 2026): cfg.exchange "bingx" (utama) | "binance" (cadangan). Simbol per exchange dari cfg.symbols.
 const EXN = (cfg) => ({ bingx: 'BingX', binance: 'Binance' }[cfg && cfg.exchange] || 'BingX');
 const EXCHANGE_SYMBOL_DEFAULT = { bingx: { real: 'BTC-USDC', demo: 'BTC-USDT' }, binance: { real: 'BTCUSDC', demo: 'BTCUSDC' } };
+// (12 Okt 2026, Olan) notif "gagal buka karena saldo kurang" -> GRUP Hedgefund (japri gak kebaca), cuma hari-1 & hari-2 per tangga,
+// sisanya diem. Farmer TETAP nunggu & nyoba terus (sifatnya continuous) -- beda dari Sniper/Ranger yang berhenti nyoba abis 2x24 jam.
+async function fundAlert(deps, j, key, msg, now) {
+  const fa = j.fundAlert && j.fundAlert.key === key ? j.fundAlert : (j.fundAlert = { key, since: now, sent: [] });
+  const day = now - fa.since < 864e5 ? 1 : (now - fa.since < 2 * 864e5 ? 2 : 0);
+  if (!day || fa.sent.includes(day)) return;
+  fa.sent.push(day); deps.save();
+  const note = day === 1 ? '🔁 Farmer nyoba terus tiap menit -- begitu saldo masuk, tangga langsung kebuka.' : '🔁 Hari ke-2 (notif terakhir). Farmer tetap nunggu & nyoba terus diam-diam sampai saldo masuk.';
+  await (deps.groupAlert || deps.alert)(`${msg}
+
+${note}`, `fund:${key}:${day}`);
+}
+
 function loadConfig() {
   const def = { enabled: false, allowReal: false, symbol: 'BTC-USDC', marginAsset: 'USDC', minDd: 15, step: 1, k: 1, tp: 15, volMult: [{ fromDd: 0, x: 1 }], capExposure: 2, leverage: 5, minCap: 0 };
   let cfg; try { cfg = { ...def, ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) }; } catch { cfg = def; }
@@ -243,7 +256,7 @@ async function runLadder(deps, log, now) {
       const mgUse = mgNeed; // total margin akhir (margin awal leverage + tambahan)
       if (wNow != null && wNow - bibit() < mgUse * 1.01) {
         log(`PENJAGA: butuh margin ${fmt$(mgUse)} buat buka ulang ${gd.qty} BTC, saldo ${EXN(cfg)} ${fmt$(wNow)} -- nunggu top up`);
-        await deps.alert(`🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo ${EXN(cfg)} cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, 'guardtopup');
+        await fundAlert(deps, j, `g:${c.id}`, `🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo ${EXN(cfg)} cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, now);
         deps.save(); return { idle: 'penjaga nunggu top up' };
       }
       await ex.setLeverage(sym, levNeed, 'LONG').catch((e) => log(`set leverage penjaga: ${e.message}`));
@@ -433,7 +446,7 @@ async function runLadder(deps, log, now) {
     if (free != null && free < c.unit * 0.99) {
       const need = c.unit - free;
       log(`tangga #${c.bets + 1} butuh margin ${fmt$(c.unit)}, saldo bebas ${EXN(cfg)} cuma ${fmt$(free)} -- nunggu top up ${fmt$(need)}`);
-      await deps.alert(`🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo ${EXN(cfg)} kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan tercatat: bank ${fmt$(j.bankReserve || 0)}${wallets.length ? ` + dompet pribadi ${fmt$(custodyTotal())}` : ''}.`, 'topup');
+      await fundAlert(deps, j, `t:${c.id}:${c.bets + 1}`, `🌾 Farmer: waktunya tangga #${c.bets + 1} (BTC ${fmt$(px)}), tapi saldo ${EXN(cfg)} kurang. Top up minimal ${fmt$(Math.ceil(need))} ${cfg.marginAsset} dari bank ya -- begitu masuk, tangga langsung kebuka (selama harga masih di zona tangga). Cadangan tercatat: bank ${fmt$(j.bankReserve || 0)}${wallets.length ? ` + dompet pribadi ${fmt$(custodyTotal())}` : ''}.`, now);
       if (!c.pos) c.waitTopUpSince = c.waitTopUpSince || now;
       deps.save(); return { idle: 'nunggu top up', need };
     }
@@ -624,6 +637,10 @@ function prodDeps(cfg, journal) {
       if (DEMO) { try { const { toSniperClubLink } = require('./darkKaelaLog'); await require('./fonnte').sendWhatsAppToSniperClub(toSniperClubLink(msg)); } catch (e) { console.log('[Grid] WA Sniper Club gagal:', e.message); } }
       try { await require('./wibowoNotify').sendWhatsAppToWibowo(msg); } catch (e) { console.log('[Grid] WA Wibowo gagal:', e.message); }
     },
+    // (12 Okt 2026) notif saldo kurang -> GRUP Hedgefund (Olan: japri gak kebaca)
+    groupAlert: async (msg) => { try { await require('./wibowoNotify').sendWhatsAppToWibowo(`${DEMO ? '(Demo) ' : ''}${msg}
+
+— Kaela`); } catch (e) { console.log('[Grid] WA grup gagal:', e.message); } },
     // peringatan (gak beres) -> DM Olan HP utama, maks 1x/6 jam per jenis (anti-spam)
     alert: async (msg, kind) => {
       const last = alerts[kind] || 0; if (Date.now() - last < 6 * 3600e3) return;

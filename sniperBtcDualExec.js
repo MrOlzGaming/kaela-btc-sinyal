@@ -55,6 +55,7 @@ const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, form
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
 const { updateOrder } = require('./sniperOrders');
+const { startRetry, retryStep, priceStillValid, retryNote } = require('./realRetry');
 
 const CONFIG_PATH = path.join(__dirname, 'sniper-btc-dual-exec-config.json');
 const JOURNAL_PATH = path.join(__dirname, 'sniper-btc-dual-exec-journal.json');
@@ -195,48 +196,51 @@ async function _ensureAccountClear(exec, mode) {
 // sniperAutoAnalysis.js) -- modul ini gak deteksi/nyimpen shadow record sendiri, cuma nambahin
 // eksekusi live-nya. `order.direction`('buy'/'sell'), `order.sl`, `order.tp`(=partialTp target 2R
 // yang UDAH dihitung caller), `order.id`/`signalId`/`patternType`/`mode` dipakai apa adanya.
+// Buka 1 leg (demo/real) -- level modul sejak 12 Okt 2026 biar leg REAL yang gagal (saldo kurang) bisa dicoba ulang dari monitor.
+async function openSniperLeg(exec, mode, order, livePrice, cfg) {
+  const balance = await exec.getAccountBalance(MARGIN_ASSET).catch(() => 0);
+  const calc = hitungExposure({ modal: balance || 0, entry: livePrice, stopLoss: order.sl, direction: order.direction });
+  if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal, bukan skip diam
+    const info = await exec.getSymbolInfo(SYMBOL).catch(() => null);
+    const minN = (info && info.minNotionalUsd) || 100;
+    if (!(calc.nilaiPosisi >= minN)) throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: livePrice, stopLoss: order.sl, direction: order.direction }, minNotionalUsd: minN }) });
+  }
+  if (calc.nilaiPosisi <= 0) return null;
+  // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
+  // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi aman.
+  if ((await _ensureAccountClear(exec, mode)) === 'unsafe') {
+    console.log(`[SniperBtcDual] Akun ${mode} belum dipastikan bersih -- skip leg ${mode} siklus ini demi aman.`);
+    return null;
+  }
+  await exec.setLeverage(SYMBOL, calc.leverage).catch(() => {});
+  const entryOrder = await exec.placeMarketEntry({ symbol: SYMBOL, direction: order.direction, notionalUsd: calc.nilaiPosisi, livePrice });
+  const filledQty = parseFloat(entryOrder.executedQty);
+  const entryPrice = parseFloat(entryOrder.avgPrice);
+  try {
+    await exec.placeStopLoss({ symbol: SYMBOL, direction: order.direction, stopPrice: order.sl, quantity: filledQty });
+  } catch (slErr) {
+    console.log(`[SniperBtcDual] (${mode}) SL GAGAL nempel (${slErr.message}) -- posisi udah masuk, tutup PAKSA demi keamanan.`);
+    await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: order.direction, quantity: filledQty }).catch(() => {});
+    throw new Error(`Entry (${mode}) masuk tapi SL gagal nempel (${slErr.message}) -- UDAH DITUTUP PAKSA otomatis.`);
+  }
+  const { stepSize, quantityPrecision } = await exec.getSymbolInfo(SYMBOL);
+  const halfQty = binanceExecutorDefault.roundToStepSize(filledQty * PARTIAL_FRAC, stepSize, quantityPrecision); // nama var lama dipertahanin, isinya sekarang 1/3
+  // (3 Okt 2026) mode TRAILING aturan Olan (cfg.trailR, default 3): GAK pasang TP -- profit dikunci SL yang ngikut naik.
+  const trailR = cfg.trailR !== undefined ? cfg.trailR : 3;
+  if (!(trailR > 0)) await exec.placeTakeProfit({ symbol: SYMBOL, direction: order.direction, tpPrice: order.tp, quantity: halfQty > 0 ? halfQty : filledQty });
+  return {
+    trailR: trailR > 0 ? trailR : null, currentSl: order.sl, peak: entryPrice, slNativeOk: true,
+    entryPrice, qty: filledQty, leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
+    openedAt: new Date().toISOString(), partialDone: false, partialPnlUsd: 0, leg2: null, closedAt: null, exitPrice: null, pnlUsd: null,
+  };
+}
+
 async function openSniperBtcDual({ order, livePrice }) {
   const cfg = loadConfig();
   const journal = loadJournal();
   if (journal.orders[order.id]) { console.log(`[SniperBtcDual] Order ${order.id} udah ada di journal, skip (harusnya gak kejadian).`); return; }
 
-  async function openLeg(exec, mode) {
-    const balance = await exec.getAccountBalance(MARGIN_ASSET).catch(() => 0);
-    const calc = hitungExposure({ modal: balance || 0, entry: livePrice, stopLoss: order.sl, direction: order.direction });
-    if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal, bukan skip diam
-      const info = await exec.getSymbolInfo(SYMBOL).catch(() => null);
-      const minN = (info && info.minNotionalUsd) || 100;
-      if (!(calc.nilaiPosisi >= minN)) throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: livePrice, stopLoss: order.sl, direction: order.direction }, minNotionalUsd: minN }) });
-    }
-    if (calc.nilaiPosisi <= 0) return null;
-    // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
-    // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi aman.
-    if ((await _ensureAccountClear(exec, mode)) === 'unsafe') {
-      console.log(`[SniperBtcDual] Akun ${mode} belum dipastikan bersih -- skip leg ${mode} siklus ini demi aman.`);
-      return null;
-    }
-    await exec.setLeverage(SYMBOL, calc.leverage).catch(() => {});
-    const entryOrder = await exec.placeMarketEntry({ symbol: SYMBOL, direction: order.direction, notionalUsd: calc.nilaiPosisi, livePrice });
-    const filledQty = parseFloat(entryOrder.executedQty);
-    const entryPrice = parseFloat(entryOrder.avgPrice);
-    try {
-      await exec.placeStopLoss({ symbol: SYMBOL, direction: order.direction, stopPrice: order.sl, quantity: filledQty });
-    } catch (slErr) {
-      console.log(`[SniperBtcDual] (${mode}) SL GAGAL nempel (${slErr.message}) -- posisi udah masuk, tutup PAKSA demi keamanan.`);
-      await exec.emergencyCloseMarket({ symbol: SYMBOL, direction: order.direction, quantity: filledQty }).catch(() => {});
-      throw new Error(`Entry (${mode}) masuk tapi SL gagal nempel (${slErr.message}) -- UDAH DITUTUP PAKSA otomatis.`);
-    }
-    const { stepSize, quantityPrecision } = await exec.getSymbolInfo(SYMBOL);
-    const halfQty = binanceExecutorDefault.roundToStepSize(filledQty * PARTIAL_FRAC, stepSize, quantityPrecision); // nama var lama dipertahanin, isinya sekarang 1/3
-    // (3 Okt 2026) mode TRAILING aturan Olan (cfg.trailR, default 3): GAK pasang TP -- profit dikunci SL yang ngikut naik.
-    const trailR = cfg.trailR !== undefined ? cfg.trailR : 3;
-    if (!(trailR > 0)) await exec.placeTakeProfit({ symbol: SYMBOL, direction: order.direction, tpPrice: order.tp, quantity: halfQty > 0 ? halfQty : filledQty });
-    return {
-      trailR: trailR > 0 ? trailR : null, currentSl: order.sl, peak: entryPrice, slNativeOk: true,
-      entryPrice, qty: filledQty, leverage: calc.leverage, marginUsd: calc.margin, nilaiPosisi: calc.nilaiPosisi,
-      openedAt: new Date().toISOString(), partialDone: false, partialPnlUsd: 0, leg2: null, closedAt: null, exitPrice: null, pnlUsd: null,
-    };
-  }
+  const openLeg = (exec, mode) => openSniperLeg(exec, mode, order, livePrice, cfg);
 
   let demoResult = null;
   try {
@@ -250,6 +254,7 @@ async function openSniperBtcDual({ order, livePrice }) {
   if (!demoResult) return;
 
   let realResult = null;
+  let realRetry = null; // (12 Okt 2026) leg real gagal saldo -> dicoba ulang monitor s/d 2x24 jam
   let wibowoRoute = 'demo';
   if (cfg.allowReal === true) {
     const realExec = execFor('real');
@@ -259,10 +264,8 @@ async function openSniperBtcDual({ order, livePrice }) {
         if (realResult) wibowoRoute = 'real';
       } catch (e) {
         if (isInsufficientBalanceError(e.message)) {
-          const alertKey = 'sniper-btc-dual-real';
-          if (shouldAlertInsufficientBalance(alertKey)) {
-            await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Sniper BTC (Real)', assetLabel: ASSET_LABEL, direction: order.direction, entry: livePrice, tp: order.tp, details: e.details ? { ...e.details, exchange: 'Binance' } : null })).catch(() => {});
-          }
+          realRetry = startRetry();
+          await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Sniper BTC (Real)', assetLabel: ASSET_LABEL, direction: order.direction, entry: livePrice, tp: order.tp, details: e.details ? { ...e.details, exchange: 'Binance' } : null, extraNote: retryNote(realRetry, 1) })).catch(() => {});
           console.log('[SniperBtcDual] Real skip -- saldo kurang.');
         } else {
           console.log('[SniperBtcDual] Real gagal (BUKAN saldo kurang -- perlu dicek):', e.message);
@@ -274,7 +277,7 @@ async function openSniperBtcDual({ order, livePrice }) {
   journal.orders[order.id] = {
     signalId: order.signalId, direction: order.direction, sl: order.sl, tp: order.tp,
     patternType: order.patternType, mode: order.mode, wibowoRoute,
-    demo: demoResult, real: realResult,
+    demo: demoResult, real: realResult, realRetry,
   };
   saveJournal(journal);
   // (3 Okt 2026) catat ke jurnal Kaela Access (dashboard) -- sebelumnya modul ini gak nyatet sama sekali
@@ -364,6 +367,35 @@ async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
 }
 
 // ============ Monitor + tutup posisi -- dipanggil 1x per siklus ============
+// (12 Okt 2026) coba ulang leg REAL yang gagal saldo -- tiap siklus monitor, s/d 2x24 jam, notif grup hari-1 (pas gagal) & hari-2.
+async function _retrySniperReal(orderId, o) {
+  const cfg = loadConfig();
+  if (cfg.allowReal !== true) return;
+  const exec = execFor('real'); if (!exec) return;
+  const live = await fetchLivePrice('real').catch(() => null);
+  if (!priceStillValid({ direction: o.direction, entry: o.demo.entryPrice, sl: o.sl, live })) {
+    o.realRetry.expired = true; o.realRetry.reason = 'harga udah lari / kena SL';
+    console.log(`[SniperBtcDual] ${orderId}: coba ulang real dihentiin -- harga ${live} udah gak layak buat masuk (entry demo ${o.demo.entryPrice}, SL ${o.sl}).`);
+    return;
+  }
+  const step = retryStep(o.realRetry);
+  if (step.expired) { console.log(`[SniperBtcDual] ${orderId}: 2x24 jam lewat, saldo real masih kurang -- berhenti nyoba (silent).`); return; }
+  try {
+    const leg = await openSniperLeg(exec, 'real', { direction: o.direction, sl: o.sl, tp: o.tp }, live, cfg);
+    if (!leg) return;
+    o.real = leg; o.wibowoRoute = 'real'; o.realRetry.doneAt = Date.now();
+    console.log(`[SniperBtcDual] ${orderId}: leg REAL akhirnya kebuka @ ${leg.entryPrice} (coba ke-${o.realRetry.tries}).`);
+    await kaelaJournalHook.recordOpen('real', { entryId: `${orderId}-real`, strategy: 'sniper', direction: o.direction, entryPrice: leg.entryPrice, sl: o.sl, tp: null, leverage: leg.leverage, marginUsd: leg.marginUsd, note: `Sniper BTC · ${kaelaJournalHook.patternLabel(o.patternType)} (nyusul setelah saldo masuk)` }).catch(() => {});
+    const cfgTp = (cfg.trailR !== undefined ? cfg.trailR : 3) > 0 ? null : o.tp;
+    const msg = formatAutoOpen({ id: orderId, signalId: o.signalId, direction: o.direction, sl: o.sl, tp: cfgTp, patternType: o.patternType, mode: o.mode, assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice, marginUsd: leg.marginUsd, leverage: leg.leverage, nilaiPosisi: leg.nilaiPosisi, reasonText: `Sinyal yang sama dengan posisi Demo -- leg Real NYUSUL begitu saldo masuk (coba ulang ke-${o.realRetry.tries}).` }, new Date(), '', false, null, '', null, badge(), SYSTEM_LABEL.SNIPER);
+    await sendWhatsAppToWibowo(msg).catch((e) => console.log('[SniperBtcDual] Gagal kirim Wibowo (real nyusul):', e.message));
+  } catch (e) {
+    if (isInsufficientBalanceError(e.message)) {
+      if (step.alert) await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Sniper BTC (Real)', assetLabel: ASSET_LABEL, direction: o.direction, entry: live, tp: o.tp, details: e.details ? { ...e.details, exchange: 'Binance' } : null, extraNote: retryNote(o.realRetry, step.day) })).catch(() => {});
+    } else console.log(`[SniperBtcDual] ${orderId}: coba ulang real gagal (BUKAN saldo kurang -- perlu dicek): ${e.message}`);
+  }
+}
+
 async function monitorSniperBtcDual({ idrRate } = {}) {
   const journal = loadJournal();
   let touched = false;
@@ -381,6 +413,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
   }
 
   for (const [orderId, o] of Object.entries(journal.orders)) {
+    if (!o.real && o.realRetry && !o.realRetry.expired && o.demo && !o.demo.closedAt) { await _retrySniperReal(orderId, o); touched = true; }
     const activeLegs = ['demo', 'real'].filter((m) => o[m] && !o[m].closedAt);
     if (activeLegs.length === 0) {
       // (5 Okt 2026, audit sinkron web) catatan order di sniper-orders.json (dibaca web/Kaela Access) dulu GAK PERNAH ditutup modul

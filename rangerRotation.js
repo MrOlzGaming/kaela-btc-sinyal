@@ -27,6 +27,7 @@ const { sma } = require('./technicalAnalysis');
 const { detectPatternSignal } = require('./chartPatterns');
 const { detectFvgSignal } = require('./fvgDetector');
 const { hitung: hitungExposure } = require('./calculator');
+const { startRetry, retryStep, priceStillValid, retryNote } = require('./realRetry');
 const { isBtcBearWindow } = require('./halvingBearWindow');
 const { nextSignalId, dayKeyOf } = require('./signalIdGenerator');
 // Diambil LANGSUNG dari Ranger live (bukan salinan) biar gak pernah beda kalau Ranger diubah. main() file itu ter-guard.
@@ -118,9 +119,30 @@ function createRotation(deps) {
     return (o && Number(o.avgPrice)) || null;
   }
 
+  // (12 Okt 2026) coba ulang leg REAL yang gagal saldo (s/d 2x24 jam, selama demo kebuka & harga masih layak)
+  async function retryReal(f) {
+    if (!cfg.allowReal || !deps.legs.real) return;
+    const live = await deps.legs.demo.price(f.coin).catch(() => null);
+    if (!priceStillValid({ direction: f.direction, entry: f.legs.demo.entryPrice, sl: f.sl, live })) { f.realRetry.expired = true; f.realRetry.reason = 'harga udah lari / kena SL'; log(`${f.coin} coba ulang real dihentiin -- harga ${live} udah gak layak`); return; }
+    const step = retryStep(f.realRetry, now());
+    if (step.expired) { log(`${f.coin} 2x24 jam lewat, saldo real masih kurang -- berhenti nyoba (silent)`); return; }
+    try {
+      const real = await openLeg('real', f.coin, { direction: f.direction, sl: f.sl }, live);
+      f.legs.real = real; f.wibowoRoute = 'real'; f.realRetry.doneAt = now();
+      if (deps.kaelaJournal) deps.kaelaJournal.record('real', { entryId: `${f.id}-real`, strategy: 'ranger-rotasi', asset: f.coin.toLowerCase(), direction: f.direction, entryPrice: real.entryPrice, sl: f.sl, tp: f.partialTp, leverage: real.leverage, marginUsd: real.margin, status: 'open', openedAt: new Date(now()).toISOString(), note: `ranger-rotasi ${f.patternType} (nyusul setelah saldo masuk)`, exchange: cfg.exchange });
+      await announce(f, 'real', deps.fmt.open(f, 'real'));
+      log(`${f.coin} leg REAL akhirnya kebuka @ ${real.entryPrice} (coba ke-${f.realRetry.tries})`);
+    } catch (e) {
+      const kurang = e.insufficient || /kekecilan|Quantity kehitung 0|min(imum)? (order|notional)/i.test(e.message);
+      if (kurang) { if (step.alert && deps.balanceAlert) await deps.balanceAlert({ strategy: 'Ranger Rotasi (Real)', assetLabel: `${f.coin}USDT`, direction: f.direction, entry: live, sl: f.sl, details: e.details ? { ...e.details, exchange: 'Bybit' } : null, extraNote: retryNote(f.realRetry, step.day) }); }
+      else log(`${f.coin} coba ulang real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`);
+    }
+  }
+
   async function monitor() {
     const f = j.floating;
     if (!f) return;
+    if (!f.legs.real && f.realRetry && !f.realRetry.expired && f.legs.demo && !f.legs.demo.closedAt) await retryReal(f);
     const isLong = f.direction === 'buy';
     const bearNow = deps.isBear(new Date(now()));
     const wrongSide = (isLong && bearNow) || (!isLong && !bearNow);
@@ -247,15 +269,18 @@ function createRotation(deps) {
     let demo;
     try { demo = await openLeg('demo', coin, sig, live); }
     catch (e) { log(`${coin} demo gak kebuka: ${e.message} -- lewati koin ini`); return false; }
-    let real = null;
+    let real = null, realRetry = null;
     if (cfg.allowReal && deps.legs.real) {
       try { real = await openLeg('real', coin, sig, live); }
       // qty 0 / notional di bawah minimum exchange = saldo kurang juga (6 Okt 2026: saldo real $0 ke-log "BUKAN saldo kurang")
       catch (e) {
         const kurang = e.insufficient || /kekecilan|Quantity kehitung 0|min(imum)? (order|notional)/i.test(e.message);
         log(kurang ? `${coin} real skip (saldo kurang buat ukuran minimum) -- ${e.message}` : `${coin} real gagal (BUKAN saldo kurang, perlu dicek): ${e.message}`);
-        // (12 Okt 2026) notif saldo kurang + saldo minimal, maks 1x/hari -- deps.balanceAlert cuma dipasang di produksi (selftest gak nyentuh state)
-        if (kurang && deps.balanceAlert) await deps.balanceAlert({ strategy: 'Ranger Rotasi (Real)', assetLabel: `${coin}USDT`, direction: sig.direction, entry: live, sl: sig.sl, details: e.details ? { ...e.details, exchange: 'Bybit' } : null });
+        // (12 Okt 2026) saldo kurang -> notif grup + coba ulang tiap siklus s/d 2x24 jam (realRetry.js). deps.balanceAlert cuma di produksi.
+        if (kurang) {
+          realRetry = startRetry(now());
+          if (deps.balanceAlert) await deps.balanceAlert({ strategy: 'Ranger Rotasi (Real)', assetLabel: `${coin}USDT`, direction: sig.direction, entry: live, sl: sig.sl, details: e.details ? { ...e.details, exchange: 'Bybit' } : null, extraNote: retryNote(realRetry, 1) });
+        }
       }
     }
     const d = new Date(now());
@@ -266,7 +291,7 @@ function createRotation(deps) {
       id: `ranger-rotasi-${now()}`, signalId, coin, direction: sig.direction, patternType: sig.patternType, sl: sig.sl,
       // koin trailing (cfg.trailRByCoin) gak punya TP tetap -> null (pesan WA nampilin 'TP: trailing')
       partialTp: (cfg.trailRByCoin || {})[coin] ? null : (sig.direction === 'buy' ? demo.entryPrice + r * PARTIAL_RR : demo.entryPrice - r * PARTIAL_RR),
-      openedAt: d.toISOString(), wibowoRoute: real ? 'real' : 'demo', exchange: cfg.exchange, legs: { demo, real },
+      openedAt: d.toISOString(), wibowoRoute: real ? 'real' : 'demo', exchange: cfg.exchange, legs: { demo, real }, realRetry,
     };
     j.floating = f;
     if (real && deps.kaelaJournal) deps.kaelaJournal.record('real', { entryId: `${f.id}-real`, strategy: 'ranger-rotasi', asset: coin.toLowerCase(), direction: f.direction, entryPrice: real.entryPrice, sl: f.sl, tp: f.partialTp, leverage: real.leverage, marginUsd: real.margin, status: 'open', openedAt: f.openedAt, note: `ranger-rotasi ${f.patternType}`, exchange: cfg.exchange });
@@ -394,7 +419,7 @@ async function main() {
   const rot = createRotation({
     cfg, journal, legs: venues.legs, symbolOf: venues.symbolOf,
     fetchCandles: fetchCandles4h,
-    balanceAlert: async (a) => { const { shouldAlertInsufficientBalance, formatInsufficientBalanceAlert } = require('./balanceAlert'); if (shouldAlertInsufficientBalance('ranger-rotasi-real')) await sendWhatsAppToWibowo(formatInsufficientBalanceAlert(a)).catch((e) => console.log('[RangerRotasi] WA saldo kurang gagal:', e.message)); },
+    balanceAlert: async (a) => { const { formatInsufficientBalanceAlert } = require('./balanceAlert'); await sendWhatsAppToWibowo(formatInsufficientBalanceAlert(a)).catch((e) => console.log('[RangerRotasi] WA saldo kurang gagal:', e.message)); }, // jadwal notif diatur realRetry (hari-1 & hari-2)
     notify: {
       sniperClub: (m) => sendWhatsAppToSniperClub(toSniperClubLink(m)).catch((e) => console.log('[RangerRotasi] WA Sniper Club gagal:', e.message)),
       wibowo: (m) => sendWhatsAppToWibowo(m).catch((e) => console.log('[RangerRotasi] WA Wibowo gagal:', e.message)),

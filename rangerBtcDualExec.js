@@ -43,6 +43,7 @@ const { hitung: hitungExposure } = require('./calculator');
 const binanceExecutorDefault = require('./binanceExecutor');
 const { isBtcBearWindow, isBtcApproachingWindowFlip } = require('./halvingBearWindow');
 const { isInsufficientBalanceError, formatInsufficientBalanceAlert, shouldAlertInsufficientBalance, minBalanceForNotional, insufficientBalanceError } = require('./balanceAlert');
+const { startRetry, retryStep, priceStillValid, retryNote } = require('./realRetry');
 const { CLOSE_REASON_LABEL, KAELA_ACCESS_URL, EXCHANGE_BADGE, SYSTEM_LABEL, formatAutoOpen, formatAutoPartial, formatAutoClosed, formatAutoClosedUntracked, formatManualOpenAutoClosed, formatWinRateLines, toSniperClubLink } = require('./darkKaelaLog');
 const { sendWhatsAppToSniperClub } = require('./fonnte');
 const { sendWhatsAppToWibowo } = require('./wibowoNotify');
@@ -210,6 +211,36 @@ async function _ensureAccountClear(exec, mode) {
 // ============ Buka posisi (2 leg) ============
 // `sig` = { direction:'buy'|'sell', sl, patternType } -- HASIL DETEKSI YANG UDAH LOLOS filter
 // window/DXY di rangerAutoTrader.js (modul ini gak deteksi/filter ulang apa-apa).
+// Buka 1 leg (demo/real) -- level modul sejak 12 Okt 2026 biar leg REAL yang gagal (saldo kurang) bisa dicoba ulang dari monitor.
+async function openRangerLeg(exec, mode, sig, livePrice, slotKey) {
+  const balance = await exec.getAccountBalance(MARGIN_ASSET).catch(() => 0);
+  const modal = (balance || 0) * MODAL_ACTIVE_FRACTION;
+  const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
+  if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal, bukan skip diam
+    const info = await exec.getSymbolInfo(SYMBOL).catch(() => null);
+    const minN = (info && info.minNotionalUsd) || 50;
+    if (!(calc.nilaiPosisi >= minN)) throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: livePrice, stopLoss: sig.sl, direction: sig.direction }, minNotionalUsd: minN, activeFraction: MODAL_ACTIVE_FRACTION }) });
+  }
+  if (calc.nilaiPosisi <= 0) return null;
+  // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
+  // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi
+  // aman, SAMA kayak sebelumnya.
+  if ((await _ensureAccountClear(exec, mode)) === 'unsafe') {
+    console.log(`[RangerBtcDual/${slotKey}] Akun ${mode} belum dipastikan bersih -- skip leg ${mode} siklus ini demi aman.`);
+    return null;
+  }
+  await exec.setIsolatedMargin(SYMBOL).catch(() => {});
+  await exec.setLeverage(SYMBOL, calc.leverage).catch(() => {});
+  const entryOrder = await exec.placeMarketEntry({ symbol: SYMBOL, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice });
+  const qty = parseFloat(entryOrder.executedQty);
+  const entryPrice = parseFloat(entryOrder.avgPrice);
+  // refEntryPrice/venueGapPct (6 Okt 2026, review Olan: demo Binance kebuka $85.910 padahal harga pasar asli ~$85.520 --
+  // order book TESTNET Binance beda sendiri, +0,46%). Dicatat biar hasil demo bisa dinilai jujur (bukan dari harga palsu).
+  const venueGapPct = livePrice ? (entryPrice - livePrice) / livePrice * 100 : null;
+  if (venueGapPct !== null && Math.abs(venueGapPct) >= 0.2) console.log(`[RangerBtcDual/${slotKey}] ⚠️ ${mode} kebuka ${venueGapPct.toFixed(2)}% dari harga pasar asli (${livePrice}) -- harga venue ${mode} melenceng.`);
+  return { entryPrice, qty, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, currentSl: sig.sl, partialDone: false, remainingFraction: 1, realizedPnlUsd: 0, refEntryPrice: livePrice, venueGapPct };
+}
+
 async function openRangerBtcDual({ sig, livePrice }) {
   const cfg = loadConfig();
   const slotKey = slotKeyFor(sig.patternType);
@@ -226,34 +257,7 @@ async function openRangerBtcDual({ sig, livePrice }) {
   if (riskDistance === 0) { console.log(`[RangerBtcDual/${slotKey}] riskDistance 0, skip.`); return; }
   const partialTp = sig.direction === 'buy' ? livePrice + riskDistance * PARTIAL_RR : livePrice - riskDistance * PARTIAL_RR;
 
-  async function openLeg(exec, mode) {
-    const balance = await exec.getAccountBalance(MARGIN_ASSET).catch(() => 0);
-    const modal = (balance || 0) * MODAL_ACTIVE_FRACTION;
-    const calc = hitungExposure({ modal, entry: livePrice, stopLoss: sig.sl, direction: sig.direction });
-    if (mode === 'real') { // (12 Okt 2026) saldo kurang -> notif + saldo minimal, bukan skip diam
-      const info = await exec.getSymbolInfo(SYMBOL).catch(() => null);
-      const minN = (info && info.minNotionalUsd) || 50;
-      if (!(calc.nilaiPosisi >= minN)) throw insufficientBalanceError({ balance, notional: calc.nilaiPosisi, minNotionalUsd: minN, minBalance: minBalanceForNotional({ calcArgs: { entry: livePrice, stopLoss: sig.sl, direction: sig.direction }, minNotionalUsd: minN, activeFraction: MODAL_ACTIVE_FRACTION }) });
-    }
-    if (calc.nilaiPosisi <= 0) return null;
-    // Akun bersih -- posisi manual/nyasar DITUTUP PAKSA (kebijakan Olan, lihat _ensureAccountClear),
-    // bukan cuma di-skip. 'unsafe' (punya Kaela sendiri/gak bisa dipastikan) -- skip leg ini demi
-    // aman, SAMA kayak sebelumnya.
-    if ((await _ensureAccountClear(exec, mode)) === 'unsafe') {
-      console.log(`[RangerBtcDual/${slotKey}] Akun ${mode} belum dipastikan bersih -- skip leg ${mode} siklus ini demi aman.`);
-      return null;
-    }
-    await exec.setIsolatedMargin(SYMBOL).catch(() => {});
-    await exec.setLeverage(SYMBOL, calc.leverage).catch(() => {});
-    const entryOrder = await exec.placeMarketEntry({ symbol: SYMBOL, direction: sig.direction, notionalUsd: calc.nilaiPosisi, livePrice });
-    const qty = parseFloat(entryOrder.executedQty);
-    const entryPrice = parseFloat(entryOrder.avgPrice);
-    // refEntryPrice/venueGapPct (6 Okt 2026, review Olan: demo Binance kebuka $85.910 padahal harga pasar asli ~$85.520 --
-    // order book TESTNET Binance beda sendiri, +0,46%). Dicatat biar hasil demo bisa dinilai jujur (bukan dari harga palsu).
-    const venueGapPct = livePrice ? (entryPrice - livePrice) / livePrice * 100 : null;
-    if (venueGapPct !== null && Math.abs(venueGapPct) >= 0.2) console.log(`[RangerBtcDual/${slotKey}] ⚠️ ${mode} kebuka ${venueGapPct.toFixed(2)}% dari harga pasar asli (${livePrice}) -- harga venue ${mode} melenceng.`);
-    return { entryPrice, qty, leverage: calc.leverage, margin: calc.margin, nilaiPosisi: calc.nilaiPosisi, currentSl: sig.sl, partialDone: false, remainingFraction: 1, realizedPnlUsd: 0, refEntryPrice: livePrice, venueGapPct };
-  }
+  const openLeg = (exec, mode) => openRangerLeg(exec, mode, sig, livePrice, slotKey);
 
   let demoResult = null;
   try {
@@ -267,6 +271,7 @@ async function openRangerBtcDual({ sig, livePrice }) {
   if (!demoResult) return;
 
   let realResult = null;
+  let realRetry = null; // (12 Okt 2026) leg real gagal saldo -> dicoba ulang monitor s/d 2x24 jam
   let wibowoRoute = 'demo';
   if (cfg.allowReal === true) {
     const realExec = execFor('real');
@@ -276,10 +281,8 @@ async function openRangerBtcDual({ sig, livePrice }) {
         if (realResult) wibowoRoute = 'real';
       } catch (e) {
         if (isInsufficientBalanceError(e.message)) {
-          const alertKey = 'ranger-btc-dual-real';
-          if (shouldAlertInsufficientBalance(alertKey)) {
-            await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Ranger BTC (Real)', assetLabel: ASSET_LABEL, direction: sig.direction, entry: livePrice, tp: partialTp, details: e.details ? { ...e.details, exchange: 'Binance' } : null })).catch(() => {});
-          }
+          realRetry = startRetry();
+          await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Ranger BTC (Real)', assetLabel: ASSET_LABEL, direction: sig.direction, entry: livePrice, tp: partialTp, details: e.details ? { ...e.details, exchange: 'Binance' } : null, extraNote: retryNote(realRetry, 1) })).catch(() => {});
           console.log(`[RangerBtcDual/${slotKey}] Real skip -- saldo kurang.`);
         } else {
           console.log(`[RangerBtcDual/${slotKey}] Real gagal (BUKAN saldo kurang -- perlu dicek):`, e.message);
@@ -295,7 +298,7 @@ async function openRangerBtcDual({ sig, livePrice }) {
     // (3 Okt 2026) trailR dikunci per posisi pas entry -- posisi lama (tanpa field ini) tetap aturan partial+SMA lama
     trailR: cfg.trailR !== undefined ? cfg.trailR : 3,
     manualReason: sig.manualReason || null, triggeredAt: new Date().toISOString(),
-    demo: demoResult, real: realResult,
+    demo: demoResult, real: realResult, realRetry,
   };
   saveJournal(journal);
   // (3 Okt 2026) catat ke jurnal Kaela Access (dashboard) -- sebelumnya modul ini gak nyatet sama sekali
@@ -369,7 +372,37 @@ async function monitorRangerBtcDual({ idrRate } = {}) {
   if (touched) saveJournal(journal);
 }
 
+// (12 Okt 2026) coba ulang leg REAL yang gagal saldo -- tiap siklus monitor, s/d 2x24 jam, notif grup hari-1 (pas gagal) & hari-2.
+async function _retryRangerReal(slotKey, f) {
+  const cfg = loadConfig();
+  if (cfg.allowReal !== true) return;
+  const exec = execFor('real'); if (!exec) return;
+  const live = await fetchLivePrice('real').catch(() => null);
+  if (!priceStillValid({ direction: f.direction, entry: f.demo.entryPrice, sl: f.sl, live })) {
+    f.realRetry.expired = true; f.realRetry.reason = 'harga udah lari / kena SL';
+    console.log(`[RangerBtcDual/${slotKey}] coba ulang real dihentiin -- harga ${live} udah gak layak (entry demo ${f.demo.entryPrice}, SL ${f.sl}).`);
+    return;
+  }
+  const step = retryStep(f.realRetry);
+  if (step.expired) { console.log(`[RangerBtcDual/${slotKey}] 2x24 jam lewat, saldo real masih kurang -- berhenti nyoba (silent).`); return; }
+  try {
+    const leg = await openRangerLeg(exec, 'real', { direction: f.direction, sl: f.sl }, live, slotKey);
+    if (!leg) return;
+    f.real = leg; f.wibowoRoute = 'real'; f.realRetry.doneAt = Date.now();
+    console.log(`[RangerBtcDual/${slotKey}] leg REAL akhirnya kebuka @ ${leg.entryPrice} (coba ke-${f.realRetry.tries}).`);
+    await kaelaJournalHook.recordOpen('real', { entryId: `${f.id}-real`, strategy: 'nyopet', direction: f.direction, entryPrice: leg.entryPrice, sl: f.sl, tp: null, leverage: leg.leverage, marginUsd: leg.margin, note: `Ranger BTC · ${kaelaJournalHook.patternLabel(f.patternType)} (nyusul setelah saldo masuk)` }).catch(() => {});
+    const trailOn = (f.trailR !== undefined ? f.trailR : 3) > 0;
+    const msg = formatAutoOpen({ id: f.id, signalId: f.signalId, direction: f.direction, sl: f.sl, tp: trailOn ? null : f.partialTp, patternType: f.patternType, mode: f.patternType, manualReason: f.manualReason, assetLabel: ASSET_LABEL, entryPrice: leg.entryPrice, marginUsd: leg.margin, leverage: leg.leverage, nilaiPosisi: leg.nilaiPosisi, reasonText: `Sinyal yang sama dengan posisi Demo -- leg Real NYUSUL begitu saldo masuk (coba ulang ke-${f.realRetry.tries}).` }, new Date(), '', false, null, '', null, badge(false), SYSTEM_LABEL.RANGER);
+    await sendWhatsAppToWibowo(msg).catch((e) => console.log(`[RangerBtcDual/${slotKey}] Gagal kirim Wibowo (real nyusul):`, e.message));
+  } catch (e) {
+    if (isInsufficientBalanceError(e.message)) {
+      if (step.alert) await sendWhatsAppToWibowo(formatInsufficientBalanceAlert({ strategy: 'Ranger BTC (Real)', assetLabel: ASSET_LABEL, direction: f.direction, entry: live, tp: f.partialTp, details: e.details ? { ...e.details, exchange: 'Binance' } : null, extraNote: retryNote(f.realRetry, step.day) })).catch(() => {});
+    } else console.log(`[RangerBtcDual/${slotKey}] coba ulang real gagal (BUKAN saldo kurang -- perlu dicek): ${e.message}`);
+  }
+}
+
 async function monitorOneSlot(slotKey, slot, f, idrRate) {
+  if (!f.real && f.realRetry && !f.realRetry.expired && f.demo && !f.demo.closedAt) await _retryRangerReal(slotKey, f);
   const sig = { direction: f.direction, sl: f.sl };
   const activeLegs = ['demo', 'real'].filter((m) => f[m] && !f[m].closedAt);
   if (activeLegs.length === 0) { archiveSlot(slot, f); return; }

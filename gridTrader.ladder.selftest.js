@@ -124,6 +124,19 @@ test('saldo lewat batas $1.000 -> grid pakai $1.000, Olan dikabarin lebihnya (se
   await runOnce(h.deps); assert(h.st.alerts.filter((m) => /lewat batas/.test(m)).length === 1);
 });
 
+test('SALDO KURANG (12 Okt): notif ke GRUP hari-1 & hari-2 doang, Farmer tetap nyoba terus; saldo masuk hari ke-4 -> tangga tetap kebuka', async () => {
+  const h = harness({ wallet: 94 }); h.deps.cfg = { ...CFG, farmerBalanceMode: 'manual', manualTotalUsd: 940, maxCapUsd: 1000 }; h.st.px = 83033;
+  const group = []; h.deps.groupAlert = async (m) => group.push(m);
+  let T = 1791700000000; h.deps.now = () => T;
+  await runOnce(h.deps); h.st.px = 66000;
+  for (let hr = 0; hr < 96; hr++) { await runOnce(h.deps); T += 3600e3; }
+  assert.strictEqual(group.filter((m) => /Top up minimal/.test(m)).length, 2, group.join(' | '));
+  assert(/nyoba terus/.test(group[0]) && /Hari ke-2/.test(group[1]));
+  assert(!h.st.alerts.some((m) => /Top up minimal/.test(m)), 'gak lewat DM lagi');
+  h.st.wallet += 100; const r = await runOnce(h.deps);
+  assert(r.bought && r.bought.bet === 2, JSON.stringify(r));
+});
+
 test('cadangan bank: BingX $94 + bank $846 -> tangga 8% x $940; margin kurang -> DM top up, gak order; top up masuk -> tangga kebuka, cadangan berkurang', async () => {
   const h = harness({ wallet: 94 }); h.deps.cfg = { ...CFG, farmerBalanceMode: "manual", manualTotalUsd: 940, maxCapUsd: 1000 }; h.st.px = 83033;
   const r1 = await runOnce(h.deps);

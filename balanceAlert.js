@@ -95,7 +95,7 @@ function insufficientBalanceError({ balance, minBalance, minNotionalUsd, notiona
 }
 
 // { strategy: 'Sniper'|'Nyopet', assetLabel, direction: 'buy'|'sell', entry, tp, sl, details?: { balance, minBalance, minNotionalUsd, exchange } }
-function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry, tp, sl, details }) {
+function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry, tp, sl, details, extraNote }) {
   const dirLabel = direction === 'buy' ? 'LONG' : 'SHORT';
   const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }));
   const levels = [`Arah: *${dirLabel}*`, `Entry sekitar: *$${fmt(entry)}*`];
@@ -108,6 +108,7 @@ function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry
     // (3 Okt 2026, Olan: "ga ada lagi manual") -- gak ngajak buka manual lagi; level cuma buat catatan.
     + `ℹ️ Posisi DEMO tetap jalan otomatis. Level sinyal (catatan, BUKAN ajakan buka manual):\n`
     + levels.map((l) => `- ${l}`).join('\n') + '\n\n'
+    + (extraNote ? `${extraNote}\n\n` : '')
     + `Begitu saldo Real cukup, sinyal berikutnya otomatis jalan di Real juga 🙏`;
 }
 

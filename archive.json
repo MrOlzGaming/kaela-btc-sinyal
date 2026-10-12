@@ -3468,5 +3468,15 @@
     "type": "anomaly",
     "date": "2026-10-12T22:46:02.306Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n📊 Credit Spread (High-Yield): 3.15 -- JAUH DI ATAS kebiasaan historis kita (median 2.70, z-score 6.1)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n📊 Credit Spread (High-Yield)\nIni ngukur seberapa \"takut\" investor pegang obligasi perusahaan yang agak berisiko. MELEBAR jauh dari biasanya -- investor lagi was-was banget soal ekonomi. Histori-nya, pas ini kejadian, BTC & saham SERING ikut kejual bareng (dianggap sama-sama \"aset berisiko\")."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-10-12T23:15:56.093Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-10-13\nHarga sekarang: $82,060.55 (📉 -1.1% dari kemarin)\n⏳ Halving berikutnya: 549 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.61 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.34 (Normal)\n⛏️ Biaya produksi BTC (perkiraan): ~$53rb listrik / ~$74rb all-in -- harga 1,56x biaya listrik, penambang untung tipis-sedang\n   (kisaran listrik $36rb-$92rb tergantung mesin & tarif; hashrate 994 EH/s, ~453 BTC/hari)\n\n💵 DXY: 102.6 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (26 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.44 (normal)\n🛢️ Minyak WTI: $96.2/barel (STABIL)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Whale netflow (24 jam): 🔴 13434 BTC masuk exchange · 🟢 13166 BTC keluar exchange\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-10-12T23:15:56.093Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-10-13\nHarga sekarang: $4,169.28/oz (≈Rp74.602.191) atau $134.05/gram (≈Rp2.398.516) (📉 -0.4% dari kemarin)\n💵 DXY: 102.6 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (26 bps / 90 hari)\n📉 Real Yield 10Y: 2.87% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.44 (normal)\n🛢️ Minyak WTI: $96.2/barel (STABIL)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

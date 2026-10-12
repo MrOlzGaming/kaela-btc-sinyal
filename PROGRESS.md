@@ -15,6 +15,8 @@
 
 ## 📜 LOG (terbaru di atas)
 
+- **12 Okt malam** — 🔔 GAGAL BUKA KARENA SALDO: Sniper BTC/Ranger BTC/Ranger Rotasi dulu skip DIAM kalau saldo real $0 -> sekarang notif GRUP Hedgefund + saldo minimal (kalkulator exposure), coba ulang tiap siklus s/d 2x24 jam (realRetry.js; real nyusul kalau harga masih layak), notif hari-1 & hari-2 doang. 🌾 Farmer: nunggu terus, notif kurang dana pindah ke grup (hari-1 & 2 per tangga). Ninja News: cek kesiapan real nampilin saldo minimal. 🚫 PENJAGA POSISI ASING Bybit (demo+real) & Bitget (real) LIVE (exchangePositionGuard.js) -- semua exchange sekarang dijaga.
+
 - **12 Okt siang** — ⛏️ BIAYA PRODUKSI BTC (ide Olan) masuk laporan harian BTC grup (`minerCost.js`, selftest 4): ~$53rb listrik/~$75rb all-in, harga 1,57x. Cek sejarah: dasar bear 2018/2020/2022 di 1,05-1,24x biaya listrik (zona, bukan sinyal). Patroli lama Channel Breakout dilewatin (spam log).
 
 - **11 Okt malam** — RISET 📈 LONG DCA ETH (`backtest/altLongStudy.js`, data Binance ASLI, jalan mulus) ❌: aturan 3x/-10%/TP 10% gak ada bet aman

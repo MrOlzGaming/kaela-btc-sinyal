@@ -7,6 +7,7 @@
   "bitget": [
     "real"
   ],
-  "dryRun": true,
-  "_note": "12 Okt 2026 -- exchangePositionGuard.js: penutup posisi asing Bybit (demo+real) & Bitget (real), aturan sama bingxPositionGuard (jurnal Kaela / order kaela- / konfirmasi 2x). Olan: \"tiap exchange kasih keamanan biar aku ga buka posisi apapun di futures\". dryRun true = cuma log yang BAKAL ditutup (cek dulu di VPS), ganti false buat beneran nutup."
+  "dryRun": false,
+  "_note": "12 Okt 2026 -- exchangePositionGuard.js: penutup posisi asing Bybit (demo+real) & Bitget (real), aturan sama bingxPositionGuard (jurnal Kaela / order kaela- / konfirmasi 2x). Olan: \"tiap exchange kasih keamanan biar aku ga buka posisi apapun di futures\". dryRun true = cuma log yang BAKAL ditutup (cek dulu di VPS), ganti false buat beneran nutup.",
+  "_live": "12 Okt 2026 21:35 WITA: dryRun dimatiin -- uji di VPS bersih (0 curiga di Bybit demo/real & Bitget real), cron tiap menit jalan."
 }

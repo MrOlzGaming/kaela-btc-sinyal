@@ -113227,5 +113227,86 @@
     "qty": 7.441,
     "notionalUsd": 620628.5106,
     "distPct": 0.07252884506364318
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "BID",
+    "price": 83189.5,
+    "qty": 8.648,
+    "notionalUsd": 719422.796,
+    "distPct": -0.05328360997359345
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "BID",
+    "price": 83175.4,
+    "qty": 9.202,
+    "notionalUsd": 765380.0308,
+    "distPct": -0.07022383321210257
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "BID",
+    "price": 83169.1,
+    "qty": 7.414,
+    "notionalUsd": 616615.7074000001,
+    "distPct": -0.077792869127164
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "BID",
+    "price": 83168.5,
+    "qty": 10.798,
+    "notionalUsd": 898053.463,
+    "distPct": -0.07851372969051151
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "ASK",
+    "price": 83233.9,
+    "qty": 9.378,
+    "notionalUsd": 780567.5142,
+    "distPct": 0.000060071713597723116
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "ASK",
+    "price": 83263.6,
+    "qty": 9.177,
+    "notionalUsd": 764110.0572,
+    "distPct": 0.03574266959896725
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "ASK",
+    "price": 83271.6,
+    "qty": 7.944,
+    "notionalUsd": 661509.5904,
+    "distPct": 0.04535414377684079
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "ASK",
+    "price": 83285.9,
+    "qty": 7.413,
+    "notionalUsd": 617398.3767,
+    "distPct": 0.06253465386977576
+  },
+  {
+    "timestamp": "2026-10-13T14:01:58.139Z",
+    "midPrice": 83233.85,
+    "side": "ASK",
+    "price": 83288.1,
+    "qty": 13.317,
+    "notionalUsd": 1109147.6277,
+    "distPct": 0.06517780926870498
   }
 ]

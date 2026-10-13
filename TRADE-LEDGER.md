@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-13 23:49 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-14 01:06 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -13,9 +13,8 @@ Diperbarui otomatis: 2026-10-13 23:49 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 9 trade, menang 3/9 (33%), bersih -$53.40
 - **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 2 trade, menang 1/2 (50%), bersih +$3.72
 
-## Posisi terbuka (4)
+## Posisi terbuka (3)
 
-- 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX · BTCUSDC LONG @ 82,918.5 (SL ?) sejak 2026-10-11 09:18 WITA
 - 🌾 Farmer · Pola Chart (grid tangga) · Olan Demo · BingX · BTCUSDT LONG @ 82,919.3 (SL ?) sejak 2026-10-11 09:01 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · BTC SHORT @ 85,503.9 (SL 87,661.1) sejak 2026-10-06 12:00 WITA
 - 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · BTC SHORT @ 85,909.5 (SL 86,405.4) sejak ?

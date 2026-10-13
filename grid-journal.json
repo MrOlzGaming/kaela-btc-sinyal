@@ -8,24 +8,27 @@
     "startedAt": 1791681485073,
     "athAtStart": 126199.63,
     "cycleCap": 903.36687605,
-    "anchor": 57.26917605,
+    "anchor": 57.25437605,
     "unit": 54.202012563,
     "putIn": 56.421516000000004,
-    "realized": -0.61277605,
-    "fees": 0.7045760500000001,
+    "realized": -0.0873815300000298,
+    "fees": 0.8459215300000001,
     "bets": 1,
     "liqs": 0,
-    "pos": {
-      "e": 82948.3,
-      "qty": 0.0034,
-      "mg": 56.4048,
-      "liq": 66542.4,
-      "lev": 5
-    },
+    "pos": null,
     "lastE": 82918.5,
     "firstE": 82918.5,
     "waitTopUpSince": null,
-    "guard": null,
+    "guard": {
+      "qty": 0.0034,
+      "liq": 66542.4,
+      "e0": 82948.3,
+      "mg0": 56.4048,
+      "closedPx": 83144.4,
+      "closedPnl": 0.5253945199999702,
+      "at": 1791911043400,
+      "tpPx": 88109.47789777242
+    },
     "guardLog": [
       {
         "at": 1791689166333,
@@ -101,11 +104,11 @@
   "noBalLogAt": 1791667327729,
   "reserveCfg": 846,
   "bankReserve": 846,
-  "lastWallet": 56.6564,
+  "lastWallet": 56.6416,
   "reserveKey": "bank:null:846:2026-10-11T02:35:22.114Z",
   "custody": null,
   "webFunds": {
-    "at": 1791906483646,
+    "at": 1791910383682,
     "mode": "extra",
     "totalUsd": null,
     "extraUsd": 846,
@@ -113,5 +116,12 @@
     "updatedAt": "2026-10-11T02:35:22.114Z",
     "bankUsd": 846
   },
-  "exchange": "bingx"
+  "exchange": "bingx",
+  "fundAlert": {
+    "key": "g:grid-1791681485073",
+    "since": 1791911043400,
+    "sent": [
+      1
+    ]
+  }
 }

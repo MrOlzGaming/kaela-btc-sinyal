@@ -8,7 +8,7 @@
     "startedAt": 1791680468438,
     "athAtStart": 126199.63,
     "cycleCap": 400323.142,
-    "anchor": 400277.55567752005,
+    "anchor": 400275.96637752,
     "unit": 24019.38852,
     "putIn": 24019.38852,
     "realized": -216.30997752000002,
@@ -76,7 +76,7 @@
   "alerts": {},
   "reserveCfg": 0,
   "bankReserve": 0,
-  "lastWallet": 400061.2457,
+  "lastWallet": 400059.6564,
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
   "exchange": "bingx"

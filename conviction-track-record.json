@@ -942,9 +942,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 85497.87,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "turun",
+    "correct": null,
+    "actualChangePct": -4.484158494240852
   },
   {
     "asset": "xau",
@@ -953,9 +954,10 @@
     "verdict": "🔴 Condong Bearish",
     "direction": "bearish",
     "priceAtVerdict": 4171.37,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "turun",
+    "correct": true,
+    "actualChangePct": -1.3659780839388393
   },
   {
     "asset": "btc",
@@ -964,9 +966,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 83237.56,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "turun",
+    "correct": null,
+    "actualChangePct": -1.890432636420389
   },
   {
     "asset": "xau",
@@ -975,9 +978,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 4119.37,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "datar",
+    "correct": null,
+    "actualChangePct": -0.12089227236202535
   },
   {
     "asset": "btc",
@@ -1085,6 +1089,28 @@
     "verdict": "🔴 BEARISH KUAT",
     "direction": "bearish",
     "priceAtVerdict": 4162.52,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "btc",
+    "date": "2026-10-14T23:16:02.677Z",
+    "score": -1,
+    "verdict": "⚪ NETRAL / Campuran",
+    "direction": "netral",
+    "priceAtVerdict": 81664.01,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "xau",
+    "date": "2026-10-14T23:16:02.677Z",
+    "score": -1,
+    "verdict": "🔴 Condong Bearish",
+    "direction": "bearish",
+    "priceAtVerdict": 4114.39,
     "graded": false,
     "actualDirection": null,
     "correct": null

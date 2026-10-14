@@ -72,5 +72,43 @@
     },
     "eurMaxMovePct": -0.00892697732547661,
     "reportSentAt": 1791464403367
+  },
+  {
+    "key": "2026-10-14T08:30",
+    "label": "CPI AS (Sep)",
+    "timeMs": 1791981000000,
+    "eur": {
+      "base": 1.1208,
+      "m1": 1.1174,
+      "m2": 1.1173,
+      "m5": 1.1163,
+      "m10": 1.1153,
+      "m15": 1.115,
+      "m30": 1.1142
+    },
+    "btc": {
+      "base": 83866,
+      "m1": 82912.85,
+      "m2": 83132.41,
+      "m5": 82871.11,
+      "m10": 82839.14,
+      "m15": 82850,
+      "m30": 82753.85
+    },
+    "signal": {
+      "skip": "BTC udah lari 0.58% ke arah sinyal (>= 0.5%) -- lag abis, gak ngejar",
+      "sec": 3
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.10706638115632493,
+    "reportSentAt": 1791982803965
   }
 ]

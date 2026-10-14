@@ -116269,5 +116269,86 @@
     "qty": 8.699,
     "notionalUsd": 717602.2575,
     "distPct": 0.05002956292354573
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "BID",
+    "price": 82828.3,
+    "qty": 8.313,
+    "notionalUsd": 688551.6579000001,
+    "distPct": -0.08004135369410605
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82894.7,
+    "qty": 9.149,
+    "notionalUsd": 758403.6103,
+    "distPct": 0.00006031752351075779
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82908,
+    "qty": 8.959,
+    "notionalUsd": 742772.772,
+    "distPct": 0.01610477877644193
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82925,
+    "qty": 8.899,
+    "notionalUsd": 737949.575,
+    "distPct": 0.03661273676890586
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82925.5,
+    "qty": 8.413,
+    "notionalUsd": 697652.2315,
+    "distPct": 0.03721591200397833
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82931.7,
+    "qty": 8.526,
+    "notionalUsd": 707075.6742,
+    "distPct": 0.04469528491887343
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82931.8,
+    "qty": 36.698,
+    "notionalUsd": 3043431.1964000002,
+    "distPct": 0.04481591996589494
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82945.6,
+    "qty": 7.395,
+    "notionalUsd": 613382.712,
+    "distPct": 0.06146355645389859
+  },
+  {
+    "timestamp": "2026-10-14T13:33:42.503Z",
+    "midPrice": 82894.65,
+    "side": "ASK",
+    "price": 82951,
+    "qty": 18.318,
+    "notionalUsd": 1519496.418,
+    "distPct": 0.06797784899267423
   }
 ]

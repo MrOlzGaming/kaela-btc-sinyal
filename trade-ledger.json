@@ -1,6 +1,6 @@
 {
- "updatedAt": "2026-10-15T10:03:32.933Z",
- "count": 40,
+ "updatedAt": "2026-10-15T10:18:26.511Z",
+ "count": 39,
  "trades": [
   {
    "key": "grid|grid-1791681066047|real",
@@ -35,41 +35,6 @@
     "modalGrid": 940.37093191,
     "athAwal": 126199.63,
     "returnModalDitanamPct": 0
-   }
-  },
-  {
-   "key": "grid|grid-1791680468438|demo",
-   "system": "🌾 Farmer",
-   "systemKey": "grid",
-   "id": "grid-1791680468438",
-   "signalId": "G2026101102",
-   "account": "Olan Demo",
-   "mode": "demo",
-   "exchange": "BingX",
-   "asset": "BTCUSDT",
-   "patternType": "grid_tangga",
-   "direction": "LONG",
-   "entry": 82919.3,
-   "sl": null,
-   "exit": null,
-   "qty": 1.4483,
-   "leverage": null,
-   "marginUsd": 24019.38852,
-   "openedAt": "2026-10-11T01:01:08.438Z",
-   "closedAt": null,
-   "status": "terbuka",
-   "grossUsd": null,
-   "feeUsd": null,
-   "netUsd": null,
-   "reasonOpen": "Farmer: BTC <= ATH -15%, tiap tangga 6% saldo terbaru (modal maks $10.000) isolated 5x, tambah tiap turun 15%, TP = rugi tangga kelikuidasi + 30% total modal masuk",
-   "reasonCloseCode": null,
-   "reasonClose": null,
-   "context": {
-    "layers": 1,
-    "ditanam": 24019.38852,
-    "modalGrid": 400323.142,
-    "athAwal": 126199.63,
-    "returnModalDitanamPct": null
    }
   },
   {

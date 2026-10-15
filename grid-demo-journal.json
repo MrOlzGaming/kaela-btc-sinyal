@@ -76,16 +76,14 @@
     "day": "2026-10-11",
     "n": 2
   },
-  "alerts": {},
+  "alerts": {
+    "stray": 1792058706315
+  },
   "reserveCfg": 0,
   "bankReserve": 0,
   "lastWallet": 400019.3039,
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
   "exchange": "bingx",
-  "apiFail": {
-    "n": 1,
-    "since": 1792058645719,
-    "last": "BingX API error (code 100500): remote or network error[remote]: biz error: remote or network error: get connection error: dial tcp 10.0.97.169:22333: connection has been closed by peer"
-  }
+  "apiFail": null
 }

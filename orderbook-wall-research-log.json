@@ -118483,5 +118483,86 @@
     "qty": 7.254,
     "notionalUsd": 592266.6125999999,
     "distPct": 0.06538507026596008
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "BID",
+    "price": 81700,
+    "qty": 10.785,
+    "notionalUsd": 881134.5,
+    "distPct": -0.01768353088100953
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "BID",
+    "price": 81698.2,
+    "qty": 6.146,
+    "notionalUsd": 502117.1372,
+    "distPct": -0.019886323655118526
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "BID",
+    "price": 81696,
+    "qty": 10.815,
+    "notionalUsd": 883542.24,
+    "distPct": -0.022578625934577164
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "BID",
+    "price": 81695,
+    "qty": 61.237,
+    "notionalUsd": 5002756.715,
+    "distPct": -0.023802399697969073
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "BID",
+    "price": 81685.5,
+    "qty": 7.284,
+    "notionalUsd": 594997.182,
+    "distPct": -0.03542825045019222
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "BID",
+    "price": 81673,
+    "qty": 6.298,
+    "notionalUsd": 514376.554,
+    "distPct": -0.05072542249259107
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "ASK",
+    "price": 81714.5,
+    "qty": 8.365,
+    "notionalUsd": 683541.7925,
+    "distPct": 0.00006118868817315712
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "ASK",
+    "price": 81728,
+    "qty": 6.196,
+    "notionalUsd": 506386.68799999997,
+    "distPct": 0.01658213449396393
+  },
+  {
+    "timestamp": "2026-10-15T00:03:33.318Z",
+    "midPrice": 81714.45,
+    "side": "ASK",
+    "price": 81739.2,
+    "qty": 8.428,
+    "notionalUsd": 688897.9776000001,
+    "distPct": 0.030288400643949755
   }
 ]

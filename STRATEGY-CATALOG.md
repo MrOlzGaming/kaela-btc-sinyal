@@ -148,6 +148,8 @@ Terakhir diperbarui: **3 Okt 2026**.
 
 ## 📰 NEWS / MAKRO
 
+- 🔧 **Ninja News batas ngejar 0,5% -> 1%** (16 Okt 2026, `backtest/newsChaseStudy.js`, 164 rilis CPI/PPI/NFP/FOMC 2023-26, 1 dtk, fee 0,12%, latensi 2 dtk, EUR >= 0,10%/10 dtk, exit SL 0,8/trail 0,4): chase 0,3% n=24 PF 1,51 | **0,5% (lama, dari teori) n=32 PF 1,08** | 0,75% n=41 PF 1,10 | **1% n=44 PF 1,27 (paruh 1,61/1,02) 11,8 trade/th -> DIPAKAI** | tanpa batas n=48 PF 1,14. Kurva gak mulus (sampel kecil) -- bukan bukti kuat. Zonk 71% rilis wajar (sinyal cuma 29%); ambang lebih rendah (0,06%) rugi PF 0,65-0,68. Exit lebar (SL 1,2/trail 0,6) PF 1,22-1,24, exit ketat 0,95.
+
 - ✅ **Scalp FOMC econ-reaction** (ikut reaksi BTC 10 menit pertama, exit paksa 30 menit) — FOMC doang, demo+real.
 - ⏸️ **Scalp NFP** — DIPAUSE: permutation p~0,20 + Deflated Sharpe ~0%.
 - ❌ **Scalp CPI/PPI** — CPI PF 1,17 gak konsisten per tahun, PPI rugi sebelum fee. Versi long-only juga ditolak.

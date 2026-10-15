@@ -1,0 +1,33 @@
+Event lengkap: 164 (2023-01-06 .. 2026-10-02, 3.7 th) | fee RT 0,12% | latensi 2s
+
+=== (a) BATAS NGEJAR (setting live: EUR >= 0,10% dalam 10 dtk, exit SL 0,8 trail 0,4) ===
+  maxChase 0.3%            n= 24 win= 71% tot=   2.0% PF=1.51 | 6.4 trade/th | paruh1 PF 1.27 paruh2 PF 1.86
+  maxChase 0.5%            n= 32 win= 63% tot=   0.5% PF=1.08 | 8.6 trade/th | paruh1 PF 0.92 paruh2 PF 1.31
+  maxChase 0.75%           n= 41 win= 63% tot=   0.8% PF=1.10 | 11.0 trade/th | paruh1 PF 1.53 paruh2 PF 0.78
+  maxChase 1%              n= 44 win= 66% tot=   2.3% PF=1.27 | 11.8 trade/th | paruh1 PF 1.61 paruh2 PF 1.02
+  maxChase tanpa batas     n= 48 win= 65% tot=   1.4% PF=1.14 | 12.8 trade/th | paruh1 PF 1.31 paruh2 PF 1.00
+
+=== (b) AMBANG & JENDELA (maxChase 0,5%, exit live) ===
+  EUR >= 0.06% dalam 5 dtk n= 37 win= 51% tot=  -2.9% PF=0.68 | 9.9 trade/th | paruh1 PF 0.51 paruh2 PF 1.00
+  EUR >= 0.08% dalam 5 dtk n= 25 win= 68% tot=   1.9% PF=1.48 | 6.7 trade/th | paruh1 PF 1.01 paruh2 PF 2.74
+  EUR >= 0.10% dalam 5 dtk n= 20 win= 60% tot=  -0.0% PF=1.00 | 5.4 trade/th | paruh1 PF 0.77 paruh2 PF 1.61
+  EUR >= 0.15% dalam 5 dtk n=  7 win= 71% tot=   0.6% PF=1.66 | 1.9 trade/th | paruh1 PF 99.00 paruh2 PF 0.52
+  EUR >= 0.06% dalam 10 dtk n= 51 win= 51% tot=  -4.0% PF=0.65 | 13.6 trade/th | paruh1 PF 0.55 paruh2 PF 0.78
+  EUR >= 0.08% dalam 10 dtk n= 42 win= 57% tot=  -1.2% PF=0.86 | 11.2 trade/th | paruh1 PF 0.85 paruh2 PF 0.87
+  EUR >= 0.10% dalam 10 dtk n= 32 win= 63% tot=   0.5% PF=1.08 | 8.6 trade/th | paruh1 PF 0.92 paruh2 PF 1.31
+  EUR >= 0.15% dalam 10 dtk n= 19 win= 68% tot=   1.0% PF=1.30 | 5.1 trade/th | paruh1 PF 1.81 paruh2 PF 0.90
+  EUR >= 0.06% dalam 15 dtk n= 64 win= 52% tot=   0.3% PF=1.03 | 17.1 trade/th | paruh1 PF 0.77 paruh2 PF 1.39
+  EUR >= 0.08% dalam 15 dtk n= 52 win= 48% tot=  -0.8% PF=0.93 | 13.9 trade/th | paruh1 PF 0.61 paruh2 PF 1.39
+  EUR >= 0.10% dalam 15 dtk n= 40 win= 53% tot=   1.3% PF=1.17 | 10.7 trade/th | paruh1 PF 1.05 paruh2 PF 1.30
+  EUR >= 0.15% dalam 15 dtk n= 25 win= 56% tot=  -0.7% PF=0.86 | 6.7 trade/th | paruh1 PF 1.18 paruh2 PF 0.62
+
+=== (c) EXIT (EUR >= 0,10%/10 dtk, maxChase 0,5% vs 1%) ===
+  exit live chase 0.5%     n= 32 win= 63% tot=   0.5% PF=1.08
+  exit live chase 1%       n= 44 win= 66% tot=   2.3% PF=1.27
+  exit ketat chase 0.5%    n= 32 win= 63% tot=  -0.3% PF=0.95
+  exit ketat chase 1%      n= 44 win= 64% tot=  -0.4% PF=0.95
+  exit lebar chase 0.5%    n= 32 win= 53% tot=   1.5% PF=1.22
+  exit lebar chase 1%      n= 44 win= 55% tot=   2.4% PF=1.24
+
+=== Seberapa sering rilis "zonk" (gak ada sinyal) di setting live ===
+  48/164 rilis ada sinyal (29%), sisanya zonk -- WAJAR (edge cuma ada di gerak dolar gede+cepat)

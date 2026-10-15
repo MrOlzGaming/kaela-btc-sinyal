@@ -11,20 +11,23 @@
     "anchor": 400235.61387752,
     "unit": 24019.38852,
     "putIn": 24019.38852,
-    "realized": -216.30997752000002,
-    "fees": 180.10247751999998,
+    "realized": -2679.024932430004,
+    "fees": 238.92909242999997,
     "bets": 1,
     "liqs": 0,
-    "pos": {
-      "e": 82895.2,
-      "qty": 1.4483,
-      "mg": 30014.2795,
-      "liq": 62452.4,
-      "lev": 4
-    },
+    "pos": null,
     "lastE": 82919.3,
     "firstE": 82919.3,
-    "guard": null,
+    "guard": {
+      "qty": 1.4483,
+      "liq": 62452.4,
+      "e0": 82895.2,
+      "mg0": 30014.2795,
+      "closedPx": 81235.4,
+      "closedPnl": -2462.714954910004,
+      "at": 1792058644760,
+      "tpPx": 88022.47988210082
+    },
     "guardLog": [
       {
         "at": 1791688807826,
@@ -79,5 +82,10 @@
   "lastWallet": 400019.3039,
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
-  "exchange": "bingx"
+  "exchange": "bingx",
+  "apiFail": {
+    "n": 1,
+    "since": 1792058645719,
+    "last": "BingX API error (code 100500): remote or network error[remote]: biz error: remote or network error: get connection error: dial tcp 10.0.97.169:22333: connection has been closed by peer"
+  }
 }

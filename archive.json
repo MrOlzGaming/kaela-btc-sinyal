@@ -3623,5 +3623,15 @@
     "type": "anomaly",
     "date": "2026-10-15T22:31:00.389Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n🛢️ Harga Minyak WTI: 101.91 -- JAUH DI ATAS kebiasaan historis kita (median 96.41, z-score 14.8)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n🛢️ Harga Minyak WTI\nIni harga minyak mentah WTI (patokan harga minyak Amerika). NAIK jauh dari biasanya -- biaya produksi di ekonomi ikut naik, ini salah satu pemicu awal INFLASI. Kalau kepanasan, The Fed bisa jadi lebih hawkish belakangan (kurang bagus buat BTC) -- beda dari DXY yang ngukur kekuatan dolar, ini ngukur tekanan dari sisi ENERGI/geopolitik."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-10-15T23:15:56.029Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-10-16\nHarga sekarang: $82,204.09 (📉 -1.2% dari kemarin)\n⏳ Halving berikutnya: 546 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.53 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.01 (Normal)\n⛏️ Biaya produksi BTC (perkiraan): ~$53rb listrik / ~$75rb all-in -- harga 1,54x biaya listrik, penambang untung tipis-sedang\n   (kisaran listrik $36rb-$93rb tergantung mesin & tarif; hashrate 1006 EH/s, ~453 BTC/hari)\n\n💵 DXY: 102.0 (MELEMAH)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.33 (normal)\n🛢️ Minyak WTI: $101.9/barel (STABIL)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-10-15T23:15:56.029Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-10-16\nHarga sekarang: $4,165.53/oz (≈Rp74.595.541) atau $133.92/gram (≈Rp2.398.302) (📈 +0.1% dari kemarin)\n💵 DXY: 102.0 (MELEMAH)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.84% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.33 (normal)\n🛢️ Minyak WTI: $101.9/barel (STABIL)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

@@ -110,5 +110,46 @@
     },
     "eurMaxMovePct": -0.10706638115632493,
     "reportSentAt": 1791982803965
+  },
+  {
+    "key": "2026-10-15T08:30",
+    "label": "PPI + Retail Sales (Sep) + Jobless Claims",
+    "timeMs": 1792067400000,
+    "eur": {
+      "base": 1.1218,
+      "s5": 1.1207,
+      "s10": 1.1207,
+      "m1": 1.1212,
+      "m2": 1.1207,
+      "m5": 1.1203,
+      "m10": 1.1224,
+      "m15": 1.1223,
+      "m30": 1.1225
+    },
+    "btc": {
+      "base": 81094,
+      "s5": 80660.58,
+      "s10": 80838.04,
+      "m1": 80853.33,
+      "m2": 80644.74,
+      "m5": 80742.01,
+      "m10": 81070.51,
+      "m15": 80892.01,
+      "m30": 80552.11
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.09805669459795677,
+    "reportSentAt": 1792069204665
   }
 ]

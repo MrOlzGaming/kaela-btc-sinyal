@@ -28510,5 +28510,14 @@
     "gap": 4.999999999999993,
     "type": "normal",
     "btcPrice": 82311.2
+  },
+  {
+    "timestamp": "2026-10-16T00:31:06.645Z",
+    "countLongPct": 61.35,
+    "dollarLongPct": 56.330000000000005,
+    "globalLongPct": 60.17,
+    "gap": 5.019999999999996,
+    "type": "normal",
+    "btcPrice": 82360
   }
 ]

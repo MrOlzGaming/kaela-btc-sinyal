@@ -85,9 +85,5 @@
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
   "exchange": "bingx",
-  "apiFail": {
-    "n": 2,
-    "since": 1792149426649,
-    "last": "BingX API error (code 100500): remote or network error[remote]: biz error: remote or network error: get connection error: dial tcp 10.0.97.169:22333: i/o timeout"
-  }
+  "apiFail": null
 }

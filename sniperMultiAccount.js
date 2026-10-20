@@ -263,7 +263,7 @@ function createSniperAccountTrader({ client, mexcClient, statePath, sendWA, getM
           const assetCfg = ASSETS[o.asset] || ASSETS.btc;
           const alertKey = `${path.basename(statePath, '.json')}-sniper-${assetCfg.label}`;
           if (shouldAlertInsufficientBalance(alertKey)) {
-            await notify(formatInsufficientBalanceAlert({ strategy: 'Sniper', assetLabel: assetCfg.label, direction: o.direction, entry: o.entry || o.entryPrice, tp: o.partialTp || o.tp, sl: o.sl }));
+            await notify(formatInsufficientBalanceAlert({ strategy: 'Sniper', exchange: (assetCfg.exchange || 'binance').toUpperCase(), assetLabel: assetCfg.label, direction: o.direction, entry: o.entry || o.entryPrice, tp: o.partialTp || o.tp, sl: o.sl }));
           }
         }
       }

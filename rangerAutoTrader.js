@@ -451,7 +451,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(jPath, '.json')}-nyopet-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
-          await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Nyopet', assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }), assetCfg);
+          await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Ranger', exchange: (assetCfg.exchange || 'binance').toUpperCase(), assetLabel: assetCfg.label, direction: sig.direction, entry: livePrice, tp: partialTp }), assetCfg);
         }
       }
       throw e;
@@ -1062,7 +1062,7 @@ function createRangerTrader({ client, mexcClient, journalPath, sendWA, getModalB
       if (effectiveTestnet === false && isInsufficientBalanceError(e.message)) {
         const alertKey = `${path.basename(jPath, '.json')}-nyopet-fedgrid-${assetCfg.label}`;
         if (shouldAlertInsufficientBalance(alertKey)) {
-          await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Nyopet (Fed Dovish Grid)', assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }), assetCfg);
+          await routedNotify(formatInsufficientBalanceAlert({ strategy: 'Ranger (Fed Dovish Grid)', exchange: (assetCfg.exchange || 'binance').toUpperCase(), assetLabel: assetCfg.label, direction: 'buy', entry: livePrice, tp: null }), assetCfg);
         }
       }
       throw e;

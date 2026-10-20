@@ -95,18 +95,24 @@ function insufficientBalanceError({ balance, minBalance, minNotionalUsd, notiona
 }
 
 // { strategy: 'Sniper'|'Nyopet', assetLabel, direction: 'buy'|'sell', entry, tp, sl, details?: { balance, minBalance, minNotionalUsd, exchange } }
-function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry, tp, sl, details, extraNote }) {
+// exchange (20 Okt 2026, Olan bingung "isi saldo kemana?") -- nama bursa tujuan isi saldo, tampil di judul.
+// Aset di MEXC (Emas) GAK PUNYA Demo -> baris "Posisi DEMO tetap jalan" diganti biar gak nipu.
+function formatInsufficientBalanceAlert({ strategy, assetLabel, direction, entry, tp, sl, details, extraNote, exchange }) {
+  const exName = exchange || (details && details.exchange) || null;
+  const noDemo = /mexc/i.test(String(exName || ''));
   const dirLabel = direction === 'buy' ? 'LONG' : 'SHORT';
   const fmt = (n) => (n == null ? '-' : Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }));
   const levels = [`Arah: *${dirLabel}*`, `Entry sekitar: *$${fmt(entry)}*`];
   if (tp != null) levels.push(`TP: *$${fmt(tp)}*`);
   if (sl != null) levels.push(`SL/Liq: *$${fmt(sl)}*`);
 
-  return `🔔 *Sinyal ${strategy} ${assetLabel} kelewat -- saldo Real kurang*\n\n`
+  return `🔔 *Sinyal ${strategy} ${assetLabel}${exName ? ` (${exName})` : ''} kelewat -- saldo Real kurang*\n\n`
     + `Sinyal *${dirLabel}* baru muncul, tapi Kaela *gak bisa buka otomatis* di akun Real kamu -- saldo kurang buat nutup margin minimum.\n\n`
     + (details && details.minBalance ? `💰 Saldo Real${details.exchange ? ` ${details.exchange}` : ''} sekarang: *$${Number(details.balance || 0).toFixed(2)}* -- minimal *~$${Number(details.minBalance).toLocaleString('en-US')}* biar posisi ini bisa kebuka (dihitung kalkulator exposure, minimum order exchange $${details.minNotionalUsd}).\n\n` : '')
     // (3 Okt 2026, Olan: "ga ada lagi manual") -- gak ngajak buka manual lagi; level cuma buat catatan.
-    + `ℹ️ Posisi DEMO tetap jalan otomatis. Level sinyal (catatan, BUKAN ajakan buka manual):\n`
+    + (noDemo
+      ? `ℹ️ ${exName} gak punya akun Demo, jadi sinyal ini cuma dicatat. Level sinyal (catatan, BUKAN ajakan buka manual):\n`
+      : `ℹ️ Posisi DEMO tetap jalan otomatis. Level sinyal (catatan, BUKAN ajakan buka manual):\n`)
     + levels.map((l) => `- ${l}`).join('\n') + '\n\n'
     + (extraNote ? `${extraNote}\n\n` : '')
     + `Begitu saldo Real cukup, sinyal berikutnya otomatis jalan di Real juga 🙏`;

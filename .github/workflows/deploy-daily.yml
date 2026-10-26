@@ -1,4 +1,4 @@
-name: Deploy web/ ke Netlify (manual)
+name: Deploy web/ ke Cloudflare Pages (manual)
 
 # Diubah TOTAL 15 Agu 2026, 2 tahap:
 #   Tahap 1: dari "tiap push" (dobel-triple sama step deploy tiap workflow rutin) jadi 1x/hari
@@ -16,6 +16,10 @@ name: Deploy web/ ke Netlify (manual)
 # gak ada lagi alasan buat jadwal deploy otomatis SAMA SEKALI. Workflow ini SEKARANG MURNI
 # MANUAL (workflow_dispatch) -- dipicu Kaela sendiri HANYA begitu ada perubahan TAMPILAN/STRUKTUR
 # shell beneran (edit buildDashboard.js, CSS, dst), bukan buat data rutin apapun.
+#
+# 26 Okt 2026: Pindah dari Netlify ke Cloudflare Pages (Netlify BLACKLISTED).
+# Perlu secrets GitHub: CF_API_TOKEN + CF_ACCOUNT_ID
+# Nama proyek CF Pages: kaela-trader-web → URL: https://kaela-trader-web.pages.dev
 
 on:
   workflow_dispatch: {}
@@ -32,7 +36,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy web/ ke Netlify
-        run: |
-          npm install -g netlify-cli
-          netlify deploy --dir=web --prod --site "${{ secrets.NETLIFY_SITE_ID }}" --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}"
+      - name: Deploy web/ ke Cloudflare Pages
+        run: npx wrangler@3 pages deploy web --project-name kaela-trader-web --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

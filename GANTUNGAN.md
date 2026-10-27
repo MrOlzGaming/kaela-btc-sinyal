@@ -106,3 +106,41 @@ Keputusan Olan 3 Okt 2026 malam:
   (aman), filter volatilitas & jam (DITOLAK), jurnal Kaela Access buat Sniper/Ranger BTC dual-exec (sebelumnya gak nyatet).
 - 3 Okt 2026 — Katalog strategi (`STRATEGY-CATALOG.md`), backup journal dual-exec ke git, kalibrasi Ninja News dari backtest
   per detik, leg real spot DCA (anggaran khusus), riset Bitget (butuh key demo), ICT sweep harian (gak robust).
+
+## ⚠️ VPS Vultr: mesin TRADER tidak jalan sejak 17 Okt 2026 (temuan sesi KAELA (BC), 28 Okt 2026)
+- `/root/kaela-engine/.git/index.lock` basi sejak 17 Okt 12.30 WITA -> `git reset --hard` di `run-vultr-executor.sh` GAGAL tiap siklus (1.035x) -> `report_and_exit` sebelum semua executor (localLiveExecutor, Sniper, Ranger, multiAccount, spot DCA, selfCheck, dll). Log: `local-executor.log` "git reset --hard GAGAL".
+- Sudah diperbaiki (izin Olan): kebocoran /tmp (PRESERVE_DIR tanpa trap, ~855 MB/hari, disk sempat 88%) -> `trap ... EXIT` (GitHub a1d3b0c1 + file VPS), folder tmp.* lama dibersihkan, disk 49%.
+- BELUM (menunggu Olan): hapus `.git/index.lock` -> mesin trading hidup lagi & bisa pasang order. Cek dulu working tree VPS (TRADE-LEDGER.md, analyst-dashboard.json kotor) dan apakah akun/strategi masih mau dinyalakan.
+- Catatan: repo lokal TRADER tertinggal 104 commit dari GitHub (dan 2 commit lokal belum di-push) — sinkronkan di sesi TRADER.
+- Keamanan: URL remote git (lokal & VPS) memuat token GitHub tertulis langsung; sebaiknya diganti ke credential helper.
+
+### Pemeriksaan sesi KAELA (TRADER), 28 Okt 2026 07.30 WITA
+- **Lock**: 0 byte, dibuat 17 Okt 12:30:03 WITA, tidak ada proses git jalan. Penyebab paling mungkin: proses git dihentikan paksa
+  `timeout -k` saat memegang kunci (push hari itu sering timeout sejak 06.34; 2 cron — executor 15 mnt & econ-calendar 5 mnt — sama-sama
+  menjalankan git di repo yang sama tanpa kunci bersama). Akibat sampingan: commit 06.34–12.30 17 Okt dibuang reset, tapi isi state-nya dijaga
+  salinan PRESERVE, jadi tidak hilang.
+- **Yang TETAP jalan selama 11 hari** (cron 1–5 menit, tidak lewat git reset): `run-channel-breakout-vultr.sh` (Ninja, Ninja MR/Exhaustion/
+  News, Grid real+demo, Short-ladder real+demo, penjaga posisi BingX/Bybit/Bitget), `run-position-check-fast.sh` (Nyopet/Ranger cepat),
+  `run-manual-open-check-vultr.sh`, `run-econ-calendar-live-vultr.sh` (commit-nya gagal terus karena lock). State mereka ada di working tree VPS.
+- **Working tree VPS**: 30 file kotor — SEMUA ada di daftar `STATE_FILES` skrip (dijaga saat reset) kecuali `run-vultr-executor.sh`, yang isinya
+  sudah SAMA dengan GitHub a1d3b0c1. Jadi menghapus lock TIDAK membuang state 11 hari. Untracked: `.channel-breakout-last-notified`,
+  `executor-stuck-state.json`, `package-lock.json` (tak tersentuh reset).
+- **Saldo real (cek 28 Okt, read-only)**: BingX futures real USDC/USDT $0, 0 posisi, spot ≈$0. Per 17 Okt: Bitget $0,58, Bybit $0,16,
+  Binance/MEXC futures $0, Binance Spot (DCA) $48,90. Artinya kalau mesin hidup, order REAL hampir semuanya gagal karena saldo -> yang muncul
+  notifikasi "saldo kurang" ke WA; demo tetap jalan.
+- **Grid (Farmer) real**: posisi 0,0034 BTC ditutup DI LUAR SISTEM 17 Okt 23.39 WITA di $81.347 (rugi $1,99); sejak itu saldo BingX $0 dan
+  penjaga menunggu top up ±$48 tiap menit (log berulang). PERTANYAAN untuk Olan: dana BingX ±$58 dipindah sendiri? Kalau iya, Grid real
+  sebaiknya dimatikan resmi biar tidak menagih top up terus.
+- Spot DCA: "di luar window beli, belum waktunya jual" -> tidak akan beli/jual saat dihidupkan.
+- Kredit Vultr per 17 Okt: sisa $11,51 — cek lagi setelah mesin hidup (vultrBalanceMonitor ikut mati selama 11 hari).
+- **Repo lokal**: cadangan branch `backup/lokal-sebelum-sync-2026-10-28`, rebase 2 commit lokal di atas GitHub (tanpa bentrok), push ->
+  GitHub kini 9274074d (isi: teks alert saldo sebut nama bursa + migrasi deploy web ke CF Pages; workflow deploy manual saja). Kode ini baru
+  dipakai VPS setelah lock dihapus.
+- **Token**: lokal sudah punya helper `gh auth git-credential` (akun MrOlzGaming login) -> cukup ubah URL remote jadi
+  `https://github.com/MrOlzGaming/kaela-btc-sinyal.git` (remote `origin` & `origin-new` dobel, bisa disatukan). VPS belum punya helper ->
+  usul: token BARU fine-grained (hanya repo kaela-btc-sinyal, izin contents read/write), simpan di `~/.git-credentials` (chmod 600,
+  `credential.helper store`), URL remote tanpa token, lalu cabut token lama (classic `ghp_`, scope luas). Sebagian awal token lama sempat
+  tercetak di log alat sesi ini (bukan di chat) -> alasan tambahan untuk mengganti.
+- **Rekomendasi**: hapus lock (aman, tidak ada proses git) lalu jalankan 1 siklus sambil dipantau; pertimbangkan perbaikan skrip:
+  kunci bersama `flock` untuk semua skrip yang memakai git + hapus otomatis `index.lock` yang basi >10 menit (tanpa proses git) + alert WA.
+  Menunggu "ya" Olan.

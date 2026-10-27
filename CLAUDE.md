@@ -1,5 +1,7 @@
 # Olan nanya soal strategi/ide trading? Buka [`STRATEGY-CATALOG.md`](STRATEGY-CATALOG.md) DULU
 
+> 🚫 **Tinggalkan Netlify** (keputusan Olan 21 Okt 2026): akun Netlify disuspend karena tagihan telat → jangan deploy/usulkan Netlify di proyek ini; pakai Cloudflare Pages / VPS. Detail: `CLAUDE.md` root, bagian "Tinggalkan Netlify".
+
 Katalog SEMUA strategi yang pernah dipelajari + hasil backtest terakhir + status (✅ dipakai / 🔬 observasi / ⏸️ disimpan /
 ❌ ditolak) + alasannya. Kalau idenya udah ada di situ -> presentasikan langsung dari situ, JANGAN riset/backtest ulang
 (permintaan Olan 3 Okt 2026). Riset baru (lolos maupun gagal) WAJIB ditambah ke katalog.
@@ -37,3 +39,8 @@ bagian dari kontinuitas itu.
 
 Detail lengkap (histori kejadian salah-akun, cakupan yang TIDAK termasuk proyek klien, dll) ada
 di memori: `reference-kaela-canonical-account` dan `reference-github-account-kaela-trading-engine`.
+
+## 💸 Irit token & sesi baru (20 Okt 2026, Olan — berlaku di semua konteks ★)
+- Ikuti aturan "Irit token Claude" di `CLAUDE.md` root: cari dulu baru baca sebagian, batch, output pendek, jangan ulang kerja, jawab ringkas.
+- Chat sudah panjang & TIDAK ada gantungan → sarankan sesi BARU beneran (`start_session` context "fresh", bukan fork) berjudul "KAELA (TRADER)",
+  brief = status terakhir + gantungan. Catat dulu yang penting ke CLAUDE.md ini / memori.

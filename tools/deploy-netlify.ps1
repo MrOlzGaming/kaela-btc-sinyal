@@ -1,3 +1,4 @@
+# !!! USANG (27 Okt 2026): Netlify DIBLACKLIST. Jangan dijalankan. Deploy web -> CF Pages, lihat _⚡ KAELA HQ ⚡\OTAK\KNOWLEDGE\DEPLOY-PLAYBOOK.md
 # Deploy web/ ke Netlify — pakai netlify-cli (sudah terpasang global), non-interaktif via token.
 # Akun target: olz.gaming.master@gmail.com, team "olz-gaming-master" -- proyek ini SENDIRI,
 # terpisah dari akun/proyek Netlify lain. Token WAJIB digenerate dari akun itu.

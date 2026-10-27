@@ -1,25 +1,25 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-17 06:33 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-28 07:49 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
 - **🌾 Farmer · Pola Chart (grid tangga) · Olan Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
 - **🌾 Farmer · Pola Chart (grid tangga) · Olan Real (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
 - **🏹 Ranger · Fair Value Gap · Olan Real (Binance)**: 2 trade, menang 2/2 (100%), bersih +$1.04
+- **🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo (Binance)**: 1 trade, menang 1/1 (100%), bersih +$40.75
+- **🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo (Bybit)**: 1 trade, menang 1/1 (100%), bersih +$397.65
 - **🏹 Ranger · Posisi manual/adopsi · Kaela Demo (Binance)**: 1 trade, menang 0/0, bersih ? (1 PnL gak kebaca)
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (MEXC)**: 3 trade, menang 1/1 (100%), bersih +$0.00 (2 PnL gak kebaca)
 - **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 9 trade, menang 3/9 (33%), bersih -$53.40
 - **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 2 trade, menang 1/2 (50%), bersih +$3.72
 
-## Posisi terbuka (3)
+## Posisi terbuka (1)
 
-- 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX · BTCUSDC LONG @ 82,918.5 (SL ?) sejak 2026-10-11 09:18 WITA
-- 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · BTC SHORT @ 85,503.9 (SL 87,198.8) sejak 2026-10-06 12:00 WITA
-- 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · BTC SHORT @ 85,909.5 (SL 85,827.8) sejak ?
+- 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 80,816.2 (SL 78,098.3) sejak ?
 
-## Trade terakhir (37 terbaru)
+## Trade terakhir (39 terbaru)
 
 ### #G2026101101 — 🌾 Farmer · Pola Chart (grid tangga) · Olan Real · BingX
 - Buka: 2026-10-11 09:11 WITA — BTCUSDC LONG @ 82,879.4
@@ -90,6 +90,13 @@ Diperbarui otomatis: 2026-10-17 06:33 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - Konteks entry: netRealistic=-8.6965785, notionalUsd=2992.8988, peakLiqUsd=11912550
 - Tutup: 2026-10-07 18:33 WITA @ 83,691.7 — Alasan tutup: Batas waktu tahan habis -- ditutup paksa (momen balik arah udah lewat)
 - Hasil: bersih -$8.10 (kotor -$5.11, fee $2.99)
+
+### #2026100601 — 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Bybit · slot rotasi
+- Buka: 2026-10-06 12:00 WITA — BTC SHORT @ 85,503.9 (SL 87,198.8), 36x
+- Alasan buka: Chart Pattern (Rising Wedge) -- breakout wedge naik terkonfirmasi (pembalikan turun)
+- Konteks entry: wibowoRoute=demo
+- Tutup: 2026-10-28 07:45 WITA @ 80,933.2 — Alasan tutup: Window rezim ganti (bull<->bear), posisi ini jadi arah salah -- ditutup paksa demi keamanan (walau rugi)
+- Hasil: bersih +$397.65
 
 ### #2026100502 — 🥷 Ninja · Exhaustion · Kaela Demo · BingX
 - Buka: 2026-10-05 23:04 WITA — BTC LONG @ 85,567.1 (SL 84,711.4)
@@ -277,4 +284,11 @@ Diperbarui otomatis: 2026-10-17 06:33 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - Konteks entry: liqPrice=4498.1047, qty=0.013, leverage=50, marginUsd=1.2, zonePrice=4500, zoneKind=round, pnlUsd=0, pnlPct=0, closeReason=OFFLINE
 - Tutup: 2026-09-08 05:12 WITA @ 4,456.2 — Alasan tutup: Kelikuidasi/tertutup pas eksekutor offline, baru kesinkron sekarang
 - Hasil: bersih +$0.00
+
+### #2026100601 — 🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo · Binance · slot pattern
+- Buka: ? — BTC SHORT @ 85,909.5 (SL 85,827.8), 36x
+- Alasan buka: Chart Pattern (Rising Wedge) -- breakout wedge naik terkonfirmasi (pembalikan turun)
+- Konteks entry: partialTp=80883.513, wibowoRoute=demo, trailR=3, archivedAt=2026-10-27T23:45:16.980Z
+- Tutup: 2026-10-28 07:45 WITA @ 80,816.2 — Alasan tutup: Window rezim ganti (bull<->bear), posisi ini jadi arah salah -- ditutup paksa demi keamanan (walau rugi)
+- Hasil: bersih +$40.75
 

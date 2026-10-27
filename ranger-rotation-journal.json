@@ -1,40 +1,12 @@
 {
-  "floating": {
-    "id": "ranger-rotasi-1791259216069",
-    "signalId": "2026100601",
-    "coin": "BTC",
-    "direction": "sell",
-    "patternType": "wedge_rising",
-    "sl": 87832.64834999999,
-    "partialTp": null,
-    "openedAt": "2026-10-06T04:00:16.068Z",
-    "wibowoRoute": "demo",
-    "exchange": "bybit",
-    "legs": {
-      "demo": {
-        "entryPrice": 85503.9,
-        "qty": 0.087,
-        "remainingQty": 0.087,
-        "sl": 87198.84504999999,
-        "risk": 2328.7483499999944,
-        "peak": 80176,
-        "leverage": 36,
-        "margin": 208.2912132625,
-        "nilaiPosisi": 7498.48367745,
-        "partialDone": false,
-        "realizedPnlUsd": 0,
-        "nativeSl": true
-      },
-      "real": null
-    }
-  },
-  "lastScanCloseTime": 1791259199999,
-  "closedCount": 0,
+  "floating": null,
+  "lastScanCloseTime": 1793131199999,
+  "closedCount": 1,
   "stats": {
     "demo": {
-      "wins": 0,
+      "wins": 1,
       "losses": 0,
-      "totalPnlUsd": 0
+      "totalPnlUsd": 397.6508999999997
     },
     "real": {
       "wins": 0,
@@ -46,5 +18,36 @@
     "dayKey": "20261006",
     "count": 1
   },
-  "history": []
+  "history": [
+    {
+      "id": "ranger-rotasi-1791259216069",
+      "signalId": "2026100601",
+      "coin": "BTC",
+      "direction": "sell",
+      "patternType": "wedge_rising",
+      "openedAt": "2026-10-06T04:00:16.068Z",
+      "wibowoRoute": "demo",
+      "legs": {
+        "demo": {
+          "entryPrice": 85503.9,
+          "qty": 0.087,
+          "remainingQty": 0.087,
+          "sl": 87198.84504999999,
+          "risk": 2328.7483499999944,
+          "peak": 80176,
+          "leverage": 36,
+          "margin": 208.2912132625,
+          "nilaiPosisi": 7498.48367745,
+          "partialDone": false,
+          "realizedPnlUsd": 0,
+          "nativeSl": true,
+          "closedAt": "2026-10-27T23:45:26.892Z",
+          "exitPrice": 80933.2,
+          "pnlUsd": 397.6508999999997,
+          "reason": "WINDOW_FLIP"
+        },
+        "real": null
+      }
+    }
+  ]
 }

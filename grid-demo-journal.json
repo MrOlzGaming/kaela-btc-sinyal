@@ -8,11 +8,11 @@
     "startedAt": 1791680468438,
     "athAtStart": 126199.63,
     "cycleCap": 400323.142,
-    "anchor": 400235.61387752,
+    "anchor": 400360.28058421,
     "unit": 24019.38852,
     "putIn": 24019.38852,
-    "realized": -2679.024932430004,
-    "fees": 238.92909242999997,
+    "realized": -713.6134726700082,
+    "fees": 357.91099267,
     "bets": 1,
     "liqs": 0,
     "pos": null,
@@ -20,13 +20,13 @@
     "firstE": 82919.3,
     "guard": {
       "qty": 1.4483,
-      "liq": 62452.4,
-      "e0": 82895.2,
-      "mg0": 30014.2795,
-      "closedPx": 81235.4,
-      "closedPnl": -2462.714954910004,
-      "at": 1792058644760,
-      "tpPx": 88022.47988210082
+      "liq": 62408.9,
+      "e0": 81433.2,
+      "mg0": 23587.9407,
+      "closedPx": 82872.4,
+      "closedPnl": 2024.3813115399955,
+      "at": 1792567624052,
+      "tpPx": 88302.48518475215
     },
     "guardLog": [
       {
@@ -38,9 +38,19 @@
         "lev": 4,
         "liqOld": 66635.3,
         "liqNew": 62452.4
+      },
+      {
+        "at": 1792251484066,
+        "closedPx": 81235.4,
+        "closedPnl": -2462.714954910004,
+        "reopenPx": 81433.2,
+        "qty": 1.4483,
+        "lev": 5,
+        "liqOld": 62452.4,
+        "liqNew": 62408.9
       }
     ],
-    "tpLock": 87938.63115773865,
+    "tpLock": 88022.47988210082,
     "extBase": 0
   },
   "history": [
@@ -77,11 +87,11 @@
     "n": 2
   },
   "alerts": {
-    "stray": 1792188544658
+    "stray": 1793130125279
   },
   "reserveCfg": 0,
   "bankReserve": 0,
-  "lastWallet": 400019.3039,
+  "lastWallet": 397622.2858,
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
   "exchange": "bingx",

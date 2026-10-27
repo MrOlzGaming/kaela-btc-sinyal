@@ -151,5 +151,44 @@
     },
     "eurMaxMovePct": -0.09805669459795677,
     "reportSentAt": 1792069204665
+  },
+  {
+    "key": "2026-10-22T08:30",
+    "label": "Jobless Claims (mingguan)",
+    "timeMs": 1792672200000,
+    "eur": {
+      "base": 1.1215,
+      "s5": 1.1214,
+      "m1": 1.1215,
+      "m2": 1.1213,
+      "m5": 1.1215,
+      "m10": 1.1214,
+      "m15": 1.1215,
+      "m30": 1.1216
+    },
+    "btc": {
+      "base": 81850,
+      "s5": 81802,
+      "m1": 81766.02,
+      "m2": 81718.71,
+      "m5": 81709.85,
+      "m10": 81698.07,
+      "m15": 81736.7,
+      "m30": 81687.22
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.00891662951404271,
+    "reportSentAt": 1792674005190
   }
 ]

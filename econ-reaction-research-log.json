@@ -752,5 +752,31 @@
       "binanceGlobalLongPct": 67.1,
       "topVsGlobalGap": -2.03
     }
+  },
+  {
+    "recordedAt": "2026-10-28T18:35:03.746Z",
+    "key": "2026-10-28T14:30:00-04:00__FOMC Press Conference",
+    "title": "FOMC Press Conference",
+    "timeMs": 1793212200000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0606,
+    "btcBefore": 80719.9,
+    "btcAfter": 80871.8,
+    "btcReactionPct": 0.1882,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000923236163436,
+      "openInterest": 30464.744300000104,
+      "longAccountPct": 67.43,
+      "shortAccountPct": 32.57,
+      "fearGreed": 51,
+      "binanceTopLongPct": 65.63,
+      "binanceGlobalLongPct": 66.93,
+      "topVsGlobalGap": -1.3
+    }
   }
 ]

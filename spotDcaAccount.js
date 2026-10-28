@@ -34,6 +34,19 @@ function createSpotDcaAccountTrader({ client, statePath, sendWA, onEvent }) {
   }
   function saveState(s) { fs.writeFileSync(statePath, JSON.stringify(s, null, 2)); }
 
+  // 28 Okt 2026 (Olan: "dca kurang duit kasih info sehari 1x aja") -- dulu gagal dana/beli = WA tiap siklus 15 menit
+  // (~96x/hari). Sekarang notif gagal maks 1x per hari per jenis; beli tetap dicoba ulang tiap siklus, diam.
+  async function notifyFailOncePerDay(kind, msg, now) {
+    const s = loadState();
+    const day = localDateKey(now);
+    s.failNotified = s.failNotified || {};
+    if (s.failNotified[kind] === day) { console.log(`[SpotDcaAccount] ${kind} gagal lagi -- notif hari ini sudah dikirim, diam.`); return; }
+    s.failNotified[kind] = day;
+    saveState(s);
+    console.log(`[SpotDcaAccount] ${kind} gagal -- kirim notif (1x hari ini).`);
+    await notify(`${msg}\n\n🔁 Dicoba ulang otomatis tiap siklus; notif ini maksimal 1x sehari.`);
+  }
+
   function sellTriggerDate() {
     return new Date(NEXT_HALVING_EST.getTime() + SELL_AFTER_HALVING_DAYS * 86400000);
   }
@@ -43,7 +56,7 @@ function createSpotDcaAccountTrader({ client, statePath, sendWA, onEvent }) {
     try {
       fundSource = await client.ensureSpotBalance(DAILY_BUY_USD, 'USDT');
     } catch (e) {
-      await notify(`⚠️ [Musiman DCA] Gagal siapin dana buat beli harian (butuh $${DAILY_BUY_USD}): ${e.message}`);
+      await notifyFailOncePerDay('dana', `⚠️ [Musiman DCA] Gagal siapin dana buat beli harian (butuh $${DAILY_BUY_USD}): ${e.message}`, now);
       return;
     }
 
@@ -65,7 +78,7 @@ function createSpotDcaAccountTrader({ client, statePath, sendWA, onEvent }) {
       await notify(`🌱 [Musiman DCA] Beli harian jalan (sumber dana: ${fundSource.source === 'earn' ? `Spot+redeem Earn $${fundSource.redeemedTotal.toFixed(2)}` : 'Spot'}):\nBTC: $${DAILY_BUY_USD.toFixed(2)} @ ${order.avgPrice.toFixed(2)} -> ${order.executedQty.toFixed(8)} BTC`);
     } catch (e) {
       console.log('[SpotDcaAccount] Beli BTC GAGAL:', e.message);
-      await notify(`⚠️ [Musiman DCA] Beli harian GAGAL: ${e.message}`);
+      await notifyFailOncePerDay('beli', `⚠️ [Musiman DCA] Beli harian GAGAL: ${e.message}`, now);
     }
   }
 

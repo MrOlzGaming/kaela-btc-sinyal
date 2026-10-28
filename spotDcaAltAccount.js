@@ -18,6 +18,7 @@
 
 const fs = require('fs');
 const crypto = require('crypto');
+const { localDateKey } = require('./config');
 const { ALT10_SYMBOLS, PER_COIN_USD, WINDOW_START, HALVING_DATE, shouldBuyToday, shouldSellNow, sellTriggerDate, monthKey } = require('./spotDcaAltShared');
 
 function coinLabel(symbol) { return symbol.replace('USDT', ''); }
@@ -36,13 +37,26 @@ function createSpotDcaAltAccountTrader({ client, statePath, sendWA, onEvent }) {
   }
   function saveState(s) { fs.writeFileSync(statePath, JSON.stringify(s, null, 2)); }
 
+  // 28 Okt 2026 (Olan: "dca kurang duit kasih info sehari 1x aja") -- dulu gagal dana = WA tiap siklus 15 menit
+  // (~96x/hari). Sekarang notif gagal maks 1x per hari per jenis; beli tetap dicoba ulang tiap siklus, diam.
+  async function notifyFailOncePerDay(kind, msg, now) {
+    const s = loadState();
+    const day = localDateKey(now);
+    s.failNotified = s.failNotified || {};
+    if (s.failNotified[kind] === day) { console.log(`[SpotDcaAltAccount] ${kind} gagal lagi -- notif hari ini sudah dikirim, diam.`); return; }
+    s.failNotified[kind] = day;
+    saveState(s);
+    console.log(`[SpotDcaAltAccount] ${kind} gagal -- kirim notif (1x hari ini).`);
+    await notify(`${msg}\n\n🔁 Dicoba ulang otomatis tiap siklus; notif ini maksimal 1x sehari.`);
+  }
+
   async function runBuyStep(now, state) {
     const totalNeeded = PER_COIN_USD * ALT10_SYMBOLS.length + ALT10_SYMBOLS.reduce((sum, s) => sum + (state.coins[s].cycleStartedAt ? 0 : state.coins[s].totalRealizedCash), 0);
     let fundSource;
     try {
       fundSource = await client.ensureSpotBalance(totalNeeded, 'USDT');
     } catch (e) {
-      await notify(`⚠️ [Compound Alt DCA] Gagal siapin dana buat beli bulanan (butuh ~$${totalNeeded.toFixed(2)}): ${e.message}`);
+      await notifyFailOncePerDay('dana', `⚠️ [Compound Alt DCA] Gagal siapin dana buat beli bulanan (butuh ~$${totalNeeded.toFixed(2)}): ${e.message}`, now);
       return;
     }
 

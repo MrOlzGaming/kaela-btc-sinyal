@@ -74,7 +74,8 @@
         "remainingFraction": 1,
         "realizedPnlUsd": 0,
         "refEntryPrice": 80817.76,
-        "venueGapPct": -0.0019302687924011648
+        "venueGapPct": -0.0019302687924011648,
+        "peak": 80816.2
       },
       "real": null,
       "realRetry": {
@@ -82,8 +83,8 @@
         "alerted": [
           1
         ],
-        "tries": 1,
-        "lastTry": 1793144718937
+        "tries": 2,
+        "lastTry": 1793145609603
       }
     },
     "closedCount": 0,
@@ -123,6 +124,6 @@
       "dayKey": null,
       "count": 0
     },
-    "lastSignalCandleT": 1792065600000
+    "lastSignalCandleT": 1793131200000
   }
 }

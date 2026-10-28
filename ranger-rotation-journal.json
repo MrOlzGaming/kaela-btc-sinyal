@@ -1,6 +1,44 @@
 {
-  "floating": null,
-  "lastScanCloseTime": 1793131199999,
+  "floating": {
+    "id": "ranger-rotasi-1793145616957",
+    "signalId": "2026102801",
+    "coin": "BTC",
+    "direction": "buy",
+    "patternType": "fvg_bounce",
+    "sl": 78098.33605,
+    "partialTp": null,
+    "openedAt": "2026-10-28T00:00:16.957Z",
+    "wibowoRoute": "demo",
+    "exchange": "bybit",
+    "legs": {
+      "demo": {
+        "entryPrice": 80850.1,
+        "qty": 0.186,
+        "remainingQty": 0.186,
+        "sl": 78098.33605,
+        "risk": 2751.7639500000078,
+        "peak": 80850.1,
+        "leverage": 25,
+        "margin": 601.9513777921201,
+        "nilaiPosisi": 15048.784444803001,
+        "partialDone": false,
+        "realizedPnlUsd": 0,
+        "nativeSl": true,
+        "liquidationPrice": null,
+        "crossMargin": true
+      },
+      "real": null
+    },
+    "realRetry": {
+      "since": 1793145614026,
+      "alerted": [
+        1
+      ],
+      "tries": 1,
+      "lastTry": 1793145614026
+    }
+  },
+  "lastScanCloseTime": 1793145599999,
   "closedCount": 1,
   "stats": {
     "demo": {
@@ -15,7 +53,7 @@
     }
   },
   "dailySignalSeq": {
-    "dayKey": "20261006",
+    "dayKey": "20261028",
     "count": 1
   },
   "history": [

@@ -1,0 +1,52 @@
+{
+  "orders": {
+    "mvrd5tiixovm": {
+      "signalId": "2026102801",
+      "direction": "buy",
+      "sl": 77179.47,
+      "tp": 91701.82999999999,
+      "patternType": "fvg_bounce",
+      "mode": "fvg",
+      "wibowoRoute": "demo",
+      "demo": {
+        "trailR": 3,
+        "currentSl": 77179.47,
+        "peak": 80737.723243,
+        "slNativeOk": true,
+        "entryPrice": 80737.723243,
+        "qty": 0.0925,
+        "leverage": 20,
+        "marginUsd": 374.1318931365,
+        "nilaiPosisi": 7482.63786273,
+        "openedAt": "2026-10-28T00:16:00.466Z",
+        "partialDone": false,
+        "partialPnlUsd": 0,
+        "leg2": null,
+        "closedAt": null,
+        "exitPrice": null,
+        "pnlUsd": null
+      },
+      "real": null,
+      "realRetry": {
+        "since": 1793146560683,
+        "alerted": [
+          1
+        ],
+        "tries": 1,
+        "lastTry": 1793146560683
+      }
+    }
+  },
+  "stats": {
+    "demo": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0
+    },
+    "real": {
+      "wins": 0,
+      "losses": 0,
+      "totalPnlUsd": 0
+    }
+  }
+}

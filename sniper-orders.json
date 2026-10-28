@@ -1,5 +1,51 @@
 {
   "balance": 0,
-  "balanceUpdatedAt": "2026-10-28T00:00:08.513Z",
-  "orders": []
+  "balanceUpdatedAt": "2026-10-28T00:15:07.634Z",
+  "orders": [
+    {
+      "id": "mvrd5tiixovm",
+      "signalId": "2026102801",
+      "status": "floating",
+      "asset": "btc",
+      "mode": "fvg",
+      "gapCreatedTime": 1789862399999,
+      "direction": "buy",
+      "strategyType": "breakout",
+      "triggerPrice": 80810.06,
+      "testLevel": null,
+      "confirmationNote": "Fair Value Gap terbentuk @ $77,179.47-$80,844.58 (candle harian BTCUSDT tutup balik di atas batas atas gap, tanda pantulan). SL di bawah batas bawah gap (nyawa 4.5%) -- kalau gap keisi penuh, thesis-nya gugur. Deteksi otomatis fvgDetector.js.",
+      "tpReasoning": "Exit: SL TRAILING 3x jarak invalidasi awal -- ngikut harga terbaik, cuma bisa naik, TANPA TP tetap (profit gak dibatesin).",
+      "entryPrice": 80810.06,
+      "tp": 91701.82999999999,
+      "sl": 77179.47,
+      "originalSl": 77179.47,
+      "exposure": 1.5,
+      "leverage": 20,
+      "marginUsd": 75,
+      "notes": "Analisa otomatis Kaela (BTCUSDT, mode Fair Value Gap): eksekusi LIVE otomatis ke Binance Demo di siklus lokal berikutnya (~15 menit).",
+      "patternType": "fvg_bounce",
+      "partialTp": 91701.82999999999,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "trailSmaLen": 10,
+      "realizedPnlUsd": 0,
+      "smartMoneyGapAtEntry": -1.99,
+      "silentTest": false,
+      "createdAt": "2026-10-28T00:15:55.818Z",
+      "triggeredAt": "2026-10-28T00:15:55.818Z",
+      "closedAt": null,
+      "closeReason": null,
+      "pnlUsd": null,
+      "pnlPct": null,
+      "liveExecutedAt": "2026-10-28T00:16:04.847Z",
+      "liveExecution": {
+        "demo": {
+          "ok": true,
+          "filledQty": 0.0925
+        },
+        "real": null,
+        "wibowoRoute": "demo"
+      }
+    }
+  ]
 }

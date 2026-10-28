@@ -135169,5 +135169,86 @@
     "qty": 7.86,
     "notionalUsd": 633101.778,
     "distPct": 0.0604357961282689
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "BID",
+    "price": 80371.2,
+    "qty": 6.578,
+    "notionalUsd": 528681.7536,
+    "distPct": -0.03314765258027264
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "BID",
+    "price": 80353.7,
+    "qty": 17.294,
+    "notionalUsd": 1389636.8878,
+    "distPct": -0.054914403805585266
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "BID",
+    "price": 80352,
+    "qty": 7.373,
+    "notionalUsd": 592435.296,
+    "distPct": -0.05702888821032629
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "BID",
+    "price": 80340,
+    "qty": 6.755,
+    "notionalUsd": 542696.7,
+    "distPct": -0.07195466047911209
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "ASK",
+    "price": 80397.9,
+    "qty": 10.72,
+    "notionalUsd": 861865.488,
+    "distPct": 0.00006219071777212757
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "ASK",
+    "price": 80416,
+    "qty": 8.074,
+    "notionalUsd": 649278.784,
+    "distPct": 0.022575230556531274
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "ASK",
+    "price": 80425.1,
+    "qty": 17.302,
+    "notionalUsd": 1391515.0802,
+    "distPct": 0.03389394119370107
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "ASK",
+    "price": 80429.7,
+    "qty": 10.253,
+    "notionalUsd": 824645.7141,
+    "distPct": 0.0396154872300581
+  },
+  {
+    "timestamp": "2026-10-28T16:48:20.396Z",
+    "midPrice": 80397.85,
+    "side": "ASK",
+    "price": 80445.6,
+    "qty": 9.302,
+    "notionalUsd": 748304.9712,
+    "distPct": 0.05939213548621014
   }
 ]

@@ -144,3 +144,10 @@ Keputusan Olan 3 Okt 2026 malam:
 - **Rekomendasi**: hapus lock (aman, tidak ada proses git) lalu jalankan 1 siklus sambil dipantau; pertimbangkan perbaikan skrip:
   kunci bersama `flock` untuk semua skrip yang memakai git + hapus otomatis `index.lock` yang basi >10 menit (tanpa proses git) + alert WA.
   Menunggu "ya" Olan.
+- ✅ **28 Okt 07.34 WITA — Olan bilang "Ya, nyalakan"**: lock dihapus (tanpa proses git). Siklus 07.45–09.30: 8 jalan, 8 selesai, 8 push
+  sukses, 0 gagal; siklus pertama menjaga 27 file state; self-check regression 109 lolos/0 gagal; disk 49%, /tmp bersih. Real semua
+  "skip saldo kurang" (SniperBtcDual, RangerBtcDual/fvg, RangerRotasi); demo jalan (Ranger BTCUSDC Binance Demo LONG #2026102801 @ $80.823).
+- Sisa (belum dikerjakan): (a) WhaleDailyDigest ketinggalan ~2.200 blok (~370 jam) & cuma maju ±1 blok/siklus -> hampir tidak mengejar,
+  perlu dipercepat/di-reset; (b) pesan WA masih menautkan `kaela-access.netlify.app` (Netlify mati/diblacklist) -> ganti ke link CF Pages;
+  (c) kredit Vultr $9,57 (28 Okt) -> isi ulang sebelum habis; (d) perbaikan `flock` + hapus otomatis lock basi; (e) ganti token git;
+  (f) jawaban Olan soal dana BingX ±$58 & Grid real.

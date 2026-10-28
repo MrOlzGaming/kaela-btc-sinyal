@@ -151,3 +151,8 @@ Keputusan Olan 3 Okt 2026 malam:
   perlu dipercepat/di-reset; (b) pesan WA masih menautkan `kaela-access.netlify.app` (Netlify mati/diblacklist) -> ganti ke link CF Pages;
   (c) kredit Vultr $9,57 (28 Okt) -> isi ulang sebelum habis; (d) perbaikan `flock` + hapus otomatis lock basi; (e) ganti token git;
   (f) jawaban Olan soal dana BingX ±$58 & Grid real.
+- ✅ **28 Okt 10.30 — Spam WA "DCA kurang dana" dibereskan** (Olan: "kasih info sehari 1x aja"). Sumber: `spotDcaAccount.js`
+  (Musiman DCA, akun real Olan via multiAccountExecutor) -- gagal `ensureSpotBalance` -> WA tiap siklus 15 mnt tanpa simpan state
+  (~96x/hari, tanpa jejak di log). Fix commit 1dec7a5a: `failNotified[jenis] = tanggal` di state (`multi-account-state/`, gitignored ->
+  aman dari reset), notif gagal maks 1x/hari per jenis (dana/beli), retry tetap tiap siklus diam. Sama untuk `spotDcaAltAccount.js`.
+  Terverifikasi live: siklus 10.30 kirim 1 notif + `failNotified.dana = 2026-10-28`. Saldo spot Olan $0,24 -> DCA baru jalan lagi setelah diisi.

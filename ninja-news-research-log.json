@@ -190,5 +190,46 @@
     },
     "eurMaxMovePct": -0.00891662951404271,
     "reportSentAt": 1792674005190
+  },
+  {
+    "key": "2026-10-28T14:00",
+    "label": "FOMC Rate Decision",
+    "timeMs": 1793210400000,
+    "eur": {
+      "base": 1.1148,
+      "s5": 1.1151,
+      "s10": 1.1152,
+      "m1": 1.1149,
+      "m2": 1.115,
+      "m5": 1.115,
+      "m10": 1.1148,
+      "m15": 1.1147,
+      "m30": 1.1143
+    },
+    "btc": {
+      "base": 80860,
+      "s5": 80830.42,
+      "s10": 80811.28,
+      "m1": 80900.01,
+      "m2": 80882.01,
+      "m5": 80958.56,
+      "m10": 80779.75,
+      "m15": 80832,
+      "m30": 80946.01
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": 0.03588087549335809,
+    "reportSentAt": 1793212203466
   }
 ]

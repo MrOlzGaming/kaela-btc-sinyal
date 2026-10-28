@@ -134404,5 +134404,86 @@
     "qty": 6.485,
     "notionalUsd": 521929.6610000001,
     "distPct": 0.03486440480992425
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80725.4,
+    "qty": 11.67,
+    "notionalUsd": 942065.418,
+    "distPct": -0.00006193833543561589
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80700,
+    "qty": 7.555,
+    "notionalUsd": 609688.5,
+    "distPct": -0.03152661273488979
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80698.6,
+    "qty": 6.866,
+    "notionalUsd": 554076.5876,
+    "distPct": -0.033260886126978875
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80693.2,
+    "qty": 17.75,
+    "notionalUsd": 1432304.3,
+    "distPct": -0.03995022635364684
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80687.7,
+    "qty": 14.591,
+    "notionalUsd": 1177314.2307,
+    "distPct": -0.046763443251168005
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80686,
+    "qty": 7.911,
+    "notionalUsd": 638306.946,
+    "distPct": -0.04886934665585276
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "BID",
+    "price": 80671.9,
+    "qty": 7.665,
+    "notionalUsd": 618350.1135,
+    "distPct": -0.06633595724768696
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "ASK",
+    "price": 80769.6,
+    "qty": 9.637,
+    "notionalUsd": 778376.6352000001,
+    "distPct": 0.05469155018647618
+  },
+  {
+    "timestamp": "2026-10-28T14:03:20.702Z",
+    "midPrice": 80725.45,
+    "side": "ASK",
+    "price": 80771.8,
+    "qty": 11.667,
+    "notionalUsd": 942364.5906,
+    "distPct": 0.05741683694548104
   }
 ]

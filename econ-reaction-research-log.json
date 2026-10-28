@@ -700,5 +700,57 @@
       "binanceGlobalLongPct": 69.38,
       "topVsGlobalGap": -3.34
     }
+  },
+  {
+    "recordedAt": "2026-10-28T18:05:02.809Z",
+    "key": "2026-10-28T14:00:00-04:00__Federal Funds Rate",
+    "title": "Federal Funds Rate",
+    "timeMs": 1793210400000,
+    "actual": "4",
+    "forecast": "4.00%",
+    "previous": "4.00%",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0411,
+    "btcBefore": 80747.4,
+    "btcAfter": 80835.3,
+    "btcReactionPct": 0.1089,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000879849163186,
+      "openInterest": 30702.47970000011,
+      "longAccountPct": 67.43,
+      "shortAccountPct": 32.57,
+      "fearGreed": 51,
+      "binanceTopLongPct": 65.07,
+      "binanceGlobalLongPct": 67.1,
+      "topVsGlobalGap": -2.03
+    }
+  },
+  {
+    "recordedAt": "2026-10-28T18:05:03.437Z",
+    "key": "2026-10-28T14:00:00-04:00__FOMC Statement",
+    "title": "FOMC Statement",
+    "timeMs": 1793210400000,
+    "actual": "4",
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0411,
+    "btcBefore": 80747.4,
+    "btcAfter": 80856.8,
+    "btcReactionPct": 0.1355,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000879849163186,
+      "openInterest": 30702.47970000011,
+      "longAccountPct": 67.43,
+      "shortAccountPct": 32.57,
+      "fearGreed": 51,
+      "binanceTopLongPct": 65.07,
+      "binanceGlobalLongPct": 67.1,
+      "topVsGlobalGap": -2.03
+    }
   }
 ]

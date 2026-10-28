@@ -130498,5 +130498,86 @@
     "qty": 7.737,
     "notionalUsd": 626028.5232,
     "distPct": 0.05051145163235555
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "BID",
+    "price": 80825.3,
+    "qty": 6.321,
+    "notionalUsd": 510896.7213,
+    "distPct": -0.0481671443190249
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "BID",
+    "price": 80819.4,
+    "qty": 6.19,
+    "notionalUsd": 500272.086,
+    "distPct": -0.055463322790980964
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "BID",
+    "price": 80815,
+    "qty": 8.316,
+    "notionalUsd": 672057.54,
+    "distPct": -0.06090454063445836
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "BID",
+    "price": 80811.3,
+    "qty": 9.558,
+    "notionalUsd": 772394.4054,
+    "distPct": -0.06548011018465773
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "ASK",
+    "price": 80864.3,
+    "qty": 19.456,
+    "notionalUsd": 1573295.8208,
+    "distPct": 0.00006183202095228778
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "ASK",
+    "price": 80884,
+    "qty": 6.814,
+    "notionalUsd": 551143.576,
+    "distPct": 0.024423648274732035
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "ASK",
+    "price": 80885,
+    "qty": 17.445,
+    "notionalUsd": 1411038.825,
+    "distPct": 0.02566028869370581
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "ASK",
+    "price": 80913.8,
+    "qty": 7.054,
+    "notionalUsd": 570765.9452000001,
+    "distPct": 0.06127553276015409
+  },
+  {
+    "timestamp": "2026-10-28T02:03:27.522Z",
+    "midPrice": 80864.25,
+    "side": "ASK",
+    "price": 80915.4,
+    "qty": 7.724,
+    "notionalUsd": 624990.5496,
+    "distPct": 0.06325415743050133
   }
 ]

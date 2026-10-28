@@ -3778,5 +3778,10 @@
     "type": "econ-calendar",
     "date": "2026-10-28T12:31:10.131Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Jumat, 30 Okt · 20:30 WITA\n📰 *Employment Cost Index q/q*\n🇺🇸 Employment Cost Index\n🇮🇩 Kenaikan total biaya tenaga kerja (gaji + tunjangan)\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 0,8% · Sebelumnya: 0,9%\nArah BTC: belum dipetakan (gak dipaksa nebak)\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "econ-calendar-headsup",
+    "date": "2026-10-28T17:55:01.709Z",
+    "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 02:00 WITA\n\n📰 *Federal Funds Rate*\n🇺🇸 Federal Funds Rate -- keputusan FOMC (Federal Open Market Committee)\n🇮🇩 Keputusan suku bunga acuan AS oleh rapat The Fed\nLevel: 👑 Final Boss (efek brutal)\nPerkiraan: 4,00% · Sebelumnya: 4,00%\nArah BTC (logika makro, keyakinan kuat):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n📰 *FOMC Statement*\n🇺🇸 Federal Open Market Committee Statement\n🇮🇩 Pernyataan resmi The Fed setelah rapat suku bunga\nLevel: 👑 Final Boss (efek brutal)\nArah BTC (dari nada omongan):\n• Nada galak/hawkish → 📉 BTC cenderung tertekan\n• Nada lunak/dovish → 📈 BTC cenderung menguat\n\n👑 FINAL BOSS -- BTC bisa gerak liar beberapa persen dalam hitungan menit. Jangan buka posisi manual pas rilis.\n\n🥷 *Ninja News siaga (Demo + Real)*\nDolar gerak ≥0,1% di 10 detik pertama → Kaela nyopet BTC arah KEBALIKAN dolar.\nSL 0,8% · trailing aktif +0,6% · maks 30 menit. Dolar adem = gak entry."
   }
 ]

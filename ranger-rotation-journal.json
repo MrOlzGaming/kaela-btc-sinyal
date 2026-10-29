@@ -32,10 +32,11 @@
     "realRetry": {
       "since": 1793145614026,
       "alerted": [
-        1
+        1,
+        2
       ],
-      "tries": 97,
-      "lastTry": 1793232012703
+      "tries": 98,
+      "lastTry": 1793232911671
     }
   },
   "lastScanCloseTime": 1793145599999,

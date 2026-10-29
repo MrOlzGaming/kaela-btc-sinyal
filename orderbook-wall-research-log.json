@@ -142099,5 +142099,86 @@
     "qty": 6.706,
     "notionalUsd": 544961.7488000001,
     "distPct": 0.06581592351315067
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "BID",
+    "price": 81430.5,
+    "qty": 17.293,
+    "notionalUsd": 1408177.6365,
+    "distPct": -0.055415329610741595
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "BID",
+    "price": 81428,
+    "qty": 7.225,
+    "notionalUsd": 588317.2999999999,
+    "distPct": -0.05848373102883399
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "BID",
+    "price": 81424,
+    "qty": 11.573,
+    "notionalUsd": 942319.952,
+    "distPct": -0.06339317329778184
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "ASK",
+    "price": 81498.5,
+    "qty": 7.23,
+    "notionalUsd": 589234.155,
+    "distPct": 0.028045188961371675
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "ASK",
+    "price": 81500,
+    "qty": 7.635,
+    "notionalUsd": 622252.5,
+    "distPct": 0.029886229812227116
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "ASK",
+    "price": 81512.4,
+    "qty": 9.339,
+    "notionalUsd": 761244.3036,
+    "distPct": 0.045105500845958275
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "ASK",
+    "price": 81514.5,
+    "qty": 17.293,
+    "notionalUsd": 1409630.2485,
+    "distPct": 0.047682958037163034
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "ASK",
+    "price": 81518.7,
+    "qty": 17.739,
+    "notionalUsd": 1446060.2193,
+    "distPct": 0.0528378724195547
+  },
+  {
+    "timestamp": "2026-10-29T15:18:34.597Z",
+    "midPrice": 81475.65,
+    "side": "ASK",
+    "price": 81526.3,
+    "qty": 9.535,
+    "notionalUsd": 777353.2705,
+    "distPct": 0.06216581273056273
   }
 ]

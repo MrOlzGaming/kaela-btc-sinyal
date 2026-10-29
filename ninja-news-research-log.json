@@ -231,5 +231,46 @@
     },
     "eurMaxMovePct": 0.03588087549335809,
     "reportSentAt": 1793212203466
+  },
+  {
+    "key": "2026-10-29T08:30",
+    "label": "GDP Q3 Advance + PCE (Sep) + Jobless Claims",
+    "timeMs": 1793277000000,
+    "eur": {
+      "base": 1.1153,
+      "s5": 1.1152,
+      "s10": 1.1152,
+      "m1": 1.1155,
+      "m2": 1.1155,
+      "m5": 1.1151,
+      "m10": 1.116,
+      "m15": 1.1158,
+      "m30": 1.1142
+    },
+    "btc": {
+      "base": 80139.37,
+      "s5": 80123.85,
+      "s10": 80188.21,
+      "m1": 80154.01,
+      "m2": 80205.7,
+      "m5": 80074.01,
+      "m10": 80159.96,
+      "m15": 80128,
+      "m30": 80058.01
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.017932394871333093,
+    "reportSentAt": 1793278803508
   }
 ]

@@ -140470,5 +140470,86 @@
     "qty": 7.22,
     "notionalUsd": 579170.35,
     "distPct": 0.06817372386335338
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80100,
+    "qty": 14.031,
+    "notionalUsd": 1123883.1,
+    "distPct": -0.037501536564625765
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80095,
+    "qty": 7.616,
+    "notionalUsd": 610003.52,
+    "distPct": -0.043741392898173546
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80090,
+    "qty": 10.049,
+    "notionalUsd": 804824.4099999999,
+    "distPct": -0.04998124923172132
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80083.7,
+    "qty": 9.71,
+    "notionalUsd": 777612.7270000001,
+    "distPct": -0.05784346821199515
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80083.4,
+    "qty": 7.184,
+    "notionalUsd": 575319.1455999999,
+    "distPct": -0.058217859592011645
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80080.2,
+    "qty": 17.523,
+    "notionalUsd": 1403245.3446,
+    "distPct": -0.06221136764547859
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "BID",
+    "price": 80076.5,
+    "qty": 6.948,
+    "notionalUsd": 556371.522,
+    "distPct": -0.06682886133230032
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "ASK",
+    "price": 80130.1,
+    "qty": 21.666,
+    "notionalUsd": 1736098.7466000002,
+    "distPct": 0.00006239856333910984
+  },
+  {
+    "timestamp": "2026-10-29T10:03:28.245Z",
+    "midPrice": 80130.05,
+    "side": "ASK",
+    "price": 80184.5,
+    "qty": 7.306,
+    "notionalUsd": 585827.957,
+    "distPct": 0.06795203547233165
   }
 ]

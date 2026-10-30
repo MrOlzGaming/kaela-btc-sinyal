@@ -53,8 +53,8 @@
   },
   "fvg": {
     "floating": {
-      "id": "ranger-btc-dual-1793330120270",
-      "signalId": "2026103013",
+      "id": "ranger-btc-dual-1793331020190",
+      "signalId": "2026103014",
       "direction": "buy",
       "patternType": "fvg_bounce",
       "sl": 77460.75,
@@ -62,36 +62,36 @@
       "wibowoRoute": "demo",
       "trailR": 3,
       "manualReason": null,
-      "triggeredAt": "2026-10-30T03:15:20.270Z",
+      "triggeredAt": "2026-10-30T03:30:20.191Z",
       "demo": {
-        "entryPrice": 77211,
+        "entryPrice": 77384.3,
         "qty": 0.037,
         "leverage": 50,
-        "margin": 58.806218217120005,
-        "nilaiPosisi": 2940.310910856,
+        "margin": 58.85196461604001,
+        "nilaiPosisi": 2942.598230802,
         "currentSl": 77460.75,
         "partialDone": false,
         "remainingFraction": 1,
         "realizedPnlUsd": 0,
         "refEntryPrice": 77991.89,
-        "venueGapPct": -1.001245129461537
+        "venueGapPct": -0.779042538910131
       },
       "real": null,
       "realRetry": {
-        "since": 1793330118500,
+        "since": 1793331018013,
         "alerted": [
           1
         ],
         "tries": 1,
-        "lastTry": 1793330118500
+        "lastTry": 1793331018013
       }
     },
-    "closedCount": 13,
+    "closedCount": 14,
     "stats": {
       "demo": {
-        "wins": 6,
+        "wins": 7,
         "losses": 6,
-        "totalPnlUsd": -49.792698400000305
+        "totalPnlUsd": -43.380598400000196
       },
       "real": {
         "wins": 0,
@@ -101,9 +101,50 @@
     },
     "dailySignalSeq": {
       "dayKey": "20261030",
-      "count": 13
+      "count": 14
     },
     "history": [
+      {
+        "id": "ranger-btc-dual-1793330120270",
+        "signalId": "2026103013",
+        "direction": "buy",
+        "patternType": "fvg_bounce",
+        "sl": 77460.75,
+        "partialTp": 79054.17,
+        "wibowoRoute": "demo",
+        "trailR": 3,
+        "manualReason": null,
+        "triggeredAt": "2026-10-30T03:15:20.270Z",
+        "demo": {
+          "entryPrice": 77211,
+          "qty": 0.037,
+          "leverage": 50,
+          "margin": 58.806218217120005,
+          "nilaiPosisi": 2940.310910856,
+          "currentSl": 77460.75,
+          "partialDone": false,
+          "remainingFraction": 1,
+          "realizedPnlUsd": 0,
+          "refEntryPrice": 77991.89,
+          "venueGapPct": -1.001245129461537,
+          "closedAt": "2026-10-30T03:30:10.830Z",
+          "exitPrice": 77384.3,
+          "legPnlUsd": 6.412100000000107,
+          "closeReason": "TRAIL_STOP"
+        },
+        "real": null,
+        "realRetry": {
+          "since": 1793330118500,
+          "alerted": [
+            1
+          ],
+          "tries": 1,
+          "lastTry": 1793330118500,
+          "expired": true,
+          "reason": "harga udah lari / kena SL"
+        },
+        "archivedAt": "2026-10-30T03:30:16.008Z"
+      },
       {
         "id": "ranger-btc-dual-1793329221358",
         "signalId": "2026103012",

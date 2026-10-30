@@ -1240,5 +1240,27 @@
     "graded": false,
     "actualDirection": null,
     "correct": null
+  },
+  {
+    "asset": "btc",
+    "date": "2026-10-30T23:15:58.037Z",
+    "score": 0,
+    "verdict": "⚪ NETRAL / Campuran",
+    "direction": "netral",
+    "priceAtVerdict": 77059.5,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "xau",
+    "date": "2026-10-30T23:15:58.037Z",
+    "score": 1,
+    "verdict": "🟢 Condong Bullish",
+    "direction": "bullish",
+    "priceAtVerdict": 3901.4,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
   }
 ]

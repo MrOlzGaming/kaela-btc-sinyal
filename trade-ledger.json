@@ -1,6 +1,6 @@
 {
- "updatedAt": "2026-10-30T02:03:42.575Z",
- "count": 51,
+ "updatedAt": "2026-10-30T02:18:40.962Z",
+ "count": 52,
  "trades": [
   {
    "key": "ranger|ranger-rotasi-1793318430884|demo",
@@ -1975,6 +1975,46 @@
    }
   },
   {
+   "key": "ranger|ranger-btc-dual-1793326518222|demo",
+   "system": "🏹 Ranger",
+   "systemKey": "ranger",
+   "id": "ranger-btc-dual-1793326518222",
+   "signalId": "2026103009",
+   "account": "Kaela Demo",
+   "mode": "demo",
+   "exchange": "Binance",
+   "asset": "BTC",
+   "patternType": "fvg_bounce",
+   "direction": "LONG",
+   "entry": 76787.9,
+   "sl": 77460.75,
+   "exit": null,
+   "qty": 0.037,
+   "leverage": 50,
+   "marginUsd": 58.7446321944,
+   "openedAt": null,
+   "closedAt": null,
+   "status": "terbuka",
+   "grossUsd": null,
+   "feeUsd": null,
+   "netUsd": null,
+   "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
+   "reasonCloseCode": null,
+   "reasonClose": null,
+   "slot": "fvg",
+   "context": {
+    "id": "ranger-btc-dual-1793326518222",
+    "signalId": "2026103009",
+    "direction": "buy",
+    "patternType": "fvg_bounce",
+    "sl": 77460.75,
+    "partialTp": 79054.17,
+    "wibowoRoute": "demo",
+    "trailR": 3,
+    "triggeredAt": "2026-10-30T02:15:18.222Z"
+   }
+  },
+  {
    "key": "ranger|ranger-btc-dual-1793325620631|demo",
    "system": "🏹 Ranger",
    "systemKey": "ranger",
@@ -1988,19 +2028,19 @@
    "direction": "LONG",
    "entry": 76676.7,
    "sl": 77460.75,
-   "exit": null,
+   "exit": 76787.9,
    "qty": 0.037,
    "leverage": 50,
    "marginUsd": 58.733910024960004,
    "openedAt": null,
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-10-30T02:15:08.647Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
-   "netUsd": null,
+   "netUsd": 4.114399999999892,
    "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "TRAIL_STOP",
+   "reasonClose": "Trailing stop kena -- SL yang ikut harga terbaik kesentuh, profit dikunci",
    "slot": "fvg",
    "context": {
     "id": "ranger-btc-dual-1793325620631",
@@ -2011,7 +2051,8 @@
     "partialTp": 79054.17,
     "wibowoRoute": "demo",
     "trailR": 3,
-    "triggeredAt": "2026-10-30T02:00:20.631Z"
+    "triggeredAt": "2026-10-30T02:00:20.631Z",
+    "archivedAt": "2026-10-30T02:15:14.119Z"
    }
   },
   {

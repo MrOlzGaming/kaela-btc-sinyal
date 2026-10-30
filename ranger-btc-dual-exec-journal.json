@@ -53,42 +53,40 @@
   },
   "fvg": {
     "floating": {
-      "id": "ranger-btc-dual-1793144721203",
-      "signalId": "2026102801",
+      "id": "ranger-btc-dual-1793318420309",
+      "signalId": "2026103001",
       "direction": "buy",
       "patternType": "fvg_bounce",
-      "sl": 78098.33605,
-      "partialTp": 86256.60789999999,
+      "sl": 77460.75,
+      "partialTp": 79054.17,
       "wibowoRoute": "demo",
       "trailR": 3,
       "manualReason": null,
-      "triggeredAt": "2026-10-27T23:45:21.204Z",
+      "triggeredAt": "2026-10-30T00:00:20.309Z",
       "demo": {
-        "entryPrice": 80816.2,
-        "qty": 0.018,
-        "leverage": 25,
-        "margin": 60.53939684784001,
-        "nilaiPosisi": 1513.4849211960002,
-        "currentSl": 78098.33605,
+        "entryPrice": 77988.5,
+        "qty": 0.038,
+        "leverage": 50,
+        "margin": 59.84114487984,
+        "nilaiPosisi": 2992.057243992,
+        "currentSl": 77460.75,
         "partialDone": false,
         "remainingFraction": 1,
         "realizedPnlUsd": 0,
-        "refEntryPrice": 80817.76,
-        "venueGapPct": -0.0019302687924011648,
-        "peak": 81666.5
+        "refEntryPrice": 77991.89,
+        "venueGapPct": -0.004346605781702967
       },
       "real": null,
       "realRetry": {
-        "since": 1793144718937,
+        "since": 1793318418162,
         "alerted": [
-          1,
-          2
+          1
         ],
-        "tries": 193,
-        "lastTry": 1793317508407
+        "tries": 1,
+        "lastTry": 1793318418162
       }
     },
-    "closedCount": 0,
+    "closedCount": 1,
     "stats": {
       "demo": {
         "wins": 0,
@@ -102,9 +100,55 @@
       }
     },
     "dailySignalSeq": {
-      "dayKey": "20261028",
+      "dayKey": "20261030",
       "count": 1
-    }
+    },
+    "history": [
+      {
+        "id": "ranger-btc-dual-1793144721203",
+        "signalId": "2026102801",
+        "direction": "buy",
+        "patternType": "fvg_bounce",
+        "sl": 78098.33605,
+        "partialTp": 86256.60789999999,
+        "wibowoRoute": "demo",
+        "trailR": 3,
+        "manualReason": null,
+        "triggeredAt": "2026-10-27T23:45:21.204Z",
+        "demo": {
+          "entryPrice": 80816.2,
+          "qty": 0.018,
+          "leverage": 25,
+          "margin": 60.53939684784001,
+          "nilaiPosisi": 1513.4849211960002,
+          "currentSl": 78098.33605,
+          "partialDone": false,
+          "remainingFraction": 1,
+          "realizedPnlUsd": 0,
+          "refEntryPrice": 80817.76,
+          "venueGapPct": -0.0019302687924011648,
+          "peak": 81666.5,
+          "closedAt": "2026-10-30T00:00:09.361Z",
+          "exitPrice": null,
+          "legPnlUsd": null,
+          "untracked": true,
+          "closeReason": "OFFLINE_UNTRACKED"
+        },
+        "real": null,
+        "realRetry": {
+          "since": 1793144718937,
+          "alerted": [
+            1,
+            2
+          ],
+          "tries": 193,
+          "lastTry": 1793317508407,
+          "expired": true,
+          "reason": "harga udah lari / kena SL"
+        },
+        "archivedAt": "2026-10-30T00:00:16.092Z"
+      }
+    ]
   },
   "sweep": {
     "floating": null,

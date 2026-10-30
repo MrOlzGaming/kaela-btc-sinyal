@@ -882,5 +882,31 @@
       "binanceGlobalLongPct": 68.5,
       "topVsGlobalGap": -0.8
     }
+  },
+  {
+    "recordedAt": "2026-10-30T12:35:03.279Z",
+    "key": "2026-10-30T08:30:00-04:00__Employment Cost Index q/q",
+    "title": "Employment Cost Index q/q",
+    "timeMs": 1793363400000,
+    "actual": null,
+    "forecast": "0.8%",
+    "previous": "0.9%",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0059,
+    "btcBefore": 77396,
+    "btcAfter": 77336.6,
+    "btcReactionPct": -0.0767,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0001,
+      "openInterest": 33270.752600000174,
+      "longAccountPct": 71.26,
+      "shortAccountPct": 28.74,
+      "fearGreed": 30,
+      "binanceTopLongPct": 63.14,
+      "binanceGlobalLongPct": 71.32,
+      "topVsGlobalGap": -8.18
+    }
   }
 ]

@@ -3888,5 +3888,10 @@
     "type": "daily-checklist-report",
     "date": "2026-10-30T12:00:54.873Z",
     "content": "🧪 *Vector [QA Tester]* lapor ke Kaela, checklist otomatisasi harian 2026-10-30 udah dicek:\n\n✅ Berita Pagi\n✅ Berita Siang\n✅ Berita Sore\n✅ Anomaly Scanner\n✅ Bloomberg Mini (laporan pribadi Olan)\n✅ Bloomberg Mini (laporan grup WA)\n✅ Sniper Analisa Harian\n✅ Ucapan Ulang Tahun\n❌ BELUM Whale Daily Digest\n\n⚠️ Ada yang belum kekirim walau udah dipaksa jalan -- cek log Vultr, kemungkinan datanya emang kosong/skip wajar hari ini (bukan otomatis berarti bug).\n\n🔍 Kesehatan Mandor (jalan beneran + gak spam):\n⚠️ Whale scan KETINGGALAN 2559 blok (~426.5 jam) -- cek run-vultr-executor.sh/log, kemungkinan kegate/macet lagi.\n✅ Econ-calendar-live jalan (state terakhir 1 menit lalu).\n⏸️ Ninja MR paper 5M: dimatikan lewat config (sengaja).\n✅ Ninja MR eksekutor BingX 15M jalan (candle terakhir 1 menit lalu).\n✅ Regression test hari ini: 109 lolos, 0 gagal (7s, salinan bersih repo).\n⏳ Verifikasi endpoint BingX belum jalan (nunggu akun demo kosong / Ninja MR gak pegang posisi).\n✅ Gak ada dobel-kirim ke 7 tipe harian + 1 prefix dinamis (cek 7 hari terakhir).\n\n— Kaela"
+  },
+  {
+    "type": "econ-calendar-headsup",
+    "date": "2026-10-30T12:25:01.374Z",
+    "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 20:30 WITA\n\n📰 *Employment Cost Index q/q*\n🇺🇸 Employment Cost Index\n🇮🇩 Kenaikan total biaya tenaga kerja (gaji + tunjangan)\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 0,8% · Sebelumnya: 0,9%\nArah BTC: belum dipetakan (gak dipaksa nebak)"
   }
 ]

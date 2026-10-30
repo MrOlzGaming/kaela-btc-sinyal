@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-10-30 11:33 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-10-30 11:48 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -20,7 +20,7 @@ Diperbarui otomatis: 2026-10-30 11:33 WITA -- dari jurnal SEMUA sistem (Sniper/R
 ## Posisi terbuka (2)
 
 - 🎯 Sniper · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 80,737.7 (SL 77,179.5) sejak 2026-10-28 08:16 WITA
-- 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 77,384.3 (SL 77,460.8) sejak ?
+- 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 77,384.3 (SL 77,674.1) sejak ?
 
 ## Trade terakhir (55 terbaru)
 

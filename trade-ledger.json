@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-30T03:33:44.157Z",
+ "updatedAt": "2026-10-30T03:48:29.561Z",
  "count": 57,
  "trades": [
   {
@@ -1987,7 +1987,7 @@
    "patternType": "fvg_bounce",
    "direction": "LONG",
    "entry": 77384.3,
-   "sl": 77460.75,
+   "sl": 77674.05,
    "exit": null,
    "qty": 0.037,
    "leverage": 50,

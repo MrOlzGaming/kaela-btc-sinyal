@@ -69,12 +69,13 @@
         "leverage": 50,
         "margin": 58.85196461604001,
         "nilaiPosisi": 2942.598230802,
-        "currentSl": 77460.75,
+        "currentSl": 77674.05,
         "partialDone": false,
         "remainingFraction": 1,
         "realizedPnlUsd": 0,
         "refEntryPrice": 77991.89,
-        "venueGapPct": -0.779042538910131
+        "venueGapPct": -0.779042538910131,
+        "peak": 77903.4
       },
       "real": null,
       "realRetry": {
@@ -83,7 +84,9 @@
           1
         ],
         "tries": 1,
-        "lastTry": 1793331018013
+        "lastTry": 1793331018013,
+        "expired": true,
+        "reason": "harga udah lari / kena SL"
       }
     },
     "closedCount": 14,

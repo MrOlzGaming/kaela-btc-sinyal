@@ -1,6 +1,6 @@
 {
   "btc": {
-    "price": 77059.5,
+    "price": 77571.67,
     "conviction": {
       "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
@@ -13,12 +13,12 @@
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.46 -- Fair value / akumulasi"
+          "reason": "1.43 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.31 -- Optimism / Anxiety"
+          "reason": "0.30 -- Optimism / Anxiety"
         },
         {
           "label": "Fear & Greed",
@@ -28,7 +28,7 @@
         {
           "label": "Stablecoin Supply",
           "v": -1,
-          "reason": "-1.09% (7 hari) -- dana keluar/redeem"
+          "reason": "-1.10% (7 hari) -- dana keluar/redeem"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -53,7 +53,7 @@
         {
           "label": "ETF Flow (institusi)",
           "v": 0,
-          "reason": "5/7 hari inflow, net 7hari $196jt -- campuran"
+          "reason": "4/7 hari inflow, net 7hari $-976jt -- campuran"
         }
       ],
       "totalFactors": 10
@@ -69,13 +69,13 @@
     },
     "advancedMacro": {
       "dvol": {
-        "value": 40.76,
-        "changePct": 9.129852744310567
+        "value": 40.05,
+        "changePct": 5.589243343000256
       },
       "stablecoin": {
-        "current": 251983300318.87842,
-        "weekAgo": 254747532395.2724,
-        "changePct": -1.0850868899114332
+        "current": 251595999207.0386,
+        "weekAgo": 254400083604.96246,
+        "changePct": -1.1022340709125305
       },
       "yieldCurve": {
         "value": 0.38,
@@ -98,10 +98,10 @@
         "changeBps": 17.99999999999997
       },
       "etfFlow": {
-        "date": "2026-10-29",
-        "latestNetFlowUsd": 17071922.455000002,
-        "sum7dUsd": 195710951.34,
-        "positiveDays7d": 5,
+        "date": "2026-10-30",
+        "latestNetFlowUsd": -643330345.885,
+        "sum7dUsd": -976019631.685,
+        "positiveDays7d": 4,
         "totalDays7d": 7
       },
       "oil": {
@@ -116,7 +116,7 @@
     }
   },
   "xau": {
-    "price": 3901.4,
+    "price": 3898.43,
     "conviction": {
       "score": 1,
       "verdict": "🟢 Condong Bullish",
@@ -124,7 +124,7 @@
         {
           "label": "RSI Teknikal",
           "v": 1,
-          "reason": "RSI 29 oversold -- rawan technical bounce"
+          "reason": "RSI 21 oversold -- rawan technical bounce"
         },
         {
           "label": "DXY (Dolar)",
@@ -150,8 +150,8 @@
       "winRatePct": 47.368421052631575
     },
     "regime": {
-      "corr30": -0.11334770283752058,
-      "corr90": -0.4118055011759228,
+      "corr30": -0.09080532539397913,
+      "corr90": -0.4045628000854866,
       "label30": "lemah/gak konsisten",
       "label90": "moderat negatif",
       "sampleDays": 83,
@@ -196,5 +196,5 @@
       "inverted": false
     }
   },
-  "updatedAt": "2026-10-30T23:15:58.037Z"
+  "updatedAt": "2026-10-31T23:15:53.012Z"
 }

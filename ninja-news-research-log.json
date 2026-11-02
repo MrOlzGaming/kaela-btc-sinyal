@@ -272,5 +272,46 @@
     },
     "eurMaxMovePct": -0.017932394871333093,
     "reportSentAt": 1793278803508
+  },
+  {
+    "key": "2026-11-02T10:00",
+    "label": "ISM Manufacturing PMI (Okt)",
+    "timeMs": 1793631600000,
+    "eur": {
+      "base": 1.1229,
+      "s5": 1.1229,
+      "s10": 1.1231,
+      "m1": 1.123,
+      "m2": 1.123,
+      "m5": 1.1226,
+      "m10": 1.1232,
+      "m15": 1.1226,
+      "m30": 1.1223
+    },
+    "btc": {
+      "base": 77869.12,
+      "s5": 77880,
+      "s10": 77892,
+      "m1": 77912.02,
+      "m2": 77840,
+      "m5": 77856,
+      "m10": 78062.4,
+      "m15": 77976.01,
+      "m30": 77942
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": 0.017811025024488197,
+    "reportSentAt": 1793633403328
   }
 ]

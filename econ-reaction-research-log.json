@@ -908,5 +908,31 @@
       "binanceGlobalLongPct": 71.32,
       "topVsGlobalGap": -8.18
     }
+  },
+  {
+    "recordedAt": "2026-11-02T15:05:03.208Z",
+    "key": "2026-11-02T10:00:00-05:00__ISM Manufacturing PMI",
+    "title": "ISM Manufacturing PMI",
+    "timeMs": 1793631600000,
+    "actual": "55.5",
+    "forecast": "54.5",
+    "previous": "54.5",
+    "conclusionLabel": "HAWKISH 📉",
+    "expectedDirection": "tertekan",
+    "dxyChangePct": -0.0295,
+    "btcBefore": 77698.6,
+    "btcAfter": 77719.4,
+    "btcReactionPct": 0.0268,
+    "divergence": false,
+    "positioningBefore": {
+      "fundingRate": 0.0000863268780358,
+      "openInterest": 33566.11930000022,
+      "longAccountPct": 70.33,
+      "shortAccountPct": 29.67,
+      "fearGreed": 37,
+      "binanceTopLongPct": 64.16,
+      "binanceGlobalLongPct": 68.69,
+      "topVsGlobalGap": -4.53
+    }
   }
 ]

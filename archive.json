@@ -4088,5 +4088,10 @@
     "type": "econ-calendar",
     "date": "2026-11-02T15:01:04.986Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Rabu, 4 Nov · 23:00 WITA\n📰 *ISM Services PMI*\n🇺🇸 Institute for Supply Management Services Purchasing Managers' Index\n🇮🇩 Survei manajer pembelian perusahaan JASA AS: di atas 50 = tumbuh, di bawah 50 = menyusut\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 54,9 · Sebelumnya: 54,9\nArah BTC (logika makro, keyakinan sedang):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "anomaly",
+    "date": "2026-11-02T22:45:56.526Z",
+    "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n💰 Stablecoin Supply (7 hari): -1.63 -- JAUH DI BAWAH kebiasaan historis kita (median -0.05, z-score -3.1)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n💰 Stablecoin Supply (7 hari)\nStablecoin (USDT/USDC dkk) itu \"peluru\" yang disiapin orang buat beli crypto. Pertumbuhannya lebih LAMBAT/nyusut dari biasanya -- bisa berarti minat/duit yang masuk ke ekosistem crypto lagi berkurang."
   }
 ]

@@ -934,5 +934,31 @@
       "binanceGlobalLongPct": 68.69,
       "topVsGlobalGap": -4.53
     }
+  },
+  {
+    "recordedAt": "2026-11-03T15:05:03.242Z",
+    "key": "2026-11-03T10:00:00-05:00__JOLTS Job Openings",
+    "title": "JOLTS Job Openings",
+    "timeMs": 1793718000000,
+    "actual": "7.523",
+    "forecast": "7.15M",
+    "previous": "7.08M",
+    "conclusionLabel": "DOVISH 📈",
+    "expectedDirection": "tertekan",
+    "dxyChangePct": -0.0776,
+    "btcBefore": 77160.1,
+    "btcAfter": 77209.9,
+    "btcReactionPct": 0.0645,
+    "divergence": false,
+    "positioningBefore": {
+      "fundingRate": 0.0001,
+      "openInterest": 33260.55000000021,
+      "longAccountPct": 72.45,
+      "shortAccountPct": 27.55,
+      "fearGreed": 26,
+      "binanceTopLongPct": 63.9,
+      "binanceGlobalLongPct": 72.26,
+      "topVsGlobalGap": -8.36
+    }
   }
 ]

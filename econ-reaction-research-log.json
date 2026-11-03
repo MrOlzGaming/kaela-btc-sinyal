@@ -960,5 +960,31 @@
       "binanceGlobalLongPct": 72.26,
       "topVsGlobalGap": -8.36
     }
+  },
+  {
+    "recordedAt": "2026-11-03T15:25:03.324Z",
+    "key": "2026-11-03T10:16:00-05:00__Congressional Elections",
+    "title": "Congressional Elections",
+    "timeMs": 1793718960000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0805,
+    "btcBefore": 77297.5,
+    "btcAfter": 77184.2,
+    "btcReactionPct": -0.1466,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0001,
+      "openInterest": 33274.879500000214,
+      "longAccountPct": 72.53,
+      "shortAccountPct": 27.47,
+      "fearGreed": 26,
+      "binanceTopLongPct": 63.9,
+      "binanceGlobalLongPct": 71.98,
+      "topVsGlobalGap": -8.08
+    }
   }
 ]

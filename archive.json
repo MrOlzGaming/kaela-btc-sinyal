@@ -4213,5 +4213,10 @@
     "type": "econ-calendar",
     "date": "2026-11-04T13:31:14.317Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Jumat, 6 Nov · 21:30 WITA\n📰 *Average Hourly Earnings m/m*\n🇺🇸 Average Hourly Earnings\n🇮🇩 Kenaikan rata-rata upah per jam pekerja AS\nLevel: 🔴 Boss (efek tinggi)\nPerkiraan: 0,3% · Sebelumnya: 0,1%\nArah BTC: belum dipetakan (gak dipaksa nebak)\n\n📰 *Non-Farm Employment Change*\n🇺🇸 Non-Farm Payrolls (NFP)\n🇮🇩 Jumlah lapangan kerja baru di AS di luar sektor pertanian\nLevel: 🔴 Boss (efek tinggi)\nPerkiraan: 65K · Sebelumnya: 29K\nArah BTC (logika makro, keyakinan sedang):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n📰 *Unemployment Rate*\n🇺🇸 Unemployment Rate\n🇮🇩 Persentase angkatan kerja AS yang menganggur\nLevel: 🔴 Boss (efek tinggi)\nPerkiraan: 4,2% · Sebelumnya: 4,2%\nArah BTC (logika makro, keyakinan sedang):\n• Di atas perkiraan → 📈 BTC cenderung menguat\n• Di bawah perkiraan → 📉 BTC cenderung tertekan\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "econ-calendar-headsup",
+    "date": "2026-11-04T14:55:01.407Z",
+    "content": "⬜ ⏰ *SIAP-SIAP · 5 menit lagi*\n🕐 23:00 WITA\n\n📰 *ISM Services PMI*\n🇺🇸 Institute for Supply Management Services Purchasing Managers' Index\n🇮🇩 Survei manajer pembelian perusahaan JASA AS: di atas 50 = tumbuh, di bawah 50 = menyusut\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 54,8 · Sebelumnya: 54,9\nArah BTC (logika makro, keyakinan sedang):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n🥷 *Ninja News: rekam doang*\nRilis ini cuma direkam reaksinya (historis gak untung buat dicopet). Laporan 30 menit tetap keluar."
   }
 ]

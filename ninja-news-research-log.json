@@ -313,5 +313,46 @@
     },
     "eurMaxMovePct": 0.017811025024488197,
     "reportSentAt": 1793633403328
+  },
+  {
+    "key": "2026-11-04T10:00",
+    "label": "ISM Services PMI (Okt)",
+    "timeMs": 1793804400000,
+    "eur": {
+      "base": 1.1269,
+      "s5": 1.1267,
+      "s10": 1.1268,
+      "m1": 1.1265,
+      "m2": 1.1262,
+      "m5": 1.1262,
+      "m10": 1.1255,
+      "m15": 1.1254,
+      "m30": 1.1243
+    },
+    "btc": {
+      "base": 79347.33,
+      "s5": 79327.31,
+      "s10": 79353.18,
+      "m1": 79458.5,
+      "m2": 79496.6,
+      "m5": 80118.45,
+      "m10": 80587.77,
+      "m15": 80846.85,
+      "m30": 80613.99
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.026621705563933534,
+    "reportSentAt": 1793806204227
   }
 ]

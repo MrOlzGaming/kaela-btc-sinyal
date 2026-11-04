@@ -4223,5 +4223,10 @@
     "type": "econ-calendar",
     "date": "2026-11-04T15:01:16.521Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Jumat, 6 Nov · 23:00 WITA\n📰 *Prelim UoM Consumer Sentiment*\n🇺🇸 University of Michigan Consumer Sentiment\n🇮🇩 Survei suasana hati konsumen AS versi Universitas Michigan\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 48,1 · Sebelumnya: 46,3\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n\n📰 *Prelim UoM Inflation Expectations*\n🇺🇸 University of Michigan Inflation Expectations\n🇮🇩 Perkiraan inflasi setahun ke depan menurut warga AS\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: - · Sebelumnya: 4,7%\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📉 BTC cenderung tertekan\n• Di bawah perkiraan → 📈 BTC cenderung menguat\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "price-alert",
+    "date": "2026-11-04T16:46:10.670Z",
+    "content": "🟫 🚀 PERGERAKAN HARGA MENDADAK -- 🟡 XAUUSDT NAIK 3.19% dalam 24 jam terakhir\n\nDari $3,937 ke $4,062.\n\n⚠️ Fakta pergerakan harga murni (ambang Emas estimasi wajar, histori data masih pendek buat statistik penuh) -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

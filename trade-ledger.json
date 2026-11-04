@@ -1,6 +1,6 @@
 {
- "updatedAt": "2026-11-04T15:48:43.221Z",
- "count": 58,
+ "updatedAt": "2026-11-04T16:03:48.981Z",
+ "count": 59,
  "trades": [
   {
    "key": "ranger|ranger-rotasi-1793332816467|demo",
@@ -2013,6 +2013,46 @@
     "trailR": 3,
     "triggeredAt": "2026-10-06T04:00:10.045Z",
     "archivedAt": "2026-10-27T23:45:16.980Z"
+   }
+  },
+  {
+   "key": "ranger|ranger-btc-dual-1793808015766|demo",
+   "system": "🏹 Ranger",
+   "systemKey": "ranger",
+   "id": "ranger-btc-dual-1793808015766",
+   "signalId": "2026110501",
+   "account": "Kaela Demo",
+   "mode": "demo",
+   "exchange": "Binance",
+   "asset": "BTC",
+   "patternType": "fvg_bounce",
+   "direction": "LONG",
+   "entry": 80243.8,
+   "sl": 77156.28994999999,
+   "exit": null,
+   "qty": 0.036,
+   "leverage": 22,
+   "marginUsd": 134.29925275418182,
+   "openedAt": null,
+   "closedAt": null,
+   "status": "terbuka",
+   "grossUsd": null,
+   "feeUsd": null,
+   "netUsd": null,
+   "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
+   "reasonCloseCode": null,
+   "reasonClose": null,
+   "slot": "fvg",
+   "context": {
+    "id": "ranger-btc-dual-1793808015766",
+    "signalId": "2026110501",
+    "direction": "buy",
+    "patternType": "fvg_bounce",
+    "sl": 77156.28994999999,
+    "partialTp": 86575.4501,
+    "wibowoRoute": "demo",
+    "trailR": 3,
+    "triggeredAt": "2026-11-04T16:00:15.767Z"
    }
   },
   {

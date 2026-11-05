@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-05T15:49:14.888Z",
+ "updatedAt": "2026-11-05T16:04:01.925Z",
  "count": 62,
  "trades": [
   {
@@ -2066,19 +2066,19 @@
    "direction": "LONG",
    "entry": 76307.1,
    "sl": 78324.41,
-   "exit": null,
+   "exit": 76307.1,
    "qty": 0.035,
    "leverage": 32,
    "marginUsd": 89.1573969361875,
    "openedAt": null,
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-11-05T16:00:09.688Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
-   "netUsd": null,
+   "netUsd": 0,
    "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "TRAIL_STOP",
+   "reasonClose": "Trailing stop kena -- SL yang ikut harga terbaik kesentuh, profit dikunci",
    "slot": "fvg",
    "context": {
     "id": "ranger-btc-dual-1793893520757",
@@ -2089,7 +2089,8 @@
     "partialTp": 84521.20999999998,
     "wibowoRoute": "demo",
     "trailR": 3,
-    "triggeredAt": "2026-11-05T15:45:20.757Z"
+    "triggeredAt": "2026-11-05T15:45:20.757Z",
+    "archivedAt": "2026-11-05T16:00:15.660Z"
    }
   },
   {

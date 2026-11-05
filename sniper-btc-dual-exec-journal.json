@@ -35,6 +35,42 @@
         "tries": 1,
         "lastTry": 1793146560683
       }
+    },
+    "mw2soq0avi5p": {
+      "signalId": "2026110501",
+      "direction": "buy",
+      "sl": 75944.3501,
+      "tp": 95013.34970000004,
+      "patternType": "wedge_falling",
+      "mode": "sniper",
+      "wibowoRoute": "demo",
+      "demo": {
+        "trailR": 3,
+        "currentSl": 75944.3501,
+        "peak": 80632.4,
+        "slNativeOk": true,
+        "entryPrice": 80632.4,
+        "qty": 0.0862,
+        "leverage": 15,
+        "marginUsd": 463.989134154,
+        "nilaiPosisi": 6959.83701231,
+        "openedAt": "2026-11-05T00:16:06.019Z",
+        "partialDone": false,
+        "partialPnlUsd": 0,
+        "leg2": null,
+        "closedAt": null,
+        "exitPrice": null,
+        "pnlUsd": null
+      },
+      "real": null,
+      "realRetry": {
+        "since": 1793837766282,
+        "alerted": [
+          1
+        ],
+        "tries": 1,
+        "lastTry": 1793837766282
+      }
     }
   },
   "stats": {

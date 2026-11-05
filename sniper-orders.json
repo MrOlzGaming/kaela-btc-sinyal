@@ -1,6 +1,6 @@
 {
   "balance": 0,
-  "balanceUpdatedAt": "2026-11-05T00:00:08.718Z",
+  "balanceUpdatedAt": "2026-11-05T00:15:08.267Z",
   "orders": [
     {
       "id": "mvrd5tiixovm",
@@ -42,6 +42,51 @@
         "demo": {
           "ok": true,
           "filledQty": 0.0925
+        },
+        "real": null,
+        "wibowoRoute": "demo"
+      }
+    },
+    {
+      "id": "mw2soq0avi5p",
+      "signalId": "2026110501",
+      "status": "floating",
+      "asset": "btc",
+      "mode": "sniper",
+      "gapCreatedTime": null,
+      "direction": "buy",
+      "strategyType": "breakout",
+      "triggerPrice": 80711.6,
+      "testLevel": null,
+      "confirmationNote": "Breakout pola Falling Wedge -- candle harian BTCUSDT CLOSE di atas batas pola ($80,504.01). SL nempel lebar pola itu sendiri (nyawa 5.9%), bukan zona jauh. Deteksi otomatis chartPatterns.js.",
+      "tpReasoning": "Exit: SL TRAILING 3x jarak invalidasi awal -- ngikut harga terbaik, cuma bisa naik, TANPA TP tetap (profit gak dibatesin).",
+      "entryPrice": 80711.6,
+      "tp": 95013.34970000004,
+      "sl": 75944.3501,
+      "originalSl": 75944.3501,
+      "exposure": 6,
+      "leverage": 15,
+      "marginUsd": 10,
+      "notes": "Analisa otomatis Kaela (BTCUSDT, mode pola chart): eksekusi LIVE otomatis ke Binance Demo di siklus lokal berikutnya (~15 menit).",
+      "patternType": "wedge_falling",
+      "partialTp": 95013.34970000004,
+      "partialDone": false,
+      "remainingFraction": 1,
+      "trailSmaLen": 10,
+      "realizedPnlUsd": 0,
+      "smartMoneyGapAtEntry": 7.48,
+      "silentTest": false,
+      "createdAt": "2026-11-05T00:15:59.914Z",
+      "triggeredAt": "2026-11-05T00:15:59.914Z",
+      "closedAt": null,
+      "closeReason": null,
+      "pnlUsd": null,
+      "pnlPct": null,
+      "liveExecutedAt": "2026-11-05T00:16:11.980Z",
+      "liveExecution": {
+        "demo": {
+          "ok": true,
+          "filledQty": 0.0862
         },
         "real": null,
         "wibowoRoute": "demo"

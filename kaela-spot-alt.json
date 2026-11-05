@@ -153,21 +153,5 @@
   },
   "lastBuyMonthKey": "2026-11",
   "halvingStopNotified": false,
-  "pendingLiveBuy": {
-    "monthKey": "2026-11",
-    "amounts": {
-      "ETHUSDT": 10,
-      "BNBUSDT": 10,
-      "XRPUSDT": 10,
-      "ADAUSDT": 10,
-      "LTCUSDT": 10,
-      "DOGEUSDT": 10,
-      "ZILUSDT": 10,
-      "TRXUSDT": 10,
-      "XLMUSDT": 10,
-      "SOLUSDT": 10
-    },
-    "createdAt": "2026-11-05T00:01:10.713Z"
-  },
   "pendingLiveSell": null
 }

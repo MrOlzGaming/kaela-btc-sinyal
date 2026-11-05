@@ -1,10 +1,15 @@
 {
-  "balance": 0,
+  "balance": 100,
   "startedAt": "2026-09-19T14:35:00.000Z",
-  "lastTopUpMonthKey": 24321,
+  "lastTopUpMonthKey": 24322,
   "topUpHistory": [
     {
       "date": "2026-10-05T00:15:54.243Z",
+      "amount": 100,
+      "balanceAfter": 100
+    },
+    {
+      "date": "2026-11-05T00:15:59.914Z",
       "amount": 100,
       "balanceAfter": 100
     }

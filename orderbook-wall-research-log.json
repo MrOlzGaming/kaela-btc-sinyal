@@ -175282,5 +175282,86 @@
     "qty": 6.597,
     "notionalUsd": 532212.3153,
     "distPct": 0.06282228981974304
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "BID",
+    "price": 80496,
+    "qty": 8.437,
+    "notionalUsd": 679144.752,
+    "distPct": -0.00006211484911732983
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "BID",
+    "price": 80473.2,
+    "qty": 17.743,
+    "notionalUsd": 1427835.9875999999,
+    "distPct": -0.028386486044974655
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80511.1,
+    "qty": 6.527,
+    "notionalUsd": 525495.9497,
+    "distPct": 0.018696569583231612
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80516,
+    "qty": 7.107,
+    "notionalUsd": 572227.212,
+    "distPct": 0.024783824796368377
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80520.7,
+    "qty": 7.886,
+    "notionalUsd": 634986.2402,
+    "distPct": 0.030622620613053906
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80522.1,
+    "qty": 9.441,
+    "notionalUsd": 760209.1461000001,
+    "distPct": 0.03236183638824875
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80523.1,
+    "qty": 10.866,
+    "notionalUsd": 874964.0046,
+    "distPct": 0.03360413337052304
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80523.2,
+    "qty": 6.746,
+    "notionalUsd": 543209.5072,
+    "distPct": 0.03372836306873962
+  },
+  {
+    "timestamp": "2026-11-05T05:03:38.233Z",
+    "midPrice": 80496.05,
+    "side": "ASK",
+    "price": 80551.6,
+    "qty": 7.14,
+    "notionalUsd": 575138.424,
+    "distPct": 0.06900959736534018
   }
 ]

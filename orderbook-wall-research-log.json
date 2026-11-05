@@ -178504,5 +178504,86 @@
     "qty": 7.983,
     "notionalUsd": 608493.7971,
     "distPct": 0.0886993368230969
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "BID",
+    "price": 76140.9,
+    "qty": 12.296,
+    "notionalUsd": 936228.5063999998,
+    "distPct": -0.00006566768605186879
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "BID",
+    "price": 76096.3,
+    "qty": 7.672,
+    "notionalUsd": 583810.8136,
+    "distPct": -0.05864124364089781
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "BID",
+    "price": 76077.8,
+    "qty": 7.208,
+    "notionalUsd": 548368.7824,
+    "distPct": -0.08293828747867499
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "ASK",
+    "price": 76168.5,
+    "qty": 8.525,
+    "notionalUsd": 649336.4625,
+    "distPct": 0.0361828950124774
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "ASK",
+    "price": 76187.4,
+    "qty": 8.525,
+    "notionalUsd": 649497.585,
+    "distPct": 0.0610052803386313
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "ASK",
+    "price": 76189,
+    "qty": 8.326,
+    "notionalUsd": 634349.6140000001,
+    "distPct": 0.06310664629217642
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "ASK",
+    "price": 76195.9,
+    "qty": 15.34,
+    "notionalUsd": 1168845.106,
+    "distPct": 0.0721687869667992
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "ASK",
+    "price": 76200,
+    "qty": 9.943,
+    "notionalUsd": 757656.6,
+    "distPct": 0.07755353722274665
+  },
+  {
+    "timestamp": "2026-11-05T17:18:38.600Z",
+    "midPrice": 76140.95,
+    "side": "ASK",
+    "price": 76206.1,
+    "qty": 8.487,
+    "notionalUsd": 646761.1707,
+    "distPct": 0.08556499492061595
   }
 ]

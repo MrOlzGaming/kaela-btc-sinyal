@@ -1,0 +1,173 @@
+{
+  "coins": {
+    "ETHUSDT": {
+      "heldQty": 0.004123218254311856,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 2425.29,
+          "qty": 0.004123218254311856
+        }
+      ]
+    },
+    "BNBUSDT": {
+      "heldQty": 0.013881369813573203,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 720.39,
+          "qty": 0.013881369813573203
+        }
+      ]
+    },
+    "XRPUSDT": {
+      "heldQty": 7.655795437145919,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 1.3062,
+          "qty": 7.655795437145919
+        }
+      ]
+    },
+    "ADAUSDT": {
+      "heldQty": 50.65856129685917,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 0.1974,
+          "qty": 50.65856129685917
+        }
+      ]
+    },
+    "LTCUSDT": {
+      "heldQty": 0.17774617845716317,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 56.26,
+          "qty": 0.17774617845716317
+        }
+      ]
+    },
+    "DOGEUSDT": {
+      "heldQty": 129.73533990659055,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 0.07708,
+          "qty": 129.73533990659055
+        }
+      ]
+    },
+    "ZILUSDT": {
+      "heldQty": 5479.45205479452,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 0.001825,
+          "qty": 5479.45205479452
+        }
+      ]
+    },
+    "TRXUSDT": {
+      "heldQty": 31.259768677711783,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 0.3199,
+          "qty": 31.259768677711783
+        }
+      ]
+    },
+    "XLMUSDT": {
+      "heldQty": 59.55926146515783,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 0.1679,
+          "qty": 59.55926146515783
+        }
+      ]
+    },
+    "SOLUSDT": {
+      "heldQty": 0.10458063166701527,
+      "totalInvestedCurrentCycle": 10,
+      "cycleStartedAt": "2026-11-05T00:01:10.713Z",
+      "totalRealizedCash": 0,
+      "completedCycles": [],
+      "buyLog": [
+        {
+          "date": "2026-11-05T00:01:10.713Z",
+          "usdAmount": 10,
+          "price": 95.62,
+          "qty": 0.10458063166701527
+        }
+      ]
+    }
+  },
+  "lastBuyMonthKey": "2026-11",
+  "halvingStopNotified": false,
+  "pendingLiveBuy": {
+    "monthKey": "2026-11",
+    "amounts": {
+      "ETHUSDT": 10,
+      "BNBUSDT": 10,
+      "XRPUSDT": 10,
+      "ADAUSDT": 10,
+      "LTCUSDT": 10,
+      "DOGEUSDT": 10,
+      "ZILUSDT": 10,
+      "TRXUSDT": 10,
+      "XLMUSDT": 10,
+      "SOLUSDT": 10
+    },
+    "createdAt": "2026-11-05T00:01:10.713Z"
+  },
+  "pendingLiveSell": null
+}

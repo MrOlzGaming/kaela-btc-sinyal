@@ -84,7 +84,9 @@
           1
         ],
         "tries": 93,
-        "lastTry": 1793890808213
+        "lastTry": 1793890808213,
+        "expired": true,
+        "reason": "harga udah lari / kena SL"
       }
     },
     "closedCount": 15,

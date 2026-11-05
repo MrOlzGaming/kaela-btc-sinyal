@@ -4303,5 +4303,15 @@
     "type": "price-alert",
     "date": "2026-11-05T21:46:10.775Z",
     "content": "🟫 📉 PERGERAKAN HARGA MENDADAK -- 🟧 BTCUSDT TURUN 5.29% dalam 24 jam terakhir\n\nDari $80,207 ke $75,961.\n\n⚠️ Fakta pergerakan harga murni -- Kaela TIDAK menebak penyebab atau arah selanjutnya. Murni informasi, bukan ajakan aksi apapun.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-11-05T23:15:56.270Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-11-06\nHarga sekarang: $75,428.97 (📉 -2.6% dari kemarin)\n⏳ Halving berikutnya: 525 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.45 (Fair value / akumulasi)\n⛓️ Puell Multiple: 0.99 (Normal)\n⛏️ Biaya produksi BTC (perkiraan): ~$54rb listrik / ~$76rb all-in -- harga 1,39x biaya listrik, penambang untung tipis-sedang\n   (kisaran listrik $37rb-$95rb tergantung mesin & tarif; hashrate 1025 EH/s, ~454 BTC/hari)\n\n💵 DXY: 101.6 (STABIL)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.38 (normal)\n🛢️ Minyak WTI: $99.6/barel (STABIL)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🐋 Smart Money: trader kakap lebih SHORT drpd akun biasa/retail (selisih 6.0 poin) -- top 68% long vs global 74% long\n\n🌱 Musim Tanam jalan terus. Ragu itu wajar, tapi jangan biarin ragu ngambil alih rencana kamu.\n\n⚠️ Opsional buat yang paham risikonya: bisa pakai leverage (OLZ Exposure System, lihat calculator.js) — tapi itu artinya ada risiko likuidasi nyata, beda dari sekadar spot. Kelola sendiri, sesuai keputusan sendiri.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-11-05T23:15:56.270Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-11-06\nHarga sekarang: $4,077.19/oz (≈Rp73.928.290) atau $131.08/gram (≈Rp2.376.850) (📈 +3.3% dari kemarin)\n💵 DXY: 101.6 (STABIL)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.64% (STABIL)\n📊 Yield Curve 10Y-2Y: 0.38 (normal)\n🛢️ Minyak WTI: $99.6/barel (STABIL)\n🧭 Regime: sinyal makro campuran, gak ada arah dominan yang jelas sekarang.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

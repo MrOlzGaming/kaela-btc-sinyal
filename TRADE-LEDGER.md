@@ -1,12 +1,12 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-11-05 23:18 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-11-05 23:34 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
 - **🌾 Farmer · Pola Chart (grid tangga) · Olan Demo (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
 - **🌾 Farmer · Pola Chart (grid tangga) · Olan Real (BingX)**: 1 trade, menang 1/1 (100%), bersih +$0.00
-- **🏹 Ranger · Fair Value Gap · Kaela Demo (Binance)**: 15 trade, menang 8/14 (57%), bersih -$19.78 (1 PnL gak kebaca)
+- **🏹 Ranger · Fair Value Gap · Kaela Demo (Binance)**: 16 trade, menang 8/14 (57%), bersih -$19.78 (2 PnL gak kebaca)
 - **🏹 Ranger · Fair Value Gap · Kaela Demo (Bybit)**: 2 trade, menang 0/2 (0%), bersih -$609.92
 - **🏹 Ranger · Fair Value Gap · Olan Real (Binance)**: 2 trade, menang 2/2 (100%), bersih +$1.04
 - **🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo (Binance)**: 1 trade, menang 1/1 (100%), bersih +$40.75
@@ -22,9 +22,9 @@ Diperbarui otomatis: 2026-11-05 23:18 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - 🎯 Sniper · Pola Chart (wedge falling) · Kaela Demo · Binance · BTC LONG @ 80,632.4 (SL 75,944.4) sejak 2026-11-05 08:16 WITA
 - 🏹 Ranger · Fair Value Gap · Kaela Demo · Bybit · ETH LONG @ 2,233.8 (SL 2,097.5) sejak 2026-10-30 12:00 WITA
 - 🎯 Sniper · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 80,737.7 (SL 77,179.5) sejak 2026-10-28 08:16 WITA
-- 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 80,243.8 (SL 77,156.3) sejak ?
+- 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 77,292 (SL 78,324.4) sejak ?
 
-## Trade terakhir (56 terbaru)
+## Trade terakhir (57 terbaru)
 
 ### #2026103001 — 🏹 Ranger · Fair Value Gap · Kaela Demo · Bybit · slot rotasi
 - Buka: 2026-10-30 08:00 WITA — BTC LONG @ 77,974.3 (SL 77,460.8), 50x
@@ -310,6 +310,13 @@ Diperbarui otomatis: 2026-11-05 23:18 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - Konteks entry: partialTp=80883.513, wibowoRoute=demo, trailR=3, archivedAt=2026-10-27T23:45:16.980Z
 - Tutup: 2026-10-28 07:45 WITA @ 80,816.2 — Alasan tutup: Window rezim ganti (bull<->bear), posisi ini jadi arah salah -- ditutup paksa demi keamanan (walau rugi)
 - Hasil: bersih +$40.75
+
+### #2026110501 — 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · slot fvg
+- Buka: ? — BTC LONG @ 80,243.8 (SL 77,156.3), 22x
+- Alasan buka: FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)
+- Konteks entry: partialTp=86575.45, wibowoRoute=demo, trailR=3, archivedAt=2026-11-05T15:30:16.902Z
+- Tutup: 2026-11-05 23:30 WITA @ ? — Alasan tutup: OFFLINE_UNTRACKED
+- Hasil: bersih ?
 
 ### #2026103014 — 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · slot fvg
 - Buka: ? — BTC LONG @ 77,384.3 (SL 78,344.4), 50x

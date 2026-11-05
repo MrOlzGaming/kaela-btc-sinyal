@@ -1,6 +1,6 @@
 {
- "updatedAt": "2026-11-05T15:18:36.000Z",
- "count": 60,
+ "updatedAt": "2026-11-05T15:34:00.079Z",
+ "count": 61,
  "trades": [
   {
    "key": "sniper|mw2soq0avi5p|demo",
@@ -2053,6 +2053,46 @@
    }
   },
   {
+   "key": "ranger|ranger-btc-dual-1793892621130|demo",
+   "system": "🏹 Ranger",
+   "systemKey": "ranger",
+   "id": "ranger-btc-dual-1793892621130",
+   "signalId": "2026110502",
+   "account": "Kaela Demo",
+   "mode": "demo",
+   "exchange": "Binance",
+   "asset": "BTC",
+   "patternType": "fvg_bounce",
+   "direction": "LONG",
+   "entry": 77292,
+   "sl": 78324.41,
+   "exit": null,
+   "qty": 0.035,
+   "leverage": 32,
+   "marginUsd": 89.8687103405625,
+   "openedAt": null,
+   "closedAt": null,
+   "status": "terbuka",
+   "grossUsd": null,
+   "feeUsd": null,
+   "netUsd": null,
+   "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
+   "reasonCloseCode": null,
+   "reasonClose": null,
+   "slot": "fvg",
+   "context": {
+    "id": "ranger-btc-dual-1793892621130",
+    "signalId": "2026110502",
+    "direction": "buy",
+    "patternType": "fvg_bounce",
+    "sl": 78324.41,
+    "partialTp": 84521.20999999998,
+    "wibowoRoute": "demo",
+    "trailR": 3,
+    "triggeredAt": "2026-11-05T15:30:21.131Z"
+   }
+  },
+  {
    "key": "ranger|ranger-btc-dual-1793808015766|demo",
    "system": "🏹 Ranger",
    "systemKey": "ranger",
@@ -2071,14 +2111,14 @@
    "leverage": 22,
    "marginUsd": 134.29925275418182,
    "openedAt": null,
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-11-05T15:30:09.979Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
    "netUsd": null,
    "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "OFFLINE_UNTRACKED",
+   "reasonClose": "OFFLINE_UNTRACKED",
    "slot": "fvg",
    "context": {
     "id": "ranger-btc-dual-1793808015766",
@@ -2089,7 +2129,8 @@
     "partialTp": 86575.4501,
     "wibowoRoute": "demo",
     "trailR": 3,
-    "triggeredAt": "2026-11-04T16:00:15.767Z"
+    "triggeredAt": "2026-11-04T16:00:15.767Z",
+    "archivedAt": "2026-11-05T15:30:16.902Z"
    }
   },
   {

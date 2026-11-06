@@ -393,5 +393,48 @@
     },
     "eurMaxMovePct": 0.00890709895786844,
     "reportSentAt": 1793887204566
+  },
+  {
+    "key": "2026-11-06T08:30",
+    "label": "NFP / Jobs Report (Okt)",
+    "timeMs": 1793971800000,
+    "eur": {
+      "base": 1.1177,
+      "s5": 1.1171,
+      "m1": 1.1162,
+      "m2": 1.1164,
+      "m5": 1.1169,
+      "m10": 1.1164,
+      "m15": 1.1159,
+      "m30": 1.1158
+    },
+    "btc": {
+      "base": 76044.01,
+      "s5": 75722.26,
+      "m1": 75746.08,
+      "m2": 75746.08,
+      "m5": 75929.99,
+      "m10": 75816.45,
+      "m15": 75804.43,
+      "m30": 75902.03
+    },
+    "signal": {
+      "dir": "short",
+      "sec": 6,
+      "eurMovePct": -0.10736333542094192
+    },
+    "trade": {
+      "skipped": "stray"
+    },
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.10736333542094192,
+    "reportSentAt": 1793973604147
   }
 ]

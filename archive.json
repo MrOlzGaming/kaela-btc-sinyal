@@ -4388,5 +4388,15 @@
     "type": "anomaly",
     "date": "2026-11-06T22:45:53.734Z",
     "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n💰 Stablecoin Supply (7 hari): -1.67 -- JAUH DI BAWAH kebiasaan historis kita (median -0.09, z-score -2.9)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n💰 Stablecoin Supply (7 hari)\nStablecoin (USDT/USDC dkk) itu \"peluru\" yang disiapin orang buat beli crypto. Pertumbuhannya lebih LAMBAT/nyusut dari biasanya -- bisa berarti minat/duit yang masuk ke ekosistem crypto lagi berkurang."
+  },
+  {
+    "type": "report-daily",
+    "date": "2026-11-06T23:16:04.489Z",
+    "content": "🟪 📊 Bloomberg Mini — Update BTC — 2026-11-07\nHarga sekarang: $75,910.22 (📉 -5.7% dari kemarin)\n⏳ Halving berikutnya: 524 hari lagi (~2028-04-13)\n⛓️ MVRV: 1.43 (Fair value / akumulasi)\n⛓️ Puell Multiple: 1.01 (Normal)\n⛏️ Biaya produksi BTC (perkiraan): ~$55rb listrik / ~$77rb all-in -- harga 1,38x biaya listrik, penambang untung tipis-sedang\n   (kisaran listrik $37rb-$96rb tergantung mesin & tarif; hashrate 1036 EH/s, ~453 BTC/hari)\n\n💵 DXY: 102.3 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📊 Yield Curve 10Y-2Y: 0.35 (normal)\n🛢️ Minyak WTI: $99.6/barel (STABIL)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🐋 Smart Money: trader kakap lebih SHORT drpd akun biasa/retail (selisih 8.2 poin) -- top 68% long vs global 76% long\n\n🌱 Default-nya: beli spot biasa, tahan sampai Musim Panen. Simpel, gak ada risiko likuidasi.\n\n⚠️ Opsional buat yang paham risikonya: bisa pakai leverage (OLZ Exposure System, lihat calculator.js) — tapi itu artinya ada risiko likuidasi nyata, beda dari sekadar spot. Kelola sendiri, sesuai keputusan sendiri.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "report-daily-gold",
+    "date": "2026-11-06T23:16:04.489Z",
+    "content": "🟪 📊 Bloomberg Mini — 🟡 Update XAU/Emas — 2026-11-07\nHarga sekarang: $4,059.93/oz (≈Rp73.403.512) atau $130.53/gram (≈Rp2.359.978) (📉 -0.0% dari kemarin)\n💵 DXY: 102.3 (MENGUAT)\n🏦 Fed Funds Rate: 3.88% -- DINAIKKAN (25 bps / 90 hari)\n📉 Real Yield 10Y: 2.60% (TURUN)\n📊 Yield Curve 10Y-2Y: 0.35 (normal)\n🛢️ Minyak WTI: $99.6/barel (STABIL)\n🧭 Regime: The Fed HAWKISH + dolar menguat -- historis headwind BARENGAN buat BTC dan Emas.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

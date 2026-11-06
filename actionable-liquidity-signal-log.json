@@ -1929,5 +1929,13 @@
     "price": 75704.73,
     "burstUsd": 354517.7094,
     "burstCount": 59
+  },
+  {
+    "timestamp": "2026-11-06T15:31:12.688Z",
+    "type": "burst",
+    "side": "long",
+    "price": 75430.5,
+    "burstUsd": 4175281.015000005,
+    "burstCount": 468
   }
 ]

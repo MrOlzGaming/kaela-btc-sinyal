@@ -1116,5 +1116,57 @@
       "binanceGlobalLongPct": 75.33,
       "topVsGlobalGap": -7.54
     }
+  },
+  {
+    "recordedAt": "2026-11-06T15:05:03.323Z",
+    "key": "2026-11-06T10:00:00-05:00__Prelim UoM Consumer Sentiment",
+    "title": "Prelim UoM Consumer Sentiment",
+    "timeMs": 1793977200000,
+    "actual": "4.3",
+    "forecast": "48.1",
+    "previous": "46.3",
+    "conclusionLabel": "DOVISH 📈",
+    "expectedDirection": "menguat",
+    "dxyChangePct": -0.0548,
+    "btcBefore": 75610.6,
+    "btcAfter": 74952.5,
+    "btcReactionPct": -0.8704,
+    "divergence": true,
+    "positioningBefore": {
+      "fundingRate": 0.0000618579559727,
+      "openInterest": 34739.440000000155,
+      "longAccountPct": 75.12,
+      "shortAccountPct": 24.88,
+      "fearGreed": 28,
+      "binanceTopLongPct": 67.1,
+      "binanceGlobalLongPct": 75.77,
+      "topVsGlobalGap": -8.67
+    }
+  },
+  {
+    "recordedAt": "2026-11-06T15:05:03.408Z",
+    "key": "2026-11-06T10:00:00-05:00__Prelim UoM Inflation Expectations",
+    "title": "Prelim UoM Inflation Expectations",
+    "timeMs": 1793977200000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "4.7%",
+    "conclusionLabel": "❓ DATA ACTUAL BELUM ADA",
+    "expectedDirection": null,
+    "dxyChangePct": -0.0548,
+    "btcBefore": 75610.6,
+    "btcAfter": 74969.6,
+    "btcReactionPct": -0.8478,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000618579559727,
+      "openInterest": 34739.440000000155,
+      "longAccountPct": 75.12,
+      "shortAccountPct": 24.88,
+      "fearGreed": 28,
+      "binanceTopLongPct": 67.1,
+      "binanceGlobalLongPct": 75.77,
+      "topVsGlobalGap": -8.67
+    }
   }
 ]

@@ -1,34 +1,34 @@
 {
   "btc": {
-    "price": 75748.56,
+    "price": 75670.03,
     "conviction": {
-      "score": 0,
+      "score": -1,
       "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 34 netral"
+          "reason": "RSI 35 netral"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.44 -- Fair value / akumulasi"
+          "reason": "1.45 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.30 -- Optimism / Anxiety"
+          "reason": "0.31 -- Optimism / Anxiety"
         },
         {
           "label": "Fear & Greed",
-          "v": 1,
-          "reason": "25/100 -- Extreme Fear (kontrarian)"
+          "v": 0,
+          "reason": "28/100 -- Fear (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": -1,
-          "reason": "-1.71% (7 hari) -- dana keluar/redeem"
+          "reason": "-1.61% (7 hari) -- dana keluar/redeem"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -69,13 +69,13 @@
     },
     "advancedMacro": {
       "dvol": {
-        "value": 40.22,
-        "changePct": 0.4746440169872539
+        "value": 40.77,
+        "changePct": 1.2164846077457845
       },
       "stablecoin": {
-        "current": 247436321628.31396,
-        "weekAgo": 251748061424.279,
-        "changePct": -1.7127201582292684
+        "current": 247360613309.27075,
+        "weekAgo": 251417815230.99933,
+        "changePct": -1.6137288910894696
       },
       "yieldCurve": {
         "value": 0.35,
@@ -116,15 +116,15 @@
     }
   },
   "xau": {
-    "price": 4063.62,
+    "price": 4061.8,
     "conviction": {
       "score": -1,
-      "verdict": "🔴 Condong Bearish",
+      "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 56 netral"
+          "reason": "RSI 57 netral"
         },
         {
           "label": "DXY (Dolar)",
@@ -140,34 +140,39 @@
           "label": "Fed Funds Rate",
           "v": -1,
           "reason": "DINAIKKAN (hawkish) -- historis BEARISH buat aset risiko (BTC) & Emas -- likuiditas mengetat, biaya peluang pegang Emas naik"
+        },
+        {
+          "label": "COT Smart Money",
+          "v": 0,
+          "reason": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade) -- posisi EKSTREM, ditandain caution (bisa dibaca 2 arah: yakin ATAU crowded/rawan unwind), gak divote"
         }
       ],
-      "totalFactors": 4
+      "totalFactors": 5
     },
     "trackRecord": {
-      "total": 43,
-      "correct": 21,
-      "winRatePct": 48.837209302325576
+      "total": 44,
+      "correct": 22,
+      "winRatePct": 50
     },
     "regime": {
-      "corr30": -0.14926520216642877,
-      "corr90": -0.40067729496093973,
+      "corr30": -0.10793976491013325,
+      "corr90": -0.40060072634434674,
       "label30": "lemah/gak konsisten",
       "label90": "moderat negatif",
-      "sampleDays": 83,
-      "latestDate": "2026-11-06"
+      "sampleDays": 84,
+      "latestDate": "2026-11-08"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-11-06",
-          "value": 102.279
+          "date": "2026-11-08",
+          "value": 102.283
         },
         "prev": {
           "date": null,
-          "value": 101.75
+          "value": 101.87
         },
-        "changePct": 0.5199017199017163,
+        "changePct": 0.405418670855008,
         "trend": {
           "arah": "MENGUAT",
           "efekEmas": "cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
@@ -189,12 +194,18 @@
         }
       }
     },
-    "cot": null,
+    "cot": {
+      "date": "2026-11-03",
+      "net": 179548,
+      "netPctOi": 44.980446878389856,
+      "label": "SANGAT net-long -- smart money kompak bullish, tapi historis makin ramai 1 arah makin rawan koreksi (crowded trade)",
+      "weekChangeContracts": -6903
+    },
     "yieldCurve": {
       "value": 0.35,
       "date": "2026-11-06",
       "inverted": false
     }
   },
-  "updatedAt": "2026-11-07T23:15:55.553Z"
+  "updatedAt": "2026-11-08T23:16:03.501Z"
 }

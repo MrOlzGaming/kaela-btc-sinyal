@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-08T21:48:30.529Z",
+ "updatedAt": "2026-11-08T22:03:37.956Z",
  "count": 62,
  "trades": [
   {
@@ -58,14 +58,14 @@
    "leverage": 15,
    "marginUsd": 497.92068541545,
    "openedAt": "2026-10-30T04:00:16.466Z",
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-11-08T22:00:13.448Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
    "netUsd": null,
    "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "OFFLINE_UNTRACKED",
+   "reasonClose": "OFFLINE_UNTRACKED",
    "slot": "rotasi",
    "context": {
     "id": "ranger-rotasi-1793332816467",
@@ -73,11 +73,8 @@
     "coin": "ETH",
     "direction": "buy",
     "patternType": "fvg_bounce",
-    "sl": 2097.46,
-    "partialTp": 2506.3600000000006,
     "openedAt": "2026-10-30T04:00:16.466Z",
-    "wibowoRoute": "demo",
-    "exchange": "bybit"
+    "wibowoRoute": "demo"
    }
   },
   {

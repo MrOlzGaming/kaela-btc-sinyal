@@ -90,10 +90,5 @@
       "btcBought": 0.0000662576361925712
     }
   ],
-  "lastBuyDateKey": "2026-11-10",
-  "pendingLiveBuy": {
-    "dateKey": "2026-11-10",
-    "usdAmount": 5,
-    "createdAt": "2026-11-09T16:01:11.902Z"
-  }
+  "lastBuyDateKey": "2026-11-10"
 }

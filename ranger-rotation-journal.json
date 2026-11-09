@@ -17,7 +17,7 @@
         "remainingQty": 0.198,
         "sl": 73033,
         "risk": 1713,
-        "peak": 74937.5,
+        "peak": 75027.9,
         "leverage": 35,
         "margin": 424.6894105037143,
         "nilaiPosisi": 14864.129367630001,
@@ -34,8 +34,8 @@
       "alerted": [
         1
       ],
-      "tries": 2,
-      "lastTry": 1794183311441
+      "tries": 3,
+      "lastTry": 1794184211467
     }
   },
   "lastScanCloseTime": 1794182399999,

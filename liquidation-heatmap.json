@@ -1,20 +1,20 @@
 {
   "BTCUSDT": {
     "72500": {
-      "longLiquidatedUsd": 2281325.393299999,
+      "longLiquidatedUsd": 2299676.2003999986,
       "shortLiquidatedUsd": 0,
-      "longCount": 262,
+      "longCount": 270,
       "shortCount": 0,
       "firstSeen": 1794325482509,
-      "lastSeen": 1794330489484
+      "lastSeen": 1794332431465
     },
     "72750": {
-      "longLiquidatedUsd": 4410480.6894999975,
+      "longLiquidatedUsd": 4410771.203899997,
       "shortLiquidatedUsd": 0,
-      "longCount": 489,
+      "longCount": 490,
       "shortCount": 0,
       "firstSeen": 1794325306258,
-      "lastSeen": 1794330424663
+      "lastSeen": 1794332729561
     },
     "73000": {
       "longLiquidatedUsd": 4017468.751300002,
@@ -26,11 +26,11 @@
     },
     "73250": {
       "longLiquidatedUsd": 6601523.808899994,
-      "shortLiquidatedUsd": 151412.8226,
+      "shortLiquidatedUsd": 151559.52020000003,
       "longCount": 577,
-      "shortCount": 15,
+      "shortCount": 16,
       "firstSeen": 1794174947610,
-      "lastSeen": 1794331146101
+      "lastSeen": 1794331156005
     },
     "73500": {
       "longLiquidatedUsd": 13637354.127099996,

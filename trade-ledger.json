@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-10T16:48:41.351Z",
+ "updatedAt": "2026-11-10T17:03:44.678Z",
  "count": 64,
  "trades": [
   {
@@ -2106,14 +2106,14 @@
    "leverage": 34,
    "marginUsd": 83.71213022682353,
    "openedAt": null,
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-11-10T17:00:09.492Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
    "netUsd": null,
    "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "OFFLINE_UNTRACKED",
+   "reasonClose": "OFFLINE_UNTRACKED",
    "slot": "fvg",
    "context": {
     "id": "ranger-btc-dual-1794182415394",
@@ -2124,7 +2124,8 @@
     "partialTp": 78488.32,
     "wibowoRoute": "demo",
     "trailR": 3,
-    "triggeredAt": "2026-11-09T00:00:15.394Z"
+    "triggeredAt": "2026-11-09T00:00:15.394Z",
+    "archivedAt": "2026-11-10T17:00:17.897Z"
    }
   },
   {

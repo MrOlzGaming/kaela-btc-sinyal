@@ -4618,5 +4618,10 @@
     "type": "econ-calendar",
     "date": "2026-11-10T13:31:29.579Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Kamis, 12 Nov · 21:30 WITA\n📰 *Unemployment Claims*\n🇺🇸 Initial Jobless Claims\n🇮🇩 Jumlah warga AS yang BARU ngajuin tunjangan pengangguran minggu ini\nLevel: 🟡 Mini Boss (efek sedang)\nPerkiraan: 194K · Sebelumnya: 189K\nArah BTC (logika makro, keyakinan lemah):\n• Di atas perkiraan → 📈 BTC cenderung menguat\n• Di bawah perkiraan → 📉 BTC cenderung tertekan\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "anomaly",
+    "date": "2026-11-10T22:31:01.915Z",
+    "content": "🟪 🔍 KAELA ANOMALY SCANNER\n\nDitemukan 1 indikator lagi gak biasa dibanding histori kita sendiri:\n\n💰 Stablecoin Supply (7 hari): -1.61 -- JAUH DI BAWAH kebiasaan historis kita (median -0.10, z-score -2.5)\n\n⚠️ Ini deteksi STATISTIK murni (z-score vs histori kita), BUKAN backtest sinyal Sniper/Musiman -- level keyakinannya beda, murni radar \"ada yang aneh, cek lebih lanjut\".\n\n🔗 https://kaela-btc-sinyal.netlify.app/analis.html\n\n🟪 📖 PENJELASAN\n\n💰 Stablecoin Supply (7 hari)\nStablecoin (USDT/USDC dkk) itu \"peluru\" yang disiapin orang buat beli crypto. Pertumbuhannya lebih LAMBAT/nyusut dari biasanya -- bisa berarti minat/duit yang masuk ke ekosistem crypto lagi berkurang."
   }
 ]

@@ -1,6 +1,44 @@
 {
-  "floating": null,
-  "lastScanCloseTime": 1794326399999,
+  "floating": {
+    "id": "ranger-rotasi-1794340815057",
+    "signalId": "2026111101",
+    "coin": "INJ",
+    "direction": "buy",
+    "patternType": "wedge_falling",
+    "sl": 6.7888850000000005,
+    "partialTp": 10.51523,
+    "openedAt": "2026-11-10T20:00:15.057Z",
+    "wibowoRoute": "demo",
+    "exchange": "bybit",
+    "legs": {
+      "demo": {
+        "entryPrice": 8.031,
+        "qty": 922,
+        "remainingQty": 922,
+        "sl": 6.7888850000000005,
+        "risk": 1.242115,
+        "peak": 8.031,
+        "leverage": 6,
+        "margin": 1234.18273630975,
+        "nilaiPosisi": 7405.0964178585,
+        "partialDone": false,
+        "realizedPnlUsd": 0,
+        "nativeSl": true,
+        "liquidationPrice": null,
+        "crossMargin": true
+      },
+      "real": null
+    },
+    "realRetry": {
+      "since": 1794340812416,
+      "alerted": [
+        1
+      ],
+      "tries": 1,
+      "lastTry": 1794340812416
+    }
+  },
+  "lastScanCloseTime": 1794340799999,
   "closedCount": 5,
   "stats": {
     "demo": {
@@ -15,7 +53,7 @@
     }
   },
   "dailySignalSeq": {
-    "dayKey": "20261109",
+    "dayKey": "20261111",
     "count": 1
   },
   "history": [

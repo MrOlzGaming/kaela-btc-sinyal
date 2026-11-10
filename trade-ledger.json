@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-10T15:33:40.001Z",
+ "updatedAt": "2026-11-10T15:48:37.675Z",
  "count": 64,
  "trades": [
   {
@@ -16,19 +16,19 @@
    "direction": "LONG",
    "entry": 74746,
    "sl": 73033,
-   "exit": null,
+   "exit": 73033,
    "qty": 0.198,
    "leverage": 35,
    "marginUsd": 424.6894105037143,
    "openedAt": "2026-11-09T00:00:23.598Z",
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-11-10T15:45:10.323Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
-   "netUsd": null,
+   "netUsd": -339.17400000000004,
    "reasonOpen": "FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "SL",
+   "reasonClose": "Stop Loss kena",
    "slot": "rotasi",
    "context": {
     "id": "ranger-rotasi-1794182423598",
@@ -36,10 +36,8 @@
     "coin": "BTC",
     "direction": "buy",
     "patternType": "fvg_bounce",
-    "sl": 73033,
     "openedAt": "2026-11-09T00:00:23.598Z",
-    "wibowoRoute": "demo",
-    "exchange": "bybit"
+    "wibowoRoute": "demo"
    }
   },
   {

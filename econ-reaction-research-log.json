@@ -1194,5 +1194,57 @@
       "binanceGlobalLongPct": 74.15,
       "topVsGlobalGap": -3.96
     }
+  },
+  {
+    "recordedAt": "2026-11-10T13:35:02.624Z",
+    "key": "2026-11-10T08:30:00-05:00__Core CPI m/m",
+    "title": "Core CPI m/m",
+    "timeMs": 1794317400000,
+    "actual": "0.3",
+    "forecast": "0.2%",
+    "previous": "0.3%",
+    "conclusionLabel": "HAWKISH 📉",
+    "expectedDirection": "tertekan",
+    "dxyChangePct": 0.0177,
+    "btcBefore": 74222.6,
+    "btcAfter": 73861,
+    "btcReactionPct": -0.4872,
+    "divergence": false,
+    "positioningBefore": {
+      "fundingRate": 5.763578701e-7,
+      "openInterest": 35876.24280000018,
+      "longAccountPct": 74.87,
+      "shortAccountPct": 25.13,
+      "fearGreed": 32,
+      "binanceTopLongPct": 69.97,
+      "binanceGlobalLongPct": 74.92,
+      "topVsGlobalGap": -4.95
+    }
+  },
+  {
+    "recordedAt": "2026-11-10T13:35:02.707Z",
+    "key": "2026-11-10T08:30:00-05:00__CPI m/m",
+    "title": "CPI m/m",
+    "timeMs": 1794317400000,
+    "actual": "0.4",
+    "forecast": "0.3%",
+    "previous": "0.6%",
+    "conclusionLabel": "HAWKISH 📉",
+    "expectedDirection": "tertekan",
+    "dxyChangePct": 0.0177,
+    "btcBefore": 74222.6,
+    "btcAfter": 73861,
+    "btcReactionPct": -0.4872,
+    "divergence": false,
+    "positioningBefore": {
+      "fundingRate": 5.763578701e-7,
+      "openInterest": 35876.24280000018,
+      "longAccountPct": 74.87,
+      "shortAccountPct": 25.13,
+      "fearGreed": 32,
+      "binanceTopLongPct": 69.97,
+      "binanceGlobalLongPct": 74.92,
+      "topVsGlobalGap": -4.95
+    }
   }
 ]

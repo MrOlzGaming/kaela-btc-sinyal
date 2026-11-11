@@ -1374,9 +1374,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 80534,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "turun",
+    "correct": null,
+    "actualChangePct": -8.642473986142504
   },
   {
     "asset": "xau",
@@ -1385,9 +1386,10 @@
     "verdict": "⚪ NETRAL / Campuran",
     "direction": "netral",
     "priceAtVerdict": 4057.31,
-    "graded": false,
-    "actualDirection": null,
-    "correct": null
+    "graded": true,
+    "actualDirection": "turun",
+    "correct": null,
+    "actualChangePct": -1.9384764782577641
   },
   {
     "asset": "btc",
@@ -1517,6 +1519,28 @@
     "verdict": "🔴 BEARISH KUAT",
     "direction": "bearish",
     "priceAtVerdict": 4026.21,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "btc",
+    "date": "2026-11-11T23:16:01.888Z",
+    "score": -1,
+    "verdict": "⚪ NETRAL / Campuran",
+    "direction": "netral",
+    "priceAtVerdict": 73573.87,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "xau",
+    "date": "2026-11-11T23:16:01.888Z",
+    "score": -3,
+    "verdict": "🔴 BEARISH KUAT",
+    "direction": "bearish",
+    "priceAtVerdict": 3978.66,
     "graded": false,
     "actualDirection": null,
     "correct": null

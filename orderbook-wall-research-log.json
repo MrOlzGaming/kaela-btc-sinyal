@@ -3,42 +3,6 @@
     "timestamp": "2026-09-23T05:01:50.573Z",
     "midPrice": 86987.35,
     "side": "BID",
-    "price": 86960.8,
-    "qty": 9.773,
-    "notionalUsd": 849867.8984,
-    "distPct": -0.030521679301648924
-  },
-  {
-    "timestamp": "2026-09-23T05:01:50.573Z",
-    "midPrice": 86987.35,
-    "side": "BID",
-    "price": 86957.6,
-    "qty": 12.049,
-    "notionalUsd": 1047752.1224,
-    "distPct": -0.03420037511201341
-  },
-  {
-    "timestamp": "2026-09-23T05:01:50.573Z",
-    "midPrice": 86987.35,
-    "side": "BID",
-    "price": 86950.6,
-    "qty": 9.227,
-    "notionalUsd": 802293.1862000001,
-    "distPct": -0.042247522197193035
-  },
-  {
-    "timestamp": "2026-09-23T05:01:50.573Z",
-    "midPrice": 86987.35,
-    "side": "BID",
-    "price": 86942.7,
-    "qty": 9.288,
-    "notionalUsd": 807523.7976,
-    "distPct": -0.051329302479048655
-  },
-  {
-    "timestamp": "2026-09-23T05:01:50.573Z",
-    "midPrice": 86987.35,
-    "side": "BID",
     "price": 86936.7,
     "qty": 9.94,
     "notionalUsd": 864150.798,
@@ -179998,5 +179962,41 @@
     "qty": 7.793,
     "notionalUsd": 580734.36,
     "distPct": 0.05686269639281828
+  },
+  {
+    "timestamp": "2026-11-11T18:33:33.537Z",
+    "midPrice": 74516.55,
+    "side": "BID",
+    "price": 74504.9,
+    "qty": 7.08,
+    "notionalUsd": 527494.6919999999,
+    "distPct": -0.015634110811636785
+  },
+  {
+    "timestamp": "2026-11-11T18:33:33.537Z",
+    "midPrice": 74516.55,
+    "side": "BID",
+    "price": 74493.1,
+    "qty": 6.725,
+    "notionalUsd": 500966.09750000003,
+    "distPct": -0.03146951918734441
+  },
+  {
+    "timestamp": "2026-11-11T18:33:33.537Z",
+    "midPrice": 74516.55,
+    "side": "BID",
+    "price": 74485.1,
+    "qty": 17.315,
+    "notionalUsd": 1289709.5065000001,
+    "distPct": -0.0422053892725805
+  },
+  {
+    "timestamp": "2026-11-11T18:33:33.537Z",
+    "midPrice": 74516.55,
+    "side": "BID",
+    "price": 74458.4,
+    "qty": 12.598,
+    "notionalUsd": 938026.9232,
+    "distPct": -0.0780363556820716
   }
 ]

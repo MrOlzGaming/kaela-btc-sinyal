@@ -99742,5 +99742,29 @@
     "balanceBtc": 68200.0061489,
     "nTx": 177,
     "deltaBtc": 0
+  },
+  {
+    "address": "34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo",
+    "label": "Binance Cold #1",
+    "timestamp": "2026-11-11T15:18:36.930Z",
+    "balanceBtc": 248597.59296803,
+    "nTx": 5598,
+    "deltaBtc": 0
+  },
+  {
+    "address": "3M219KR5vEneNb47ewrPfWyb5jQ2DjxRP6",
+    "label": "Binance Cold #2",
+    "timestamp": "2026-11-11T15:18:37.121Z",
+    "balanceBtc": 168570.07943139,
+    "nTx": 669,
+    "deltaBtc": 2772.6600000000035
+  },
+  {
+    "address": "3LYJfcfHPXYJreMsASk2jkn69LWEYKzexb",
+    "label": "Binance Cold #3",
+    "timestamp": "2026-11-11T15:18:37.316Z",
+    "balanceBtc": 68200.0061489,
+    "nTx": 177,
+    "deltaBtc": 0
   }
 ]

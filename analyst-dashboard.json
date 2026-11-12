@@ -1,34 +1,34 @@
 {
   "btc": {
-    "price": 73573.87,
+    "price": 71452.01,
     "conviction": {
-      "score": -1,
+      "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 0,
-          "reason": "RSI 31 netral"
+          "v": 1,
+          "reason": "RSI 30 oversold -- rawan technical bounce"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.49 -- Fair value / akumulasi"
+          "reason": "1.41 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.33 -- Optimism / Anxiety"
+          "reason": "0.29 -- Optimism / Anxiety"
         },
         {
           "label": "Fear & Greed",
           "v": 0,
-          "reason": "29/100 -- Fear (kontrarian)"
+          "reason": "28/100 -- Fear (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": -1,
-          "reason": "-1.42% (7 hari) -- dana keluar/redeem"
+          "reason": "-1.53% (7 hari) -- dana keluar/redeem"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -53,33 +53,33 @@
         {
           "label": "ETF Flow (institusi)",
           "v": -1,
-          "reason": "1/7 hari inflow, net 7hari $-1578jt -- distribusi institusi konsisten"
+          "reason": "1/7 hari inflow, net 7hari $-1479jt -- distribusi institusi konsisten"
         }
       ],
       "totalFactors": 10
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.6953725880216542,
-      "corr90": 0.4752568271963961,
+      "corr30": 0.6928513544551271,
+      "corr90": 0.4668938170559834,
       "label30": "KUAT POSITIF",
       "label90": "moderat positif",
       "sampleDays": 83,
-      "latestDate": "2026-11-10"
+      "latestDate": "2026-11-11"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 39.37,
-        "changePct": 3.441933788754585
+        "value": 39.7,
+        "changePct": -6.079962148095576
       },
       "stablecoin": {
-        "current": 245539755424.9494,
-        "weekAgo": 249083696806.07434,
-        "changePct": -1.4227913856136865
+        "current": 245036957239.65295,
+        "weekAgo": 248833811865.73737,
+        "changePct": -1.52585960791095
       },
       "yieldCurve": {
-        "value": 0.25,
-        "date": "2026-11-10",
+        "value": 0.24,
+        "date": "2026-11-12",
         "inverted": false
       },
       "m2": {
@@ -89,18 +89,18 @@
       },
       "fedRate": {
         "value": 3.88,
-        "date": "2026-11-09",
+        "date": "2026-11-11",
         "changeBps": 25
       },
       "creditSpread": {
-        "value": 3.34,
-        "date": "2026-11-09",
-        "changeBps": 23
+        "value": 3.3,
+        "date": "2026-11-11",
+        "changeBps": 18.999999999999993
       },
       "etfFlow": {
-        "date": "2026-11-10",
-        "latestNetFlowUsd": -95001233.75,
-        "sum7dUsd": -1577816658.3799999,
+        "date": "2026-11-11",
+        "latestNetFlowUsd": -299898422.14,
+        "sum7dUsd": -1479097727.12,
         "positiveDays7d": 1,
         "totalDays7d": 7
       },
@@ -116,7 +116,7 @@
     }
   },
   "xau": {
-    "price": 3978.66,
+    "price": 3877.73,
     "conviction": {
       "score": -3,
       "verdict": "🔴 BEARISH KUAT",
@@ -124,7 +124,7 @@
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 47 netral"
+          "reason": "RSI 43 netral"
         },
         {
           "label": "DXY (Dolar)",
@@ -145,29 +145,29 @@
       "totalFactors": 4
     },
     "trackRecord": {
-      "total": 45,
-      "correct": 23,
-      "winRatePct": 51.11111111111111
+      "total": 46,
+      "correct": 24,
+      "winRatePct": 52.17391304347826
     },
     "regime": {
-      "corr30": -0.3345405490323622,
-      "corr90": -0.442177445736271,
+      "corr30": -0.4170090456138898,
+      "corr90": -0.44499383784968655,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
       "sampleDays": 84,
-      "latestDate": "2026-11-11"
+      "latestDate": "2026-11-12"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-11-11",
-          "value": 102.843
+          "date": "2026-11-12",
+          "value": 103.17
         },
         "prev": {
           "date": null,
-          "value": 102.3
+          "value": 101.65
         },
-        "changePct": 0.5307917888563113,
+        "changePct": 1.4953271028037345,
         "trend": {
           "arah": "MENGUAT",
           "efekEmas": "cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
@@ -175,14 +175,14 @@
       },
       "realYield": {
         "latest": {
+          "date": "2026-11-10",
+          "value": 2.78
+        },
+        "prev": {
           "date": "2026-11-09",
           "value": 2.66
         },
-        "prev": {
-          "date": "2026-11-06",
-          "value": 2.63
-        },
-        "changePct": 1.1406844106463974,
+        "changePct": 4.511278195488709,
         "trend": {
           "arah": "NAIK",
           "efekEmas": "cenderung TERTEKAN (biaya peluang pegang Emas naik)"
@@ -191,10 +191,10 @@
     },
     "cot": null,
     "yieldCurve": {
-      "value": 0.25,
-      "date": "2026-11-10",
+      "value": 0.24,
+      "date": "2026-11-12",
       "inverted": false
     }
   },
-  "updatedAt": "2026-11-11T23:16:01.888Z"
+  "updatedAt": "2026-11-12T23:16:07.017Z"
 }

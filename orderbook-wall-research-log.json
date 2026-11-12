@@ -1,86 +1,5 @@
 [
   {
-    "timestamp": "2026-09-24T00:31:34.679Z",
-    "midPrice": 84379.45,
-    "side": "BID",
-    "price": 84344.5,
-    "qty": 12.207,
-    "notionalUsd": 1029593.3115000001,
-    "distPct": -0.04142003769874903
-  },
-  {
-    "timestamp": "2026-09-24T00:31:34.679Z",
-    "midPrice": 84379.45,
-    "side": "ASK",
-    "price": 84399,
-    "qty": 7.12,
-    "notionalUsd": 600920.88,
-    "distPct": 0.02316914841232422
-  },
-  {
-    "timestamp": "2026-09-24T00:31:34.679Z",
-    "midPrice": 84379.45,
-    "side": "ASK",
-    "price": 84432.6,
-    "qty": 6.153,
-    "notionalUsd": 519513.7878,
-    "distPct": 0.06298927049181849
-  },
-  {
-    "timestamp": "2026-09-24T00:46:33.807Z",
-    "midPrice": 84323.05,
-    "side": "BID",
-    "price": 84301,
-    "qty": 7.118,
-    "notionalUsd": 600054.518,
-    "distPct": -0.026149433636476517
-  },
-  {
-    "timestamp": "2026-09-24T00:46:33.807Z",
-    "midPrice": 84323.05,
-    "side": "BID",
-    "price": 84292.5,
-    "qty": 7.117,
-    "notionalUsd": 599909.7225,
-    "distPct": -0.03622971417661352
-  },
-  {
-    "timestamp": "2026-09-24T00:46:33.807Z",
-    "midPrice": 84323.05,
-    "side": "ASK",
-    "price": 84323.1,
-    "qty": 17.466,
-    "notionalUsd": 1472787.2646,
-    "distPct": 0.000059295767886610344
-  },
-  {
-    "timestamp": "2026-09-24T00:46:33.807Z",
-    "midPrice": 84323.05,
-    "side": "ASK",
-    "price": 84326,
-    "qty": 6.557,
-    "notionalUsd": 552925.582,
-    "distPct": 0.0034984503051029223
-  },
-  {
-    "timestamp": "2026-09-24T00:46:33.807Z",
-    "midPrice": 84323.05,
-    "side": "ASK",
-    "price": 84362.2,
-    "qty": 8.859,
-    "notionalUsd": 747364.7298,
-    "distPct": 0.046428586252506496
-  },
-  {
-    "timestamp": "2026-09-24T01:01:36.453Z",
-    "midPrice": 84349.45,
-    "side": "BID",
-    "price": 84349.4,
-    "qty": 11.207,
-    "notionalUsd": 945303.7258,
-    "distPct": -0.00005927720927985943
-  },
-  {
     "timestamp": "2026-09-24T01:01:36.453Z",
     "midPrice": 84349.45,
     "side": "BID",
@@ -179998,5 +179917,86 @@
     "qty": 16.385,
     "notionalUsd": 1184388.0865,
     "distPct": 0.07649213307831342
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "BID",
+    "price": 71869.5,
+    "qty": 9.465,
+    "notionalUsd": 680244.8175,
+    "distPct": -0.00006957049265357913
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "BID",
+    "price": 71804.6,
+    "qty": 7.85,
+    "notionalUsd": 563666.11,
+    "distPct": -0.0903720699517349
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71909.1,
+    "qty": 7.293,
+    "notionalUsd": 524433.0663000001,
+    "distPct": 0.05503025968578196
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71909.2,
+    "qty": 8.784,
+    "notionalUsd": 631650.4128,
+    "distPct": 0.05516940067106887
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71913.7,
+    "qty": 8.904,
+    "notionalUsd": 640319.5848,
+    "distPct": 0.061430745009526534
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71915.6,
+    "qty": 17.294,
+    "notionalUsd": 1243708.3864000002,
+    "distPct": 0.0640744237302208
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71918.1,
+    "qty": 17.307,
+    "notionalUsd": 1244686.5567,
+    "distPct": 0.06755294836269729
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71920.6,
+    "qty": 7.004,
+    "notionalUsd": 503731.8824,
+    "distPct": 0.07103147299517377
+  },
+  {
+    "timestamp": "2026-11-12T14:34:02.399Z",
+    "midPrice": 71869.55,
+    "side": "ASK",
+    "price": 71929.5,
+    "qty": 7.7,
+    "notionalUsd": 553857.15,
+    "distPct": 0.08341502068678194
   }
 ]

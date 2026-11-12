@@ -1246,5 +1246,31 @@
       "binanceGlobalLongPct": 74.92,
       "topVsGlobalGap": -4.95
     }
+  },
+  {
+    "recordedAt": "2026-11-12T13:35:03.173Z",
+    "key": "2026-11-12T08:30:00-05:00__Unemployment Claims",
+    "title": "Unemployment Claims",
+    "timeMs": 1794490200000,
+    "actual": null,
+    "forecast": "194K",
+    "previous": "189K",
+    "conclusionLabel": "❓ DATA ACTUAL BELUM ADA",
+    "expectedDirection": null,
+    "dxyChangePct": -0.067,
+    "btcBefore": 72581.3,
+    "btcAfter": 72535,
+    "btcReactionPct": -0.0638,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000719293470719,
+      "openInterest": 35949.64440000014,
+      "longAccountPct": 75.55,
+      "shortAccountPct": 24.45,
+      "fearGreed": 28,
+      "binanceTopLongPct": 69.15,
+      "binanceGlobalLongPct": 74.75,
+      "topVsGlobalGap": -5.6
+    }
   }
 ]

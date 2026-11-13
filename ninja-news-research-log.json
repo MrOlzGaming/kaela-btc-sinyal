@@ -520,5 +520,46 @@
     },
     "eurMaxMovePct": 0.009013068949976475,
     "reportSentAt": 1794492003938
+  },
+  {
+    "key": "2026-11-13T08:30",
+    "label": "PPI (Okt)",
+    "timeMs": 1794576600000,
+    "eur": {
+      "base": 1.106,
+      "s5": 1.1062,
+      "s10": 1.1065,
+      "m1": 1.1061,
+      "m2": 1.1065,
+      "m5": 1.1072,
+      "m10": 1.1066,
+      "m15": 1.1064,
+      "m30": 1.1057
+    },
+    "btc": {
+      "base": 69246.01,
+      "s5": 69445.5,
+      "s10": 69407.79,
+      "m1": 69356.01,
+      "m2": 69554.01,
+      "m5": 69939.51,
+      "m10": 69933,
+      "m15": 69828.38,
+      "m30": 69564.83
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": 0.04520795660035668,
+    "reportSentAt": 1794578403549
   }
 ]

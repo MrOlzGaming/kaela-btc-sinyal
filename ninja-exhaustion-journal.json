@@ -1,5 +1,9 @@
 {
-  "episode": null,
+  "episode": {
+    "side": "long",
+    "startedAt": 1794530223710,
+    "peakUsd": 7487828.209599996
+  },
   "floating": null,
   "closedCount": 9,
   "signals": 90,

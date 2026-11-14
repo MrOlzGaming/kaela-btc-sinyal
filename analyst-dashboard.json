@@ -1,14 +1,14 @@
 {
   "btc": {
-    "price": 67986.01,
+    "price": 63684.86,
     "conviction": {
-      "score": 0,
+      "score": 1,
       "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 0,
-          "reason": "RSI 31 netral"
+          "v": 1,
+          "reason": "RSI 27 oversold -- rawan technical bounce"
         },
         {
           "label": "MVRV (on-chain)",
@@ -23,12 +23,12 @@
         {
           "label": "Fear & Greed",
           "v": 1,
-          "reason": "20/100 -- Extreme Fear (kontrarian)"
+          "reason": "13/100 -- Extreme Fear (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
           "v": -1,
-          "reason": "-1.52% (7 hari) -- dana keluar/redeem"
+          "reason": "-1.15% (7 hari) -- dana keluar/redeem"
         },
         {
           "label": "M2 Money Supply (YoY)",
@@ -60,22 +60,22 @@
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.6795889822691121,
-      "corr90": 0.46841330035057316,
+      "corr30": 0.6692996200894588,
+      "corr90": 0.4749625316870894,
       "label30": "KUAT POSITIF",
       "label90": "moderat positif",
       "sampleDays": 83,
-      "latestDate": "2026-11-12"
+      "latestDate": "2026-11-13"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 39.77,
-        "changePct": 0.8622875982754334
+        "value": 47.41,
+        "changePct": 17.93532338308456
       },
       "stablecoin": {
-        "current": 244485723969.1081,
-        "weekAgo": 248263189120.06168,
-        "changePct": -1.5215566852026443
+        "current": 244602817032.58762,
+        "weekAgo": 247451885964.96204,
+        "changePct": -1.1513627876644408
       },
       "yieldCurve": {
         "value": 0.27,
@@ -116,7 +116,7 @@
     }
   },
   "xau": {
-    "price": 3876.22,
+    "price": 3806.2,
     "conviction": {
       "score": -3,
       "verdict": "🔴 BEARISH KUAT",
@@ -124,7 +124,7 @@
         {
           "label": "RSI Teknikal",
           "v": 0,
-          "reason": "RSI 40 netral"
+          "reason": "RSI 48 netral"
         },
         {
           "label": "DXY (Dolar)",
@@ -145,16 +145,16 @@
       "totalFactors": 4
     },
     "trackRecord": {
-      "total": 47,
-      "correct": 25,
-      "winRatePct": 53.191489361702125
+      "total": 48,
+      "correct": 26,
+      "winRatePct": 54.166666666666664
     },
     "regime": {
-      "corr30": -0.43059120699865294,
-      "corr90": -0.4448538808612122,
+      "corr30": -0.42975702834818535,
+      "corr90": -0.4460926593616081,
       "label30": "moderat negatif",
       "label90": "moderat negatif",
-      "sampleDays": 84,
+      "sampleDays": 83,
       "latestDate": "2026-11-13"
     },
     "macro": {
@@ -196,5 +196,5 @@
       "inverted": false
     }
   },
-  "updatedAt": "2026-11-13T23:16:08.706Z"
+  "updatedAt": "2026-11-14T23:16:00.371Z"
 }

@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-14T21:03:31.880Z",
+ "updatedAt": "2026-11-14T21:18:26.857Z",
  "count": 65,
  "trades": [
   {
@@ -16,19 +16,19 @@
    "direction": "LONG",
    "entry": 8.031,
    "sl": 6.7888850000000005,
-   "exit": null,
+   "exit": 6.7888850000000005,
    "qty": 922,
    "leverage": 6,
    "marginUsd": 1234.18273630975,
    "openedAt": "2026-11-10T20:00:15.057Z",
-   "closedAt": null,
-   "status": "terbuka",
+   "closedAt": "2026-11-14T21:15:10.144Z",
+   "status": "tutup",
    "grossUsd": null,
    "feeUsd": null,
-   "netUsd": null,
+   "netUsd": -1145.2300300000002,
    "reasonOpen": "Chart Pattern (Falling Wedge) -- breakout wedge turun terkonfirmasi",
-   "reasonCloseCode": null,
-   "reasonClose": null,
+   "reasonCloseCode": "SL",
+   "reasonClose": "Stop Loss kena",
    "slot": "rotasi",
    "context": {
     "id": "ranger-rotasi-1794340815057",
@@ -36,11 +36,8 @@
     "coin": "INJ",
     "direction": "buy",
     "patternType": "wedge_falling",
-    "sl": 6.7888850000000005,
-    "partialTp": 10.51523,
     "openedAt": "2026-11-10T20:00:15.057Z",
-    "wibowoRoute": "demo",
-    "exchange": "bybit"
+    "wibowoRoute": "demo"
    }
   },
   {

@@ -14,21 +14,12 @@
     "realized": -2.2134666400000196,
     "fees": 1.1234266400000001,
     "bets": 1,
-    "liqs": 0,
+    "liqs": 1,
     "pos": null,
     "lastE": 82918.5,
     "firstE": 82918.5,
-    "waitTopUpSince": null,
-    "guard": {
-      "qty": 0.0034,
-      "liq": 66513.8,
-      "e0": 81891,
-      "mg0": 46.4049,
-      "closedPx": 81347.3,
-      "closedPnl": -1.9868704099999899,
-      "at": 1792251543381,
-      "tpPx": 86938.53877821265
-    },
+    "waitTopUpSince": 1794623343354,
+    "guard": null,
     "guardLog": [
       {
         "at": 1791689166333,
@@ -118,7 +109,7 @@
   "reserveKey": "bank:null:846:2026-10-11T02:35:22.114Z",
   "custody": null,
   "webFunds": {
-    "at": 1792251243512,
+    "at": 1794623343354,
     "mode": "extra",
     "totalUsd": null,
     "extraUsd": 846,
@@ -128,11 +119,10 @@
   },
   "exchange": "bingx",
   "fundAlert": {
-    "key": "g:grid-1791681485073",
-    "since": 1791911043400,
+    "key": "t:grid-1791681485073:2",
+    "since": 1794623343354,
     "sent": [
-      1,
-      2
+      1
     ]
   },
   "apiFail": null

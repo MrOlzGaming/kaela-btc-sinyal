@@ -1,6 +1,6 @@
 {
-  "btcHeld": 0.0011769859653872315,
-  "totalInvestedCurrentCycle": 90,
+  "btcHeld": 0.0012530686678935174,
+  "totalInvestedCurrentCycle": 95,
   "cycleStartedAt": "2026-10-27T23:46:44.808Z",
   "totalRealizedCash": 0,
   "completedCycles": [],
@@ -112,7 +112,18 @@
       "usdAmount": 5,
       "price": 68835.01,
       "btcBought": 0.00007263745585277027
+    },
+    {
+      "date": "2026-11-14T16:00:59.186Z",
+      "usdAmount": 5,
+      "price": 65717.96,
+      "btcBought": 0.00007608270250628594
     }
   ],
-  "lastBuyDateKey": "2026-11-14"
+  "lastBuyDateKey": "2026-11-15",
+  "pendingLiveBuy": {
+    "dateKey": "2026-11-15",
+    "usdAmount": 5,
+    "createdAt": "2026-11-14T16:00:59.186Z"
+  }
 }

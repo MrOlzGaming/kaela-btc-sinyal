@@ -2760,5 +2760,12 @@
     "price": 64995.01,
     "burstUsd": 402814.68889999995,
     "burstCount": 53
+  },
+  {
+    "timestamp": "2026-11-15T19:45:59.743Z",
+    "type": "exhaustion",
+    "side": "short",
+    "price": 64994.38,
+    "peakUsd": 402814.68889999995
   }
 ]

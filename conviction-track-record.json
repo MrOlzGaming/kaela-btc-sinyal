@@ -1616,5 +1616,27 @@
     "graded": false,
     "actualDirection": null,
     "correct": null
+  },
+  {
+    "asset": "btc",
+    "date": "2026-11-15T23:15:56.005Z",
+    "score": 1,
+    "verdict": "⚪ NETRAL / Campuran",
+    "direction": "netral",
+    "priceAtVerdict": 65042.06,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
+  },
+  {
+    "asset": "xau",
+    "date": "2026-11-15T23:15:56.005Z",
+    "score": -3,
+    "verdict": "🔴 BEARISH KUAT",
+    "direction": "bearish",
+    "priceAtVerdict": 3870.73,
+    "graded": false,
+    "actualDirection": null,
+    "correct": null
   }
 ]

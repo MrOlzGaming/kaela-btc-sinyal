@@ -7,27 +7,23 @@
     "signalId": "G2026101102",
     "startedAt": 1791680468438,
     "athAtStart": 126199.63,
-    "cycleCap": 400323.142,
-    "anchor": 400360.28058421,
-    "unit": 24019.38852,
-    "putIn": 24019.38852,
-    "realized": -713.6134726700082,
-    "fees": 357.91099267,
-    "bets": 1,
-    "liqs": 0,
-    "pos": null,
-    "lastE": 82919.3,
-    "firstE": 82919.3,
-    "guard": {
-      "qty": 1.4483,
-      "liq": 62408.9,
-      "e0": 81433.2,
-      "mg0": 23587.9407,
-      "closedPx": 82872.4,
-      "closedPnl": 2024.3813115399955,
-      "at": 1792567624052,
-      "tpPx": 88302.48518475215
+    "cycleCap": 370491.81347267004,
+    "anchor": 370491.81342990504,
+    "unit": 22229.508808360202,
+    "putIn": 46248.8973283602,
+    "realized": -769.1956299050081,
+    "fees": 413.493149905,
+    "bets": 2,
+    "liqs": 1,
+    "pos": {
+      "e": 62879.3,
+      "qty": 1.7679,
+      "mg": 22232.8629,
+      "liq": 50530.8
     },
+    "lastE": 62879.3,
+    "firstE": 82919.3,
+    "guard": null,
     "guardLog": [
       {
         "at": 1791688807826,
@@ -50,8 +46,22 @@
         "liqNew": 62408.9
       }
     ],
-    "tpLock": 88022.47988210082,
-    "extBase": 0
+    "tpLock": null,
+    "extBase": 0,
+    "capBreak": {
+      "bingx": 369778.2,
+      "ext": 0,
+      "capped": false
+    },
+    "capChanges": [
+      {
+        "at": 1794704644839,
+        "from": 400323.142,
+        "to": 370491.81347267004,
+        "wallet": 369778.2
+      }
+    ],
+    "waitTopUpSince": null
   },
   "history": [
     {
@@ -91,7 +101,7 @@
   },
   "reserveCfg": 0,
   "bankReserve": 0,
-  "lastWallet": 397622.2858,
+  "lastWallet": 369722.6178,
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
   "exchange": "bingx",

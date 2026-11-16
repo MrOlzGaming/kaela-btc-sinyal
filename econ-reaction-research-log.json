@@ -1324,5 +1324,31 @@
       "binanceGlobalLongPct": 76.55,
       "topVsGlobalGap": -8.95
     }
+  },
+  {
+    "recordedAt": "2026-11-16T17:05:03.880Z",
+    "key": "2026-11-16T12:00:00-05:00__Fed Chairman Warsh Speaks",
+    "title": "Fed Chairman Warsh Speaks",
+    "timeMs": 1794848400000,
+    "actual": null,
+    "forecast": "-",
+    "previous": "-",
+    "conclusionLabel": "NETRAL ↔️",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0126,
+    "btcBefore": 64579.7,
+    "btcAfter": 64829.6,
+    "btcReactionPct": 0.387,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": 0.0000609226791905,
+      "openInterest": 31522.149700000133,
+      "longAccountPct": 73.54,
+      "shortAccountPct": 26.46,
+      "fearGreed": 10,
+      "binanceTopLongPct": 63.76,
+      "binanceGlobalLongPct": 73.73,
+      "topVsGlobalGap": -9.97
+    }
   }
 ]

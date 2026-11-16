@@ -36,6 +36,15 @@
       "qty": 0.01,
       "why": "bukan posisi sistem Kaela (gak ada di jurnal, order pembuka bukan Kaela)",
       "orderId": "2109184769690685440"
+    },
+    {
+      "at": 1794801612704,
+      "mode": "demo",
+      "symbol": "BTC-USDT",
+      "side": "LONG",
+      "qty": 1.7679,
+      "why": "qty 3.5358 lebih dari jurnal 🌾 Farmer (1.7679) -- kelebihan ditambah di luar sistem",
+      "orderId": "2122177903497056256"
     }
   ]
 }

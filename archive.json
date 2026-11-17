@@ -4818,5 +4818,25 @@
     "type": "econ-calendar",
     "date": "2026-11-16T19:01:19.267Z",
     "content": "⬜ 📅 *JADWAL BERITA EKONOMI AS*\nPeringatan dini · 48 jam ke depan\n\n━━━━━━━━━━━━\n🕐 Kamis, 19 Nov · 03:00 WITA\n📰 *FOMC Meeting Minutes*\n🇺🇸 Federal Open Market Committee Meeting Minutes\n🇮🇩 Notulen rapat The Fed sebelumnya (dirilis ~3 minggu setelah rapat)\nLevel: 🔴 Boss (efek tinggi)\nArah BTC (dari nada omongan):\n• Nada galak/hawkish → 📉 BTC cenderung tertekan\n• Nada lunak/dovish → 📈 BTC cenderung menguat\n━━━━━━━━━━━━\n\nℹ️ Arah BTC = logika makro umum, BUKAN hasil backtest. Murni info, gak ngubah sinyal Kaela.\n\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-11-17T00:15:54.447Z",
+    "content": "🟧 🎯 SNIPER · Kaela — 🟧 BTCUSDT (FVG) — 📡 PEMANTAUAN POSISI (hari ke-21)\n🆔 ID Sinyal: 2026102801\n🟢 BUY @ $80,810 -- masih FLOATING, bukan sinyal baru.\n\nHarga sekarang: $64,709 (-19.92% dari entry)\n❌ SL: $77,179  🎯 TP tahap 1: $91,702\nP&L saat ini: -$298.86 (-Rp5.461.198)\n\n🤖 Posisi RIIL di Binance Demo (duit virtual, bukan bayangan) -- kalau kamu ikut jasa Kaela, ini otomatis ke-mirror ke akunmu sendiri juga.\n\n2026-11-17 08:15 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-11-17T00:15:54.447Z",
+    "content": "🟧 🎯 SNIPER · Kaela — 🟧 BTCUSDT (Pola Chart) — 📡 PEMANTAUAN POSISI (hari ke-12)\n🆔 ID Sinyal: 2026110501\n🟢 BUY @ $80,712 -- masih FLOATING, bukan sinyal baru.\n\nHarga sekarang: $64,709 (-19.83% dari entry)\n❌ SL: $75,944  🎯 TP tahap 1: $95,013\nP&L saat ini: -$29.74 (-Rp543.442)\n\n🤖 Posisi RIIL di Binance Demo (duit virtual, bukan bayangan) -- kalau kamu ikut jasa Kaela, ini otomatis ke-mirror ke akunmu sendiri juga.\n\n2026-11-17 08:15 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-11-17T00:15:54.447Z",
+    "content": "🟧 🏹 RANGER · Kaela (4H) — 🐻 SINYAL SHORT (window bear, MANUAL)\n🟡 XAUUSDT · Pola: fvg_bounce_bear\n\n🔴 Zona FVG (resistance): $3,888 -- $3,922 (harga sekarang $3,851)\n📌 Harga udah nyentuh zona ini dan DITOLAK turun (candle nutup di bawah zona) -- konfirmasi udah ada, short valid di sekitar harga sekarang. Batal kalau harga balik nutup di atas SL.\n⚠️ Invalidasi/SL referensi @ $3,942 (jarak ~2.4%)\n\n⛔ INI SINYAL DOANG -- Kaela GAK auto-eksekusi short. Timing & eksekusi 100% di tangan MASING-MASING (cek liq heatmap + faktor lain dulu, posisi mini disarankan).\n\n🔗 Liq Heatmap: https://www.coinglass.com/pro/futures/LiquidationHeatMap\n\n2026-11-17 08:15 WITA"
+  },
+  {
+    "type": "sniper",
+    "date": "2026-11-17T00:15:54.447Z",
+    "content": "🟧 🎯 SNIPER · Kaela — ❌ BELUM ADA SINYAL\nBelum ada posisi baru. Masih nunggu syarat terpenuhi.\n\n🟧 Sniper (BTCUSDT): 2 posisi (Pola Chart+FVG) lagi floating bareng, gak cek sinyal baru dulu.\n\n2026-11-17 08:15 WITA\n🔗 https://kaela-btc-sinyal.netlify.app"
   }
 ]

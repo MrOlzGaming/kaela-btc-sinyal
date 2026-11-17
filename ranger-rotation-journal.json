@@ -1,6 +1,44 @@
 {
-  "floating": null,
-  "lastScanCloseTime": 1794873599999,
+  "floating": {
+    "id": "ranger-rotasi-1794888022087",
+    "signalId": "2026111701",
+    "coin": "ETH",
+    "direction": "buy",
+    "patternType": "wedge_falling",
+    "sl": 1702.5246,
+    "partialTp": 2091.7608,
+    "openedAt": "2026-11-17T04:00:22.087Z",
+    "wibowoRoute": "demo",
+    "exchange": "bybit",
+    "legs": {
+      "demo": {
+        "entryPrice": 1832.27,
+        "qty": 3.99,
+        "remainingQty": 3.99,
+        "sl": 1702.5246,
+        "risk": 129.74540000000002,
+        "peak": 1832.27,
+        "leverage": 13,
+        "margin": 563.0037661942499,
+        "nilaiPosisi": 7319.04896052525,
+        "partialDone": false,
+        "realizedPnlUsd": 0,
+        "nativeSl": true,
+        "liquidationPrice": null,
+        "crossMargin": true
+      },
+      "real": null
+    },
+    "realRetry": {
+      "since": 1794888019098,
+      "alerted": [
+        1
+      ],
+      "tries": 1,
+      "lastTry": 1794888019098
+    }
+  },
+  "lastScanCloseTime": 1794887999999,
   "closedCount": 6,
   "stats": {
     "demo": {
@@ -15,7 +53,7 @@
     }
   },
   "dailySignalSeq": {
-    "dayKey": "20261111",
+    "dayKey": "20261117",
     "count": 1
   },
   "history": [

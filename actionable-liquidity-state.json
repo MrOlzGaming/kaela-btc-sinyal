@@ -1,5 +1,9 @@
 {
   "lastBurstSide": "long",
-  "lastBurstAt": "2026-11-16T23:46:02.604Z",
-  "burstEpisode": null
+  "lastBurstAt": "2026-11-17T06:31:15.497Z",
+  "burstEpisode": {
+    "side": "long",
+    "startedAt": 1794897075497,
+    "peakUsd": 425478.6419
+  }
 }

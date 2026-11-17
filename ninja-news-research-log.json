@@ -561,5 +561,44 @@
     },
     "eurMaxMovePct": 0.04520795660035668,
     "reportSentAt": 1794578403549
+  },
+  {
+    "key": "2026-11-17T08:30",
+    "label": "Retail Sales (Okt)",
+    "timeMs": 1794922200000,
+    "eur": {
+      "base": 1.0997,
+      "s5": 1.0997,
+      "m1": 1.0993,
+      "m2": 1.0992,
+      "m5": 1.0985,
+      "m10": 1.0983,
+      "m15": 1.0989,
+      "m30": 1.0992
+    },
+    "btc": {
+      "base": 65058,
+      "s5": 64978.5,
+      "m1": 64986,
+      "m2": 64932.01,
+      "m5": 64992,
+      "m10": 64966,
+      "m15": 64971.98,
+      "m30": 65142.27
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": -0.0363735564244754,
+    "reportSentAt": 1794924003861
   }
 ]

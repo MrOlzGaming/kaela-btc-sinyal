@@ -3,42 +3,6 @@
     "timestamp": "2026-09-30T11:46:36.041Z",
     "midPrice": 83853.75,
     "side": "BID",
-    "price": 83853.6,
-    "qty": 22.319,
-    "notionalUsd": 1871528.4984000002,
-    "distPct": -0.00017888287642971152
-  },
-  {
-    "timestamp": "2026-09-30T11:46:36.041Z",
-    "midPrice": 83853.75,
-    "side": "BID",
-    "price": 83853,
-    "qty": 7.025,
-    "notionalUsd": 589067.3250000001,
-    "distPct": -0.0008944143821832656
-  },
-  {
-    "timestamp": "2026-09-30T11:46:36.041Z",
-    "midPrice": 83853.75,
-    "side": "BID",
-    "price": 83850,
-    "qty": 100.474,
-    "notionalUsd": 8424744.9,
-    "distPct": -0.004472071910916328
-  },
-  {
-    "timestamp": "2026-09-30T11:46:36.041Z",
-    "midPrice": 83853.75,
-    "side": "BID",
-    "price": 83800.1,
-    "qty": 14.766,
-    "notionalUsd": 1237392.2766,
-    "distPct": -0.06398044213883598
-  },
-  {
-    "timestamp": "2026-09-30T11:46:36.041Z",
-    "midPrice": 83853.75,
-    "side": "BID",
     "price": 83800,
     "qty": 101.862,
     "notionalUsd": 8536035.6,
@@ -179998,5 +179962,41 @@
     "qty": 11.948,
     "notionalUsd": 775702.3936,
     "distPct": 0.08440158505405941
+  },
+  {
+    "timestamp": "2026-11-17T12:48:34.616Z",
+    "midPrice": 64886.45,
+    "side": "BID",
+    "price": 64851.4,
+    "qty": 8.95,
+    "notionalUsd": 580420.0299999999,
+    "distPct": -0.05401744123772473
+  },
+  {
+    "timestamp": "2026-11-17T12:48:34.616Z",
+    "midPrice": 64886.45,
+    "side": "ASK",
+    "price": 64909.4,
+    "qty": 17.292,
+    "notionalUsd": 1122413.3448,
+    "distPct": 0.03536948006864972
+  },
+  {
+    "timestamp": "2026-11-17T12:48:34.616Z",
+    "midPrice": 64886.45,
+    "side": "ASK",
+    "price": 64914.8,
+    "qty": 8.569,
+    "notionalUsd": 556254.9212000001,
+    "distPct": 0.04369171067303855
+  },
+  {
+    "timestamp": "2026-11-17T12:48:34.616Z",
+    "midPrice": 64886.45,
+    "side": "ASK",
+    "price": 64930.2,
+    "qty": 8.863,
+    "notionalUsd": 575476.3626,
+    "distPct": 0.06742547943368762
   }
 ]

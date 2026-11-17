@@ -1350,5 +1350,57 @@
       "binanceGlobalLongPct": 73.73,
       "topVsGlobalGap": -9.97
     }
+  },
+  {
+    "recordedAt": "2026-11-17T13:35:03.000Z",
+    "key": "2026-11-17T08:30:00-05:00__Core Retail Sales m/m",
+    "title": "Core Retail Sales m/m",
+    "timeMs": 1794922200000,
+    "actual": null,
+    "forecast": "0.4%",
+    "previous": "0.9%",
+    "conclusionLabel": "❓ DATA ACTUAL BELUM ADA",
+    "expectedDirection": null,
+    "dxyChangePct": 0.0183,
+    "btcBefore": 64909.8,
+    "btcAfter": 64905.9,
+    "btcReactionPct": -0.006,
+    "divergence": null,
+    "positioningBefore": {
+      "fundingRate": -0.0000271089184622,
+      "openInterest": 31998.314900000136,
+      "longAccountPct": 72.38,
+      "shortAccountPct": 27.62,
+      "fearGreed": 12,
+      "binanceTopLongPct": 63.69,
+      "binanceGlobalLongPct": 72.62,
+      "topVsGlobalGap": -8.93
+    }
+  },
+  {
+    "recordedAt": "2026-11-17T13:35:03.084Z",
+    "key": "2026-11-17T08:30:00-05:00__Retail Sales m/m",
+    "title": "Retail Sales m/m",
+    "timeMs": 1794922200000,
+    "actual": "0.2",
+    "forecast": "0.1%",
+    "previous": "0.8%",
+    "conclusionLabel": "HAWKISH 📉",
+    "expectedDirection": "tertekan",
+    "dxyChangePct": 0.0183,
+    "btcBefore": 64909.8,
+    "btcAfter": 64905.9,
+    "btcReactionPct": -0.006,
+    "divergence": false,
+    "positioningBefore": {
+      "fundingRate": -0.0000271089184622,
+      "openInterest": 31998.314900000136,
+      "longAccountPct": 72.38,
+      "shortAccountPct": 27.62,
+      "fearGreed": 12,
+      "binanceTopLongPct": 63.69,
+      "binanceGlobalLongPct": 72.62,
+      "topVsGlobalGap": -8.93
+    }
   }
 ]

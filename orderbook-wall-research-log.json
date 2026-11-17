@@ -1,86 +1,5 @@
 [
   {
-    "timestamp": "2026-09-30T03:16:29.247Z",
-    "midPrice": 83256.25,
-    "side": "ASK",
-    "price": 83311.7,
-    "qty": 15.5,
-    "notionalUsd": 1291331.3499999999,
-    "distPct": 0.06660160648599606
-  },
-  {
-    "timestamp": "2026-09-30T03:31:56.993Z",
-    "midPrice": 83235.05,
-    "side": "BID",
-    "price": 83235,
-    "qty": 7.295,
-    "notionalUsd": 607199.325,
-    "distPct": -0.00006007084756110602
-  },
-  {
-    "timestamp": "2026-09-30T03:31:56.993Z",
-    "midPrice": 83235.05,
-    "side": "BID",
-    "price": 83204.8,
-    "qty": 9.945,
-    "notionalUsd": 827471.736,
-    "distPct": -0.03634286277235371
-  },
-  {
-    "timestamp": "2026-09-30T03:31:56.993Z",
-    "midPrice": 83235.05,
-    "side": "BID",
-    "price": 83173.5,
-    "qty": 6.112,
-    "notionalUsd": 508356.43200000003,
-    "distPct": -0.07394721334342072
-  },
-  {
-    "timestamp": "2026-09-30T03:31:56.993Z",
-    "midPrice": 83235.05,
-    "side": "ASK",
-    "price": 83292.6,
-    "qty": 6.661,
-    "notionalUsd": 554812.0086000001,
-    "distPct": 0.06914154553881197
-  },
-  {
-    "timestamp": "2026-09-30T03:47:24.922Z",
-    "midPrice": 83296.25,
-    "side": "BID",
-    "price": 83296.2,
-    "qty": 9.097,
-    "notionalUsd": 757745.5314,
-    "distPct": -0.00006002671189028364
-  },
-  {
-    "timestamp": "2026-09-30T03:47:24.922Z",
-    "midPrice": 83296.25,
-    "side": "BID",
-    "price": 83250,
-    "qty": 7.131,
-    "notionalUsd": 593655.75,
-    "distPct": -0.055524708495280406
-  },
-  {
-    "timestamp": "2026-09-30T03:47:24.922Z",
-    "midPrice": 83296.25,
-    "side": "ASK",
-    "price": 83333.6,
-    "qty": 6.633,
-    "notionalUsd": 552751.7688000001,
-    "distPct": 0.044839953779438835
-  },
-  {
-    "timestamp": "2026-09-30T04:02:05.026Z",
-    "midPrice": 83303.05,
-    "side": "BID",
-    "price": 83303,
-    "qty": 7.138,
-    "notionalUsd": 594616.814,
-    "distPct": -0.0000600218119299478
-  },
-  {
     "timestamp": "2026-09-30T04:02:05.026Z",
     "midPrice": 83303.05,
     "side": "BID",
@@ -179998,5 +179917,86 @@
     "qty": 8.96,
     "notionalUsd": 575321.6000000001,
     "distPct": 0.07535654086203492
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "BID",
+    "price": 64326.5,
+    "qty": 17.861,
+    "notionalUsd": 1148935.6165,
+    "distPct": -0.048867311653023576
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "BID",
+    "price": 64325.8,
+    "qty": 10.493,
+    "notionalUsd": 674970.6194000001,
+    "distPct": -0.04995497836707692
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "BID",
+    "price": 64310.3,
+    "qty": 8.947,
+    "notionalUsd": 575384.2541,
+    "distPct": -0.07403902703550094
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "ASK",
+    "price": 64368,
+    "qty": 10.047,
+    "notionalUsd": 646705.2960000001,
+    "distPct": 0.015615786394692358
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "ASK",
+    "price": 64376.9,
+    "qty": 13.183,
+    "notionalUsd": 848680.6727,
+    "distPct": 0.029444691759144544
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "ASK",
+    "price": 64380,
+    "qty": 17.134,
+    "notionalUsd": 1103086.92,
+    "distPct": 0.03426150149282709
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "ASK",
+    "price": 64382.3,
+    "qty": 8.934,
+    "notionalUsd": 575191.4682,
+    "distPct": 0.037835263553307436
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "ASK",
+    "price": 64390.5,
+    "qty": 13.858,
+    "notionalUsd": 892323.549,
+    "distPct": 0.05057650220369498
+  },
+  {
+    "timestamp": "2026-11-17T09:33:32.820Z",
+    "midPrice": 64357.95,
+    "side": "ASK",
+    "price": 64400,
+    "qty": 10.403,
+    "notionalUsd": 669953.2000000001,
+    "distPct": 0.06533769332305164
   }
 ]

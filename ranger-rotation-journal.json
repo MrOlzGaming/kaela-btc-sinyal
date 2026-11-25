@@ -1,6 +1,44 @@
 {
-  "floating": null,
-  "lastScanCloseTime": 1795622399999,
+  "floating": {
+    "id": "ranger-rotasi-1795636821071",
+    "signalId": "2026112601",
+    "coin": "BNB",
+    "direction": "buy",
+    "patternType": "wedge_falling",
+    "sl": 501.23125,
+    "partialTp": 654.7075,
+    "openedAt": "2026-11-25T20:00:21.070Z",
+    "wibowoRoute": "demo",
+    "exchange": "bybit",
+    "legs": {
+      "demo": {
+        "entryPrice": 552.39,
+        "qty": 13.17,
+        "remainingQty": 13.17,
+        "sl": 501.23125,
+        "risk": 51.15875,
+        "peak": 552.39,
+        "leverage": 10,
+        "margin": 727.8689285242501,
+        "nilaiPosisi": 7278.689285242501,
+        "partialDone": false,
+        "realizedPnlUsd": 0,
+        "nativeSl": true,
+        "liquidationPrice": null,
+        "crossMargin": true
+      },
+      "real": null
+    },
+    "realRetry": {
+      "since": 1795636818680,
+      "alerted": [
+        1
+      ],
+      "tries": 1,
+      "lastTry": 1795636818680
+    }
+  },
+  "lastScanCloseTime": 1795636799999,
   "closedCount": 7,
   "stats": {
     "demo": {
@@ -15,7 +53,7 @@
     }
   },
   "dailySignalSeq": {
-    "dayKey": "20261117",
+    "dayKey": "20261126",
     "count": 1
   },
   "history": [

@@ -600,5 +600,87 @@
     },
     "eurMaxMovePct": -0.0363735564244754,
     "reportSentAt": 1794924003861
+  },
+  {
+    "key": "2026-11-19T08:30",
+    "label": "Jobless Claims (mingguan)",
+    "timeMs": 1795095000000,
+    "eur": {
+      "base": 1.1004,
+      "s5": 1.1005,
+      "s10": 1.1005,
+      "m1": 1.1005,
+      "m2": 1.1006,
+      "m5": 1.1007,
+      "m10": 1.1009,
+      "m15": 1.1008,
+      "m30": 1.1009
+    },
+    "btc": {
+      "base": 63706,
+      "s5": 63725.1,
+      "s10": 63730.01,
+      "m1": 63770,
+      "m2": 63808,
+      "m5": 63704.01,
+      "m10": 63767.99,
+      "m15": 63734,
+      "m30": 64038.01
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": 0.01817520901490167,
+    "reportSentAt": 1795096803887
+  },
+  {
+    "key": "2026-11-25T08:30",
+    "label": "GDP Q3 Second + PCE (Okt) + Jobless Claims",
+    "timeMs": 1795613400000,
+    "eur": {
+      "base": 1.0958,
+      "s5": 1.0958,
+      "s10": 1.0958,
+      "m1": 1.0957,
+      "m2": 1.0962,
+      "m5": 1.0963,
+      "m10": 1.0958,
+      "m15": 1.0959,
+      "m30": 1.0954
+    },
+    "btc": {
+      "base": 58854.93,
+      "s5": 58905.75,
+      "s10": 58861.09,
+      "m1": 58521.37,
+      "m2": 58606,
+      "m5": 58454.76,
+      "m10": 58459.42,
+      "m15": 58314.03,
+      "m30": 58080.78
+    },
+    "signal": {
+      "none": true
+    },
+    "trade": null,
+    "realReady": {
+      "ok": false,
+      "balance": 0,
+      "minBalance": 7,
+      "notional": 0,
+      "leverage": 50,
+      "note": "saldo real $0.00 -> posisi $0.00 (lev 50x), di bawah minimum $15 -- perlu setoran dulu (saldo minimal ~$7)"
+    },
+    "eurMaxMovePct": 0,
+    "reportSentAt": 1795615203502
   }
 ]

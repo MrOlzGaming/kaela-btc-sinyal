@@ -1,50 +1,12 @@
 {
-  "floating": {
-    "id": "ranger-rotasi-1794888022087",
-    "signalId": "2026111701",
-    "coin": "ETH",
-    "direction": "buy",
-    "patternType": "wedge_falling",
-    "sl": 1702.5246,
-    "partialTp": 2091.7608,
-    "openedAt": "2026-11-17T04:00:22.087Z",
-    "wibowoRoute": "demo",
-    "exchange": "bybit",
-    "legs": {
-      "demo": {
-        "entryPrice": 1832.27,
-        "qty": 3.99,
-        "remainingQty": 3.99,
-        "sl": 1702.5246,
-        "risk": 129.74540000000002,
-        "peak": 1832.27,
-        "leverage": 13,
-        "margin": 563.0037661942499,
-        "nilaiPosisi": 7319.04896052525,
-        "partialDone": false,
-        "realizedPnlUsd": 0,
-        "nativeSl": true,
-        "liquidationPrice": null,
-        "crossMargin": true
-      },
-      "real": null
-    },
-    "realRetry": {
-      "since": 1794888019098,
-      "alerted": [
-        1
-      ],
-      "tries": 46,
-      "lastTry": 1794929411158
-    }
-  },
-  "lastScanCloseTime": 1794887999999,
-  "closedCount": 6,
+  "floating": null,
+  "lastScanCloseTime": 1795622399999,
+  "closedCount": 7,
   "stats": {
     "demo": {
       "wins": 1,
-      "losses": 4,
-      "totalPnlUsd": -1696.6692747000025
+      "losses": 5,
+      "totalPnlUsd": -2214.3534207000025
     },
     "real": {
       "wins": 0,
@@ -57,6 +19,38 @@
     "count": 1
   },
   "history": [
+    {
+      "id": "ranger-rotasi-1794888022087",
+      "signalId": "2026111701",
+      "coin": "ETH",
+      "direction": "buy",
+      "patternType": "wedge_falling",
+      "openedAt": "2026-11-17T04:00:22.087Z",
+      "wibowoRoute": "demo",
+      "legs": {
+        "demo": {
+          "entryPrice": 1832.27,
+          "qty": 3.99,
+          "remainingQty": 3.99,
+          "sl": 1702.5246,
+          "risk": 129.74540000000002,
+          "peak": 1832.27,
+          "leverage": 13,
+          "margin": 563.0037661942499,
+          "nilaiPosisi": 7319.04896052525,
+          "partialDone": false,
+          "realizedPnlUsd": 0,
+          "nativeSl": true,
+          "liquidationPrice": null,
+          "crossMargin": true,
+          "closedAt": "2026-11-25T16:30:14.176Z",
+          "exitPrice": 1702.5246,
+          "pnlUsd": -517.684146,
+          "reason": "SL"
+        },
+        "real": null
+      }
+    },
     {
       "id": "ranger-rotasi-1794340815057",
       "signalId": "2026111101",

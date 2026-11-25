@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-11-17 23:33 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-11-26 00:33 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -9,22 +9,36 @@ Diperbarui otomatis: 2026-11-17 23:33 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - **🏹 Ranger · Fair Value Gap · Kaela Demo (Binance)**: 19 trade, menang 9/16 (56%), bersih -$54.25 (3 PnL gak kebaca)
 - **🏹 Ranger · Fair Value Gap · Kaela Demo (Bybit)**: 4 trade, menang 0/3 (0%), bersih -$949.09 (1 PnL gak kebaca)
 - **🏹 Ranger · Fair Value Gap · Olan Real (Binance)**: 2 trade, menang 2/2 (100%), bersih +$1.04
-- **🏹 Ranger · Pola Chart (wedge falling) · Kaela Demo (Bybit)**: 1 trade, menang 0/1 (0%), bersih -$1145.23
+- **🏹 Ranger · Pola Chart (wedge falling) · Kaela Demo (Bybit)**: 2 trade, menang 0/2 (0%), bersih -$1662.91
 - **🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo (Binance)**: 1 trade, menang 1/1 (100%), bersih +$40.75
 - **🏹 Ranger · Pola Chart (wedge rising) · Kaela Demo (Bybit)**: 1 trade, menang 1/1 (100%), bersih +$397.65
 - **🏹 Ranger · Posisi manual/adopsi · Kaela Demo (Binance)**: 1 trade, menang 0/0, bersih ? (1 PnL gak kebaca)
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (Binance)**: 18 trade, menang 8/18 (44%), bersih +$77.02
 - **🏹 Ranger · Posisi manual/adopsi · Olan Real (MEXC)**: 3 trade, menang 1/1 (100%), bersih +$0.00 (2 PnL gak kebaca)
+- **🏹 Ranger · Scalp Rilis Data · Kaela Demo (Binance)**: 1 trade, menang 1/1 (100%), bersih +$0.65
 - **🥷 Ninja · Exhaustion · Kaela Demo (BingX)**: 9 trade, menang 3/9 (33%), bersih -$53.40
 - **🥷 Ninja · Mean Reversion · Kaela Demo (BingX)**: 2 trade, menang 1/2 (50%), bersih +$3.72
 
-## Posisi terbuka (3)
+## Posisi terbuka (2)
 
-- 🏹 Ranger · Pola Chart (wedge falling) · Kaela Demo · Bybit · ETH LONG @ 1,832.3 (SL 1,702.5) sejak 2026-11-17 12:00 WITA
 - 🎯 Sniper · Pola Chart (wedge falling) · Kaela Demo · Binance · BTC LONG @ 80,632.4 (SL 75,944.4) sejak 2026-11-05 08:16 WITA
 - 🎯 Sniper · Fair Value Gap · Kaela Demo · Binance · BTC LONG @ 80,737.7 (SL 77,179.5) sejak 2026-10-28 08:16 WITA
 
 ## Trade terakhir (60 terbaru)
+
+### #2026111901 — 🏹 Ranger · Scalp Rilis Data · Kaela Demo · Binance
+- Buka: 2026-11-19 03:05 WITA — BTC SHORT @ 62,808.1 (SL 64,069.4), 39x
+- Alasan buka: Reaksi Kalender Ekonomi -- BTC bereaksi searah abis rilis data high-impact, ikut kelanjutannya (exit paksa ~30 menit, jendela tervalidasi backtest)
+- Konteks entry: exchange=binance, originalSl=64069.362, partialTp=60300.576, qty=0.022, leverage=39, marginUsd=35.847656, nilaiPosisi=1398.0586, partialDone=false, remainingFraction=1, realizedPnlUsd=0, manualReason=Scalp otomatis abis rilis data ekonomi high-impact (Notulen Rapat FOMC) -- BTC bereaksi turun duluan, exit paksa ~30 menit (lihat backtest/econReactionBacktest.js)., smartMoneyGapAtEntry=-12.82
+- Tutup: 2026-11-19 03:40 WITA @ 62,778.7 — Alasan tutup: MANUAL
+- Hasil: bersih +$0.65
+
+### #2026111701 — 🏹 Ranger · Pola Chart (wedge falling) · Kaela Demo · Bybit · slot rotasi
+- Buka: 2026-11-17 12:00 WITA — ETH LONG @ 1,832.3 (SL 1,702.5), 13x
+- Alasan buka: Chart Pattern (Falling Wedge) -- breakout wedge turun terkonfirmasi
+- Konteks entry: wibowoRoute=demo
+- Tutup: 2026-11-26 00:30 WITA @ 1,702.5 — Alasan tutup: Stop Loss kena
+- Hasil: bersih -$517.68
 
 ### #2026111101 — 🏹 Ranger · Pola Chart (wedge falling) · Kaela Demo · Bybit · slot rotasi
 - Buka: 2026-11-11 04:00 WITA — INJ LONG @ 8.031 (SL 6.78889), 6x
@@ -429,18 +443,4 @@ Diperbarui otomatis: 2026-11-17 23:33 WITA -- dari jurnal SEMUA sistem (Sniper/R
 - Konteks entry: partialTp=79054.17, wibowoRoute=demo, trailR=3, archivedAt=2026-10-30T01:30:14.635Z
 - Tutup: 2026-10-30 09:30 WITA @ 76,836.6 — Alasan tutup: Trailing stop kena -- SL yang ikut harga terbaik kesentuh, profit dikunci
 - Hasil: bersih -$13.04
-
-### #2026103004 — 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · slot fvg
-- Buka: ? — BTC LONG @ 77,093.2 (SL 77,460.8), 50x
-- Alasan buka: FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)
-- Konteks entry: partialTp=79054.17, wibowoRoute=demo, trailR=3, archivedAt=2026-10-30T01:15:15.002Z
-- Tutup: 2026-10-30 09:15 WITA @ 77,180.4 — Alasan tutup: Trailing stop kena -- SL yang ikut harga terbaik kesentuh, profit dikunci
-- Hasil: bersih +$3.23
-
-### #2026103003 — 🏹 Ranger · Fair Value Gap · Kaela Demo · Binance · slot fvg
-- Buka: ? — BTC LONG @ 77,116.1 (SL 77,460.8), 50x
-- Alasan buka: FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)
-- Konteks entry: partialTp=79054.17, wibowoRoute=demo, trailR=3, archivedAt=2026-10-30T01:00:19.949Z
-- Tutup: 2026-10-30 09:00 WITA @ 77,076.3 — Alasan tutup: Trailing stop kena -- SL yang ikut harga terbaik kesentuh, profit dikunci
-- Hasil: bersih -$1.47
 

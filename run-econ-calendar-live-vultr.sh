@@ -34,56 +34,47 @@ if ! echo "$output" | grep -q 'gak ada event dalam jendela'; then
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $output" >> "$LOG_FILE"
 fi
 
-CHANGED=$(git status --porcelain -- archive.json econ-reaction-research-log.json)
-if [ -n "$CHANGED" ]; then
-  # 🐛 FIX 19 Sep 2026 (review independen -- "klaim 'sudah ketutup' cuma dipersempit, bukan
-  # dihilangkan": run-vultr-executor.sh (cron 15 menit) pakai flock di /tmp/kaela-executor.lock
-  # SEPANJANG siklusnya, tapi script INI (cron 5 menit) gak pernah pakai lock yang sama -- masih
-  # ada jendela beberapa detik antara node nulis archive.json (baris 32) dan git commit di bawah
-  # ini di mana run-vultr-executor.sh bisa `reset --hard` di proses terpisah dan hapus balik
-  # tulisan yang belum sempat ke-commit). Fix: ambil lock SINGKAT (fd BEDA dari fd 200 yang
-  # dipakai run-vultr-executor.sh, tapi FILE lock-nya SAMA -- flock kerja per-file, bukan per-fd)
-  # SEBELUM commit, `-w 5` (tunggu maks 5 detik, BUKAN nunggu selama run-vultr-executor.sh
-  # megang -- itu bisa berjam-jam kalau kebetulan lambat). Gagal ambil lock TETAP lanjut commit
-  # (best-effort, sama filosofi retry push di bawah) -- ini MEMPERSEMPIT jendela race ke hampir
-  # nol, bukan klaim "pasti nol" (masih ada celah teoretis kalau lock gagal DIAMBIL tepat pas
-  # reset --hard proses lain kejadian di detik yang sama -- probabilitas sangat rendah).
-  exec 201>/tmp/kaela-executor.lock
-  LOCKED=1
-  if ! flock -w 5 201; then
-    LOCKED=0
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: siklus 15-menit lagi jalan -- commit lokal aja, push diserahin ke run-vultr-executor.sh." >> "$LOG_FILE"
+# (26 Nov 2026) SEMUA git di script ini jalan HANYA sambil pegang /tmp/kaela-executor.lock (file lock yang sama dengan
+# run-vultr-executor.sh). Dulu `git status` jalan sebelum lock, dan `git add/commit` tetap jalan walau lock gagal
+# diambil -> dua cron jalanin git barengan di repo yang sama (dugaan pemicu index.lock nyangkut 17 Okt & 17 Nov 2026).
+# Lock gak kedapet (executor lagi jalan) = gak nyentuh git sama sekali: archive.json + econ-reaction-research-log.json
+# ada di STATE_FILES executor -> dijaga dari reset --hard + ke-commit+push ujung siklusnya, atau diambil script ini
+# 5 menit lagi. `201>&-` = proses git (termasuk gc latar belakang) gak mewarisi lock.
+SYNC_STATUS_LINE=""
+CHANGED=""
+exec 201>/tmp/kaela-executor.lock
+if flock -w 5 201; then
+  if [ -f "$PROJECT_DIR/git-lock-guard.sh" ]; then
+    . "$PROJECT_DIR/git-lock-guard.sh"
+    bersihkan_lock_git_basi "$LOG_FILE" 'econ-calendar-live' 201>&-
   fi
+  CHANGED=$(git status --porcelain -- archive.json econ-reaction-research-log.json 201>&-)
+fi
+if [ -n "$CHANGED" ]; then
   for f in archive.json econ-reaction-research-log.json; do
-    [ -f "$f" ] && git add "$f"
+    [ -f "$f" ] && git add "$f" 201>&-
   done
-  git commit -m "Auto: sync econ-calendar-live $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1
+  git commit -m "Auto: sync econ-calendar-live $(date '+%Y-%m-%d %H:%M')" --quiet >> "$LOG_FILE" 2>&1 201>&-
   synced=0
-  # (4 Okt 2026) Lock gak kedapet = run-vultr-executor.sh lagi jalan + file state-nya belum di-commit -> pull --rebase PASTI
-  # gagal "unstaged changes" (5x "sync GAGAL 3x" palsu ke Watchdog 1-3 Okt). Gak perlu push di sini: archive.json +
-  # econ-reaction-research-log.json ada di STATE_FILES executor -> dijaga dari reset --hard + ke-commit+push ujung siklusnya.
-  [ "$LOCKED" -eq 0 ] && synced=2
   for attempt in 1 2 3; do
-    [ "$synced" -ne 0 ] && break
-    if timeout -k 10 20 git pull --rebase --autostash origin-new master --quiet >> "$LOG_FILE" 2>&1 \
-       && timeout -k 10 20 git push origin-new master --quiet >> "$LOG_FILE" 2>&1; then
+    [ "$synced" -eq 1 ] && break
+    if timeout -k 10 20 git pull --rebase --autostash origin-new master --quiet >> "$LOG_FILE" 2>&1 201>&- \
+       && timeout -k 10 20 git push origin-new master --quiet >> "$LOG_FILE" 2>&1 201>&-; then
       synced=1
       break
     fi
-    git rebase --abort >/dev/null 2>&1 || true # (4 Okt 2026) konflik -> jangan tinggalin repo setengah rebase (HEAD detached)
+    git rebase --abort >/dev/null 2>&1 201>&- || true # (4 Okt 2026) konflik -> jangan tinggalin repo setengah rebase (HEAD detached)
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: sync GAGAL percobaan $attempt, coba lagi..." >> "$LOG_FILE"
     sleep 3
   done
-  SYNC_STATUS_LINE=""
   if [ "$synced" -eq 1 ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] econ-calendar-live: archive/research-log ke-sync." >> "$LOG_FILE"
-  elif [ "$synced" -eq 2 ]; then
-    : # ditunda ke executor (lihat di atas), bukan kegagalan
   else
     SYNC_STATUS_LINE="econ-calendar-live: sync GAGAL 3x -- entri BERISIKO kehapus git reset --hard siklus vultr-executor berikutnya."
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $SYNC_STATUS_LINE" >> "$LOG_FILE"
   fi
 fi
+exec 201>&- # lepas lock secepatnya, sebelum lapor
 
 # 🐛 FIX 19 Sep 2026 (audit -- "siapa mengawasi run-econ-calendar-live-vultr.sh sendiri?") --
 # SEBELUM ini, error/exception di script ini (`node econCalendarLiveMonitor.js` gagal, atau sync

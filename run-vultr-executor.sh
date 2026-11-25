@@ -65,7 +65,9 @@ git config --global http.lowSpeedLimit 1000
 git config --global http.lowSpeedTime 20
 
 exec 200>"$LOCK_FILE"
-if ! flock -n 200; then
+# (26 Nov 2026) Tunggu maks 90 detik (dulu -n): skrip cron lain sekarang jalanin SEMUA git-nya sambil pegang lock ini,
+# jadi pegangan singkat mereka gak boleh bikin satu siklus 15 menit kelewat.
+if ! flock -w 90 200; then
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] Lock lagi kepegang (mungkin run sebelumnya masih jalan/macet) -- skip siklus ini." >> "$LOG_FILE"
   exit 0
 fi
@@ -83,6 +85,12 @@ CYCLE_LOG_START=$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)
 # Baris pendek buat dilaporin kalau exit dini di bawah -- CYCLE_ERRORS full (tail+grep) gak
 # kepake di jalur ini karena scriptnya keburu exit sebelum nyampe blok laporan di akhir file.
 report_and_exit() { node reportCycleErrors.js 'vultr-sg' "$1" >> "$LOG_FILE" 2>&1 || true; exit "$2"; }
+
+# (26 Nov 2026) Kunci git basi dibersihin SEBELUM perintah git pertama -- lihat git-lock-guard.sh. Lock executor udah dipegang.
+if [ -f "$PROJECT_DIR/git-lock-guard.sh" ]; then
+  . "$PROJECT_DIR/git-lock-guard.sh"
+  bersihkan_lock_git_basi "$LOG_FILE" 'vultr-sg'
+fi
 
 if ! timeout -k 10 30 git fetch origin-new master --quiet >> "$LOG_FILE" 2>&1; then
   log 'git fetch GAGAL/timeout -- coba lagi run berikutnya.'

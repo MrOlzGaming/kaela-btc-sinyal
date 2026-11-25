@@ -1,44 +1,39 @@
 {
   "btc": {
-    "price": 65315.57,
+    "price": 60272.84,
     "conviction": {
-      "score": 1,
+      "score": 0,
       "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
           "v": 1,
-          "reason": "RSI 23 oversold -- rawan technical bounce"
+          "reason": "RSI 18 oversold -- rawan technical bounce"
         },
         {
           "label": "MVRV (on-chain)",
           "v": 0,
-          "reason": "1.40 -- Fair value / akumulasi"
+          "reason": "1.18 -- Fair value / akumulasi"
         },
         {
           "label": "NUPL (on-chain)",
           "v": 0,
-          "reason": "0.28 -- Optimism / Anxiety"
+          "reason": "0.15 -- Hope / Fear"
         },
         {
           "label": "Fear & Greed",
           "v": 1,
-          "reason": "10/100 -- Extreme Fear (kontrarian)"
+          "reason": "13/100 -- Extreme Fear (kontrarian)"
         },
         {
           "label": "Stablecoin Supply",
-          "v": -1,
-          "reason": "-1.11% (7 hari) -- dana keluar/redeem"
+          "v": 0,
+          "reason": "-0.70% (7 hari) -- stabil"
         },
         {
           "label": "M2 Money Supply (YoY)",
           "v": 1,
-          "reason": "6.7% -- likuiditas melimpah, tailwind"
-        },
-        {
-          "label": "Fase Siklus Halving",
-          "v": 1,
-          "reason": "TANAM"
+          "reason": "6.5% -- likuiditas melimpah, tailwind"
         },
         {
           "label": "Fed Funds Rate",
@@ -47,94 +42,94 @@
         },
         {
           "label": "Credit Spread (High-Yield)",
-          "v": 0,
-          "reason": "STABIL -- netral"
+          "v": -1,
+          "reason": "MELEBAR -- pasar kredit mulai waspada/risk-off -- historis headwind buat BTC (aset risiko)"
         },
         {
           "label": "ETF Flow (institusi)",
           "v": -1,
-          "reason": "0/7 hari inflow, net 7hari $-1908jt -- distribusi institusi konsisten"
+          "reason": "1/7 hari inflow, net 7hari $-2591jt -- distribusi institusi konsisten"
         }
       ],
-      "totalFactors": 10
+      "totalFactors": 9
     },
     "trackRecord": null,
     "regime": {
-      "corr30": 0.6692996200894588,
-      "corr90": 0.4749625316870894,
+      "corr30": 0.7545403147291797,
+      "corr90": 0.5427506631023586,
       "label30": "KUAT POSITIF",
       "label90": "moderat positif",
       "sampleDays": 83,
-      "latestDate": "2026-11-13"
+      "latestDate": "2026-11-24"
     },
     "advancedMacro": {
       "dvol": {
-        "value": 43.23,
-        "changePct": 8.427389014296462
+        "value": 52.53,
+        "changePct": 14.945295404813999
       },
       "stablecoin": {
-        "current": 244683715939.60034,
-        "weekAgo": 247431788432.15378,
-        "changePct": -1.1106384147188761
+        "current": 242792970296.33658,
+        "weekAgo": 244496543122.2648,
+        "changePct": -0.6967676533063787
       },
       "yieldCurve": {
-        "value": 0.29,
-        "date": "2026-11-16",
+        "value": 0.24,
+        "date": "2026-11-25",
         "inverted": false
       },
       "m2": {
-        "value": 23508,
-        "date": "2026-10-05",
-        "changePctYoY": 6.67368507031261
+        "value": 23489.1,
+        "date": "2026-11-02",
+        "changePctYoY": 6.467623355784998
       },
       "fedRate": {
         "value": 3.88,
-        "date": "2026-11-13",
+        "date": "2026-11-24",
         "changeBps": 25
       },
       "creditSpread": {
-        "value": 3.23,
-        "date": "2026-11-13",
-        "changeBps": -2.0000000000000018
+        "value": 3.72,
+        "date": "2026-11-24",
+        "changeBps": 34.00000000000003
       },
       "etfFlow": {
-        "date": "2026-11-13",
-        "latestNetFlowUsd": -185450233.4,
-        "sum7dUsd": -1907549873.25,
-        "positiveDays7d": 0,
+        "date": "2026-11-24",
+        "latestNetFlowUsd": -231556490.06999975,
+        "sum7dUsd": -2591031787.6499996,
+        "positiveDays7d": 1,
         "totalDays7d": 7
       },
       "oil": {
-        "value": 89.62,
-        "date": "2026-11-11",
-        "changePct": -5.653226655437404,
+        "value": 82.24,
+        "date": "2026-11-24",
+        "changePct": -25.045570543200878,
         "trend": {
-          "arah": "STABIL",
-          "efek": "gak ada tekanan inflasi tambahan dari sisi energi"
+          "arah": "TURUN TAJAM",
+          "efek": "tekanan inflasi mereda dari sisi energi -- historis ngasih The Fed ruang lebih dovish"
         }
       }
     }
   },
   "xau": {
-    "price": 3843.09,
+    "price": 3571.25,
     "conviction": {
-      "score": -3,
-      "verdict": "🔴 BEARISH KUAT",
+      "score": 0,
+      "verdict": "⚪ NETRAL / Campuran",
       "factors": [
         {
           "label": "RSI Teknikal",
-          "v": 0,
-          "reason": "RSI 48 netral"
+          "v": 1,
+          "reason": "RSI 21 oversold -- rawan technical bounce"
         },
         {
           "label": "DXY (Dolar)",
-          "v": -1,
-          "reason": "MENGUAT -- Emas cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
         },
         {
           "label": "Real Yield 10Y",
-          "v": -1,
-          "reason": "NAIK -- Emas cenderung TERTEKAN (biaya peluang pegang Emas naik)"
+          "v": 0,
+          "reason": "STABIL -- Emas netral"
         },
         {
           "label": "Fed Funds Rate",
@@ -145,56 +140,56 @@
       "totalFactors": 4
     },
     "trackRecord": {
-      "total": 48,
-      "correct": 26,
-      "winRatePct": 54.166666666666664
+      "total": 56,
+      "correct": 34,
+      "winRatePct": 60.71428571428571
     },
     "regime": {
-      "corr30": -0.43562149289438673,
-      "corr90": -0.44780910558518155,
-      "label30": "moderat negatif",
+      "corr30": -0.18981819795643978,
+      "corr90": -0.3557392462577612,
+      "label30": "lemah/gak konsisten",
       "label90": "moderat negatif",
       "sampleDays": 84,
-      "latestDate": "2026-11-16"
+      "latestDate": "2026-11-25"
     },
     "macro": {
       "dxy": {
         "latest": {
-          "date": "2026-11-16",
-          "value": 103.586
+          "date": "2026-11-25",
+          "value": 103.696
         },
         "prev": {
           "date": null,
-          "value": 102.91
+          "value": 103.81
         },
-        "changePct": 0.6568846564959693,
+        "changePct": -0.10981601001830683,
         "trend": {
-          "arah": "MENGUAT",
-          "efekEmas": "cenderung TERTEKAN (dolar kuat = Emas lebih mahal buat pembeli non-dolar)"
+          "arah": "STABIL",
+          "efekEmas": "netral"
         }
       },
       "realYield": {
         "latest": {
-          "date": "2026-11-13",
-          "value": 2.91
+          "date": "2026-11-24",
+          "value": 2.79
         },
         "prev": {
-          "date": "2026-11-12",
-          "value": 2.86
+          "date": "2026-11-23",
+          "value": 2.79
         },
-        "changePct": 1.7482517482517577,
+        "changePct": 0,
         "trend": {
-          "arah": "NAIK",
-          "efekEmas": "cenderung TERTEKAN (biaya peluang pegang Emas naik)"
+          "arah": "STABIL",
+          "efekEmas": "netral"
         }
       }
     },
     "cot": null,
     "yieldCurve": {
-      "value": 0.29,
-      "date": "2026-11-16",
+      "value": 0.24,
+      "date": "2026-11-25",
       "inverted": false
     }
   },
-  "updatedAt": "2026-11-16T23:16:00.015Z"
+  "updatedAt": "2026-11-25T23:15:58.799Z"
 }

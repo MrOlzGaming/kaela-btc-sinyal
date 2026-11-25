@@ -3045,5 +3045,12 @@
     "side": "long",
     "price": 59614.01,
     "peakUsd": 306046.0482
+  },
+  {
+    "timestamp": "2026-11-25T19:01:12.483Z",
+    "type": "exhaustion",
+    "side": "short",
+    "price": 59740,
+    "peakUsd": 396730.43899999995
   }
 ]

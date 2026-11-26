@@ -23,7 +23,7 @@
         "realizedPnlUsd": 0,
         "refEntryPrice": 60714.01,
         "venueGapPct": -0.1653819274991118,
-        "peak": 60791.7
+        "peak": 60802.8
       },
       "real": null,
       "realRetry": {
@@ -31,8 +31,8 @@
         "alerted": [
           1
         ],
-        "tries": 38,
-        "lastTry": 1795727710441
+        "tries": 39,
+        "lastTry": 1795728608989
       }
     },
     "closedCount": 1,

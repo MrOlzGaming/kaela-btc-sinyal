@@ -1,6 +1,6 @@
 {
- "updatedAt": "2026-11-26T11:48:51.975Z",
- "count": 68,
+ "updatedAt": "2026-11-26T12:04:13.761Z",
+ "count": 69,
  "trades": [
   {
    "key": "ranger|ranger-rotasi-1795636821071|demo",
@@ -2220,6 +2220,46 @@
     "pnlPct": 0,
     "closeReason": "OFFLINE",
     "closedAt": "2026-09-07T21:12:00.659Z"
+   }
+  },
+  {
+   "key": "ranger|ranger-btc-dual-1795694416250|demo",
+   "system": "🏹 Ranger",
+   "systemKey": "ranger",
+   "id": "ranger-btc-dual-1795694416250",
+   "signalId": "2026112601",
+   "account": "Kaela Demo",
+   "mode": "demo",
+   "exchange": "Binance",
+   "asset": "BTC",
+   "patternType": "wedge_falling",
+   "direction": "LONG",
+   "entry": 60613.6,
+   "sl": 54854.35,
+   "exit": null,
+   "qty": 0.046,
+   "leverage": 9,
+   "marginUsd": 310.63998051066665,
+   "openedAt": null,
+   "closedAt": null,
+   "status": "terbuka",
+   "grossUsd": null,
+   "feeUsd": null,
+   "netUsd": null,
+   "reasonOpen": "Chart Pattern (Falling Wedge) -- breakout wedge turun terkonfirmasi",
+   "reasonCloseCode": null,
+   "reasonClose": null,
+   "slot": "pattern",
+   "context": {
+    "id": "ranger-btc-dual-1795694416250",
+    "signalId": "2026112601",
+    "direction": "buy",
+    "patternType": "wedge_falling",
+    "sl": 54854.35,
+    "partialTp": 72433.33000000002,
+    "wibowoRoute": "demo",
+    "trailR": 3,
+    "triggeredAt": "2026-11-26T12:00:16.250Z"
    }
   },
   {

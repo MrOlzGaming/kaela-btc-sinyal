@@ -1,6 +1,39 @@
 {
   "pattern": {
-    "floating": null,
+    "floating": {
+      "id": "ranger-btc-dual-1795694416250",
+      "signalId": "2026112601",
+      "direction": "buy",
+      "patternType": "wedge_falling",
+      "sl": 54854.35,
+      "partialTp": 72433.33000000002,
+      "wibowoRoute": "demo",
+      "trailR": 3,
+      "manualReason": null,
+      "triggeredAt": "2026-11-26T12:00:16.250Z",
+      "demo": {
+        "entryPrice": 60613.6,
+        "qty": 0.046,
+        "leverage": 9,
+        "margin": 310.63998051066665,
+        "nilaiPosisi": 2795.759824596,
+        "currentSl": 54854.35,
+        "partialDone": false,
+        "remainingFraction": 1,
+        "realizedPnlUsd": 0,
+        "refEntryPrice": 60714.01,
+        "venueGapPct": -0.1653819274991118
+      },
+      "real": null,
+      "realRetry": {
+        "since": 1795694412091,
+        "alerted": [
+          1
+        ],
+        "tries": 1,
+        "lastTry": 1795694412091
+      }
+    },
     "closedCount": 1,
     "stats": {
       "demo": {
@@ -15,7 +48,7 @@
       }
     },
     "dailySignalSeq": {
-      "dayKey": "20261006",
+      "dayKey": "20261126",
       "count": 1
     },
     "history": [

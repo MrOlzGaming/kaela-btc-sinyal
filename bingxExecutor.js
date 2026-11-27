@@ -292,8 +292,20 @@ function createBingxClient({ apiKey, apiSecret, testnet }) {
     return (positions || []).find((p) => p.positionSide === positionSide && Math.abs(parseFloat(p.positionAmt)) > 0) || null;
   }
 
+  // (27 Nov 2026) Bukti posisi beneran ditutup: total order penutup FILLED sejak `sinceMs` (dibatasi 7 hari ke belakang).
+  // null = gak ada order tutup. Error API dilempar (caller anggap "belum tahu").
+  async function findCloseFill(symbol, positionSide, sinceMs) {
+    const from = Math.max(Number(sinceMs) || 0, Date.now() - 7 * 86400e3 + 3600e3);
+    const data = await signedRequest('GET', '/openApi/swap/v2/trade/allOrders', { symbol, startTime: from, endTime: Date.now(), limit: 500 });
+    const side = positionSide === 'SHORT' ? 'BUY' : 'SELL';
+    const fills = ((data && data.orders) || []).filter((o) => o.status === 'FILLED' && o.positionSide === positionSide && o.side === side && Number(o.time) >= from);
+    const qty = fills.reduce((s, o) => s + parseFloat(o.executedQty), 0);
+    if (!(qty > 0)) return null;
+    return { qty, avgPrice: fills.reduce((s, o) => s + parseFloat(o.executedQty) * parseFloat(o.avgPrice), 0) / qty, time: Math.max(...fills.map((o) => Number(o.time))) };
+  }
+
   return {
-    getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, setCrossMargin, placeMarketEntry,
+    findCloseFill, getAccountBalance, getWalletBalance, setLeverage, setIsolatedMargin, setCrossMargin, placeMarketEntry,
     getPositionRisk, getAllPositions, cancelAllOpenOrders, getSymbolInfo, roundToStepSize,
     emergencyCloseMarket, wasLastEntryOrderByKaela,
     placeLimitEntry, placeLimitClose, placeStopMarketClose, getOrder, cancelOrder, getPositionBySide, adjustIsolatedMargin, transferAsset, getSpotBalances, spotMarketBuy, spotMarketSell,

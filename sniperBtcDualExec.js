@@ -145,6 +145,37 @@ async function fetchLastReduceOnlyFill(mode, sinceMs) {
   return avgPrice > 0 ? avgPrice : null;
 }
 
+// (27 Nov 2026) Order PENUTUP PERTAMA sejak leg dibuka yang ukurannya cocok -- bukan yang paling baru: kalau monitor telat,
+// "paling baru" bisa punya trade berikutnya (kejadian nyata order 28 Okt vs 5 Nov). Binance cuma kasih jendela 7 hari per query.
+async function fetchExitFill(mode, sinceMs, direction, qty) {
+  const secrets = binanceExecutorDefault.loadSecrets();
+  const apiKey = mode === 'real' ? secrets.BINANCE_API_KEY_REAL : secrets.BINANCE_API_KEY;
+  const apiSecret = mode === 'real' ? secrets.BINANCE_API_SECRET_REAL : secrets.BINANCE_API_SECRET;
+  const closeSide = direction === 'buy' ? 'SELL' : 'BUY';
+  const WINDOW = 7 * 86400e3 - 1000;
+  for (let from = sinceMs; from < Date.now(); from += WINDOW + 1) {
+    const params = { symbol: SYMBOL, startTime: from, endTime: Math.min(from + WINDOW, Date.now()), timestamp: Date.now(), recvWindow: 15000, limit: 500 };
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${baseUrlFor(mode)}/fapi/v1/allOrders?${query}&signature=${sign(query, apiSecret)}`, { headers: { 'X-MBX-APIKEY': apiKey } });
+    const orders = await res.json();
+    if (!Array.isArray(orders)) return null; // query gagal -- jangan lompatin jendela
+    const hit = orders
+      .filter((o) => o.status === 'FILLED' && o.reduceOnly === true && o.side === closeSide && Math.abs(parseFloat(o.executedQty) - qty) <= qty * 0.02 && parseFloat(o.avgPrice) > 0)
+      .sort((a, b) => Number(a.updateTime || a.time) - Number(b.updateTime || b.time))[0];
+    if (hit) return { price: parseFloat(hit.avgPrice), time: Number(hit.updateTime || hit.time) };
+  }
+  return null;
+}
+
+// Posisi kebaca kosong: tutup di jurnal pakai fill asli. Belum ada buktinya -> tunggu; 3 siklus tetap gak ada -> pakai harga SL.
+async function resolveExit(mode, direction, leg, fallbackPrice) {
+  const fill = await fetchExitFill(mode, new Date(leg.openedAt).getTime(), direction, leg.qty).catch(() => null);
+  if (fill) { delete leg.noFillCycles; return fill; }
+  leg.noFillCycles = (leg.noFillCycles || 0) + 1;
+  if (leg.noFillCycles < 3) return null;
+  return { price: fallbackPrice, time: Date.now() };
+}
+
 // (26 Sep 2026, kebijakan eksplisit Olan: "pastikan setiap posisi yang aku buka di exchange, kaela
 // tutup.. Olan sudah di banned kaela buat trading demi keselamatan Olan sendiri.. kaela full
 // kontrol futures exchange Olan" -- SCOPE ini CUMA akun Kaela SENDIRI/Olan sendiri, BUKAN member
@@ -337,11 +368,10 @@ async function _doPartialAndReopen(o, mode, exec, posQtyBeforeClose, idrRate) {
 }
 
 // ============ Tutup leg (final -- leg1 SL-hit sebelum partial, ATAU leg2 selesai) ============
-async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
+async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode, stats) {
   const leg = o[mode];
   if (leg && !leg.closeReason) leg.closeReason = reasonCode; // (5 Okt) disimpen buat tradeLedger.js
   const isDemo = mode !== 'real';
-  const stats = (loadJournal().stats)[mode]; // re-load biar stats akumulasi konsisten kalau ada order lain kepr proses bareng siklus ini -- caller yang nyimpen ulang journal penuh
 
   if (leg.untracked) {
     await kaelaJournalHook.recordClose(`${orderId}-${mode}`, null);
@@ -356,6 +386,11 @@ async function _reportAndTallyClose(orderId, o, mode, idrRate, reasonCode) {
   if (won) stats.wins += 1; else stats.losses += 1;
   stats.totalPnlUsd += leg.pnlUsd;
 
+  // (27 Nov 2026) tutupan lama yang baru ketahuan: dicatat, tapi gak diumumin ke grup seolah baru kejadian.
+  if (leg.closedAt && Date.now() - Date.parse(leg.closedAt) > 24 * 3600e3) {
+    console.log(`[SniperBtcDual] ${orderId} leg ${mode}: tutupan ${leg.closedAt} @ ${leg.exitPrice} (PnL $${leg.pnlUsd.toFixed(2)}) dicatat susulan, tanpa WA.`);
+    return stats;
+  }
   const alasanText = CLOSE_REASON_LABEL[reasonCode] || reasonCode;
   let msg = formatAutoClosed({ id: o.id, signalId: o.signalId, direction: o.direction === 'buy' ? 'long' : 'short', mode: o.mode, entryPrice: leg.entryPrice, exitPrice: leg.exitPrice, pnlUsd: leg.pnlUsd, pnlPct: leg.marginUsd ? (leg.pnlUsd / leg.marginUsd) * 100 : null, assetLabel: ASSET_LABEL }, new Date(), isDemo, alasanText, idrRate, null, badge(), SYSTEM_LABEL.SNIPER);
   const winRateLines = formatWinRateLines(stats, `Sniper ${ASSET_LABEL} (${isDemo ? 'Demo' : 'Real'})`, idrRate);
@@ -372,6 +407,9 @@ async function _retrySniperReal(orderId, o) {
   const cfg = loadConfig();
   if (cfg.allowReal !== true) return;
   const exec = execFor('real'); if (!exec) return;
+  const demoExec = execFor('demo');
+  const demoPos = demoExec ? await demoExec.getPositionRisk(SYMBOL).catch(() => null) : null;
+  if (!demoPos || !(Math.abs(parseFloat(demoPos.positionAmt)) > 0)) return; // sinyalnya udah selesai / gak bisa dipastikan
   const live = await fetchLivePrice('real').catch(() => null);
   if (!priceStillValid({ direction: o.direction, entry: o.demo.entryPrice, sl: o.sl, live })) {
     o.realRetry.expired = true; o.realRetry.reason = 'harga udah lari / kena SL';
@@ -443,10 +481,12 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
       if (leg.trailR && !leg.leg2) {
         const isLong = o.direction === 'buy';
         if (posQty <= 0) {
-          const px = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? leg.currentSl;
-          leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
+          const keluar = await resolveExit(mode, o.direction, leg, leg.currentSl);
+          if (!keluar) continue;
+          const px = keluar.price;
+          leg.closedAt = new Date(keluar.time).toISOString(); leg.exitPrice = px;
           leg.pnlUsd = isLong ? (px - leg.entryPrice) * leg.qty : (leg.entryPrice - px) * leg.qty;
-          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL_STOP' : 'SL');
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL_STOP' : 'SL', journal.stats[mode]); saveJournal(journal);
           continue;
         }
         const livePx = await fetchLivePrice(mode).catch(() => null);
@@ -458,7 +498,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
             const px = parseFloat(r && r.avgPrice) || livePx;
             leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
             leg.pnlUsd = isLong ? (px - leg.entryPrice) * posQty : (leg.entryPrice - px) * posQty;
-            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL_STOP' : 'SL');
+            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, (isLong ? px > leg.entryPrice : px < leg.entryPrice) ? 'TRAIL_STOP' : 'SL', journal.stats[mode]); saveJournal(journal);
           } catch (e) { console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL tutup pengaman trailing: ${e.message}`); }
           continue;
         }
@@ -484,11 +524,13 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
           // leg1 ke NOL (TP sekarang cuma separuh qty, gak pernah nutup penuh sendirian). Exit
           // price = harga FILL ASLI order STOP_MARKET (query sempit sejak leg dibuka), fallback
           // ke harga SL target kalau query gagal/gak ketemu.
-          const exitPriceLeg1Sl = (await fetchLastReduceOnlyFill(mode, new Date(leg.openedAt).getTime()).catch(() => null)) ?? (leg.beEarly ? leg.entryPrice : o.sl);
-          leg.closedAt = new Date().toISOString();
+          const keluar = await resolveExit(mode, o.direction, leg, leg.beEarly ? leg.entryPrice : o.sl);
+          if (!keluar) continue;
+          const exitPriceLeg1Sl = keluar.price;
+          leg.closedAt = new Date(keluar.time).toISOString();
           leg.exitPrice = exitPriceLeg1Sl;
           leg.pnlUsd = o.direction === 'buy' ? (exitPriceLeg1Sl - leg.entryPrice) * leg.qty : (leg.entryPrice - exitPriceLeg1Sl) * leg.qty;
-          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, leg.beEarly ? 'SL_BREAKEVEN' : 'SL');
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, leg.beEarly ? 'SL_BREAKEVEN' : 'SL', journal.stats[mode]); saveJournal(journal);
           continue;
         }
         if (posQty < leg.qty * PARTIAL_SHRINK_RATIO) {
@@ -526,7 +568,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
             const px = parseFloat(r && r.avgPrice) || livePx;
             leg.closedAt = new Date().toISOString(); leg.exitPrice = px;
             leg.pnlUsd = o.direction === 'buy' ? (px - leg.entryPrice) * posQty : (leg.entryPrice - px) * posQty;
-            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL_BREAKEVEN');
+            journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL_BREAKEVEN', journal.stats[mode]); saveJournal(journal);
           } catch (e) { console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL tutup pengaman BE: ${e.message}`); }
           continue;
         }
@@ -545,7 +587,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
           leg.closedAt = new Date().toISOString();
           leg.exitPrice = leg.leg2.entryPrice; // dekat breakeven by design, gak ada harga exact buat dilaporin
           leg.pnlUsd = leg.partialPnlUsd + leg2Pnl;
-          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL_BREAKEVEN');
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'SL_BREAKEVEN', journal.stats[mode]); saveJournal(journal);
         } catch (e) {
           console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL rekonsiliasi leg2 hilang:`, e.message);
         }
@@ -561,7 +603,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
           leg.closedAt = new Date().toISOString();
           leg.exitPrice = avgPrice;
           leg.pnlUsd = leg.partialPnlUsd + leg2Pnl;
-          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'TRAIL');
+          journal.stats[mode] = await _reportAndTallyClose(orderId, o, mode, idrRate, 'TRAIL', journal.stats[mode]); saveJournal(journal);
         } catch (e) {
           console.log(`[SniperBtcDual] Order ${orderId} leg ${mode}: GAGAL tutup leg2 (trailing patah):`, e.message);
         }

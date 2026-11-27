@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { runOnce, freshJournal } = require('./gridTrader');
 
-const CFG = { enabled: true, allowReal: true, mode: 'LADDER', symbol: 'BTC-USDC', marginAsset: 'USDC', minDd: 15, leverage: 5, betPct: 8, gapPct: 20, ladderTpPct: 20 };
+const CFG = { enabled: true, allowReal: true, mode: 'LADDER', symbol: 'BTC-USDC', marginAsset: 'USDC', minDd: 15, leverage: 5, betPct: 8, gapPct: 20, ladderTpPct: 20, goneConfirm: 1 }; // 1 = reaksi langsung; konfirmasi berulang diuji terpisah di bawah
 
 function harness({ wallet = 1000, ath = 126200 } = {}) {
   const st = { wallet, qty: 0, entry: 0, mg: 0, orders: [], wa: [], alerts: [], px: ath, margin: null };
@@ -209,6 +209,63 @@ test('🐻 untung/rugi tangga SHORT (akun sama) gak kebaca top up/tarik Farmer',
   ext = -100; h.st.wallet -= 160; await runOnce(h.deps); // short ditutup paksa rugi
   assert.strictEqual(h.j.cycle.cycleCap, cap0, 'cap gak boleh turun gara2 short');
   assert(!h.st.alerts.some((m) => /top up|tarik/i.test(m)), h.st.alerts.join('|'));
+});
+
+// ---- (27 Nov 2026) insiden 16 Nov: exchange ngasih "posisi kosong" padahal ada ----
+const C3 = { ...CFG, goneConfirm: 3 };
+function buka() { const h = harness(); h.deps.cfg = C3; h.st.px = 83033; return runOnce(h.deps).then(() => h); }
+function butaSekali(h) { const asli = h.deps.exec.getPositionBySide; const s = { aktif: true }; h.deps.exec.getPositionBySide = async (...a) => (s.aktif ? null : asli(...a)); return s; }
+
+test('posisi kosong 1-2x lalu muncul lagi -> gak beli, gak ada penjaga', async () => {
+  const h = await buka(); const buta = butaSekali(h); const n = h.st.orders.length;
+  for (let i = 0; i < 2; i++) { const r = await runOnce(h.deps); assert(r.idle === 'posisi belum kebaca', JSON.stringify(r)); }
+  buta.aktif = false; await runOnce(h.deps);
+  assert(h.st.orders.length === n && !h.j.cycle.guard && h.j.cycle.pos && !h.j.cycle.missing, JSON.stringify(h.j.cycle));
+});
+
+test('kosong terus tapi GAK ADA order tutup di riwayat -> gak beli apa-apa, Olan dikabari', async () => {
+  const h = await buka(); butaSekali(h); const n = h.st.orders.length; let tanya = 0;
+  h.deps.exec.findCloseFill = async () => { tanya++; return null; };
+  for (let i = 0; i < 12; i++) await runOnce(h.deps);
+  assert(h.st.orders.length === n && h.j.cycle.pos && !h.j.cycle.guard, JSON.stringify(h.j.cycle));
+  assert(tanya === 2, 'riwayat ditanya tiap 5 putaran, bukan tiap putaran: ' + tanya);
+  assert(h.st.alerts.some((m) => /gak ada order tutup/.test(m)));
+});
+
+test('riwayat order gagal dibaca -> nunggu, gak beli', async () => {
+  const h = await buka(); butaSekali(h); const n = h.st.orders.length;
+  h.deps.exec.findCloseFill = async () => { throw new Error('rate limit'); };
+  for (let i = 0; i < 4; i++) await runOnce(h.deps);
+  assert(h.st.orders.length === n && h.j.cycle.pos && !h.j.cycle.guard);
+});
+
+test('ditutup beneran (ada order tutup) -> konfirmasi 3x lalu penjaga buka ulang volume sama, PnL pakai harga order', async () => {
+  const h = await buka(); const q0 = h.j.cycle.pos.qty, e0 = h.j.cycle.pos.e;
+  h.st.px = 75000; h.st.wallet += h.st.qty * (75000 - h.st.entry); h.st.qty = 0;
+  h.deps.exec.findCloseFill = async () => ({ qty: q0, avgPrice: 74900, time: 1 });
+  await runOnce(h.deps); await runOnce(h.deps); const r = await runOnce(h.deps);
+  assert(r.guarded && Math.abs(r.guarded.qty - q0) < 1e-9, JSON.stringify(r));
+  const g = h.j.cycle.guardLog[h.j.cycle.guardLog.length - 1];
+  assert(g.closedPx === 74900 && g.closedPnl < q0 * (74900 - e0), JSON.stringify(g));
+});
+
+test('penjaga nunggu tapi posisi asli masih ada (salah baca) -> dikenali lagi, catatan tutup dibatalkan, gak macet "nyasar"', async () => {
+  const h = await buka(); const c = h.j.cycle, p = { ...c.pos }, r0 = c.realized, f0 = c.fees, n = h.st.orders.length;
+  const fee = p.qty * 80000 * 0.0005, est = p.qty * (80000 - p.e) - fee;
+  c.guard = { qty: p.qty, liq: p.liq, e0: p.e, mg0: p.mg, closedPx: 80000, closedPnl: est, at: 1, tpPx: 90000 }; c.pos = null; c.realized += est; c.fees += fee;
+  h.st.px = 80000; const r = await runOnce(h.deps);
+  assert(r.adopted && r.adopted.samePosition, JSON.stringify(r));
+  assert(c.pos && c.pos.qty === p.qty && c.pos.e === p.e && !c.guard && h.st.orders.length === n);
+  assert(Math.abs(c.realized - r0) < 0.01 && Math.abs(c.fees - f0) < 0.01, `realized ${c.realized} vs ${r0}, fee ${c.fees} vs ${f0}`);
+});
+
+test('penjaga nunggu, posisi ada dengan harga masuk BEDA (simpanan beli ulang hilang) -> diadopsi, catatan tutup dipertahankan', async () => {
+  const h = await buka(); const c = h.j.cycle, p = { ...c.pos }, r0 = c.realized, n = h.st.orders.length;
+  c.guard = { qty: p.qty, liq: p.liq, e0: p.e, mg0: p.mg, closedPx: 80000, closedPnl: -10, at: 1, tpPx: 90000 }; c.pos = null; c.realized -= 10;
+  const asli = h.deps.exec.getPositionBySide; h.deps.exec.getPositionBySide = async () => ({ ...(await asli()), avgPrice: '79000' });
+  h.st.px = 80000; const r = await runOnce(h.deps);
+  assert(r.adopted && !r.adopted.samePosition && c.pos.e === 79000 && c.tpLock === 90000 && h.st.orders.length === n, JSON.stringify(r));
+  assert(c.realized < r0 - 10, 'fee beli ulang ikut dicatat');
 });
 
 (async () => {

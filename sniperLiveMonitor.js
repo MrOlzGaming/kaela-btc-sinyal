@@ -205,6 +205,12 @@ async function processOrder(order) {
 }
 
 async function main() {
+  // (27 Nov 2026) monitorSniperBtcDual() (trailing stop + pencatatan tutup posisi Sniper dual demo/real, 26 Sep 2026) ternyata gak
+  // pernah dipanggil siapa pun. Dipanggil di sini, tiap siklus executor.
+  try {
+    const idrRate = await require('./kaelaProTraderClient').getUsdIdrRate().catch(() => null);
+    await require('./sniperBtcDualExec').monitorSniperBtcDual({ idrRate });
+  } catch (e) { console.log('[SniperBtcDual] ERROR monitor:', e.message); }
   const orders = getActiveOrders().filter((o) => o.liveExecution && o.liveExecution.ok && !o.liveExecution.fullyClosedAt);
   if (orders.length === 0) { console.log('[SniperLiveMonitor] Gak ada posisi live yang perlu dipantau.'); return; }
   for (const order of orders) {

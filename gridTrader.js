@@ -183,6 +183,26 @@ async function runOnce(deps) {
 //   LOT VIRTUAL (1 posisi, tiap bet dipotong software di harga liq-nya)                         -> x2,31 / terburuk x0,94
 // MERGE menang + selalu cuma 1 posisi ISOLATED, likuidasi diurus exchange sendiri (gak gantung VPS hidup). Parameter dari sweep
 // (syarat Olan tahan crash -90%): bet 8%, jarak 20%, 5x -> x2,22, DD 60%, rungkad 0/94, peluru habis baru di ATH -93%.
+// (27 Nov 2026) Posisi muncul lagi pas penjaga masih nunggu. Harga masuk sama dengan sebelum "hilang" = gak pernah ketutup (salah
+// baca) -> catatan tutupnya dibatalin. Harga masuk beda = posisi baru (mis. beli ulang yang simpanannya hilang) -> dicatat apa adanya.
+async function adoptPosition(deps, log, now, pos, exQty) {
+  const { cfg, journal: j } = deps; const c = j.cycle, gd = c.guard;
+  const exE = parseFloat(pos.avgPrice || pos.entryPrice) || 0;
+  const sama = !(exE > 0) || Math.abs(exE - gd.e0) / gd.e0 <= 0.0005;
+  const entry = sama ? gd.e0 : exE;
+  const lev = parseFloat(pos.leverage) || cfg.leverage;
+  const exLiq = parseFloat(pos.liquidationPrice), exMg = parseFloat(pos.initialMargin || pos.margin);
+  if (sama) { c.realized -= gd.closedPnl; c.fees -= exQty * gd.closedPx * TAKER; }
+  else { const feeIn = exQty * entry * TAKER; c.realized -= feeIn; c.fees += feeIn; c.tpLock = gd.tpPx; }
+  c.pos = { e: entry, qty: exQty, mg: exMg > 0 ? exMg : gd.mg0, liq: exLiq > 0 && exLiq < entry ? exLiq : gd.liq, lev, at: now };
+  c.guard = null; delete c.missing;
+  (c.guardLog = c.guardLog || []).push({ at: now, adopted: true, samePosition: sama, qty: exQty, entry });
+  deps.save();
+  const msg = `posisi ${c.signalId} (${exQty} BTC @ ${fmt$(entry)}) ada di exchange -- dikenali lagi${sama ? ', catatan "ketutup" dibatalkan' : '; harga masuk BEDA dari catatan, cek untung-rugi'}.`;
+  log(`PENJAGA: ${msg}`); await deps.alert(`🛡️ 🌾 Farmer${deps.isDemo ? ' (Demo)' : ''}: ${msg}`, `adopt:${now}`);
+  return { adopted: { samePosition: sama } };
+}
+
 async function runLadder(deps, log, now) {
   const { cfg, journal: j } = deps;
   const sym = cfg.symbol, ex = deps.exec, L = cfg.leverage, betPct = cfg.betPct || 8, gap = cfg.gapPct || 20, tpPct = cfg.ladderTpPct || 20;
@@ -194,6 +214,7 @@ async function runLadder(deps, log, now) {
   const dd = (1 - px / j.ath) * 100;
   let c = j.cycle;
   if (j.exchange && j.exchange !== cfg.exchange) {
+    if (c && c.pos) c.pindahExchange = true; // posisi di exchange lama emang gak akan kebaca -> gak perlu konfirmasi/bukti tutup
     log(`PINDAH EXCHANGE ${j.exchange} -> ${cfg.exchange}${c && c.pos ? ` -- posisi ${c.pos.qty} BTC di ${j.exchange} dianggap ilang, penjaga buka ulang volume sama di ${cfg.exchange}` : ''}`);
     await deps.alert(`🏦 🌾 Farmer pindah exchange: ${j.exchange.toUpperCase()} -> ${cfg.exchange.toUpperCase()}.${c && c.pos ? ` Tangga #${c.bets} (${c.pos.qty} BTC) dibuka ulang di ${cfg.exchange.toUpperCase()} begitu saldonya ada -- target & harga likuidasi dijaga sama.` : ' Siklus baru mulai di sana begitu saldo ada.'}`, `exch:${now}`);
   }
@@ -206,6 +227,9 @@ async function runLadder(deps, log, now) {
   const pos = await ex.getPositionBySide(sym, 'LONG');
   const exQty = pos ? Math.abs(parseFloat(pos.positionAmt)) : 0;
   const jQty = c && c.pos ? c.pos.qty : 0;
+  if (c && c.missing && exQty > 0) { log(`posisi kebaca lagi setelah ${c.missing.n}x kosong -- salah baca, gak ada tindakan`); delete c.missing; }
+  // Penjaga lagi nunggu (jurnal gak punya posisi) tapi posisi seukuran itu ADA di exchange -> dikenali lagi, jangan macet "nyasar".
+  if (c && !c.pos && c.guard && exQty > 0 && Math.abs(exQty - c.guard.qty) / c.guard.qty <= 0.02) return adoptPosition(deps, log, now, pos, exQty);
   if (jQty === 0 && exQty > 0) {
     const msg = `posisi LONG ${sym} ${exQty} ada di exchange tapi jurnal grid kosong -- grid BERHENTI, gak nyentuh posisi itu. Cek manual.`;
     log(msg); await deps.alert(`⚠️ 🌾 Farmer: ${msg}`, 'stray'); deps.save(); return { stopped: 'stray' };
@@ -217,21 +241,45 @@ async function runLadder(deps, log, now) {
   // posisi hilang = kena likuidasi exchange (isolated) -> margin bet itu hangus, siklus lanjut (nunggu tangga berikutnya)
   if (jQty > 0 && exQty === 0) {
     const p = c.pos;
+    // (27 Nov 2026) Insiden 16 Nov: BingX demo 2x ngasih "posisi kosong" padahal ada -> penjaga beli dobel 1,7679 BTC lalu grid
+    // macet. Sekarang: kosong harus kebaca N kali berturut-turut (cron 1 menit), dan buat jalur "ditutup di luar sistem" harus ada
+    // order tutup di riwayat exchange. Gak ada bukti = gak beli apa-apa.
+    let closeFill = null;
+    if (c.pindahExchange) delete c.pindahExchange;
+    else {
+      const need = cfg.goneConfirm || 3;
+      c.missing = c.missing || { n: 0, since: now }; c.missing.n += 1;
+      if (c.missing.n < need) { log(`posisi ${c.signalId} gak kebaca di exchange (${c.missing.n}/${need}) -- dicek ulang dulu`); deps.save(); return { idle: 'posisi belum kebaca' }; }
+      if (px > p.liq * 1.03 && ex.findCloseFill) {
+        if ((c.missing.n - need) % 5 !== 0) { deps.save(); return { idle: 'nunggu bukti order tutup' }; } // tanya riwayat tiap 5 putaran (batas frekuensi API)
+        const f = await ex.findCloseFill(sym, 'LONG', p.at || c.startedAt).catch((e) => { log(`riwayat order gak kebaca: ${e.message}`); return undefined; });
+        if (!f || f.qty < p.qty * 0.98) {
+          if (f !== undefined) {
+            const msg = `posisi ${c.signalId} (${p.qty} BTC) gak kebaca ${c.missing.n}x tapi gak ada order tutup di riwayat -- gak beli apa-apa, cek manual.`;
+            log(msg); await deps.alert(`⚠️ 🌾 Farmer: ${msg}`, `noproof:${c.id}`);
+          }
+          deps.save(); return { idle: 'nunggu bukti order tutup' };
+        }
+        closeFill = f;
+      }
+      delete c.missing;
+    }
     // harga masih jauh di atas harga liq -> BUKAN likuidasi: ketutup gak sengaja (kepencet / ditutup BingX).
     if (px > p.liq * 1.03) {
-      const fee = p.qty * px * TAKER, est = p.qty * (px - p.e) - fee;
+      const pxTutup = closeFill && closeFill.avgPrice > 0 ? closeFill.avgPrice : px;
+      const fee = p.qty * pxTutup * TAKER, est = p.qty * (pxTutup - p.e) - fee;
       const tpBefore = p.e + (c.putIn * tpPct / 100 - c.realized) / (p.qty * (1 - TAKER));
       c.realized += est; c.fees += fee; c.pos = null; deps.save();
-      if (px >= tpBefore * 0.998) { // ketutup pas udah di target -> anggap panen biasa
-        const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: px, qty: p.qty, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs || 0, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_LADDER_TP' };
+      if (pxTutup >= tpBefore * 0.998) { // ketutup pas udah di target -> anggap panen biasa
+        const rec = { id: c.id, signalId: c.signalId, mode: 'LADDER', openedAt: c.startedAt, entry: c.firstE, exit: pxTutup, qty: p.qty, planted: c.putIn, layers: c.bets, cycleCap: c.cycleCap, athAtStart: c.athAtStart, liqs: c.liqs || 0, closedAt: now, grossUsd: c.realized + c.fees, feeUsd: c.fees, net: c.realized, retPlantedPct: c.realized / c.putIn * 100, reason: 'GRID_LADDER_TP' };
         j.history.push(rec); j.stats.cycles += 1; j.stats.totalPnlUsd += c.realized; if (c.realized >= 0) j.stats.wins += 1; else j.stats.losses += 1; j.cycle = null;
         rec.bibit = await recordBibit(j, cfg, c.realized, px, deps, log, now, c.cycleCap + c.realized); deps.save();
         await deps.alert(`🌾 Farmer: posisi ${c.signalId} ketutup di luar sistem pas harga udah di target (${fmt$(px)}) -- dicatat sebagai panen (${fmt$(c.realized)}). Siklus baru jalan normal.`, `guardtp:${now}`);
         return { tp: rec };
       }
       // PENJAGA: catat volume + likuidasi lama, buka lagi di bawah (untung/rugi tutup tadi masuk siklus -> target tetap sama)
-      c.guard = { qty: p.qty, liq: p.liq, e0: p.e, mg0: p.mg, closedPx: px, closedPnl: est, at: now, tpPx: tpBefore };
-      log(`PENJAGA: posisi ${c.signalId} ketutup di luar sistem @ ~${fmt$(px)} (${fmt$(est)}) -- buka lagi ${p.qty} BTC, target ${fmt$(tpBefore)}, liq ${fmt$(p.liq)}`);
+      c.guard = { qty: p.qty, liq: p.liq, e0: p.e, mg0: p.mg, closedPx: pxTutup, closedPnl: est, at: now, tpPx: tpBefore };
+      log(`PENJAGA: posisi ${c.signalId} ketutup di luar sistem @ ~${fmt$(pxTutup)} (${fmt$(est)}) -- buka lagi ${p.qty} BTC, target ${fmt$(tpBefore)}, liq ${fmt$(p.liq)}`);
       deps.save();
     } else {
       c.realized -= p.mg; c.liqs = (c.liqs || 0) + 1; c.pos = null;
@@ -259,11 +307,13 @@ async function runLadder(deps, log, now) {
         await fundAlert(deps, j, `g:${c.id}`, `🌾 Farmer PENJAGA: posisi ${c.signalId} ketutup di luar sistem. Buat buka lagi ${gd.qty} BTC (target ${fmt$(gd.tpPx)}, liq ${fmt$(gd.liq)}) butuh margin ${fmt$(mgUse)}, saldo ${EXN(cfg)} cuma ${fmt$(wNow)}. Top up minimal ${fmt$(Math.ceil(mgUse - wNow + 1))} ya.`, now);
         deps.save(); return { idle: 'penjaga nunggu top up' };
       }
+      const masihAda = await ex.getPositionBySide(sym, 'LONG');
+      if (masihAda && Math.abs(parseFloat(masihAda.positionAmt)) > 0) { log('PENJAGA: posisi ternyata ada di exchange -- gak beli, dibereskan siklus berikutnya'); deps.save(); return { idle: 'posisi ternyata ada' }; }
       await ex.setLeverage(sym, levNeed, 'LONG').catch((e) => log(`set leverage penjaga: ${e.message}`));
       const order = await ex.placeMarketEntry({ symbol: sym, direction: 'buy', notionalUsd: gd.qty * px * 1.0000001, livePrice: px });
       const fillPx = parseFloat(order.avgPrice) || px, fillQty = parseFloat(order.executedQty) || gd.qty;
       const feeIn = fillQty * fillPx * TAKER;
-      c.pos = { e: fillPx, qty: fillQty, mg: fillQty * fillPx / levNeed, liq: fillPx * (1 - 1 / levNeed + mmr), lev: levNeed };
+      c.pos = { e: fillPx, qty: fillQty, mg: fillQty * fillPx / levNeed, liq: fillPx * (1 - 1 / levNeed + mmr), lev: levNeed, at: deps.now ? deps.now() : Date.now() };
       const exPos = await ex.getPositionBySide(sym, 'LONG').catch(() => null);
       const exLiq = exPos ? parseFloat(exPos.liquidationPrice) : NaN, exMg = exPos ? parseFloat(exPos.initialMargin || exPos.margin) : NaN;
       if (exLiq > 0 && exLiq < fillPx) c.pos.liq = exLiq;
@@ -471,7 +521,7 @@ async function runLadder(deps, log, now) {
   const order = await ex.placeMarketEntry({ symbol: sym, direction: 'buy', notionalUsd: qty * px * 1.0000001, livePrice: px });
   const fillPx = parseFloat(order.avgPrice) || px, fillQty = parseFloat(order.executedQty) || qty;
   const feeIn = fillQty * fillPx * TAKER;
-  c.pos = { e: fillPx, qty: fillQty, mg: fillQty * fillPx / L, liq: fillPx * (1 - 1 / L + 0.005) };
+  c.pos = { e: fillPx, qty: fillQty, mg: fillQty * fillPx / L, liq: fillPx * (1 - 1 / L + 0.005), at: deps.now ? deps.now() : Date.now() };
   const exPos = await ex.getPositionBySide(sym, 'LONG').catch(() => null);
   const exLiq = exPos ? parseFloat(exPos.liquidationPrice) : NaN, exMg = exPos ? parseFloat(exPos.initialMargin || exPos.margin) : NaN;
   if (exLiq > 0 && exLiq < fillPx) c.pos.liq = exLiq;

@@ -1,11 +1,11 @@
 {
   "balance": 0,
-  "balanceUpdatedAt": "2026-11-27T14:45:09.113Z",
+  "balanceUpdatedAt": "2026-11-27T15:00:09.938Z",
   "orders": [
     {
       "id": "mvrd5tiixovm",
       "signalId": "2026102801",
-      "status": "floating",
+      "status": "closed_live",
       "asset": "btc",
       "mode": "fvg",
       "gapCreatedTime": 1789862399999,
@@ -33,9 +33,9 @@
       "silentTest": false,
       "createdAt": "2026-10-28T00:15:55.818Z",
       "triggeredAt": "2026-10-28T00:15:55.818Z",
-      "closedAt": null,
-      "closeReason": null,
-      "pnlUsd": null,
+      "closedAt": "2026-10-30T00:29:16.311Z",
+      "closeReason": "SL",
+      "pnlUsd": -339.65289997749977,
       "pnlPct": null,
       "liveExecutedAt": "2026-10-28T00:16:04.847Z",
       "liveExecution": {
@@ -45,12 +45,14 @@
         },
         "real": null,
         "wibowoRoute": "demo"
-      }
+      },
+      "exitPrice": 77065.8,
+      "liveClosedFrom": "sniperBtcDualExec"
     },
     {
       "id": "mw2soq0avi5p",
       "signalId": "2026110501",
-      "status": "floating",
+      "status": "closed_live",
       "asset": "btc",
       "mode": "sniper",
       "gapCreatedTime": null,
@@ -78,9 +80,9 @@
       "silentTest": false,
       "createdAt": "2026-11-05T00:15:59.914Z",
       "triggeredAt": "2026-11-05T00:15:59.914Z",
-      "closedAt": null,
-      "closeReason": null,
-      "pnlUsd": null,
+      "closedAt": "2026-11-05T15:50:53.655Z",
+      "closeReason": "SL",
+      "pnlUsd": -404.93311999999924,
       "pnlPct": null,
       "liveExecutedAt": "2026-11-05T00:16:11.980Z",
       "liveExecution": {
@@ -90,7 +92,9 @@
         },
         "real": null,
         "wibowoRoute": "demo"
-      }
+      },
+      "exitPrice": 75934.8,
+      "liveClosedFrom": "sniperBtcDualExec"
     }
   ]
 }

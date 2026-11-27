@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-11-27T14:48:47.078Z",
+ "updatedAt": "2026-11-27T15:03:47.971Z",
  "count": 70,
  "trades": [
   {
@@ -250,7 +250,8 @@
     "tp": 95013.34970000004,
     "patternType": "wedge_falling",
     "mode": "sniper",
-    "wibowoRoute": "demo"
+    "wibowoRoute": "demo",
+    "shadowClosed": true
    }
   },
   {
@@ -363,7 +364,8 @@
     "tp": 91701.82999999999,
     "patternType": "fvg_bounce",
     "mode": "fvg",
-    "wibowoRoute": "demo"
+    "wibowoRoute": "demo",
+    "shadowClosed": true
    }
   },
   {

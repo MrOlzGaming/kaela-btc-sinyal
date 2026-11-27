@@ -1,6 +1,6 @@
 # 📒 Buku Besar Trading Kaela (otomatis)
 
-Diperbarui otomatis: 2026-11-27 22:48 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
+Diperbarui otomatis: 2026-11-27 23:03 WITA -- dari jurnal SEMUA sistem (Sniper/Ranger/Ninja, demo & real, semua exchange). JANGAN diedit manual (ketimpa tiap 15 menit). Data mesin: `trade-ledger.json`.
 
 ## Ringkasan per metode (trade yang udah tutup)
 
@@ -60,7 +60,7 @@ Diperbarui otomatis: 2026-11-27 22:48 WITA -- dari jurnal SEMUA sistem (Sniper/R
 ### #2026110501 — 🎯 Sniper · Pola Chart (wedge falling) · Kaela Demo · Binance
 - Buka: 2026-11-05 08:16 WITA — BTC LONG @ 80,632.4 (SL 75,944.4), 15x
 - Alasan buka: Chart Pattern (Falling Wedge) -- breakout wedge turun terkonfirmasi
-- Konteks entry: wibowoRoute=demo
+- Konteks entry: wibowoRoute=demo, shadowClosed=true
 - Tutup: 2026-11-05 23:50 WITA @ 75,934.8 — Alasan tutup: Stop Loss kena
 - Hasil: bersih -$404.93
 
@@ -81,7 +81,7 @@ Diperbarui otomatis: 2026-11-27 22:48 WITA -- dari jurnal SEMUA sistem (Sniper/R
 ### #2026102801 — 🎯 Sniper · Fair Value Gap · Kaela Demo · Binance
 - Buka: 2026-10-28 08:16 WITA — BTC LONG @ 80,737.7 (SL 77,179.5), 20x
 - Alasan buka: FVG Bounce -- harga pantul dari Fair Value Gap (zona belum keisi), deket zona (gak nge-chase)
-- Konteks entry: wibowoRoute=demo
+- Konteks entry: wibowoRoute=demo, shadowClosed=true
 - Tutup: 2026-10-30 08:29 WITA @ 77,065.8 — Alasan tutup: Stop Loss kena
 - Hasil: bersih -$339.65
 

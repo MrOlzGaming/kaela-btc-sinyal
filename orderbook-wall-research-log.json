@@ -3,42 +3,6 @@
     "timestamp": "2026-10-02T17:31:25.716Z",
     "midPrice": 84697.65,
     "side": "ASK",
-    "price": 84734,
-    "qty": 6.353,
-    "notionalUsd": 538315.102,
-    "distPct": 0.042917365475908506
-  },
-  {
-    "timestamp": "2026-10-02T17:31:25.716Z",
-    "midPrice": 84697.65,
-    "side": "ASK",
-    "price": 84736.9,
-    "qty": 7.089,
-    "notionalUsd": 600699.8841,
-    "distPct": 0.04634130935155816
-  },
-  {
-    "timestamp": "2026-10-02T17:31:25.716Z",
-    "midPrice": 84697.65,
-    "side": "ASK",
-    "price": 84743,
-    "qty": 6.147,
-    "notionalUsd": 520915.221,
-    "distPct": 0.053543398193463244
-  },
-  {
-    "timestamp": "2026-10-02T17:31:25.716Z",
-    "midPrice": 84697.65,
-    "side": "ASK",
-    "price": 84743.5,
-    "qty": 8.445,
-    "notionalUsd": 715658.8575,
-    "distPct": 0.05413373334443851
-  },
-  {
-    "timestamp": "2026-10-02T17:31:25.716Z",
-    "midPrice": 84697.65,
-    "side": "ASK",
     "price": 84748,
     "qty": 7.089,
     "notionalUsd": 600778.572,
@@ -179998,5 +179962,41 @@
     "qty": 12.615,
     "notionalUsd": 754983.7815,
     "distPct": 0.09675490569114287
+  },
+  {
+    "timestamp": "2026-11-27T22:03:23.410Z",
+    "midPrice": 59695.649999999994,
+    "side": "BID",
+    "price": 59665,
+    "qty": 50.286,
+    "notionalUsd": 3000314.19,
+    "distPct": -0.051343774630134995
+  },
+  {
+    "timestamp": "2026-11-27T22:03:23.410Z",
+    "midPrice": 59695.649999999994,
+    "side": "BID",
+    "price": 59646.9,
+    "qty": 8.416,
+    "notionalUsd": 501988.3104,
+    "distPct": -0.08166424186685751
+  },
+  {
+    "timestamp": "2026-11-27T22:03:23.410Z",
+    "midPrice": 59695.649999999994,
+    "side": "ASK",
+    "price": 59715.1,
+    "qty": 8.936,
+    "notionalUsd": 533614.1336,
+    "distPct": 0.03258193854996866
+  },
+  {
+    "timestamp": "2026-11-27T22:03:23.410Z",
+    "midPrice": 59695.649999999994,
+    "side": "ASK",
+    "price": 59752.1,
+    "qty": 9.231,
+    "notionalUsd": 551571.6351,
+    "distPct": 0.0945630041720031
   }
 ]

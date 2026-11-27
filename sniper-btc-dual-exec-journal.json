@@ -22,9 +22,10 @@
         "partialDone": false,
         "partialPnlUsd": 0,
         "leg2": null,
-        "closedAt": null,
-        "exitPrice": null,
-        "pnlUsd": null
+        "closedAt": "2026-10-30T00:29:16.311Z",
+        "exitPrice": 77065.8,
+        "pnlUsd": -339.65289997749977,
+        "closeReason": "SL"
       },
       "real": null,
       "realRetry": {
@@ -58,9 +59,10 @@
         "partialDone": false,
         "partialPnlUsd": 0,
         "leg2": null,
-        "closedAt": null,
-        "exitPrice": null,
-        "pnlUsd": null
+        "closedAt": "2026-11-05T15:50:53.655Z",
+        "exitPrice": 75934.8,
+        "pnlUsd": -404.93311999999924,
+        "closeReason": "SL"
       },
       "real": null,
       "realRetry": {
@@ -76,8 +78,8 @@
   "stats": {
     "demo": {
       "wins": 0,
-      "losses": 0,
-      "totalPnlUsd": 0
+      "losses": 2,
+      "totalPnlUsd": -744.5860199774991
     },
     "real": {
       "wins": 0,

@@ -8,26 +8,24 @@
     "startedAt": 1791680468438,
     "athAtStart": 126199.63,
     "cycleCap": 370491.81347267004,
-    "anchor": 370491.81342990504,
+    "anchor": 370441.377302435,
     "unit": 22229.508808360202,
     "putIn": 46248.8973283602,
-    "realized": 2938.346573619997,
-    "fees": 586.1378663800001,
+    "realized": 1032.9119975649865,
+    "fees": 528.5846774350001,
     "bets": 2,
     "liqs": 1,
-    "pos": null,
+    "pos": {
+      "e": 63998.75,
+      "qty": 1.7679,
+      "mg": 22628.678,
+      "liq": 51459.1,
+      "lev": 5,
+      "at": 1795790142941
+    },
     "lastE": 62879.3,
     "firstE": 82919.3,
-    "guard": {
-      "qty": 1.7679,
-      "liq": 51430.4,
-      "e0": 65118.2,
-      "mg0": 45257.3561,
-      "closedPx": 65073.8,
-      "closedPnl": -136.01674550998973,
-      "at": 1794801609594,
-      "tpPx": 71230.37191795064
-    },
+    "guard": null,
     "guardLog": [
       {
         "at": 1791688807826,
@@ -57,10 +55,30 @@
         "qty": 1.7679,
         "lev": 5,
         "liqOld": 50530.8,
-        "liqNew": 51430.4
+        "liqNew": 51430.4,
+        "salahBaca": true
+      },
+      {
+        "at": 1795790142941,
+        "perbaikanManual": "16 Nov: 2 catatan ketutup palsu dibatalkan, jual kelebihan penjaga dicatat",
+        "sebelum": {
+          "realized": 2938.346573619997,
+          "fees": 586.1378663800001,
+          "guard": {
+            "qty": 1.7679,
+            "liq": 51430.4,
+            "e0": 65118.2,
+            "mg0": 45257.3561,
+            "closedPx": 65073.8,
+            "closedPnl": -136.01674550998973,
+            "at": 1794801609594,
+            "tpPx": 71230.37191795064
+          },
+          "tpLock": 71166.64115256796
+        }
       }
     ],
-    "tpLock": 71166.64115256796,
+    "tpLock": null,
     "extBase": 0,
     "capBreak": {
       "bingx": 369778.2,
@@ -116,7 +134,7 @@
   },
   "reserveCfg": 0,
   "bankReserve": 0,
-  "lastWallet": 369722.6178,
+  "lastWallet": 371474.2893,
   "reserveKey": "auto:undefined:undefined:config",
   "custody": null,
   "exchange": "bingx",

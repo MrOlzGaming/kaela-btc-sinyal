@@ -25,13 +25,27 @@ Terakhir diperbarui: **27 Nov 2026**.
 - Farmer real BingX: log per menit "tangga #2 butuh margin $54.2, saldo $0 -- nunggu top up" (26 Nov) -> isi saldo atau matikan resmi.
 
 **Antrian Kaela (ketemu saat pemeriksaan, belum disentuh):**
-- Grid demo BingX BERHENTI: posisi LONG BTC-USDT 1,7679 ada di exchange tapi jurnal grid kosong -- cek manual.
-- `sniper-orders.json`: 2 order floating BTC dobel (mvrd5tiixovm, mw2soq0avi5p); ledger masih catat 2 Sniper demo LONG ~$80,7rb
-  terbuka padahal harga sudah jauh di bawah SL-nya (BTC ~$58,6rb per 26 Nov) -> kemungkinan jurnal gak sinkron, cek ke exchange.
 - WhaleDailyDigest ketinggalan ~6.000+ blok & kepotong batas 120 dtk (sisa lama 28 Okt) -> percepat / reset cursor.
 - `econ-calendar-live` tetap tulis "ke-sync" walau `git commit` gagal (perilaku lama, pesan menyesatkan).
 - Checkout lokal TRADER tertinggal ribuan commit dari GitHub (ada CLAUDE.md diubah lokal) -> sinkronkan hati-hati.
 - Dari 28 Okt: token git di URL remote VPS belum diganti.
+
+## 🔧 Jurnal demo gak sinkron -- BERES 27 Nov 2026 23:05 WITA (commit 0ba4d2e + susulan)
+
+- **Grid demo:** 16 Nov posisi kebaca kosong 2x padahal ada (dugaan data kosong dari BingX demo) -> beli dobel, kelebihan dijual penjaga,
+  jurnal macet. Fix kode: kosong harus 3x + ada order tutup di riwayat; cek ulang sebelum beli; adopsi posisi. Jurnal dibetulkan di VPS
+  (realized 2938,35 -> 1032,91; cadangan `/root/backup-kaela/`).
+- **Sniper dual:** `monitorSniperBtcDual` gak pernah dipanggil sejak 26 Sep (trailing & catat tutup gak jalan). Sekarang dipanggil tiap
+  siklus. 2 order demo tercatat tutup: 30 Okt @77.065,8 (-$339,65) & 5 Nov @75.934,8 (-$404,93).
+- **Belum teruji di bursa asli:** trailing stop Sniper & coba-ulang leg real (aktif pertama kali; pantau posisi Sniper berikutnya),
+  jalur penjaga grid baru (baru di tes palsu 26 + gladi baca saja).
+
+**Antrian dari pemeriksaan ini:**
+- Ranger BTC dual: gak pasang stop order di bursa (SL cuma lewat polling; mesin mati = tanpa SL) -> pertimbangkan SL native.
+- Ranger demo 30 Okt 08:00-11:30 buka-tutup berulang tiap 15 menit (riwayat Binance demo BTCUSDC) -> selidiki.
+- `shortLadderTrader.js` punya pola "posisi hilang" yang sama seperti grid lama -> beri konfirmasi sebelum musim short (2029).
+- Grid jalur likuidasi (harga dekat liq) cuma pakai konfirmasi 3x, tanpa bukti order.
+- `_doPartialAndReopen` Sniper masih pakai order reduce TERBARU buat harga partial (jalur non-trailing).
 
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 

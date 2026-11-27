@@ -51,7 +51,7 @@ const baca = () => JSON.parse(fs.readFileSync(JP, 'utf8'));
   // 2) siklus berikutnya: catatan sniper-orders ikut ditutup, gak dihitung dobel
   await monitorSniperBtcDual({ idrRate: null });
   const o = JSON.parse(fs.readFileSync(OP, 'utf8')).orders;
-  assert(o.every((x) => x.status === 'closed_live'), JSON.stringify(o)); assert.strictEqual(baca().stats.demo.losses, 2); assert.strictEqual(web.length, 2);
+  assert(o.every((x) => x.status === 'closed_live' && Number.isFinite(x.pnlPct)), JSON.stringify(o)); // pnlPct wajib (SystemInvariantCheck) assert.strictEqual(baca().stats.demo.losses, 2); assert.strictEqual(web.length, 2);
   console.log('  OK   sniper-orders ditutup, gak dobel');
   // 3) posisi kebaca kosong tanpa bukti fill: tunggu 2 siklus, siklus ke-3 baru pakai harga SL
   tulis({ c: order(leg(0.05, 70000, 66000, now - hari)) }); state.fills = [];

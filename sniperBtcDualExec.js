@@ -459,7 +459,7 @@ async function monitorSniperBtcDual({ idrRate } = {}) {
       // Sekarang ditutup pakai hasil ASLI leg demo (leg yang selalu ada), sekali aja.
       if (!o.shadowClosed) {
         const L = o.demo || o.real;
-        updateOrder(orderId, { status: 'closed_live', closedAt: L.closedAt || new Date().toISOString(), exitPrice: L.exitPrice, pnlUsd: L.pnlUsd, closeReason: L.closeReason || null, liveClosedFrom: 'sniperBtcDualExec' });
+        updateOrder(orderId, { status: 'closed_live', closedAt: L.closedAt || new Date().toISOString(), exitPrice: L.exitPrice, pnlUsd: L.pnlUsd, pnlPct: L.marginUsd && L.pnlUsd != null ? (L.pnlUsd / L.marginUsd) * 100 : null, closeReason: L.closeReason || null, liveClosedFrom: 'sniperBtcDualExec' });
         o.shadowClosed = true; touched = true;
       }
       continue;

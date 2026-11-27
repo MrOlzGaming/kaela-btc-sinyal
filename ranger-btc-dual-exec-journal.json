@@ -31,8 +31,8 @@
         "alerted": [
           1
         ],
-        "tries": 95,
-        "lastTry": 1795779911182
+        "tries": 96,
+        "lastTry": 1795780810444
       }
     },
     "closedCount": 1,
@@ -915,6 +915,6 @@
       "dayKey": null,
       "count": 0
     },
-    "lastSignalCandleT": 1795752000000
+    "lastSignalCandleT": 1795766400000
   }
 }

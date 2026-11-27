@@ -1,6 +1,6 @@
 {
   "balance": 0,
-  "balanceUpdatedAt": "2026-11-27T15:00:09.938Z",
+  "balanceUpdatedAt": "2026-11-27T15:15:09.914Z",
   "orders": [
     {
       "id": "mvrd5tiixovm",
@@ -36,7 +36,7 @@
       "closedAt": "2026-10-30T00:29:16.311Z",
       "closeReason": "SL",
       "pnlUsd": -339.65289997749977,
-      "pnlPct": null,
+      "pnlPct": -90.78426785004913,
       "liveExecutedAt": "2026-10-28T00:16:04.847Z",
       "liveExecution": {
         "demo": {
@@ -83,7 +83,7 @@
       "closedAt": "2026-11-05T15:50:53.655Z",
       "closeReason": "SL",
       "pnlUsd": -404.93311999999924,
-      "pnlPct": null,
+      "pnlPct": -87.27211268391474,
       "liveExecutedAt": "2026-11-05T00:16:11.980Z",
       "liveExecution": {
         "demo": {

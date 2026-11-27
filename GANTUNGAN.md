@@ -5,7 +5,33 @@
 > bagian "Selesai" paling bawah (tanggal + 1 baris). Permintaan Olan 3 Okt 2026: "catat sebagai gantungan/waiting list
 > biar gak lupa". Katalog strategi ada di `STRATEGY-CATALOG.md`.
 
-Terakhir diperbarui: **10 Okt 2026**.
+Terakhir diperbarui: **27 Nov 2026**.
+
+## 🔧 Insiden mesin macet 17-26 Nov 2026 -- BERES (sesi KAELA TRADER)
+
+- **Kejadian:** `.git/index.lock` 0 byte (dibuat 17 Nov 23:45:04 WITA) -> `git reset --hard` gagal tiap siklus 15 menit sampai 26 Nov 00:26.
+  Cron 1-5 menit tetap jalan. Pemicu persis BELUM terbukti (dugaan: 2 cron jalanin git barengan).
+- **Fix (26 Nov, commit 563abc32, izin Olan):** kunci basi dihapus (cadangan state di VPS `/root/backup-kaela/`); `git-lock-guard.sh`
+  hapus otomatis kunci git >= 10 menit kalau gak ada proses git + lapor Watchdog; semua git econ-calendar cuma jalan sambil pegang
+  lock executor; executor nunggu lock maks 90 detik. Uji di folder sementara VPS 12/12 lolos.
+- **Verifikasi 27 Nov 22:00 WITA:** sejak 26 Nov 00:30 -> 180 siklus selesai, 180 push sukses, 0 reset/fetch/push gagal, 0 kunci basi.
+  Jalur commit econ-calendar versi baru belum kelihatan jalan di data asli (belum ada baris sync di lognya) -- cek pas ada event.
+
+**Nunggu Olan:**
+- **Fonnte habis kredit** (kata Olan 26 Nov; log: "disconnected device") -> SEMUA notif WA gak sampai, termasuk alert pagar & Watchdog
+  lewat WA. Isi kredit + cek device tersambung. Sistem trading tetap jalan; notif berita/checklist/harga diulang tiap siklus sampai
+  terkirim (pas hidup lagi bisa masuk beruntun / basi).
+- Kredit Vultr: $14,65 per 27 Nov (sudah diisi, ~$0,18/hari) -> tembus $5 kira-kira pertengahan Jan 2027.
+- Farmer real BingX: log per menit "tangga #2 butuh margin $54.2, saldo $0 -- nunggu top up" (26 Nov) -> isi saldo atau matikan resmi.
+
+**Antrian Kaela (ketemu saat pemeriksaan, belum disentuh):**
+- Grid demo BingX BERHENTI: posisi LONG BTC-USDT 1,7679 ada di exchange tapi jurnal grid kosong -- cek manual.
+- `sniper-orders.json`: 2 order floating BTC dobel (mvrd5tiixovm, mw2soq0avi5p); ledger masih catat 2 Sniper demo LONG ~$80,7rb
+  terbuka padahal harga sudah jauh di bawah SL-nya (BTC ~$58,6rb per 26 Nov) -> kemungkinan jurnal gak sinkron, cek ke exchange.
+- WhaleDailyDigest ketinggalan ~6.000+ blok & kepotong batas 120 dtk (sisa lama 28 Okt) -> percepat / reset cursor.
+- `econ-calendar-live` tetap tulis "ke-sync" walau `git commit` gagal (perilaku lama, pesan menyesatkan).
+- Checkout lokal TRADER tertinggal ribuan commit dari GitHub (ada CLAUDE.md diubah lokal) -> sinkronkan hati-hati.
+- Dari 28 Okt: token git di URL remote VPS belum diganti.
 
 ## 🙋 NUNGGU OLAN (gak bisa dikerjain Kaela sendiri)
 

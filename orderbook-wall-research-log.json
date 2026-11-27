@@ -3,42 +3,6 @@
     "timestamp": "2026-10-02T08:31:31.175Z",
     "midPrice": 86346.95,
     "side": "BID",
-    "price": 86328,
-    "qty": 13.54,
-    "notionalUsd": 1168881.1199999999,
-    "distPct": -0.021946345528124724
-  },
-  {
-    "timestamp": "2026-10-02T08:31:31.175Z",
-    "midPrice": 86346.95,
-    "side": "BID",
-    "price": 86323.2,
-    "qty": 9.94,
-    "notionalUsd": 858052.6079999999,
-    "distPct": -0.027505314316255525
-  },
-  {
-    "timestamp": "2026-10-02T08:31:31.175Z",
-    "midPrice": 86346.95,
-    "side": "BID",
-    "price": 86309.6,
-    "qty": 7.614,
-    "notionalUsd": 657161.2944,
-    "distPct": -0.04325572588260647
-  },
-  {
-    "timestamp": "2026-10-02T08:31:31.175Z",
-    "midPrice": 86346.95,
-    "side": "BID",
-    "price": 86307.7,
-    "qty": 8.994,
-    "notionalUsd": 776251.4537999999,
-    "distPct": -0.04545615102791703
-  },
-  {
-    "timestamp": "2026-10-02T08:31:31.175Z",
-    "midPrice": 86346.95,
-    "side": "BID",
     "price": 86303.9,
     "qty": 7.339,
     "notionalUsd": 633384.3221,
@@ -179998,5 +179962,41 @@
     "qty": 30.361,
     "notionalUsd": 1868203.413,
     "distPct": 0.08775347049116258
+  },
+  {
+    "timestamp": "2026-11-27T04:47:22.111Z",
+    "midPrice": 61466.05,
+    "side": "BID",
+    "price": 61437,
+    "qty": 31.146,
+    "notionalUsd": 1913516.8020000001,
+    "distPct": -0.04726186244276785
+  },
+  {
+    "timestamp": "2026-11-27T04:47:22.111Z",
+    "midPrice": 61466.05,
+    "side": "BID",
+    "price": 61418.1,
+    "qty": 9.214,
+    "notionalUsd": 565906.3734,
+    "distPct": -0.07801054403203779
+  },
+  {
+    "timestamp": "2026-11-27T04:47:22.111Z",
+    "midPrice": 61466.05,
+    "side": "ASK",
+    "price": 61466.1,
+    "qty": 10.079,
+    "notionalUsd": 619516.8219,
+    "distPct": 0.00008134571848302343
+  },
+  {
+    "timestamp": "2026-11-27T04:47:22.111Z",
+    "midPrice": 61466.05,
+    "side": "ASK",
+    "price": 61515.7,
+    "qty": 8.974,
+    "notionalUsd": 552041.8918,
+    "distPct": 0.0807762984606855
   }
 ]

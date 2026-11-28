@@ -3283,5 +3283,13 @@
     "side": "long",
     "price": 59226.03,
     "peakUsd": 377732.3949000001
+  },
+  {
+    "timestamp": "2026-11-28T13:46:03.763Z",
+    "type": "burst",
+    "side": "long",
+    "price": 59063.59,
+    "burstUsd": 460812.2942,
+    "burstCount": 55
   }
 ]
